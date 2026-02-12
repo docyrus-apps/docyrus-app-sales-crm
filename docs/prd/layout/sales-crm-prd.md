@@ -1219,14 +1219,16 @@ Deal Products and Sales Order Items use TanStack Form's `mode="array"` for dynam
 |---|---|
 | 20 | Add detail routes to route tree (`/deals/:dealId`, `/leads/:leadId`, `/companies/:companyId`, `/sales-orders/:orderId`, `/emails/:threadId`) |
 | 21 | Install diceui: editable, timeline, gauge, stepper, file-upload |
-| 22 | Install shadcn: dialog, sheet, field, calendar, accordion, hover-card, progress |
-| 23 | Build Deal Detail page (left summary panel + tabs: Overview, Products, Orders, Activity, Files) |
-| 24 | Build Deal Products tab (read-only data table with pricing summary) |
-| 25 | Build Lead Detail page (summary + tabs: Overview, Activity, Files) |
-| 26 | Build Company Detail page (summary + relationship tabs: Contacts, Deals, Leads, Tasks, Orders, Emails) |
-| 27 | Build Sales Order Detail page (header + line items table + totals) |
-| 28 | Build Email Thread Detail page (message timeline + thread metadata) |
-| 29 | Build Task detail side panel (Sheet) |
+| 22 | Install shadcn: dialog, sheet, field, calendar, accordion, hover-card, progress, textarea |
+| 23 | Build reusable **CommentsPanel** component — generic threaded comment list with create/edit/delete using data source comment endpoints (Section 4.4.1). Displays user avatar, timestamp, and comment body. Reused across all detail views. |
+| 24 | Build reusable **FileAttachments** component — generic file list with upload (multipart), insert, delete using data source file endpoints (Section 4.4.2). Uses diceui `FileUpload` for drag-and-drop upload. Reused across all detail views. |
+| 25 | Build Deal Detail page (left summary panel + tabs: Overview, Products, Orders, Activity, Comments, Files) |
+| 26 | Build Deal Products tab (read-only data table with pricing summary) |
+| 27 | Build Lead Detail page (summary + tabs: Overview, Activity, Comments, Files) |
+| 28 | Build Company Detail page (summary + relationship tabs: Contacts, Deals, Leads, Tasks, Orders, Emails, Comments, Files) |
+| 29 | Build Sales Order Detail page (header + line items table + totals + Comments + Files tabs) |
+| 30 | Build Email Thread Detail page (message timeline + thread metadata) |
+| 31 | Build Task detail side panel (Sheet + Comments + Files) |
 
 ### Phase 3 - Forms & CRUD (P1)
 
@@ -1234,22 +1236,22 @@ Deal Products and Sales Order Items use TanStack Form's `mode="array"` for dynam
 
 | # | Task |
 |---|---|
-| 30 | Install TanStack Form + Zod adapter (`@tanstack/react-form`, `@tanstack/zod-form-adapter`, `zod`) |
-| 31 | Install diceui: phone-input, responsive-dialog. Install shadcn: textarea, field (if not yet installed) |
-| 32 | Build New Deal form (Dialog) with Zod schema validation |
-| 33 | Build Deal edit form (reuses schema, pre-populated) |
-| 34 | Build Deal Products inline editor (array fields with `mode="array"`) |
-| 35 | Build New Lead form + Lead edit form |
-| 36 | Build Lead-to-Deal conversion flow (pre-fills deal form from lead data) |
-| 37 | Build New Company form + Company edit form |
-| 38 | Build New Contact form + Contact edit form |
-| 39 | Build Task create/edit form (Sheet side panel) |
-| 40 | Build Event create/edit form (Dialog) |
-| 41 | Build Product create/edit form (Dialog) |
-| 42 | Build Sales Order line item editor (array fields) |
-| 43 | Build "Generate Sales Order from Deal Products" action |
-| 44 | Build Email reply composer with rich text |
-| 45 | Add bulk delete with ActionBar + AlertDialog confirmation across all list views |
+| 32 | Install TanStack Form + Zod adapter (`@tanstack/react-form`, `@tanstack/zod-form-adapter`, `zod`) |
+| 33 | Install diceui: phone-input, responsive-dialog |
+| 34 | Build New Deal form (Dialog) with Zod schema validation |
+| 35 | Build Deal edit form (reuses schema, pre-populated) |
+| 36 | Build Deal Products inline editor (array fields with `mode="array"`) |
+| 37 | Build New Lead form + Lead edit form |
+| 38 | Build Lead-to-Deal conversion flow (pre-fills deal form from lead data) |
+| 39 | Build New Company form + Company edit form |
+| 40 | Build New Contact form + Contact edit form |
+| 41 | Build Task create/edit form (Sheet side panel) |
+| 42 | Build Event create/edit form (Dialog) |
+| 43 | Build Product create/edit form (Dialog) |
+| 44 | Build Sales Order line item editor (array fields) |
+| 45 | Build "Generate Sales Order from Deal Products" action |
+| 46 | Build Email reply composer with rich text |
+| 47 | Add bulk delete with ActionBar + AlertDialog confirmation across all list views |
 
 ### Phase 4 - Dashboard, Calendar & Polish (P1-P2)
 
