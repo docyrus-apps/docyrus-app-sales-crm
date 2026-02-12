@@ -1,5 +1,5 @@
 import { flexRender, type Table as TanstackTable } from '@tanstack/react-table'
-import type * as React from 'react'
+import * as React from 'react'
 
 import { DataTablePagination } from '@/components/data-table/data-table-pagination'
 import {
@@ -57,10 +57,18 @@ export function DataTable<TData>({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
+              table.getRowModel().rows.map((row, rowIndex) => (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
+                  className="animate-fade-in-up"
+                  style={
+                    rowIndex < 15
+                      ? ({
+                          '--stagger': rowIndex,
+                        } as React.CSSProperties)
+                      : undefined
+                  }
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell

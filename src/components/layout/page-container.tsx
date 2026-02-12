@@ -11,6 +11,8 @@ interface PageContainerProps {
  */
 export function PageContainer({ children, className }: PageContainerProps) {
   return (
-    <div className={cn('container mx-auto p-6', className)}>{children}</div>
+    <div className={cn('container mx-auto p-6 animate-fade-in-up', className)}>
+      {children}
+    </div>
   )
 }

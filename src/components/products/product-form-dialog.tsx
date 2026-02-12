@@ -57,7 +57,7 @@ export function ProductFormDialog({
     },
     validatorAdapter: zodValidator(),
     validators: {
-      onChange: productFormSchema,
+      onSubmit: productFormSchema,
     },
     onSubmit: async ({ value }) => {
       // Clean up empty strings (convert to undefined for UUID fields)
@@ -105,154 +105,156 @@ export function ProductFormDialog({
           className="flex flex-col flex-1 overflow-hidden"
         >
           <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4">
-            {/* Product Code Field */}
-            <form.Field name="product_code">
-              {(field) => (
-                <Field>
-                  <Label htmlFor={field.name}>
-                    Product Code <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id={field.name}
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="Enter product code..."
-                  />
-                  {field.state.meta.errors && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          'Validation error'}
-                    </p>
-                  )}
-                </Field>
-              )}
-            </form.Field>
+            <div className="grid grid-cols-2 gap-4">
+              {/* Product Code Field */}
+              <form.Field name="product_code">
+                {(field) => (
+                  <Field className="col-span-2">
+                    <Label htmlFor={field.name}>
+                      Product Code <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id={field.name}
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="Enter product code..."
+                    />
+                    {field.state.meta.errors?.[0] && (
+                      <p className="text-sm text-destructive">
+                        {typeof field.state.meta.errors[0] === 'string'
+                          ? field.state.meta.errors[0]
+                          : (field.state.meta.errors[0] as any)?.message ||
+                            'Validation error'}
+                      </p>
+                    )}
+                  </Field>
+                )}
+              </form.Field>
 
-            {/* Category Field */}
-            <form.Field name="category">
-              {(field) => (
-                <Field>
-                  <Label htmlFor={field.name}>Category</Label>
-                  <Select
-                    value={field.state.value}
-                    onValueChange={field.handleChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categoryOptions.map((option: any) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {field.state.meta.errors && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          'Validation error'}
-                    </p>
-                  )}
-                </Field>
-              )}
-            </form.Field>
+              {/* Category Field */}
+              <form.Field name="category">
+                {(field) => (
+                  <Field>
+                    <Label htmlFor={field.name}>Category</Label>
+                    <Select
+                      value={field.state.value}
+                      onValueChange={field.handleChange}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select category..." />
+                      </SelectTrigger>
+                      <SelectContent position="popper" sideOffset={4}>
+                        {categoryOptions.map((option: any) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {field.state.meta.errors?.[0] && (
+                      <p className="text-sm text-destructive">
+                        {typeof field.state.meta.errors[0] === 'string'
+                          ? field.state.meta.errors[0]
+                          : (field.state.meta.errors[0] as any)?.message ||
+                            'Validation error'}
+                      </p>
+                    )}
+                  </Field>
+                )}
+              </form.Field>
 
-            {/* Unit Field */}
-            <form.Field name="Unit">
-              {(field) => (
-                <Field>
-                  <Label htmlFor={field.name}>Unit</Label>
-                  <Select
-                    value={field.state.value}
-                    onValueChange={field.handleChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select unit..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {unitOptions.map((option: any) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {field.state.meta.errors && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          'Validation error'}
-                    </p>
-                  )}
-                </Field>
-              )}
-            </form.Field>
+              {/* Unit Field */}
+              <form.Field name="Unit">
+                {(field) => (
+                  <Field>
+                    <Label htmlFor={field.name}>Unit</Label>
+                    <Select
+                      value={field.state.value}
+                      onValueChange={field.handleChange}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select unit..." />
+                      </SelectTrigger>
+                      <SelectContent position="popper" sideOffset={4}>
+                        {unitOptions.map((option: any) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {field.state.meta.errors?.[0] && (
+                      <p className="text-sm text-destructive">
+                        {typeof field.state.meta.errors[0] === 'string'
+                          ? field.state.meta.errors[0]
+                          : (field.state.meta.errors[0] as any)?.message ||
+                            'Validation error'}
+                      </p>
+                    )}
+                  </Field>
+                )}
+              </form.Field>
 
-            {/* Unit Price Field */}
-            <form.Field name="unit_price">
-              {(field) => (
-                <Field>
-                  <Label htmlFor={field.name}>Unit Price</Label>
-                  <Input
-                    id={field.name}
-                    type="number"
-                    value={field.state.value ?? ''}
-                    onChange={(e) =>
-                      field.handleChange(
-                        e.target.value ? Number(e.target.value) : undefined,
-                      )
-                    }
-                    placeholder="0.00"
-                    step="0.01"
-                  />
-                  {field.state.meta.errors && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          'Validation error'}
-                    </p>
-                  )}
-                </Field>
-              )}
-            </form.Field>
+              {/* Unit Price Field */}
+              <form.Field name="unit_price">
+                {(field) => (
+                  <Field>
+                    <Label htmlFor={field.name}>Unit Price</Label>
+                    <Input
+                      id={field.name}
+                      type="number"
+                      value={field.state.value ?? ''}
+                      onChange={(e) =>
+                        field.handleChange(
+                          e.target.value ? Number(e.target.value) : undefined,
+                        )
+                      }
+                      placeholder="0.00"
+                      step="0.01"
+                    />
+                    {field.state.meta.errors?.[0] && (
+                      <p className="text-sm text-destructive">
+                        {typeof field.state.meta.errors[0] === 'string'
+                          ? field.state.meta.errors[0]
+                          : (field.state.meta.errors[0] as any)?.message ||
+                            'Validation error'}
+                      </p>
+                    )}
+                  </Field>
+                )}
+              </form.Field>
 
-            {/* Tax Field */}
-            <form.Field name="tax">
-              {(field) => (
-                <Field>
-                  <Label htmlFor={field.name}>Tax (%)</Label>
-                  <Input
-                    id={field.name}
-                    type="number"
-                    value={field.state.value ?? ''}
-                    onChange={(e) =>
-                      field.handleChange(
-                        e.target.value ? Number(e.target.value) : undefined,
-                      )
-                    }
-                    placeholder="0"
-                    step="1"
-                    min="0"
-                    max="100"
-                  />
-                  {field.state.meta.errors && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          'Validation error'}
-                    </p>
-                  )}
-                </Field>
-              )}
-            </form.Field>
+              {/* Tax Field */}
+              <form.Field name="tax">
+                {(field) => (
+                  <Field>
+                    <Label htmlFor={field.name}>Tax (%)</Label>
+                    <Input
+                      id={field.name}
+                      type="number"
+                      value={field.state.value ?? ''}
+                      onChange={(e) =>
+                        field.handleChange(
+                          e.target.value ? Number(e.target.value) : undefined,
+                        )
+                      }
+                      placeholder="0"
+                      step="1"
+                      min="0"
+                      max="100"
+                    />
+                    {field.state.meta.errors?.[0] && (
+                      <p className="text-sm text-destructive">
+                        {typeof field.state.meta.errors[0] === 'string'
+                          ? field.state.meta.errors[0]
+                          : (field.state.meta.errors[0] as any)?.message ||
+                            'Validation error'}
+                      </p>
+                    )}
+                  </Field>
+                )}
+              </form.Field>
+            </div>
           </div>
 
           <ResponsiveDialogFooter>

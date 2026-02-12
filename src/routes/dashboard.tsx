@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import React, { useMemo } from 'react'
 import { Link } from '@tanstack/react-router'
 import {
   Building2,
@@ -162,7 +162,10 @@ export function Dashboard() {
       <PageContainer>
         {/* Stat Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
+          <Card
+            className="animate-fade-in-up"
+            style={{ '--stagger': 0 } as React.CSSProperties}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Deals</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -181,7 +184,10 @@ export function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card
+            className="animate-fade-in-up"
+            style={{ '--stagger': 1 } as React.CSSProperties}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Leads</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
@@ -198,7 +204,10 @@ export function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card
+            className="animate-fade-in-up"
+            style={{ '--stagger': 2 } as React.CSSProperties}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Companies</CardTitle>
               <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -219,7 +228,10 @@ export function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card
+            className="animate-fade-in-up"
+            style={{ '--stagger': 3 } as React.CSSProperties}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Revenue</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -241,7 +253,10 @@ export function Dashboard() {
 
         {/* Charts */}
         <div className="mt-8 grid gap-4 md:grid-cols-2">
-          <Card>
+          <Card
+            className="animate-fade-in-up"
+            style={{ '--stagger': 5 } as React.CSSProperties}
+          >
             <CardHeader>
               <CardTitle>Pipeline by Stage</CardTitle>
               <CardDescription>
@@ -275,7 +290,10 @@ export function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card
+            className="animate-fade-in-up"
+            style={{ '--stagger': 6 } as React.CSSProperties}
+          >
             <CardHeader>
               <CardTitle>Leads by Source</CardTitle>
               <CardDescription>Where your leads come from</CardDescription>
@@ -319,7 +337,10 @@ export function Dashboard() {
 
         {/* Widgets */}
         <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
+          <Card
+            className="animate-fade-in-up"
+            style={{ '--stagger': 8 } as React.CSSProperties}
+          >
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
               <CardDescription>Get started with common tasks</CardDescription>
@@ -346,7 +367,10 @@ export function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card
+            className="animate-fade-in-up"
+            style={{ '--stagger': 9 } as React.CSSProperties}
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Flame className="h-5 w-5 text-orange-500" />
@@ -396,7 +420,10 @@ export function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card
+            className="animate-fade-in-up"
+            style={{ '--stagger': 10 } as React.CSSProperties}
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
