@@ -17,6 +17,8 @@ import { useContacts } from '@/hooks/use-contacts'
 import { useDeals } from '@/hooks/use-deals'
 import { useLeads } from '@/hooks/use-leads'
 import { CompanyFormDialog } from '@/components/companies/company-form-dialog'
+import { CommentsPanel } from '@/components/shared/comments-panel'
+import { FileAttachments } from '@/components/shared/file-attachments'
 
 export function CompanyDetail() {
   const { companyId } = useParams({ strict: false })
@@ -438,29 +440,19 @@ export function CompanyDetail() {
             </TabsContent>
 
             <TabsContent value="comments" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Comments</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Comments coming soon
-                  </p>
-                </CardContent>
-              </Card>
+              <CommentsPanel
+                appSlug="base"
+                dataSource="organization"
+                recordId={companyId!}
+              />
             </TabsContent>
 
             <TabsContent value="files" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Files</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Files coming soon
-                  </p>
-                </CardContent>
-              </Card>
+              <FileAttachments
+                appSlug="base"
+                dataSource="organization"
+                recordId={companyId!}
+              />
             </TabsContent>
           </Tabs>
         </div>

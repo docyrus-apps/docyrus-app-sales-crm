@@ -16,6 +16,8 @@ import { useDeal } from '@/hooks/use-deals'
 import { useDealProducts } from '@/hooks/use-deal-products'
 import { useSalesOrders } from '@/hooks/use-sales-orders'
 import { DealFormDialog } from '@/components/deals/deal-form-dialog'
+import { CommentsPanel } from '@/components/shared/comments-panel'
+import { FileAttachments } from '@/components/shared/file-attachments'
 
 export function DealDetail() {
   const { dealId } = useParams({ strict: false })
@@ -252,7 +254,8 @@ export function DealDetail() {
                       <div className="mt-1">
                         {deal.record_owner
                           ? typeof deal.record_owner === 'object'
-                            ? deal.record_owner.id
+                            ? (deal.record_owner as any).name ||
+                              (deal.record_owner as any).id
                             : deal.record_owner
                           : 'N/A'}
                       </div>
@@ -382,29 +385,19 @@ export function DealDetail() {
             </TabsContent>
 
             <TabsContent value="comments" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Comments</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Comments feature coming soon
-                  </p>
-                </CardContent>
-              </Card>
+              <CommentsPanel
+                appSlug="base_crm"
+                dataSource="deals"
+                recordId={dealId!}
+              />
             </TabsContent>
 
             <TabsContent value="files" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Files</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    File attachments coming soon
-                  </p>
-                </CardContent>
-              </Card>
+              <FileAttachments
+                appSlug="base_crm"
+                dataSource="deals"
+                recordId={dealId!}
+              />
             </TabsContent>
           </Tabs>
         </div>

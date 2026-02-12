@@ -19,6 +19,7 @@ import { getApiClient } from '@/lib/api'
 import { formatDate } from '@/lib/formatters'
 
 interface FileAttachmentsProps {
+  appSlug: string
   dataSource: string
   recordId: string
 }
@@ -37,6 +38,7 @@ interface FileAttachment {
 }
 
 export function FileAttachments({
+  appSlug,
   dataSource,
   recordId,
 }: FileAttachmentsProps) {
@@ -55,7 +57,7 @@ export function FileAttachments({
       if (!apiClient) throw new Error('API client not initialized')
 
       const response = await apiClient.get(
-        `/v1/apps/default/data-sources/${dataSource}/items/${recordId}/files`,
+        `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/files`,
       )
       return response.data
     },
@@ -73,7 +75,7 @@ export function FileAttachments({
       })
 
       const response = await apiClient.post(
-        `/v1/apps/default/data-sources/${dataSource}/items/${recordId}/files/upload`,
+        `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/files/upload`,
         formData,
         {
           headers: {
@@ -103,7 +105,7 @@ export function FileAttachments({
       if (!apiClient) throw new Error('API client not initialized')
 
       await apiClient.delete(
-        `/v1/apps/default/data-sources/${dataSource}/items/${recordId}/files/${fileId}`,
+        `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/files/${fileId}`,
       )
     },
     onSuccess: () => {

@@ -12,6 +12,7 @@ import { getApiClient } from '@/lib/api'
 import { formatDate } from '@/lib/formatters'
 
 interface CommentsPanelProps {
+  appSlug: string
   dataSource: string
   recordId: string
 }
@@ -28,7 +29,11 @@ interface Comment {
   }
 }
 
-export function CommentsPanel({ dataSource, recordId }: CommentsPanelProps) {
+export function CommentsPanel({
+  appSlug,
+  dataSource,
+  recordId,
+}: CommentsPanelProps) {
   const queryClient = useQueryClient()
   const [newComment, setNewComment] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -46,7 +51,7 @@ export function CommentsPanel({ dataSource, recordId }: CommentsPanelProps) {
       if (!apiClient) throw new Error('API client not initialized')
 
       const response = await apiClient.get(
-        `/v1/apps/default/data-sources/${dataSource}/items/${recordId}/comments`,
+        `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/comments`,
       )
       return response.data
     },
@@ -59,7 +64,7 @@ export function CommentsPanel({ dataSource, recordId }: CommentsPanelProps) {
       if (!apiClient) throw new Error('API client not initialized')
 
       const response = await apiClient.post(
-        `/v1/apps/default/data-sources/${dataSource}/items/${recordId}/comments`,
+        `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/comments`,
         { body },
       )
       return response.data
@@ -89,7 +94,7 @@ export function CommentsPanel({ dataSource, recordId }: CommentsPanelProps) {
       if (!apiClient) throw new Error('API client not initialized')
 
       const response = await apiClient.patch(
-        `/v1/apps/default/data-sources/${dataSource}/items/${recordId}/comments/${commentId}`,
+        `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/comments/${commentId}`,
         { body },
       )
       return response.data
@@ -114,7 +119,7 @@ export function CommentsPanel({ dataSource, recordId }: CommentsPanelProps) {
       if (!apiClient) throw new Error('API client not initialized')
 
       await apiClient.delete(
-        `/v1/apps/default/data-sources/${dataSource}/items/${recordId}/comments/${commentId}`,
+        `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/comments/${commentId}`,
       )
     },
     onSuccess: () => {

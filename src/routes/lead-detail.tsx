@@ -14,6 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useLead } from '@/hooks/use-leads'
 import { LeadFormDialog } from '@/components/leads/lead-form-dialog'
+import { CommentsPanel } from '@/components/shared/comments-panel'
+import { FileAttachments } from '@/components/shared/file-attachments'
 
 export function LeadDetail() {
   const { leadId } = useParams({ strict: false })
@@ -223,29 +225,19 @@ export function LeadDetail() {
             </TabsContent>
 
             <TabsContent value="comments" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Comments</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Comments coming soon
-                  </p>
-                </CardContent>
-              </Card>
+              <CommentsPanel
+                appSlug="base_crm"
+                dataSource="leads"
+                recordId={leadId!}
+              />
             </TabsContent>
 
             <TabsContent value="files" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Files</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Files coming soon
-                  </p>
-                </CardContent>
-              </Card>
+              <FileAttachments
+                appSlug="base_crm"
+                dataSource="leads"
+                recordId={leadId!}
+              />
             </TabsContent>
           </Tabs>
         </div>
