@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { CheckSquare, Plus } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
@@ -16,7 +16,7 @@ export function Tasks() {
     <PageContainer>
       <PageHeader
         title="Tasks"
-        description="Manage your tasks and to-dos"
+        icon={CheckSquare}
         actions={
           <Button onClick={() => setIsFormOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />

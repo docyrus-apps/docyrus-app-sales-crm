@@ -71,8 +71,8 @@ export function Events() {
   return (
     <PageContainer>
       <PageHeader
-        title="Events & Calendar"
-        description="Manage your events and schedule"
+        title="Events"
+        icon={CalendarIcon}
         actions={
           <div className="flex items-center gap-2">
             <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)}>

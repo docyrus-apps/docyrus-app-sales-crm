@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { Plus } from 'lucide-react'
+import { DollarSign, Plus } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
@@ -16,8 +16,8 @@ export function Deals() {
   return (
     <PageContainer>
       <PageHeader
-        title="Deals Pipeline"
-        description="Manage your sales pipeline"
+        title="Deals"
+        icon={DollarSign}
         actions={
           <Button onClick={() => setIsFormOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />

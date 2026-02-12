@@ -23,6 +23,7 @@ import { LeadDetail } from './routes/lead-detail.tsx'
 import { Companies } from './routes/companies.tsx'
 import { CompanyDetail } from './routes/company-detail.tsx'
 import { Tasks } from './routes/tasks.tsx'
+import { Notifications } from './routes/notifications.tsx'
 import { Emails } from './routes/emails.tsx'
 import { Events } from './routes/events.tsx'
 import { Products } from './routes/products.tsx'
@@ -81,6 +82,12 @@ const tasksRoute = createRoute({
   component: Tasks,
 })
 
+const notificationsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/notifications',
+  component: Notifications,
+})
+
 const emailsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/emails',
@@ -132,6 +139,7 @@ const routeTree = rootRoute.addChildren([
   companiesRoute,
   companyDetailRoute,
   tasksRoute,
+  notificationsRoute,
   emailsRoute,
   eventsRoute,
   productsRoute,

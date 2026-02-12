@@ -18,7 +18,7 @@ export function Companies() {
     <PageContainer>
       <PageHeader
         title="Companies"
-        description="Manage your company directory"
+        icon={Building2}
         actions={
           <Button onClick={() => setIsFormOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />

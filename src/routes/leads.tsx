@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { Plus } from 'lucide-react'
+import { Plus, Users } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
@@ -18,7 +18,7 @@ export function Leads() {
     <PageContainer>
       <PageHeader
         title="Leads"
-        description="Manage your sales leads"
+        icon={Users}
         actions={
           <Button onClick={() => setIsFormOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />

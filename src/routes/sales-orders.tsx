@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+import { FileText, Plus } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
@@ -13,7 +13,7 @@ export function SalesOrders() {
     <PageContainer>
       <PageHeader
         title="Sales Orders"
-        description="Manage your sales orders"
+        icon={FileText}
         actions={
           <Button disabled>
             <Plus className="mr-2 h-4 w-4" />
