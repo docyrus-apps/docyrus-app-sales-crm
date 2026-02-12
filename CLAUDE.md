@@ -2,9 +2,7 @@
 
 <!-- Source: .ruler/AGENTS.md -->
 
-# AGENTS.md
-
-# Claude Code Project Instructions
+# Project Instructions
 
 This is a React Single Page Application starter template built with modern tooling and best practices.
 
@@ -54,6 +52,7 @@ pnpm check        # Run both Prettier and ESLint with auto-fix
 ## Authentication
 
 The project uses `@docyrus/app-auth-ui` for authentication. This library provides:
+
 - **Auto Environment Detection**: Standalone apps use OAuth2 PKCE via redirect, iframe-embedded apps receive tokens via `postMessage`
 - **Token Auto-Refresh**: Proactive token refresh before expiry in both modes
 - **React Hooks**: `useDocyrusAuth()` and `useDocyrusClient()` for easy integration
@@ -89,6 +88,7 @@ function MyComponent() {
 ### Auth Hooks API
 
 **useDocyrusAuth()** returns:
+
 - `status: 'loading' | 'authenticated' | 'unauthenticated'` - Auth state
 - `mode: 'standalone' | 'iframe'` - Detected auth mode
 - `client: RestApiClient | null` - Configured API client
@@ -98,6 +98,7 @@ function MyComponent() {
 - `error: Error | null` - Any auth error
 
 **useDocyrusClient()** returns:
+
 - `RestApiClient | null` - Shorthand for the API client
 
 ### API Client Pattern
@@ -152,6 +153,24 @@ The `DocyrusAuthProvider` manages the `RestApiClient` internally. For non-React 
 - When using collection's list and get methods always send columns parameter to select only the columns you need. If you do not send columns parameter, only id column will be returned.
 - Use `UsersCollection.getMyInfo()` for profile information of the logged-in user
 - Use `@docyrus/api-client` for API calls which is configured and exported in src/lib/api.ts
+
+#### Data Source Query API Capabilities
+
+The Docyrus data source get-items endpoint (and each generated collection's `.list()` method) accepts a powerful query payload (`ZodSelectQueryPayload`) that supports:
+
+- **Column selection** with relation expansion `field(subfield)`, aliasing `alias:field`, spread `...field()`, and functions `field@upper`
+- **Filtering** with nested AND/OR groups, 50+ operators (comparison, text search, date shortcuts like `today`/`this_month`/`last_7_days`, user-related like `active_user`, dynamic `in_next_x_days`, collection operators like `in`/`contains any`, null/empty checks)
+- **Keyword search** via `filterKeyword` for full-text search
+- **Sorting** by one or more fields with direction, including related field sorting
+- **Pagination** with `limit`/`offset`
+- **Aggregations** (`count`, `sum`, `avg`, `min`, `max`, `jsonb_agg`, `json_agg`, `array_agg`) with grouping, distinct, and min/max bounds
+- **Formulas** — computed virtual columns: simple function calls, block/AST-based inline expressions (math, case/when, compare, boolean logic, type casting), and correlated subqueries against child tables
+- **Pivot** — cross-tab grouping with date range series and matrix CTEs
+- **Child queries** — fetch related child records as nested JSON arrays per parent row
+- **Field expansion** — expand relation/user/enum fields to return full objects instead of IDs
+- **Filtering by related record fields** using `rel_{{relation_field}}/{{field}}` syntax
+
+**When to read `docs/docyrus-api-query-guide.md`:** Read this guide whenever you need to build a query payload for a collection's `.list()` method — especially when implementing filters, aggregations, formulas, pivot tables, child queries, or any non-trivial data fetching. It contains the full parameter reference, all operator definitions, and detailed examples for every feature.
 
 ### 6. **TypeScript Configuration**
 
