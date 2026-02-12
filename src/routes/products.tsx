@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
@@ -5,9 +6,11 @@ import { Button } from '@/components/ui/button'
 import { useProducts } from '@/hooks/use-products'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent } from '@/components/ui/card'
+import { ProductFormDialog } from '@/components/products/product-form-dialog'
 
 export function Products() {
   const { data: products, isLoading } = useProducts()
+  const [isFormOpen, setIsFormOpen] = useState(false)
 
   return (
     <PageContainer>
@@ -15,11 +18,17 @@ export function Products() {
         title="Products"
         description="Manage your product catalog"
         actions={
-          <Button disabled>
+          <Button onClick={() => setIsFormOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             New Product
           </Button>
         }
+      />
+
+      <ProductFormDialog
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        mode="create"
       />
 
       {isLoading && <Skeleton className="h-64 w-full" />}

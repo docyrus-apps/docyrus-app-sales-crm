@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
@@ -6,9 +7,11 @@ import { Button } from '@/components/ui/button'
 import { useDeals } from '@/hooks/use-deals'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { DealFormDialog } from '@/components/deals/deal-form-dialog'
 
 export function Deals() {
   const { data: deals, isLoading, error } = useDeals()
+  const [isFormOpen, setIsFormOpen] = useState(false)
 
   return (
     <PageContainer>
@@ -16,11 +19,17 @@ export function Deals() {
         title="Deals Pipeline"
         description="Manage your sales pipeline"
         actions={
-          <Button disabled>
+          <Button onClick={() => setIsFormOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             New Deal
           </Button>
         }
+      />
+
+      <DealFormDialog
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        mode="create"
       />
 
       {isLoading && (
@@ -51,7 +60,7 @@ export function Deals() {
             <p className="text-sm text-muted-foreground mt-2">
               Create your first deal to get started
             </p>
-            <Button className="mt-4" disabled>
+            <Button className="mt-4" onClick={() => setIsFormOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Create Deal
             </Button>

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
@@ -5,9 +6,11 @@ import { Button } from '@/components/ui/button'
 import { useTasks } from '@/hooks/use-tasks'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent } from '@/components/ui/card'
+import { TaskFormSheet } from '@/components/tasks/task-form-sheet'
 
 export function Tasks() {
   const { data: tasks, isLoading } = useTasks()
+  const [isFormOpen, setIsFormOpen] = useState(false)
 
   return (
     <PageContainer>
@@ -15,11 +18,17 @@ export function Tasks() {
         title="Tasks"
         description="Manage your tasks and to-dos"
         actions={
-          <Button disabled>
+          <Button onClick={() => setIsFormOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             New Task
           </Button>
         }
+      />
+
+      <TaskFormSheet
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        mode="create"
       />
 
       {isLoading && <Skeleton className="h-64 w-full" />}

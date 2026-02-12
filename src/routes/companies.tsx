@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Building2, Plus } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
@@ -7,9 +8,11 @@ import { useCompanies } from '@/hooks/use-companies'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { CompanyFormDialog } from '@/components/companies/company-form-dialog'
 
 export function Companies() {
   const { data: companies, isLoading, error } = useCompanies()
+  const [isFormOpen, setIsFormOpen] = useState(false)
 
   return (
     <PageContainer>
@@ -17,11 +20,17 @@ export function Companies() {
         title="Companies"
         description="Manage your company directory"
         actions={
-          <Button disabled>
+          <Button onClick={() => setIsFormOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             New Company
           </Button>
         }
+      />
+
+      <CompanyFormDialog
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        mode="create"
       />
 
       {isLoading && (
@@ -52,7 +61,7 @@ export function Companies() {
             <p className="text-sm text-muted-foreground mt-2">
               Add your first company to get started
             </p>
-            <Button className="mt-4" disabled>
+            <Button className="mt-4" onClick={() => setIsFormOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Create Company
             </Button>

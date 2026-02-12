@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
@@ -7,9 +8,11 @@ import { useLeads } from '@/hooks/use-leads'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { LeadFormDialog } from '@/components/leads/lead-form-dialog'
 
 export function Leads() {
   const { data: leads, isLoading, error } = useLeads()
+  const [isFormOpen, setIsFormOpen] = useState(false)
 
   return (
     <PageContainer>
@@ -17,11 +20,17 @@ export function Leads() {
         title="Leads"
         description="Manage your sales leads"
         actions={
-          <Button disabled>
+          <Button onClick={() => setIsFormOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             New Lead
           </Button>
         }
+      />
+
+      <LeadFormDialog
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        mode="create"
       />
 
       {isLoading && (
@@ -52,7 +61,7 @@ export function Leads() {
             <p className="text-sm text-muted-foreground mt-2">
               Add your first lead to start tracking
             </p>
-            <Button className="mt-4" disabled>
+            <Button className="mt-4" onClick={() => setIsFormOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Create Lead
             </Button>

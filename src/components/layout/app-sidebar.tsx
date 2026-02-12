@@ -2,6 +2,7 @@ import { Link, useLocation } from '@tanstack/react-router'
 import {
   Bell,
   Building2,
+  Calendar,
   CheckSquare,
   DollarSign,
   FileText,
@@ -25,6 +26,7 @@ const navigation = [
     badge: 'notifications',
   },
   { name: 'Tasks', href: '/tasks', icon: CheckSquare, badge: 'tasks' },
+  { name: 'Events', href: '/events', icon: Calendar },
   { name: 'Emails', href: '/emails', icon: Mail },
 ]
 
