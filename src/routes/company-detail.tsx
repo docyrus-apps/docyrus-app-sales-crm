@@ -13,12 +13,66 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useCompany } from '@/hooks/use-companies'
+import { useContacts } from '@/hooks/use-contacts'
+import { useDeals } from '@/hooks/use-deals'
+import { useLeads } from '@/hooks/use-leads'
 import { CompanyFormDialog } from '@/components/companies/company-form-dialog'
 
 export function CompanyDetail() {
   const { companyId } = useParams({ strict: false })
   const { data: company, isLoading, error } = useCompany(companyId)
   const [isEditOpen, setIsEditOpen] = useState(false)
+
+  const { data: contacts, isLoading: contactsLoading } = useContacts(
+    companyId
+      ? {
+          columns: ['id', 'name', 'job_title', 'email', 'mobile'],
+          filters: {
+            rules: [{ field: 'organization', operator: '=', value: companyId }],
+          },
+          orderBy: 'created_on desc',
+        }
+      : undefined,
+  )
+
+  const { data: deals, isLoading: dealsLoading } = useDeals(
+    companyId
+      ? {
+          columns: [
+            'id',
+            'deal_value',
+            'stage',
+            'expected_closing_date',
+            'close_probability',
+          ],
+          filters: {
+            rules: [
+              { field: 'organizations', operator: '=', value: companyId },
+            ],
+          },
+          orderBy: 'created_on desc',
+        }
+      : undefined,
+  )
+
+  const { data: leads, isLoading: leadsLoading } = useLeads(
+    companyId
+      ? {
+          columns: [
+            'id',
+            'title',
+            'email',
+            'phone',
+            'lead_status',
+            'lead_source',
+          ],
+          filters: {
+            rules: [{ field: 'company_name', operator: '=', value: companyId }],
+          },
+          orderBy: 'created_on desc',
+        }
+      : undefined,
+  )
 
   if (isLoading) {
     return (
@@ -220,9 +274,46 @@ export function CompanyDetail() {
                   <CardTitle>Contacts</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    No contacts yet
-                  </p>
+                  {contactsLoading ? (
+                    <div className="space-y-3">
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  ) : !contacts?.length ? (
+                    <p className="text-sm text-muted-foreground">
+                      No contacts yet
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {contacts.map((contact: any) => (
+                        <div
+                          key={contact.id}
+                          className="flex items-center justify-between rounded-lg border p-3"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="font-medium">{contact.name}</div>
+                            {contact.job_title && (
+                              <div className="text-sm text-muted-foreground">
+                                {contact.job_title}
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-right text-sm">
+                            {contact.email && (
+                              <div className="text-muted-foreground">
+                                {contact.email}
+                              </div>
+                            )}
+                            {contact.mobile && (
+                              <div className="text-muted-foreground">
+                                {contact.mobile}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -233,7 +324,57 @@ export function CompanyDetail() {
                   <CardTitle>Related Deals</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground">No deals yet</p>
+                  {dealsLoading ? (
+                    <div className="space-y-3">
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  ) : !deals?.length ? (
+                    <p className="text-sm text-muted-foreground">
+                      No deals yet
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {deals.map((deal: any) => (
+                        <Link
+                          key={deal.id}
+                          to="/deals/$dealId"
+                          params={{ dealId: deal.id }}
+                          className="block"
+                        >
+                          <div className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50">
+                            <div className="min-w-0 flex-1">
+                              <div className="font-medium">
+                                {typeof deal.stage === 'object'
+                                  ? deal.stage.name
+                                  : deal.stage || 'N/A'}
+                              </div>
+                              {deal.expected_closing_date && (
+                                <div className="text-sm text-muted-foreground">
+                                  Expected:{' '}
+                                  {new Date(
+                                    deal.expected_closing_date,
+                                  ).toLocaleDateString()}
+                                </div>
+                              )}
+                            </div>
+                            <div className="text-right">
+                              {deal.deal_value != null && (
+                                <div className="font-semibold">
+                                  ${deal.deal_value.toLocaleString()}
+                                </div>
+                              )}
+                              {deal.close_probability != null && (
+                                <div className="text-sm text-muted-foreground">
+                                  {deal.close_probability}%
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -244,7 +385,54 @@ export function CompanyDetail() {
                   <CardTitle>Related Leads</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground">No leads yet</p>
+                  {leadsLoading ? (
+                    <div className="space-y-3">
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  ) : !leads?.length ? (
+                    <p className="text-sm text-muted-foreground">
+                      No leads yet
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {leads.map((lead: any) => (
+                        <Link
+                          key={lead.id}
+                          to="/leads/$leadId"
+                          params={{ leadId: lead.id }}
+                          className="block"
+                        >
+                          <div className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50">
+                            <div className="min-w-0 flex-1">
+                              <div className="font-medium">
+                                {lead.title || 'Untitled Lead'}
+                              </div>
+                              {lead.lead_status && (
+                                <div className="text-sm text-muted-foreground">
+                                  {typeof lead.lead_status === 'object'
+                                    ? lead.lead_status.name
+                                    : lead.lead_status}
+                                </div>
+                              )}
+                            </div>
+                            <div className="text-right text-sm">
+                              {lead.email && (
+                                <div className="text-muted-foreground">
+                                  {lead.email}
+                                </div>
+                              )}
+                              {lead.phone && (
+                                <div className="text-muted-foreground">
+                                  {lead.phone}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

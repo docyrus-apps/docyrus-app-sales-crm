@@ -5,10 +5,39 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSalesOrder } from '@/hooks/use-sales-orders'
+import { useSalesOrderItems } from '@/hooks/use-sales-order-items'
 
 export function SalesOrderDetail() {
   const { orderId } = useParams({ strict: false })
   const { data: order, isLoading, error } = useSalesOrder(orderId)
+
+  const { data: lineItems, isLoading: itemsLoading } = useSalesOrderItems(
+    orderId
+      ? {
+          columns: [
+            'id',
+            'product(id,name)',
+            'category',
+            'qty',
+            'unit_price',
+            'discount',
+            'tax_rate',
+            'total',
+            'net_total',
+          ],
+          filters: {
+            rules: [
+              {
+                field: 'related_sales_order',
+                operator: '=',
+                value: orderId,
+              },
+            ],
+          },
+          orderBy: 'created_on desc',
+        }
+      : undefined,
+  )
 
   if (isLoading) {
     return (
@@ -86,7 +115,53 @@ export function SalesOrderDetail() {
             <CardTitle>Line Items</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">No line items yet</p>
+            {itemsLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ) : !lineItems?.length ? (
+              <p className="text-sm text-muted-foreground">No line items yet</p>
+            ) : (
+              <div className="space-y-3">
+                {lineItems.map((item: any) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between rounded-lg border p-3"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium">
+                        {typeof item.product === 'object'
+                          ? item.product.name
+                          : item.product || 'N/A'}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {typeof item.category === 'object'
+                          ? item.category.name
+                          : item.category || ''}
+                        {item.category ? ' · ' : ''}
+                        Qty: {item.qty} &times; $
+                        {item.unit_price?.toLocaleString()}
+                        {item.discount ? ` (-${item.discount}%)` : ''}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold">
+                        $
+                        {item.net_total?.toLocaleString() ??
+                          item.total?.toLocaleString() ??
+                          '0'}
+                      </div>
+                      {item.tax_rate != null && (
+                        <div className="text-sm text-muted-foreground">
+                          Tax: {item.tax_rate}%
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 

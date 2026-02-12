@@ -9,16 +9,40 @@ export function setApiClient(client: RestApiClient) {
   // Add request interceptor for custom param handling
   apiClient.use({
     request: (config) => {
-      // Handle columns array parameter - join as comma-separated
-      if (
-        config.params &&
-        config.params.columns &&
-        Array.isArray(config.params.columns)
-      ) {
-        config.params = {
-          ...config.params,
-          columns: config.params.columns.join(','),
+      if (config.params) {
+        const params = { ...config.params }
+
+        // Handle columns array - join as comma-separated
+        if (params.columns && Array.isArray(params.columns)) {
+          params.columns = params.columns.join(',')
         }
+
+        // Handle expand array - join as comma-separated
+        if (params.expand && Array.isArray(params.expand)) {
+          params.expand = params.expand.join(',')
+        }
+
+        // Stringify complex object/array params for query string serialization
+        const jsonKeys = [
+          'filters',
+          'orderBy',
+          'calculations',
+          'formulas',
+          'childQueries',
+          'pivot',
+          'distinctColumns',
+        ] as const
+        for (const key of jsonKeys) {
+          if (
+            params[key] !== undefined &&
+            params[key] !== null &&
+            typeof params[key] === 'object'
+          ) {
+            params[key] = JSON.stringify(params[key])
+          }
+        }
+
+        config.params = params
       }
       return config
     },

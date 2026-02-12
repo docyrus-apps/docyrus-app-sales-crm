@@ -13,12 +13,52 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDeal } from '@/hooks/use-deals'
+import { useDealProducts } from '@/hooks/use-deal-products'
+import { useSalesOrders } from '@/hooks/use-sales-orders'
 import { DealFormDialog } from '@/components/deals/deal-form-dialog'
 
 export function DealDetail() {
   const { dealId } = useParams({ strict: false })
   const { data: deal, isLoading, error } = useDeal(dealId)
   const [isEditOpen, setIsEditOpen] = useState(false)
+
+  const orgId =
+    deal?.organizations && typeof deal.organizations === 'object'
+      ? deal.organizations.id
+      : undefined
+
+  const { data: dealProducts, isLoading: productsLoading } = useDealProducts(
+    dealId
+      ? {
+          columns: [
+            'id',
+            'product(id,name)',
+            'qty',
+            'unit_price',
+            'discount',
+            'tax_rate',
+            'total',
+            'net_total',
+          ],
+          filters: {
+            rules: [{ field: 'related_deal', operator: '=', value: dealId }],
+          },
+          orderBy: 'created_on desc',
+        }
+      : undefined,
+  )
+
+  const { data: salesOrders, isLoading: ordersLoading } = useSalesOrders(
+    orgId
+      ? {
+          columns: ['id', 'status', 'sub_total', 'grand_total', 'created_on'],
+          filters: {
+            rules: [{ field: 'organization', operator: '=', value: orgId }],
+          },
+          orderBy: 'created_on desc',
+        }
+      : undefined,
+  )
 
   if (isLoading) {
     return (
@@ -228,9 +268,51 @@ export function DealDetail() {
                   <CardTitle>Deal Products</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    No products added yet
-                  </p>
+                  {productsLoading ? (
+                    <div className="space-y-3">
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  ) : !dealProducts?.length ? (
+                    <p className="text-sm text-muted-foreground">
+                      No products added yet
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {dealProducts.map((item: any) => (
+                        <div
+                          key={item.id}
+                          className="flex items-center justify-between rounded-lg border p-3"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="font-medium">
+                              {typeof item.product === 'object'
+                                ? item.product.name
+                                : item.product || 'N/A'}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              Qty: {item.qty} &times; $
+                              {item.unit_price?.toLocaleString()}
+                              {item.discount ? ` (-${item.discount}%)` : ''}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-semibold">
+                              $
+                              {item.net_total?.toLocaleString() ??
+                                item.total?.toLocaleString() ??
+                                '0'}
+                            </div>
+                            {item.tax_rate != null && (
+                              <div className="text-sm text-muted-foreground">
+                                Tax: {item.tax_rate}%
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -241,7 +323,47 @@ export function DealDetail() {
                   <CardTitle>Related Sales Orders</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground">No orders yet</p>
+                  {ordersLoading ? (
+                    <div className="space-y-3">
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  ) : !salesOrders?.length ? (
+                    <p className="text-sm text-muted-foreground">
+                      No orders yet
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {salesOrders.map((order: any) => (
+                        <Link
+                          key={order.id}
+                          to="/sales-orders/$orderId"
+                          params={{ orderId: order.id }}
+                          className="block"
+                        >
+                          <div className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50">
+                            <div className="min-w-0 flex-1">
+                              <div className="font-medium">
+                                Order #{order.id}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {typeof order.status === 'object'
+                                  ? order.status.name
+                                  : order.status || 'N/A'}
+                                {order.created_on &&
+                                  ` · ${new Date(order.created_on).toLocaleDateString()}`}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-semibold">
+                                ${order.grand_total?.toLocaleString() || '0'}
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
