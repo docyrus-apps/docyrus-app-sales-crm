@@ -38,7 +38,6 @@ export function useProduct(productId: string | undefined) {
           'category',
           'tax',
           'created_on',
-          'modified_on',
         ],
       })
     },

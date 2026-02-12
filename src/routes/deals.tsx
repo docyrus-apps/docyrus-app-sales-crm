@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
@@ -38,7 +39,7 @@ export function Deals() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm">{(error).message}</p>
+            <p className="text-sm">{error.message}</p>
           </CardContent>
         </Card>
       )}
@@ -61,19 +62,41 @@ export function Deals() {
       {deals && deals.length > 0 && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {deals.map((deal: any) => (
-            <Card key={deal.id}>
-              <CardHeader>
-                <CardTitle className="text-base">{deal.id}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Stage: {deal.stage || 'Unknown'}
-                </p>
-                <p className="text-sm font-medium mt-2">
-                  ${deal.deal_value || 0}
-                </p>
-              </CardContent>
-            </Card>
+            <Link
+              key={deal.id}
+              to="/deals/$dealId"
+              params={{ dealId: deal.id }}
+            >
+              <Card className="transition-all hover:shadow-md cursor-pointer">
+                <CardHeader>
+                  <CardTitle className="text-base">
+                    Deal #{deal.id.slice(0, 8)}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {deal.stage && (
+                    <p className="text-sm text-muted-foreground">
+                      Stage:{' '}
+                      {typeof deal.stage === 'object'
+                        ? deal.stage.name
+                        : deal.stage}
+                    </p>
+                  )}
+                  <p className="text-sm font-medium mt-2">
+                    $
+                    {deal.deal_value?.toLocaleString() ||
+                      deal.expected_revenue?.toLocaleString() ||
+                      0}
+                  </p>
+                  {deal.organizations &&
+                    typeof deal.organizations === 'object' && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {deal.organizations.name}
+                      </p>
+                    )}
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       )}

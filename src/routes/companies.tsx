@@ -1,13 +1,15 @@
-import { Plus } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import { Building2, Plus } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
 import { useCompanies } from '@/hooks/use-companies'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 
 export function Companies() {
-  const { data: companies, isLoading } = useCompanies()
+  const { data: companies, isLoading, error } = useCompanies()
 
   return (
     <PageContainer>
@@ -22,7 +24,26 @@ export function Companies() {
         }
       />
 
-      {isLoading && <Skeleton className="h-64 w-full" />}
+      {isLoading && (
+        <div className="space-y-4">
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+        </div>
+      )}
+
+      {error && (
+        <Card className="border-destructive">
+          <CardHeader>
+            <CardTitle className="text-destructive">
+              Error loading companies
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm">{error.message}</p>
+          </CardContent>
+        </Card>
+      )}
 
       {companies && companies.length === 0 && (
         <Card>
@@ -31,12 +52,70 @@ export function Companies() {
             <p className="text-sm text-muted-foreground mt-2">
               Add your first company to get started
             </p>
+            <Button className="mt-4" disabled>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Company
+            </Button>
           </CardContent>
         </Card>
       )}
 
       {companies && companies.length > 0 && (
-        <div className="text-sm">Found {companies.length} companies</div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {companies.map((company: any) => (
+            <Link
+              key={company.id}
+              to="/companies/$companyId"
+              params={{ companyId: company.id }}
+            >
+              <Card className="transition-all hover:shadow-md cursor-pointer">
+                <CardHeader>
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                      <Building2 className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1">
+                      <CardTitle className="text-base">
+                        {company.name}
+                      </CardTitle>
+                      {company.industry && (
+                        <Badge variant="secondary" className="mt-1">
+                          {typeof company.industry === 'object'
+                            ? company.industry.name
+                            : company.industry}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {company.status && (
+                    <Badge variant="outline" className="mb-2">
+                      {typeof company.status === 'object'
+                        ? company.status.name
+                        : company.status}
+                    </Badge>
+                  )}
+                  {company.email && (
+                    <p className="text-xs text-muted-foreground">
+                      {company.email}
+                    </p>
+                  )}
+                  {company.phone && (
+                    <p className="text-xs text-muted-foreground">
+                      {company.phone}
+                    </p>
+                  )}
+                  {company.city && typeof company.city === 'object' && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {company.city.name}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
       )}
     </PageContainer>
   )

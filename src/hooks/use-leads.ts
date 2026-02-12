@@ -62,7 +62,6 @@ export function useLead(leadId: string | undefined) {
           'countries(id,name)',
           'record_owner',
           'created_on',
-          'modified_on',
         ],
       })
       return response

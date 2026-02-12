@@ -63,7 +63,6 @@ export function useDeal(dealId: string | undefined) {
           'country(id,name,currency_symbol)',
           'followers',
           'created_on',
-          'modified_on',
         ],
       })
       return response

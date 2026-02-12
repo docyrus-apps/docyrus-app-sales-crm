@@ -38,7 +38,6 @@ export function useContact(contactId: string | undefined) {
           'mobile',
           'organization(id,name,phone,email,website)',
           'created_on',
-          'modified_on',
         ],
       })
     },

@@ -1,0 +1,273 @@
+import { Link, useParams } from '@tanstack/react-router'
+import { ArrowLeft } from 'lucide-react'
+import { PageContainer } from '@/components/layout/page-container'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useDeal } from '@/hooks/use-deals'
+
+export function DealDetail() {
+  const { dealId } = useParams({ strict: false })
+  const { data: deal, isLoading, error } = useDeal(dealId)
+
+  if (isLoading) {
+    return (
+      <PageContainer>
+        <Skeleton className="h-8 w-64 mb-4" />
+        <Skeleton className="h-96 w-full" />
+      </PageContainer>
+    )
+  }
+
+  if (error || !deal) {
+    return (
+      <PageContainer>
+        <Card className="border-destructive">
+          <CardHeader>
+            <CardTitle className="text-destructive">Error</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>Failed to load deal details</p>
+            <Link to="/deals">
+              <Button variant="outline" className="mt-4">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Deals
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </PageContainer>
+    )
+  }
+
+  return (
+    <PageContainer>
+      <div className="mb-6">
+        <Link to="/deals">
+          <Button variant="ghost" size="sm">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Pipeline
+          </Button>
+        </Link>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Left Panel - Deal Summary */}
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Deal Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <div className="text-sm font-medium text-muted-foreground">
+                  Deal ID
+                </div>
+                <div className="mt-1">{deal.id}</div>
+              </div>
+
+              {deal.stage && (
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground">
+                    Stage
+                  </div>
+                  <div className="mt-1 font-medium">
+                    {typeof deal.stage === 'object'
+                      ? deal.stage.name
+                      : deal.stage}
+                  </div>
+                </div>
+              )}
+
+              {deal.deal_value && (
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground">
+                    Deal Value
+                  </div>
+                  <div className="mt-1 text-2xl font-bold">
+                    ${deal.deal_value.toLocaleString()}
+                  </div>
+                </div>
+              )}
+
+              {deal.close_probability !== undefined && (
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground">
+                    Close Probability
+                  </div>
+                  <div className="mt-1">{deal.close_probability}%</div>
+                </div>
+              )}
+
+              {deal.expected_closing_date && (
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground">
+                    Expected Close
+                  </div>
+                  <div className="mt-1">
+                    {new Date(deal.expected_closing_date).toLocaleDateString()}
+                  </div>
+                </div>
+              )}
+
+              {deal.hot_prospect && (
+                <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-2">
+                  <span className="text-sm font-medium text-destructive">
+                    🔥 Hot Prospect
+                  </span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {deal.organizations && typeof deal.organizations === 'object' && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Organization</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm font-medium">
+                  {(deal.organizations as any).name || 'N/A'}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Right Panel - Tabs */}
+        <div className="lg:col-span-2">
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="grid w-full grid-cols-6">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="products">Products</TabsTrigger>
+              <TabsTrigger value="orders">Orders</TabsTrigger>
+              <TabsTrigger value="activity">Activity</TabsTrigger>
+              <TabsTrigger value="comments">Comments</TabsTrigger>
+              <TabsTrigger value="files">Files</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Deal Overview</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-sm font-medium text-muted-foreground">
+                        Customer Type
+                      </div>
+                      <div className="mt-1">
+                        {deal.customer_type
+                          ? typeof deal.customer_type === 'object'
+                            ? deal.customer_type.name
+                            : deal.customer_type
+                          : 'N/A'}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-muted-foreground">
+                        Lead Source
+                      </div>
+                      <div className="mt-1">
+                        {deal.lead_source
+                          ? typeof deal.lead_source === 'object'
+                            ? deal.lead_source.name
+                            : deal.lead_source
+                          : 'N/A'}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-muted-foreground">
+                        Expected Revenue
+                      </div>
+                      <div className="mt-1">
+                        ${deal.expected_revenue?.toLocaleString() || '0'}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-muted-foreground">
+                        Owner
+                      </div>
+                      <div className="mt-1">
+                        {deal.record_owner
+                          ? typeof deal.record_owner === 'object'
+                            ? deal.record_owner.id
+                            : deal.record_owner
+                          : 'N/A'}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="products" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Deal Products</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    No products added yet
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="orders" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Related Sales Orders</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">No orders yet</p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="activity" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Activity Timeline</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    No activity yet
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="comments" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Comments</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Comments feature coming soon
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="files" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Files</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    File attachments coming soon
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+    </PageContainer>
+  )
+}

@@ -59,7 +59,6 @@ export function useCompany(companyId: string | undefined) {
           'tax_number',
           'district',
           'created_on',
-          'modified_on',
         ],
       })
       return response

@@ -17,12 +17,16 @@ import reportWebVitals from './reportWebVitals.ts'
 import App from './App.tsx'
 import { Dashboard } from './routes/dashboard.tsx'
 import { Deals } from './routes/deals.tsx'
+import { DealDetail } from './routes/deal-detail.tsx'
 import { Leads } from './routes/leads.tsx'
+import { LeadDetail } from './routes/lead-detail.tsx'
 import { Companies } from './routes/companies.tsx'
+import { CompanyDetail } from './routes/company-detail.tsx'
 import { Tasks } from './routes/tasks.tsx'
 import { Emails } from './routes/emails.tsx'
 import { Products } from './routes/products.tsx'
 import { SalesOrders } from './routes/sales-orders.tsx'
+import { SalesOrderDetail } from './routes/sales-order-detail.tsx'
 
 const rootRoute = createRootRoute({
   component: App,
@@ -40,16 +44,34 @@ const dealsRoute = createRoute({
   component: Deals,
 })
 
+const dealDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/deals/$dealId',
+  component: DealDetail,
+})
+
 const leadsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/leads',
   component: Leads,
 })
 
+const leadDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/leads/$leadId',
+  component: LeadDetail,
+})
+
 const companiesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/companies',
   component: Companies,
+})
+
+const companyDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/companies/$companyId',
+  component: CompanyDetail,
 })
 
 const tasksRoute = createRoute({
@@ -76,6 +98,12 @@ const salesOrdersRoute = createRoute({
   component: SalesOrders,
 })
 
+const salesOrderDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/sales-orders/$orderId',
+  component: SalesOrderDetail,
+})
+
 const authCallbackRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/auth/callback',
@@ -91,12 +119,16 @@ const authCallbackRoute = createRoute({
 const routeTree = rootRoute.addChildren([
   indexRoute,
   dealsRoute,
+  dealDetailRoute,
   leadsRoute,
+  leadDetailRoute,
   companiesRoute,
+  companyDetailRoute,
   tasksRoute,
   emailsRoute,
   productsRoute,
   salesOrdersRoute,
+  salesOrderDetailRoute,
   authCallbackRoute,
 ])
 

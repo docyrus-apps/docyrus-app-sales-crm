@@ -38,7 +38,6 @@ export function useSalesOrder(orderId: string | undefined) {
           'tax_total',
           'grand_total',
           'created_on',
-          'modified_on',
         ],
       })
     },

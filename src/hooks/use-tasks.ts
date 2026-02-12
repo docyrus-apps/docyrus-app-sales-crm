@@ -49,7 +49,6 @@ export function useTask(taskId: string | undefined) {
           'parent',
           'followers',
           'created_on',
-          'modified_on',
         ],
       })
     },
