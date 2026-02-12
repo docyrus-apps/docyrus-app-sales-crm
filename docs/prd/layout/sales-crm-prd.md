@@ -255,6 +255,56 @@ Task ──→ Task (parent/child hierarchy)
 | Notification | system | subject, message, seen, created_by_fullname, created_by_photo |
 | Enums | system | Shared enums for all enum-type fields (stages, statuses, types, etc.) |
 
+### 4.4 Comments & File Attachments (Generic Data Source Endpoints)
+
+Every data source entity exposes **comment** and **file attachment** sub-endpoints. These are not separate collections — they are generic REST endpoints available on all data sources, following a consistent URL pattern.
+
+**API Reference:** `openapi.json` — endpoints follow the pattern below for every data source.
+
+#### 4.4.1 Comment Endpoints
+
+| Method | Path Pattern | Description |
+|---|---|---|
+| GET | `/v1/apps/{app}/data-sources/{ds}/comments` | List all comments for a data source |
+| GET | `/v1/apps/{app}/data-sources/{ds}/items/{recordId}/comments` | List comments for a specific record |
+| POST | `/v1/apps/{app}/data-sources/{ds}/items/{recordId}/comments` | Create a comment on a record (`CreateCommentDto`) |
+| GET | `/v1/apps/{app}/data-sources/{ds}/items/{recordId}/comments/{commentId}` | Get a comment by ID |
+| PATCH | `/v1/apps/{app}/data-sources/{ds}/items/{recordId}/comments/{commentId}` | Update a comment (`UpdateCommentDto`) |
+| DELETE | `/v1/apps/{app}/data-sources/{ds}/items/{recordId}/comments/{commentId}` | Delete a comment |
+
+**Example:** `GET /v1/apps/base/data-sources/contact/comments` — lists all comments across all contacts.
+
+#### 4.4.2 File Attachment Endpoints
+
+| Method | Path Pattern | Description |
+|---|---|---|
+| GET | `/v1/apps/{app}/data-sources/{ds}/files` | List all files for a data source |
+| POST | `/v1/apps/{app}/data-sources/{ds}/files` | Insert file records (`InsertFilesDto`) |
+| GET | `/v1/apps/{app}/data-sources/{ds}/files/{fileId}` | Get a file by ID |
+| POST | `/v1/apps/{app}/data-sources/{ds}/files/upload` | Upload a file (`multipart/form-data`, `UploadFileDto`) |
+| PUT | `/v1/apps/{app}/data-sources/{ds}/files/copy` | Copy a file (`CopyMoveFileDto`) |
+| PUT | `/v1/apps/{app}/data-sources/{ds}/files/move` | Move a file (`CopyMoveFileDto`) |
+| GET | `/v1/apps/{app}/data-sources/{ds}/items/{recordId}/files` | List files for a specific record |
+| POST | `/v1/apps/{app}/data-sources/{ds}/items/{recordId}/files` | Insert file records for a specific record |
+| POST | `/v1/apps/{app}/data-sources/{ds}/items/{recordId}/files/upload` | Upload a file for a specific record |
+| DELETE | `/v1/apps/{app}/data-sources/{ds}/items/{recordId}/files/{fileId}` | Delete a file (`DeleteFileDto`) |
+
+#### 4.4.3 Applicable Entities
+
+These endpoints are available on **all** CRM data sources:
+
+| Entity | Data Source Path | Comments | Files |
+|---|---|---|---|
+| Deal | `base_crm/data-sources/deals` | Deal discussions, internal notes | Proposals, contracts, attachments |
+| Lead | `base_crm/data-sources/leads` | Lead qualification notes | Business cards, requirement docs |
+| Organization | `base/data-sources/organization` | Account notes | Logos, agreements, NDAs |
+| Contact | `base/data-sources/contact` | Meeting notes | vCards, profile photos |
+| Task | `base/data-sources/task` | Task discussions | Task-related documents |
+| Event | `base/data-sources/event` | Event notes | Agendas, minutes |
+| Product | `base_crm/data-sources/product` | Product feedback | Spec sheets, images |
+| Sales Order | `base_crm/data-sources/sales_order` | Order notes | Invoices, POs |
+| Thread | `base/data-sources/thread` | Thread annotations | Email attachments |
+
 ---
 
 ## 5. Application Architecture
@@ -630,7 +680,8 @@ DealsCollection.list({
 | **Products** | Deal products table (diceui `DataTable`), add/edit/remove products, pricing summary |
 | **Orders** | Related sales orders, create order from deal products |
 | **Activity** | Activity timeline (diceui `Timeline`), notes, calls, emails |
-| **Files** | Attached documents (diceui `FileUpload`) |
+| **Comments** | Threaded comment list via generic comment endpoints (see Section 4.4.1). Add/edit/delete comments with user avatar and timestamp |
+| **Files** | File attachments via generic file endpoints (see Section 4.4.2). Upload (multipart), list, delete files using diceui `FileUpload` |
 | **Notes** | Rich text notes |
 
 #### 6.4.1 Deal Products Tab
@@ -702,7 +753,8 @@ DealsCollection.list({
 |---|---|
 | Overview | Lead details, company info, contact info |
 | Activity | Activity timeline, notes |
-| Files | Attachments |
+| Comments | Threaded comments via generic comment endpoints (Section 4.4.1) |
+| Files | File attachments via generic file endpoints (Section 4.4.2) |
 
 **Key Actions:**
 - Edit lead fields (inline or form)
@@ -749,6 +801,8 @@ DealsCollection.list({
 | Tasks | Tasks linked to this organization |
 | Orders | Sales orders for this organization |
 | Emails | Threads/messages related to this organization |
+| Comments | Threaded comments via generic comment endpoints (Section 4.4.1) |
+| Files | File attachments via generic file endpoints (Section 4.4.2) |
 | Activity | Activity timeline |
 
 ---
