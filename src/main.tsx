@@ -15,19 +15,65 @@ import './styles.css'
 import reportWebVitals from './reportWebVitals.ts'
 
 import App from './App.tsx'
+import { Dashboard } from './routes/dashboard.tsx'
+import { Deals } from './routes/deals.tsx'
+import { Leads } from './routes/leads.tsx'
+import { Companies } from './routes/companies.tsx'
+import { Tasks } from './routes/tasks.tsx'
+import { Emails } from './routes/emails.tsx'
+import { Products } from './routes/products.tsx'
+import { SalesOrders } from './routes/sales-orders.tsx'
 
 const rootRoute = createRootRoute({
-  component: () => (
-    <>
-      <Outlet />
-    </>
-  ),
+  component: App,
 })
 
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  component: App,
+  component: Dashboard,
+})
+
+const dealsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/deals',
+  component: Deals,
+})
+
+const leadsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/leads',
+  component: Leads,
+})
+
+const companiesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/companies',
+  component: Companies,
+})
+
+const tasksRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/tasks',
+  component: Tasks,
+})
+
+const emailsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/emails',
+  component: Emails,
+})
+
+const productsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/products',
+  component: Products,
+})
+
+const salesOrdersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/sales-orders',
+  component: SalesOrders,
 })
 
 const authCallbackRoute = createRoute({
@@ -42,7 +88,17 @@ const authCallbackRoute = createRoute({
   ),
 })
 
-const routeTree = rootRoute.addChildren([indexRoute, authCallbackRoute])
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  dealsRoute,
+  leadsRoute,
+  companiesRoute,
+  tasksRoute,
+  emailsRoute,
+  productsRoute,
+  salesOrdersRoute,
+  authCallbackRoute,
+])
 
 const router = createRouter({
   routeTree,

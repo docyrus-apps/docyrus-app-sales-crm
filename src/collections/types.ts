@@ -26,13 +26,13 @@
  */
 export interface ICollectionFilterRule {
   /** Filter field/column slug */
-  field?: string;
+  field?: string
   /** Filter operator */
-  operator: string;
+  operator: string
   /** Filter value. Can be a string, number, boolean, or an array of strings/numbers */
-  value?: unknown;
+  value?: unknown
   /** Filter type for value casting */
-  filterType?: string | null;
+  filterType?: string | null
 }
 
 /**
@@ -74,11 +74,11 @@ export interface ICollectionFilterRule {
  */
 export interface ICollectionFilterGroup {
   /** List of filter rules or nested groups */
-  rules: Array<ICollectionFilterRule | ICollectionFilterGroup>;
+  rules: Array<ICollectionFilterRule | ICollectionFilterGroup>
   /** Combinator for filter rules (and/or) */
-  combinator?: "and" | "or";
+  combinator?: 'and' | 'or'
   /** Negate the entire filter group */
-  not?: boolean;
+  not?: boolean
 }
 
 /**
@@ -101,19 +101,19 @@ export interface ICollectionFilterGroup {
  */
 export interface ICollectionCalculation {
   /** Aggregation function name (count, sum, avg, min, max) */
-  func: string;
+  func: string
   /** Field/column name to aggregate */
-  field: string;
+  field: string
   /** Alias for the calculation result column */
-  name?: string | null;
+  name?: string | null
   /** Aggregate unique values only */
-  isDistinct?: boolean;
+  isDistinct?: boolean
   /** Aggregate values greater than this (use only if necessary) */
-  minValue?: number | null;
+  minValue?: number | null
   /** Aggregate values less than this (use only if necessary) */
-  maxValue?: number | null;
+  maxValue?: number | null
   /** Number type for the calculation result value */
-  numberType?: "bigint" | "int" | "decimal";
+  numberType?: 'bigint' | 'int' | 'decimal'
 }
 
 /**
@@ -134,7 +134,10 @@ export interface ICollectionCalculation {
  * ]
  * ```
  */
-export type ICollectionOrderBy = string | { field: string; direction?: "asc" | "desc" } | Array<{ field: string; direction?: "asc" | "desc" }>;
+export type ICollectionOrderBy =
+  | string
+  | { field: string; direction?: 'asc' | 'desc' }
+  | Array<{ field: string; direction?: 'asc' | 'desc' }>
 
 /**
  * A simple formula that computes a virtual column using a function and arguments.
@@ -153,9 +156,9 @@ export type ICollectionOrderBy = string | { field: string; direction?: "asc" | "
  */
 export interface ICollectionFormula {
   /** Formula function name (e.g. "add", "subtract", "multiply", "divide", "concat", "coalesce") */
-  func: string;
+  func: string
   /** Arguments for the formula function (column names or literal values) */
-  args: Array<string | number>;
+  args: Array<string | number>
 }
 
 /**
@@ -176,16 +179,16 @@ export interface ICollectionFormula {
 export interface ICollectionBlockFormula {
   expression: {
     /** Optional alias for the computed column */
-    alias?: string;
+    alias?: string
     /** Expression tree blocks */
-    inputs: Array<Record<string, unknown>>;
+    inputs: Array<Record<string, unknown>>
     /** Source table for the subquery */
-    from: string;
+    from: string
     /** Join condition: column name or mapping of subquery columns to parent columns */
-    with: string | Record<string, string>;
+    with: string | Record<string, string>
     /** Optional filters inside the subquery */
-    filters?: ICollectionFilterGroup;
-  };
+    filters?: ICollectionFilterGroup
+  }
 }
 
 /**
@@ -207,19 +210,19 @@ export interface ICollectionBlockFormula {
  */
 export interface ICollectionChildQuery {
   /** The slug of the child data source in "appSlug_slug" format */
-  from: string;
+  from: string
   /** The field in child data source that references parent record */
-  using: string;
+  using: string
   /** Columns to select from child records */
-  columns?: Array<string> | null;
+  columns?: Array<string> | null
   /** Filters to apply to child records */
-  filters?: ICollectionFilterGroup | null;
+  filters?: ICollectionFilterGroup | null
   /** Aggregations for child records */
-  calculations?: Array<ICollectionCalculation> | null;
+  calculations?: Array<ICollectionCalculation> | null
   /** Sorting for child records. Can be a string, an object, or an array of strings/objects */
-  orderBy?: ICollectionOrderBy | null;
+  orderBy?: ICollectionOrderBy | null
   /** Maximum number of child records per parent. Default is 100 */
-  limit?: number;
+  limit?: number
 }
 
 /**
@@ -249,26 +252,26 @@ export interface ICollectionChildQuery {
  */
 export interface ICollectionPivotMatrix {
   /** Join this query using this field */
-  using: string;
+  using: string
   /** Columns to select from this query */
-  columns: string;
+  columns: string
   /** Spread jsonb columns as separate columns */
-  spread?: boolean;
+  spread?: boolean
   /** Filters for matrix query */
-  filters?: ICollectionFilterGroup;
+  filters?: ICollectionFilterGroup
   /** Number of records to return */
-  limit?: number;
+  limit?: number
   /** Generate date range series for the query */
   dateRange?: {
     /** Date range interval */
-    interval: "day" | "week" | "month" | "year" | "hour" | "minute" | "second";
+    interval: 'day' | 'week' | 'month' | 'year' | 'hour' | 'minute' | 'second'
     /** Number of intervals to increment */
-    increment?: number;
+    increment?: number
     /** Minimum datetime value (ISO format) */
-    min: string;
+    min: string
     /** Maximum datetime value (ISO format) */
-    max: string;
-  };
+    max: string
+  }
 }
 
 /**
@@ -292,13 +295,13 @@ export interface ICollectionPivotMatrix {
  */
 export interface ICollectionPivot {
   /** List of matrix (CTE) queries / data sources */
-  matrix: Array<ICollectionPivotMatrix>;
+  matrix: Array<ICollectionPivotMatrix>
   /** Don't include rows with no matching data */
-  hideEmptyRows?: boolean;
+  hideEmptyRows?: boolean
   /** Sorting for pivot results. Can be a string, an object, or an array of strings/objects */
-  orderBy?: ICollectionOrderBy | null;
+  orderBy?: ICollectionOrderBy | null
   /** Maximum number of pivot result rows. Default is 1000 */
-  limit?: number;
+  limit?: number
 }
 
 /**
@@ -408,31 +411,31 @@ export interface ICollectionListParams {
    * - `["f:firstname"]` — alias a column
    * - `["...related_account(accountName:name)"]` — spread relation into top-level keys
    */
-  columns?: Array<string>;
+  columns?: Array<string>
   /** List of distinct columns to deduplicate data. Use only when strictly necessary for performance reasons */
-  distinctColumns?: Array<string>;
+  distinctColumns?: Array<string>
   /** Second-axis columns for pivotal queries */
-  rows?: Array<string>;
+  rows?: Array<string>
   /** Named formulas to compute on the data. Keys are formula names (used as column aliases), values are formula definitions */
-  formulas?: Record<string, ICollectionFormula | ICollectionBlockFormula> | null;
+  formulas?: Record<string, ICollectionFormula | ICollectionBlockFormula> | null
   /** Child queries to fetch related records as nested lists */
-  childQueries?: Record<string, ICollectionChildQuery> | null;
+  childQueries?: Record<string, ICollectionChildQuery> | null
   /** List of aggregate calculation rules to apply on the result set */
-  calculations?: Array<ICollectionCalculation> | null;
+  calculations?: Array<ICollectionCalculation> | null
   /** Filter rules to narrow down results. Supports nested groups with AND/OR combinators */
-  filters?: ICollectionFilterGroup | null;
+  filters?: ICollectionFilterGroup | null
   /** Keyword to search using full-text search */
-  filterKeyword?: string;
+  filterKeyword?: string
   /** List of columns or orderBy rules to sort data. Can be a string (e.g. "created_on desc"), an object, or an array of strings/objects */
-  orderBy?: ICollectionOrderBy | null;
+  orderBy?: ICollectionOrderBy | null
   /** Number of records to return. Default is 100 */
-  limit?: number;
+  limit?: number
   /** Number of records to skip for pagination. Default is 0 */
-  offset?: number;
+  offset?: number
   /** Return the total count of records matching the filters */
-  fullCount?: boolean;
+  fullCount?: boolean
   /** List of specific fields to expand */
-  expand?: Array<string>;
+  expand?: Array<string>
   /** Pivot configuration for matrix-style cross-tab queries */
-  pivot?: ICollectionPivot | null;
+  pivot?: ICollectionPivot | null
 }

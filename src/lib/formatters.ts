@@ -8,7 +8,7 @@
 export function formatCurrency(
   value: number | null | undefined,
   currencySymbol: string = '$',
-  locale: string = 'en-US'
+  locale: string = 'en-US',
 ): string {
   if (value === null || value === undefined) {
     return `${currencySymbol}0`
@@ -30,7 +30,7 @@ export function formatDate(
   options: {
     format?: 'short' | 'long' | 'relative'
     locale?: string
-  } = {}
+  } = {},
 ): string {
   if (!date) {
     return '-'
@@ -88,7 +88,7 @@ export function formatDate(
  */
 export function formatPercentage(
   value: number | null | undefined,
-  decimals: number = 0
+  decimals: number = 0,
 ): string {
   if (value === null || value === undefined) {
     return '0%'

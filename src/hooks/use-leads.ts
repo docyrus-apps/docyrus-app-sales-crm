@@ -1,7 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { base_crmLeadsCollection } from '@/collections'
-import type { ICollectionListParams } from '@/collections/types'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import type { ICollectionListParams } from '@/collections/types'
+import { base_crmLeadsCollection } from '@/collections'
 
 /**
  * Hook to list leads with optional filters
@@ -141,7 +141,7 @@ export function useDeleteLeads() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (leadIds: string[]) => {
+    mutationFn: async (leadIds: Array<string>) => {
       await base_crmLeadsCollection.deleteMany({ recordIds: leadIds })
     },
     onSuccess: () => {

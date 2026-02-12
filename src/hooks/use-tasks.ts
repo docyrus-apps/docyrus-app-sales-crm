@@ -1,7 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { baseTaskCollection } from '@/collections'
-import type { ICollectionListParams } from '@/collections/types'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import type { ICollectionListParams } from '@/collections/types'
+import { baseTaskCollection } from '@/collections'
 
 export function useTasks(params?: ICollectionListParams) {
   return useQuery({
@@ -65,7 +65,8 @@ export function useCreateTask() {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
       toast.success('Task created successfully')
     },
-    onError: (error: any) => toast.error(error?.message || 'Failed to create task'),
+    onError: (error: any) =>
+      toast.error(error?.message || 'Failed to create task'),
   })
 }
 
@@ -79,18 +80,21 @@ export function useUpdateTask() {
       queryClient.invalidateQueries({ queryKey: ['tasks', variables.taskId] })
       toast.success('Task updated successfully')
     },
-    onError: (error: any) => toast.error(error?.message || 'Failed to update task'),
+    onError: (error: any) =>
+      toast.error(error?.message || 'Failed to update task'),
   })
 }
 
 export function useDeleteTask() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (taskId: string) => await baseTaskCollection.delete(taskId),
+    mutationFn: async (taskId: string) =>
+      await baseTaskCollection.delete(taskId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
       toast.success('Task deleted successfully')
     },
-    onError: (error: any) => toast.error(error?.message || 'Failed to delete task'),
+    onError: (error: any) =>
+      toast.error(error?.message || 'Failed to delete task'),
   })
 }

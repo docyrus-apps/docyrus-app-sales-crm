@@ -1,7 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { base_crmProductCollection } from '@/collections'
-import type { ICollectionListParams } from '@/collections/types'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import type { ICollectionListParams } from '@/collections/types'
+import { base_crmProductCollection } from '@/collections'
 
 export function useProducts(params?: ICollectionListParams) {
   return useQuery({
@@ -30,7 +30,16 @@ export function useProduct(productId: string | undefined) {
     queryFn: async () => {
       if (!productId) throw new Error('Product ID is required')
       return await base_crmProductCollection.get(productId, {
-        columns: ['id', 'product_code', 'unit_price', 'Unit', 'category', 'tax', 'created_on', 'modified_on'],
+        columns: [
+          'id',
+          'product_code',
+          'unit_price',
+          'Unit',
+          'category',
+          'tax',
+          'created_on',
+          'modified_on',
+        ],
       })
     },
     enabled: !!productId,
@@ -40,12 +49,14 @@ export function useProduct(productId: string | undefined) {
 export function useCreateProduct() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: any) => await base_crmProductCollection.create({ data }),
+    mutationFn: async (data: any) =>
+      await base_crmProductCollection.create({ data }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] })
       toast.success('Product created successfully')
     },
-    onError: (error: any) => toast.error(error?.message || 'Failed to create product'),
+    onError: (error: any) =>
+      toast.error(error?.message || 'Failed to create product'),
   })
 }
 
@@ -56,21 +67,26 @@ export function useUpdateProduct() {
       await base_crmProductCollection.update(productId, { data }),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['products'] })
-      queryClient.invalidateQueries({ queryKey: ['products', variables.productId] })
+      queryClient.invalidateQueries({
+        queryKey: ['products', variables.productId],
+      })
       toast.success('Product updated successfully')
     },
-    onError: (error: any) => toast.error(error?.message || 'Failed to update product'),
+    onError: (error: any) =>
+      toast.error(error?.message || 'Failed to update product'),
   })
 }
 
 export function useDeleteProduct() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (productId: string) => await base_crmProductCollection.delete(productId),
+    mutationFn: async (productId: string) =>
+      await base_crmProductCollection.delete(productId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] })
       toast.success('Product deleted successfully')
     },
-    onError: (error: any) => toast.error(error?.message || 'Failed to delete product'),
+    onError: (error: any) =>
+      toast.error(error?.message || 'Failed to delete product'),
   })
 }

@@ -1,7 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { base_crmDealsCollection } from '@/collections'
-import type { ICollectionListParams } from '@/collections/types'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import type { ICollectionListParams } from '@/collections/types'
+import { base_crmDealsCollection } from '@/collections'
 
 /**
  * Hook to list deals with optional filters
@@ -104,7 +104,7 @@ export function useUpdateDeal() {
       const response = await base_crmDealsCollection.update(dealId, { data })
       return response
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['deals'] })
       queryClient.invalidateQueries({ queryKey: ['deals', variables.dealId] })
       toast.success('Deal updated successfully')
@@ -142,7 +142,7 @@ export function useDeleteDeals() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (dealIds: string[]) => {
+    mutationFn: async (dealIds: Array<string>) => {
       await base_crmDealsCollection.deleteMany({ recordIds: dealIds })
     },
     onSuccess: () => {

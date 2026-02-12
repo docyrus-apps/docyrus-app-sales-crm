@@ -1,118 +1,139 @@
 // Generated collection for base/country
-import { apiClient } from '../lib/api';
-import type { QueryParamValue } from '@docyrus/api-client';
-import type { ICollectionListParams } from './types';
+import { apiClient } from '../lib/api'
+import type { QueryParamValue } from '@docyrus/api-client'
+import type { ICollectionListParams } from './types'
 
 export interface BaseCountryEntity {
-
   /** ID */
-  id?: string;
+  id?: string
 
   /** Record owner */
-  record_owner?: string;
+  record_owner?: string
 
   /** Created On */
-  created_on?: string;
+  created_on?: string
 
   /** Created By */
-  created_by?: string;
+  created_by?: string
 
   /** Last Modified On */
-  last_modified_on?: string;
+  last_modified_on?: string
 
   /** Last Modified By */
-  last_modified_by?: string;
+  last_modified_by?: string
 
   /** Currency Name */
-  currency_name?: string;
+  currency_name?: string
 
   /** Name */
-  name: string;
+  name: string
 
   /** ISO3 */
-  iso3?: string;
+  iso3?: string
 
   /** Numeric Code */
-  numeric_code?: string;
+  numeric_code?: string
 
   /** ISO2 */
-  iso2?: string;
+  iso2?: string
 
   /** Currency */
-  currency?: string;
+  currency?: string
 
   /** Currency Symbol */
-  currency_symbol?: string;
+  currency_symbol?: string
 
   /** Native */
-  native?: string;
+  native?: string
 
   /** Capital */
-  capital?: string;
+  capital?: string
 
   /** Region */
-  region?: string;
+  region?: string
 
   /** Subregion */
-  subregion?: string;
+  subregion?: string
 
   /** Nationality */
-  nationality?: string;
+  nationality?: string
 
   /** Timezones */
-  timezones?: string;
+  timezones?: string
 
   /** Translations */
-  translations?: string;
+  translations?: string
 
   /** TLD */
-  tld?: string;
+  tld?: string
 
   /** Emoji */
-  emoji?: string;
+  emoji?: string
 
   /** EmojiU */
-  emojiu?: string;
+  emojiu?: string
 
   /** Flag */
-  flag?: number;
+  flag?: number
 
   /** WikiDataId */
-  wikidataid?: string;
+  wikidataid?: string
 
   /** Latitude */
-  latitude?: string;
+  latitude?: string
 
   /** Longitude */
-  longitude?: string;
+  longitude?: string
 
   /** Phone Code */
-  phone_code?: string;
+  phone_code?: string
 }
-
 
 export const baseCountryCollection = {
   /** List records with optional filtering, sorting, and pagination. */
   list: (params?: ICollectionListParams): Promise<Array<BaseCountryEntity>> =>
-    apiClient.get('/v1/apps/base/data-sources/country/items', params as Record<string, QueryParamValue> | undefined),
+    apiClient.get(
+      '/v1/apps/base/data-sources/country/items',
+      params as Record<string, QueryParamValue> | undefined,
+    ),
 
   /** Get record */
-  get: (recordId: string, params?: { columns?: Array<string> }): Promise<BaseCountryEntity> => 
-    apiClient.get('/v1/apps/base/data-sources/country/items/{recordId}'.replace('{recordId}', recordId), params),
+  get: (
+    recordId: string,
+    params?: { columns?: Array<string> },
+  ): Promise<BaseCountryEntity> =>
+    apiClient.get(
+      '/v1/apps/base/data-sources/country/items/{recordId}'.replace(
+        '{recordId}',
+        recordId,
+      ),
+      params,
+    ),
 
   /** Create record */
-  create: (data: { data: any }): Promise<BaseCountryEntity> => 
+  create: (data: { data: any }): Promise<BaseCountryEntity> =>
     apiClient.post('/v1/apps/base/data-sources/country/items', data),
 
   /** Update record */
-  update: (recordId: string, data: { data: any }): Promise<BaseCountryEntity> => 
-    apiClient.patch('/v1/apps/base/data-sources/country/items/{recordId}'.replace('{recordId}', recordId), data),
+  update: (recordId: string, data: { data: any }): Promise<BaseCountryEntity> =>
+    apiClient.patch(
+      '/v1/apps/base/data-sources/country/items/{recordId}'.replace(
+        '{recordId}',
+        recordId,
+      ),
+      data,
+    ),
 
   /** Delete record */
-  delete: (recordId: string): Promise<void> => 
-    apiClient.delete('/v1/apps/base/data-sources/country/items/{recordId}'.replace('{recordId}', recordId)),
+  delete: (recordId: string): Promise<void> =>
+    apiClient.delete(
+      '/v1/apps/base/data-sources/country/items/{recordId}'.replace(
+        '{recordId}',
+        recordId,
+      ),
+    ),
 
   /** Delete many records */
-  deleteMany: (data: { recordIds: Array<string> }): Promise<void> => 
-    apiClient.delete('/v1/apps/base/data-sources/country/items', data)
-};
+  deleteMany: (data: { recordIds: Array<string> }): Promise<void> =>
+    apiClient.delete('/v1/apps/base/data-sources/country/items', data),
+}

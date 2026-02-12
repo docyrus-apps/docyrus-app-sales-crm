@@ -1,7 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { baseOrganizationCollection } from '@/collections'
-import type { ICollectionListParams } from '@/collections/types'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import type { ICollectionListParams } from '@/collections/types'
+import { baseOrganizationCollection } from '@/collections'
 
 /**
  * Hook to list companies (organizations) with optional filters
@@ -96,13 +96,23 @@ export function useUpdateCompany() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ companyId, data }: { companyId: string; data: any }) => {
-      const response = await baseOrganizationCollection.update(companyId, { data })
+    mutationFn: async ({
+      companyId,
+      data,
+    }: {
+      companyId: string
+      data: any
+    }) => {
+      const response = await baseOrganizationCollection.update(companyId, {
+        data,
+      })
       return response
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['companies'] })
-      queryClient.invalidateQueries({ queryKey: ['companies', variables.companyId] })
+      queryClient.invalidateQueries({
+        queryKey: ['companies', variables.companyId],
+      })
       toast.success('Company updated successfully')
     },
     onError: (error: any) => {
@@ -138,7 +148,7 @@ export function useDeleteCompanies() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (companyIds: string[]) => {
+    mutationFn: async (companyIds: Array<string>) => {
       await baseOrganizationCollection.deleteMany({ recordIds: companyIds })
     },
     onSuccess: () => {

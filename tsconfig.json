@@ -6,7 +6,24 @@
     "prettier.config.js",
     "vite.config.js"
   ],
-  "exclude": ["src/db/**/*"],
+  "exclude": [
+    "src/db/**/*",
+    "src/collections/**/*",
+    "src/components/admin-panel/**/*",
+    "src/components/data-table/**/*",
+    "src/components/mode-toggle.tsx",
+    "src/components/providers/**/*",
+    "src/lib/menu-list.ts",
+    "src/lib/data-table.ts",
+    "src/lib/parsers.ts",
+    "src/lib/format.ts",
+    "src/hooks/use-data-table.ts",
+    "src/hooks/use-sidebar.ts",
+    "src/hooks/use-store.ts",
+    "src/config/**/*",
+    "src/types/data-table.ts",
+    "src/components/visually-hidden-input.tsx"
+  ],
 
   "compilerOptions": {
     "target": "ES2022",

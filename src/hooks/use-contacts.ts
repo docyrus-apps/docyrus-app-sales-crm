@@ -1,7 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { baseContactCollection } from '@/collections'
-import type { ICollectionListParams } from '@/collections/types'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import type { ICollectionListParams } from '@/collections/types'
+import { baseContactCollection } from '@/collections'
 
 export function useContacts(params?: ICollectionListParams) {
   return useQuery({
@@ -49,12 +49,14 @@ export function useContact(contactId: string | undefined) {
 export function useCreateContact() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: any) => await baseContactCollection.create({ data }),
+    mutationFn: async (data: any) =>
+      await baseContactCollection.create({ data }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] })
       toast.success('Contact created successfully')
     },
-    onError: (error: any) => toast.error(error?.message || 'Failed to create contact'),
+    onError: (error: any) =>
+      toast.error(error?.message || 'Failed to create contact'),
   })
 }
 
@@ -65,21 +67,26 @@ export function useUpdateContact() {
       await baseContactCollection.update(contactId, { data }),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] })
-      queryClient.invalidateQueries({ queryKey: ['contacts', variables.contactId] })
+      queryClient.invalidateQueries({
+        queryKey: ['contacts', variables.contactId],
+      })
       toast.success('Contact updated successfully')
     },
-    onError: (error: any) => toast.error(error?.message || 'Failed to update contact'),
+    onError: (error: any) =>
+      toast.error(error?.message || 'Failed to update contact'),
   })
 }
 
 export function useDeleteContact() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (contactId: string) => await baseContactCollection.delete(contactId),
+    mutationFn: async (contactId: string) =>
+      await baseContactCollection.delete(contactId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] })
       toast.success('Contact deleted successfully')
     },
-    onError: (error: any) => toast.error(error?.message || 'Failed to delete contact'),
+    onError: (error: any) =>
+      toast.error(error?.message || 'Failed to delete contact'),
   })
 }

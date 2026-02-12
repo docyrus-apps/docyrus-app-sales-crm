@@ -1,49 +1,46 @@
 // Generated collection for enums
-import { apiClient } from '../lib/api';
+import { apiClient } from '../lib/api'
 
 export interface EnumEntity {
-
   /** Unique identifier */
-  id: string;
+  id: string
 
   /** Enum name */
-  name: string;
+  name: string
 
   /** Description of the enum */
-  description?: string;
+  description?: string
 
   /** Color code */
-  color?: string;
+  color?: string
 
   /** Icon identifier */
-  icon?: string;
+  icon?: string
 
   /** Whether the enum is active */
-  active: boolean;
+  active: boolean
 
   /** Parent enum ID */
-  parent?: string;
+  parent?: string
 
   /** Enum number identifier */
-  no: number;
+  no: number
 
   /** Sort order */
-  sortOrder?: number;
+  sortOrder?: number
 
   /** Whether this is a final option */
-  isFinalOption?: boolean;
+  isFinalOption?: boolean
 
   /** App slug */
-  appSlug: string;
+  appSlug: string
 
   /** Data source slug */
-  dataSourceSlug: string;
+  dataSourceSlug: string
 
   /** Field slug */
-  fieldSlug: string;
+  fieldSlug: string
 }
-
-
 
 export const EnumsCollection = {
   /**
@@ -51,6 +48,10 @@ export const EnumsCollection = {
    * List all enums in a tree structure
    * @returns Record<string, Record<string, Record<string, Array<EnumEntity>>>>
    */
-  getEnums: (): Promise<Record<string, Record<string, Record<string, Array<EnumEntity>>>>> => 
-    apiClient.get<Record<string, Record<string, Record<string, Array<EnumEntity>>>>>('/v1/apps/enums')
-};
+  getEnums: (): Promise<
+    Record<string, Record<string, Record<string, Array<EnumEntity>>>>
+  > =>
+    apiClient.get<
+      Record<string, Record<string, Record<string, Array<EnumEntity>>>>
+    >('/v1/apps/enums'),
+}

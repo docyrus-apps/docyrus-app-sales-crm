@@ -1,61 +1,63 @@
-import { Slot } from "@radix-ui/react-slot";
-import { cva, type VariantProps } from "class-variance-authority";
-import * as React from "react";
-import { cn } from "@/lib/utils";
+import { Slot } from '@radix-ui/react-slot'
+import {  cva } from 'class-variance-authority'
+import * as React from 'react'
+import type {VariantProps} from 'class-variance-authority';
+import { cn } from '@/lib/utils'
 
-const avatarGroupVariants = cva("flex items-center", {
+const avatarGroupVariants = cva('flex items-center', {
   variants: {
     orientation: {
-      horizontal: "flex-row",
-      vertical: "flex-col",
+      horizontal: 'flex-row',
+      vertical: 'flex-col',
     },
     dir: {
-      ltr: "",
-      rtl: "",
+      ltr: '',
+      rtl: '',
     },
   },
   compoundVariants: [
     {
-      orientation: "horizontal",
-      dir: "ltr",
-      className: "-space-x-1",
+      orientation: 'horizontal',
+      dir: 'ltr',
+      className: '-space-x-1',
     },
     {
-      orientation: "horizontal",
-      dir: "rtl",
-      className: "flex-row-reverse -space-x-1 space-x-reverse",
+      orientation: 'horizontal',
+      dir: 'rtl',
+      className: 'flex-row-reverse -space-x-1 space-x-reverse',
     },
     {
-      orientation: "vertical",
-      dir: "ltr",
-      className: "-space-y-1",
+      orientation: 'vertical',
+      dir: 'ltr',
+      className: '-space-y-1',
     },
     {
-      orientation: "vertical",
-      dir: "rtl",
-      className: "flex-col-reverse -space-y-1 space-y-reverse",
+      orientation: 'vertical',
+      dir: 'rtl',
+      className: 'flex-col-reverse -space-y-1 space-y-reverse',
     },
   ],
   defaultVariants: {
-    orientation: "horizontal",
-    dir: "ltr",
+    orientation: 'horizontal',
+    dir: 'ltr',
   },
-});
+})
 
 interface AvatarGroupProps
-  extends Omit<React.ComponentProps<"div">, "dir">,
+  extends
+    Omit<React.ComponentProps<'div'>, 'dir'>,
     VariantProps<typeof avatarGroupVariants> {
-  size?: number;
-  max?: number;
-  asChild?: boolean;
-  reverse?: boolean;
-  renderOverflow?: (count: number) => React.ReactNode;
+  size?: number
+  max?: number
+  asChild?: boolean
+  reverse?: boolean
+  renderOverflow?: (count: number) => React.ReactNode
 }
 
 function AvatarGroup(props: AvatarGroupProps) {
   const {
-    orientation = "horizontal",
-    dir = "ltr",
+    orientation = 'horizontal',
+    dir = 'ltr',
     size = 40,
     max,
     asChild,
@@ -64,20 +66,20 @@ function AvatarGroup(props: AvatarGroupProps) {
     className,
     children,
     ...rootProps
-  } = props;
+  } = props
 
   const childrenArray = React.Children.toArray(children).filter(
     React.isValidElement,
-  );
-  const itemCount = childrenArray.length;
-  const shouldTruncate = max && itemCount > max;
+  )
+  const itemCount = childrenArray.length
+  const shouldTruncate = max && itemCount > max
   const visibleItems = shouldTruncate
     ? childrenArray.slice(0, max - 1)
-    : childrenArray;
-  const overflowCount = shouldTruncate ? itemCount - (max - 1) : 0;
-  const totalRenderedItems = shouldTruncate ? max : itemCount;
+    : childrenArray
+  const overflowCount = shouldTruncate ? itemCount - (max - 1) : 0
+  const totalRenderedItems = shouldTruncate ? max : itemCount
 
-  const RootPrimitive = asChild ? Slot : "div";
+  const RootPrimitive = asChild ? Slot : 'div'
 
   return (
     <RootPrimitive
@@ -119,17 +121,18 @@ function AvatarGroup(props: AvatarGroupProps) {
         />
       )}
     </RootPrimitive>
-  );
+  )
 }
 
 interface AvatarGroupItemProps
-  extends Omit<React.ComponentProps<typeof Slot>, "dir">,
+  extends
+    Omit<React.ComponentProps<typeof Slot>, 'dir'>,
     VariantProps<typeof avatarGroupVariants> {
-  child: React.ReactNode;
-  index: number;
-  itemCount: number;
-  size: number;
-  reverse: boolean;
+  child: React.ReactNode
+  index: number
+  itemCount: number
+  size: number
+  reverse: boolean
 }
 
 function AvatarGroupItem(props: AvatarGroupItemProps) {
@@ -138,55 +141,55 @@ function AvatarGroupItem(props: AvatarGroupItemProps) {
     index,
     size,
     orientation,
-    dir = "ltr",
+    dir = 'ltr',
     reverse = false,
     itemCount,
     className,
     style,
     ...itemProps
-  } = props;
+  } = props
 
   const maskStyle = React.useMemo<React.CSSProperties>(() => {
-    let maskImage = "";
+    let maskImage = ''
 
-    let shouldMask = false;
+    let shouldMask = false
 
-    if (orientation === "vertical" && dir === "rtl" && reverse) {
-      shouldMask = index !== itemCount - 1;
+    if (orientation === 'vertical' && dir === 'rtl' && reverse) {
+      shouldMask = index !== itemCount - 1
     } else {
-      shouldMask = reverse ? index < itemCount - 1 : index > 0;
+      shouldMask = reverse ? index < itemCount - 1 : index > 0
     }
 
     if (shouldMask) {
-      const maskRadius = size / 2;
-      const maskOffset = size / 4 + size / 10;
+      const maskRadius = size / 2
+      const maskOffset = size / 4 + size / 10
 
-      if (orientation === "vertical") {
-        if (dir === "ltr") {
+      if (orientation === 'vertical') {
+        if (dir === 'ltr') {
           if (reverse) {
-            maskImage = `radial-gradient(circle ${maskRadius}px at 50% ${size + maskOffset}px, transparent 99%, white 100%)`;
+            maskImage = `radial-gradient(circle ${maskRadius}px at 50% ${size + maskOffset}px, transparent 99%, white 100%)`
           } else {
-            maskImage = `radial-gradient(circle ${maskRadius}px at 50% -${maskOffset}px, transparent 99%, white 100%)`;
+            maskImage = `radial-gradient(circle ${maskRadius}px at 50% -${maskOffset}px, transparent 99%, white 100%)`
           }
         } else {
           if (reverse) {
-            maskImage = `radial-gradient(circle ${maskRadius}px at 50% -${maskOffset}px, transparent 99%, white 100%)`;
+            maskImage = `radial-gradient(circle ${maskRadius}px at 50% -${maskOffset}px, transparent 99%, white 100%)`
           } else {
-            maskImage = `radial-gradient(circle ${maskRadius}px at 50% ${size + maskOffset}px, transparent 99%, white 100%)`;
+            maskImage = `radial-gradient(circle ${maskRadius}px at 50% ${size + maskOffset}px, transparent 99%, white 100%)`
           }
         }
       } else {
-        if (dir === "ltr") {
+        if (dir === 'ltr') {
           if (reverse) {
-            maskImage = `radial-gradient(circle ${maskRadius}px at ${size + maskOffset}px 50%, transparent 99%, white 100%)`;
+            maskImage = `radial-gradient(circle ${maskRadius}px at ${size + maskOffset}px 50%, transparent 99%, white 100%)`
           } else {
-            maskImage = `radial-gradient(circle ${maskRadius}px at -${maskOffset}px 50%, transparent 99%, white 100%)`;
+            maskImage = `radial-gradient(circle ${maskRadius}px at -${maskOffset}px 50%, transparent 99%, white 100%)`
           }
         } else {
           if (reverse) {
-            maskImage = `radial-gradient(circle ${maskRadius}px at -${maskOffset}px 50%, transparent 99%, white 100%)`;
+            maskImage = `radial-gradient(circle ${maskRadius}px at -${maskOffset}px 50%, transparent 99%, white 100%)`
           } else {
-            maskImage = `radial-gradient(circle ${maskRadius}px at ${size + maskOffset}px 50%, transparent 99%, white 100%)`;
+            maskImage = `radial-gradient(circle ${maskRadius}px at ${size + maskOffset}px 50%, transparent 99%, white 100%)`
           }
         }
       }
@@ -196,14 +199,14 @@ function AvatarGroupItem(props: AvatarGroupItemProps) {
       width: size,
       height: size,
       maskImage,
-    };
-  }, [size, index, orientation, dir, reverse, itemCount]);
+    }
+  }, [size, index, orientation, dir, reverse, itemCount])
 
   return (
     <Slot
       data-slot="avatar-group-item"
       className={cn(
-        "size-full shrink-0 overflow-hidden rounded-full [&_img]:size-full",
+        'size-full shrink-0 overflow-hidden rounded-full [&_img]:size-full',
         className,
       )}
       style={{
@@ -214,7 +217,7 @@ function AvatarGroupItem(props: AvatarGroupItemProps) {
     >
       {child}
     </Slot>
-  );
+  )
 }
 
-export { AvatarGroup };
+export { AvatarGroup }
