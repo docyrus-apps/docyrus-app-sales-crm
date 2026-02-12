@@ -73,23 +73,38 @@ export function DealFormDialog({
   const form = useForm<DealFormData>({
     defaultValues: {
       organizations:
-        typeof deal?.organizations === 'object'
+        deal?.organizations && typeof deal.organizations === 'object'
           ? deal.organizations.id
           : deal?.organizations || '',
       contact_person:
-        typeof deal?.contact_person === 'object'
+        deal?.contact_person && typeof deal.contact_person === 'object'
           ? deal.contact_person.id
           : deal?.contact_person || '',
-      stage: deal?.stage || '',
+      stage:
+        deal?.stage && typeof deal.stage === 'object'
+          ? deal.stage.id
+          : deal?.stage || '',
       deal_value: deal?.deal_value || undefined,
       expected_revenue: deal?.expected_revenue || undefined,
       close_probability: deal?.close_probability || undefined,
       expected_closing_date: deal?.expected_closing_date || undefined,
-      lead_source: deal?.lead_source || '',
-      customer_type: deal?.customer_type || '',
-      country: deal?.country || '',
+      lead_source:
+        deal?.lead_source && typeof deal.lead_source === 'object'
+          ? deal.lead_source.id
+          : deal?.lead_source || '',
+      customer_type:
+        deal?.customer_type && typeof deal.customer_type === 'object'
+          ? deal.customer_type.id
+          : deal?.customer_type || '',
+      country:
+        deal?.country && typeof deal.country === 'object'
+          ? deal.country.id
+          : deal?.country || '',
       hot_prospect: deal?.hot_prospect || false,
-      record_owner: deal?.record_owner || '',
+      record_owner:
+        deal?.record_owner && typeof deal.record_owner === 'object'
+          ? deal.record_owner.id
+          : deal?.record_owner || '',
     },
     validatorAdapter: zodValidator(),
     validators: {

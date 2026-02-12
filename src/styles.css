@@ -31,8 +31,8 @@ code {
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.15 0 0);
 
-  /* Primary - Green (#00c853) */
-  --primary: oklch(0.7 0.22 145);
+  /* Primary - Corporate Indigo */
+  --primary: oklch(0.45 0.15 260);
   --primary-foreground: oklch(1 0 0);
 
   /* Secondary - Light gray */
@@ -55,8 +55,8 @@ code {
   --border: oklch(0.94 0.003 247);
   --input: oklch(0.94 0.003 247);
 
-  /* Ring - Green for focus */
-  --ring: oklch(0.7 0.22 145);
+  /* Ring - Indigo for focus */
+  --ring: oklch(0.45 0.15 260);
 
   /* Charts */
   --chart-1: oklch(0.646 0.222 41.116);
@@ -71,12 +71,12 @@ code {
   /* Sidebar - Light gray (#f8f9fa) */
   --sidebar: oklch(0.98 0.002 247);
   --sidebar-foreground: oklch(0.15 0 0);
-  --sidebar-primary: oklch(0.7 0.22 145);
+  --sidebar-primary: oklch(0.45 0.15 260);
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(93.531% 0.01363 241.191);
   --sidebar-accent-foreground: oklch(0.25 0.02 240);
   --sidebar-border: oklch(0.94 0.003 247);
-  --sidebar-ring: oklch(0.7 0.22 145);
+  --sidebar-ring: oklch(0.45 0.15 260);
 }
 
 .dark {
@@ -92,8 +92,8 @@ code {
   --popover: oklch(0.2 0 0);
   --popover-foreground: oklch(0.98 0 0);
 
-  /* Primary - Keep green in dark mode */
-  --primary: oklch(0.7 0.22 145);
+  /* Primary - Indigo in dark mode */
+  --primary: oklch(0.65 0.18 260);
   --primary-foreground: oklch(1 0 0);
 
   /* Secondary */
@@ -116,8 +116,8 @@ code {
   --border: oklch(0.3 0 0);
   --input: oklch(0.3 0 0);
 
-  /* Ring - Green for focus */
-  --ring: oklch(0.7 0.22 145);
+  /* Ring - Indigo for focus */
+  --ring: oklch(0.65 0.18 260);
 
   /* Charts */
   --chart-1: oklch(0.488 0.243 264.376);
@@ -129,12 +129,12 @@ code {
   /* Dark sidebar */
   --sidebar: oklch(0.18 0 0);
   --sidebar-foreground: oklch(0.98 0 0);
-  --sidebar-primary: oklch(0.7 0.22 145);
+  --sidebar-primary: oklch(0.65 0.18 260);
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.3 0.06 230);
   --sidebar-accent-foreground: oklch(0.98 0 0);
   --sidebar-border: oklch(0.3 0 0);
-  --sidebar-ring: oklch(0.7 0.22 145);
+  --sidebar-ring: oklch(0.65 0.18 260);
 }
 
 @theme inline {

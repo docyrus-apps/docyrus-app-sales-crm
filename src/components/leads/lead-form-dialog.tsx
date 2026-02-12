@@ -57,20 +57,41 @@ export function LeadFormDialog({
     defaultValues: {
       title: lead?.title || '',
       company_name:
-        typeof lead?.company_name === 'object'
+        lead?.company_name && typeof lead.company_name === 'object'
           ? lead.company_name.id
           : lead?.company_name || '',
       email: lead?.email || '',
       phone: lead?.phone || '',
       website: lead?.website || '',
       address: lead?.address || '',
-      city: lead?.city || '',
-      state: lead?.state || '',
-      lead_source: lead?.lead_source || '',
-      lead_status: lead?.lead_status || '',
-      lead_type: lead?.lead_type || '',
-      country: lead?.country || '',
-      record_owner: lead?.record_owner || '',
+      city:
+        lead?.city && typeof lead.city === 'object'
+          ? lead.city.id
+          : lead?.city || '',
+      state:
+        lead?.state && typeof lead.state === 'object'
+          ? lead.state.id
+          : lead?.state || '',
+      lead_source:
+        lead?.lead_source && typeof lead.lead_source === 'object'
+          ? lead.lead_source.id
+          : lead?.lead_source || '',
+      lead_status:
+        lead?.lead_status && typeof lead.lead_status === 'object'
+          ? lead.lead_status.id
+          : lead?.lead_status || '',
+      lead_type:
+        lead?.lead_type && typeof lead.lead_type === 'object'
+          ? lead.lead_type.id
+          : lead?.lead_type || '',
+      country:
+        lead?.country && typeof lead.country === 'object'
+          ? lead.country.id
+          : lead?.country || '',
+      record_owner:
+        lead?.record_owner && typeof lead.record_owner === 'object'
+          ? lead.record_owner.id
+          : lead?.record_owner || '',
       contact_message: lead?.contact_message || '',
     },
     validatorAdapter: zodValidator(),

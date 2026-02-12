@@ -1,15 +1,24 @@
+import { useState } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Pencil } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useCompany } from '@/hooks/use-companies'
+import { CompanyFormDialog } from '@/components/companies/company-form-dialog'
 
 export function CompanyDetail() {
   const { companyId } = useParams({ strict: false })
   const { data: company, isLoading, error } = useCompany(companyId)
+  const [isEditOpen, setIsEditOpen] = useState(false)
 
   if (isLoading) {
     return (
@@ -55,9 +64,19 @@ export function CompanyDetail() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left Panel */}
         <div className="space-y-4">
-          <Card>
+          <Card className="group">
             <CardHeader>
               <CardTitle>Company Info</CardTitle>
+              <CardAction>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100"
+                  onClick={() => setIsEditOpen(true)}
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+              </CardAction>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -258,6 +277,12 @@ export function CompanyDetail() {
           </Tabs>
         </div>
       </div>
+      <CompanyFormDialog
+        open={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        company={company}
+        mode="edit"
+      />
     </PageContainer>
   )
 }

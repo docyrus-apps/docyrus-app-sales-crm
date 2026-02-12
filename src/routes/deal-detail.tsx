@@ -1,15 +1,24 @@
+import { useState } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Pencil } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDeal } from '@/hooks/use-deals'
+import { DealFormDialog } from '@/components/deals/deal-form-dialog'
 
 export function DealDetail() {
   const { dealId } = useParams({ strict: false })
   const { data: deal, isLoading, error } = useDeal(dealId)
+  const [isEditOpen, setIsEditOpen] = useState(false)
 
   if (isLoading) {
     return (
@@ -55,9 +64,19 @@ export function DealDetail() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left Panel - Deal Summary */}
         <div className="space-y-4">
-          <Card>
+          <Card className="group">
             <CardHeader>
               <CardTitle>Deal Details</CardTitle>
+              <CardAction>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100"
+                  onClick={() => setIsEditOpen(true)}
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+              </CardAction>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -268,6 +287,12 @@ export function DealDetail() {
           </Tabs>
         </div>
       </div>
+      <DealFormDialog
+        open={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        deal={deal}
+        mode="edit"
+      />
     </PageContainer>
   )
 }

@@ -49,20 +49,29 @@ export function CompanyFormDialog({
   const form = useForm<CompanyFormData>({
     defaultValues: {
       name: company?.name || '',
-      industry: company?.industry || '',
+      industry:
+        company?.industry && typeof company.industry === 'object'
+          ? company.industry.id
+          : company?.industry || '',
       phone: company?.phone || '',
       email: company?.email || '',
       website: company?.website || '',
       country:
-        typeof company?.country === 'object'
+        company?.country && typeof company.country === 'object'
           ? company.country.id
           : company?.country || '',
       city:
-        typeof company?.city === 'object'
+        company?.city && typeof company.city === 'object'
           ? company.city.id
           : company?.city || '',
-      status: company?.status || '',
-      type: company?.type || '',
+      status:
+        company?.status && typeof company.status === 'object'
+          ? company.status.id
+          : company?.status || '',
+      type:
+        company?.type && typeof company.type === 'object'
+          ? company.type.id
+          : company?.type || '',
       address: company?.address || '',
       tax_number: company?.tax_number || '',
       district: company?.district || '',
