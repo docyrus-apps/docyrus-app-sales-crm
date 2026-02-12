@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { useEffect, useState } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { zodValidator } from '@tanstack/zod-form-adapter'
@@ -56,7 +57,7 @@ export function EventFormDialog({
       start_date: event?.start_date || '',
       end_date: event?.end_date || '',
       calendar: event?.calendar || '',
-      event_notes: event?.event_notes || '',
+      event_notes: event?.event_notes || undefined,
     },
     validatorAdapter: zodValidator(),
     validators: {
@@ -75,7 +76,10 @@ export function EventFormDialog({
         if (mode === 'create') {
           await createEvent.mutateAsync(cleanedData)
         } else if (event?.id) {
-          await updateEvent.mutateAsync({ eventId: event.id, data: cleanedData })
+          await updateEvent.mutateAsync({
+            eventId: event.id,
+            data: cleanedData,
+          })
         }
         onOpenChange(false)
         form.reset()
@@ -137,9 +141,12 @@ export function EventFormDialog({
                     onBlur={field.handleBlur}
                     placeholder="Enter event subject"
                   />
-                  {field.state.meta.errors.length > 0 && (
+                  {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-red-500">
-                      {field.state.meta.errors[0]}
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          'Validation error'}
                     </p>
                   )}
                 </div>
@@ -159,9 +166,12 @@ export function EventFormDialog({
                     placeholder="Enter event description"
                     rows={3}
                   />
-                  {field.state.meta.errors.length > 0 && (
+                  {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-red-500">
-                      {field.state.meta.errors[0]}
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          'Validation error'}
                     </p>
                   )}
                 </div>
@@ -222,9 +232,12 @@ export function EventFormDialog({
                         </div>
                       </PopoverContent>
                     </Popover>
-                    {field.state.meta.errors.length > 0 && (
+                    {field.state.meta.errors?.[0] && (
                       <p className="text-sm text-red-500">
-                        {field.state.meta.errors[0]}
+                        {typeof field.state.meta.errors[0] === 'string'
+                          ? field.state.meta.errors[0]
+                          : field.state.meta.errors[0]?.message ||
+                            'Validation error'}
                       </p>
                     )}
                   </div>
@@ -282,9 +295,12 @@ export function EventFormDialog({
                         </div>
                       </PopoverContent>
                     </Popover>
-                    {field.state.meta.errors.length > 0 && (
+                    {field.state.meta.errors?.[0] && (
                       <p className="text-sm text-red-500">
-                        {field.state.meta.errors[0]}
+                        {typeof field.state.meta.errors[0] === 'string'
+                          ? field.state.meta.errors[0]
+                          : field.state.meta.errors[0]?.message ||
+                            'Validation error'}
                       </p>
                     )}
                   </div>
@@ -304,9 +320,12 @@ export function EventFormDialog({
                     onBlur={field.handleBlur}
                     placeholder="e.g., Work, Personal"
                   />
-                  {field.state.meta.errors.length > 0 && (
+                  {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-red-500">
-                      {field.state.meta.errors[0]}
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          'Validation error'}
                     </p>
                   )}
                 </div>
@@ -326,9 +345,12 @@ export function EventFormDialog({
                     placeholder="Additional notes about the event"
                     rows={2}
                   />
-                  {field.state.meta.errors.length > 0 && (
+                  {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-red-500">
-                      {field.state.meta.errors[0]}
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          'Validation error'}
                     </p>
                   )}
                 </div>

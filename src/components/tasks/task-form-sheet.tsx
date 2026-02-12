@@ -27,7 +27,17 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { Combobox } from '@/components/ui/combobox-simple'
 import { Calendar } from '@/components/ui/calendar'
-import { TagsInput } from '@/components/ui/tags-input'
+import {
+  ComboboxAnchor,
+  ComboboxBadgeItem,
+  ComboboxBadgeList,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxTrigger,
+  Combobox as MultiCombobox,
+} from '@/components/ui/combobox'
 import {
   Popover,
   PopoverContent,
@@ -36,6 +46,7 @@ import {
 import { taskFormSchema } from '@/schemas/task-schema'
 import { useCreateTask, useUpdateTask } from '@/hooks/use-tasks'
 import { useCompanies } from '@/hooks/use-companies'
+import { useUsers } from '@/hooks/use-users'
 import { useEnumOptions } from '@/hooks/use-enums'
 import { cn } from '@/lib/utils'
 
@@ -55,6 +66,7 @@ export function TaskFormSheet({
   const createTask = useCreateTask()
   const updateTask = useUpdateTask()
   const { data: companies = [] } = useCompanies()
+  const { data: users = [] } = useUsers()
   const { options: statusOptions = [] } = useEnumOptions('status')
 
   const [startDate, setStartDate] = useState<Date | undefined>(
@@ -127,6 +139,11 @@ export function TaskFormSheet({
     value: company.id,
   }))
 
+  const userOptions = users.map((user: any) => ({
+    label: `${user.firstname} ${user.lastname}`,
+    value: user.id,
+  }))
+
   const isSubmitting = createTask.isPending || updateTask.isPending
 
   return (
@@ -167,9 +184,10 @@ export function TaskFormSheet({
                   />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          'Validation error'}
                     </p>
                   )}
                 </Field>
@@ -190,9 +208,10 @@ export function TaskFormSheet({
                   />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          'Validation error'}
                     </p>
                   )}
                 </Field>
@@ -221,9 +240,10 @@ export function TaskFormSheet({
                   </Select>
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          'Validation error'}
                     </p>
                   )}
                 </Field>
@@ -244,9 +264,10 @@ export function TaskFormSheet({
                   />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          'Validation error'}
                     </p>
                   )}
                 </Field>
@@ -286,9 +307,10 @@ export function TaskFormSheet({
                   </Popover>
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          'Validation error'}
                     </p>
                   )}
                 </Field>
@@ -328,9 +350,34 @@ export function TaskFormSheet({
                   </Popover>
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          'Validation error'}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
+
+            {/* Record Owner Field */}
+            <form.Field name="record_owner">
+              {(field) => (
+                <Field>
+                  <Label htmlFor={field.name}>Record Owner</Label>
+                  <Combobox
+                    options={userOptions}
+                    value={field.state.value}
+                    onValueChange={(value) => field.handleChange(value)}
+                    placeholder="Select record owner..."
+                    emptyText="No user found"
+                  />
+                  {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          'Validation error'}
                     </p>
                   )}
                 </Field>
@@ -342,16 +389,45 @@ export function TaskFormSheet({
               {(field) => (
                 <Field>
                   <Label htmlFor={field.name}>Followers</Label>
-                  <TagsInput
+                  <MultiCombobox
                     value={field.state.value || []}
-                    onValueChange={field.handleChange}
-                    placeholder="Add follower emails..."
-                  />
+                    onValueChange={(value) => field.handleChange(value)}
+                    multiple
+                  >
+                    <ComboboxAnchor>
+                      <ComboboxBadgeList>
+                        {(field.state.value || []).map((followerId: string) => {
+                          const user = users.find(
+                            (u: any) => u.id === followerId,
+                          )
+                          return user ? (
+                            <ComboboxBadgeItem
+                              key={followerId}
+                              value={followerId}
+                            >
+                              {user.firstname} {user.lastname}
+                            </ComboboxBadgeItem>
+                          ) : null
+                        })}
+                      </ComboboxBadgeList>
+                      <ComboboxInput placeholder="Select followers..." />
+                      <ComboboxTrigger />
+                    </ComboboxAnchor>
+                    <ComboboxContent>
+                      <ComboboxEmpty>No users found</ComboboxEmpty>
+                      {userOptions.map((option: any) => (
+                        <ComboboxItem key={option.value} value={option.value}>
+                          {option.label}
+                        </ComboboxItem>
+                      ))}
+                    </ComboboxContent>
+                  </MultiCombobox>
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          'Validation error'}
                     </p>
                   )}
                 </Field>

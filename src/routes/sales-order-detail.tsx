@@ -74,9 +74,7 @@ export function SalesOrderDetail() {
                   <div className="text-sm font-medium text-muted-foreground">
                     Status
                   </div>
-                  <div className="mt-1">
-                    {(order.status as any).name || 'N/A'}
-                  </div>
+                  <div className="mt-1">{order.status.name || 'N/A'}</div>
                 </div>
               )}
             </div>

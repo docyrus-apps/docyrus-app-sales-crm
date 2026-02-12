@@ -71,7 +71,10 @@ export function ProductFormDialog({
       if (mode === 'create') {
         await createProduct.mutateAsync(cleanedData)
       } else if (product?.id) {
-        await updateProduct.mutateAsync({ productId: product.id, data: cleanedData })
+        await updateProduct.mutateAsync({
+          productId: product.id,
+          data: cleanedData,
+        })
       }
       onOpenChange(false)
     },
@@ -117,7 +120,10 @@ export function ProductFormDialog({
                   />
                   {field.state.meta.errors && (
                     <p className="text-sm text-destructive">
-                      {field.state.meta.errors[0]}
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          'Validation error'}
                     </p>
                   )}
                 </Field>
@@ -146,7 +152,10 @@ export function ProductFormDialog({
                   </Select>
                   {field.state.meta.errors && (
                     <p className="text-sm text-destructive">
-                      {field.state.meta.errors[0]}
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          'Validation error'}
                     </p>
                   )}
                 </Field>
@@ -175,7 +184,10 @@ export function ProductFormDialog({
                   </Select>
                   {field.state.meta.errors && (
                     <p className="text-sm text-destructive">
-                      {field.state.meta.errors[0]}
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          'Validation error'}
                     </p>
                   )}
                 </Field>
@@ -201,7 +213,10 @@ export function ProductFormDialog({
                   />
                   {field.state.meta.errors && (
                     <p className="text-sm text-destructive">
-                      {field.state.meta.errors[0]}
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          'Validation error'}
                     </p>
                   )}
                 </Field>
@@ -229,7 +244,10 @@ export function ProductFormDialog({
                   />
                   {field.state.meta.errors && (
                     <p className="text-sm text-destructive">
-                      {field.state.meta.errors[0]}
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          'Validation error'}
                     </p>
                   )}
                 </Field>

@@ -28,6 +28,7 @@ import { PhoneInput } from '@/components/ui/phone-input'
 import { leadFormSchema } from '@/schemas/lead-schema'
 import { useCreateLead, useUpdateLead } from '@/hooks/use-leads'
 import { useCompanies } from '@/hooks/use-companies'
+import { useUsers } from '@/hooks/use-users'
 import { useEnumOptions } from '@/hooks/use-enums'
 
 interface LeadFormDialogProps {
@@ -46,6 +47,7 @@ export function LeadFormDialog({
   const createLead = useCreateLead()
   const updateLead = useUpdateLead()
   const { data: companies = [] } = useCompanies()
+  const { data: users = [] } = useUsers()
   const { options: leadStatusOptions = [] } = useEnumOptions('lead_status')
   const { options: leadSourceOptions = [] } = useEnumOptions('lead_source')
   const { options: leadTypeOptions = [] } = useEnumOptions('lead_type')
@@ -98,6 +100,11 @@ export function LeadFormDialog({
     value: company.id,
   }))
 
+  const userOptions = users.map((user: any) => ({
+    label: `${user.firstname} ${user.lastname}`,
+    value: user.id,
+  }))
+
   const isSubmitting = createLead.isPending || updateLead.isPending
 
   return (
@@ -138,12 +145,13 @@ export function LeadFormDialog({
                       placeholder="Enter lead title..."
                     />
                     {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
-                    </p>
-                  )}
+                      <p className="text-sm text-destructive">
+                        {typeof field.state.meta.errors[0] === 'string'
+                          ? field.state.meta.errors[0]
+                          : field.state.meta.errors[0]?.message ||
+                            'Validation error'}
+                      </p>
+                    )}
                   </Field>
                 )}
               </form.Field>
@@ -161,12 +169,13 @@ export function LeadFormDialog({
                       emptyText="No company found"
                     />
                     {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
-                    </p>
-                  )}
+                      <p className="text-sm text-destructive">
+                        {typeof field.state.meta.errors[0] === 'string'
+                          ? field.state.meta.errors[0]
+                          : field.state.meta.errors[0]?.message ||
+                            'Validation error'}
+                      </p>
+                    )}
                   </Field>
                 )}
               </form.Field>
@@ -192,12 +201,13 @@ export function LeadFormDialog({
                       </SelectContent>
                     </Select>
                     {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
-                    </p>
-                  )}
+                      <p className="text-sm text-destructive">
+                        {typeof field.state.meta.errors[0] === 'string'
+                          ? field.state.meta.errors[0]
+                          : field.state.meta.errors[0]?.message ||
+                            'Validation error'}
+                      </p>
+                    )}
                   </Field>
                 )}
               </form.Field>
@@ -215,12 +225,13 @@ export function LeadFormDialog({
                       placeholder="email@example.com"
                     />
                     {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
-                    </p>
-                  )}
+                      <p className="text-sm text-destructive">
+                        {typeof field.state.meta.errors[0] === 'string'
+                          ? field.state.meta.errors[0]
+                          : field.state.meta.errors[0]?.message ||
+                            'Validation error'}
+                      </p>
+                    )}
                   </Field>
                 )}
               </form.Field>
@@ -236,12 +247,13 @@ export function LeadFormDialog({
                       placeholder="Enter phone number..."
                     />
                     {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
-                    </p>
-                  )}
+                      <p className="text-sm text-destructive">
+                        {typeof field.state.meta.errors[0] === 'string'
+                          ? field.state.meta.errors[0]
+                          : field.state.meta.errors[0]?.message ||
+                            'Validation error'}
+                      </p>
+                    )}
                   </Field>
                 )}
               </form.Field>
@@ -259,12 +271,13 @@ export function LeadFormDialog({
                       placeholder="https://example.com"
                     />
                     {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
-                    </p>
-                  )}
+                      <p className="text-sm text-destructive">
+                        {typeof field.state.meta.errors[0] === 'string'
+                          ? field.state.meta.errors[0]
+                          : field.state.meta.errors[0]?.message ||
+                            'Validation error'}
+                      </p>
+                    )}
                   </Field>
                 )}
               </form.Field>
@@ -290,12 +303,13 @@ export function LeadFormDialog({
                       </SelectContent>
                     </Select>
                     {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
-                    </p>
-                  )}
+                      <p className="text-sm text-destructive">
+                        {typeof field.state.meta.errors[0] === 'string'
+                          ? field.state.meta.errors[0]
+                          : field.state.meta.errors[0]?.message ||
+                            'Validation error'}
+                      </p>
+                    )}
                   </Field>
                 )}
               </form.Field>
@@ -321,12 +335,13 @@ export function LeadFormDialog({
                       </SelectContent>
                     </Select>
                     {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
-                    </p>
-                  )}
+                      <p className="text-sm text-destructive">
+                        {typeof field.state.meta.errors[0] === 'string'
+                          ? field.state.meta.errors[0]
+                          : field.state.meta.errors[0]?.message ||
+                            'Validation error'}
+                      </p>
+                    )}
                   </Field>
                 )}
               </form.Field>
@@ -343,12 +358,13 @@ export function LeadFormDialog({
                       placeholder="Enter address..."
                     />
                     {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
-                    </p>
-                  )}
+                      <p className="text-sm text-destructive">
+                        {typeof field.state.meta.errors[0] === 'string'
+                          ? field.state.meta.errors[0]
+                          : field.state.meta.errors[0]?.message ||
+                            'Validation error'}
+                      </p>
+                    )}
                   </Field>
                 )}
               </form.Field>
@@ -365,12 +381,13 @@ export function LeadFormDialog({
                       placeholder="Enter city..."
                     />
                     {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
-                    </p>
-                  )}
+                      <p className="text-sm text-destructive">
+                        {typeof field.state.meta.errors[0] === 'string'
+                          ? field.state.meta.errors[0]
+                          : field.state.meta.errors[0]?.message ||
+                            'Validation error'}
+                      </p>
+                    )}
                   </Field>
                 )}
               </form.Field>
@@ -387,12 +404,13 @@ export function LeadFormDialog({
                       placeholder="Enter state..."
                     />
                     {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
-                    </p>
-                  )}
+                      <p className="text-sm text-destructive">
+                        {typeof field.state.meta.errors[0] === 'string'
+                          ? field.state.meta.errors[0]
+                          : field.state.meta.errors[0]?.message ||
+                            'Validation error'}
+                      </p>
+                    )}
                   </Field>
                 )}
               </form.Field>
@@ -418,12 +436,37 @@ export function LeadFormDialog({
                       </SelectContent>
                     </Select>
                     {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
-                    </p>
-                  )}
+                      <p className="text-sm text-destructive">
+                        {typeof field.state.meta.errors[0] === 'string'
+                          ? field.state.meta.errors[0]
+                          : field.state.meta.errors[0]?.message ||
+                            'Validation error'}
+                      </p>
+                    )}
+                  </Field>
+                )}
+              </form.Field>
+
+              {/* Record Owner Field */}
+              <form.Field name="record_owner">
+                {(field) => (
+                  <Field className="col-span-2">
+                    <Label htmlFor={field.name}>Record Owner</Label>
+                    <Combobox
+                      options={userOptions}
+                      value={field.state.value}
+                      onValueChange={(value) => field.handleChange(value)}
+                      placeholder="Select record owner..."
+                      emptyText="No user found"
+                    />
+                    {field.state.meta.errors?.[0] && (
+                      <p className="text-sm text-destructive">
+                        {typeof field.state.meta.errors[0] === 'string'
+                          ? field.state.meta.errors[0]
+                          : field.state.meta.errors[0]?.message ||
+                            'Validation error'}
+                      </p>
+                    )}
                   </Field>
                 )}
               </form.Field>
@@ -441,12 +484,13 @@ export function LeadFormDialog({
                       rows={4}
                     />
                     {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
-                    </p>
-                  )}
+                      <p className="text-sm text-destructive">
+                        {typeof field.state.meta.errors[0] === 'string'
+                          ? field.state.meta.errors[0]
+                          : field.state.meta.errors[0]?.message ||
+                            'Validation error'}
+                      </p>
+                    )}
                   </Field>
                 )}
               </form.Field>

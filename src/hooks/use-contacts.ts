@@ -48,8 +48,7 @@ export function useContact(contactId: string | undefined) {
 export function useCreateContact() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: any) =>
-      await baseContactCollection.create(data),
+    mutationFn: async (data: any) => await baseContactCollection.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] })
       toast.success('Contact created successfully')

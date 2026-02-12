@@ -49,19 +49,12 @@ export function Events() {
       .map((event: any) => new Date(event.start_date))
   }, [events])
 
-  // Upcoming events (next 30 days)
-  const upcomingEvents = useMemo(() => {
+  // All events sorted by date
+  const allEventsSorted = useMemo(() => {
     if (!events) return []
 
-    const now = new Date()
-    const monthFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
-
     return events
-      .filter((event: any) => {
-        if (!event.start_date) return false
-        const eventDate = new Date(event.start_date)
-        return eventDate >= now && eventDate <= monthFromNow
-      })
+      .filter((event: any) => event.start_date)
       .sort(
         (a: any, b: any) =>
           new Date(a.start_date).getTime() - new Date(b.start_date).getTime(),
@@ -215,9 +208,9 @@ export function Events() {
           /* List View */
           <Card>
             <CardHeader>
-              <CardTitle>Upcoming Events</CardTitle>
+              <CardTitle>All Events</CardTitle>
               <CardDescription>
-                Events in the next 30 days ({upcomingEvents.length} events)
+                All scheduled events ({allEventsSorted.length} events)
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -228,10 +221,10 @@ export function Events() {
                   <Skeleton className="h-20 w-full" />
                   <Skeleton className="h-20 w-full" />
                 </div>
-              ) : upcomingEvents.length === 0 ? (
+              ) : allEventsSorted.length === 0 ? (
                 <div className="text-center py-12">
                   <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-lg font-medium">No upcoming events</p>
+                  <p className="text-lg font-medium">No events</p>
                   <p className="text-sm text-muted-foreground mt-2">
                     Schedule your first event
                   </p>
@@ -242,7 +235,7 @@ export function Events() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {upcomingEvents.map((event: any) => (
+                  {allEventsSorted.map((event: any) => (
                     <Card
                       key={event.id}
                       className="hover:shadow-md transition-all"

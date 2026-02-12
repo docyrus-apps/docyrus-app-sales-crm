@@ -65,7 +65,10 @@ export function ContactFormDialog({
       if (mode === 'create') {
         await createContact.mutateAsync(cleanedData)
       } else if (contact?.id) {
-        await updateContact.mutateAsync({ contactId: contact.id, data: cleanedData })
+        await updateContact.mutateAsync({
+          contactId: contact.id,
+          data: cleanedData,
+        })
       }
       onOpenChange(false)
     },
@@ -116,9 +119,10 @@ export function ContactFormDialog({
                   />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          'Validation error'}
                     </p>
                   )}
                 </Field>
@@ -138,9 +142,10 @@ export function ContactFormDialog({
                   />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          'Validation error'}
                     </p>
                   )}
                 </Field>
@@ -161,9 +166,10 @@ export function ContactFormDialog({
                   />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          'Validation error'}
                     </p>
                   )}
                 </Field>
@@ -182,9 +188,10 @@ export function ContactFormDialog({
                   />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          'Validation error'}
                     </p>
                   )}
                 </Field>
@@ -205,9 +212,10 @@ export function ContactFormDialog({
                   />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string' 
-                        ? field.state.meta.errors[0] 
-                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          'Validation error'}
                     </p>
                   )}
                 </Field>
