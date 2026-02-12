@@ -105,7 +105,7 @@ export function LeadConvertDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
+          <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4">
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Lead Information</h4>
               <div className="space-y-1 text-sm text-muted-foreground">

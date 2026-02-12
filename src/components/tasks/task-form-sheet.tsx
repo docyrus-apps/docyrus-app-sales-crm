@@ -123,7 +123,7 @@ export function TaskFormSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+      <SheetContent className="w-full sm:max-w-md">
         <SheetHeader>
           <SheetTitle>
             {mode === 'create' ? 'Create New Task' : 'Edit Task'}
@@ -141,199 +141,201 @@ export function TaskFormSheet({
             e.stopPropagation()
             form.handleSubmit()
           }}
-          className="space-y-4 py-4"
+          className="flex flex-col flex-1 overflow-hidden"
         >
-          {/* Subject Field */}
-          <form.Field name="subject">
-            {(field) => (
-              <Field>
-                <Label htmlFor={field.name}>
-                  Subject <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id={field.name}
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="Enter task subject..."
-                />
-                {field.state.meta.errors && (
-                  <p className="text-sm text-destructive">
-                    {field.state.meta.errors[0]}
-                  </p>
-                )}
-              </Field>
-            )}
-          </form.Field>
+          <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4">
+            {/* Subject Field */}
+            <form.Field name="subject">
+              {(field) => (
+                <Field>
+                  <Label htmlFor={field.name}>
+                    Subject <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id={field.name}
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="Enter task subject..."
+                  />
+                  {field.state.meta.errors && (
+                    <p className="text-sm text-destructive">
+                      {field.state.meta.errors[0]}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
 
-          {/* Description Field */}
-          <form.Field name="description">
-            {(field) => (
-              <Field>
-                <Label htmlFor={field.name}>Description</Label>
-                <Textarea
-                  id={field.name}
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="Enter task description..."
-                  rows={4}
-                />
-                {field.state.meta.errors && (
-                  <p className="text-sm text-destructive">
-                    {field.state.meta.errors[0]}
-                  </p>
-                )}
-              </Field>
-            )}
-          </form.Field>
+            {/* Description Field */}
+            <form.Field name="description">
+              {(field) => (
+                <Field>
+                  <Label htmlFor={field.name}>Description</Label>
+                  <Textarea
+                    id={field.name}
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="Enter task description..."
+                    rows={4}
+                  />
+                  {field.state.meta.errors && (
+                    <p className="text-sm text-destructive">
+                      {field.state.meta.errors[0]}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
 
-          {/* Status Field */}
-          <form.Field name="status">
-            {(field) => (
-              <Field>
-                <Label htmlFor={field.name}>Status</Label>
-                <Select
-                  value={field.state.value}
-                  onValueChange={field.handleChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {statusOptions.map((option: any) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {field.state.meta.errors && (
-                  <p className="text-sm text-destructive">
-                    {field.state.meta.errors[0]}
-                  </p>
-                )}
-              </Field>
-            )}
-          </form.Field>
+            {/* Status Field */}
+            <form.Field name="status">
+              {(field) => (
+                <Field>
+                  <Label htmlFor={field.name}>Status</Label>
+                  <Select
+                    value={field.state.value}
+                    onValueChange={field.handleChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statusOptions.map((option: any) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {field.state.meta.errors && (
+                    <p className="text-sm text-destructive">
+                      {field.state.meta.errors[0]}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
 
-          {/* Organization Field */}
-          <form.Field name="organization">
-            {(field) => (
-              <Field>
-                <Label htmlFor={field.name}>Organization</Label>
-                <Combobox
-                  options={companyOptions}
-                  value={field.state.value}
-                  onValueChange={(value) => field.handleChange(value)}
-                  placeholder="Select organization..."
-                  emptyText="No organization found"
-                />
-                {field.state.meta.errors && (
-                  <p className="text-sm text-destructive">
-                    {field.state.meta.errors[0]}
-                  </p>
-                )}
-              </Field>
-            )}
-          </form.Field>
+            {/* Organization Field */}
+            <form.Field name="organization">
+              {(field) => (
+                <Field>
+                  <Label htmlFor={field.name}>Organization</Label>
+                  <Combobox
+                    options={companyOptions}
+                    value={field.state.value}
+                    onValueChange={(value) => field.handleChange(value)}
+                    placeholder="Select organization..."
+                    emptyText="No organization found"
+                  />
+                  {field.state.meta.errors && (
+                    <p className="text-sm text-destructive">
+                      {field.state.meta.errors[0]}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
 
-          {/* Start Date Field */}
-          <form.Field name="start_date">
-            {(field) => (
-              <Field>
-                <Label htmlFor={field.name}>Start Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        'w-full justify-start text-left font-normal',
-                        !startDate && 'text-muted-foreground',
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {startDate ? (
-                        format(startDate, 'PPP')
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={startDate}
-                      onSelect={setStartDate}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                {field.state.meta.errors && (
-                  <p className="text-sm text-destructive">
-                    {field.state.meta.errors[0]}
-                  </p>
-                )}
-              </Field>
-            )}
-          </form.Field>
+            {/* Start Date Field */}
+            <form.Field name="start_date">
+              {(field) => (
+                <Field>
+                  <Label htmlFor={field.name}>Start Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          'w-full justify-start text-left font-normal',
+                          !startDate && 'text-muted-foreground',
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {startDate ? (
+                          format(startDate, 'PPP')
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={startDate}
+                        onSelect={setStartDate}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {field.state.meta.errors && (
+                    <p className="text-sm text-destructive">
+                      {field.state.meta.errors[0]}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
 
-          {/* End Date Field */}
-          <form.Field name="end_date">
-            {(field) => (
-              <Field>
-                <Label htmlFor={field.name}>Due Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        'w-full justify-start text-left font-normal',
-                        !endDate && 'text-muted-foreground',
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {endDate ? (
-                        format(endDate, 'PPP')
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={endDate}
-                      onSelect={setEndDate}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                {field.state.meta.errors && (
-                  <p className="text-sm text-destructive">
-                    {field.state.meta.errors[0]}
-                  </p>
-                )}
-              </Field>
-            )}
-          </form.Field>
+            {/* End Date Field */}
+            <form.Field name="end_date">
+              {(field) => (
+                <Field>
+                  <Label htmlFor={field.name}>Due Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          'w-full justify-start text-left font-normal',
+                          !endDate && 'text-muted-foreground',
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {endDate ? (
+                          format(endDate, 'PPP')
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={endDate}
+                        onSelect={setEndDate}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {field.state.meta.errors && (
+                    <p className="text-sm text-destructive">
+                      {field.state.meta.errors[0]}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
 
-          {/* Followers Field */}
-          <form.Field name="followers">
-            {(field) => (
-              <Field>
-                <Label htmlFor={field.name}>Followers</Label>
-                <TagsInput
-                  value={field.state.value || []}
-                  onValueChange={field.handleChange}
-                  placeholder="Add follower emails..."
-                />
-                {field.state.meta.errors && (
-                  <p className="text-sm text-destructive">
-                    {field.state.meta.errors[0]}
-                  </p>
-                )}
-              </Field>
-            )}
-          </form.Field>
+            {/* Followers Field */}
+            <form.Field name="followers">
+              {(field) => (
+                <Field>
+                  <Label htmlFor={field.name}>Followers</Label>
+                  <TagsInput
+                    value={field.state.value || []}
+                    onValueChange={field.handleChange}
+                    placeholder="Add follower emails..."
+                  />
+                  {field.state.meta.errors && (
+                    <p className="text-sm text-destructive">
+                      {field.state.meta.errors[0]}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
+          </div>
 
           <SheetFooter>
             <Button

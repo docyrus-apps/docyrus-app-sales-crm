@@ -94,7 +94,7 @@ export function EventFormDialog({
 
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <ResponsiveDialogContent className="max-w-2xl">
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>
             {mode === 'create' ? 'Create Event' : 'Edit Event'}
@@ -112,8 +112,9 @@ export function EventFormDialog({
             e.stopPropagation()
             form.handleSubmit()
           }}
+          className="flex flex-col flex-1 overflow-hidden"
         >
-          <div className="space-y-4 py-4">
+          <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4">
             {/* Subject */}
             <form.Field name="subject">
               {(field) => (

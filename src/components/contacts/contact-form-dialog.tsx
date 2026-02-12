@@ -90,110 +90,112 @@ export function ContactFormDialog({
             e.stopPropagation()
             form.handleSubmit()
           }}
-          className="space-y-4"
+          className="flex flex-col flex-1 overflow-hidden"
         >
-          {/* Name Field */}
-          <form.Field name="name">
-            {(field) => (
-              <Field>
-                <Label htmlFor={field.name}>
-                  Name <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id={field.name}
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="Enter contact name..."
-                />
-                {field.state.meta.errors && (
-                  <p className="text-sm text-destructive">
-                    {field.state.meta.errors[0]}
-                  </p>
-                )}
-              </Field>
-            )}
-          </form.Field>
+          <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4">
+            {/* Name Field */}
+            <form.Field name="name">
+              {(field) => (
+                <Field>
+                  <Label htmlFor={field.name}>
+                    Name <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id={field.name}
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="Enter contact name..."
+                  />
+                  {field.state.meta.errors && (
+                    <p className="text-sm text-destructive">
+                      {field.state.meta.errors[0]}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
 
-          {/* Job Title Field */}
-          <form.Field name="job_title">
-            {(field) => (
-              <Field>
-                <Label htmlFor={field.name}>Job Title</Label>
-                <Input
-                  id={field.name}
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="Enter job title..."
-                />
-                {field.state.meta.errors && (
-                  <p className="text-sm text-destructive">
-                    {field.state.meta.errors[0]}
-                  </p>
-                )}
-              </Field>
-            )}
-          </form.Field>
+            {/* Job Title Field */}
+            <form.Field name="job_title">
+              {(field) => (
+                <Field>
+                  <Label htmlFor={field.name}>Job Title</Label>
+                  <Input
+                    id={field.name}
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="Enter job title..."
+                  />
+                  {field.state.meta.errors && (
+                    <p className="text-sm text-destructive">
+                      {field.state.meta.errors[0]}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
 
-          {/* Email Field */}
-          <form.Field name="email">
-            {(field) => (
-              <Field>
-                <Label htmlFor={field.name}>Email</Label>
-                <Input
-                  id={field.name}
-                  type="email"
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="email@example.com"
-                />
-                {field.state.meta.errors && (
-                  <p className="text-sm text-destructive">
-                    {field.state.meta.errors[0]}
-                  </p>
-                )}
-              </Field>
-            )}
-          </form.Field>
+            {/* Email Field */}
+            <form.Field name="email">
+              {(field) => (
+                <Field>
+                  <Label htmlFor={field.name}>Email</Label>
+                  <Input
+                    id={field.name}
+                    type="email"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="email@example.com"
+                  />
+                  {field.state.meta.errors && (
+                    <p className="text-sm text-destructive">
+                      {field.state.meta.errors[0]}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
 
-          {/* Mobile Field */}
-          <form.Field name="mobile">
-            {(field) => (
-              <Field>
-                <Label htmlFor={field.name}>Mobile</Label>
-                <PhoneInput
-                  value={field.state.value}
-                  onChange={field.handleChange}
-                  placeholder="Enter phone number..."
-                />
-                {field.state.meta.errors && (
-                  <p className="text-sm text-destructive">
-                    {field.state.meta.errors[0]}
-                  </p>
-                )}
-              </Field>
-            )}
-          </form.Field>
+            {/* Mobile Field */}
+            <form.Field name="mobile">
+              {(field) => (
+                <Field>
+                  <Label htmlFor={field.name}>Mobile</Label>
+                  <PhoneInput
+                    value={field.state.value}
+                    onChange={field.handleChange}
+                    placeholder="Enter phone number..."
+                  />
+                  {field.state.meta.errors && (
+                    <p className="text-sm text-destructive">
+                      {field.state.meta.errors[0]}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
 
-          {/* Organization Field */}
-          <form.Field name="organization">
-            {(field) => (
-              <Field>
-                <Label htmlFor={field.name}>Organization</Label>
-                <Combobox
-                  options={companyOptions}
-                  value={field.state.value}
-                  onValueChange={(value) => field.handleChange(value)}
-                  placeholder="Select organization..."
-                  emptyText="No organization found"
-                />
-                {field.state.meta.errors && (
-                  <p className="text-sm text-destructive">
-                    {field.state.meta.errors[0]}
-                  </p>
-                )}
-              </Field>
-            )}
-          </form.Field>
+            {/* Organization Field */}
+            <form.Field name="organization">
+              {(field) => (
+                <Field>
+                  <Label htmlFor={field.name}>Organization</Label>
+                  <Combobox
+                    options={companyOptions}
+                    value={field.state.value}
+                    onValueChange={(value) => field.handleChange(value)}
+                    placeholder="Select organization..."
+                    emptyText="No organization found"
+                  />
+                  {field.state.meta.errors && (
+                    <p className="text-sm text-destructive">
+                      {field.state.meta.errors[0]}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
+          </div>
 
           <ResponsiveDialogFooter>
             <Button
