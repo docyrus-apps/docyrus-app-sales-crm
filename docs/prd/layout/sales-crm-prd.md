@@ -349,7 +349,7 @@ src/
 │   ├── sales-orders/       # Sales order components
 │   ├── products/           # Product components
 │   ├── dashboard/          # Dashboard widgets and charts
-│   └── shared/             # Cross-feature shared components (filters, search, etc.)
+│   └── shared/             # Cross-feature shared components (filters, search, comments, file-attachments)
 ├── hooks/                  # Custom React hooks
 │   ├── use-deals.ts        # Deal data hooks (TanStack Query)
 │   ├── use-leads.ts        # Lead data hooks
@@ -1259,14 +1259,14 @@ Deal Products and Sales Order Items use TanStack Form's `mode="array"` for dynam
 
 | # | Task |
 |---|---|
-| 46 | Build Dashboard home page with stat widgets (diceui Stat) |
-| 47 | Build Dashboard charts: pipeline by stage, revenue over time, leads by source (shadcn Chart) |
-| 48 | Build Dashboard lists: upcoming tasks, recent activity (diceui Timeline), hot deals |
-| 49 | Build Events/Calendar page |
-| 50 | Add command palette (Cmd+K) for global search and quick actions |
-| 51 | Add responsive breakpoints and mobile optimizations (ResponsiveDialog, sidebar drawer) |
-| 52 | Performance optimization (query caching strategies, lazy route loading, optimistic updates) |
-| 53 | Final QA pass: `pnpm build`, `pnpm check`, `pnpm test` |
+| 48 | Build Dashboard home page with stat widgets (diceui Stat) |
+| 49 | Build Dashboard charts: pipeline by stage, revenue over time, leads by source (shadcn Chart) |
+| 50 | Build Dashboard lists: upcoming tasks, recent activity (diceui Timeline), hot deals |
+| 51 | Build Events/Calendar page |
+| 52 | Add command palette (Cmd+K) for global search and quick actions |
+| 53 | Add responsive breakpoints and mobile optimizations (ResponsiveDialog, sidebar drawer) |
+| 54 | Performance optimization (query caching strategies, lazy route loading, optimistic updates) |
+| 55 | Final QA pass: `pnpm build`, `pnpm check`, `pnpm test` |
 
 ---
 
