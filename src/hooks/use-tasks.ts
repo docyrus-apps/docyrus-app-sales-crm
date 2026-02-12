@@ -17,7 +17,7 @@ export function useTasks(params?: ICollectionListParams) {
           'end_date',
           'status',
           'organization(id,name)',
-          'record_owner',
+          'record_owner(id,email,firstname,lastname)',
           'section',
           'project',
           'parent',

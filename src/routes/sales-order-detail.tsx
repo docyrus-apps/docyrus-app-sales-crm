@@ -69,12 +69,14 @@ export function SalesOrderDetail() {
                 </div>
               )}
 
-              {order.status && (
+              {order.status && typeof order.status === 'object' && (
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">
                     Status
                   </div>
-                  <div className="mt-1">{order.status}</div>
+                  <div className="mt-1">
+                    {(order.status as any).name || 'N/A'}
+                  </div>
                 </div>
               )}
             </div>

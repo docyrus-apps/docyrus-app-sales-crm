@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Outlet } from '@tanstack/react-router'
+import { NuqsAdapter } from 'nuqs/adapters/tanstack-router'
 import { Agentation } from 'agentation'
 import { DollarSign } from 'lucide-react'
 import {
@@ -99,41 +100,43 @@ function App() {
   }
 
   return (
-    <TooltipProvider>
-      <AppLayout>
-        <Outlet />
-      </AppLayout>
-      <Toaster />
-      <CommandPalette
-        open={commandOpen}
-        onOpenChange={setCommandOpen}
-        onCreateDeal={() => setDealFormOpen(true)}
-        onCreateLead={() => setLeadFormOpen(true)}
-        onCreateTask={() => setTaskFormOpen(true)}
-        onCreateEvent={() => setEventFormOpen(true)}
-      />
-      <DealFormDialog
-        open={dealFormOpen}
-        onOpenChange={setDealFormOpen}
-        mode="create"
-      />
-      <LeadFormDialog
-        open={leadFormOpen}
-        onOpenChange={setLeadFormOpen}
-        mode="create"
-      />
-      <TaskFormSheet
-        open={taskFormOpen}
-        onOpenChange={setTaskFormOpen}
-        mode="create"
-      />
-      <EventFormDialog
-        open={eventFormOpen}
-        onOpenChange={setEventFormOpen}
-        mode="create"
-      />
-      {import.meta.env.DEV && <Agentation endpoint="http://localhost:4747" />}
-    </TooltipProvider>
+    <NuqsAdapter>
+      <TooltipProvider>
+        <AppLayout>
+          <Outlet />
+        </AppLayout>
+        <Toaster />
+        <CommandPalette
+          open={commandOpen}
+          onOpenChange={setCommandOpen}
+          onCreateDeal={() => setDealFormOpen(true)}
+          onCreateLead={() => setLeadFormOpen(true)}
+          onCreateTask={() => setTaskFormOpen(true)}
+          onCreateEvent={() => setEventFormOpen(true)}
+        />
+        <DealFormDialog
+          open={dealFormOpen}
+          onOpenChange={setDealFormOpen}
+          mode="create"
+        />
+        <LeadFormDialog
+          open={leadFormOpen}
+          onOpenChange={setLeadFormOpen}
+          mode="create"
+        />
+        <TaskFormSheet
+          open={taskFormOpen}
+          onOpenChange={setTaskFormOpen}
+          mode="create"
+        />
+        <EventFormDialog
+          open={eventFormOpen}
+          onOpenChange={setEventFormOpen}
+          mode="create"
+        />
+        {import.meta.env.DEV && <Agentation endpoint="http://localhost:4747" />}
+      </TooltipProvider>
+    </NuqsAdapter>
   )
 }
 

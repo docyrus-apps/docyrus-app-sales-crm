@@ -16,7 +16,6 @@ interface PageHeaderProps {
  */
 export function PageHeader({
   title,
-  description,
   icon: Icon,
   actions,
   className,
@@ -24,7 +23,7 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        'h-12 border-b flex items-center justify-between px-4 -mx-6 -mt-6 mb-6 bg-sidebar shrink-0',
+        'sticky top-0 z-10 h-12 border-b flex items-center justify-between px-4 bg-sidebar shrink-0',
         className,
       )}
     >

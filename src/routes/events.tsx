@@ -69,7 +69,7 @@ export function Events() {
   }, [events])
 
   return (
-    <PageContainer>
+    <>
       <PageHeader
         title="Events"
         icon={CalendarIcon}
@@ -94,52 +94,130 @@ export function Events() {
           </div>
         }
       />
+      <PageContainer>
+        <EventFormDialog
+          open={isFormOpen}
+          onOpenChange={setIsFormOpen}
+          mode="create"
+        />
 
-      <EventFormDialog
-        open={isFormOpen}
-        onOpenChange={setIsFormOpen}
-        mode="create"
-      />
+        {viewMode === 'calendar' ? (
+          <div className="grid gap-4 md:grid-cols-[350px_1fr]">
+            {/* Calendar */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Calendar</CardTitle>
+                <CardDescription>Select a date to view events</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <Skeleton className="h-64 w-full" />
+                ) : (
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
+                    className="rounded-md border"
+                    modifiers={{
+                      hasEvent: eventDates,
+                    }}
+                    modifiersStyles={{
+                      hasEvent: {
+                        fontWeight: 'bold',
+                        textDecoration: 'underline',
+                      },
+                    }}
+                  />
+                )}
+              </CardContent>
+            </Card>
 
-      {viewMode === 'calendar' ? (
-        <div className="grid gap-4 md:grid-cols-[350px_1fr]">
-          {/* Calendar */}
+            {/* Events for selected date */}
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  Events on {selectedDate && format(selectedDate, 'PPP')}
+                </CardTitle>
+                <CardDescription>
+                  {eventsOnSelectedDate.length} event(s) scheduled
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="h-20 w-full" />
+                  </div>
+                ) : eventsOnSelectedDate.length === 0 ? (
+                  <div className="text-center py-12">
+                    <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-lg font-medium">No events scheduled</p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Create an event to get started
+                    </p>
+                    <Button
+                      className="mt-4"
+                      onClick={() => setIsFormOpen(true)}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create Event
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {eventsOnSelectedDate.map((event: any) => (
+                      <Card
+                        key={event.id}
+                        className="hover:shadow-md transition-all"
+                      >
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <CardTitle className="text-base">
+                                {event.subject}
+                              </CardTitle>
+                              {event.description && (
+                                <CardDescription className="mt-1">
+                                  {event.description}
+                                </CardDescription>
+                              )}
+                            </div>
+                            {event.calendar && (
+                              <Badge variant="outline">{event.calendar}</Badge>
+                            )}
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <CalendarIcon className="h-4 w-4" />
+                              <span>
+                                {event.start_date &&
+                                  format(new Date(event.start_date), 'p')}
+                                {event.end_date &&
+                                  ` - ${format(new Date(event.end_date), 'p')}`}
+                              </span>
+                            </div>
+                          </div>
+                          {event.event_notes && (
+                            <p className="text-sm mt-2">{event.event_notes}</p>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          /* List View */
           <Card>
             <CardHeader>
-              <CardTitle>Calendar</CardTitle>
-              <CardDescription>Select a date to view events</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-64 w-full" />
-              ) : (
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  className="rounded-md border"
-                  modifiers={{
-                    hasEvent: eventDates,
-                  }}
-                  modifiersStyles={{
-                    hasEvent: {
-                      fontWeight: 'bold',
-                      textDecoration: 'underline',
-                    },
-                  }}
-                />
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Events for selected date */}
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                Events on {selectedDate && format(selectedDate, 'PPP')}
-              </CardTitle>
+              <CardTitle>Upcoming Events</CardTitle>
               <CardDescription>
-                {eventsOnSelectedDate.length} event(s) scheduled
+                Events in the next 30 days ({upcomingEvents.length} events)
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -148,13 +226,14 @@ export function Events() {
                   <Skeleton className="h-20 w-full" />
                   <Skeleton className="h-20 w-full" />
                   <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
                 </div>
-              ) : eventsOnSelectedDate.length === 0 ? (
+              ) : upcomingEvents.length === 0 ? (
                 <div className="text-center py-12">
                   <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-lg font-medium">No events scheduled</p>
+                  <p className="text-lg font-medium">No upcoming events</p>
                   <p className="text-sm text-muted-foreground mt-2">
-                    Create an event to get started
+                    Schedule your first event
                   </p>
                   <Button className="mt-4" onClick={() => setIsFormOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
@@ -162,44 +241,39 @@ export function Events() {
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {eventsOnSelectedDate.map((event: any) => (
+                <div className="space-y-3">
+                  {upcomingEvents.map((event: any) => (
                     <Card
                       key={event.id}
                       className="hover:shadow-md transition-all"
                     >
-                      <CardHeader>
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <CardTitle className="text-base">
-                              {event.subject}
-                            </CardTitle>
+                      <CardContent className="pt-6">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-medium">{event.subject}</h4>
+                              {event.calendar && (
+                                <Badge variant="outline" className="text-xs">
+                                  {event.calendar}
+                                </Badge>
+                              )}
+                            </div>
                             {event.description && (
-                              <CardDescription className="mt-1">
+                              <p className="text-sm text-muted-foreground">
                                 {event.description}
-                              </CardDescription>
+                              </p>
                             )}
-                          </div>
-                          {event.calendar && (
-                            <Badge variant="outline">{event.calendar}</Badge>
-                          )}
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <CalendarIcon className="h-4 w-4" />
-                            <span>
-                              {event.start_date &&
-                                format(new Date(event.start_date), 'p')}
-                              {event.end_date &&
-                                ` - ${format(new Date(event.end_date), 'p')}`}
-                            </span>
+                            <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1">
+                              <div className="flex items-center gap-1">
+                                <CalendarIcon className="h-3 w-3" />
+                                <span>
+                                  {event.start_date &&
+                                    format(new Date(event.start_date), 'PPP p')}
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        {event.event_notes && (
-                          <p className="text-sm mt-2">{event.event_notes}</p>
-                        )}
                       </CardContent>
                     </Card>
                   ))}
@@ -207,78 +281,8 @@ export function Events() {
               )}
             </CardContent>
           </Card>
-        </div>
-      ) : (
-        /* List View */
-        <Card>
-          <CardHeader>
-            <CardTitle>Upcoming Events</CardTitle>
-            <CardDescription>
-              Events in the next 30 days ({upcomingEvents.length} events)
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="space-y-3">
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-              </div>
-            ) : upcomingEvents.length === 0 ? (
-              <div className="text-center py-12">
-                <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-lg font-medium">No upcoming events</p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Schedule your first event
-                </p>
-                <Button className="mt-4" onClick={() => setIsFormOpen(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Event
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {upcomingEvents.map((event: any) => (
-                  <Card
-                    key={event.id}
-                    className="hover:shadow-md transition-all"
-                  >
-                    <CardContent className="pt-6">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 space-y-1">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-medium">{event.subject}</h4>
-                            {event.calendar && (
-                              <Badge variant="outline" className="text-xs">
-                                {event.calendar}
-                              </Badge>
-                            )}
-                          </div>
-                          {event.description && (
-                            <p className="text-sm text-muted-foreground">
-                              {event.description}
-                            </p>
-                          )}
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1">
-                            <div className="flex items-center gap-1">
-                              <CalendarIcon className="h-3 w-3" />
-                              <span>
-                                {event.start_date &&
-                                  format(new Date(event.start_date), 'PPP p')}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-    </PageContainer>
+        )}
+      </PageContainer>
+    </>
   )
 }
