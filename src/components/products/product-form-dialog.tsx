@@ -60,10 +60,18 @@ export function ProductFormDialog({
       onChange: productFormSchema,
     },
     onSubmit: async ({ value }) => {
+      // Clean up empty strings (convert to undefined for UUID fields)
+      const cleanedData = Object.fromEntries(
+        Object.entries(value).map(([key, val]) => [
+          key,
+          val === '' ? undefined : val,
+        ]),
+      )
+
       if (mode === 'create') {
-        await createProduct.mutateAsync(value)
+        await createProduct.mutateAsync(cleanedData)
       } else if (product?.id) {
-        await updateProduct.mutateAsync({ productId: product.id, data: value })
+        await updateProduct.mutateAsync({ productId: product.id, data: cleanedData })
       }
       onOpenChange(false)
     },

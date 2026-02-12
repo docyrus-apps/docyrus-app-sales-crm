@@ -19,12 +19,29 @@ export function useEnums() {
 
 /**
  * Hook to get specific enum options by field name
+ * Flattens the nested enum structure to find options
  */
 export function useEnumOptions(fieldName: string) {
   const { data: enums, isLoading, error } = useEnums()
 
+  // Flatten nested structure to find options
+  const options = enums
+    ? Object.values(enums).flatMap((app) =>
+        Object.values(app).flatMap((dataSource) => {
+          const fieldOptions = dataSource[fieldName]
+          if (Array.isArray(fieldOptions)) {
+            return fieldOptions.map((option: any) => ({
+              label: option.name,
+              value: option.id,
+            }))
+          }
+          return []
+        }),
+      )
+    : []
+
   return {
-    options: enums?.[fieldName] || [],
+    options,
     isLoading,
     error,
   }

@@ -49,7 +49,7 @@ export function useCreateContact() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (data: any) =>
-      await baseContactCollection.create({ data }),
+      await baseContactCollection.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] })
       toast.success('Contact created successfully')
@@ -63,7 +63,7 @@ export function useUpdateContact() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ contactId, data }: { contactId: string; data: any }) =>
-      await baseContactCollection.update(contactId, { data }),
+      await baseContactCollection.update(contactId, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] })
       queryClient.invalidateQueries({

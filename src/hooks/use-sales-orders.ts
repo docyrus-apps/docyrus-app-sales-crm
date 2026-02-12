@@ -49,7 +49,7 @@ export function useCreateSalesOrder() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (data: any) =>
-      await base_crmSalesOrderCollection.create({ data }),
+      await base_crmSalesOrderCollection.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sales-orders'] })
       toast.success('Sales order created successfully')
@@ -63,7 +63,7 @@ export function useUpdateSalesOrder() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ orderId, data }: { orderId: string; data: any }) =>
-      await base_crmSalesOrderCollection.update(orderId, { data }),
+      await base_crmSalesOrderCollection.update(orderId, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['sales-orders'] })
       queryClient.invalidateQueries({

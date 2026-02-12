@@ -63,11 +63,19 @@ export function EventFormDialog({
       onChange: eventFormSchema,
     },
     onSubmit: async ({ value }) => {
+      // Clean up empty strings (convert to undefined for UUID fields)
+      const cleanedData = Object.fromEntries(
+        Object.entries(value).map(([key, val]) => [
+          key,
+          val === '' ? undefined : val,
+        ]),
+      )
+
       try {
         if (mode === 'create') {
-          await createEvent.mutateAsync(value)
+          await createEvent.mutateAsync(cleanedData)
         } else if (event?.id) {
-          await updateEvent.mutateAsync({ eventId: event.id, data: value })
+          await updateEvent.mutateAsync({ eventId: event.id, data: cleanedData })
         }
         onOpenChange(false)
         form.reset()

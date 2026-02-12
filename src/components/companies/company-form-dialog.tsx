@@ -72,10 +72,18 @@ export function CompanyFormDialog({
       onChange: companyFormSchema,
     },
     onSubmit: async ({ value }) => {
+      // Clean up empty strings (convert to undefined for UUID fields)
+      const cleanedData = Object.fromEntries(
+        Object.entries(value).map(([key, val]) => [
+          key,
+          val === '' ? undefined : val,
+        ]),
+      )
+
       if (mode === 'create') {
-        await createCompany.mutateAsync(value)
+        await createCompany.mutateAsync(cleanedData)
       } else if (company?.id) {
-        await updateCompany.mutateAsync({ companyId: company.id, data: value })
+        await updateCompany.mutateAsync({ companyId: company.id, data: cleanedData })
       }
       onOpenChange(false)
     },
@@ -120,11 +128,13 @@ export function CompanyFormDialog({
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="Enter company name..."
                     />
-                    {field.state.meta.errors && (
-                      <p className="text-sm text-destructive">
-                        {field.state.meta.errors[0]}
-                      </p>
-                    )}
+                    {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                    </p>
+                  )}
                   </Field>
                 )}
               </form.Field>
@@ -149,11 +159,13 @@ export function CompanyFormDialog({
                         ))}
                       </SelectContent>
                     </Select>
-                    {field.state.meta.errors && (
-                      <p className="text-sm text-destructive">
-                        {field.state.meta.errors[0]}
-                      </p>
-                    )}
+                    {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                    </p>
+                  )}
                   </Field>
                 )}
               </form.Field>
@@ -178,11 +190,13 @@ export function CompanyFormDialog({
                         ))}
                       </SelectContent>
                     </Select>
-                    {field.state.meta.errors && (
-                      <p className="text-sm text-destructive">
-                        {field.state.meta.errors[0]}
-                      </p>
-                    )}
+                    {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                    </p>
+                  )}
                   </Field>
                 )}
               </form.Field>
@@ -207,11 +221,13 @@ export function CompanyFormDialog({
                         ))}
                       </SelectContent>
                     </Select>
-                    {field.state.meta.errors && (
-                      <p className="text-sm text-destructive">
-                        {field.state.meta.errors[0]}
-                      </p>
-                    )}
+                    {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                    </p>
+                  )}
                   </Field>
                 )}
               </form.Field>
@@ -228,11 +244,13 @@ export function CompanyFormDialog({
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="email@example.com"
                     />
-                    {field.state.meta.errors && (
-                      <p className="text-sm text-destructive">
-                        {field.state.meta.errors[0]}
-                      </p>
-                    )}
+                    {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                    </p>
+                  )}
                   </Field>
                 )}
               </form.Field>
@@ -248,11 +266,13 @@ export function CompanyFormDialog({
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="Enter phone number..."
                     />
-                    {field.state.meta.errors && (
-                      <p className="text-sm text-destructive">
-                        {field.state.meta.errors[0]}
-                      </p>
-                    )}
+                    {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                    </p>
+                  )}
                   </Field>
                 )}
               </form.Field>
@@ -269,11 +289,13 @@ export function CompanyFormDialog({
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="https://example.com"
                     />
-                    {field.state.meta.errors && (
-                      <p className="text-sm text-destructive">
-                        {field.state.meta.errors[0]}
-                      </p>
-                    )}
+                    {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                    </p>
+                  )}
                   </Field>
                 )}
               </form.Field>
@@ -289,11 +311,13 @@ export function CompanyFormDialog({
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="Enter address..."
                     />
-                    {field.state.meta.errors && (
-                      <p className="text-sm text-destructive">
-                        {field.state.meta.errors[0]}
-                      </p>
-                    )}
+                    {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                    </p>
+                  )}
                   </Field>
                 )}
               </form.Field>
@@ -318,11 +342,13 @@ export function CompanyFormDialog({
                         ))}
                       </SelectContent>
                     </Select>
-                    {field.state.meta.errors && (
-                      <p className="text-sm text-destructive">
-                        {field.state.meta.errors[0]}
-                      </p>
-                    )}
+                    {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                    </p>
+                  )}
                   </Field>
                 )}
               </form.Field>
@@ -338,11 +364,13 @@ export function CompanyFormDialog({
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="Enter city..."
                     />
-                    {field.state.meta.errors && (
-                      <p className="text-sm text-destructive">
-                        {field.state.meta.errors[0]}
-                      </p>
-                    )}
+                    {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                    </p>
+                  )}
                   </Field>
                 )}
               </form.Field>
@@ -358,11 +386,13 @@ export function CompanyFormDialog({
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="Enter district..."
                     />
-                    {field.state.meta.errors && (
-                      <p className="text-sm text-destructive">
-                        {field.state.meta.errors[0]}
-                      </p>
-                    )}
+                    {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                    </p>
+                  )}
                   </Field>
                 )}
               </form.Field>
@@ -378,11 +408,13 @@ export function CompanyFormDialog({
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="Enter tax number..."
                     />
-                    {field.state.meta.errors && (
-                      <p className="text-sm text-destructive">
-                        {field.state.meta.errors[0]}
-                      </p>
-                    )}
+                    {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                    </p>
+                  )}
                   </Field>
                 )}
               </form.Field>

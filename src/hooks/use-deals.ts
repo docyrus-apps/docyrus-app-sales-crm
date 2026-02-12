@@ -79,7 +79,7 @@ export function useCreateDeal() {
 
   return useMutation({
     mutationFn: async (data: any) => {
-      const response = await base_crmDealsCollection.create({ data })
+      const response = await base_crmDealsCollection.create(data)
       return response
     },
     onSuccess: () => {
@@ -100,7 +100,7 @@ export function useUpdateDeal() {
 
   return useMutation({
     mutationFn: async ({ dealId, data }: { dealId: string; data: any }) => {
-      const response = await base_crmDealsCollection.update(dealId, { data })
+      const response = await base_crmDealsCollection.update(dealId, data)
       return response
     },
     onSuccess: (_data, variables) => {

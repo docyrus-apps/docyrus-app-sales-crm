@@ -75,7 +75,7 @@ export function useCreateCompany() {
 
   return useMutation({
     mutationFn: async (data: any) => {
-      const response = await baseOrganizationCollection.create({ data })
+      const response = await baseOrganizationCollection.create(data)
       return response
     },
     onSuccess: () => {

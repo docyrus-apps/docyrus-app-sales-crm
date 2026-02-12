@@ -15,7 +15,7 @@ import {
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Combobox } from '@/components/ui/combobox'
+import { Combobox } from '@/components/ui/combobox-simple'
 import { PhoneInput } from '@/components/ui/phone-input'
 import { contactFormSchema } from '@/schemas/contact-schema'
 import { useCreateContact, useUpdateContact } from '@/hooks/use-contacts'
@@ -54,10 +54,18 @@ export function ContactFormDialog({
       onChange: contactFormSchema,
     },
     onSubmit: async ({ value }) => {
+      // Clean up empty strings (convert to undefined for UUID fields)
+      const cleanedData = Object.fromEntries(
+        Object.entries(value).map(([key, val]) => [
+          key,
+          val === '' ? undefined : val,
+        ]),
+      )
+
       if (mode === 'create') {
-        await createContact.mutateAsync(value)
+        await createContact.mutateAsync(cleanedData)
       } else if (contact?.id) {
-        await updateContact.mutateAsync({ contactId: contact.id, data: value })
+        await updateContact.mutateAsync({ contactId: contact.id, data: cleanedData })
       }
       onOpenChange(false)
     },
@@ -106,9 +114,11 @@ export function ContactFormDialog({
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="Enter contact name..."
                   />
-                  {field.state.meta.errors && (
+                  {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {field.state.meta.errors[0]}
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
                     </p>
                   )}
                 </Field>
@@ -126,9 +136,11 @@ export function ContactFormDialog({
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="Enter job title..."
                   />
-                  {field.state.meta.errors && (
+                  {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {field.state.meta.errors[0]}
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
                     </p>
                   )}
                 </Field>
@@ -147,9 +159,11 @@ export function ContactFormDialog({
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="email@example.com"
                   />
-                  {field.state.meta.errors && (
+                  {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {field.state.meta.errors[0]}
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
                     </p>
                   )}
                 </Field>
@@ -166,9 +180,11 @@ export function ContactFormDialog({
                     onChange={field.handleChange}
                     placeholder="Enter phone number..."
                   />
-                  {field.state.meta.errors && (
+                  {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {field.state.meta.errors[0]}
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
                     </p>
                   )}
                 </Field>
@@ -187,9 +203,11 @@ export function ContactFormDialog({
                     placeholder="Select organization..."
                     emptyText="No organization found"
                   />
-                  {field.state.meta.errors && (
+                  {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {field.state.meta.errors[0]}
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
                     </p>
                   )}
                 </Field>

@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { Combobox } from '@/components/ui/combobox'
+import { Combobox } from '@/components/ui/combobox-simple'
 import { Calendar } from '@/components/ui/calendar'
 import { TagsInput } from '@/components/ui/tags-input'
 import {
@@ -93,10 +93,18 @@ export function TaskFormSheet({
       onChange: taskFormSchema,
     },
     onSubmit: async ({ value }) => {
+      // Clean up empty strings (convert to undefined for UUID fields)
+      const cleanedData = Object.fromEntries(
+        Object.entries(value).map(([key, val]) => [
+          key,
+          val === '' ? undefined : val,
+        ]),
+      )
+
       if (mode === 'create') {
-        await createTask.mutateAsync(value)
+        await createTask.mutateAsync(cleanedData)
       } else if (task?.id) {
-        await updateTask.mutateAsync({ taskId: task.id, data: value })
+        await updateTask.mutateAsync({ taskId: task.id, data: cleanedData })
       }
       onOpenChange(false)
     },
@@ -157,9 +165,11 @@ export function TaskFormSheet({
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="Enter task subject..."
                   />
-                  {field.state.meta.errors && (
+                  {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {field.state.meta.errors[0]}
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
                     </p>
                   )}
                 </Field>
@@ -178,9 +188,11 @@ export function TaskFormSheet({
                     placeholder="Enter task description..."
                     rows={4}
                   />
-                  {field.state.meta.errors && (
+                  {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {field.state.meta.errors[0]}
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
                     </p>
                   )}
                 </Field>
@@ -207,9 +219,11 @@ export function TaskFormSheet({
                       ))}
                     </SelectContent>
                   </Select>
-                  {field.state.meta.errors && (
+                  {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {field.state.meta.errors[0]}
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
                     </p>
                   )}
                 </Field>
@@ -228,9 +242,11 @@ export function TaskFormSheet({
                     placeholder="Select organization..."
                     emptyText="No organization found"
                   />
-                  {field.state.meta.errors && (
+                  {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {field.state.meta.errors[0]}
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
                     </p>
                   )}
                 </Field>
@@ -268,9 +284,11 @@ export function TaskFormSheet({
                       />
                     </PopoverContent>
                   </Popover>
-                  {field.state.meta.errors && (
+                  {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {field.state.meta.errors[0]}
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
                     </p>
                   )}
                 </Field>
@@ -308,9 +326,11 @@ export function TaskFormSheet({
                       />
                     </PopoverContent>
                   </Popover>
-                  {field.state.meta.errors && (
+                  {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {field.state.meta.errors[0]}
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
                     </p>
                   )}
                 </Field>
@@ -327,9 +347,11 @@ export function TaskFormSheet({
                     onValueChange={field.handleChange}
                     placeholder="Add follower emails..."
                   />
-                  {field.state.meta.errors && (
+                  {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {field.state.meta.errors[0]}
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
                     </p>
                   )}
                 </Field>

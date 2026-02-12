@@ -59,7 +59,7 @@ export function useTask(taskId: string | undefined) {
 export function useCreateTask() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: any) => await baseTaskCollection.create({ data }),
+    mutationFn: async (data: any) => await baseTaskCollection.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
       toast.success('Task created successfully')
@@ -73,7 +73,7 @@ export function useUpdateTask() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ taskId, data }: { taskId: string; data: any }) =>
-      await baseTaskCollection.update(taskId, { data }),
+      await baseTaskCollection.update(taskId, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
       queryClient.invalidateQueries({ queryKey: ['tasks', variables.taskId] })

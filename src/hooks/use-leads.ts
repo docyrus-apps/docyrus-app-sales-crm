@@ -78,7 +78,7 @@ export function useCreateLead() {
 
   return useMutation({
     mutationFn: async (data: any) => {
-      const response = await base_crmLeadsCollection.create({ data })
+      const response = await base_crmLeadsCollection.create(data)
       return response
     },
     onSuccess: () => {
@@ -99,7 +99,7 @@ export function useUpdateLead() {
 
   return useMutation({
     mutationFn: async ({ leadId, data }: { leadId: string; data: any }) => {
-      const response = await base_crmLeadsCollection.update(leadId, { data })
+      const response = await base_crmLeadsCollection.update(leadId, data)
       return response
     },
     onSuccess: (data, variables) => {

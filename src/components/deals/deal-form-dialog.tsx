@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Combobox } from '@/components/ui/combobox'
+import { Combobox } from '@/components/ui/combobox-simple'
 import { Switch } from '@/components/ui/switch'
 import { Slider } from '@/components/ui/slider'
 import { Calendar } from '@/components/ui/calendar'
@@ -92,10 +92,18 @@ export function DealFormDialog({
       onChange: dealFormSchema,
     },
     onSubmit: async ({ value }) => {
+      // Clean up empty strings (convert to undefined for UUID fields)
+      const cleanedData = Object.fromEntries(
+        Object.entries(value).map(([key, val]) => [
+          key,
+          val === '' ? undefined : val,
+        ]),
+      )
+
       if (mode === 'create') {
-        await createDeal.mutateAsync(value)
+        await createDeal.mutateAsync(cleanedData)
       } else if (deal?.id) {
-        await updateDeal.mutateAsync({ dealId: deal.id, data: value })
+        await updateDeal.mutateAsync({ dealId: deal.id, data: cleanedData })
       }
       onOpenChange(false)
     },
@@ -152,11 +160,13 @@ export function DealFormDialog({
                       placeholder="Select organization..."
                       emptyText="No organization found"
                     />
-                    {field.state.meta.errors && (
-                      <p className="text-sm text-destructive">
-                        {field.state.meta.errors[0]}
-                      </p>
-                    )}
+                    {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                    </p>
+                  )}
                   </Field>
                 )}
               </form.Field>
@@ -183,11 +193,13 @@ export function DealFormDialog({
                         ))}
                       </SelectContent>
                     </Select>
-                    {field.state.meta.errors && (
-                      <p className="text-sm text-destructive">
-                        {field.state.meta.errors[0]}
-                      </p>
-                    )}
+                    {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                    </p>
+                  )}
                   </Field>
                 )}
               </form.Field>
@@ -209,11 +221,13 @@ export function DealFormDialog({
                       placeholder="0.00"
                       step="0.01"
                     />
-                    {field.state.meta.errors && (
-                      <p className="text-sm text-destructive">
-                        {field.state.meta.errors[0]}
-                      </p>
-                    )}
+                    {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                    </p>
+                  )}
                   </Field>
                 )}
               </form.Field>
@@ -235,11 +249,13 @@ export function DealFormDialog({
                       placeholder="0.00"
                       step="0.01"
                     />
-                    {field.state.meta.errors && (
-                      <p className="text-sm text-destructive">
-                        {field.state.meta.errors[0]}
-                      </p>
-                    )}
+                    {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                    </p>
+                  )}
                   </Field>
                 )}
               </form.Field>
@@ -260,11 +276,13 @@ export function DealFormDialog({
                       step={5}
                       className="mt-2"
                     />
-                    {field.state.meta.errors && (
-                      <p className="text-sm text-destructive">
-                        {field.state.meta.errors[0]}
-                      </p>
-                    )}
+                    {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                    </p>
+                  )}
                   </Field>
                 )}
               </form.Field>
@@ -300,11 +318,13 @@ export function DealFormDialog({
                         />
                       </PopoverContent>
                     </Popover>
-                    {field.state.meta.errors && (
-                      <p className="text-sm text-destructive">
-                        {field.state.meta.errors[0]}
-                      </p>
-                    )}
+                    {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                    </p>
+                  )}
                   </Field>
                 )}
               </form.Field>
@@ -329,11 +349,13 @@ export function DealFormDialog({
                         ))}
                       </SelectContent>
                     </Select>
-                    {field.state.meta.errors && (
-                      <p className="text-sm text-destructive">
-                        {field.state.meta.errors[0]}
-                      </p>
-                    )}
+                    {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                    </p>
+                  )}
                   </Field>
                 )}
               </form.Field>
@@ -358,11 +380,13 @@ export function DealFormDialog({
                         ))}
                       </SelectContent>
                     </Select>
-                    {field.state.meta.errors && (
-                      <p className="text-sm text-destructive">
-                        {field.state.meta.errors[0]}
-                      </p>
-                    )}
+                    {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                    </p>
+                  )}
                   </Field>
                 )}
               </form.Field>
@@ -387,11 +411,13 @@ export function DealFormDialog({
                         ))}
                       </SelectContent>
                     </Select>
-                    {field.state.meta.errors && (
-                      <p className="text-sm text-destructive">
-                        {field.state.meta.errors[0]}
-                      </p>
-                    )}
+                    {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                    </p>
+                  )}
                   </Field>
                 )}
               </form.Field>
@@ -410,11 +436,13 @@ export function DealFormDialog({
                         Hot Prospect
                       </Label>
                     </div>
-                    {field.state.meta.errors && (
-                      <p className="text-sm text-destructive">
-                        {field.state.meta.errors[0]}
-                      </p>
-                    )}
+                    {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string' 
+                        ? field.state.meta.errors[0] 
+                        : field.state.meta.errors[0]?.message || 'Validation error'}
+                    </p>
+                  )}
                   </Field>
                 )}
               </form.Field>

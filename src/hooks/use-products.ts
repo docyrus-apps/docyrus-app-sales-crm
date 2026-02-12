@@ -49,7 +49,7 @@ export function useCreateProduct() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (data: any) =>
-      await base_crmProductCollection.create({ data }),
+      await base_crmProductCollection.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] })
       toast.success('Product created successfully')
@@ -63,7 +63,7 @@ export function useUpdateProduct() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ productId, data }: { productId: string; data: any }) =>
-      await base_crmProductCollection.update(productId, { data }),
+      await base_crmProductCollection.update(productId, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['products'] })
       queryClient.invalidateQueries({

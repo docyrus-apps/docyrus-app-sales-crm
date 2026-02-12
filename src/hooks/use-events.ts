@@ -50,7 +50,7 @@ export function useCreateEvent() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: EventFormData) => baseEventCollection.create({ data }),
+    mutationFn: (data: EventFormData) => baseEventCollection.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] })
       toast.success('Event created successfully')
