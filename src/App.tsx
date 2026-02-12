@@ -10,6 +10,7 @@ import { Button } from './components/ui/button'
 import { setApiClient } from './lib/api'
 import { AppLayout } from './components/layout/app-layout'
 import { Toaster } from './components/ui/sonner'
+import { TooltipProvider } from './components/ui/tooltip'
 import { CommandPalette } from './components/shared/command-palette'
 import { DealFormDialog } from './components/deals/deal-form-dialog'
 import { LeadFormDialog } from './components/leads/lead-form-dialog'
@@ -94,7 +95,7 @@ function App() {
   }
 
   return (
-    <>
+    <TooltipProvider>
       <AppLayout>
         <Outlet />
       </AppLayout>
@@ -128,7 +129,7 @@ function App() {
         mode="create"
       />
       {import.meta.env.DEV && <Agentation endpoint="http://localhost:4747" />}
-    </>
+    </TooltipProvider>
   )
 }
 
