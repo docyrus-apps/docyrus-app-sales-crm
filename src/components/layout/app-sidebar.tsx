@@ -1,22 +1,23 @@
-import * as React from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import {
   BadgeCheck,
   Bell,
+  BarChart3,
   Building2,
-  ChevronRight,
   ChevronsUpDown,
+  CheckSquare,
+  Contact,
   CreditCard,
+  CalendarDays,
   DollarSign,
-  Folder,
-  Forward,
   Home,
   LogOut,
-  Mail,
-  MoreHorizontal,
+  NotepadText,
   Package,
+  ShoppingCart,
   Sparkles,
-  Trash2,
+  UserRoundSearch,
+  Zap,
 } from 'lucide-react'
 import { useDocyrusAuth } from '@docyrus/app-auth-ui'
 import {
@@ -27,12 +28,8 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   SidebarRail,
 } from '@/components/ui/sidebar'
 import {
@@ -44,86 +41,28 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useNotifications } from '@/hooks/use-notifications'
 
-const navMain = [
-  {
-    title: 'Navigation',
-    url: '#',
-    icon: Home,
-    isActive: true,
-    items: [
-      {
-        title: 'Home',
-        url: '/',
-      },
-      {
-        title: 'Notifications',
-        url: '/notifications',
-        badge: 'notifications',
-      },
-      {
-        title: 'Tasks',
-        url: '/tasks',
-        badge: 'tasks',
-      },
-    ],
-  },
-  {
-    title: 'Communication',
-    url: '#',
-    icon: Mail,
-    items: [
-      {
-        title: 'Emails',
-        url: '/emails',
-      },
-      {
-        title: 'Events',
-        url: '/events',
-      },
-    ],
-  },
-  {
-    title: 'Sales',
-    url: '#',
-    icon: DollarSign,
-    items: [
-      {
-        title: 'Deals',
-        url: '/deals',
-      },
-      {
-        title: 'Leads',
-        url: '/leads',
-      },
-      {
-        title: 'Sales Orders',
-        url: '/sales-orders',
-      },
-    ],
-  },
+const menuItems = [
+  { title: 'Home', url: '/', icon: Home },
+  { title: 'Notifications', url: '/notifications', icon: Bell, badge: 'notifications' },
+  { title: 'Deals', url: '/deals', icon: DollarSign },
+  { title: 'Leads', url: '/leads', icon: UserRoundSearch },
+  { title: 'Tasks', url: '/tasks', icon: CheckSquare },
+  { title: 'Notes', url: '/notes', icon: NotepadText },
+  { title: 'Activities', url: '/activities', icon: Zap },
+  { title: 'Events', url: '/events', icon: CalendarDays },
+  { title: 'Reports', url: '/reports', icon: BarChart3 },
 ]
 
-const projects = [
-  {
-    name: 'Companies',
-    url: '/companies',
-    icon: Building2,
-  },
-  {
-    name: 'Products',
-    url: '/products',
-    icon: Package,
-  },
+const dataSources = [
+  { title: 'Organizations', url: '/companies', icon: Building2 },
+  { title: 'Contacts', url: '/contacts', icon: Contact },
+  { title: 'Products', url: '/products', icon: Package },
+  { title: 'Sales Orders', url: '/sales-orders', icon: ShoppingCart },
 ]
 
 export function AppSidebar() {
@@ -156,110 +95,58 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        {/* Nav Main */}
+        {/* Main Menu */}
         <SidebarGroup>
-          <SidebarGroupLabel>Platform</SidebarGroupLabel>
           <SidebarMenu>
-            {navMain.map((item) => (
-              <Collapsible
-                key={item.title}
-                asChild
-                defaultOpen={true}
-                className="group/collapsible"
-              >
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton tooltip={item.title}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                      <ChevronRight className="ml-auto transition-transform duration-300 group-data-[state=open]/collapsible:rotate-90" />
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {item.items.map((subItem) => {
-                        const isActive = location.pathname === subItem.url
-                        const showBadge =
-                          'badge' in subItem &&
-                          subItem.badge === 'notifications' &&
-                          unreadCount > 0
+            {menuItems.map((item) => {
+              const isActive =
+                item.url === '/'
+                  ? location.pathname === '/'
+                  : location.pathname.startsWith(item.url)
+              const showBadge =
+                'badge' in item &&
+                item.badge === 'notifications' &&
+                unreadCount > 0
 
-                        return (
-                          <SidebarMenuSubItem key={subItem.title}>
-                            <SidebarMenuSubButton asChild isActive={isActive}>
-                              <Link to={subItem.url}>
-                                <span>{subItem.title}</span>
-                                {showBadge && (
-                                  <Badge
-                                    variant="destructive"
-                                    className="ml-auto h-5 min-w-5 rounded-full px-1 text-xs"
-                                  >
-                                    {unreadCount}
-                                  </Badge>
-                                )}
-                              </Link>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        )
-                      })}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
-            ))}
-          </SidebarMenu>
-        </SidebarGroup>
-
-        {/* Projects */}
-        <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-          <SidebarGroupLabel>Records</SidebarGroupLabel>
-          <SidebarMenu>
-            {projects.map((item) => {
-              const isActive = location.pathname.startsWith(item.url)
               return (
-                <SidebarMenuItem key={item.name}>
-                  <SidebarMenuButton asChild isActive={isActive}>
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
                     <Link to={item.url}>
                       <item.icon />
-                      <span>{item.name}</span>
+                      <span>{item.title}</span>
+                      {showBadge && (
+                        <Badge
+                          variant="destructive"
+                          className="ml-auto h-5 min-w-5 rounded-full px-1 text-xs"
+                        >
+                          {unreadCount}
+                        </Badge>
+                      )}
                     </Link>
                   </SidebarMenuButton>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <SidebarMenuAction showOnHover>
-                        <MoreHorizontal />
-                        <span className="sr-only">More</span>
-                      </SidebarMenuAction>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      className="w-48 rounded-lg"
-                      side={isMobile ? 'bottom' : 'right'}
-                      align={isMobile ? 'end' : 'start'}
-                    >
-                      <DropdownMenuItem>
-                        <Folder className="text-muted-foreground" />
-                        <span>View {item.name}</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Forward className="text-muted-foreground" />
-                        <span>Share {item.name}</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem>
-                        <Trash2 className="text-muted-foreground" />
-                        <span>Delete {item.name}</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
                 </SidebarMenuItem>
               )
             })}
-            <SidebarMenuItem>
-              <SidebarMenuButton className="text-sidebar-foreground/70">
-                <MoreHorizontal className="text-sidebar-foreground/70" />
-                <span>More</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+
+        {/* Data Sources */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Data Sources</SidebarGroupLabel>
+          <SidebarMenu>
+            {dataSources.map((item) => {
+              const isActive = location.pathname.startsWith(item.url)
+              return (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                    <Link to={item.url}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )
+            })}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
