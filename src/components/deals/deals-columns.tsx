@@ -1,9 +1,26 @@
 import type { ColumnDef } from '@tanstack/react-table'
+import { Link } from '@tanstack/react-router'
+import { Eye } from 'lucide-react'
 import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 
 export function getDealsColumns(): Array<ColumnDef<any>> {
   return [
+    {
+      id: 'actions',
+      header: () => <span className="sr-only">Actions</span>,
+      cell: ({ row }) => (
+        <Link to="/deals/$dealId" params={{ dealId: row.original.id }}>
+          <Button variant="ghost" size="icon" className="size-8">
+            <Eye className="size-4" />
+          </Button>
+        </Link>
+      ),
+      enableSorting: false,
+      enableHiding: false,
+      size: 40,
+    },
     {
       accessorKey: 'stage',
       header: ({ column }) => (
