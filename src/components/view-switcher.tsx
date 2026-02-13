@@ -29,7 +29,7 @@ interface ViewSwitcherProps {
 }
 
 export function ViewSwitcher({ value, onValueChange }: ViewSwitcherProps) {
-  const current = viewOptions.find((o) => o.value === value) ?? viewOptions[0]!
+  const current = viewOptions.find((o) => o.value === value) ?? viewOptions[0]
 
   return (
     <DropdownMenu>

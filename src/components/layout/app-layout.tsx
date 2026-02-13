@@ -8,7 +8,6 @@ interface AppLayoutProps {
 
 /**
  * Main application layout with animated sidebar
- * PageHeaders are positioned at the top with no gap
  */
 export function AppLayout({ children }: AppLayoutProps) {
   return (

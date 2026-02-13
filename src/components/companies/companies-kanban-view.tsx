@@ -28,7 +28,7 @@ export function CompaniesKanbanView({ companies }: CompaniesKanbanViewProps) {
     const grouped: Record<string, Array<any>> = {}
     for (const company of companies) {
       const status = getStatusName(company)
-      if (!grouped[status]) grouped[status] = []
+      grouped[status] ??= []
       grouped[status].push(company)
     }
     return grouped

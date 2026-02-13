@@ -1,22 +1,22 @@
 import * as React from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import {
+  BadgeCheck,
   Bell,
   Building2,
-  Calendar,
-  CheckSquare,
   ChevronRight,
   ChevronsUpDown,
+  CreditCard,
   DollarSign,
-  FileText,
+  Folder,
+  Forward,
   Home,
   LogOut,
   Mail,
   MoreHorizontal,
   Package,
-  Settings,
-  User,
-  Users,
+  Sparkles,
+  Trash2,
 } from 'lucide-react'
 import { useDocyrusAuth } from '@docyrus/app-auth-ui'
 import {
@@ -24,17 +24,16 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
-  SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarRail,
-  SidebarTrigger,
 } from '@/components/ui/sidebar'
 import {
   DropdownMenu,
@@ -50,68 +49,80 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useNotifications } from '@/hooks/use-notifications'
-import { cn } from '@/lib/utils'
 
 const navMain = [
   {
-    title: 'Home',
-    url: '/',
+    title: 'Navigation',
+    url: '#',
     icon: Home,
-    isActive: false,
+    isActive: true,
+    items: [
+      {
+        title: 'Home',
+        url: '/',
+      },
+      {
+        title: 'Notifications',
+        url: '/notifications',
+        badge: 'notifications',
+      },
+      {
+        title: 'Tasks',
+        url: '/tasks',
+        badge: 'tasks',
+      },
+    ],
   },
   {
-    title: 'Notifications',
-    url: '/notifications',
-    icon: Bell,
-    badge: 'notifications',
-  },
-  {
-    title: 'Tasks',
-    url: '/tasks',
-    icon: CheckSquare,
-    badge: 'tasks',
-  },
-  {
-    title: 'Events',
-    url: '/events',
-    icon: Calendar,
-  },
-  {
-    title: 'Emails',
-    url: '/emails',
+    title: 'Communication',
+    url: '#',
     icon: Mail,
+    items: [
+      {
+        title: 'Emails',
+        url: '/emails',
+      },
+      {
+        title: 'Events',
+        url: '/events',
+      },
+    ],
+  },
+  {
+    title: 'Sales',
+    url: '#',
+    icon: DollarSign,
+    items: [
+      {
+        title: 'Deals',
+        url: '/deals',
+      },
+      {
+        title: 'Leads',
+        url: '/leads',
+      },
+      {
+        title: 'Sales Orders',
+        url: '/sales-orders',
+      },
+    ],
   },
 ]
 
-const navRecords = [
+const projects = [
   {
-    title: 'Deals',
-    url: '/deals',
-    icon: DollarSign,
-  },
-  {
-    title: 'Leads',
-    url: '/leads',
-    icon: Users,
-  },
-  {
-    title: 'Companies',
+    name: 'Companies',
     url: '/companies',
     icon: Building2,
   },
   {
-    title: 'Products',
+    name: 'Products',
     url: '/products',
     icon: Package,
-  },
-  {
-    title: 'Sales Orders',
-    url: '/sales-orders',
-    icon: FileText,
   },
 ]
 
@@ -126,92 +137,135 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        {/* App Branding with Toggle */}
-        <div className="flex items-center justify-between gap-2">
-          <SidebarMenu className="flex-1">
-            <SidebarMenuItem>
-              <SidebarMenuButton size="lg" asChild>
-                <Link to="/">
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                    <DollarSign className="size-4" />
-                  </div>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">Sales CRM</span>
-                    <span className="truncate text-xs">
-                      Manage your pipeline
-                    </span>
-                  </div>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-          <SidebarTrigger />
-        </div>
+        {/* App Branding */}
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" asChild>
+              <Link to="/">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                  <DollarSign className="size-4" />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">Sales CRM</span>
+                  <span className="truncate text-xs">Manage your pipeline</span>
+                </div>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarHeader>
 
       <SidebarContent>
-        {/* Main Navigation */}
+        {/* Nav Main */}
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel>Platform</SidebarGroupLabel>
           <SidebarMenu>
-            {navMain.map((item) => {
-              const isActive = location.pathname === item.url
-              const showBadge =
-                item.badge === 'notifications' && unreadCount > 0
-
-              return (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive}
-                    tooltip={item.title}
-                  >
-                    <Link to={item.url}>
+            {navMain.map((item) => (
+              <Collapsible
+                key={item.title}
+                asChild
+                defaultOpen={true}
+                className="group/collapsible"
+              >
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip={item.title}>
                       <item.icon />
                       <span>{item.title}</span>
-                      {showBadge && (
-                        <Badge
-                          variant="destructive"
-                          className="ml-auto h-5 min-w-5 rounded-full px-1 text-xs"
-                        >
-                          {unreadCount}
-                        </Badge>
-                      )}
-                    </Link>
-                  </SidebarMenuButton>
+                      <ChevronRight className="ml-auto transition-transform duration-300 group-data-[state=open]/collapsible:rotate-90" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      {item.items.map((subItem) => {
+                        const isActive = location.pathname === subItem.url
+                        const showBadge =
+                          'badge' in subItem &&
+                          subItem.badge === 'notifications' &&
+                          unreadCount > 0
+
+                        return (
+                          <SidebarMenuSubItem key={subItem.title}>
+                            <SidebarMenuSubButton asChild isActive={isActive}>
+                              <Link to={subItem.url}>
+                                <span>{subItem.title}</span>
+                                {showBadge && (
+                                  <Badge
+                                    variant="destructive"
+                                    className="ml-auto h-5 min-w-5 rounded-full px-1 text-xs"
+                                  >
+                                    {unreadCount}
+                                  </Badge>
+                                )}
+                              </Link>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        )
+                      })}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
                 </SidebarMenuItem>
-              )
-            })}
+              </Collapsible>
+            ))}
           </SidebarMenu>
         </SidebarGroup>
 
-        {/* Records Section */}
-        <SidebarGroup>
+        {/* Projects */}
+        <SidebarGroup className="group-data-[collapsible=icon]:hidden">
           <SidebarGroupLabel>Records</SidebarGroupLabel>
           <SidebarMenu>
-            {navRecords.map((item) => {
+            {projects.map((item) => {
               const isActive = location.pathname.startsWith(item.url)
               return (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive}
-                    tooltip={item.title}
-                  >
+                <SidebarMenuItem key={item.name}>
+                  <SidebarMenuButton asChild isActive={isActive}>
                     <Link to={item.url}>
                       <item.icon />
-                      <span>{item.title}</span>
+                      <span>{item.name}</span>
                     </Link>
                   </SidebarMenuButton>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <SidebarMenuAction showOnHover>
+                        <MoreHorizontal />
+                        <span className="sr-only">More</span>
+                      </SidebarMenuAction>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      className="w-48 rounded-lg"
+                      side={isMobile ? 'bottom' : 'right'}
+                      align={isMobile ? 'end' : 'start'}
+                    >
+                      <DropdownMenuItem>
+                        <Folder className="text-muted-foreground" />
+                        <span>View {item.name}</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Forward className="text-muted-foreground" />
+                        <span>Share {item.name}</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem>
+                        <Trash2 className="text-muted-foreground" />
+                        <span>Delete {item.name}</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </SidebarMenuItem>
               )
             })}
+            <SidebarMenuItem>
+              <SidebarMenuButton className="text-sidebar-foreground/70">
+                <MoreHorizontal className="text-sidebar-foreground/70" />
+                <span>More</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter>
-        {/* User Profile */}
+        {/* Nav User */}
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
@@ -221,9 +275,7 @@ export function AppSidebar() {
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
                   <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarFallback className="rounded-lg">
-                      <User className="h-4 w-4" />
-                    </AvatarFallback>
+                    <AvatarFallback className="rounded-lg">CN</AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">User</span>
@@ -241,9 +293,7 @@ export function AppSidebar() {
                 <DropdownMenuLabel className="p-0 font-normal">
                   <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                     <Avatar className="h-8 w-8 rounded-lg">
-                      <AvatarFallback className="rounded-lg">
-                        <User className="h-4 w-4" />
-                      </AvatarFallback>
+                      <AvatarFallback className="rounded-lg">CN</AvatarFallback>
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-semibold">User</span>
@@ -254,8 +304,23 @@ export function AppSidebar() {
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                   <DropdownMenuItem>
-                    <Settings />
-                    Settings
+                    <Sparkles />
+                    Upgrade to Pro
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem>
+                    <BadgeCheck />
+                    Account
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <CreditCard />
+                    Billing
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Bell />
+                    Notifications
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />

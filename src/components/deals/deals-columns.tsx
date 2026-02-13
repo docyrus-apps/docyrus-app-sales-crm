@@ -23,7 +23,7 @@ export function getDealsColumns(): Array<ColumnDef<any>> {
         <DataTableColumnHeader column={column} label="Value" />
       ),
       cell: ({ row }) => {
-        const value = row.getValue('deal_value') as number | undefined
+        const value = row.getValue('deal_value')
         return (
           <div className="font-medium">
             {value != null ? `$${value.toLocaleString()}` : '-'}
@@ -38,10 +38,8 @@ export function getDealsColumns(): Array<ColumnDef<any>> {
         <DataTableColumnHeader column={column} label="Expected Revenue" />
       ),
       cell: ({ row }) => {
-        const value = row.getValue('expected_revenue') as number | undefined
-        return (
-          <div>{value != null ? `$${value.toLocaleString()}` : '-'}</div>
-        )
+        const value = row.getValue('expected_revenue')
+        return <div>{value != null ? `$${value.toLocaleString()}` : '-'}</div>
       },
       enableSorting: true,
     },
@@ -77,7 +75,7 @@ export function getDealsColumns(): Array<ColumnDef<any>> {
         <DataTableColumnHeader column={column} label="Probability" />
       ),
       cell: ({ row }) => {
-        const value = row.getValue('close_probability') as number | undefined
+        const value = row.getValue('close_probability')
         return <div>{value != null ? `${value}%` : '-'}</div>
       },
       enableSorting: true,

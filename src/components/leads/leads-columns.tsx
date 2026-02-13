@@ -51,11 +51,7 @@ export function getLeadsColumns(): Array<ColumnDef<any>> {
         const val = row.getValue('lead_source')
         const name =
           typeof val === 'object' && val?.name ? val.name : (val as string)
-        return name ? (
-          <Badge variant="secondary">{name}</Badge>
-        ) : (
-          <span>-</span>
-        )
+        return name ? <Badge variant="secondary">{name}</Badge> : <span>-</span>
       },
       enableSorting: true,
     },

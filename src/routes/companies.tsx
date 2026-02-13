@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Building2, Plus } from 'lucide-react'
+import type { ViewType } from '@/components/view-switcher'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
@@ -9,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { CompanyFormDialog } from '@/components/companies/company-form-dialog'
-import { ViewSwitcher, type ViewType } from '@/components/view-switcher'
+import { ViewSwitcher } from '@/components/view-switcher'
 import { DataTable } from '@/components/data-table/data-table'
 import { DataTableSkeleton } from '@/components/data-table/data-table-skeleton'
 import { useDataTable } from '@/hooks/use-data-table'
@@ -19,7 +20,7 @@ import { CompaniesKanbanView } from '@/components/companies/companies-kanban-vie
 export function Companies() {
   const { data: companies, isLoading, error } = useCompanies()
   const [isFormOpen, setIsFormOpen] = useState(false)
-  const [viewType, setViewType] = useState<ViewType>('card')
+  const [viewType, setViewType] = useState<ViewType>('list')
 
   const columns = useMemo(() => getCompaniesColumns(), [])
   const { table } = useDataTable({
@@ -33,14 +34,14 @@ export function Companies() {
       <PageHeader
         title="Companies"
         icon={Building2}
-        center={
-          <ViewSwitcher value={viewType} onValueChange={setViewType} />
-        }
         actions={
-          <Button onClick={() => setIsFormOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Company
-          </Button>
+          <>
+            <ViewSwitcher value={viewType} onValueChange={setViewType} />
+            <Button onClick={() => setIsFormOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Company
+            </Button>
+          </>
         }
       />
       <PageContainer

@@ -27,7 +27,7 @@ export function DealsKanbanView({ deals }: DealsKanbanViewProps) {
     const grouped: Record<string, Array<any>> = {}
     for (const deal of deals) {
       const stage = getStageName(deal)
-      if (!grouped[stage]) grouped[stage] = []
+      grouped[stage] ??= []
       grouped[stage].push(deal)
     }
     return grouped

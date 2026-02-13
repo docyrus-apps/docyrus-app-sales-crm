@@ -27,7 +27,7 @@ export function LeadsKanbanView({ leads }: LeadsKanbanViewProps) {
     const grouped: Record<string, Array<any>> = {}
     for (const lead of leads) {
       const status = getLeadStatusName(lead)
-      if (!grouped[status]) grouped[status] = []
+      grouped[status] ??= []
       grouped[status].push(lead)
     }
     return grouped

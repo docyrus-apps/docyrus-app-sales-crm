@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { DollarSign, Plus } from 'lucide-react'
+import type { ViewType } from '@/components/view-switcher'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
@@ -8,7 +9,7 @@ import { useDeals } from '@/hooks/use-deals'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DealFormDialog } from '@/components/deals/deal-form-dialog'
-import { ViewSwitcher, type ViewType } from '@/components/view-switcher'
+import { ViewSwitcher } from '@/components/view-switcher'
 import { DataTable } from '@/components/data-table/data-table'
 import { DataTableSkeleton } from '@/components/data-table/data-table-skeleton'
 import { useDataTable } from '@/hooks/use-data-table'
@@ -18,7 +19,7 @@ import { DealsKanbanView } from '@/components/deals/deals-kanban-view'
 export function Deals() {
   const { data: deals, isLoading, error } = useDeals()
   const [isFormOpen, setIsFormOpen] = useState(false)
-  const [viewType, setViewType] = useState<ViewType>('card')
+  const [viewType, setViewType] = useState<ViewType>('list')
 
   const columns = useMemo(() => getDealsColumns(), [])
   const { table } = useDataTable({
@@ -32,14 +33,14 @@ export function Deals() {
       <PageHeader
         title="Deals"
         icon={DollarSign}
-        center={
-          <ViewSwitcher value={viewType} onValueChange={setViewType} />
-        }
         actions={
-          <Button onClick={() => setIsFormOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Deal
-          </Button>
+          <>
+            <ViewSwitcher value={viewType} onValueChange={setViewType} />
+            <Button onClick={() => setIsFormOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Deal
+            </Button>
+          </>
         }
       />
       <PageContainer
