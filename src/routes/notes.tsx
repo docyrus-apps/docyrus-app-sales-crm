@@ -13,7 +13,10 @@ import { DataTableSkeleton } from '@/components/data-table/data-table-skeleton'
 import { useDataTable } from '@/hooks/use-data-table'
 import { Card, CardContent } from '@/components/ui/card'
 
-const priorityVariant: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+const priorityVariant: Record<
+  string,
+  'default' | 'secondary' | 'destructive' | 'outline'
+> = {
   high: 'destructive',
   medium: 'default',
   low: 'secondary',
@@ -58,7 +61,7 @@ export function Notes() {
           <DataTableColumnHeader column={column} label="Priority" />
         ),
         cell: ({ row }) => {
-          const priority = row.getValue('priority') as string
+          const priority = row.getValue('priority')
           if (!priority) return <span>-</span>
           return (
             <Badge variant={priorityVariant[priority] || 'outline'}>
@@ -74,7 +77,7 @@ export function Notes() {
           <DataTableColumnHeader column={column} label="Due Date" />
         ),
         cell: ({ row }) => {
-          const date = row.getValue('due_date') as string
+          const date = row.getValue('due_date')
           return (
             <div>
               {date

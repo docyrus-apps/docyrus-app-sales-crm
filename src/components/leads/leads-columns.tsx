@@ -1,6 +1,6 @@
-import type { ColumnDef } from '@tanstack/react-table'
 import { Link } from '@tanstack/react-router'
 import { Eye } from 'lucide-react'
+import type { ColumnDef } from '@tanstack/react-table'
 import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'

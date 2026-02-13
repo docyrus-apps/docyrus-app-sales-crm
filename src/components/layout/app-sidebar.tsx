@@ -1,14 +1,14 @@
 import { Link, useLocation } from '@tanstack/react-router'
 import {
   BadgeCheck,
-  Bell,
   BarChart3,
+  Bell,
   Building2,
-  ChevronsUpDown,
+  CalendarDays,
   CheckSquare,
+  ChevronsUpDown,
   Contact,
   CreditCard,
-  CalendarDays,
   DollarSign,
   Home,
   LogOut,
@@ -48,7 +48,12 @@ import { useNotifications } from '@/hooks/use-notifications'
 
 const menuItems = [
   { title: 'Home', url: '/', icon: Home },
-  { title: 'Notifications', url: '/notifications', icon: Bell, badge: 'notifications' },
+  {
+    title: 'Notifications',
+    url: '/notifications',
+    icon: Bell,
+    badge: 'notifications',
+  },
   { title: 'Deals', url: '/deals', icon: DollarSign },
   { title: 'Leads', url: '/leads', icon: UserRoundSearch },
   { title: 'Tasks', url: '/tasks', icon: CheckSquare },
@@ -110,7 +115,11 @@ export function AppSidebar() {
 
               return (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive}
+                    tooltip={item.title}
+                  >
                     <Link to={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
@@ -138,7 +147,11 @@ export function AppSidebar() {
               const isActive = location.pathname.startsWith(item.url)
               return (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive}
+                    tooltip={item.title}
+                  >
                     <Link to={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
