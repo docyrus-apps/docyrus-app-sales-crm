@@ -6,6 +6,7 @@ interface PageHeaderProps {
   title: string
   description?: string
   icon?: LucideIcon
+  center?: ReactNode
   actions?: ReactNode
   className?: string
 }
@@ -17,6 +18,7 @@ interface PageHeaderProps {
 export function PageHeader({
   title,
   icon: Icon,
+  center,
   actions,
   className,
 }: PageHeaderProps) {
@@ -30,6 +32,7 @@ export function PageHeader({
       <div className="flex items-center gap-2">
         {Icon && <Icon className="h-5 w-5 text-primary" />}
         <h1 className="text-sm font-bold">{title}</h1>
+        {center}
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
     </div>
