@@ -10,7 +10,7 @@ export function Notifications() {
 
   return (
     <>
-      <PageHeader title="Notifications" section="Navigation" />
+      <PageHeader title="Notifications" />
       <PageContainer>
         {isLoading && <Skeleton className="h-64 w-full" />}
 

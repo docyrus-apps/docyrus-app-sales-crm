@@ -8,6 +8,7 @@ import {
   createRouter,
 } from '@tanstack/react-router'
 import { DocyrusAuthProvider } from '@docyrus/app-auth-ui'
+import { ThemeProvider } from 'next-themes'
 
 import * as TanStackQueryProvider from './integrations/tanstack-query/root-provider.tsx'
 
@@ -51,6 +52,9 @@ const dealDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/deals/$dealId',
   component: DealDetail,
+  validateSearch: (search: Record<string, unknown>) => ({
+    tab: (search.tab as string) || 'overview',
+  }),
 })
 
 const leadsRoute = createRoute({
@@ -63,6 +67,9 @@ const leadDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/leads/$leadId',
   component: LeadDetail,
+  validateSearch: (search: Record<string, unknown>) => ({
+    tab: (search.tab as string) || 'overview',
+  }),
 })
 
 const companiesRoute = createRoute({
@@ -75,6 +82,9 @@ const companyDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/companies/$companyId',
   component: CompanyDetail,
+  validateSearch: (search: Record<string, unknown>) => ({
+    tab: (search.tab as string) || 'overview',
+  }),
 })
 
 const tasksRoute = createRoute({
@@ -184,17 +194,19 @@ if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
   root.render(
     <StrictMode>
-      <DocyrusAuthProvider
-        apiUrl={import.meta.env.VITE_API_BASE_URL}
-        clientId={import.meta.env.VITE_OAUTH2_CLIENT_ID}
-        redirectUri={import.meta.env.VITE_OAUTH2_REDIRECT_URI}
-        scopes={oauthScopes}
-        callbackPath="/auth/callback"
-      >
-        <TanStackQueryProvider.Provider>
-          <RouterProvider router={router} />
-        </TanStackQueryProvider.Provider>
-      </DocyrusAuthProvider>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <DocyrusAuthProvider
+          apiUrl={import.meta.env.VITE_API_BASE_URL}
+          clientId={import.meta.env.VITE_OAUTH2_CLIENT_ID}
+          redirectUri={import.meta.env.VITE_OAUTH2_REDIRECT_URI}
+          scopes={oauthScopes}
+          callbackPath="/auth/callback"
+        >
+          <TanStackQueryProvider.Provider>
+            <RouterProvider router={router} />
+          </TanStackQueryProvider.Provider>
+        </DocyrusAuthProvider>
+      </ThemeProvider>
     </StrictMode>,
   )
 }

@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 export function Emails() {
   return (
     <>
-      <PageHeader title="Emails" section="Communication" />
+      <PageHeader title="Emails" />
       <PageContainer>
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">

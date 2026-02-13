@@ -205,7 +205,6 @@ export function Tasks() {
     <>
       <PageHeader
         title="Tasks"
-        section="Navigation"
         actions={
           <Button
             onClick={() => {

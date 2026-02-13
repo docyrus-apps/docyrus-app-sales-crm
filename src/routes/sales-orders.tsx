@@ -190,7 +190,7 @@ export function SalesOrders() {
 
   return (
     <>
-      <PageHeader title="Sales Orders" section="Sales" />
+      <PageHeader title="Sales Orders" />
       <PageContainer>
         {isLoading && <DataTableSkeleton columnCount={8} rowCount={10} />}
 

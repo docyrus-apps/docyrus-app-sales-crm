@@ -32,7 +32,6 @@ export function Deals() {
     <>
       <PageHeader
         title="Deals"
-        section="Sales"
         actions={
           <>
             <ViewSwitcher value={viewType} onValueChange={setViewType} />

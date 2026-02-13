@@ -104,7 +104,7 @@ export function Notes() {
 
   return (
     <>
-      <PageHeader title="Notes" section="Notes" />
+      <PageHeader title="Notes" />
       <PageContainer>
         {isLoading && <DataTableSkeleton columnCount={4} rowCount={10} />}
 

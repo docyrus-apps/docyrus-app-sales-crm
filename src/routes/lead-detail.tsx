@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useParams } from '@tanstack/react-router'
+import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { ArrowLeft, Pencil } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
 import { Button } from '@/components/ui/button'
@@ -19,8 +19,14 @@ import { FileAttachments } from '@/components/shared/file-attachments'
 
 export function LeadDetail() {
   const { leadId } = useParams({ strict: false })
+  const { tab } = useSearch({ from: '/leads/$leadId' })
+  const navigate = useNavigate({ from: '/leads/$leadId' })
   const { data: lead, isLoading, error } = useLead(leadId)
   const [isEditOpen, setIsEditOpen] = useState(false)
+
+  const handleTabChange = (value: string) => {
+    void navigate({ search: { tab: value }, replace: true })
+  }
 
   if (isLoading) {
     return (
@@ -150,7 +156,7 @@ export function LeadDetail() {
 
         {/* Right Panel - Tabs */}
         <div className="lg:col-span-2">
-          <Tabs defaultValue="overview" className="w-full">
+          <Tabs value={tab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="activity">Activity</TabsTrigger>

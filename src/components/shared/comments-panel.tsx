@@ -19,11 +19,11 @@ interface CommentsPanelProps {
 
 interface Comment {
   id: string
-  body: string
+  message: string
   created_on: string
-  created_by: {
+  created_by?: {
     id: string
-    name: string
+    name?: string
     email?: string
     avatar?: string
   }
@@ -50,10 +50,9 @@ export function CommentsPanel({
       const apiClient = getApiClient()
       if (!apiClient) throw new Error('API client not initialized')
 
-      const response = await apiClient.get(
+      return await apiClient.get(
         `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/comments`,
       )
-      return response.data
     },
   })
 
@@ -63,11 +62,10 @@ export function CommentsPanel({
       const apiClient = getApiClient()
       if (!apiClient) throw new Error('API client not initialized')
 
-      const response = await apiClient.post(
+      return await apiClient.post(
         `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/comments`,
-        { body },
+        { message: body },
       )
-      return response.data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -93,11 +91,10 @@ export function CommentsPanel({
       const apiClient = getApiClient()
       if (!apiClient) throw new Error('API client not initialized')
 
-      const response = await apiClient.patch(
+      return await apiClient.patch(
         `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/comments/${commentId}`,
-        { body },
+        { message: body },
       )
-      return response.data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -142,7 +139,7 @@ export function CommentsPanel({
 
   const handleEdit = (comment: Comment) => {
     setEditingId(comment.id)
-    setEditingBody(comment.body)
+    setEditingBody(comment.message)
   }
 
   const handleUpdate = (commentId: string) => {
@@ -156,7 +153,8 @@ export function CommentsPanel({
     setEditingBody('')
   }
 
-  const getInitials = (name: string) => {
+  const getInitials = (name?: string) => {
+    if (!name) return '??'
     return name
       .split(' ')
       .map((n) => n[0])
@@ -197,16 +195,16 @@ export function CommentsPanel({
               <CardContent className="pt-6">
                 <div className="flex gap-3">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={comment.created_by.avatar} />
+                    <AvatarImage src={comment.created_by?.avatar} />
                     <AvatarFallback>
-                      {getInitials(comment.created_by.name)}
+                      {getInitials(comment.created_by?.name)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium">
-                          {comment.created_by.name}
+                          {comment.created_by?.name ?? 'Unknown'}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {formatDate(comment.created_on, {
@@ -264,7 +262,7 @@ export function CommentsPanel({
                       </div>
                     ) : (
                       <p className="text-sm whitespace-pre-wrap">
-                        {comment.body}
+                        {comment.message}
                       </p>
                     )}
                   </div>

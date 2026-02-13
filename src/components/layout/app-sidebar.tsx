@@ -12,13 +12,17 @@ import {
   DollarSign,
   Home,
   LogOut,
+  Monitor,
+  Moon,
   NotepadText,
   Package,
   ShoppingCart,
   Sparkles,
+  Sun,
   UserRoundSearch,
   Zap,
 } from 'lucide-react'
+import { useTheme } from 'next-themes'
 import { useDocyrusAuth } from '@docyrus/app-auth-ui'
 import {
   Sidebar,
@@ -75,6 +79,7 @@ export function AppSidebar() {
   const isMobile = useIsMobile()
   const { data: notifications } = useNotifications()
   const { signOut } = useDocyrusAuth()
+  const { setTheme, theme } = useTheme()
 
   const unreadCount = notifications?.filter((n: any) => !n.seen).length || 0
 
@@ -221,6 +226,39 @@ export function AppSidebar() {
                   <DropdownMenuItem>
                     <Bell />
                     Notifications
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">
+                    Theme
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => setTheme('light')}>
+                    <Sun />
+                    Light
+                    {theme === 'light' && (
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        ✓
+                      </span>
+                    )}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme('dark')}>
+                    <Moon />
+                    Dark
+                    {theme === 'dark' && (
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        ✓
+                      </span>
+                    )}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme('system')}>
+                    <Monitor />
+                    System
+                    {theme === 'system' && (
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        ✓
+                      </span>
+                    )}
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />

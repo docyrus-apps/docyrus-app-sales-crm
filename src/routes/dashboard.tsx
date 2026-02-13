@@ -158,7 +158,7 @@ export function Dashboard() {
 
   return (
     <>
-      <PageHeader title="Dashboard" section="Navigation" />
+      <PageHeader title="Dashboard" />
       <PageContainer>
         {/* Stat Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

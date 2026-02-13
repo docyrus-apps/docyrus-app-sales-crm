@@ -33,7 +33,6 @@ export function Companies() {
     <>
       <PageHeader
         title="Companies"
-        section="Records"
         actions={
           <>
             <ViewSwitcher value={viewType} onValueChange={setViewType} />

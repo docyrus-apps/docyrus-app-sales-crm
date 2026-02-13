@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useParams } from '@tanstack/react-router'
+import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { ArrowLeft, Pencil } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
 import { Button } from '@/components/ui/button'
@@ -21,8 +21,14 @@ import { FileAttachments } from '@/components/shared/file-attachments'
 
 export function DealDetail() {
   const { dealId } = useParams({ strict: false })
+  const { tab } = useSearch({ from: '/deals/$dealId' })
+  const navigate = useNavigate({ from: '/deals/$dealId' })
   const { data: deal, isLoading, error } = useDeal(dealId)
   const [isEditOpen, setIsEditOpen] = useState(false)
+
+  const handleTabChange = (value: string) => {
+    void navigate({ search: { tab: value }, replace: true })
+  }
 
   const orgId =
     deal?.organizations && typeof deal.organizations === 'object'
@@ -198,7 +204,7 @@ export function DealDetail() {
 
         {/* Right Panel - Tabs */}
         <div className="lg:col-span-2">
-          <Tabs defaultValue="overview" className="w-full">
+          <Tabs value={tab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="products">Products</TabsTrigger>
