@@ -26,6 +26,7 @@ import { Tasks } from './routes/tasks.tsx'
 import { Notifications } from './routes/notifications.tsx'
 import { Emails } from './routes/emails.tsx'
 import { Events } from './routes/events.tsx'
+import { Notes } from './routes/notes.tsx'
 import { Products } from './routes/products.tsx'
 import { SalesOrders } from './routes/sales-orders.tsx'
 import { SalesOrderDetail } from './routes/sales-order-detail.tsx'
@@ -100,6 +101,12 @@ const eventsRoute = createRoute({
   component: Events,
 })
 
+const notesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/notes',
+  component: Notes,
+})
+
 const productsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/products',
@@ -142,6 +149,7 @@ const routeTree = rootRoute.addChildren([
   notificationsRoute,
   emailsRoute,
   eventsRoute,
+  notesRoute,
   productsRoute,
   salesOrdersRoute,
   salesOrderDetailRoute,
