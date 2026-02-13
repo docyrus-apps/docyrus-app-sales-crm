@@ -65,7 +65,7 @@ export function Events() {
     <>
       <PageHeader
         title="Events"
-        icon={CalendarIcon}
+        section="Communication"
         actions={
           <div className="flex items-center gap-2">
             <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)}>

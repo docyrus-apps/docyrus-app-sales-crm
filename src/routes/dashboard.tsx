@@ -158,7 +158,7 @@ export function Dashboard() {
 
   return (
     <>
-      <PageHeader title="Dashboard" description="Welcome to your Sales CRM" />
+      <PageHeader title="Dashboard" section="Navigation" />
       <PageContainer>
         {/* Stat Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

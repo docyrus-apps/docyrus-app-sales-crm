@@ -1,4 +1,3 @@
-import { Mail } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
 import { Card, CardContent } from '@/components/ui/card'
@@ -6,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 export function Emails() {
   return (
     <>
-      <PageHeader title="Emails" icon={Mail} />
+      <PageHeader title="Emails" section="Communication" />
       <PageContainer>
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">

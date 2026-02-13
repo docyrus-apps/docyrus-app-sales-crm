@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { DollarSign, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import type { ViewType } from '@/components/view-switcher'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
@@ -32,7 +32,7 @@ export function Deals() {
     <>
       <PageHeader
         title="Deals"
-        icon={DollarSign}
+        section="Sales"
         actions={
           <>
             <ViewSwitcher value={viewType} onValueChange={setViewType} />

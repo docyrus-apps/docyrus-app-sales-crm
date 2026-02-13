@@ -161,7 +161,7 @@ export function Products() {
     <>
       <PageHeader
         title="Products"
-        icon={Package}
+        section="Records"
         actions={
           <Button
             onClick={() => {

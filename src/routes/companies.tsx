@@ -33,7 +33,7 @@ export function Companies() {
     <>
       <PageHeader
         title="Companies"
-        icon={Building2}
+        section="Records"
         actions={
           <>
             <ViewSwitcher value={viewType} onValueChange={setViewType} />

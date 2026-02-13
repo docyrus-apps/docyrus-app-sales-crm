@@ -10,11 +10,7 @@ export function Notifications() {
 
   return (
     <>
-      <PageHeader
-        title="Notifications"
-        description="Stay updated with your latest activities"
-        icon={Bell}
-      />
+      <PageHeader title="Notifications" section="Navigation" />
       <PageContainer>
         {isLoading && <Skeleton className="h-64 w-full" />}
 
