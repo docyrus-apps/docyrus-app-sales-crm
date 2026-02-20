@@ -24,7 +24,6 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@docyrus/api-client": "^0.1.0",
     "@docyrus/dom-selector-client": "^0.3.2",
-    "@docyrus/logo-asset-generator": "^0.3.2",
     "@docyrus/signin": "^0.3.1",
     "@docyrus/tanstack-db-generator": "^0.5.1",
     "@radix-ui/react-direction": "^1.1.1",
@@ -62,6 +61,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
+    "@docyrus/logo-asset-generator": "^0.3.2",
     "@tanstack/eslint-config": "^0.4.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",

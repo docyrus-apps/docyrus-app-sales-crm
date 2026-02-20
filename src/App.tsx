@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Outlet } from '@tanstack/react-router'
 import { NuqsAdapter } from 'nuqs/adapters/tanstack-router'
 import { Agentation } from 'agentation'
-import { DollarSign } from 'lucide-react'
 import {
   SignInButton,
   useDocyrusAuth,
@@ -67,10 +66,12 @@ function App() {
           <div className="w-full max-w-md">
             <div className="flex flex-col gap-6 p-8 bg-background rounded-lg border shadow-sm">
               <div className="flex flex-col items-center gap-2 text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground mb-2">
-                  <DollarSign className="h-6 w-6" />
-                </div>
-                <h1 className="text-2xl font-bold">Sales CRM</h1>
+                <img
+                  src="/logo.svg"
+                  alt="Sales CRM by Docyrus"
+                  className="h-12 w-12 mb-2"
+                />
+                <h1 className="text-2xl font-bold">Sales CRM by Docyrus</h1>
                 <p className="text-muted-foreground text-sm text-balance">
                   Sign in to access your account
                 </p>

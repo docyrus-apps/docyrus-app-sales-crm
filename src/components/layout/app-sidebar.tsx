@@ -91,11 +91,11 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link to="/">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <DollarSign className="size-4" />
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg">
+                  <img src="/logo.svg" alt="Sales CRM" className="size-6" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Sales CRM</span>
+                  <span className="truncate font-semibold">Sales CRM by Docyrus</span>
                   <span className="truncate text-xs">Manage your pipeline</span>
                 </div>
               </Link>
