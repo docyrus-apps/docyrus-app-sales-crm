@@ -11,7 +11,7 @@ This is a React Single Page Application starter template built with modern tooli
 - **Styling**: Tailwind CSS v4 with @tailwindcss/vite
 - **UI Components**: Shadcn/ui, diceui, and reui compatible setup
 - **State Management**: Ready for TanStack Store integration
-- **Authentication**: @docyrus/app-auth-ui (OAuth2 PKCE + iframe postMessage)
+- **Authentication**: @docyrus/signin (OAuth2 PKCE + iframe postMessage)
 - **Testing**: Vitest with React Testing Library
 - **Linting**: ESLint with TanStack config
 - **Formatting**: Prettier
@@ -25,7 +25,7 @@ src/
 │   └── ui/           # UI primitives (button, input, etc.)
 ├── integrations/     # Integration-specific code (TanStack Query setup)
 ├── lib/              # Utility functions and core services
-│   ├── api.ts        # API client configuration (setter pattern for @docyrus/app-auth-ui client)
+│   ├── api.ts        # API client configuration (setter pattern for @docyrus/signin client)
 │   └── utils.ts      # General utilities
 ├── App.tsx           # Main app component
 ├── main.tsx          # Application entry point with routing setup
@@ -47,7 +47,7 @@ pnpm check        # Run both Prettier and ESLint with auto-fix
 
 ## Authentication
 
-The project uses `@docyrus/app-auth-ui` for authentication. This library provides:
+The project uses `@docyrus/signin` for authentication. This library provides:
 
 - **Auto Environment Detection**: Standalone apps use OAuth2 PKCE via redirect, iframe-embedded apps receive tokens via `postMessage`
 - **Token Auto-Refresh**: Proactive token refresh before expiry in both modes
@@ -68,7 +68,7 @@ VITE_OAUTH2_SCOPES=openid profile offline_access Users.Read DS.ReadWrite.All
 ### Using Authentication
 
 ```typescript
-import { useDocyrusAuth, useDocyrusClient, SignInButton } from '@docyrus/app-auth-ui'
+import { useDocyrusAuth, useDocyrusClient, SignInButton } from '@docyrus/signin'
 
 function MyComponent() {
   const { status, signOut } = useDocyrusAuth()
@@ -106,7 +106,7 @@ The `DocyrusAuthProvider` manages the `RestApiClient` internally. For non-React 
 - `src/main.tsx` - DocyrusAuthProvider setup with env var configuration
 - `src/App.tsx` - Uses useDocyrusAuth/useDocyrusClient, syncs API client
 - `src/lib/api.ts` - Module-level API client with setter pattern and interceptors
-- `docs/@docyrus/app-auth-ui.md` - Full library documentation
+- `docs/@docyrus/signin.md` - Full library documentation
 
 ## Key Conventions
 
@@ -140,7 +140,7 @@ The `DocyrusAuthProvider` manages the `RestApiClient` internally. For non-React 
 - TanStack Query is set up for server state management
 - Query client is configured in `src/integrations/tanstack-query/`
 - For local state, the project is ready for TanStack Store integration
-- Auth state is managed via `DocyrusAuthProvider` from `@docyrus/app-auth-ui`
+- Auth state is managed via `DocyrusAuthProvider` from `@docyrus/signin`
 
 ### 5. **Data Management**
 

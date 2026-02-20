@@ -7,7 +7,7 @@ import {
   SignInButton,
   useDocyrusAuth,
   useDocyrusClient,
-} from '@docyrus/app-auth-ui'
+} from '@docyrus/signin'
 import { Button } from './components/ui/button'
 import { setApiClient } from './lib/api'
 import { AppLayout } from './components/layout/app-layout'

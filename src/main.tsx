@@ -7,7 +7,7 @@ import {
   createRoute,
   createRouter,
 } from '@tanstack/react-router'
-import { DocyrusAuthProvider } from '@docyrus/app-auth-ui'
+import { DocyrusAuthProvider } from '@docyrus/signin'
 import { ThemeProvider } from 'next-themes'
 
 import * as TanStackQueryProvider from './integrations/tanstack-query/root-provider.tsx'

@@ -55,7 +55,7 @@ The reference screenshot (`deals-layout.png`) establishes the core layout patter
 | Data Fetching | TanStack Query                      |
 | Forms         | TanStack Form + Zod validation      |
 | Styling       | Tailwind CSS v4                     |
-| Auth          | @docyrus/app-auth-ui (OAuth2 PKCE)  |
+| Auth          | @docyrus/signin (OAuth2 PKCE)  |
 | API           | @docyrus/api-client via collections |
 
 ### 3.2 Component Priority
@@ -1060,7 +1060,7 @@ Every list/table view must have a well-designed empty state with:
 
 - All routes except `/auth/callback` require authentication
 - Unauthenticated users see sign-in page
-- API calls use `@docyrus/app-auth-ui` token management
+- API calls use `@docyrus/signin` token management
 - `record_owner` field used for ownership-based visibility (future enhancement)
 
 ---
@@ -1407,7 +1407,7 @@ pnpm dlx shadcn@latest add @diceui/responsive-dialog
 
 1. All backend entities exist and are accessible via the generated collections in `src/collections/`
 2. Enum values for deal stages, lead statuses, etc. are pre-configured in the backend
-3. Authentication is fully handled by `@docyrus/app-auth-ui`
+3. Authentication is fully handled by `@docyrus/signin`
 4. The Docyrus API supports all query capabilities described in `docs/docyrus-api-query-guide.md`
 5. File upload/attachment relies on existing document storage backend
 6. No new backend endpoints or entities are needed for V1

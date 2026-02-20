@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { DocyrusAuthProvider } from '@docyrus/app-auth-ui'
+import { DocyrusAuthProvider } from '@docyrus/signin'
 import App from './App.tsx'
 
 describe('App', () => {

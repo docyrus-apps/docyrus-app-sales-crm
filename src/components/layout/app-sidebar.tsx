@@ -23,7 +23,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
-import { useDocyrusAuth } from '@docyrus/app-auth-ui'
+import { useDocyrusAuth } from '@docyrus/signin'
 import {
   Sidebar,
   SidebarContent,

@@ -1,4 +1,4 @@
-# @docyrus/app-auth-ui
+# @docyrus/signin
 
 React authentication provider for Docyrus apps. Provides "Sign in with Docyrus" experience with automatic environment detection — standalone apps use OAuth2 Authorization Code + PKCE via page redirect, while iframe-embedded apps receive tokens via `window.postMessage` from the host.
 
@@ -16,11 +16,11 @@ React authentication provider for Docyrus apps. Provides "Sign in with Docyrus" 
 ## Installation
 
 ```bash
-npm install @docyrus/app-auth-ui
+npm install @docyrus/signin
 ```
 
 ```bash
-pnpm add @docyrus/app-auth-ui
+pnpm add @docyrus/signin
 ```
 
 ### Peer Dependencies
@@ -36,7 +36,7 @@ import {
   useDocyrusAuth,
   useDocyrusClient,
   SignInButton,
-} from '@docyrus/app-auth-ui'
+} from '@docyrus/signin'
 
 function App() {
   return (
@@ -178,7 +178,7 @@ import {
   StandaloneOAuth2Auth,
   IframeAuth,
   detectAuthMode,
-} from '@docyrus/app-auth-ui'
+} from '@docyrus/signin'
 ```
 
 ## Development
