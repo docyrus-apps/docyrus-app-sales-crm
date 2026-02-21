@@ -95,7 +95,9 @@ export function AppSidebar() {
                   <img src="/logo.svg" alt="Sales CRM" className="size-6" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Sales CRM by Docyrus</span>
+                  <span className="truncate font-semibold">
+                    Sales CRM by Docyrus
+                  </span>
                   <span className="truncate text-xs">Manage your pipeline</span>
                 </div>
               </Link>

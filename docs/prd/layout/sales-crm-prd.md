@@ -55,7 +55,7 @@ The reference screenshot (`deals-layout.png`) establishes the core layout patter
 | Data Fetching | TanStack Query                      |
 | Forms         | TanStack Form + Zod validation      |
 | Styling       | Tailwind CSS v4                     |
-| Auth          | @docyrus/signin (OAuth2 PKCE)  |
+| Auth          | @docyrus/signin (OAuth2 PKCE)       |
 | API           | @docyrus/api-client via collections |
 
 ### 3.2 Component Priority

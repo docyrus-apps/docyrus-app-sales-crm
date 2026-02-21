@@ -13,7 +13,12 @@ This is a React Single Page Application starter template built with modern tooli
 - **Routing**: TanStack Router (code-based routing)
 - **Data Fetching**: TanStack Query, TanStack DB
 - **Styling**: Tailwind CSS v4 with @tailwindcss/vite
-- **UI Components**: Shadcn/ui, diceui, and reui compatible setup
+- **UI Components**:
+  - **Docyrus UI** (19 components) - Production-ready components with Data Grid, Form Fields (47 types), Value Renderers (44 types), Query Builder, and more
+  - **Animate UI** (21 components) - Fully animated components with smooth transitions and motion effects
+  - **Shadcn/ui** (43 components) - Foundation components built on Radix UI
+  - **DiceUI** (42 components) - Extended component collection
+  - **ReUI** (2 components) - Additional specialized components
 - **State Management**: Ready for TanStack Store integration
 - **Authentication**: @docyrus/app-auth-ui (OAuth2 PKCE + iframe postMessage)
 - **Testing**: Vitest with React Testing Library
@@ -123,10 +128,65 @@ The `DocyrusAuthProvider` manages the `RestApiClient` internally. For non-React 
   - `/` - Main app (protected, shows login if not authenticated)
   - `/auth/callback` - Handled automatically by DocyrusAuthProvider
 
-### 2. **Component Organization**
+### 2. **Component Organization & UI Libraries**
 
-- **Before developing a component, check `docs/preferred-components.md` to see if a suitable component exists; if not, develop a new component.** The file includes components from shadcn, diceui, and reui with install commands and local documentation paths.
-- **For page layouts, use `docs/preferred_layout_alternatives.md` to select an appropriate sidebar layout.** This should be the default approach for application layouts unless the user specifically requests no sidebar. The file contains various shadcn sidebar variants with descriptions and install commands.
+#### Component Selection Priority
+
+**ALWAYS check `docs/preferred-components.md` before developing any UI component.** The project has 127+ pre-built components across 5 libraries:
+
+1. **Docyrus UI** (19 components) - **PREFERRED for data-heavy features**
+   - Data Grid - Virtualized spreadsheet with sorting, filtering, grouping, cell selection
+   - Form Fields - 47 field types with TanStack Form integration
+   - Value Renderers - 44 renderer types for read-only data display
+   - Query Builder - Visual query builder component
+   - Date/Time Pickers, File panels, Activity panels, Delete dialogs
+   - **Use for**: Forms, tables, data visualization, record management
+
+2. **Animate UI** (21 components) - **PREFERRED for animated interactions**
+   - Dialog, Sheet, Popover, Dropdown Menu, Tabs (animated versions)
+   - Avatar Group, Flip Card, Pin List, Radial Menu
+   - Sidebar, Tooltip, Switch, Checkbox, Radio Group (animated versions)
+   - **Use for**: Modals, navigation, interactive elements requiring smooth animations
+
+3. **Shadcn/ui** (43 components) - Foundation components
+   - Use when Docyrus UI or Animate UI don't have the needed component
+   - Breadcrumb, Command, Card, Badge, Separator, Skeleton, etc.
+
+4. **DiceUI** (42 components) - Extended components
+   - Additional specialized components not in shadcn
+   - Combobox, File Upload, Kanban, Action Bar, etc.
+
+5. **ReUI** (2 components) - Specialized components
+   - File Upload variations, Sortable lists
+
+#### Component Installation
+
+All components use the shadcn CLI:
+
+```bash
+# Docyrus UI components
+pnpm dlx shadcn@latest add @docyrus/ui-data-grid
+pnpm dlx shadcn@latest add @docyrus/ui-form-fields
+
+# Animate UI components (preferred for animations)
+pnpm dlx shadcn@latest add @animate-ui/dialog
+pnpm dlx shadcn@latest add @animate-ui/sidebar
+
+# Shadcn components
+pnpm dlx shadcn@latest add button
+pnpm dlx shadcn@latest add card
+```
+
+**Full component list**: See `docs/preferred-components.md` with install commands and documentation paths.
+
+#### Layout Components
+
+- **For page layouts, use `docs/preferred_layout_alternatives.md` to select an appropriate sidebar layout.**
+- This should be the default approach for application layouts unless the user specifically requests no sidebar.
+- The file contains various shadcn and animate-ui sidebar variants with descriptions and install commands.
+
+#### File Organization
+
 - Place reusable components in `src/components/`
 - Route-specific components go in `src/routes/`
 - Use TypeScript for all components
@@ -197,7 +257,15 @@ The Docyrus data source get-items endpoint (and each generated collection's `.li
 
 1. **Authentication**: The app requires OAuth2 authentication. Users must sign in with Docyrus to access protected features.
 
-2. **UI Components**: Use `pnpm dlx shadcn@latest add [component]` to add shadcn, diceui, or reui components. Refer to `docs/preferred-components.md` for the full list of available components and their install commands.
+2. **UI Components - Component Library Priority**:
+   - **ALWAYS check `docs/preferred-components.md` first** - Contains 127+ components across 5 libraries
+   - **Docyrus UI (19 components)** - Use for data grids, forms (47 field types), value renderers (44 types), query builders
+   - **Animate UI (21 components)** - Preferred for dialogs, sheets, popovers, tabs, sidebars (animated versions)
+   - **Shadcn/ui (43 components)** - Foundation components when Docyrus UI or Animate UI don't have it
+   - **DiceUI (42 components)** - Extended components like Combobox, Kanban, File Upload
+   - **ReUI (2 components)** - Specialized sortable and file upload components
+   - Install via: `pnpm dlx shadcn@latest add [component-name]`
+   - Full documentation paths included in `docs/preferred-components.md`
 
 3. **Environment**: The project uses Vite's environment variable system. Use `import.meta.env` for env vars
 
@@ -222,6 +290,70 @@ When adding new features:
 4. Include error boundaries for robust error handling
 5. Consider adding tests for critical functionality
 6. Update this file if introducing new patterns or dependencies
+
+## UI Component Libraries
+
+### Docyrus UI Components (IMPORTANT)
+
+The project includes specialized **Docyrus UI components** designed specifically for data-intensive applications. These components integrate seamlessly with the Docyrus API and TanStack ecosystem:
+
+#### Key Docyrus UI Components:
+
+1. **Data Grid** (`@docyrus/ui-data-grid`)
+   - Virtualized, editable spreadsheet-like grid
+   - Features: sorting, filtering, grouping, cell selection, keyboard navigation
+   - Perfect for displaying and editing large datasets
+
+2. **Form Fields** (`@docyrus/ui-form-fields`)
+   - 47 field types with automatic dispatch via `DynamicFormField`
+   - Powered by TanStack Form
+   - Covers: text, number, date, select, file, relation fields, and more
+
+3. **Value Renderers** (`@docyrus/ui-value-renderers`)
+   - 44 renderer types with automatic dispatch via `DynamicValue`
+   - Read-only value display for table cells, detail views, kanban cards
+   - Handles: dates, numbers, money, users, relations, status, enums, files, etc.
+
+4. **Query Builder** (`@docyrus/ui-query-builder`)
+   - Visual query builder for constructing filters
+   - Works with Docyrus API query syntax
+
+5. **Data Table Filter** (`@docyrus/ui-data-table-filter`)
+   - Composable filter bar for data tables
+   - Supports text, number, date, option, and multi-option columns
+
+6. **Date/Time Components**:
+   - Date Time Picker, Day Picker, Duration Select, Calendar
+
+7. **Data Management**:
+   - Record Activity Panel - Display record history
+   - Record Delete Confirm Dialog - Confirm delete with relation handling
+   - File Attachment Panel - File attachment management
+   - Comments Panel - Comment threads
+
+**Documentation**: See `docs/components/docyrus-ui-components.md` for complete documentation of all Docyrus UI components.
+
+### Animate UI Components
+
+21 fully animated components providing smooth transitions and motion effects. These are **preferred over shadcn equivalents** for better UX:
+
+- Dialogs, Sheets, Popovers, Dropdowns (animated versions)
+- Sidebar (animated), Tabs (animated), Tooltips (animated)
+- Form controls: Checkbox, Switch, Radio Group, Toggle (animated)
+- Special: Flip Card, Pin List, Radial Menu, Preview Link Card
+
+**Documentation**: See `docs/components/animate-ui/` folder for individual component docs.
+
+### Component Selection Guidelines
+
+**When building features, follow this priority:**
+
+1. **Check Docyrus UI first** - For forms, tables, data display, record management
+2. **Check Animate UI** - For modals, navigation, interactive elements needing animations
+3. **Check Shadcn/DiceUI** - For foundation UI primitives not covered above
+4. **Develop custom** - Only if no suitable component exists
+
+**Always consult `docs/preferred-components.md`** before developing any new UI component.
 
 ## Backend Operations
 

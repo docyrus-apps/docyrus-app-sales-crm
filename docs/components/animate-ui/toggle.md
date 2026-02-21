@@ -1,0 +1,78 @@
+# Toggle
+
+URL: /docs/components/radix/toggle
+
+---
+
+title: Toggle
+description: A two-state button that can be either on or off.
+author:
+name: imskyleen
+url: [https://github.com/imskyleen](https://github.com/imskyleen)
+releaseDate: 2025-09-07
+
+---
+
+<ComponentPreview name="demo-components-radix-toggle" />
+
+## Installation
+
+<ComponentInstallation name="components-radix-toggle" />
+
+## Usage
+
+```tsx
+import {
+  Toggle,
+  type ToggleProps,
+} from '@/components/animate-ui/components/radix/toggle'
+import { Bold } from 'lucide-react'
+
+interface RadixToggleDemoProps {
+  variant: ToggleProps['variant']
+  size: ToggleProps['size']
+}
+
+export function RadixToggleDemo({ variant, size }: RadixToggleDemoProps) {
+  return (
+    <Toggle aria-label="Toggle italic" variant={variant} size={size}>
+      <Bold />
+    </Toggle>
+  )
+}
+```
+
+## API Reference
+
+### Toggle
+
+<div className="flex flex-col gap-2">
+  <ExternalLink href="https://animate-ui.com/docs/primitives/radix/toggle#toggle" text="Animate UI API Reference - Toggle Primitive" />
+
+  <ExternalLink href="https://www.radix-ui.com/primitives/docs/components/toggle#root" text="Radix UI API Reference - Toggle.Root" />
+</div>
+
+<TypeTable
+type={{
+  variant: {
+    description: 'The variant of the Toggle component.',
+    type: '"default" | "outline"',
+    required: false,
+  },
+  size: {
+    description: 'The size of the Toggle component.',
+    type: '"default" | "sm" | "lg" | "icon"',
+    required: false,
+  },
+}}
+/>
+
+<Callout type="info">
+  The `asChild` property is not supported in the `Toggle` component, as it is
+  used for animation.
+</Callout>
+
+## Credits
+
+- [Radix UI Toggle](https://www.radix-ui.com/primitives/docs/components/toggle)
+- Credit to [shadcn/ui](https://ui.shadcn.com/docs/components/toggle) for style inspiration.

@@ -23,12 +23,14 @@ import {
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+  AwesomeCard,
+  AwesomeCardBody,
+  AwesomeCardHeader,
+  AwesomeCardIcon,
+  AwesomeCardTitle,
+  AwesomeCardTrend,
+  AwesomeCardValue,
+} from '@/components/ui/awesome-card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -162,108 +164,107 @@ export function Dashboard() {
       <PageContainer>
         {/* Stat Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card
+          <AwesomeCard
             className="animate-fade-in-up"
             style={{ '--stagger': 0 } as React.CSSProperties}
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Deals</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
+            <AwesomeCardHeader>
+              <AwesomeCardTitle>Total Deals</AwesomeCardTitle>
+              <AwesomeCardIcon>
+                <DollarSign className="size-4" />
+              </AwesomeCardIcon>
+            </AwesomeCardHeader>
+            <AwesomeCardBody>
               {isLoading ? (
                 <Skeleton className="h-8 w-20" />
               ) : (
                 <>
-                  <div className="text-2xl font-bold">{stats.totalDeals}</div>
-                  <p className="text-xs text-muted-foreground">
-                    Active deals in pipeline
-                  </p>
+                  <AwesomeCardValue>{stats.totalDeals}</AwesomeCardValue>
+                  <AwesomeCardTrend>Active deals in pipeline</AwesomeCardTrend>
                 </>
               )}
-            </CardContent>
-          </Card>
+            </AwesomeCardBody>
+          </AwesomeCard>
 
-          <Card
+          <AwesomeCard
             className="animate-fade-in-up"
             style={{ '--stagger': 1 } as React.CSSProperties}
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Leads</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
+            <AwesomeCardHeader>
+              <AwesomeCardTitle>Leads</AwesomeCardTitle>
+              <AwesomeCardIcon>
+                <Users className="size-4" />
+              </AwesomeCardIcon>
+            </AwesomeCardHeader>
+            <AwesomeCardBody>
               {isLoading ? (
                 <Skeleton className="h-8 w-20" />
               ) : (
                 <>
-                  <div className="text-2xl font-bold">{stats.totalLeads}</div>
-                  <p className="text-xs text-muted-foreground">Total leads</p>
+                  <AwesomeCardValue>{stats.totalLeads}</AwesomeCardValue>
+                  <AwesomeCardTrend>Total leads</AwesomeCardTrend>
                 </>
               )}
-            </CardContent>
-          </Card>
+            </AwesomeCardBody>
+          </AwesomeCard>
 
-          <Card
+          <AwesomeCard
             className="animate-fade-in-up"
             style={{ '--stagger': 2 } as React.CSSProperties}
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Companies</CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
+            <AwesomeCardHeader>
+              <AwesomeCardTitle>Companies</AwesomeCardTitle>
+              <AwesomeCardIcon>
+                <Building2 className="size-4" />
+              </AwesomeCardIcon>
+            </AwesomeCardHeader>
+            <AwesomeCardBody>
               {isLoading ? (
                 <Skeleton className="h-8 w-20" />
               ) : (
                 <>
-                  <div className="text-2xl font-bold">
-                    {stats.totalCompanies}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Active companies
-                  </p>
+                  <AwesomeCardValue>{stats.totalCompanies}</AwesomeCardValue>
+                  <AwesomeCardTrend>Active companies</AwesomeCardTrend>
                 </>
               )}
-            </CardContent>
-          </Card>
+            </AwesomeCardBody>
+          </AwesomeCard>
 
-          <Card
+          <AwesomeCard
             className="animate-fade-in-up"
             style={{ '--stagger': 3 } as React.CSSProperties}
           >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Revenue</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
+            <AwesomeCardHeader>
+              <AwesomeCardTitle>Revenue</AwesomeCardTitle>
+              <AwesomeCardIcon>
+                <TrendingUp className="size-4" />
+              </AwesomeCardIcon>
+            </AwesomeCardHeader>
+            <AwesomeCardBody>
               {isLoading ? (
                 <Skeleton className="h-8 w-20" />
               ) : (
                 <>
-                  <div className="text-2xl font-bold">
+                  <AwesomeCardValue>
                     {formatCurrency(stats.monthlyRevenue)}
-                  </div>
-                  <p className="text-xs text-muted-foreground">This month</p>
+                  </AwesomeCardValue>
+                  <AwesomeCardTrend>This month</AwesomeCardTrend>
                 </>
               )}
-            </CardContent>
-          </Card>
+            </AwesomeCardBody>
+          </AwesomeCard>
         </div>
 
         {/* Charts */}
         <div className="mt-8 grid gap-4 md:grid-cols-2">
-          <Card
+          <AwesomeCard
             className="animate-fade-in-up"
             style={{ '--stagger': 5 } as React.CSSProperties}
           >
-            <CardHeader>
-              <CardTitle>Pipeline by Stage</CardTitle>
-              <CardDescription>
-                Distribution of deals across stages
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+            <AwesomeCardHeader>
+              <AwesomeCardTitle>Pipeline by Stage</AwesomeCardTitle>
+            </AwesomeCardHeader>
+            <AwesomeCardBody>
               {isLoading ? (
                 <Skeleton className="h-64 w-full" />
               ) : pipelineData.length === 0 ? (
@@ -287,18 +288,17 @@ export function Dashboard() {
                   </BarChart>
                 </ResponsiveContainer>
               )}
-            </CardContent>
-          </Card>
+            </AwesomeCardBody>
+          </AwesomeCard>
 
-          <Card
+          <AwesomeCard
             className="animate-fade-in-up"
             style={{ '--stagger': 6 } as React.CSSProperties}
           >
-            <CardHeader>
-              <CardTitle>Leads by Source</CardTitle>
-              <CardDescription>Where your leads come from</CardDescription>
-            </CardHeader>
-            <CardContent>
+            <AwesomeCardHeader>
+              <AwesomeCardTitle>Leads by Source</AwesomeCardTitle>
+            </AwesomeCardHeader>
+            <AwesomeCardBody>
               {isLoading ? (
                 <Skeleton className="h-64 w-full" />
               ) : leadsSourceData.length === 0 ? (
@@ -331,21 +331,20 @@ export function Dashboard() {
                   </PieChart>
                 </ResponsiveContainer>
               )}
-            </CardContent>
-          </Card>
+            </AwesomeCardBody>
+          </AwesomeCard>
         </div>
 
         {/* Widgets */}
         <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Card
+          <AwesomeCard
             className="animate-fade-in-up"
             style={{ '--stagger': 8 } as React.CSSProperties}
           >
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Get started with common tasks</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
+            <AwesomeCardHeader>
+              <AwesomeCardTitle>Quick Actions</AwesomeCardTitle>
+            </AwesomeCardHeader>
+            <AwesomeCardBody className="space-y-2">
               <Link to="/deals">
                 <Button variant="outline" className="w-full justify-start">
                   <DollarSign className="mr-2 h-4 w-4" />
@@ -364,21 +363,20 @@ export function Dashboard() {
                   Browse Companies
                 </Button>
               </Link>
-            </CardContent>
-          </Card>
+            </AwesomeCardBody>
+          </AwesomeCard>
 
-          <Card
+          <AwesomeCard
             className="animate-fade-in-up"
             style={{ '--stagger': 9 } as React.CSSProperties}
           >
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Flame className="h-5 w-5 text-orange-500" />
-                Hot Deals
-              </CardTitle>
-              <CardDescription>High-priority opportunities</CardDescription>
-            </CardHeader>
-            <CardContent>
+            <AwesomeCardHeader>
+              <AwesomeCardTitle>Hot Deals</AwesomeCardTitle>
+              <AwesomeCardIcon>
+                <Flame className="size-4 text-orange-500" />
+              </AwesomeCardIcon>
+            </AwesomeCardHeader>
+            <AwesomeCardBody>
               {isLoading ? (
                 <div className="space-y-2">
                   <Skeleton className="h-4 w-full" />
@@ -417,21 +415,20 @@ export function Dashboard() {
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </AwesomeCardBody>
+          </AwesomeCard>
 
-          <Card
+          <AwesomeCard
             className="animate-fade-in-up"
             style={{ '--stagger': 10 } as React.CSSProperties}
           >
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Upcoming Tasks
-              </CardTitle>
-              <CardDescription>Tasks due in the next 7 days</CardDescription>
-            </CardHeader>
-            <CardContent>
+            <AwesomeCardHeader>
+              <AwesomeCardTitle>Upcoming Tasks</AwesomeCardTitle>
+              <AwesomeCardIcon>
+                <Calendar className="size-4" />
+              </AwesomeCardIcon>
+            </AwesomeCardHeader>
+            <AwesomeCardBody>
               {isLoading ? (
                 <div className="space-y-2">
                   <Skeleton className="h-4 w-full" />
@@ -468,8 +465,8 @@ export function Dashboard() {
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </AwesomeCardBody>
+          </AwesomeCard>
         </div>
       </PageContainer>
     </>

@@ -21,11 +21,32 @@ url: [https://github.com/imskyleen](https://github.com/imskyleen)
 ## Usage
 
 ```tsx
-<RadioGroup>
-  <RadioGroupItem value="1" />
-  <RadioGroupItem value="2" />
-  <RadioGroupItem value="3" />
-</RadioGroup>
+import * as React from 'react'
+
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from '@/components/animate-ui/components/radix/radio-group'
+import { Label } from '@/components/ui/label'
+
+export const RadixRadioGroupDemo = () => {
+  return (
+    <RadioGroup defaultValue="default">
+      <Label className="flex items-center gap-x-3">
+        <RadioGroupItem value="default" />
+        Default
+      </Label>
+      <Label className="flex items-center gap-x-3">
+        <RadioGroupItem value="comfortable" />
+        Comfortable
+      </Label>
+      <Label className="flex items-center gap-x-3">
+        <RadioGroupItem value="compact" />
+        Compact
+      </Label>
+    </RadioGroup>
+  )
+}
 ```
 
 ## API Reference

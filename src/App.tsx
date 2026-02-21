@@ -2,11 +2,7 @@ import { useEffect, useState } from 'react'
 import { Outlet } from '@tanstack/react-router'
 import { NuqsAdapter } from 'nuqs/adapters/tanstack-router'
 import { Agentation } from 'agentation'
-import {
-  SignInButton,
-  useDocyrusAuth,
-  useDocyrusClient,
-} from '@docyrus/signin'
+import { SignInButton, useDocyrusAuth, useDocyrusClient } from '@docyrus/signin'
 import { Button } from './components/ui/button'
 import { setApiClient } from './lib/api'
 import { AppLayout } from './components/layout/app-layout'
