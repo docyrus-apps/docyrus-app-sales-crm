@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import { Link } from '@tanstack/react-router'
 import {
   Building2,
@@ -30,7 +30,7 @@ import {
   AwesomeCardTitle,
   AwesomeCardTrend,
   AwesomeCardValue,
-} from '@/components/ui/awesome-card'
+} from '@/components/docyrus/awesome-card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -164,10 +164,7 @@ export function Dashboard() {
       <PageContainer>
         {/* Stat Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <AwesomeCard
-            className="animate-fade-in-up"
-            style={{ '--stagger': 0 } as React.CSSProperties}
-          >
+          <AwesomeCard className="animate-fade-in-up">
             <AwesomeCardHeader>
               <AwesomeCardTitle>Total Deals</AwesomeCardTitle>
               <AwesomeCardIcon>
@@ -186,10 +183,7 @@ export function Dashboard() {
             </AwesomeCardBody>
           </AwesomeCard>
 
-          <AwesomeCard
-            className="animate-fade-in-up"
-            style={{ '--stagger': 1 } as React.CSSProperties}
-          >
+          <AwesomeCard className="animate-fade-in-up">
             <AwesomeCardHeader>
               <AwesomeCardTitle>Leads</AwesomeCardTitle>
               <AwesomeCardIcon>
@@ -208,10 +202,7 @@ export function Dashboard() {
             </AwesomeCardBody>
           </AwesomeCard>
 
-          <AwesomeCard
-            className="animate-fade-in-up"
-            style={{ '--stagger': 2 } as React.CSSProperties}
-          >
+          <AwesomeCard className="animate-fade-in-up">
             <AwesomeCardHeader>
               <AwesomeCardTitle>Companies</AwesomeCardTitle>
               <AwesomeCardIcon>
@@ -230,10 +221,7 @@ export function Dashboard() {
             </AwesomeCardBody>
           </AwesomeCard>
 
-          <AwesomeCard
-            className="animate-fade-in-up"
-            style={{ '--stagger': 3 } as React.CSSProperties}
-          >
+          <AwesomeCard className="animate-fade-in-up">
             <AwesomeCardHeader>
               <AwesomeCardTitle>Revenue</AwesomeCardTitle>
               <AwesomeCardIcon>
@@ -257,10 +245,7 @@ export function Dashboard() {
 
         {/* Charts */}
         <div className="mt-8 grid gap-4 md:grid-cols-2">
-          <AwesomeCard
-            className="animate-fade-in-up"
-            style={{ '--stagger': 5 } as React.CSSProperties}
-          >
+          <AwesomeCard className="animate-fade-in-up">
             <AwesomeCardHeader>
               <AwesomeCardTitle>Pipeline by Stage</AwesomeCardTitle>
             </AwesomeCardHeader>
@@ -291,10 +276,7 @@ export function Dashboard() {
             </AwesomeCardBody>
           </AwesomeCard>
 
-          <AwesomeCard
-            className="animate-fade-in-up"
-            style={{ '--stagger': 6 } as React.CSSProperties}
-          >
+          <AwesomeCard className="animate-fade-in-up">
             <AwesomeCardHeader>
               <AwesomeCardTitle>Leads by Source</AwesomeCardTitle>
             </AwesomeCardHeader>
@@ -337,10 +319,7 @@ export function Dashboard() {
 
         {/* Widgets */}
         <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <AwesomeCard
-            className="animate-fade-in-up"
-            style={{ '--stagger': 8 } as React.CSSProperties}
-          >
+          <AwesomeCard className="animate-fade-in-up">
             <AwesomeCardHeader>
               <AwesomeCardTitle>Quick Actions</AwesomeCardTitle>
             </AwesomeCardHeader>
@@ -366,10 +345,7 @@ export function Dashboard() {
             </AwesomeCardBody>
           </AwesomeCard>
 
-          <AwesomeCard
-            className="animate-fade-in-up"
-            style={{ '--stagger': 9 } as React.CSSProperties}
-          >
+          <AwesomeCard className="animate-fade-in-up">
             <AwesomeCardHeader>
               <AwesomeCardTitle>Hot Deals</AwesomeCardTitle>
               <AwesomeCardIcon>
@@ -418,10 +394,7 @@ export function Dashboard() {
             </AwesomeCardBody>
           </AwesomeCard>
 
-          <AwesomeCard
-            className="animate-fade-in-up"
-            style={{ '--stagger': 10 } as React.CSSProperties}
-          >
+          <AwesomeCard className="animate-fade-in-up">
             <AwesomeCardHeader>
               <AwesomeCardTitle>Upcoming Tasks</AwesomeCardTitle>
               <AwesomeCardIcon>
