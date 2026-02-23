@@ -13,6 +13,7 @@ export default [
       'src/collections/**/*',
       'src/components/admin-panel/**/*',
       'src/components/ui/**/*',
+      'src/components/charts/**/*',
       'src/components/data-table/**/*',
       'src/components/mode-toggle.tsx',
       'src/components/providers/**/*',

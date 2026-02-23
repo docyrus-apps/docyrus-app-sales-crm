@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import {
   Building2,
@@ -8,18 +8,22 @@ import {
   TrendingUp,
   Users,
 } from 'lucide-react'
+import type { PieData } from '@/components/charts/pie-context'
+import { BarChart } from '@/components/charts/bar-chart'
+import { Bar } from '@/components/charts/bar'
+import { BarXAxis } from '@/components/charts/bar-x-axis'
+import { Grid } from '@/components/charts/grid'
+import { ChartTooltip } from '@/components/charts/tooltip'
+import { PieChart } from '@/components/charts/pie-chart'
+import { PieSlice } from '@/components/charts/pie-slice'
+import { PieCenter } from '@/components/charts/pie-center'
 import {
-  Bar,
-  BarChart,
-  Cell,
   Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
+  LegendItem,
+  LegendLabel,
+  LegendMarker,
+  LegendValue,
+} from '@/components/charts/legend'
 import { PageContainer } from '@/components/layout/page-container'
 import {
   AwesomeCard,
@@ -39,14 +43,56 @@ import { useCompanies } from '@/hooks/use-companies'
 import { useTasks } from '@/hooks/use-tasks'
 import { formatCurrency, formatDate } from '@/lib/formatters'
 
-const COLORS = [
-  '#0088FE',
-  '#00C49F',
-  '#FFBB28',
-  '#FF8042',
-  '#8884D8',
-  '#82CA9D',
+const PIE_COLORS = [
+  'hsl(210, 100%, 50%)',
+  'hsl(162, 100%, 39%)',
+  'hsl(43, 100%, 57%)',
+  'hsl(18, 100%, 63%)',
+  'hsl(252, 56%, 68%)',
+  'hsl(140, 45%, 65%)',
 ]
+
+function PieLeadsBySource({ data }: { data: Array<PieData> }) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+
+  const legendItems = data.map((item) => ({
+    label: item.label,
+    value: item.value,
+    color: item.color ?? '',
+    maxValue: data.reduce((sum, d) => sum + d.value, 0),
+  }))
+
+  return (
+    <div className="flex items-center gap-6">
+      <PieChart
+        data={data}
+        size={200}
+        innerRadius={55}
+        padAngle={0.03}
+        cornerRadius={4}
+        hoveredIndex={hoveredIndex}
+        onHoverChange={setHoveredIndex}
+      >
+        {data.map((_, index) => (
+          <PieSlice key={index} index={index} hoverEffect="grow" />
+        ))}
+        <PieCenter defaultLabel="Total" />
+      </PieChart>
+      <Legend
+        items={legendItems}
+        hoveredIndex={hoveredIndex}
+        onHoverChange={setHoveredIndex}
+        className="flex-1"
+      >
+        <LegendItem className="flex items-center gap-2">
+          <LegendMarker className="size-2.5 rounded-full" />
+          <LegendLabel className="flex-1 text-sm" />
+          <LegendValue className="text-sm font-medium tabular-nums" />
+        </LegendItem>
+      </Legend>
+    </div>
+  )
+}
 
 export function Dashboard() {
   const { data: deals, isLoading: dealsLoading } = useDeals()
@@ -108,7 +154,7 @@ export function Dashboard() {
     return Object.values(stageGroups)
   }, [deals])
 
-  // Leads by source data
+  // Leads by source data (PieData format: { label, value, color })
   const leadsSourceData = useMemo(() => {
     if (!leads) return []
 
@@ -118,13 +164,16 @@ export function Dashboard() {
           ? lead.lead_source.name
           : lead.lead_source || 'Unknown'
       if (!acc[sourceName]) {
-        acc[sourceName] = { name: sourceName, value: 0 }
+        acc[sourceName] = { label: sourceName, value: 0 }
       }
       acc[sourceName].value++
       return acc
     }, {})
 
-    return Object.values(sourceGroups)
+    return Object.values(sourceGroups).map((item, index) => ({
+      ...item,
+      color: PIE_COLORS[index % PIE_COLORS.length],
+    }))
   }, [leads])
 
   // Hot deals (top 5)
@@ -261,21 +310,28 @@ export function Dashboard() {
                   No deals in pipeline
                 </p>
               ) : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={pipelineData}>
-                    <XAxis
-                      dataKey="stage"
-                      tick={{ fontSize: 12 }}
-                      angle={-45}
-                      textAnchor="end"
-                      height={80}
-                    />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="count" fill="#8884d8" name="Deal Count" />
-                  </BarChart>
-                </ResponsiveContainer>
+                <BarChart
+                  data={pipelineData as Array<Record<string, unknown>>}
+                  xDataKey="stage"
+                  aspectRatio="16 / 9"
+                >
+                  <Grid horizontal />
+                  <Bar
+                    dataKey="count"
+                    fill="hsl(252, 56%, 68%)"
+                    lineCap="round"
+                  />
+                  <BarXAxis showAllLabels />
+                  <ChartTooltip
+                    rows={(point) => [
+                      {
+                        color: 'hsl(252, 56%, 68%)',
+                        label: 'Deal Count',
+                        value: String(point.count ?? 0),
+                      },
+                    ]}
+                  />
+                </BarChart>
               )}
             </AwesomeCardBody>
           </AwesomeCard>
@@ -292,30 +348,7 @@ export function Dashboard() {
                   No leads data available
                 </p>
               ) : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={leadsSourceData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) =>
-                        `${name} ${(percent * 100).toFixed(0)}%`
-                      }
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {leadsSourceData.map((_entry: any, index: number) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+                <PieLeadsBySource data={leadsSourceData} />
               )}
             </AwesomeCardBody>
           </AwesomeCard>

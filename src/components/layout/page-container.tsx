@@ -11,7 +11,12 @@ interface PageContainerProps {
  */
 export function PageContainer({ children, className }: PageContainerProps) {
   return (
-    <div className={cn('container mx-auto px-1 pt-3 pb-6 animate-fade-in-up', className)}>
+    <div
+      className={cn(
+        'container mx-auto px-1 pt-3 pb-6 animate-fade-in-up',
+        className,
+      )}
+    >
       {children}
     </div>
   )
