@@ -31,6 +31,8 @@ import { Notes } from './routes/notes.tsx'
 import { Products } from './routes/products.tsx'
 import { SalesOrders } from './routes/sales-orders.tsx'
 import { SalesOrderDetail } from './routes/sales-order-detail.tsx'
+import { Contacts } from './routes/contacts.tsx'
+import { ContactDetail } from './routes/contact-detail.tsx'
 import { Activities } from './routes/activities.tsx'
 import { Reports } from './routes/reports.tsx'
 
@@ -84,6 +86,21 @@ const companyDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/companies/$companyId',
   component: CompanyDetail,
+  validateSearch: (search: Record<string, unknown>) => ({
+    tab: (search.tab as string) || 'overview',
+  }),
+})
+
+const contactsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/contacts',
+  component: Contacts,
+})
+
+const contactDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/contacts/$contactId',
+  component: ContactDetail,
   validateSearch: (search: Record<string, unknown>) => ({
     tab: (search.tab as string) || 'overview',
   }),
@@ -169,6 +186,8 @@ const routeTree = rootRoute.addChildren([
   leadDetailRoute,
   companiesRoute,
   companyDetailRoute,
+  contactsRoute,
+  contactDetailRoute,
   tasksRoute,
   notificationsRoute,
   emailsRoute,

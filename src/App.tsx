@@ -26,9 +26,13 @@ function App() {
   const [eventFormOpen, setEventFormOpen] = useState(false)
 
   // Sync the library's API client to the module-level apiClient used by collections
+  // Track readiness so we don't render children until the client is available
+  const [clientReady, setClientReady] = useState(false)
+
   useEffect(() => {
     if (client) {
       setApiClient(client)
+      setClientReady(true)
     }
   }, [client])
 
@@ -45,7 +49,7 @@ function App() {
     return () => document.removeEventListener('keydown', down)
   }, [])
 
-  if (status === 'loading') {
+  if (status === 'loading' || (status === 'authenticated' && !clientReady)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
