@@ -31,6 +31,8 @@ import { Notes } from './routes/notes.tsx'
 import { Products } from './routes/products.tsx'
 import { SalesOrders } from './routes/sales-orders.tsx'
 import { SalesOrderDetail } from './routes/sales-order-detail.tsx'
+import { Activities } from './routes/activities.tsx'
+import { Reports } from './routes/reports.tsx'
 
 const rootRoute = createRootRoute({
   component: App,
@@ -135,6 +137,18 @@ const salesOrderDetailRoute = createRoute({
   component: SalesOrderDetail,
 })
 
+const activitiesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/activities',
+  component: Activities,
+})
+
+const reportsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/reports',
+  component: Reports,
+})
+
 const authCallbackRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/auth/callback',
@@ -163,6 +177,8 @@ const routeTree = rootRoute.addChildren([
   productsRoute,
   salesOrdersRoute,
   salesOrderDetailRoute,
+  activitiesRoute,
+  reportsRoute,
   authCallbackRoute,
 ])
 
