@@ -198,7 +198,7 @@ if (rootElement && !rootElement.innerHTML) {
         <DocyrusAuthProvider
           apiUrl={import.meta.env.VITE_API_BASE_URL}
           clientId={import.meta.env.VITE_OAUTH2_CLIENT_ID}
-          redirectUri={import.meta.env.VITE_OAUTH2_REDIRECT_URI}
+          redirectUri={`${window.location.origin}${import.meta.env.VITE_OAUTH2_REDIRECT_URI}`}
           scopes={oauthScopes}
           callbackPath="/auth/callback"
         >
