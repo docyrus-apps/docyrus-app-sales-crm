@@ -253,7 +253,7 @@ function PieChartInner({
   return (
     <PieProvider value={contextValue}>
       <div
-        className="grid"
+        className="grid font-sans"
         style={{
           gridTemplateColumns: '1fr',
           gridTemplateRows: '1fr',
