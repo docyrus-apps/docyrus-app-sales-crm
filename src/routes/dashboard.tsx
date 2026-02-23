@@ -21,7 +21,6 @@ import {
   YAxis,
 } from 'recharts'
 import { PageContainer } from '@/components/layout/page-container'
-import { PageHeader } from '@/components/layout/page-header'
 import {
   AwesomeCard,
   AwesomeCardBody,
@@ -160,7 +159,12 @@ export function Dashboard() {
 
   return (
     <>
-      <PageHeader title="Dashboard" />
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Track your sales pipeline, leads, and revenue at a glance.
+        </p>
+      </div>
       <PageContainer>
         {/* Stat Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
