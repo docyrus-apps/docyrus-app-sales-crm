@@ -66,8 +66,8 @@ export function CommandPalette({
       ?.filter((deal: any) => {
         if (!search) return false
         const orgName =
-          typeof deal.organizations === 'object'
-            ? deal.organizations.name
+          deal.organizations && typeof deal.organizations === 'object'
+            ? deal.organizations.name || ''
             : deal.organizations || ''
         return orgName.toLowerCase().includes(search.toLowerCase())
       })
@@ -79,8 +79,8 @@ export function CommandPalette({
         if (!search) return false
         const title = lead.title || ''
         const company =
-          typeof lead.company_name === 'object'
-            ? lead.company_name.name
+          lead.company_name && typeof lead.company_name === 'object'
+            ? lead.company_name.name || ''
             : lead.company_name || ''
         return (
           title.toLowerCase().includes(search.toLowerCase()) ||
@@ -257,7 +257,8 @@ export function CommandPalette({
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span>
-                        {typeof deal.organizations === 'object'
+                        {deal.organizations &&
+                        typeof deal.organizations === 'object'
                           ? deal.organizations.name
                           : 'Deal'}
                       </span>
