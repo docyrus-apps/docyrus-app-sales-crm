@@ -195,7 +195,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <NavGroup
-          label="Main Menu"
+          label="Main Navigation"
           items={MAIN_NAV}
           matchRoute={matchRoute}
           unreadCount={unreadCount}
