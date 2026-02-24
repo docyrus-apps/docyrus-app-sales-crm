@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { useTheme } from 'next-themes'
+import { useTheme } from '@/hooks/use-theme'
 import { MoonIcon, SunIcon } from '@radix-ui/react-icons'
 
 import { Button } from '@/components/ui/button'

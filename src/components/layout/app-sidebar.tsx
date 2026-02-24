@@ -12,17 +12,13 @@ import {
   DollarSign,
   Home,
   LogOut,
-  Monitor,
-  Moon,
   NotepadText,
   Package,
   Search,
   ShoppingCart,
-  Sun,
   UserRoundSearch,
   Zap,
 } from 'lucide-react'
-import { useTheme } from 'next-themes'
 import { useDocyrusAuth } from '@docyrus/signin'
 import type { UserEntity } from '@/collections/users.collection'
 import {
@@ -51,6 +47,8 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { UsersCollection } from '@/collections/users.collection'
 import { useNotifications } from '@/hooks/use-notifications'
+import { ThemeToggle } from '@/components/theme-toggle'
+import { ThemeSelector } from '@/components/theme-selector'
 
 const MAIN_NAV = [
   { title: 'Home', url: '/', icon: Home },
@@ -120,7 +118,6 @@ export function AppSidebar() {
   const { signOut } = useDocyrusAuth()
   const matchRoute = useMatchRoute()
   const { state } = useSidebar()
-  const { setTheme, theme } = useTheme()
   const { data: notifications } = useNotifications()
   const [userProfile, setUserProfile] = useState<UserEntity | null>(null)
 
@@ -268,30 +265,14 @@ export function AppSidebar() {
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  <DropdownMenuLabel className="text-xs text-muted-foreground">
-                    Theme
-                  </DropdownMenuLabel>
-                  <DropdownMenuItem
-                    onClick={() => setTheme('light')}
-                    className={theme === 'light' ? 'bg-accent' : ''}
-                  >
-                    <Sun />
-                    Light
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setTheme('dark')}
-                    className={theme === 'dark' ? 'bg-accent' : ''}
-                  >
-                    <Moon />
-                    Dark
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setTheme('system')}
-                    className={theme === 'system' ? 'bg-accent' : ''}
-                  >
-                    <Monitor />
-                    System
-                  </DropdownMenuItem>
+                  <div className="flex items-center justify-between px-2 py-1.5">
+                    <span className="text-sm">Theme</span>
+                    <ThemeToggle />
+                  </div>
+                  <div className="flex items-center justify-between px-2 py-1.5">
+                    <span className="text-sm">Color Theme</span>
+                    <ThemeSelector />
+                  </div>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => signOut()}>

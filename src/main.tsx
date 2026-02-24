@@ -8,7 +8,6 @@ import {
   createRouter,
 } from '@tanstack/react-router'
 import { DocyrusAuthProvider } from '@docyrus/signin'
-import { ThemeProvider } from 'next-themes'
 
 import * as TanStackQueryProvider from './integrations/tanstack-query/root-provider.tsx'
 
@@ -229,19 +228,17 @@ if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
   root.render(
     <StrictMode>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <DocyrusAuthProvider
-          apiUrl={import.meta.env.VITE_API_BASE_URL}
-          clientId={import.meta.env.VITE_OAUTH2_CLIENT_ID}
-          redirectUri={`${window.location.origin}${import.meta.env.VITE_OAUTH2_REDIRECT_URI}`}
-          scopes={oauthScopes}
-          callbackPath="/auth/callback"
-        >
-          <TanStackQueryProvider.Provider>
-            <RouterProvider router={router} />
-          </TanStackQueryProvider.Provider>
-        </DocyrusAuthProvider>
-      </ThemeProvider>
+      <DocyrusAuthProvider
+        apiUrl={import.meta.env.VITE_API_BASE_URL}
+        clientId={import.meta.env.VITE_OAUTH2_CLIENT_ID}
+        redirectUri={`${window.location.origin}${import.meta.env.VITE_OAUTH2_REDIRECT_URI}`}
+        scopes={oauthScopes}
+        callbackPath="/auth/callback"
+      >
+        <TanStackQueryProvider.Provider>
+          <RouterProvider router={router} />
+        </TanStackQueryProvider.Provider>
+      </DocyrusAuthProvider>
     </StrictMode>,
   )
 }
