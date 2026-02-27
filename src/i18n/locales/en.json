@@ -1,0 +1,109 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "loading": "Loading...",
+    "search": "Search",
+    "close": "Close",
+    "noResults": "No results found.",
+    "unexpectedError": "An unexpected error occurred"
+  },
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "mainNavigation": "Main Navigation",
+    "searchAnything": "Search anything",
+    "searchPlaceholder": "Search pages...",
+    "noResultsFound": "No results found.",
+    "pages": "Pages",
+    "searchTooltip": "Search"
+  },
+  "sidebar": {
+    "appName": "Example Web App",
+    "appDescription": "by Docyrus",
+    "myProfile": "My Profile",
+    "changePassword": "Change Password",
+    "theme": "Theme",
+    "signOut": "Sign out",
+    "language": "Language"
+  },
+  "auth": {
+    "loading": "Loading...",
+    "redirecting": "Redirecting...",
+    "signInWithDocyrus": "Sign in with Docyrus",
+    "appTitle": "React Web Application Example",
+    "appSubtitle": "Powered by Docyrus Platform",
+    "signedOut": "You've been signed out",
+    "signedOutDescription": "You can close this tab or",
+    "signInAgain": "sign in again",
+    "signingOut": "Signing out...",
+    "completingSignIn": "Completing sign in..."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "noNotifications": "No new notifications",
+    "markAllRead": "Mark all as read",
+    "viewAll": "View All"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "notImplemented": "This page has not been implemented yet.",
+    "comingSoon": "Coming soon..."
+  },
+  "profile": {
+    "title": "My Profile",
+    "description": "Manage your personal information.",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "phone": "Phone",
+    "jobTitle": "Job Title",
+    "saveChanges": "Save Changes",
+    "profileUpdated": "Profile updated.",
+    "profileUpdateFailed": "Failed to update profile.",
+    "changePhoto": "Change profile photo",
+    "cropPhoto": "Crop Profile Photo",
+    "cropPhotoDescription": "Adjust the image and click save.",
+    "photoUpdated": "Profile photo updated.",
+    "photoUploadFailed": "Failed to upload profile photo.",
+    "selectImage": "Please select an image file.",
+    "imageTooLarge": "Image must be smaller than 5 MB.",
+    "firstNameRequired": "First name is required.",
+    "lastNameRequired": "Last name is required."
+  },
+  "changePassword": {
+    "title": "Change Password",
+    "description": "Enter your current password and choose a new one that meets all the requirements below.",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "changeButton": "Change Password",
+    "currentPasswordRequired": "Current password is required.",
+    "newPasswordRequired": "New password is required.",
+    "confirmPasswordRequired": "Please confirm your new password.",
+    "passwordsDoNotMatch": "Passwords do not match.",
+    "passwordRequirements": "Password does not meet all requirements.",
+    "passwordChanged": "Password changed successfully.",
+    "passwordChangeFailed": "Failed to change password.",
+    "strength": "Password strength",
+    "rules": {
+      "minLength": "At least 8 characters",
+      "uppercase": "At least one uppercase letter",
+      "lowercase": "At least one lowercase letter",
+      "number": "At least one number",
+      "special": "At least one special character (!@#$%^&*)"
+    },
+    "strengthLabels": {
+      "veryWeak": "Very Weak",
+      "weak": "Weak",
+      "fair": "Fair",
+      "strong": "Strong",
+      "veryStrong": "Very Strong"
+    }
+  },
+  "quickAdd": {
+    "tooltip": "Quick Add",
+    "label": "Quick Add"
+  }
+}

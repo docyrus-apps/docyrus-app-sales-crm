@@ -11,10 +11,12 @@ import {
   Contact,
   DollarSign,
   Home,
+  Languages,
   LogOut,
   NotepadText,
   Package,
   Search,
+  Settings,
   ShoppingCart,
   UserRoundSearch,
   Zap,
@@ -49,6 +51,9 @@ import { UsersCollection } from '@/collections/users.collection'
 import { useNotifications } from '@/hooks/use-notifications'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { ThemeSelector } from '@/components/theme-selector'
+import { ProfileDialog } from '@/components/user/profile-dialog'
+import { ChangePasswordDialog } from '@/components/user/change-password-dialog'
+import { LanguageSelector } from '@/components/shared/language-selector'
 
 const MAIN_NAV = [
   { title: 'Home', url: '/', icon: Home },
@@ -120,6 +125,8 @@ export function AppSidebar() {
   const { state } = useSidebar()
   const { data: notifications } = useNotifications()
   const [userProfile, setUserProfile] = useState<UserEntity | null>(null)
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false)
+  const [changePasswordDialogOpen, setChangePasswordDialogOpen] = useState(false)
 
   const unreadCount = notifications?.filter((n: any) => !n.seen).length || 0
 
@@ -254,9 +261,13 @@ export function AppSidebar() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setProfileDialogOpen(true)}>
                     <BadgeCheck />
                     Account
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setChangePasswordDialogOpen(true)}>
+                    <Settings />
+                    Change Password
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <Bell />
@@ -273,6 +284,7 @@ export function AppSidebar() {
                     <span className="text-sm">Color Theme</span>
                     <ThemeSelector />
                   </div>
+                  <LanguageSelector />
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => signOut()}>
@@ -285,6 +297,14 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarFooter>
       <SidebarRail />
+      <ProfileDialog
+        open={profileDialogOpen}
+        onOpenChange={setProfileDialogOpen}
+      />
+      <ChangePasswordDialog
+        open={changePasswordDialogOpen}
+        onOpenChange={setChangePasswordDialogOpen}
+      />
     </Sidebar>
   )
 }

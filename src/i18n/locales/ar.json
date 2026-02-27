@@ -1,0 +1,109 @@
+{
+  "common": {
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "delete": "حذف",
+    "loading": "جارٍ التحميل...",
+    "search": "بحث",
+    "close": "إغلاق",
+    "noResults": "لم يتم العثور على نتائج.",
+    "unexpectedError": "حدث خطأ غير متوقع"
+  },
+  "nav": {
+    "home": "الرئيسية",
+    "dashboard": "لوحة التحكم",
+    "mainNavigation": "التنقل الرئيسي",
+    "searchAnything": "البحث عن أي شيء",
+    "searchPlaceholder": "البحث في الصفحات...",
+    "noResultsFound": "لم يتم العثور على نتائج.",
+    "pages": "الصفحات",
+    "searchTooltip": "بحث"
+  },
+  "sidebar": {
+    "appName": "Example Web App",
+    "appDescription": "بواسطة Docyrus",
+    "myProfile": "ملفي الشخصي",
+    "changePassword": "تغيير كلمة المرور",
+    "theme": "المظهر",
+    "signOut": "تسجيل الخروج",
+    "language": "اللغة"
+  },
+  "auth": {
+    "loading": "جارٍ التحميل...",
+    "redirecting": "جارٍ إعادة التوجيه...",
+    "signInWithDocyrus": "تسجيل الدخول باستخدام Docyrus",
+    "appTitle": "React Web Application Example",
+    "appSubtitle": "مدعوم من Docyrus Platform",
+    "signedOut": "تم تسجيل خروجك",
+    "signedOutDescription": "يمكنك إغلاق هذا التبويب أو",
+    "signInAgain": "تسجيل الدخول مرة أخرى",
+    "signingOut": "جارٍ تسجيل الخروج...",
+    "completingSignIn": "جارٍ إتمام تسجيل الدخول..."
+  },
+  "notifications": {
+    "title": "الإشعارات",
+    "noNotifications": "لا توجد إشعارات جديدة",
+    "markAllRead": "تحديد الكل كمقروء",
+    "viewAll": "عرض الكل"
+  },
+  "dashboard": {
+    "title": "لوحة التحكم",
+    "notImplemented": "لم يتم تنفيذ هذه الصفحة بعد.",
+    "comingSoon": "قريباً..."
+  },
+  "profile": {
+    "title": "ملفي الشخصي",
+    "description": "إدارة معلوماتك الشخصية.",
+    "firstName": "الاسم الأول",
+    "lastName": "اسم العائلة",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "jobTitle": "المسمى الوظيفي",
+    "saveChanges": "حفظ التغييرات",
+    "profileUpdated": "تم تحديث الملف الشخصي.",
+    "profileUpdateFailed": "فشل تحديث الملف الشخصي.",
+    "changePhoto": "تغيير صورة الملف الشخصي",
+    "cropPhoto": "قص صورة الملف الشخصي",
+    "cropPhotoDescription": "قم بضبط الصورة واضغط على حفظ.",
+    "photoUpdated": "تم تحديث صورة الملف الشخصي.",
+    "photoUploadFailed": "فشل رفع صورة الملف الشخصي.",
+    "selectImage": "يرجى اختيار ملف صورة.",
+    "imageTooLarge": "يجب أن تكون الصورة أصغر من 5 ميغابايت.",
+    "firstNameRequired": "الاسم الأول مطلوب.",
+    "lastNameRequired": "اسم العائلة مطلوب."
+  },
+  "changePassword": {
+    "title": "تغيير كلمة المرور",
+    "description": "أدخل كلمة المرور الحالية واختر كلمة مرور جديدة تستوفي جميع المتطلبات أدناه.",
+    "currentPassword": "كلمة المرور الحالية",
+    "newPassword": "كلمة المرور الجديدة",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "changeButton": "تغيير كلمة المرور",
+    "currentPasswordRequired": "كلمة المرور الحالية مطلوبة.",
+    "newPasswordRequired": "كلمة المرور الجديدة مطلوبة.",
+    "confirmPasswordRequired": "يرجى تأكيد كلمة المرور الجديدة.",
+    "passwordsDoNotMatch": "كلمات المرور غير متطابقة.",
+    "passwordRequirements": "كلمة المرور لا تستوفي جميع المتطلبات.",
+    "passwordChanged": "تم تغيير كلمة المرور بنجاح.",
+    "passwordChangeFailed": "فشل تغيير كلمة المرور.",
+    "strength": "قوة كلمة المرور",
+    "rules": {
+      "minLength": "8 أحرف على الأقل",
+      "uppercase": "حرف كبير واحد على الأقل",
+      "lowercase": "حرف صغير واحد على الأقل",
+      "number": "رقم واحد على الأقل",
+      "special": "رمز خاص واحد على الأقل (!@#$%^&*)"
+    },
+    "strengthLabels": {
+      "veryWeak": "ضعيفة جداً",
+      "weak": "ضعيفة",
+      "fair": "مقبولة",
+      "strong": "قوية",
+      "veryStrong": "قوية جداً"
+    }
+  },
+  "quickAdd": {
+    "tooltip": "إضافة سريعة",
+    "label": "إضافة سريعة"
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "common": {
+    "cancel": "Ακύρωση",
+    "save": "Αποθήκευση",
+    "delete": "Διαγραφή",
+    "loading": "Φόρτωση...",
+    "search": "Αναζήτηση",
+    "close": "Κλείσιμο",
+    "noResults": "Δεν βρέθηκαν αποτελέσματα.",
+    "unexpectedError": "Παρουσιάστηκε ένα μη αναμενόμενο σφάλμα"
+  },
+  "nav": {
+    "home": "Αρχική",
+    "dashboard": "Πίνακας ελέγχου",
+    "mainNavigation": "Κύρια πλοήγηση",
+    "searchAnything": "Αναζήτηση οτιδήποτε",
+    "searchPlaceholder": "Αναζήτηση σελίδων...",
+    "noResultsFound": "Δεν βρέθηκαν αποτελέσματα.",
+    "pages": "Σελίδες",
+    "searchTooltip": "Αναζήτηση"
+  },
+  "sidebar": {
+    "appName": "Example Web App",
+    "appDescription": "από Docyrus",
+    "myProfile": "Το προφίλ μου",
+    "changePassword": "Αλλαγή κωδικού",
+    "theme": "Θέμα",
+    "signOut": "Αποσύνδεση",
+    "language": "Γλώσσα"
+  },
+  "auth": {
+    "loading": "Φόρτωση...",
+    "redirecting": "Ανακατεύθυνση...",
+    "signInWithDocyrus": "Σύνδεση με Docyrus",
+    "appTitle": "React Web Application Example",
+    "appSubtitle": "Με την υποστήριξη του Docyrus Platform",
+    "signedOut": "Αποσυνδεθήκατε",
+    "signedOutDescription": "Μπορείτε να κλείσετε αυτήν την καρτέλα ή",
+    "signInAgain": "να συνδεθείτε ξανά",
+    "signingOut": "Αποσύνδεση...",
+    "completingSignIn": "Ολοκλήρωση σύνδεσης..."
+  },
+  "notifications": {
+    "title": "Ειδοποιήσεις",
+    "noNotifications": "Δεν υπάρχουν νέες ειδοποιήσεις",
+    "markAllRead": "Σήμανση όλων ως αναγνωσμένα",
+    "viewAll": "Εμφάνιση όλων"
+  },
+  "dashboard": {
+    "title": "Πίνακας ελέγχου",
+    "notImplemented": "Αυτή η σελίδα δεν έχει υλοποιηθεί ακόμα.",
+    "comingSoon": "Σύντομα διαθέσιμο..."
+  },
+  "profile": {
+    "title": "Το προφίλ μου",
+    "description": "Διαχειριστείτε τα προσωπικά σας στοιχεία.",
+    "firstName": "Όνομα",
+    "lastName": "Επώνυμο",
+    "email": "E-mail",
+    "phone": "Τηλέφωνο",
+    "jobTitle": "Τίτλος εργασίας",
+    "saveChanges": "Αποθήκευση αλλαγών",
+    "profileUpdated": "Το προφίλ ενημερώθηκε.",
+    "profileUpdateFailed": "Αποτυχία ενημέρωσης προφίλ.",
+    "changePhoto": "Αλλαγή φωτογραφίας προφίλ",
+    "cropPhoto": "Περικοπή φωτογραφίας προφίλ",
+    "cropPhotoDescription": "Προσαρμόστε την εικόνα και κάντε κλικ στο αποθήκευση.",
+    "photoUpdated": "Η φωτογραφία προφίλ ενημερώθηκε.",
+    "photoUploadFailed": "Αποτυχία μεταφόρτωσης φωτογραφίας προφίλ.",
+    "selectImage": "Παρακαλώ επιλέξτε ένα αρχείο εικόνας.",
+    "imageTooLarge": "Η εικόνα πρέπει να είναι μικρότερη από 5 MB.",
+    "firstNameRequired": "Το όνομα είναι υποχρεωτικό.",
+    "lastNameRequired": "Το επώνυμο είναι υποχρεωτικό."
+  },
+  "changePassword": {
+    "title": "Αλλαγή κωδικού",
+    "description": "Εισάγετε τον τρέχοντα κωδικό σας και επιλέξτε έναν νέο που πληροί όλες τις παρακάτω απαιτήσεις.",
+    "currentPassword": "Τρέχων κωδικός",
+    "newPassword": "Νέος κωδικός",
+    "confirmPassword": "Επιβεβαίωση κωδικού",
+    "changeButton": "Αλλαγή κωδικού",
+    "currentPasswordRequired": "Ο τρέχων κωδικός είναι υποχρεωτικός.",
+    "newPasswordRequired": "Ο νέος κωδικός είναι υποχρεωτικός.",
+    "confirmPasswordRequired": "Παρακαλώ επιβεβαιώστε τον νέο κωδικό σας.",
+    "passwordsDoNotMatch": "Οι κωδικοί δεν ταιριάζουν.",
+    "passwordRequirements": "Ο κωδικός δεν πληροί όλες τις απαιτήσεις.",
+    "passwordChanged": "Ο κωδικός αλλάχτηκε επιτυχώς.",
+    "passwordChangeFailed": "Αποτυχία αλλαγής κωδικού.",
+    "strength": "Ισχύς κωδικού",
+    "rules": {
+      "minLength": "Τουλάχιστον 8 χαρακτήρες",
+      "uppercase": "Τουλάχιστον ένα κεφαλαίο γράμμα",
+      "lowercase": "Τουλάχιστον ένα πεζό γράμμα",
+      "number": "Τουλάχιστον ένας αριθμός",
+      "special": "Τουλάχιστον ένας ειδικός χαρακτήρας (!@#$%^&*)"
+    },
+    "strengthLabels": {
+      "veryWeak": "Πολύ αδύναμος",
+      "weak": "Αδύναμος",
+      "fair": "Μέτριος",
+      "strong": "Ισχυρός",
+      "veryStrong": "Πολύ ισχυρός"
+    }
+  },
+  "quickAdd": {
+    "tooltip": "Γρήγορη προσθήκη",
+    "label": "Γρήγορη προσθήκη"
+  }
+}

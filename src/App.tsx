@@ -13,6 +13,7 @@ import { DealFormDialog } from './components/deals/deal-form-dialog'
 import { LeadFormDialog } from './components/leads/lead-form-dialog'
 import { TaskFormSheet } from './components/tasks/task-form-sheet'
 import { EventFormDialog } from './components/events/event-form-dialog'
+import { GlobalDialogBar } from './components/docyrus/awesome-dialog'
 
 function App() {
   const { status } = useDocyrusAuth()
@@ -135,6 +136,7 @@ function App() {
           onOpenChange={setEventFormOpen}
           mode="create"
         />
+        <GlobalDialogBar />
         {import.meta.env.DEV && <Agentation endpoint="http://localhost:4747" />}
       </TooltipProvider>
     </NuqsAdapter>

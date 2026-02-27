@@ -1,0 +1,109 @@
+{
+  "common": {
+    "cancel": "Prekliči",
+    "save": "Shrani",
+    "delete": "Izbriši",
+    "loading": "Nalaganje...",
+    "search": "Išči",
+    "close": "Zapri",
+    "noResults": "Ni najdenih rezultatov.",
+    "unexpectedError": "Prišlo je do nepričakovane napake"
+  },
+  "nav": {
+    "home": "Domov",
+    "dashboard": "Nadzorna plošča",
+    "mainNavigation": "Glavna navigacija",
+    "searchAnything": "Išči karkoli",
+    "searchPlaceholder": "Išči strani...",
+    "noResultsFound": "Ni najdenih rezultatov.",
+    "pages": "Strani",
+    "searchTooltip": "Išči"
+  },
+  "sidebar": {
+    "appName": "Example Web App",
+    "appDescription": "od Docyrus",
+    "myProfile": "Moj profil",
+    "changePassword": "Spremeni geslo",
+    "theme": "Tema",
+    "signOut": "Odjava",
+    "language": "Jezik"
+  },
+  "auth": {
+    "loading": "Nalaganje...",
+    "redirecting": "Preusmeritev...",
+    "signInWithDocyrus": "Prijava z Docyrus",
+    "appTitle": "React Web Application Example",
+    "appSubtitle": "Poganja Docyrus Platform",
+    "signedOut": "Bili ste odjavljeni",
+    "signedOutDescription": "Zaprete lahko ta zavihek ali",
+    "signInAgain": "se ponovno prijavite",
+    "signingOut": "Odjavljanje...",
+    "completingSignIn": "Dokončevanje prijave..."
+  },
+  "notifications": {
+    "title": "Obvestila",
+    "noNotifications": "Ni novih obvestil",
+    "markAllRead": "Označi vse kot prebrano",
+    "viewAll": "Prikaži vse"
+  },
+  "dashboard": {
+    "title": "Nadzorna plošča",
+    "notImplemented": "Ta stran še ni bila implementirana.",
+    "comingSoon": "Kmalu na voljo..."
+  },
+  "profile": {
+    "title": "Moj profil",
+    "description": "Upravljajte svoje osebne podatke.",
+    "firstName": "Ime",
+    "lastName": "Priimek",
+    "email": "E-pošta",
+    "phone": "Telefon",
+    "jobTitle": "Naziv delovnega mesta",
+    "saveChanges": "Shrani spremembe",
+    "profileUpdated": "Profil posodobljen.",
+    "profileUpdateFailed": "Posodobitev profila ni uspela.",
+    "changePhoto": "Spremeni fotografijo profila",
+    "cropPhoto": "Obreži fotografijo profila",
+    "cropPhotoDescription": "Prilagodite sliko in kliknite shrani.",
+    "photoUpdated": "Fotografija profila posodobljena.",
+    "photoUploadFailed": "Nalaganje fotografije profila ni uspelo.",
+    "selectImage": "Prosimo, izberite slikovno datoteko.",
+    "imageTooLarge": "Slika mora biti manjša od 5 MB.",
+    "firstNameRequired": "Ime je obvezno.",
+    "lastNameRequired": "Priimek je obvezen."
+  },
+  "changePassword": {
+    "title": "Spremeni geslo",
+    "description": "Vnesite svoje trenutno geslo in izberite novo, ki izpolnjuje vse spodnje zahteve.",
+    "currentPassword": "Trenutno geslo",
+    "newPassword": "Novo geslo",
+    "confirmPassword": "Potrdi geslo",
+    "changeButton": "Spremeni geslo",
+    "currentPasswordRequired": "Trenutno geslo je obvezno.",
+    "newPasswordRequired": "Novo geslo je obvezno.",
+    "confirmPasswordRequired": "Prosimo, potrdite novo geslo.",
+    "passwordsDoNotMatch": "Gesli se ne ujemata.",
+    "passwordRequirements": "Geslo ne izpolnjuje vseh zahtev.",
+    "passwordChanged": "Geslo uspešno spremenjeno.",
+    "passwordChangeFailed": "Sprememba gesla ni uspela.",
+    "strength": "Moč gesla",
+    "rules": {
+      "minLength": "Vsaj 8 znakov",
+      "uppercase": "Vsaj ena velika črka",
+      "lowercase": "Vsaj ena mala črka",
+      "number": "Vsaj ena številka",
+      "special": "Vsaj en poseben znak (!@#$%^&*)"
+    },
+    "strengthLabels": {
+      "veryWeak": "Zelo šibko",
+      "weak": "Šibko",
+      "fair": "Zmerno",
+      "strong": "Močno",
+      "veryStrong": "Zelo močno"
+    }
+  },
+  "quickAdd": {
+    "tooltip": "Hitro dodaj",
+    "label": "Hitro dodaj"
+  }
+}

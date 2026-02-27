@@ -1,0 +1,109 @@
+{
+  "common": {
+    "cancel": "İptal",
+    "save": "Kaydet",
+    "delete": "Sil",
+    "loading": "Yükleniyor...",
+    "search": "Ara",
+    "close": "Kapat",
+    "noResults": "Sonuç bulunamadı.",
+    "unexpectedError": "Beklenmeyen bir hata oluştu"
+  },
+  "nav": {
+    "home": "Ana Sayfa",
+    "dashboard": "Gösterge Paneli",
+    "mainNavigation": "Ana Navigasyon",
+    "searchAnything": "Her şeyi ara",
+    "searchPlaceholder": "Sayfa ara...",
+    "noResultsFound": "Sonuç bulunamadı.",
+    "pages": "Sayfalar",
+    "searchTooltip": "Ara"
+  },
+  "sidebar": {
+    "appName": "Example Web App",
+    "appDescription": "Docyrus tarafından",
+    "myProfile": "Profilim",
+    "changePassword": "Şifre Değiştir",
+    "theme": "Tema",
+    "signOut": "Çıkış yap",
+    "language": "Dil"
+  },
+  "auth": {
+    "loading": "Yükleniyor...",
+    "redirecting": "Yönlendiriliyor...",
+    "signInWithDocyrus": "Docyrus ile giriş yap",
+    "appTitle": "React Web Application Example",
+    "appSubtitle": "Docyrus Platform tarafından desteklenmektedir",
+    "signedOut": "Çıkış yapıldı",
+    "signedOutDescription": "Bu sekmeyi kapatabilir veya",
+    "signInAgain": "tekrar giriş yapabilirsiniz",
+    "signingOut": "Çıkış yapılıyor...",
+    "completingSignIn": "Giriş tamamlanıyor..."
+  },
+  "notifications": {
+    "title": "Bildirimler",
+    "noNotifications": "Yeni bildirim yok",
+    "markAllRead": "Tümünü okundu işaretle",
+    "viewAll": "Tümünü Gör"
+  },
+  "dashboard": {
+    "title": "Gösterge Paneli",
+    "notImplemented": "Bu sayfa henüz uygulanmadı.",
+    "comingSoon": "Yakında..."
+  },
+  "profile": {
+    "title": "Profilim",
+    "description": "Kişisel bilgilerinizi yönetin.",
+    "firstName": "Ad",
+    "lastName": "Soyad",
+    "email": "E-posta",
+    "phone": "Telefon",
+    "jobTitle": "Unvan",
+    "saveChanges": "Değişiklikleri Kaydet",
+    "profileUpdated": "Profil güncellendi.",
+    "profileUpdateFailed": "Profil güncellenemedi.",
+    "changePhoto": "Profil fotoğrafını değiştir",
+    "cropPhoto": "Profil Fotoğrafını Kırp",
+    "cropPhotoDescription": "Görüntüyü ayarlayın ve kaydet'e tıklayın.",
+    "photoUpdated": "Profil fotoğrafı güncellendi.",
+    "photoUploadFailed": "Profil fotoğrafı yüklenemedi.",
+    "selectImage": "Lütfen bir resim dosyası seçin.",
+    "imageTooLarge": "Resim 5 MB'den küçük olmalıdır.",
+    "firstNameRequired": "Ad gereklidir.",
+    "lastNameRequired": "Soyad gereklidir."
+  },
+  "changePassword": {
+    "title": "Şifre Değiştir",
+    "description": "Mevcut şifrenizi girin ve aşağıdaki tüm gereksinimleri karşılayan yeni bir şifre seçin.",
+    "currentPassword": "Mevcut Şifre",
+    "newPassword": "Yeni Şifre",
+    "confirmPassword": "Şifreyi Onayla",
+    "changeButton": "Şifre Değiştir",
+    "currentPasswordRequired": "Mevcut şifre gereklidir.",
+    "newPasswordRequired": "Yeni şifre gereklidir.",
+    "confirmPasswordRequired": "Lütfen yeni şifrenizi onaylayın.",
+    "passwordsDoNotMatch": "Şifreler eşleşmiyor.",
+    "passwordRequirements": "Şifre tüm gereksinimleri karşılamıyor.",
+    "passwordChanged": "Şifre başarıyla değiştirildi.",
+    "passwordChangeFailed": "Şifre değiştirilemedi.",
+    "strength": "Şifre gücü",
+    "rules": {
+      "minLength": "En az 8 karakter",
+      "uppercase": "En az bir büyük harf",
+      "lowercase": "En az bir küçük harf",
+      "number": "En az bir rakam",
+      "special": "En az bir özel karakter (!@#$%^&*)"
+    },
+    "strengthLabels": {
+      "veryWeak": "Çok Zayıf",
+      "weak": "Zayıf",
+      "fair": "Orta",
+      "strong": "Güçlü",
+      "veryStrong": "Çok Güçlü"
+    }
+  },
+  "quickAdd": {
+    "tooltip": "Hızlı Ekle",
+    "label": "Hızlı Ekle"
+  }
+}

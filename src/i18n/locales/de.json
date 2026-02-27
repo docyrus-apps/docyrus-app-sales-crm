@@ -1,0 +1,109 @@
+{
+  "common": {
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "loading": "Laden...",
+    "search": "Suchen",
+    "close": "Schließen",
+    "noResults": "Keine Ergebnisse gefunden.",
+    "unexpectedError": "Ein unerwarteter Fehler ist aufgetreten"
+  },
+  "nav": {
+    "home": "Startseite",
+    "dashboard": "Dashboard",
+    "mainNavigation": "Hauptnavigation",
+    "searchAnything": "Alles durchsuchen",
+    "searchPlaceholder": "Seiten durchsuchen...",
+    "noResultsFound": "Keine Ergebnisse gefunden.",
+    "pages": "Seiten",
+    "searchTooltip": "Suchen"
+  },
+  "sidebar": {
+    "appName": "Example Web App",
+    "appDescription": "von Docyrus",
+    "myProfile": "Mein Profil",
+    "changePassword": "Passwort ändern",
+    "theme": "Design",
+    "signOut": "Abmelden",
+    "language": "Sprache"
+  },
+  "auth": {
+    "loading": "Laden...",
+    "redirecting": "Weiterleitung...",
+    "signInWithDocyrus": "Mit Docyrus anmelden",
+    "appTitle": "React Web Application Example",
+    "appSubtitle": "Betrieben von Docyrus Platform",
+    "signedOut": "Sie wurden abgemeldet",
+    "signedOutDescription": "Sie können diesen Tab schließen oder",
+    "signInAgain": "erneut anmelden",
+    "signingOut": "Abmeldung...",
+    "completingSignIn": "Anmeldung wird abgeschlossen..."
+  },
+  "notifications": {
+    "title": "Benachrichtigungen",
+    "noNotifications": "Keine neuen Benachrichtigungen",
+    "markAllRead": "Alle als gelesen markieren",
+    "viewAll": "Alle anzeigen"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "notImplemented": "Diese Seite wurde noch nicht implementiert.",
+    "comingSoon": "Demnächst verfügbar..."
+  },
+  "profile": {
+    "title": "Mein Profil",
+    "description": "Verwalten Sie Ihre persönlichen Daten.",
+    "firstName": "Vorname",
+    "lastName": "Nachname",
+    "email": "E-Mail",
+    "phone": "Telefon",
+    "jobTitle": "Berufsbezeichnung",
+    "saveChanges": "Änderungen speichern",
+    "profileUpdated": "Profil aktualisiert.",
+    "profileUpdateFailed": "Profil konnte nicht aktualisiert werden.",
+    "changePhoto": "Profilfoto ändern",
+    "cropPhoto": "Profilfoto zuschneiden",
+    "cropPhotoDescription": "Passen Sie das Bild an und klicken Sie auf Speichern.",
+    "photoUpdated": "Profilfoto aktualisiert.",
+    "photoUploadFailed": "Profilfoto konnte nicht hochgeladen werden.",
+    "selectImage": "Bitte wählen Sie eine Bilddatei aus.",
+    "imageTooLarge": "Das Bild muss kleiner als 5 MB sein.",
+    "firstNameRequired": "Vorname ist erforderlich.",
+    "lastNameRequired": "Nachname ist erforderlich."
+  },
+  "changePassword": {
+    "title": "Passwort ändern",
+    "description": "Geben Sie Ihr aktuelles Passwort ein und wählen Sie ein neues, das alle folgenden Anforderungen erfüllt.",
+    "currentPassword": "Aktuelles Passwort",
+    "newPassword": "Neues Passwort",
+    "confirmPassword": "Passwort bestätigen",
+    "changeButton": "Passwort ändern",
+    "currentPasswordRequired": "Aktuelles Passwort ist erforderlich.",
+    "newPasswordRequired": "Neues Passwort ist erforderlich.",
+    "confirmPasswordRequired": "Bitte bestätigen Sie Ihr neues Passwort.",
+    "passwordsDoNotMatch": "Passwörter stimmen nicht überein.",
+    "passwordRequirements": "Passwort erfüllt nicht alle Anforderungen.",
+    "passwordChanged": "Passwort erfolgreich geändert.",
+    "passwordChangeFailed": "Passwort konnte nicht geändert werden.",
+    "strength": "Passwortstärke",
+    "rules": {
+      "minLength": "Mindestens 8 Zeichen",
+      "uppercase": "Mindestens ein Großbuchstabe",
+      "lowercase": "Mindestens ein Kleinbuchstabe",
+      "number": "Mindestens eine Zahl",
+      "special": "Mindestens ein Sonderzeichen (!@#$%^&*)"
+    },
+    "strengthLabels": {
+      "veryWeak": "Sehr schwach",
+      "weak": "Schwach",
+      "fair": "Mittel",
+      "strong": "Stark",
+      "veryStrong": "Sehr stark"
+    }
+  },
+  "quickAdd": {
+    "tooltip": "Schnell hinzufügen",
+    "label": "Schnell hinzufügen"
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "common": {
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "loading": "Chargement...",
+    "search": "Rechercher",
+    "close": "Fermer",
+    "noResults": "Aucun résultat trouvé.",
+    "unexpectedError": "Une erreur inattendue s'est produite"
+  },
+  "nav": {
+    "home": "Accueil",
+    "dashboard": "Tableau de bord",
+    "mainNavigation": "Navigation principale",
+    "searchAnything": "Rechercher n'importe quoi",
+    "searchPlaceholder": "Rechercher des pages...",
+    "noResultsFound": "Aucun résultat trouvé.",
+    "pages": "Pages",
+    "searchTooltip": "Rechercher"
+  },
+  "sidebar": {
+    "appName": "Example Web App",
+    "appDescription": "par Docyrus",
+    "myProfile": "Mon profil",
+    "changePassword": "Changer le mot de passe",
+    "theme": "Thème",
+    "signOut": "Se déconnecter",
+    "language": "Langue"
+  },
+  "auth": {
+    "loading": "Chargement...",
+    "redirecting": "Redirection...",
+    "signInWithDocyrus": "Se connecter avec Docyrus",
+    "appTitle": "React Web Application Example",
+    "appSubtitle": "Propulsé par Docyrus Platform",
+    "signedOut": "Vous avez été déconnecté",
+    "signedOutDescription": "Vous pouvez fermer cet onglet ou",
+    "signInAgain": "vous reconnecter",
+    "signingOut": "Déconnexion...",
+    "completingSignIn": "Connexion en cours..."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "noNotifications": "Aucune nouvelle notification",
+    "markAllRead": "Tout marquer comme lu",
+    "viewAll": "Tout afficher"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "notImplemented": "Cette page n'a pas encore été implémentée.",
+    "comingSoon": "Bientôt disponible..."
+  },
+  "profile": {
+    "title": "Mon profil",
+    "description": "Gérez vos informations personnelles.",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "email": "E-mail",
+    "phone": "Téléphone",
+    "jobTitle": "Intitulé du poste",
+    "saveChanges": "Enregistrer les modifications",
+    "profileUpdated": "Profil mis à jour.",
+    "profileUpdateFailed": "Échec de la mise à jour du profil.",
+    "changePhoto": "Changer la photo de profil",
+    "cropPhoto": "Recadrer la photo de profil",
+    "cropPhotoDescription": "Ajustez l'image et cliquez sur enregistrer.",
+    "photoUpdated": "Photo de profil mise à jour.",
+    "photoUploadFailed": "Échec du téléchargement de la photo de profil.",
+    "selectImage": "Veuillez sélectionner un fichier image.",
+    "imageTooLarge": "L'image doit être inférieure à 5 Mo.",
+    "firstNameRequired": "Le prénom est requis.",
+    "lastNameRequired": "Le nom est requis."
+  },
+  "changePassword": {
+    "title": "Changer le mot de passe",
+    "description": "Entrez votre mot de passe actuel et choisissez-en un nouveau qui répond à toutes les exigences ci-dessous.",
+    "currentPassword": "Mot de passe actuel",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "changeButton": "Changer le mot de passe",
+    "currentPasswordRequired": "Le mot de passe actuel est requis.",
+    "newPasswordRequired": "Le nouveau mot de passe est requis.",
+    "confirmPasswordRequired": "Veuillez confirmer votre nouveau mot de passe.",
+    "passwordsDoNotMatch": "Les mots de passe ne correspondent pas.",
+    "passwordRequirements": "Le mot de passe ne répond pas à toutes les exigences.",
+    "passwordChanged": "Mot de passe modifié avec succès.",
+    "passwordChangeFailed": "Échec du changement de mot de passe.",
+    "strength": "Force du mot de passe",
+    "rules": {
+      "minLength": "Au moins 8 caractères",
+      "uppercase": "Au moins une lettre majuscule",
+      "lowercase": "Au moins une lettre minuscule",
+      "number": "Au moins un chiffre",
+      "special": "Au moins un caractère spécial (!@#$%^&*)"
+    },
+    "strengthLabels": {
+      "veryWeak": "Très faible",
+      "weak": "Faible",
+      "fair": "Moyen",
+      "strong": "Fort",
+      "veryStrong": "Très fort"
+    }
+  },
+  "quickAdd": {
+    "tooltip": "Ajout rapide",
+    "label": "Ajout rapide"
+  }
+}

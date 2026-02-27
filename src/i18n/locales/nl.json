@@ -1,0 +1,109 @@
+{
+  "common": {
+    "cancel": "Annuleren",
+    "save": "Opslaan",
+    "delete": "Verwijderen",
+    "loading": "Laden...",
+    "search": "Zoeken",
+    "close": "Sluiten",
+    "noResults": "Geen resultaten gevonden.",
+    "unexpectedError": "Er is een onverwachte fout opgetreden"
+  },
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "mainNavigation": "Hoofdnavigatie",
+    "searchAnything": "Zoek alles",
+    "searchPlaceholder": "Pagina's zoeken...",
+    "noResultsFound": "Geen resultaten gevonden.",
+    "pages": "Pagina's",
+    "searchTooltip": "Zoeken"
+  },
+  "sidebar": {
+    "appName": "Example Web App",
+    "appDescription": "door Docyrus",
+    "myProfile": "Mijn profiel",
+    "changePassword": "Wachtwoord wijzigen",
+    "theme": "Thema",
+    "signOut": "Uitloggen",
+    "language": "Taal"
+  },
+  "auth": {
+    "loading": "Laden...",
+    "redirecting": "Doorverwijzen...",
+    "signInWithDocyrus": "Inloggen met Docyrus",
+    "appTitle": "React Web Application Example",
+    "appSubtitle": "Mogelijk gemaakt door Docyrus Platform",
+    "signedOut": "U bent uitgelogd",
+    "signedOutDescription": "U kunt dit tabblad sluiten of",
+    "signInAgain": "opnieuw inloggen",
+    "signingOut": "Uitloggen...",
+    "completingSignIn": "Aanmelding voltooien..."
+  },
+  "notifications": {
+    "title": "Meldingen",
+    "noNotifications": "Geen nieuwe meldingen",
+    "markAllRead": "Alles als gelezen markeren",
+    "viewAll": "Alles bekijken"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "notImplemented": "Deze pagina is nog niet geïmplementeerd.",
+    "comingSoon": "Binnenkort beschikbaar..."
+  },
+  "profile": {
+    "title": "Mijn profiel",
+    "description": "Beheer uw persoonlijke gegevens.",
+    "firstName": "Voornaam",
+    "lastName": "Achternaam",
+    "email": "E-mail",
+    "phone": "Telefoon",
+    "jobTitle": "Functietitel",
+    "saveChanges": "Wijzigingen opslaan",
+    "profileUpdated": "Profiel bijgewerkt.",
+    "profileUpdateFailed": "Profiel kon niet worden bijgewerkt.",
+    "changePhoto": "Profielfoto wijzigen",
+    "cropPhoto": "Profielfoto bijsnijden",
+    "cropPhotoDescription": "Pas de afbeelding aan en klik op opslaan.",
+    "photoUpdated": "Profielfoto bijgewerkt.",
+    "photoUploadFailed": "Profielfoto kon niet worden geüpload.",
+    "selectImage": "Selecteer een afbeeldingsbestand.",
+    "imageTooLarge": "De afbeelding moet kleiner zijn dan 5 MB.",
+    "firstNameRequired": "Voornaam is verplicht.",
+    "lastNameRequired": "Achternaam is verplicht."
+  },
+  "changePassword": {
+    "title": "Wachtwoord wijzigen",
+    "description": "Voer uw huidige wachtwoord in en kies een nieuw wachtwoord dat aan alle onderstaande vereisten voldoet.",
+    "currentPassword": "Huidig wachtwoord",
+    "newPassword": "Nieuw wachtwoord",
+    "confirmPassword": "Wachtwoord bevestigen",
+    "changeButton": "Wachtwoord wijzigen",
+    "currentPasswordRequired": "Huidig wachtwoord is verplicht.",
+    "newPasswordRequired": "Nieuw wachtwoord is verplicht.",
+    "confirmPasswordRequired": "Bevestig uw nieuwe wachtwoord.",
+    "passwordsDoNotMatch": "Wachtwoorden komen niet overeen.",
+    "passwordRequirements": "Wachtwoord voldoet niet aan alle vereisten.",
+    "passwordChanged": "Wachtwoord succesvol gewijzigd.",
+    "passwordChangeFailed": "Wachtwoord kon niet worden gewijzigd.",
+    "strength": "Wachtwoordsterkte",
+    "rules": {
+      "minLength": "Minimaal 8 tekens",
+      "uppercase": "Minimaal één hoofdletter",
+      "lowercase": "Minimaal één kleine letter",
+      "number": "Minimaal één cijfer",
+      "special": "Minimaal één speciaal teken (!@#$%^&*)"
+    },
+    "strengthLabels": {
+      "veryWeak": "Zeer zwak",
+      "weak": "Zwak",
+      "fair": "Redelijk",
+      "strong": "Sterk",
+      "veryStrong": "Zeer sterk"
+    }
+  },
+  "quickAdd": {
+    "tooltip": "Snel toevoegen",
+    "label": "Snel toevoegen"
+  }
+}

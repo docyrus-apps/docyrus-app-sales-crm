@@ -1,0 +1,109 @@
+{
+  "common": {
+    "cancel": "Annulla",
+    "save": "Salva",
+    "delete": "Elimina",
+    "loading": "Caricamento...",
+    "search": "Cerca",
+    "close": "Chiudi",
+    "noResults": "Nessun risultato trovato.",
+    "unexpectedError": "Si è verificato un errore imprevisto"
+  },
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "mainNavigation": "Navigazione principale",
+    "searchAnything": "Cerca qualsiasi cosa",
+    "searchPlaceholder": "Cerca pagine...",
+    "noResultsFound": "Nessun risultato trovato.",
+    "pages": "Pagine",
+    "searchTooltip": "Cerca"
+  },
+  "sidebar": {
+    "appName": "Example Web App",
+    "appDescription": "di Docyrus",
+    "myProfile": "Il mio profilo",
+    "changePassword": "Cambia password",
+    "theme": "Tema",
+    "signOut": "Esci",
+    "language": "Lingua"
+  },
+  "auth": {
+    "loading": "Caricamento...",
+    "redirecting": "Reindirizzamento...",
+    "signInWithDocyrus": "Accedi con Docyrus",
+    "appTitle": "React Web Application Example",
+    "appSubtitle": "Alimentato da Docyrus Platform",
+    "signedOut": "Sei stato disconnesso",
+    "signedOutDescription": "Puoi chiudere questa scheda o",
+    "signInAgain": "accedere di nuovo",
+    "signingOut": "Disconnessione...",
+    "completingSignIn": "Completamento accesso..."
+  },
+  "notifications": {
+    "title": "Notifiche",
+    "noNotifications": "Nessuna nuova notifica",
+    "markAllRead": "Segna tutto come letto",
+    "viewAll": "Visualizza tutto"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "notImplemented": "Questa pagina non è stata ancora implementata.",
+    "comingSoon": "Prossimamente..."
+  },
+  "profile": {
+    "title": "Il mio profilo",
+    "description": "Gestisci le tue informazioni personali.",
+    "firstName": "Nome",
+    "lastName": "Cognome",
+    "email": "E-mail",
+    "phone": "Telefono",
+    "jobTitle": "Qualifica",
+    "saveChanges": "Salva modifiche",
+    "profileUpdated": "Profilo aggiornato.",
+    "profileUpdateFailed": "Aggiornamento del profilo non riuscito.",
+    "changePhoto": "Cambia foto profilo",
+    "cropPhoto": "Ritaglia foto profilo",
+    "cropPhotoDescription": "Regola l'immagine e clicca su salva.",
+    "photoUpdated": "Foto profilo aggiornata.",
+    "photoUploadFailed": "Caricamento della foto profilo non riuscito.",
+    "selectImage": "Seleziona un file immagine.",
+    "imageTooLarge": "L'immagine deve essere inferiore a 5 MB.",
+    "firstNameRequired": "Il nome è obbligatorio.",
+    "lastNameRequired": "Il cognome è obbligatorio."
+  },
+  "changePassword": {
+    "title": "Cambia password",
+    "description": "Inserisci la tua password attuale e scegline una nuova che soddisfi tutti i requisiti seguenti.",
+    "currentPassword": "Password attuale",
+    "newPassword": "Nuova password",
+    "confirmPassword": "Conferma password",
+    "changeButton": "Cambia password",
+    "currentPasswordRequired": "La password attuale è obbligatoria.",
+    "newPasswordRequired": "La nuova password è obbligatoria.",
+    "confirmPasswordRequired": "Conferma la tua nuova password.",
+    "passwordsDoNotMatch": "Le password non corrispondono.",
+    "passwordRequirements": "La password non soddisfa tutti i requisiti.",
+    "passwordChanged": "Password cambiata con successo.",
+    "passwordChangeFailed": "Cambio password non riuscito.",
+    "strength": "Sicurezza della password",
+    "rules": {
+      "minLength": "Almeno 8 caratteri",
+      "uppercase": "Almeno una lettera maiuscola",
+      "lowercase": "Almeno una lettera minuscola",
+      "number": "Almeno un numero",
+      "special": "Almeno un carattere speciale (!@#$%^&*)"
+    },
+    "strengthLabels": {
+      "veryWeak": "Molto debole",
+      "weak": "Debole",
+      "fair": "Discreta",
+      "strong": "Forte",
+      "veryStrong": "Molto forte"
+    }
+  },
+  "quickAdd": {
+    "tooltip": "Aggiunta rapida",
+    "label": "Aggiunta rapida"
+  }
+}
