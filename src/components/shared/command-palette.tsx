@@ -14,6 +14,7 @@ import {
   Users,
 } from 'lucide-react'
 import {
+  Command,
   CommandDialog,
   CommandEmpty,
   CommandGroup,
@@ -114,13 +115,14 @@ export function CommandPalette({
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
-      <CommandInput
-        placeholder={t('commandPalette.searchPlaceholder')}
-        value={search}
-        onValueChange={setSearch}
-      />
-      <CommandList>
-        <CommandEmpty>{t('commandPalette.noResults')}</CommandEmpty>
+      <Command>
+        <CommandInput
+          placeholder={t('commandPalette.searchPlaceholder')}
+          value={search}
+          onValueChange={setSearch}
+        />
+        <CommandList>
+          <CommandEmpty>{t('commandPalette.noResults')}</CommandEmpty>
 
         {/* Quick Actions */}
         {!search && (
@@ -381,7 +383,8 @@ export function CommandPalette({
             </CommandGroup>
           </>
         )}
-      </CommandList>
+        </CommandList>
+      </Command>
     </CommandDialog>
   )
 }

@@ -11,16 +11,10 @@ import { AwesomeDialog } from '@/components/docyrus/awesome-dialog'
 import { AwesomeDialogHeader } from '@/components/docyrus/awesome-dialog/awesome-dialog-header'
 import { AwesomeDialogBody } from '@/components/docyrus/awesome-dialog/awesome-dialog-body'
 import { AwesomeDialogFooter } from '@/components/docyrus/awesome-dialog/awesome-dialog-footer'
+import { SelectFormField } from '@/components/docyrus/form-fields/select-form-field'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Combobox } from '@/components/ui/combobox-simple'
 import { Switch } from '@/components/ui/switch'
 import { Slider } from '@/components/ui/slider'
@@ -207,41 +201,20 @@ export function DealFormDialog({
             </form.Field>
 
             {/* Stage Field */}
-            <form.Field name="stage">
-              {(field) => (
-                <Field>
-                  <Label htmlFor={field.name}>
-                    {t('deals.form.stageLabel')}{' '}
-                    <span className="text-destructive">*</span>
-                  </Label>
-                  <Select
-                    value={field.state.value}
-                    onValueChange={field.handleChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t('deals.form.stagePlaceholder')}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {stageOptions.map((option: any) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
-                    </p>
-                  )}
-                </Field>
-              )}
-            </form.Field>
+            <SelectFormField
+              field={{
+                slug: 'stage',
+                name: t('deals.form.stageLabel'),
+                readOnly: false,
+              }}
+              form={form}
+              enumOptions={stageOptions.map((opt: any) => ({
+                id: opt.value,
+                name: opt.label,
+                color: opt.color,
+                icon: opt.icon,
+              }))}
+            />
 
             {/* Deal Value Field */}
             <form.Field name="deal_value">
@@ -380,112 +353,52 @@ export function DealFormDialog({
             </form.Field>
 
             {/* Lead Source Field */}
-            <form.Field name="lead_source">
-              {(field) => (
-                <Field>
-                  <Label htmlFor={field.name}>
-                    {t('deals.form.leadSourceLabel')}
-                  </Label>
-                  <Select
-                    value={field.state.value}
-                    onValueChange={field.handleChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t('deals.form.leadSourcePlaceholder')}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {leadSourceOptions.map((option: any) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
-                    </p>
-                  )}
-                </Field>
-              )}
-            </form.Field>
+            <SelectFormField
+              field={{
+                slug: 'lead_source',
+                name: t('deals.form.leadSourceLabel'),
+                readOnly: false,
+              }}
+              form={form}
+              enumOptions={leadSourceOptions.map((opt: any) => ({
+                id: opt.value,
+                name: opt.label,
+                color: opt.color,
+                icon: opt.icon,
+              }))}
+            />
 
             {/* Customer Type Field */}
-            <form.Field name="customer_type">
-              {(field) => (
-                <Field>
-                  <Label htmlFor={field.name}>
-                    {t('deals.form.customerTypeLabel')}
-                  </Label>
-                  <Select
-                    value={field.state.value}
-                    onValueChange={field.handleChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t('deals.form.customerTypePlaceholder')}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customerTypeOptions.map((option: any) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
-                    </p>
-                  )}
-                </Field>
-              )}
-            </form.Field>
+            <SelectFormField
+              field={{
+                slug: 'customer_type',
+                name: t('deals.form.customerTypeLabel'),
+                readOnly: false,
+              }}
+              form={form}
+              enumOptions={customerTypeOptions.map((opt: any) => ({
+                id: opt.value,
+                name: opt.label,
+                color: opt.color,
+                icon: opt.icon,
+              }))}
+            />
 
             {/* Country Field */}
-            <form.Field name="country">
-              {(field) => (
-                <Field>
-                  <Label htmlFor={field.name}>
-                    {t('deals.form.countryLabel')}
-                  </Label>
-                  <Select
-                    value={field.state.value}
-                    onValueChange={field.handleChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t('deals.form.countryPlaceholder')}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {countryOptions.map((option: any) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
-                    </p>
-                  )}
-                </Field>
-              )}
-            </form.Field>
+            <SelectFormField
+              field={{
+                slug: 'country',
+                name: t('deals.form.countryLabel'),
+                readOnly: false,
+              }}
+              form={form}
+              enumOptions={countryOptions.map((opt: any) => ({
+                id: opt.value,
+                name: opt.label,
+                color: opt.color,
+                icon: opt.icon,
+              }))}
+            />
 
             {/* Contact Person Field */}
             <form.Field name="contact_person">
