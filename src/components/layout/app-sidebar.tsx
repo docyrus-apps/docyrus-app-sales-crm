@@ -36,7 +36,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
   useSidebar,
-} from '@/components/ui/sidebar'
+} from '@/components/animate-ui/components/radix/sidebar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,7 +45,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+} from '@/components/animate-ui/components/radix/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useUsersCollection } from '@/collections/users.collection'
 import { useNotifications } from '@/hooks/use-notifications'
@@ -141,7 +141,6 @@ export function AppSidebar() {
 
   useEffect(() => {
     usersCollection.getMyInfo().then(setUserProfile).catch(console.error)
-    // eslint-disable-next-line -- usersCollection is a new ref each render, run only on mount
   }, [])
 
   const initials = userProfile

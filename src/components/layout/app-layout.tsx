@@ -7,7 +7,7 @@ import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from '@/components/ui/sidebar'
+} from '@/components/animate-ui/components/radix/sidebar'
 import { Separator } from '@/components/ui/separator'
 import {
   Breadcrumb,

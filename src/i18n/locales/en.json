@@ -94,7 +94,16 @@
     "hotDeals": "Hot Deals",
     "noHotDeals": "No hot deals",
     "upcomingTasks": "Upcoming Tasks",
-    "noUpcomingTasks": "No upcoming tasks"
+    "noUpcomingTasks": "No upcoming tasks",
+    "latestUpdates": "Latest Updates",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "thisWeek": "This Week",
+    "loadingActivity": "Loading activity...",
+    "noUpdates": "No updates for this period",
+    "deal": "Deal",
+    "lead": "Lead",
+    "task": "Task"
   },
   "profile": {
     "title": "My Profile",
