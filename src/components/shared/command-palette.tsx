@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@tanstack/react-router'
 import {
   Building2,
@@ -44,6 +45,7 @@ export function CommandPalette({
   onCreateTask,
   onCreateEvent,
 }: CommandPaletteProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
 
@@ -113,24 +115,24 @@ export function CommandPalette({
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput
-        placeholder="Search deals, leads, companies, tasks..."
+        placeholder={t('commandPalette.searchPlaceholder')}
         value={search}
         onValueChange={setSearch}
       />
       <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
+        <CommandEmpty>{t('commandPalette.noResults')}</CommandEmpty>
 
         {/* Quick Actions */}
         {!search && (
           <>
-            <CommandGroup heading="Quick Actions">
+            <CommandGroup heading={t('commandPalette.quickActions')}>
               {onCreateDeal && (
                 <CommandItem
                   onSelect={() => handleSelect(onCreateDeal)}
                   className="gap-2"
                 >
                   <Plus className="h-4 w-4" />
-                  <span>New Deal</span>
+                  <span>{t('commandPalette.newDeal')}</span>
                 </CommandItem>
               )}
               {onCreateLead && (
@@ -139,7 +141,7 @@ export function CommandPalette({
                   className="gap-2"
                 >
                   <Plus className="h-4 w-4" />
-                  <span>New Lead</span>
+                  <span>{t('commandPalette.newLead')}</span>
                 </CommandItem>
               )}
               {onCreateTask && (
@@ -148,7 +150,7 @@ export function CommandPalette({
                   className="gap-2"
                 >
                   <Plus className="h-4 w-4" />
-                  <span>New Task</span>
+                  <span>{t('commandPalette.newTask')}</span>
                 </CommandItem>
               )}
               {onCreateEvent && (
@@ -157,7 +159,7 @@ export function CommandPalette({
                   className="gap-2"
                 >
                   <Plus className="h-4 w-4" />
-                  <span>New Event</span>
+                  <span>{t('commandPalette.newEvent')}</span>
                 </CommandItem>
               )}
             </CommandGroup>
@@ -168,20 +170,20 @@ export function CommandPalette({
         {/* Navigation */}
         {!search && (
           <>
-            <CommandGroup heading="Navigation">
+            <CommandGroup heading={t('commandPalette.navigation')}>
               <CommandItem
                 onSelect={() => handleSelect(() => navigate({ to: '/deals' }))}
                 className="gap-2"
               >
                 <DollarSign className="h-4 w-4" />
-                <span>Deals Pipeline</span>
+                <span>{t('commandPalette.dealsPipeline')}</span>
               </CommandItem>
               <CommandItem
                 onSelect={() => handleSelect(() => navigate({ to: '/leads' }))}
                 className="gap-2"
               >
                 <Users className="h-4 w-4" />
-                <span>Leads</span>
+                <span>{t('commandPalette.leads')}</span>
               </CommandItem>
               <CommandItem
                 onSelect={() =>
@@ -190,28 +192,28 @@ export function CommandPalette({
                 className="gap-2"
               >
                 <Building2 className="h-4 w-4" />
-                <span>Companies</span>
+                <span>{t('commandPalette.companies')}</span>
               </CommandItem>
               <CommandItem
                 onSelect={() => handleSelect(() => navigate({ to: '/tasks' }))}
                 className="gap-2"
               >
                 <CheckSquare className="h-4 w-4" />
-                <span>Tasks</span>
+                <span>{t('commandPalette.tasks')}</span>
               </CommandItem>
               <CommandItem
                 onSelect={() => handleSelect(() => navigate({ to: '/events' }))}
                 className="gap-2"
               >
                 <Calendar className="h-4 w-4" />
-                <span>Events</span>
+                <span>{t('commandPalette.events')}</span>
               </CommandItem>
               <CommandItem
                 onSelect={() => handleSelect(() => navigate({ to: '/emails' }))}
                 className="gap-2"
               >
                 <Mail className="h-4 w-4" />
-                <span>Emails</span>
+                <span>{t('commandPalette.emails')}</span>
               </CommandItem>
               <CommandItem
                 onSelect={() =>
@@ -220,7 +222,7 @@ export function CommandPalette({
                 className="gap-2"
               >
                 <Package className="h-4 w-4" />
-                <span>Products</span>
+                <span>{t('commandPalette.products')}</span>
               </CommandItem>
               <CommandItem
                 onSelect={() =>
@@ -229,7 +231,7 @@ export function CommandPalette({
                 className="gap-2"
               >
                 <FileText className="h-4 w-4" />
-                <span>Sales Orders</span>
+                <span>{t('commandPalette.salesOrders')}</span>
               </CommandItem>
             </CommandGroup>
             <CommandSeparator />
@@ -239,7 +241,7 @@ export function CommandPalette({
         {/* Search Results - Deals */}
         {search && filteredDeals.length > 0 && (
           <>
-            <CommandGroup heading="Deals">
+            <CommandGroup heading={t('commandPalette.searchResults.deals')}>
               {filteredDeals.map((deal: any) => (
                 <CommandItem
                   key={deal.id}
@@ -280,7 +282,7 @@ export function CommandPalette({
         {/* Search Results - Leads */}
         {search && filteredLeads.length > 0 && (
           <>
-            <CommandGroup heading="Leads">
+            <CommandGroup heading={t('commandPalette.searchResults.leads')}>
               {filteredLeads.map((lead: any) => (
                 <CommandItem
                   key={lead.id}
@@ -318,7 +320,7 @@ export function CommandPalette({
         {/* Search Results - Companies */}
         {search && filteredCompanies.length > 0 && (
           <>
-            <CommandGroup heading="Companies">
+            <CommandGroup heading={t('commandPalette.searchResults.companies')}>
               {filteredCompanies.map((company: any) => (
                 <CommandItem
                   key={company.id}
@@ -354,7 +356,7 @@ export function CommandPalette({
         {/* Search Results - Tasks */}
         {search && filteredTasks.length > 0 && (
           <>
-            <CommandGroup heading="Tasks">
+            <CommandGroup heading={t('commandPalette.searchResults.tasks')}>
               {filteredTasks.map((task: any) => (
                 <CommandItem
                   key={task.id}

@@ -1,28 +1,28 @@
-'use client';
+'use client'
 
-import * as React from 'react';
-import { ToggleGroup as ToggleGroupPrimitive } from 'radix-ui';
-import { AnimatePresence, motion, type HTMLMotionProps } from 'motion/react';
+import * as React from 'react'
+import { ToggleGroup as ToggleGroupPrimitive } from 'radix-ui'
+import { AnimatePresence, motion, type HTMLMotionProps } from 'motion/react'
 
 import {
   Highlight,
   HighlightItem,
   type HighlightItemProps,
   type HighlightProps,
-} from '@/components/animate-ui/primitives/effects/highlight';
-import { getStrictContext } from '@/lib/get-strict-context';
-import { useControlledState } from '@/hooks/use-controlled-state';
+} from '@/components/animate-ui/primitives/effects/highlight'
+import { getStrictContext } from '@/lib/get-strict-context'
+import { useControlledState } from '@/hooks/use-controlled-state'
 
 type ToggleGroupContextType = {
-  value: string | string[] | undefined;
-  setValue: (value: string | string[] | undefined) => void;
-  type: 'single' | 'multiple';
-};
+  value: string | string[] | undefined
+  setValue: (value: string | string[] | undefined) => void
+  type: 'single' | 'multiple'
+}
 
 const [ToggleGroupProvider, useToggleGroup] =
-  getStrictContext<ToggleGroupContextType>('ToggleGroupContext');
+  getStrictContext<ToggleGroupContextType>('ToggleGroupContext')
 
-type ToggleGroupProps = React.ComponentProps<typeof ToggleGroupPrimitive.Root>;
+type ToggleGroupProps = React.ComponentProps<typeof ToggleGroupPrimitive.Root>
 
 function ToggleGroup(props: ToggleGroupProps) {
   const [value, setValue] = useControlledState<string | string[] | undefined>({
@@ -31,7 +31,7 @@ function ToggleGroup(props: ToggleGroupProps) {
     onChange: props.onValueChange as (
       value: string | string[] | undefined,
     ) => void,
-  });
+  })
 
   return (
     <ToggleGroupProvider value={{ value, setValue, type: props.type }}>
@@ -41,14 +41,14 @@ function ToggleGroup(props: ToggleGroupProps) {
         onValueChange={setValue}
       />
     </ToggleGroupProvider>
-  );
+  )
 }
 
 type ToggleGroupItemProps = Omit<
   React.ComponentProps<typeof ToggleGroupPrimitive.Item>,
   'asChild'
 > &
-  HTMLMotionProps<'button'>;
+  HTMLMotionProps<'button'>
 
 function ToggleGroupItem({ value, disabled, ...props }: ToggleGroupItemProps) {
   return (
@@ -59,16 +59,16 @@ function ToggleGroupItem({ value, disabled, ...props }: ToggleGroupItemProps) {
         {...props}
       />
     </ToggleGroupPrimitive.Item>
-  );
+  )
 }
 
-type ToggleGroupHighlightProps = Omit<HighlightProps, 'controlledItems'>;
+type ToggleGroupHighlightProps = Omit<HighlightProps, 'controlledItems'>
 
 function ToggleGroupHighlight({
   transition = { type: 'spring', stiffness: 200, damping: 25 },
   ...props
 }: ToggleGroupHighlightProps) {
-  const { value } = useToggleGroup();
+  const { value } = useToggleGroup()
 
   return (
     <Highlight
@@ -79,20 +79,20 @@ function ToggleGroupHighlight({
       transition={transition}
       {...props}
     />
-  );
+  )
 }
 
 type ToggleGroupHighlightItemProps = HighlightItemProps &
   HTMLMotionProps<'div'> & {
-    children: React.ReactElement;
-  };
+    children: React.ReactElement
+  }
 
 function ToggleGroupHighlightItem({
   children,
   style,
   ...props
 }: ToggleGroupHighlightItemProps) {
-  const { type, value } = useToggleGroup();
+  const { type, value } = useToggleGroup()
 
   if (type === 'single') {
     return (
@@ -103,13 +103,13 @@ function ToggleGroupHighlightItem({
       >
         {children}
       </HighlightItem>
-    );
+    )
   }
 
   if (type === 'multiple' && React.isValidElement(children)) {
-    const isActive = props.value && value && value.includes(props.value);
+    const isActive = props.value && value && value.includes(props.value)
 
-    const element = children as React.ReactElement<React.ComponentProps<'div'>>;
+    const element = children as React.ReactElement<React.ComponentProps<'div'>>
 
     return React.cloneElement(
       children,
@@ -143,7 +143,7 @@ function ToggleGroupHighlightItem({
           {element.props.children}
         </div>
       </>,
-    );
+    )
   }
 }
 
@@ -158,4 +158,4 @@ export {
   type ToggleGroupHighlightProps,
   type ToggleGroupHighlightItemProps,
   type ToggleGroupContextType,
-};
+}

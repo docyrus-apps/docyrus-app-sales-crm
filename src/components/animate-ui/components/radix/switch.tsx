@@ -1,19 +1,19 @@
-import * as React from 'react';
+import * as React from 'react'
 
 import {
   Switch as SwitchPrimitive,
   SwitchThumb as SwitchThumbPrimitive,
   SwitchIcon as SwitchIconPrimitive,
   type SwitchProps as SwitchPrimitiveProps,
-} from '@/components/animate-ui/primitives/radix/switch';
-import { cn } from '@/lib/utils';
+} from '@/components/animate-ui/primitives/radix/switch'
+import { cn } from '@/lib/utils'
 
 type SwitchProps = SwitchPrimitiveProps & {
-  pressedWidth?: number;
-  startIcon?: React.ReactElement;
-  endIcon?: React.ReactElement;
-  thumbIcon?: React.ReactElement;
-};
+  pressedWidth?: number
+  startIcon?: React.ReactElement
+  endIcon?: React.ReactElement
+  thumbIcon?: React.ReactElement
+}
 
 function Switch({
   className,
@@ -65,7 +65,7 @@ function Switch({
         </SwitchIconPrimitive>
       )}
     </SwitchPrimitive>
-  );
+  )
 }
 
-export { Switch, type SwitchProps };
+export { Switch, type SwitchProps }

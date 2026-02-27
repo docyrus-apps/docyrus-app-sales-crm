@@ -1,35 +1,33 @@
-'use client';
+'use client'
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react'
 
-import { cva } from 'class-variance-authority';
-import {
-  isSameMonth, isSunday, isToday, startOfDay
-} from 'date-fns';
-import { motion } from 'motion/react';
+import { cva } from 'class-variance-authority'
+import { isSameMonth, isSunday, isToday, startOfDay } from 'date-fns'
+import { motion } from 'motion/react'
 
-import { Plus } from 'lucide-react';
+import { Plus } from 'lucide-react'
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'
 
-import { type ICalendarCell, type IEvent } from '../../interfaces';
+import { type ICalendarCell, type IEvent } from '../../interfaces'
 
-import { transition } from '../../animations';
-import { EventListDialog } from '../../dialogs/events-list-dialog';
-import { DroppableArea } from '../../dnd/droppable-area';
-import { getMonthCellEvents } from '../../helpers';
-import { useMediaQuery } from '../../hooks';
-import { EventBullet } from './event-bullet';
-import { MonthEventBadge } from './month-event-badge';
+import { transition } from '../../animations'
+import { EventListDialog } from '../../dialogs/events-list-dialog'
+import { DroppableArea } from '../../dnd/droppable-area'
+import { getMonthCellEvents } from '../../helpers'
+import { useMediaQuery } from '../../hooks'
+import { EventBullet } from './event-bullet'
+import { MonthEventBadge } from './month-event-badge'
 
-import { AddEditEventDialog } from '../../dialogs/add-edit-event-dialog';
+import { AddEditEventDialog } from '../../dialogs/add-edit-event-dialog'
 
 interface IProps {
-  cell: ICalendarCell;
-  events: Array<IEvent>;
-  eventPositions: Record<string, number>;
+  cell: ICalendarCell
+  events: Array<IEvent>
+  eventPositions: Record<string, number>
 }
 
 export const dayCellVariants = cva('text-white', {
@@ -45,32 +43,32 @@ export const dayCellVariants = cva('text-white', {
         'bg-purple-600 dark:bg-purple-500 hover:bg-purple-700 dark:hover:bg-purple-400',
       orange:
         'bg-orange-600 dark:bg-orange-500 hover:bg-orange-700 dark:hover:bg-orange-400',
-      gray: 'bg-gray-600 dark:bg-gray-500 hover:bg-gray-700 dark:hover:bg-gray-400'
-    }
+      gray: 'bg-gray-600 dark:bg-gray-500 hover:bg-gray-700 dark:hover:bg-gray-400',
+    },
   },
   defaultVariants: {
-    color: 'blue'
-  }
-});
+    color: 'blue',
+  },
+})
 
-const MAX_VISIBLE_EVENTS = 3;
+const MAX_VISIBLE_EVENTS = 3
 
 export function DayCell({ cell, events, eventPositions }: IProps) {
-  const { day, currentMonth, date } = cell;
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const { day, currentMonth, date } = cell
+  const isMobile = useMediaQuery('(max-width: 768px)')
 
   const { cellEvents, currentCellMonth } = useMemo(() => {
-    const evts = getMonthCellEvents(date, events, eventPositions);
+    const evts = getMonthCellEvents(date, events, eventPositions)
     const cellMonth = startOfDay(
-      new Date(date.getFullYear(), date.getMonth(), 1)
-    );
+      new Date(date.getFullYear(), date.getMonth(), 1),
+    )
 
-    return { cellEvents: evts, currentCellMonth: cellMonth };
-  }, [date, events, eventPositions]);
+    return { cellEvents: evts, currentCellMonth: cellMonth }
+  }, [date, events, eventPositions])
 
   const renderEventAtPosition = useCallback(
     (position: number) => {
-      const event = cellEvents.find(e => e.position === position);
+      const event = cellEvents.find((e) => e.position === position)
 
       if (!event) {
         return (
@@ -78,13 +76,14 @@ export function DayCell({ cell, events, eventPositions }: IProps) {
             key={`empty-${position}`}
             className="lg:flex-1"
             initial={false}
-            animate={false} />
-        );
+            animate={false}
+          />
+        )
       }
       const showBullet = isSameMonth(
         new Date(event.startDate),
-        currentCellMonth
-      );
+        currentCellMonth,
+      )
 
       return (
         <motion.div
@@ -92,57 +91,63 @@ export function DayCell({ cell, events, eventPositions }: IProps) {
           className="lg:flex-1"
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: position * 0.1, ...transition }}>
+          transition={{ delay: position * 0.1, ...transition }}
+        >
           {showBullet && (
             <EventBullet className="lg:hidden" color={event.color} />
           )}
           <MonthEventBadge
             className="hidden lg:flex"
             event={event}
-            cellDate={startOfDay(date)} />
+            cellDate={startOfDay(date)}
+          />
         </motion.div>
-      );
+      )
     },
-    [cellEvents, currentCellMonth, date]
-  );
+    [cellEvents, currentCellMonth, date],
+  )
 
-  const showMoreCount = cellEvents.length - MAX_VISIBLE_EVENTS;
+  const showMoreCount = cellEvents.length - MAX_VISIBLE_EVENTS
 
-  const showMobileMore = isMobile && currentMonth && showMoreCount > 0;
-  const showDesktopMore = !isMobile && currentMonth && showMoreCount > 0;
+  const showMobileMore = isMobile && currentMonth && showMoreCount > 0
+  const showDesktopMore = !isMobile && currentMonth && showMoreCount > 0
 
   const cellContent = useMemo(
     () => (
       <motion.div
         className={cn(
           'flex h-full lg:min-h-40 flex-col gap-1 border-l border-t',
-          isSunday(date) && 'border-l-0'
+          isSunday(date) && 'border-l-0',
         )}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={transition}>
+        transition={transition}
+      >
         <DroppableArea date={date} className="w-full h-full py-2">
           <motion.span
             className={cn(
               'h-6 px-1 text-xs font-semibold lg:px-2',
               !currentMonth && 'opacity-20',
-              isToday(date)
-              && 'flex w-6 translate-x-1 items-center justify-center rounded-full bg-primary px-0 font-bold text-primary-foreground'
-            )}>
+              isToday(date) &&
+                'flex w-6 translate-x-1 items-center justify-center rounded-full bg-primary px-0 font-bold text-primary-foreground',
+            )}
+          >
             {day}
           </motion.span>
 
           <motion.div
             className={cn(
               'flex h-fit gap-1 px-2 mt-1 lg:h-[94px] lg:flex-col lg:gap-2 lg:px-0',
-              !currentMonth && 'opacity-50'
-            )}>
+              !currentMonth && 'opacity-50',
+            )}
+          >
             {cellEvents.length === 0 && !isMobile ? (
               <div className="w-full h-full flex justify-center items-center group">
                 <AddEditEventDialog startDate={date}>
                   <Button
                     variant="ghost"
-                    className="border opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    className="border opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                  >
                     <Plus className="h-4 w-4" />
                     <span className="max-sm:hidden">Add Event</span>
                   </Button>
@@ -166,7 +171,8 @@ export function DayCell({ cell, events, eventPositions }: IProps) {
               className="h-4.5 px-1.5 my-2 text-end text-xs font-semibold text-muted-foreground"
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, ...transition }}>
+              transition={{ delay: 0.3, ...transition }}
+            >
               <EventListDialog date={date} events={cellEvents} />
             </motion.div>
           )}
@@ -182,17 +188,17 @@ export function DayCell({ cell, events, eventPositions }: IProps) {
       showDesktopMore,
       showMoreCount,
       renderEventAtPosition,
-      isMobile
-    ]
-  );
+      isMobile,
+    ],
+  )
 
   if (isMobile && currentMonth) {
     return (
       <EventListDialog date={date} events={cellEvents}>
         {cellContent}
       </EventListDialog>
-    );
+    )
   }
 
-  return cellContent;
+  return cellContent
 }

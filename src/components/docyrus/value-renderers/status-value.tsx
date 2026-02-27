@@ -1,51 +1,54 @@
-'use client';
+'use client'
 
-import { Calendar } from 'lucide-react';
+import { Calendar } from 'lucide-react'
 
-import { DocyrusIcon } from '@/components/docyrus/docyrus-icon';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 
-import { getEnumBadgeColors } from '../form-fields/lib/utils';
-import { getCompanionValue } from './utils';
-import { type DocyrusValueProps } from './types';
+import { getEnumBadgeColors } from '../form-fields/lib/utils'
+import { getCompanionValue } from './utils'
+import { type DocyrusValueProps } from './types'
 
 export function StatusValue({
   field,
   value,
   record,
   enumOptions,
-  className
+  className,
 }: DocyrusValueProps) {
   if (value == null || value === '') {
-    return <span className="text-muted-foreground">—</span>;
+    return <span className="text-muted-foreground">—</span>
   }
 
-  const primaryOption = enumOptions?.find(o => o.id === value);
-  const secondaryId = getCompanionValue(record, field.slug, 'secondary');
-  const secondaryOption
-    = secondaryId && enumOptions
-      ? enumOptions.find(o => o.id === secondaryId)
-      : null;
-  const description = getCompanionValue(record, field.slug, 'description');
-  const followupDate = getCompanionValue(record, field.slug, 'followup_date');
+  const primaryOption = enumOptions?.find((o) => o.id === value)
+  const secondaryId = getCompanionValue(record, field.slug, 'secondary')
+  const secondaryOption =
+    secondaryId && enumOptions
+      ? enumOptions.find((o) => o.id === secondaryId)
+      : null
+  const description = getCompanionValue(record, field.slug, 'description')
+  const followupDate = getCompanionValue(record, field.slug, 'followup_date')
 
   const primaryColors = primaryOption
     ? getEnumBadgeColors(primaryOption.color)
-    : {};
+    : {}
 
   return (
     <span
-      className={cn('inline-flex items-center gap-1.5 flex-wrap', className)}>
+      className={cn('inline-flex items-center gap-1.5 flex-wrap', className)}
+    >
       {primaryOption ? (
         <Badge
           variant="secondary"
           className={primaryColors.className}
-          style={primaryColors.style}>
+          style={primaryColors.style}
+        >
           {primaryOption.icon && (
             <DocyrusIcon
               icon={primaryOption.icon}
-              className="size-3.5 shrink-0" />
+              className="size-3.5 shrink-0"
+            />
           )}
           <span className="truncate">{primaryOption.name}</span>
         </Badge>
@@ -59,7 +62,8 @@ export function StatusValue({
           {secondaryOption.icon && (
             <DocyrusIcon
               icon={secondaryOption.icon}
-              className="size-3.5 shrink-0" />
+              className="size-3.5 shrink-0"
+            />
           )}
           <span className="truncate">{secondaryOption.name}</span>
         </Badge>
@@ -76,5 +80,5 @@ export function StatusValue({
         </span>
       )}
     </span>
-  );
+  )
 }

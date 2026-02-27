@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import {
   Building2,
   Calendar,
@@ -53,6 +54,7 @@ const PIE_COLORS = [
 ]
 
 function PieLeadsBySource({ data }: { data: Array<PieData> }) {
+  const { t } = useTranslation()
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
   const legendItems = data.map((item) => ({
@@ -76,7 +78,7 @@ function PieLeadsBySource({ data }: { data: Array<PieData> }) {
         {data.map((_, index) => (
           <PieSlice key={index} index={index} hoverEffect="grow" />
         ))}
-        <PieCenter defaultLabel="Total" />
+        <PieCenter defaultLabel={t('dashboard.total')} />
       </PieChart>
       <Legend
         items={legendItems}
@@ -95,6 +97,7 @@ function PieLeadsBySource({ data }: { data: Array<PieData> }) {
 }
 
 export function Dashboard() {
+  const { t } = useTranslation()
   const { data: deals, isLoading: dealsLoading } = useDeals()
   const { data: leads, isLoading: leadsLoading } = useLeads()
   const { data: companies, isLoading: companiesLoading } = useCompanies()
@@ -209,9 +212,11 @@ export function Dashboard() {
   return (
     <>
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {t('dashboard.title')}
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Track your sales pipeline, leads, and revenue at a glance.
+          {t('dashboard.subtitle')}
         </p>
       </div>
       <PageContainer>
@@ -219,7 +224,7 @@ export function Dashboard() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <AwesomeCard className="animate-fade-in-up">
             <AwesomeCardHeader>
-              <AwesomeCardTitle>Total Deals</AwesomeCardTitle>
+              <AwesomeCardTitle>{t('dashboard.totalDeals')}</AwesomeCardTitle>
               <AwesomeCardIcon>
                 <DollarSign className="size-4" />
               </AwesomeCardIcon>
@@ -230,7 +235,9 @@ export function Dashboard() {
               ) : (
                 <>
                   <AwesomeCardValue>{stats.totalDeals}</AwesomeCardValue>
-                  <AwesomeCardTrend>Active deals in pipeline</AwesomeCardTrend>
+                  <AwesomeCardTrend>
+                    {t('dashboard.activeDealsInPipeline')}
+                  </AwesomeCardTrend>
                 </>
               )}
             </AwesomeCardBody>
@@ -238,7 +245,7 @@ export function Dashboard() {
 
           <AwesomeCard className="animate-fade-in-up">
             <AwesomeCardHeader>
-              <AwesomeCardTitle>Leads</AwesomeCardTitle>
+              <AwesomeCardTitle>{t('dashboard.leads')}</AwesomeCardTitle>
               <AwesomeCardIcon>
                 <Users className="size-4" />
               </AwesomeCardIcon>
@@ -249,7 +256,9 @@ export function Dashboard() {
               ) : (
                 <>
                   <AwesomeCardValue>{stats.totalLeads}</AwesomeCardValue>
-                  <AwesomeCardTrend>Total leads</AwesomeCardTrend>
+                  <AwesomeCardTrend>
+                    {t('dashboard.totalLeads')}
+                  </AwesomeCardTrend>
                 </>
               )}
             </AwesomeCardBody>
@@ -257,7 +266,7 @@ export function Dashboard() {
 
           <AwesomeCard className="animate-fade-in-up">
             <AwesomeCardHeader>
-              <AwesomeCardTitle>Companies</AwesomeCardTitle>
+              <AwesomeCardTitle>{t('dashboard.companies')}</AwesomeCardTitle>
               <AwesomeCardIcon>
                 <Building2 className="size-4" />
               </AwesomeCardIcon>
@@ -268,7 +277,9 @@ export function Dashboard() {
               ) : (
                 <>
                   <AwesomeCardValue>{stats.totalCompanies}</AwesomeCardValue>
-                  <AwesomeCardTrend>Active companies</AwesomeCardTrend>
+                  <AwesomeCardTrend>
+                    {t('dashboard.activeCompanies')}
+                  </AwesomeCardTrend>
                 </>
               )}
             </AwesomeCardBody>
@@ -276,7 +287,7 @@ export function Dashboard() {
 
           <AwesomeCard className="animate-fade-in-up">
             <AwesomeCardHeader>
-              <AwesomeCardTitle>Revenue</AwesomeCardTitle>
+              <AwesomeCardTitle>{t('dashboard.revenue')}</AwesomeCardTitle>
               <AwesomeCardIcon>
                 <TrendingUp className="size-4" />
               </AwesomeCardIcon>
@@ -289,7 +300,9 @@ export function Dashboard() {
                   <AwesomeCardValue>
                     {formatCurrency(stats.monthlyRevenue)}
                   </AwesomeCardValue>
-                  <AwesomeCardTrend>This month</AwesomeCardTrend>
+                  <AwesomeCardTrend>
+                    {t('dashboard.thisMonth')}
+                  </AwesomeCardTrend>
                 </>
               )}
             </AwesomeCardBody>
@@ -300,14 +313,16 @@ export function Dashboard() {
         <div className="mt-8 grid gap-4 md:grid-cols-2">
           <AwesomeCard className="animate-fade-in-up">
             <AwesomeCardHeader>
-              <AwesomeCardTitle>Pipeline by Stage</AwesomeCardTitle>
+              <AwesomeCardTitle>
+                {t('dashboard.pipelineByStage')}
+              </AwesomeCardTitle>
             </AwesomeCardHeader>
             <AwesomeCardBody>
               {isLoading ? (
                 <Skeleton className="h-64 w-full" />
               ) : pipelineData.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-12 text-center">
-                  No deals in pipeline
+                  {t('dashboard.noDealsInPipeline')}
                 </p>
               ) : (
                 <BarChart
@@ -326,7 +341,7 @@ export function Dashboard() {
                     rows={(point) => [
                       {
                         color: 'hsl(252, 56%, 68%)',
-                        label: 'Deal Count',
+                        label: t('dashboard.dealCount'),
                         value: String(point.count ?? 0),
                       },
                     ]}
@@ -338,14 +353,16 @@ export function Dashboard() {
 
           <AwesomeCard className="animate-fade-in-up">
             <AwesomeCardHeader>
-              <AwesomeCardTitle>Leads by Source</AwesomeCardTitle>
+              <AwesomeCardTitle>
+                {t('dashboard.leadsBySource')}
+              </AwesomeCardTitle>
             </AwesomeCardHeader>
             <AwesomeCardBody>
               {isLoading ? (
                 <Skeleton className="h-64 w-full" />
               ) : leadsSourceData.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-12 text-center">
-                  No leads data available
+                  {t('dashboard.noLeadsDataAvailable')}
                 </p>
               ) : (
                 <PieLeadsBySource data={leadsSourceData} />
@@ -358,25 +375,25 @@ export function Dashboard() {
         <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <AwesomeCard className="animate-fade-in-up">
             <AwesomeCardHeader>
-              <AwesomeCardTitle>Quick Actions</AwesomeCardTitle>
+              <AwesomeCardTitle>{t('dashboard.quickActions')}</AwesomeCardTitle>
             </AwesomeCardHeader>
             <AwesomeCardBody className="space-y-2">
               <Link to="/deals">
                 <Button variant="outline" className="w-full justify-start">
                   <DollarSign className="mr-2 h-4 w-4" />
-                  View Deals Pipeline
+                  {t('dashboard.viewDealsPipeline')}
                 </Button>
               </Link>
               <Link to="/leads">
                 <Button variant="outline" className="w-full justify-start">
                   <Users className="mr-2 h-4 w-4" />
-                  Manage Leads
+                  {t('dashboard.manageLeads')}
                 </Button>
               </Link>
               <Link to="/companies">
                 <Button variant="outline" className="w-full justify-start">
                   <Building2 className="mr-2 h-4 w-4" />
-                  Browse Companies
+                  {t('dashboard.browseCompanies')}
                 </Button>
               </Link>
             </AwesomeCardBody>
@@ -384,7 +401,7 @@ export function Dashboard() {
 
           <AwesomeCard className="animate-fade-in-up">
             <AwesomeCardHeader>
-              <AwesomeCardTitle>Hot Deals</AwesomeCardTitle>
+              <AwesomeCardTitle>{t('dashboard.hotDeals')}</AwesomeCardTitle>
               <AwesomeCardIcon>
                 <Flame className="size-4 text-orange-500" />
               </AwesomeCardIcon>
@@ -397,7 +414,9 @@ export function Dashboard() {
                   <Skeleton className="h-4 w-full" />
                 </div>
               ) : hotDeals.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No hot deals</p>
+                <p className="text-sm text-muted-foreground">
+                  {t('dashboard.noHotDeals')}
+                </p>
               ) : (
                 <div className="space-y-3">
                   {hotDeals.map((deal: any) => (
@@ -433,7 +452,9 @@ export function Dashboard() {
 
           <AwesomeCard className="animate-fade-in-up">
             <AwesomeCardHeader>
-              <AwesomeCardTitle>Upcoming Tasks</AwesomeCardTitle>
+              <AwesomeCardTitle>
+                {t('dashboard.upcomingTasks')}
+              </AwesomeCardTitle>
               <AwesomeCardIcon>
                 <Calendar className="size-4" />
               </AwesomeCardIcon>
@@ -447,7 +468,7 @@ export function Dashboard() {
                 </div>
               ) : upcomingTasks.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  No upcoming tasks
+                  {t('dashboard.noUpcomingTasks')}
                 </p>
               ) : (
                 <div className="space-y-3">

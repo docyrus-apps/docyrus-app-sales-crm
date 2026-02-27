@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { Plus, User } from 'lucide-react'
 import type { ViewType } from '@/components/view-switcher'
 import { PageContainer } from '@/components/layout/page-container'
@@ -17,6 +18,7 @@ import { useDataTable } from '@/hooks/use-data-table'
 import { getContactsColumns } from '@/components/contacts/contacts-columns'
 
 export function Contacts() {
+  const { t } = useTranslation()
   const { data: contacts, isLoading, error } = useContacts()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [viewType, setViewType] = useState<ViewType>('list')
@@ -31,13 +33,13 @@ export function Contacts() {
   return (
     <>
       <PageHeader
-        title="Contacts"
+        title={t('contacts.title')}
         actions={
           <>
             <ViewSwitcher value={viewType} onValueChange={setViewType} />
             <Button onClick={() => setIsFormOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              New Contact
+              {t('contacts.newContact')}
             </Button>
           </>
         }
@@ -65,7 +67,7 @@ export function Contacts() {
           <Card className="border-destructive">
             <CardHeader>
               <CardTitle className="text-destructive">
-                Error loading contacts
+                {t('contacts.errorLoading')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -77,13 +79,13 @@ export function Contacts() {
         {contacts && contacts.length === 0 && (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-lg font-medium">No contacts yet</p>
+              <p className="text-lg font-medium">{t('contacts.emptyTitle')}</p>
               <p className="text-sm text-muted-foreground mt-2">
-                Add your first contact to get started
+                {t('contacts.emptyDescription')}
               </p>
               <Button className="mt-4" onClick={() => setIsFormOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
-                Create Contact
+                {t('contacts.createContact')}
               </Button>
             </CardContent>
           </Card>

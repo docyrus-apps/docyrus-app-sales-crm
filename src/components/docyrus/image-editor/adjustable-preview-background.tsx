@@ -1,31 +1,31 @@
-'use client';
+'use client'
 
 import {
   type CropperImage,
   type CropperState,
   type CropperTransitions,
-  type Size
-} from 'react-advanced-cropper';
+  type Size,
+} from 'react-advanced-cropper'
 
-import { getPreviewStyle } from 'advanced-cropper';
+import { getPreviewStyle } from 'advanced-cropper'
 
-import { AdjustableImage } from './adjustable-image';
+import { AdjustableImage } from './adjustable-image'
 
 interface CropperRef {
-  getState: () => CropperState;
-  getTransitions: () => CropperTransitions;
-  getImage: () => CropperImage;
+  getState: () => CropperState
+  getTransitions: () => CropperTransitions
+  getImage: () => CropperImage
 }
 
 interface AdjustablePreviewBackgroundProps {
-  className?: string;
-  cropper: CropperRef;
-  crossOrigin?: 'anonymous' | 'use-credentials' | boolean;
-  brightness?: number;
-  saturation?: number;
-  hue?: number;
-  contrast?: number;
-  size?: Size | null;
+  className?: string
+  cropper: CropperRef
+  crossOrigin?: 'anonymous' | 'use-credentials' | boolean
+  brightness?: number
+  saturation?: number
+  hue?: number
+  contrast?: number
+  size?: Size | null
 }
 
 function AdjustablePreviewBackground({
@@ -36,16 +36,16 @@ function AdjustablePreviewBackground({
   saturation = 0,
   hue = 0,
   contrast = 0,
-  size
+  size,
 }: AdjustablePreviewBackgroundProps) {
-  const state = cropper.getState();
-  const transitions = cropper.getTransitions();
-  const image = cropper.getImage();
+  const state = cropper.getState()
+  const transitions = cropper.getTransitions()
+  const image = cropper.getImage()
 
-  const style
-    = image && state && size
+  const style =
+    image && state && size
       ? getPreviewStyle(image, state, size, transitions)
-      : {};
+      : {}
 
   return (
     <AdjustableImage
@@ -56,8 +56,9 @@ function AdjustablePreviewBackground({
       hue={hue}
       contrast={contrast}
       className={className}
-      style={style} />
-  );
+      style={style}
+    />
+  )
 }
 
-export { AdjustablePreviewBackground };
+export { AdjustablePreviewBackground }

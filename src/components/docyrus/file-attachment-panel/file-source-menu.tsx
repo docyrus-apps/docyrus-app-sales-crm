@@ -1,18 +1,18 @@
-import { DocyrusIcon } from '@/components/docyrus/docyrus-icon';
-import { Button } from '@/components/ui/button';
+import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface FileSourceMenuProps {
-  onUploadClick: () => void;
-  onOneDriveClick?: () => void;
-  onGoogleDriveClick?: () => void;
-  showOneDrive: boolean;
-  showGoogleDrive: boolean;
+  onUploadClick: () => void
+  onOneDriveClick?: () => void
+  onGoogleDriveClick?: () => void
+  showOneDrive: boolean
+  showGoogleDrive: boolean
 }
 
 export function FileSourceMenu({
@@ -20,9 +20,9 @@ export function FileSourceMenu({
   onOneDriveClick,
   onGoogleDriveClick,
   showOneDrive,
-  showGoogleDrive
+  showGoogleDrive,
 }: FileSourceMenuProps) {
-  const hasExternalSources = showOneDrive || showGoogleDrive;
+  const hasExternalSources = showOneDrive || showGoogleDrive
 
   if (!hasExternalSources) {
     return (
@@ -30,7 +30,7 @@ export function FileSourceMenu({
         <DocyrusIcon icon="far plus" className="size-3.5" />
         <span className="hidden @sm/file-panel:inline">Add</span>
       </Button>
-    );
+    )
   }
 
   return (
@@ -60,5 +60,5 @@ export function FileSourceMenu({
         )}
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }

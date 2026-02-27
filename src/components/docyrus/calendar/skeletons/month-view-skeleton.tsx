@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/ui/skeleton'
 
 export function MonthViewSkeleton() {
   return (
@@ -21,12 +21,12 @@ export function MonthViewSkeleton() {
               {Array.from({ length: Math.floor(Math.random() * 3) }).map(
                 (_item, j) => (
                   <Skeleton key={`event-${j}`} className="h-5 w-full" />
-                )
+                ),
               )}
             </div>
           </div>
         ))}
       </div>
     </div>
-  );
+  )
 }

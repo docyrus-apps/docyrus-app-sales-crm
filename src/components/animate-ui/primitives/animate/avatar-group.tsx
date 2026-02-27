@@ -1,7 +1,7 @@
-'use client';
+'use client'
 
-import * as React from 'react';
-import { HTMLMotionProps, motion, type Transition } from 'motion/react';
+import * as React from 'react'
+import { HTMLMotionProps, motion, type Transition } from 'motion/react'
 
 import {
   TooltipProvider,
@@ -13,13 +13,13 @@ import {
   type TooltipProps,
   type TooltipContentProps,
   type TooltipArrowProps,
-} from '@/components/animate-ui/primitives/animate/tooltip';
+} from '@/components/animate-ui/primitives/animate/tooltip'
 
 type AvatarProps = Omit<HTMLMotionProps<'div'>, 'translate'> & {
-  children: React.ReactNode;
-  zIndex: number;
-  translate?: string | number;
-} & Omit<TooltipProps, 'children'>;
+  children: React.ReactNode
+  zIndex: number
+  translate?: string | number
+} & Omit<TooltipProps, 'children'>
 
 function AvatarContainer({
   zIndex,
@@ -55,17 +55,17 @@ function AvatarContainer({
         </motion.div>
       </TooltipTrigger>
     </Tooltip>
-  );
+  )
 }
 
 type AvatarGroupProps = Omit<React.ComponentProps<'div'>, 'translate'> & {
-  children: React.ReactElement[];
-  invertOverlap?: boolean;
-  translate?: string | number;
-  transition?: Transition;
-  tooltipTransition?: Transition;
+  children: React.ReactElement[]
+  invertOverlap?: boolean
+  translate?: string | number
+  transition?: Transition
+  tooltipTransition?: Transition
 } & Omit<TooltipProviderProps, 'children'> &
-  Omit<TooltipProps, 'children'>;
+  Omit<TooltipProps, 'children'>
 
 function AvatarGroup({
   ref,
@@ -119,19 +119,19 @@ function AvatarGroup({
         ))}
       </div>
     </TooltipProvider>
-  );
+  )
 }
 
-type AvatarGroupTooltipProps = TooltipContentProps;
+type AvatarGroupTooltipProps = TooltipContentProps
 
 function AvatarGroupTooltip(props: AvatarGroupTooltipProps) {
-  return <TooltipContent {...props} />;
+  return <TooltipContent {...props} />
 }
 
-type AvatarGroupTooltipArrowProps = TooltipArrowProps;
+type AvatarGroupTooltipArrowProps = TooltipArrowProps
 
 function AvatarGroupTooltipArrow(props: AvatarGroupTooltipArrowProps) {
-  return <TooltipArrow {...props} />;
+  return <TooltipArrow {...props} />
 }
 
 export {
@@ -141,4 +141,4 @@ export {
   type AvatarGroupProps,
   type AvatarGroupTooltipProps,
   type AvatarGroupTooltipArrowProps,
-};
+}

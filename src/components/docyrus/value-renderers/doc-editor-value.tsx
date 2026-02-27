@@ -1,26 +1,26 @@
-'use client';
+'use client'
 
-import { FileIcon } from 'lucide-react';
+import { FileIcon } from 'lucide-react'
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'
 
-import { type DocyrusValueProps } from './types';
+import { type DocyrusValueProps } from './types'
 
 export function DocEditorValue({ value, className }: DocyrusValueProps) {
   if (value == null || value === '') {
-    return <span className="text-muted-foreground">—</span>;
+    return <span className="text-muted-foreground">—</span>
   }
 
-  let preview = 'Document';
+  let preview = 'Document'
 
   if (typeof value === 'string') {
-    const stripped = value.replace(/<[^>]*>/g, '').trim();
+    const stripped = value.replace(/<[^>]*>/g, '').trim()
 
     if (stripped) {
-      preview = stripped.length > 80 ? `${stripped.slice(0, 80)}...` : stripped;
+      preview = stripped.length > 80 ? `${stripped.slice(0, 80)}...` : stripped
     }
   } else if (typeof value === 'object') {
-    preview = 'Document';
+    preview = 'Document'
   }
 
   return (
@@ -28,5 +28,5 @@ export function DocEditorValue({ value, className }: DocyrusValueProps) {
       <FileIcon className="size-3.5 shrink-0 text-muted-foreground" />
       <span className="truncate">{preview}</span>
     </span>
-  );
+  )
 }

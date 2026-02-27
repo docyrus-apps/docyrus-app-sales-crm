@@ -1,37 +1,37 @@
-'use client';
+'use client'
 
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare } from 'lucide-react'
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'
 
-import { type DocyrusValueProps } from './types';
+import { type DocyrusValueProps } from './types'
 
 interface ChannelData {
-  id?: string;
-  name?: string;
-  title?: string;
+  id?: string
+  name?: string
+  title?: string
 }
 
 function isChannelData(val: unknown): val is ChannelData {
-  return typeof val === 'object' && val !== null;
+  return typeof val === 'object' && val !== null
 }
 
 export function ConversationChannelValue({
   value,
-  className
+  className,
 }: DocyrusValueProps) {
   if (value == null || value === '') {
-    return <span className="text-muted-foreground">—</span>;
+    return <span className="text-muted-foreground">—</span>
   }
 
-  let display: string;
+  let display: string
 
   if (typeof value === 'string') {
-    display = value;
+    display = value
   } else if (isChannelData(value)) {
-    display = value.name ?? value.title ?? value.id ?? 'Channel';
+    display = value.name ?? value.title ?? value.id ?? 'Channel'
   } else {
-    display = String(value);
+    display = String(value)
   }
 
   return (
@@ -39,5 +39,5 @@ export function ConversationChannelValue({
       <MessageSquare className="size-3.5 shrink-0 text-muted-foreground" />
       <span className="truncate">{display}</span>
     </span>
-  );
+  )
 }

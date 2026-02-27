@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Pencil } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
 import { Button } from '@/components/ui/button'
@@ -18,6 +19,7 @@ import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
 
 export function LeadDetail() {
+  const { t } = useTranslation()
   const { leadId } = useParams({ strict: false })
   const { tab } = useSearch({ from: '/leads/$leadId' })
   const navigate = useNavigate({ from: '/leads/$leadId' })
@@ -42,14 +44,16 @@ export function LeadDetail() {
       <PageContainer>
         <Card className="border-destructive">
           <CardHeader>
-            <CardTitle className="text-destructive">Error</CardTitle>
+            <CardTitle className="text-destructive">
+              {t('common.error')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <p>Failed to load lead details</p>
+            <p>{t('leads.failedToLoad')}</p>
             <Link to="/leads">
               <Button variant="outline" className="mt-4">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Leads
+                {t('leads.backToLeads')}
               </Button>
             </Link>
           </CardContent>
@@ -64,7 +68,7 @@ export function LeadDetail() {
         <Link to="/leads">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Leads
+            {t('leads.backToLeads')}
           </Button>
         </Link>
       </div>
@@ -74,7 +78,7 @@ export function LeadDetail() {
         <div className="space-y-4">
           <Card className="group">
             <CardHeader>
-              <CardTitle>Lead Details</CardTitle>
+              <CardTitle>{t('leads.leadDetails')}</CardTitle>
               <CardAction>
                 <Button
                   variant="ghost"
@@ -89,15 +93,17 @@ export function LeadDetail() {
             <CardContent className="space-y-4">
               <div>
                 <div className="text-sm font-medium text-muted-foreground">
-                  Title
+                  {t('leads.titleLabel')}
                 </div>
-                <div className="mt-1 font-medium">{lead.title || 'N/A'}</div>
+                <div className="mt-1 font-medium">
+                  {lead.title || t('common.na')}
+                </div>
               </div>
 
               {lead.lead_status && (
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">
-                    Status
+                    {t('leads.status')}
                   </div>
                   <div className="mt-1">
                     {typeof lead.lead_status === 'object'
@@ -110,7 +116,7 @@ export function LeadDetail() {
               {lead.email && (
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">
-                    Email
+                    {t('leads.email')}
                   </div>
                   <div className="mt-1">{lead.email}</div>
                 </div>
@@ -119,7 +125,7 @@ export function LeadDetail() {
               {lead.phone && (
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">
-                    Phone
+                    {t('leads.phone')}
                   </div>
                   <div className="mt-1">{lead.phone}</div>
                 </div>
@@ -128,7 +134,7 @@ export function LeadDetail() {
               {lead.lead_source && (
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">
-                    Source
+                    {t('leads.source')}
                   </div>
                   <div className="mt-1">
                     {typeof lead.lead_source === 'object'
@@ -143,11 +149,11 @@ export function LeadDetail() {
           {lead.company_name && typeof lead.company_name === 'object' && (
             <Card>
               <CardHeader>
-                <CardTitle>Company</CardTitle>
+                <CardTitle>{t('leads.company')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-sm font-medium">
-                  {(lead.company_name as any).name || 'N/A'}
+                  {(lead.company_name as any).name || t('common.na')}
                 </div>
               </CardContent>
             </Card>
@@ -158,43 +164,51 @@ export function LeadDetail() {
         <div className="lg:col-span-2">
           <Tabs value={tab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="activity">Activity</TabsTrigger>
-              <TabsTrigger value="comments">Comments</TabsTrigger>
-              <TabsTrigger value="files">Files</TabsTrigger>
+              <TabsTrigger value="overview">
+                {t('leads.tabs.overview')}
+              </TabsTrigger>
+              <TabsTrigger value="activity">
+                {t('leads.tabs.activity')}
+              </TabsTrigger>
+              <TabsTrigger value="comments">
+                {t('leads.tabs.comments')}
+              </TabsTrigger>
+              <TabsTrigger value="files">{t('leads.tabs.files')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="mt-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Lead Information</CardTitle>
+                  <CardTitle>{t('leads.leadInformation')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <div className="text-sm font-medium text-muted-foreground">
-                        Lead Type
+                        {t('leads.leadType')}
                       </div>
                       <div className="mt-1">
                         {lead.lead_type
                           ? typeof lead.lead_type === 'object'
                             ? lead.lead_type.name
                             : lead.lead_type
-                          : 'N/A'}
+                          : t('common.na')}
                       </div>
                     </div>
                     <div>
                       <div className="text-sm font-medium text-muted-foreground">
-                        Website
+                        {t('leads.website')}
                       </div>
-                      <div className="mt-1">{lead.website || 'N/A'}</div>
+                      <div className="mt-1">
+                        {lead.website || t('common.na')}
+                      </div>
                     </div>
                   </div>
 
                   {lead.address && (
                     <div>
                       <div className="text-sm font-medium text-muted-foreground">
-                        Address
+                        {t('leads.address')}
                       </div>
                       <div className="mt-1">{lead.address}</div>
                       {lead.city && (
@@ -208,7 +222,7 @@ export function LeadDetail() {
                   {lead.contact_message && (
                     <div>
                       <div className="text-sm font-medium text-muted-foreground">
-                        Message
+                        {t('leads.message')}
                       </div>
                       <div className="mt-1 text-sm">{lead.contact_message}</div>
                     </div>
@@ -220,11 +234,11 @@ export function LeadDetail() {
             <TabsContent value="activity" className="mt-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Activity</CardTitle>
+                  <CardTitle>{t('leads.activity.title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    No activity yet
+                    {t('leads.activity.empty')}
                   </p>
                 </CardContent>
               </Card>

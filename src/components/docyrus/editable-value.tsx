@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import {
   forwardRef,
@@ -10,27 +10,27 @@ import {
   type FocusEvent,
   type KeyboardEvent,
   type ReactNode,
-  type RefObject
-} from 'react';
+  type RefObject,
+} from 'react'
 
-import { cva, type VariantProps } from 'class-variance-authority';
-import { Check, X } from 'lucide-react';
+import { cva, type VariantProps } from 'class-variance-authority'
+import { Check, X } from 'lucide-react'
 
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
-import { DynamicFormField } from '@/components/docyrus/form-fields/dynamic-form-field';
+import { DynamicFormField } from '@/components/docyrus/form-fields/dynamic-form-field'
 import {
   isMultiSelectField,
   isReadOnlyField,
-  isSelectField
-} from '@/components/docyrus/form-fields/lib/utils';
+  isSelectField,
+} from '@/components/docyrus/form-fields/lib/utils'
 import {
   type EnumOption,
   type IField,
-  type IFieldType
-} from '@/components/docyrus/form-fields/types';
-import { DynamicValue } from '@/components/docyrus/value-renderers/dynamic-value';
+  type IFieldType,
+} from '@/components/docyrus/form-fields/types'
+import { DynamicValue } from '@/components/docyrus/value-renderers/dynamic-value'
 
 const editableValueVariants = cva(
   'relative inline-flex w-full items-center rounded-md transition-colors duration-150',
@@ -38,20 +38,20 @@ const editableValueVariants = cva(
     variants: {
       variant: {
         default: 'border border-transparent',
-        ghost: ''
+        ghost: '',
       },
       size: {
         sm: 'min-h-7 px-1.5 py-0.5 text-xs',
         default: 'min-h-9 px-2 py-1 text-sm',
-        lg: 'min-h-11 px-3 py-1.5 text-base'
-      }
+        lg: 'min-h-11 px-3 py-1.5 text-base',
+      },
     },
     defaultVariants: {
       variant: 'default',
-      size: 'default'
-    }
-  }
-);
+      size: 'default',
+    },
+  },
+)
 
 /** Pure inline input fields — blur saves, Enter saves */
 const INLINE_TYPES = new Set<IFieldType>([
@@ -59,14 +59,18 @@ const INLINE_TYPES = new Set<IFieldType>([
   'field-number',
   'field-email',
   'field-url',
-  'field-percent'
-]);
+  'field-percent',
+])
 
 /**
  * Instant-save fields — value change immediately commits and exits edit mode.
  * These are simple toggle/click fields with no intermediate editing state.
  */
-const INSTANT_SAVE_TYPES = new Set<IFieldType>(['field-checkbox', 'field-switch', 'field-rating']);
+const INSTANT_SAVE_TYPES = new Set<IFieldType>([
+  'field-checkbox',
+  'field-switch',
+  'field-rating',
+])
 
 /**
  * Fields that always require explicit save + visible action buttons.
@@ -79,8 +83,8 @@ const EXPLICIT_SAVE_TYPES = new Set<IFieldType>([
   'field-duration',
   'field-currency',
   'field-dateTime',
-  'field-time'
-]);
+  'field-time',
+])
 
 /**
  * Popover/dropdown fields that portal content outside the wrapper.
@@ -110,8 +114,8 @@ const POPOVER_TYPES = new Set<IFieldType>([
   'field-money',
   'field-phone',
   'field-duration',
-  'field-currency'
-]);
+  'field-currency',
+])
 
 /**
  * A stable component that holds its own value state so the parent
@@ -121,22 +125,22 @@ function MicroFormField({
   slug,
   initialValue,
   onChangeRef,
-  children
+  children,
 }: {
-  slug: string;
-  initialValue: unknown;
-  onChangeRef: RefObject<(v: unknown) => void>;
-  children: (field: any) => ReactNode;
+  slug: string
+  initialValue: unknown
+  onChangeRef: RefObject<(v: unknown) => void>
+  children: (field: any) => ReactNode
 }) {
-  const [localValue, setLocalValue] = useState<unknown>(initialValue);
+  const [localValue, setLocalValue] = useState<unknown>(initialValue)
 
   const handleChange = useCallback(
     (v: unknown) => {
-      setLocalValue(v);
-      onChangeRef.current(v);
+      setLocalValue(v)
+      onChangeRef.current(v)
     },
-    [onChangeRef]
-  );
+    [onChangeRef],
+  )
 
   return (
     <>
@@ -144,13 +148,13 @@ function MicroFormField({
         name: slug,
         state: {
           value: localValue,
-          meta: { isTouched: false, isValid: true, errors: [] }
+          meta: { isTouched: false, isValid: true, errors: [] },
         },
         handleChange,
-        handleBlur: () => {}
+        handleBlur: () => {},
       })}
     </>
-  );
+  )
 }
 
 /**
@@ -165,41 +169,42 @@ function useMicroForm(
   slug: string,
   initialValue: unknown,
   onChangeRef: RefObject<(v: unknown) => void>,
-  editCount: number
+  editCount: number,
 ) {
-  const initialValueRef = useRef(initialValue);
-  const editCountRef = useRef(editCount);
+  const initialValueRef = useRef(initialValue)
+  const editCountRef = useRef(editCount)
 
-  initialValueRef.current = initialValue;
-  editCountRef.current = editCount;
+  initialValueRef.current = initialValue
+  editCountRef.current = editCount
 
   const [form] = useState(() => ({
     Field: ({
       name,
-      children
+      children,
     }: {
-      name: string;
-      children: (field: any) => ReactNode;
+      name: string
+      children: (field: any) => ReactNode
     }) => (
       <MicroFormField
         key={editCountRef.current}
         slug={name}
         initialValue={initialValueRef.current}
-        onChangeRef={onChangeRef}>
+        onChangeRef={onChangeRef}
+      >
         {children}
       </MicroFormField>
-    )
-  }));
+    ),
+  }))
 
-  return form;
+  return form
 }
 
 function EditableValueActions({
   onSave,
-  onCancel
+  onCancel,
 }: {
-  onSave: () => void;
-  onCancel: () => void;
+  onSave: () => void
+  onCancel: () => void
 }) {
   return (
     <div className="ml-1 flex shrink-0 items-center gap-0.5">
@@ -208,8 +213,9 @@ function EditableValueActions({
         variant="ghost"
         size="icon"
         className="size-6"
-        onMouseDown={e => e.preventDefault()}
-        onClick={onSave}>
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={onSave}
+      >
         <Check className="size-3.5" />
       </Button>
       <Button
@@ -217,47 +223,49 @@ function EditableValueActions({
         variant="ghost"
         size="icon"
         className="size-6"
-        onMouseDown={e => e.preventDefault()}
-        onClick={onCancel}>
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={onCancel}
+      >
         <X className="size-3.5" />
       </Button>
     </div>
-  );
+  )
 }
 
 export interface EditableValueProps
-  extends Omit<ComponentProps<'div'>, 'children' | 'onChange'>,
-  VariantProps<typeof editableValueVariants> {
+  extends
+    Omit<ComponentProps<'div'>, 'children' | 'onChange'>,
+    VariantProps<typeof editableValueVariants> {
   /** Field configuration — determines which renderer and editor to use */
-  field: IField;
+  field: IField
   /** Current value to display and edit */
-  value: unknown;
+  value: unknown
   /** Called when a new value is committed */
-  onValueChange?: (value: unknown) => void;
+  onValueChange?: (value: unknown) => void
   /** Full record for companion fields (phone country, money currency) */
-  record?: Record<string, unknown>;
+  record?: Record<string, unknown>
   /** Enum options for select-based fields */
-  enumOptions?: Array<EnumOption>;
+  enumOptions?: Array<EnumOption>
   /** TanStack Form instance — if provided, delegates editing to this form */
-  form?: any;
+  form?: any
   /** Whether the field is disabled (prevents entering edit mode) */
-  disabled?: boolean;
+  disabled?: boolean
   /** Whether the field is read-only (shows value, no hover affordance) */
-  readOnly?: boolean;
+  readOnly?: boolean
   /** Custom display content — overrides DynamicValue auto-rendering */
-  children?: ReactNode;
+  children?: ReactNode
   /** Show confirm/cancel buttons during editing */
-  showActions?: boolean;
+  showActions?: boolean
   /** Require explicit save — blur cancels instead of saving */
-  explicitSave?: boolean;
+  explicitSave?: boolean
   /** Controlled editing state */
-  editing?: boolean;
+  editing?: boolean
   /** Called when editing state changes */
-  onEditingChange?: (editing: boolean) => void;
+  onEditingChange?: (editing: boolean) => void
   /** App slug for dynamic enum loading */
-  appSlug?: string;
+  appSlug?: string
   /** Data source slug for dynamic enum loading */
-  dataSourceSlug?: string;
+  dataSourceSlug?: string
 }
 
 const EditableValue = forwardRef<HTMLDivElement, EditableValueProps>(
@@ -283,79 +291,78 @@ const EditableValue = forwardRef<HTMLDivElement, EditableValueProps>(
       className,
       ...props
     },
-    ref
+    ref,
   ) => {
-    const wrapperRef = useRef<HTMLDivElement>(null);
+    const wrapperRef = useRef<HTMLDivElement>(null)
 
-    const isFieldReadOnly
-      = readOnly
-        || disabled
-        || isReadOnlyField(field.type)
-        || field.readOnly === true;
+    const isFieldReadOnly =
+      readOnly ||
+      disabled ||
+      isReadOnlyField(field.type) ||
+      field.readOnly === true
 
-    const isPopover = POPOVER_TYPES.has(field.type);
-    const isMulti = isMultiSelectField(field.type);
-    const isSingleSelect
-      = isPopover && isSelectField(field.type) && !isMulti;
+    const isPopover = POPOVER_TYPES.has(field.type)
+    const isMulti = isMultiSelectField(field.type)
+    const isSingleSelect = isPopover && isSelectField(field.type) && !isMulti
 
     /*
      * Multi-select and compound fields always need explicit save + actions.
      * Single-select popover fields auto-save on change (no actions needed).
      * Inline fields use the user's props (defaults: blur-to-save, no actions).
      */
-    const forceExplicit = isMulti || EXPLICIT_SAVE_TYPES.has(field.type);
+    const forceExplicit = isMulti || EXPLICIT_SAVE_TYPES.has(field.type)
     const effectiveExplicitSave = forceExplicit
       ? true
-      : (explicitSaveProp ?? false);
+      : (explicitSaveProp ?? false)
     const effectiveShowActions = forceExplicit
       ? true
-      : (showActionsProp ?? false);
+      : (showActionsProp ?? false)
 
-    const isInstantSave = INSTANT_SAVE_TYPES.has(field.type);
+    const isInstantSave = INSTANT_SAVE_TYPES.has(field.type)
 
-    const [internalEditing, setInternalEditing] = useState(false);
-    const isEditing = controlledEditing ?? internalEditing;
+    const [internalEditing, setInternalEditing] = useState(false)
+    const isEditing = controlledEditing ?? internalEditing
 
     /*
      * Tracks how many times edit mode has been entered — used as a key
      * to remount MicroFormField with the latest value on each edit.
      */
-    const editCountRef = useRef(0);
+    const editCountRef = useRef(0)
 
     const setEditing = useCallback(
       (v: boolean) => {
-        if (v) editCountRef.current += 1;
-        setInternalEditing(v);
-        onEditingChange?.(v);
+        if (v) editCountRef.current += 1
+        setInternalEditing(v)
+        onEditingChange?.(v)
       },
-      [onEditingChange]
-    );
+      [onEditingChange],
+    )
 
-    const editingValueRef = useRef<unknown>(value);
-    const onValueChangeRef = useRef(onValueChange);
+    const editingValueRef = useRef<unknown>(value)
+    const onValueChangeRef = useRef(onValueChange)
 
-    onValueChangeRef.current = onValueChange;
+    onValueChangeRef.current = onValueChange
 
     useEffect(() => {
       if (!isEditing) {
-        editingValueRef.current = value;
+        editingValueRef.current = value
       }
-    }, [value, isEditing]);
+    }, [value, isEditing])
 
     useEffect(() => {
       if (isEditing) {
-        editingValueRef.current = value;
+        editingValueRef.current = value
       }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on edit start
-    }, [isEditing]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- only on edit start
+    }, [isEditing])
 
-    const setEditingRef = useRef(setEditing);
+    const setEditingRef = useRef(setEditing)
 
-    setEditingRef.current = setEditing;
+    setEditingRef.current = setEditing
 
     const onChangeRef = useRef((v: unknown) => {
-      editingValueRef.current = v;
-    });
+      editingValueRef.current = v
+    })
 
     /*
      * Instant-save fields: change = commit + close immediately
@@ -364,43 +371,45 @@ const EditableValue = forwardRef<HTMLDivElement, EditableValueProps>(
      * Multi-select / explicit-save: onChange just stores, confirm button saves
      */
     useEffect(() => {
-      if (isInstantSave || (!forceExplicit && (isSingleSelect || (isPopover && !isMulti)))) {
+      if (
+        isInstantSave ||
+        (!forceExplicit && (isSingleSelect || (isPopover && !isMulti)))
+      ) {
         onChangeRef.current = (v: unknown) => {
-          editingValueRef.current = v;
-          onValueChangeRef.current?.(v);
-          setEditingRef.current(false);
-        };
+          editingValueRef.current = v
+          onValueChangeRef.current?.(v)
+          setEditingRef.current(false)
+        }
       } else {
         onChangeRef.current = (v: unknown) => {
-          editingValueRef.current = v;
-        };
+          editingValueRef.current = v
+        }
       }
-    }, [
-      isInstantSave,
-      forceExplicit,
-      isSingleSelect,
-      isPopover,
-      isMulti
-    ]);
+    }, [isInstantSave, forceExplicit, isSingleSelect, isPopover, isMulti])
 
-    const internalForm = useMicroForm(field.slug, value, onChangeRef, editCountRef.current);
-    const activeForm = externalForm ?? internalForm;
+    const internalForm = useMicroForm(
+      field.slug,
+      value,
+      onChangeRef,
+      editCountRef.current,
+    )
+    const activeForm = externalForm ?? internalForm
 
     const handleSave = useCallback(() => {
-      onValueChange?.(editingValueRef.current);
-      setEditing(false);
-    }, [onValueChange, setEditing]);
+      onValueChange?.(editingValueRef.current)
+      setEditing(false)
+    }, [onValueChange, setEditing])
 
     const handleCancel = useCallback(() => {
-      editingValueRef.current = value;
-      setEditing(false);
-    }, [value, setEditing]);
+      editingValueRef.current = value
+      setEditing(false)
+    }, [value, setEditing])
 
     const handleClick = useCallback(() => {
       if (!isEditing && !isFieldReadOnly) {
-        setEditing(true);
+        setEditing(true)
       }
-    }, [isEditing, isFieldReadOnly, setEditing]);
+    }, [isEditing, isFieldReadOnly, setEditing])
 
     const handleBlur = useCallback(
       (e: FocusEvent<HTMLDivElement>) => {
@@ -408,83 +417,75 @@ const EditableValue = forwardRef<HTMLDivElement, EditableValueProps>(
          * Popover fields portal their content — blur fires when focus
          * moves to the popover, so we must ignore blur entirely for these
          */
-        if (isPopover) return;
+        if (isPopover) return
 
-        const related = e.relatedTarget as Node | null;
+        const related = e.relatedTarget as Node | null
 
         if (wrapperRef.current?.contains(related)) {
-          return;
+          return
         }
 
         if (effectiveExplicitSave) {
-          handleCancel();
+          handleCancel()
         } else {
-          handleSave();
+          handleSave()
         }
       },
-      [
-        isPopover,
-        effectiveExplicitSave,
-        handleSave,
-        handleCancel
-      ]
-    );
+      [isPopover, effectiveExplicitSave, handleSave, handleCancel],
+    )
 
     const handleKeyDown = useCallback(
       (e: KeyboardEvent<HTMLDivElement>) => {
         if (e.key === 'Escape') {
-          e.preventDefault();
-          handleCancel();
+          e.preventDefault()
+          handleCancel()
 
-          return;
+          return
         }
 
-        if (
-          e.key === 'Enter'
-          && !e.shiftKey
-          && INLINE_TYPES.has(field.type)
-        ) {
-          e.preventDefault();
-          handleSave();
+        if (e.key === 'Enter' && !e.shiftKey && INLINE_TYPES.has(field.type)) {
+          e.preventDefault()
+          handleSave()
         }
       },
-      [field.type, handleSave, handleCancel]
-    );
+      [field.type, handleSave, handleCancel],
+    )
 
     const handleDisplayKeyDown = useCallback(
       (e: KeyboardEvent<HTMLDivElement>) => {
         if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          handleClick();
+          e.preventDefault()
+          handleClick()
         }
       },
-      [handleClick]
-    );
+      [handleClick],
+    )
 
     useEffect(() => {
       if (isEditing && wrapperRef.current) {
         const focusable = wrapperRef.current.querySelector<HTMLElement>(
-          'input, textarea, select, [tabindex], [contenteditable="true"]'
-        );
+          'input, textarea, select, [tabindex], [contenteditable="true"]',
+        )
 
-        focusable?.focus();
+        focusable?.focus()
       }
-    }, [isEditing]);
+    }, [isEditing])
 
     if (isEditing) {
       return (
         <div
           ref={(node) => {
-            if (typeof ref === 'function') ref(node);
-            else if (ref) ref.current = node;
+            if (typeof ref === 'function') ref(node)
+            else if (ref) ref.current = node
           }}
           data-slot="editable-value"
           className={cn(
             editableValueVariants({ variant, size }),
             'relative',
-            className
+            className,
           )}
-          {...props}>
+          {...props}
+        >
           {/* Invisible spacer preserving the display-mode height */}
           <div className="invisible">
             {children ?? (
@@ -492,74 +493,83 @@ const EditableValue = forwardRef<HTMLDivElement, EditableValueProps>(
                 field={field}
                 value={value}
                 record={record}
-                enumOptions={enumOptions} />
+                enumOptions={enumOptions}
+              />
             )}
           </div>
           {/* Floating edit container */}
           <div
-            ref={(node) => { wrapperRef.current = node; }}
+            ref={(node) => {
+              wrapperRef.current = node
+            }}
             data-editing=""
             className={cn(
               'absolute inset-x-0 top-0 z-10',
               'flex w-full items-start rounded-md',
-              'border border-ring bg-background shadow-md'
+              'border border-ring bg-background shadow-md',
             )}
             onBlur={handleBlur}
-            onKeyDown={handleKeyDown}>
-            <div className={cn(
-              'w-full',
-              editableValueVariants({ size }),
-              '**:data-[slot=field-label]:hidden',
-              '**:data-[slot=field]:mb-0 **:data-[slot=field]:gap-1'
-            )}>
+            onKeyDown={handleKeyDown}
+          >
+            <div
+              className={cn(
+                'w-full',
+                editableValueVariants({ size }),
+                '**:data-[slot=field-label]:hidden',
+                '**:data-[slot=field]:mb-0 **:data-[slot=field]:gap-1',
+              )}
+            >
               <DynamicFormField
                 field={field}
                 form={activeForm}
                 enumOptions={enumOptions}
                 appSlug={appSlug}
-                dataSourceSlug={dataSourceSlug} />
+                dataSourceSlug={dataSourceSlug}
+              />
             </div>
             {effectiveShowActions && (
               <EditableValueActions
                 onSave={handleSave}
-                onCancel={handleCancel} />
+                onCancel={handleCancel}
+              />
             )}
           </div>
         </div>
-      );
+      )
     }
 
     return (
       <div
         ref={(node) => {
-          wrapperRef.current = node;
-          if (typeof ref === 'function') ref(node);
-          else if (ref) ref.current = node;
+          wrapperRef.current = node
+          if (typeof ref === 'function') ref(node)
+          else if (ref) ref.current = node
         }}
         data-slot="editable-value"
         role={isFieldReadOnly ? undefined : 'button'}
         tabIndex={isFieldReadOnly ? undefined : 0}
         className={cn(
           editableValueVariants({ variant, size }),
-          !isFieldReadOnly
-          && 'cursor-pointer hover:border-muted-foreground/30',
-          className
+          !isFieldReadOnly && 'cursor-pointer hover:border-muted-foreground/30',
+          className,
         )}
         onClick={handleClick}
         onKeyDown={handleDisplayKeyDown}
-        {...props}>
+        {...props}
+      >
         {children ?? (
           <DynamicValue
             field={field}
             value={value}
             record={record}
-            enumOptions={enumOptions} />
+            enumOptions={enumOptions}
+          />
         )}
       </div>
-    );
-  }
-);
+    )
+  },
+)
 
-EditableValue.displayName = 'EditableValue';
+EditableValue.displayName = 'EditableValue'
 
-export { EditableValue, editableValueVariants };
+export { EditableValue, editableValueVariants }

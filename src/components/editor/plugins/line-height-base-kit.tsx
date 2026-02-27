@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { BaseLineHeightPlugin } from '@platejs/basic-styles';
-import { KEYS } from 'platejs';
+import { BaseLineHeightPlugin } from '@platejs/basic-styles'
+import { KEYS } from 'platejs'
 
 export const BaseLineHeightKit = [
   BaseLineHeightPlugin.configure({
@@ -12,4 +12,4 @@ export const BaseLineHeightKit = [
       targetPlugins: [...KEYS.heading, KEYS.p],
     },
   }),
-];
+]

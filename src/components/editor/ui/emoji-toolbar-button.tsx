@@ -1,23 +1,23 @@
 // @ts-nocheck
-'use client';
+'use client'
 /* eslint-disable react-hooks/refs */
 
-import * as React from 'react';
+import * as React from 'react'
 
-import type { Emoji } from '@emoji-mart/data';
+import type { Emoji } from '@emoji-mart/data'
 
 import {
   type EmojiCategoryList,
   type EmojiIconList,
   type GridRow,
   EmojiSettings,
-} from '@platejs/emoji';
+} from '@platejs/emoji'
 import {
   type EmojiDropdownMenuOptions,
   type UseEmojiPickerType,
   useEmojiDropdownMenuState,
-} from '@platejs/emoji/react';
-import * as Popover from '@radix-ui/react-popover';
+} from '@platejs/emoji/react'
+import * as Popover from '@radix-ui/react-popover'
 import {
   AppleIcon,
   ClockIcon,
@@ -30,26 +30,26 @@ import {
   SmileIcon,
   StarIcon,
   XIcon,
-} from 'lucide-react';
+} from 'lucide-react'
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
-import { ToolbarButton } from '@/components/editor/ui/toolbar';
+} from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
+import { ToolbarButton } from '@/components/editor/ui/toolbar'
 
 export function EmojiToolbarButton({
   options,
   ...props
 }: {
-  options?: EmojiDropdownMenuOptions;
+  options?: EmojiDropdownMenuOptions
 } & React.ComponentPropsWithoutRef<typeof ToolbarButton>) {
   const { emojiPickerState, isOpen, setIsOpen } =
-    useEmojiDropdownMenuState(options);
+    useEmojiDropdownMenuState(options)
 
   return (
     <EmojiPopover
@@ -68,7 +68,7 @@ export function EmojiToolbarButton({
         settings={options?.settings}
       />
     </EmojiPopover>
-  );
+  )
 }
 
 export function EmojiPopover({
@@ -77,10 +77,10 @@ export function EmojiPopover({
   isOpen,
   setIsOpen,
 }: {
-  children: React.ReactNode;
-  control: React.ReactNode;
-  isOpen: boolean;
-  setIsOpen: (open: boolean) => void;
+  children: React.ReactNode
+  control: React.ReactNode
+  isOpen: boolean
+  setIsOpen: (open: boolean) => void
 }) {
   return (
     <Popover.Root open={isOpen} onOpenChange={setIsOpen}>
@@ -90,7 +90,7 @@ export function EmojiPopover({
         <Popover.Content className="z-100">{children}</Popover.Content>
       </Popover.Portal>
     </Popover.Root>
-  );
+  )
 }
 
 export function EmojiPicker({
@@ -115,13 +115,13 @@ export function EmojiPicker({
   onMouseOver,
   onSelectEmoji,
 }: Omit<UseEmojiPickerType, 'icons'> & {
-  icons?: EmojiIconList<React.ReactElement>;
+  icons?: EmojiIconList<React.ReactElement>
 }) {
   return (
     <div
       className={cn(
         'flex flex-col rounded-xl bg-popover text-popover-foreground',
-        'h-[23rem] w-80 border shadow-md'
+        'h-[23rem] w-80 border shadow-md',
       )}
     >
       <EmojiPickerNavigation
@@ -160,7 +160,7 @@ export function EmojiPicker({
         isSearching={isSearching}
       />
     </div>
-  );
+  )
 }
 
 const EmojiButton = React.memo(function EmojiButton({
@@ -169,10 +169,10 @@ const EmojiButton = React.memo(function EmojiButton({
   onMouseOver,
   onSelect,
 }: {
-  emoji: Emoji;
-  index: number;
-  onMouseOver: (emoji?: Emoji) => void;
-  onSelect: (emoji: Emoji) => void;
+  emoji: Emoji
+  index: number
+  onMouseOver: (emoji?: Emoji) => void
+  onSelect: (emoji: Emoji) => void
 }) {
   return (
     <button
@@ -200,8 +200,8 @@ const EmojiButton = React.memo(function EmojiButton({
         {emoji.skins[0].native}
       </span>
     </button>
-  );
-});
+  )
+})
 
 const RowOfButtons = React.memo(function RowOfButtons({
   emojiLibrary,
@@ -209,7 +209,7 @@ const RowOfButtons = React.memo(function RowOfButtons({
   onMouseOver,
   onSelectEmoji,
 }: {
-  row: GridRow;
+  row: GridRow
 } & Pick<
   UseEmojiPickerType,
   'emojiLibrary' | 'onMouseOver' | 'onSelectEmoji'
@@ -226,8 +226,8 @@ const RowOfButtons = React.memo(function RowOfButtons({
         />
       ))}
     </div>
-  );
-});
+  )
+})
 
 function EmojiPickerContent({
   emojiLibrary,
@@ -251,15 +251,15 @@ function EmojiPickerContent({
   | 'settings'
   | 'visibleCategories'
 >) {
-  const getRowWidth = settings.perLine.value * settings.buttonSize.value;
+  const getRowWidth = settings.perLine.value * settings.buttonSize.value
 
   const isCategoryVisible = React.useCallback(
     (categoryId: any) =>
       visibleCategories.has(categoryId)
         ? visibleCategories.get(categoryId)
         : false,
-    [visibleCategories]
-  );
+    [visibleCategories],
+  )
 
   const EmojiList = React.useCallback(
     () =>
@@ -267,8 +267,8 @@ function EmojiPickerContent({
         .getGrid()
         .sections()
         .map(({ id: categoryId }) => {
-          const section = emojiLibrary.getGrid().section(categoryId);
-          const { buttonSize } = settings;
+          const section = emojiLibrary.getGrid().section(categoryId)
+          const { buttonSize } = settings
 
           return (
             <div
@@ -298,7 +298,7 @@ function EmojiPickerContent({
                     ))}
               </div>
             </div>
-          );
+          )
         }),
     [
       emojiLibrary,
@@ -308,8 +308,8 @@ function EmojiPickerContent({
       onSelectEmoji,
       onMouseOver,
       settings,
-    ]
-  );
+    ],
+  )
 
   const SearchList = React.useCallback(
     () => (
@@ -337,8 +337,8 @@ function EmojiPickerContent({
       searchResult,
       onSelectEmoji,
       onMouseOver,
-    ]
-  );
+    ],
+  )
 
   return (
     <div
@@ -348,7 +348,7 @@ function EmojiPickerContent({
         '[&::-webkit-scrollbar]:w-4',
         '[&::-webkit-scrollbar-button]:hidden [&::-webkit-scrollbar-button]:size-0',
         '[&::-webkit-scrollbar-thumb]:min-h-11 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:hover:bg-muted-foreground/25',
-        '[&::-webkit-scrollbar-thumb]:border-4 [&::-webkit-scrollbar-thumb]:border-popover [&::-webkit-scrollbar-thumb]:border-solid [&::-webkit-scrollbar-thumb]:bg-clip-padding'
+        '[&::-webkit-scrollbar-thumb]:border-4 [&::-webkit-scrollbar-thumb]:border-popover [&::-webkit-scrollbar-thumb]:border-solid [&::-webkit-scrollbar-thumb]:bg-clip-padding',
       )}
       data-id="scroll"
     >
@@ -356,7 +356,7 @@ function EmojiPickerContent({
         {isSearching ? SearchList() : EmojiList()}
       </div>
     </div>
-  );
+  )
 }
 
 function EmojiPickerSearchBar({
@@ -365,7 +365,7 @@ function EmojiPickerSearchBar({
   searchValue,
   setSearch,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 } & Pick<UseEmojiPickerType, 'i18n' | 'searchValue' | 'setSearch'>) {
   return (
     <div className="flex items-center px-2">
@@ -383,7 +383,7 @@ function EmojiPickerSearchBar({
         {children}
       </div>
     </div>
-  );
+  )
 }
 
 function EmojiPickerSearchAndClear({
@@ -395,7 +395,7 @@ function EmojiPickerSearchAndClear({
     <div className="flex items-center text-foreground">
       <div
         className={cn(
-          '-translate-y-1/2 absolute top-1/2 left-2.5 z-10 flex size-5 items-center justify-center text-foreground'
+          '-translate-y-1/2 absolute top-1/2 left-2.5 z-10 flex size-5 items-center justify-center text-foreground',
         )}
       >
         {emojiSearchIcons.loupe}
@@ -405,7 +405,7 @@ function EmojiPickerSearchAndClear({
           size="icon"
           variant="ghost"
           className={cn(
-            '-translate-y-1/2 absolute top-1/2 right-0.5 flex size-8 cursor-pointer items-center justify-center rounded-full border-none bg-transparent text-popover-foreground hover:bg-transparent'
+            '-translate-y-1/2 absolute top-1/2 right-0.5 flex size-8 cursor-pointer items-center justify-center rounded-full border-none bg-transparent text-popover-foreground hover:bg-transparent',
           )}
           onClick={clearSearch}
           title={i18n.clear}
@@ -416,7 +416,7 @@ function EmojiPickerSearchAndClear({
         </Button>
       )}
     </div>
-  );
+  )
 }
 
 function EmojiPreview({ emoji }: Pick<UseEmojiPickerType, 'emoji'>) {
@@ -430,7 +430,7 @@ function EmojiPreview({ emoji }: Pick<UseEmojiPickerType, 'emoji'>) {
         <div className="truncate text-sm">{`:${emoji?.id}:`}</div>
       </div>
     </div>
-  );
+  )
 }
 
 function NoEmoji({ i18n }: Pick<UseEmojiPickerType, 'i18n'>) {
@@ -444,7 +444,7 @@ function NoEmoji({ i18n }: Pick<UseEmojiPickerType, 'i18n'>) {
         <div className="truncate text-sm">{i18n.searchNoResultsSubtitle}</div>
       </div>
     </div>
-  );
+  )
 }
 
 function PickAnEmoji({ i18n }: Pick<UseEmojiPickerType, 'i18n'>) {
@@ -455,7 +455,7 @@ function PickAnEmoji({ i18n }: Pick<UseEmojiPickerType, 'i18n'>) {
         <div className="truncate font-semibold text-sm">{i18n.pick}</div>
       </div>
     </div>
-  );
+  )
 }
 
 function EmojiPickerPreview({
@@ -465,9 +465,9 @@ function EmojiPickerPreview({
   isSearching = false,
   ...props
 }: Pick<UseEmojiPickerType, 'emoji' | 'hasFound' | 'i18n' | 'isSearching'>) {
-  const showPickEmoji = !emoji && (!isSearching || hasFound);
-  const showNoEmoji = isSearching && !hasFound;
-  const showPreview = emoji && !showNoEmoji && !showNoEmoji;
+  const showPickEmoji = !emoji && (!isSearching || hasFound)
+  const showNoEmoji = isSearching && !hasFound
+  const showPreview = emoji && !showNoEmoji && !showNoEmoji
 
   return (
     <>
@@ -475,7 +475,7 @@ function EmojiPickerPreview({
       {showPickEmoji && <PickAnEmoji i18n={i18n} {...props} />}
       {showNoEmoji && <NoEmoji i18n={i18n} {...props} />}
     </>
-  );
+  )
 }
 
 function EmojiPickerNavigation({
@@ -485,7 +485,7 @@ function EmojiPickerNavigation({
   icons,
   onClick,
 }: {
-  onClick: (id: EmojiCategoryList) => void;
+  onClick: (id: EmojiCategoryList) => void
 } & Pick<
   UseEmojiPickerType,
   'emojiLibrary' | 'focusedCategory' | 'i18n' | 'icons'
@@ -509,10 +509,10 @@ function EmojiPickerNavigation({
                     className={cn(
                       'h-fit rounded-full fill-current p-1.5 text-muted-foreground hover:bg-muted hover:text-muted-foreground',
                       id === focusedCategory &&
-                        'pointer-events-none bg-accent fill-current text-accent-foreground'
+                        'pointer-events-none bg-accent fill-current text-accent-foreground',
                     )}
                     onClick={() => {
-                      onClick(id);
+                      onClick(id)
                     }}
                     aria-label={i18n.categories[id]}
                     type="button"
@@ -530,14 +530,14 @@ function EmojiPickerNavigation({
         </div>
       </nav>
     </TooltipProvider>
-  );
+  )
 }
 
 const emojiCategoryIcons: Record<
   EmojiCategoryList,
   {
-    outline: React.ReactElement;
-    solid: React.ReactElement; // Needed to add another solid variant - outline will be used for now
+    outline: React.ReactElement
+    solid: React.ReactElement // Needed to add another solid variant - outline will be used for now
   }
 > = {
   activity: {
@@ -621,9 +621,9 @@ const emojiCategoryIcons: Record<
     outline: <MusicIcon className="size-full" />,
     solid: <MusicIcon className="size-full" />,
   },
-};
+}
 
 const emojiSearchIcons = {
   delete: <XIcon className="size-4 text-current" />,
   loupe: <SearchIcon className="size-4 text-current" />,
-};
+}

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Building2, Plus } from 'lucide-react'
 import type { ViewType } from '@/components/view-switcher'
@@ -18,6 +19,7 @@ import { getCompaniesColumns } from '@/components/companies/companies-columns'
 import { CompaniesKanbanView } from '@/components/companies/companies-kanban-view'
 
 export function Companies() {
+  const { t } = useTranslation()
   const { data: companies, isLoading, error } = useCompanies()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [viewType, setViewType] = useState<ViewType>('list')
@@ -32,13 +34,13 @@ export function Companies() {
   return (
     <>
       <PageHeader
-        title="Companies"
+        title={t('companies.title')}
         actions={
           <>
             <ViewSwitcher value={viewType} onValueChange={setViewType} />
             <Button onClick={() => setIsFormOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              New Company
+              {t('companies.newCompany')}
             </Button>
           </>
         }
@@ -76,7 +78,7 @@ export function Companies() {
           <Card className="border-destructive">
             <CardHeader>
               <CardTitle className="text-destructive">
-                Error loading companies
+                {t('companies.errorLoading')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -88,13 +90,13 @@ export function Companies() {
         {companies && companies.length === 0 && (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-lg font-medium">No companies yet</p>
+              <p className="text-lg font-medium">{t('companies.emptyTitle')}</p>
               <p className="text-sm text-muted-foreground mt-2">
-                Add your first company to get started
+                {t('companies.emptyDescription')}
               </p>
               <Button className="mt-4" onClick={() => setIsFormOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
-                Create Company
+                {t('companies.createCompany')}
               </Button>
             </CardContent>
           </Card>

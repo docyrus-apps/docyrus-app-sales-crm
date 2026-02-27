@@ -4,17 +4,19 @@
  */
 
 export interface IconEntry {
-  lib: string;
-  name: string;
+  lib: string
+  name: string
 }
 
 /** Parse prefixed icon strings ('fal star') into structured { lib, name } entries. */
-export function parseIconEntries(icons: ReadonlyArray<string>): Array<IconEntry> {
+export function parseIconEntries(
+  icons: ReadonlyArray<string>,
+): Array<IconEntry> {
   return icons.map((icon) => {
-    const spaceIdx = icon.indexOf(' ');
+    const spaceIdx = icon.indexOf(' ')
 
-    return { lib: icon.slice(0, spaceIdx), name: icon.slice(spaceIdx + 1) };
-  });
+    return { lib: icon.slice(0, spaceIdx), name: icon.slice(spaceIdx + 1) }
+  })
 }
 
 /** Font Awesome Light icons (prefixed: 'fal star') */
@@ -3155,8 +3157,8 @@ export const allIcons: ReadonlyArray<string> = [
   'fal y',
   'fal yen-sign',
   'fal yin-yang',
-  'fal z'
-];
+  'fal z',
+]
 
 /** Featured Font Awesome icons for quick picker. */
 export const featuredIcons: ReadonlyArray<string> = [
@@ -3184,8 +3186,8 @@ export const featuredIcons: ReadonlyArray<string> = [
   'fal plus-circle',
   'fal lock',
   'fal key',
-  'fal folder-plus'
-];
+  'fal folder-plus',
+]
 
 /** Huge Icons (prefixed: 'huge home-01') */
 export const hugeIcons: ReadonlyArray<string> = [
@@ -7687,8 +7689,8 @@ export const hugeIcons: ReadonlyArray<string> = [
   'huge zoom-square',
   'huge zoom',
   'huge zsh',
-  'huge zzz'
-];
+  'huge zzz',
+]
 
 /** Featured Huge Icons for quick picker. */
 export const featuredHugeIcons: ReadonlyArray<string> = [
@@ -7705,5 +7707,5 @@ export const featuredHugeIcons: ReadonlyArray<string> = [
   'huge search-01',
   'huge checkmark-circle-01',
   'huge alert-02',
-  'huge information-circle'
-];
+  'huge information-circle',
+]

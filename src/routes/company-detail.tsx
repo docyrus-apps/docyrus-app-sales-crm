@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { ArrowLeft, Pencil } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
@@ -21,6 +22,7 @@ import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
 
 export function CompanyDetail() {
+  const { t } = useTranslation()
   const { companyId } = useParams({ strict: false })
   const { tab } = useSearch({ from: '/companies/$companyId' })
   const navigate = useNavigate({ from: '/companies/$companyId' })
@@ -96,14 +98,16 @@ export function CompanyDetail() {
       <PageContainer>
         <Card className="border-destructive">
           <CardHeader>
-            <CardTitle className="text-destructive">Error</CardTitle>
+            <CardTitle className="text-destructive">
+              {t('common.error')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <p>Failed to load company details</p>
+            <p>{t('companies.failedToLoad')}</p>
             <Link to="/companies">
               <Button variant="outline" className="mt-4">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Companies
+                {t('companies.backToCompanies')}
               </Button>
             </Link>
           </CardContent>
@@ -118,7 +122,7 @@ export function CompanyDetail() {
         <Link to="/companies">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Companies
+            {t('companies.backToCompanies')}
           </Button>
         </Link>
       </div>
@@ -128,7 +132,7 @@ export function CompanyDetail() {
         <div className="space-y-4">
           <Card className="group">
             <CardHeader>
-              <CardTitle>Company Info</CardTitle>
+              <CardTitle>{t('companies.companyInfo')}</CardTitle>
               <CardAction>
                 <Button
                   variant="ghost"
@@ -143,7 +147,7 @@ export function CompanyDetail() {
             <CardContent className="space-y-4">
               <div>
                 <div className="text-sm font-medium text-muted-foreground">
-                  Name
+                  {t('companies.name')}
                 </div>
                 <div className="mt-1 font-medium text-lg">{company.name}</div>
               </div>
@@ -151,7 +155,7 @@ export function CompanyDetail() {
               {company.industry && (
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">
-                    Industry
+                    {t('companies.industry')}
                   </div>
                   <div className="mt-1">
                     {typeof company.industry === 'object'
@@ -164,7 +168,7 @@ export function CompanyDetail() {
               {company.status && (
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">
-                    Status
+                    {t('companies.status')}
                   </div>
                   <div className="mt-1">
                     {typeof company.status === 'object'
@@ -177,7 +181,7 @@ export function CompanyDetail() {
               {company.type && (
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">
-                    Type
+                    {t('companies.type')}
                   </div>
                   <div className="mt-1">
                     {typeof company.type === 'object'
@@ -191,13 +195,13 @@ export function CompanyDetail() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Contact Information</CardTitle>
+              <CardTitle>{t('companies.contactInformation')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {company.email && (
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">
-                    Email
+                    {t('companies.email')}
                   </div>
                   <div className="mt-1 text-sm">{company.email}</div>
                 </div>
@@ -206,7 +210,7 @@ export function CompanyDetail() {
               {company.phone && (
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">
-                    Phone
+                    {t('companies.phone')}
                   </div>
                   <div className="mt-1 text-sm">{company.phone}</div>
                 </div>
@@ -215,7 +219,7 @@ export function CompanyDetail() {
               {company.website && (
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">
-                    Website
+                    {t('companies.website')}
                   </div>
                   <div className="mt-1 text-sm">{company.website}</div>
                 </div>
@@ -224,7 +228,7 @@ export function CompanyDetail() {
               {company.address && (
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">
-                    Address
+                    {t('companies.address')}
                   </div>
                   <div className="mt-1 text-sm">{company.address}</div>
                   {company.city && typeof company.city === 'object' && (
@@ -240,25 +244,37 @@ export function CompanyDetail() {
         <div className="lg:col-span-2">
           <Tabs value={tab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="contacts">Contacts</TabsTrigger>
-              <TabsTrigger value="deals">Deals</TabsTrigger>
-              <TabsTrigger value="leads">Leads</TabsTrigger>
-              <TabsTrigger value="comments">Comments</TabsTrigger>
-              <TabsTrigger value="files">Files</TabsTrigger>
+              <TabsTrigger value="overview">
+                {t('companies.tabs.overview')}
+              </TabsTrigger>
+              <TabsTrigger value="contacts">
+                {t('companies.tabs.contacts')}
+              </TabsTrigger>
+              <TabsTrigger value="deals">
+                {t('companies.tabs.deals')}
+              </TabsTrigger>
+              <TabsTrigger value="leads">
+                {t('companies.tabs.leads')}
+              </TabsTrigger>
+              <TabsTrigger value="comments">
+                {t('companies.tabs.comments')}
+              </TabsTrigger>
+              <TabsTrigger value="files">
+                {t('companies.tabs.files')}
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="mt-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Company Overview</CardTitle>
+                  <CardTitle>{t('companies.companyOverview')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     {company.tax_number && (
                       <div>
                         <div className="text-sm font-medium text-muted-foreground">
-                          Tax Number
+                          {t('companies.taxNumber')}
                         </div>
                         <div className="mt-1">{company.tax_number}</div>
                       </div>
@@ -266,7 +282,7 @@ export function CompanyDetail() {
                     {company.district && (
                       <div>
                         <div className="text-sm font-medium text-muted-foreground">
-                          District
+                          {t('companies.district')}
                         </div>
                         <div className="mt-1">{company.district}</div>
                       </div>
@@ -279,7 +295,7 @@ export function CompanyDetail() {
             <TabsContent value="contacts" className="mt-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Contacts</CardTitle>
+                  <CardTitle>{t('companies.contacts.title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {contactsLoading ? (
@@ -289,7 +305,7 @@ export function CompanyDetail() {
                     </div>
                   ) : !contacts?.length ? (
                     <p className="text-sm text-muted-foreground">
-                      No contacts yet
+                      {t('companies.contacts.empty')}
                     </p>
                   ) : (
                     <div className="space-y-3">
@@ -329,7 +345,7 @@ export function CompanyDetail() {
             <TabsContent value="deals" className="mt-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Related Deals</CardTitle>
+                  <CardTitle>{t('companies.deals.title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {dealsLoading ? (
@@ -339,7 +355,7 @@ export function CompanyDetail() {
                     </div>
                   ) : !deals?.length ? (
                     <p className="text-sm text-muted-foreground">
-                      No deals yet
+                      {t('companies.deals.empty')}
                     </p>
                   ) : (
                     <div className="space-y-3">
@@ -355,11 +371,11 @@ export function CompanyDetail() {
                               <div className="font-medium">
                                 {typeof deal.stage === 'object'
                                   ? deal.stage.name
-                                  : deal.stage || 'N/A'}
+                                  : deal.stage || t('common.na')}
                               </div>
                               {deal.expected_closing_date && (
                                 <div className="text-sm text-muted-foreground">
-                                  Expected:{' '}
+                                  {t('companies.expected')}:{' '}
                                   {new Date(
                                     deal.expected_closing_date,
                                   ).toLocaleDateString()}
@@ -390,7 +406,7 @@ export function CompanyDetail() {
             <TabsContent value="leads" className="mt-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Related Leads</CardTitle>
+                  <CardTitle>{t('companies.leads.title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {leadsLoading ? (
@@ -400,7 +416,7 @@ export function CompanyDetail() {
                     </div>
                   ) : !leads?.length ? (
                     <p className="text-sm text-muted-foreground">
-                      No leads yet
+                      {t('companies.leads.empty')}
                     </p>
                   ) : (
                     <div className="space-y-3">
@@ -414,7 +430,7 @@ export function CompanyDetail() {
                           <div className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50">
                             <div className="min-w-0 flex-1">
                               <div className="font-medium">
-                                {lead.title || 'Untitled Lead'}
+                                {lead.title || t('leads.untitledLead')}
                               </div>
                               {lead.lead_status && (
                                 <div className="text-sm text-muted-foreground">

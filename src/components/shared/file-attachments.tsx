@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition, @typescript-eslint/require-await, no-shadow */
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Download,
@@ -42,6 +43,7 @@ export function FileAttachments({
   dataSource,
   recordId,
 }: FileAttachmentsProps) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [uploading, setUploading] = useState(false)
 
@@ -90,11 +92,11 @@ export function FileAttachments({
         queryKey: ['files', dataSource, recordId],
       })
       setUploading(false)
-      toast.success('File(s) uploaded successfully')
+      toast.success(t('files.uploadSuccess'))
     },
     onError: (err: Error) => {
       setUploading(false)
-      toast.error(`Failed to upload file: ${err.message}`)
+      toast.error(t('files.uploadError', { error: err.message }))
     },
   })
 
@@ -112,10 +114,10 @@ export function FileAttachments({
       queryClient.invalidateQueries({
         queryKey: ['files', dataSource, recordId],
       })
-      toast.success('File deleted successfully')
+      toast.success(t('files.deleteSuccess'))
     },
     onError: (err: Error) => {
-      toast.error(`Failed to delete file: ${err.message}`)
+      toast.error(t('files.deleteError', { error: err.message }))
     },
   })
 
@@ -144,7 +146,7 @@ export function FileAttachments({
       link.remove()
       window.URL.revokeObjectURL(url)
     } catch (err) {
-      toast.error('Failed to download file')
+      toast.error(t('files.downloadError'))
     }
   }
 
@@ -178,7 +180,7 @@ export function FileAttachments({
       <Card className="border-destructive">
         <CardContent className="py-6">
           <p className="text-sm text-destructive">
-            Failed to load files: {error.message}
+            {t('files.failedToLoad', { error: error.message })}
           </p>
         </CardContent>
       </Card>
@@ -192,7 +194,7 @@ export function FileAttachments({
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Upload className="h-4 w-4" />
-            Upload Files
+            {t('files.uploadFiles')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -272,9 +274,11 @@ export function FileAttachments({
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-8">
             <FileText className="h-12 w-12 text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground">No files attached</p>
+            <p className="text-sm text-muted-foreground">
+              {t('files.noFiles')}
+            </p>
             <p className="text-xs text-muted-foreground">
-              Upload files using the form above
+              {t('files.uploadHint')}
             </p>
           </CardContent>
         </Card>

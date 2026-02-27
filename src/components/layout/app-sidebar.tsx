@@ -11,7 +11,6 @@ import {
   Contact,
   DollarSign,
   Home,
-  Languages,
   LogOut,
   NotepadText,
   Package,
@@ -21,6 +20,7 @@ import {
   UserRoundSearch,
   Zap,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useDocyrusAuth } from '@docyrus/signin'
 import type { UserEntity } from '@/collections/users.collection'
 import {
@@ -55,37 +55,44 @@ import { ProfileDialog } from '@/components/user/profile-dialog'
 import { ChangePasswordDialog } from '@/components/user/change-password-dialog'
 import { LanguageSelector } from '@/components/shared/language-selector'
 
-const MAIN_NAV = [
-  { title: 'Home', url: '/', icon: Home },
-  { title: 'Notifications', url: '/notifications', icon: Bell, hasBadge: true },
-  { title: 'Deals', url: '/deals', icon: DollarSign },
-  { title: 'Leads', url: '/leads', icon: UserRoundSearch },
-  { title: 'Tasks', url: '/tasks', icon: CheckSquare },
-  { title: 'Notes', url: '/notes', icon: NotepadText },
-  { title: 'Activities', url: '/activities', icon: Zap },
-  { title: 'Events', url: '/events', icon: CalendarDays },
-  { title: 'Reports', url: '/reports', icon: BarChart3 },
+const MAIN_NAV_KEYS = [
+  { titleKey: 'nav.home', url: '/', icon: Home },
+  {
+    titleKey: 'notifications.title',
+    url: '/notifications',
+    icon: Bell,
+    hasBadge: true,
+  },
+  { titleKey: 'deals.title', url: '/deals', icon: DollarSign },
+  { titleKey: 'leads.title', url: '/leads', icon: UserRoundSearch },
+  { titleKey: 'tasks.title', url: '/tasks', icon: CheckSquare },
+  { titleKey: 'notes.title', url: '/notes', icon: NotepadText },
+  { titleKey: 'activities.title', url: '/activities', icon: Zap },
+  { titleKey: 'events.title', url: '/events', icon: CalendarDays },
+  { titleKey: 'reports.title', url: '/reports', icon: BarChart3 },
 ]
 
-const DATA_SOURCES_NAV = [
-  { title: 'Organizations', url: '/companies', icon: Building2 },
-  { title: 'Contacts', url: '/contacts', icon: Contact },
-  { title: 'Products', url: '/products', icon: Package },
-  { title: 'Sales Orders', url: '/sales-orders', icon: ShoppingCart },
+const DATA_SOURCES_NAV_KEYS = [
+  { titleKey: 'companies.title', url: '/companies', icon: Building2 },
+  { titleKey: 'contacts.title', url: '/contacts', icon: Contact },
+  { titleKey: 'products.title', url: '/products', icon: Package },
+  { titleKey: 'salesOrders.title', url: '/sales-orders', icon: ShoppingCart },
 ]
 
-type NavItem = (typeof MAIN_NAV)[number]
+type NavItem = (typeof MAIN_NAV_KEYS)[number]
 
 function NavGroup({
   label,
   items,
   matchRoute,
   unreadCount,
+  t,
 }: {
   label: string
   items: Array<NavItem>
   matchRoute: ReturnType<typeof useMatchRoute>
   unreadCount?: number
+  t: (key: string) => string
 }) {
   return (
     <SidebarGroup>
@@ -93,16 +100,13 @@ function NavGroup({
       <SidebarMenu>
         {items.map((item) => {
           const isActive = matchRoute({ to: item.url, fuzzy: true })
+          const title = t(item.titleKey)
           return (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton
-                asChild
-                isActive={!!isActive}
-                tooltip={item.title}
-              >
+            <SidebarMenuItem key={item.titleKey}>
+              <SidebarMenuButton asChild isActive={!!isActive} tooltip={title}>
                 <Link to={item.url}>
                   <item.icon />
-                  <span>{item.title}</span>
+                  <span>{title}</span>
                 </Link>
               </SidebarMenuButton>
               {'hasBadge' in item &&
@@ -123,10 +127,12 @@ export function AppSidebar() {
   const { signOut } = useDocyrusAuth()
   const matchRoute = useMatchRoute()
   const { state } = useSidebar()
+  const { t } = useTranslation()
   const { data: notifications } = useNotifications()
   const [userProfile, setUserProfile] = useState<UserEntity | null>(null)
   const [profileDialogOpen, setProfileDialogOpen] = useState(false)
-  const [changePasswordDialogOpen, setChangePasswordDialogOpen] = useState(false)
+  const [changePasswordDialogOpen, setChangePasswordDialogOpen] =
+    useState(false)
 
   const unreadCount = notifications?.filter((n: any) => !n.seen).length || 0
 
@@ -165,7 +171,7 @@ export function AppSidebar() {
                 <img src="/logo.svg" alt="Docyrus" className="size-8" />
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">
-                    Sales CRM by Docyrus
+                    {t('sidebar.appName')}
                   </span>
                 </div>
               </Link>
@@ -180,14 +186,16 @@ export function AppSidebar() {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
-                tooltip="Search"
+                tooltip={t('nav.searchTooltip')}
                 onClick={openCommandPalette}
                 className="rounded-lg bg-card text-muted-foreground shadow-sm"
               >
                 <Search />
                 {!isCollapsed && (
                   <>
-                    <span className="flex-1 text-left">Search anything</span>
+                    <span className="flex-1 text-left">
+                      {t('nav.searchAnything')}
+                    </span>
                     <kbd className="pointer-events-none ml-auto inline-flex h-5 select-none items-center gap-0.5 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
                       <span className="text-xs">&#8984;</span>K
                     </kbd>
@@ -199,15 +207,17 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <NavGroup
-          label="Main Navigation"
-          items={MAIN_NAV}
+          label={t('nav.mainNavigation')}
+          items={MAIN_NAV_KEYS}
           matchRoute={matchRoute}
           unreadCount={unreadCount}
+          t={t}
         />
         <NavGroup
-          label="Data Sources"
-          items={DATA_SOURCES_NAV}
+          label={t('nav.dataSources', 'Data Sources')}
+          items={DATA_SOURCES_NAV_KEYS}
           matchRoute={matchRoute}
+          t={t}
         />
       </SidebarContent>
 
@@ -263,25 +273,29 @@ export function AppSidebar() {
                 <DropdownMenuGroup>
                   <DropdownMenuItem onClick={() => setProfileDialogOpen(true)}>
                     <BadgeCheck />
-                    Account
+                    {t('sidebar.myProfile')}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setChangePasswordDialogOpen(true)}>
+                  <DropdownMenuItem
+                    onClick={() => setChangePasswordDialogOpen(true)}
+                  >
                     <Settings />
-                    Change Password
+                    {t('sidebar.changePassword')}
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <Bell />
-                    Notifications
+                    {t('notifications.title')}
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                   <div className="flex items-center justify-between px-2 py-1.5">
-                    <span className="text-sm">Theme</span>
+                    <span className="text-sm">{t('sidebar.theme')}</span>
                     <ThemeToggle />
                   </div>
                   <div className="flex items-center justify-between px-2 py-1.5">
-                    <span className="text-sm">Color Theme</span>
+                    <span className="text-sm">
+                      {t('sidebar.colorTheme', 'Color Theme')}
+                    </span>
                     <ThemeSelector />
                   </div>
                   <LanguageSelector />
@@ -289,7 +303,7 @@ export function AppSidebar() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => signOut()}>
                   <LogOut />
-                  Sign out
+                  {t('sidebar.signOut')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

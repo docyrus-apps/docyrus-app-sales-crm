@@ -1,5 +1,5 @@
-import * as React from 'react';
-import { XIcon } from 'lucide-react';
+import * as React from 'react'
+import { XIcon } from 'lucide-react'
 
 import {
   Dialog as DialogPrimitive,
@@ -21,28 +21,28 @@ import {
   type DialogTriggerProps as DialogTriggerPrimitiveProps,
   type DialogOverlayProps as DialogOverlayPrimitiveProps,
   type DialogCloseProps as DialogClosePrimitiveProps,
-} from '@/components/animate-ui/primitives/radix/dialog';
-import { cn } from '@/lib/utils';
+} from '@/components/animate-ui/primitives/radix/dialog'
+import { cn } from '@/lib/utils'
 
-type DialogProps = DialogPrimitiveProps;
+type DialogProps = DialogPrimitiveProps
 
 function Dialog(props: DialogProps) {
-  return <DialogPrimitive {...props} />;
+  return <DialogPrimitive {...props} />
 }
 
-type DialogTriggerProps = DialogTriggerPrimitiveProps;
+type DialogTriggerProps = DialogTriggerPrimitiveProps
 
 function DialogTrigger(props: DialogTriggerProps) {
-  return <DialogTriggerPrimitive {...props} />;
+  return <DialogTriggerPrimitive {...props} />
 }
 
-type DialogCloseProps = DialogClosePrimitiveProps;
+type DialogCloseProps = DialogClosePrimitiveProps
 
 function DialogClose(props: DialogCloseProps) {
-  return <DialogClosePrimitive {...props} />;
+  return <DialogClosePrimitive {...props} />
 }
 
-type DialogOverlayProps = DialogOverlayPrimitiveProps;
+type DialogOverlayProps = DialogOverlayPrimitiveProps
 
 function DialogOverlay({ className, ...props }: DialogOverlayProps) {
   return (
@@ -50,12 +50,12 @@ function DialogOverlay({ className, ...props }: DialogOverlayProps) {
       className={cn('fixed inset-0 z-50 bg-black/50', className)}
       {...props}
     />
-  );
+  )
 }
 
 type DialogContentProps = DialogContentPrimitiveProps & {
-  showCloseButton?: boolean;
-};
+  showCloseButton?: boolean
+}
 
 function DialogContent({
   className,
@@ -82,10 +82,10 @@ function DialogContent({
         )}
       </DialogContentPrimitive>
     </DialogPortalPrimitive>
-  );
+  )
 }
 
-type DialogHeaderProps = DialogHeaderPrimitiveProps;
+type DialogHeaderProps = DialogHeaderPrimitiveProps
 
 function DialogHeader({ className, ...props }: DialogHeaderProps) {
   return (
@@ -93,10 +93,10 @@ function DialogHeader({ className, ...props }: DialogHeaderProps) {
       className={cn('flex flex-col gap-2 text-center sm:text-left', className)}
       {...props}
     />
-  );
+  )
 }
 
-type DialogFooterProps = DialogFooterPrimitiveProps;
+type DialogFooterProps = DialogFooterPrimitiveProps
 
 function DialogFooter({ className, ...props }: DialogFooterProps) {
   return (
@@ -107,10 +107,10 @@ function DialogFooter({ className, ...props }: DialogFooterProps) {
       )}
       {...props}
     />
-  );
+  )
 }
 
-type DialogTitleProps = DialogTitlePrimitiveProps;
+type DialogTitleProps = DialogTitlePrimitiveProps
 
 function DialogTitle({ className, ...props }: DialogTitleProps) {
   return (
@@ -118,10 +118,10 @@ function DialogTitle({ className, ...props }: DialogTitleProps) {
       className={cn('text-lg leading-none font-semibold', className)}
       {...props}
     />
-  );
+  )
 }
 
-type DialogDescriptionProps = DialogDescriptionPrimitiveProps;
+type DialogDescriptionProps = DialogDescriptionPrimitiveProps
 
 function DialogDescription({ className, ...props }: DialogDescriptionProps) {
   return (
@@ -129,7 +129,7 @@ function DialogDescription({ className, ...props }: DialogDescriptionProps) {
       className={cn('text-muted-foreground text-sm', className)}
       {...props}
     />
-  );
+  )
 }
 
 export {
@@ -149,4 +149,4 @@ export {
   type DialogFooterProps,
   type DialogTitleProps,
   type DialogDescriptionProps,
-};
+}

@@ -4,8 +4,8 @@ import {
   type FilterOperatorTarget,
   type FilterOperators,
   type FilterTypeOperatorDetails,
-  type FilterValues
-} from './types';
+  type FilterValues,
+} from './types'
 
 export const DEFAULT_OPERATORS: Record<
   ColumnDataType,
@@ -13,25 +13,25 @@ export const DEFAULT_OPERATORS: Record<
 > = {
   text: {
     single: 'contains',
-    multiple: 'contains'
+    multiple: 'contains',
   },
   number: {
     single: 'is',
-    multiple: 'is between'
+    multiple: 'is between',
   },
   date: {
     single: 'is',
-    multiple: 'is between'
+    multiple: 'is between',
   },
   option: {
     single: 'is',
-    multiple: 'is any of'
+    multiple: 'is any of',
   },
   multiOption: {
     single: 'include',
-    multiple: 'include any of'
-  }
-};
+    multiple: 'include any of',
+  },
+}
 
 /* Details for all the filter operators for option data type */
 export const optionFilterOperators = {
@@ -42,7 +42,7 @@ export const optionFilterOperators = {
     singularOf: 'is any of',
     relativeOf: 'is not',
     isNegated: false,
-    negation: 'is not'
+    negation: 'is not',
   },
   'is not': {
     key: 'filters.option.isNot',
@@ -51,7 +51,7 @@ export const optionFilterOperators = {
     singularOf: 'is none of',
     relativeOf: 'is',
     isNegated: true,
-    negationOf: 'is'
+    negationOf: 'is',
   },
   'is any of': {
     key: 'filters.option.isAnyOf',
@@ -60,7 +60,7 @@ export const optionFilterOperators = {
     pluralOf: 'is',
     relativeOf: 'is none of',
     isNegated: false,
-    negation: 'is none of'
+    negation: 'is none of',
   },
   'is none of': {
     key: 'filters.option.isNoneOf',
@@ -69,9 +69,9 @@ export const optionFilterOperators = {
     pluralOf: 'is not',
     relativeOf: 'is any of',
     isNegated: true,
-    negationOf: 'is any of'
-  }
-} as const satisfies FilterDetails<'option'>;
+    negationOf: 'is any of',
+  },
+} as const satisfies FilterDetails<'option'>
 
 /* Details for all the filter operators for multi-option data type */
 export const multiOptionFilterOperators = {
@@ -82,7 +82,7 @@ export const multiOptionFilterOperators = {
     singularOf: 'include any of',
     relativeOf: 'exclude',
     isNegated: false,
-    negation: 'exclude'
+    negation: 'exclude',
   },
   exclude: {
     key: 'filters.multiOption.exclude',
@@ -91,7 +91,7 @@ export const multiOptionFilterOperators = {
     singularOf: 'exclude if any of',
     relativeOf: 'include',
     isNegated: true,
-    negationOf: 'include'
+    negationOf: 'include',
   },
   'include any of': {
     key: 'filters.multiOption.includeAnyOf',
@@ -100,7 +100,7 @@ export const multiOptionFilterOperators = {
     pluralOf: 'include',
     relativeOf: ['exclude if all', 'include all of', 'exclude if any of'],
     isNegated: false,
-    negation: 'exclude if all'
+    negation: 'exclude if all',
   },
   'exclude if all': {
     key: 'filters.multiOption.excludeIfAll',
@@ -109,7 +109,7 @@ export const multiOptionFilterOperators = {
     pluralOf: 'exclude',
     relativeOf: ['include any of', 'include all of', 'exclude if any of'],
     isNegated: true,
-    negationOf: 'include any of'
+    negationOf: 'include any of',
   },
   'include all of': {
     key: 'filters.multiOption.includeAllOf',
@@ -118,7 +118,7 @@ export const multiOptionFilterOperators = {
     pluralOf: 'include',
     relativeOf: ['include any of', 'exclude if all', 'exclude if any of'],
     isNegated: false,
-    negation: 'exclude if any of'
+    negation: 'exclude if any of',
   },
   'exclude if any of': {
     key: 'filters.multiOption.excludeIfAnyOf',
@@ -127,9 +127,9 @@ export const multiOptionFilterOperators = {
     pluralOf: 'exclude',
     relativeOf: ['include any of', 'exclude if all', 'include all of'],
     isNegated: true,
-    negationOf: 'include all of'
-  }
-} as const satisfies FilterDetails<'multiOption'>;
+    negationOf: 'include all of',
+  },
+} as const satisfies FilterDetails<'multiOption'>
 
 /* Details for all the filter operators for date data type */
 export const dateFilterOperators = {
@@ -140,7 +140,7 @@ export const dateFilterOperators = {
     singularOf: 'is between',
     relativeOf: 'is after',
     isNegated: false,
-    negation: 'is before'
+    negation: 'is before',
   },
   'is not': {
     key: 'filters.date.isNot',
@@ -152,10 +152,10 @@ export const dateFilterOperators = {
       'is before',
       'is on or after',
       'is after',
-      'is on or before'
+      'is on or before',
     ],
     isNegated: true,
-    negationOf: 'is'
+    negationOf: 'is',
   },
   'is before': {
     key: 'filters.date.isBefore',
@@ -167,25 +167,19 @@ export const dateFilterOperators = {
       'is not',
       'is on or after',
       'is after',
-      'is on or before'
+      'is on or before',
     ],
     isNegated: false,
-    negation: 'is on or after'
+    negation: 'is on or after',
   },
   'is on or after': {
     key: 'filters.date.isOnOrAfter',
     value: 'is on or after',
     target: 'single',
     singularOf: 'is between',
-    relativeOf: [
-      'is',
-      'is not',
-      'is before',
-      'is after',
-      'is on or before'
-    ],
+    relativeOf: ['is', 'is not', 'is before', 'is after', 'is on or before'],
     isNegated: false,
-    negation: 'is before'
+    negation: 'is before',
   },
   'is after': {
     key: 'filters.date.isAfter',
@@ -197,25 +191,19 @@ export const dateFilterOperators = {
       'is not',
       'is before',
       'is on or after',
-      'is on or before'
+      'is on or before',
     ],
     isNegated: false,
-    negation: 'is on or before'
+    negation: 'is on or before',
   },
   'is on or before': {
     key: 'filters.date.isOnOrBefore',
     value: 'is on or before',
     target: 'single',
     singularOf: 'is between',
-    relativeOf: [
-      'is',
-      'is not',
-      'is after',
-      'is on or after',
-      'is before'
-    ],
+    relativeOf: ['is', 'is not', 'is after', 'is on or after', 'is before'],
     isNegated: false,
-    negation: 'is after'
+    negation: 'is after',
   },
   'is between': {
     key: 'filters.date.isBetween',
@@ -224,7 +212,7 @@ export const dateFilterOperators = {
     pluralOf: 'is',
     relativeOf: 'is not between',
     isNegated: false,
-    negation: 'is not between'
+    negation: 'is not between',
   },
   'is not between': {
     key: 'filters.date.isNotBetween',
@@ -233,9 +221,9 @@ export const dateFilterOperators = {
     pluralOf: 'is not',
     relativeOf: 'is between',
     isNegated: true,
-    negationOf: 'is between'
-  }
-} as const satisfies FilterDetails<'date'>;
+    negationOf: 'is between',
+  },
+} as const satisfies FilterDetails<'date'>
 
 /* Details for all the filter operators for text data type */
 export const textFilterOperators = {
@@ -245,7 +233,7 @@ export const textFilterOperators = {
     target: 'single',
     relativeOf: 'does not contain',
     isNegated: false,
-    negation: 'does not contain'
+    negation: 'does not contain',
   },
   'does not contain': {
     key: 'filters.text.doesNotContain',
@@ -253,9 +241,9 @@ export const textFilterOperators = {
     target: 'single',
     relativeOf: 'contains',
     isNegated: true,
-    negationOf: 'contains'
-  }
-} as const satisfies FilterDetails<'text'>;
+    negationOf: 'contains',
+  },
+} as const satisfies FilterDetails<'text'>
 
 /* Details for all the filter operators for number data type */
 export const numberFilterOperators = {
@@ -269,10 +257,10 @@ export const numberFilterOperators = {
       'is greater than',
       'is less than or equal to',
       'is less than',
-      'is greater than or equal to'
+      'is greater than or equal to',
     ],
     isNegated: false,
-    negation: 'is not'
+    negation: 'is not',
   },
   'is not': {
     key: 'filters.number.isNot',
@@ -284,10 +272,10 @@ export const numberFilterOperators = {
       'is greater than',
       'is less than or equal to',
       'is less than',
-      'is greater than or equal to'
+      'is greater than or equal to',
     ],
     isNegated: true,
-    negationOf: 'is'
+    negationOf: 'is',
   },
   'is greater than': {
     key: 'filters.number.greaterThan',
@@ -299,10 +287,10 @@ export const numberFilterOperators = {
       'is not',
       'is less than or equal to',
       'is less than',
-      'is greater than or equal to'
+      'is greater than or equal to',
     ],
     isNegated: false,
-    negation: 'is less than or equal to'
+    negation: 'is less than or equal to',
   },
   'is greater than or equal to': {
     key: 'filters.number.greaterThanOrEqual',
@@ -314,10 +302,10 @@ export const numberFilterOperators = {
       'is not',
       'is greater than',
       'is less than or equal to',
-      'is less than'
+      'is less than',
     ],
     isNegated: false,
-    negation: 'is less than or equal to'
+    negation: 'is less than or equal to',
   },
   'is less than': {
     key: 'filters.number.lessThan',
@@ -329,10 +317,10 @@ export const numberFilterOperators = {
       'is not',
       'is greater than',
       'is less than or equal to',
-      'is greater than or equal to'
+      'is greater than or equal to',
     ],
     isNegated: false,
-    negation: 'is greater than'
+    negation: 'is greater than',
   },
   'is less than or equal to': {
     key: 'filters.number.lessThanOrEqual',
@@ -344,10 +332,10 @@ export const numberFilterOperators = {
       'is not',
       'is greater than',
       'is less than',
-      'is greater than or equal to'
+      'is greater than or equal to',
     ],
     isNegated: false,
-    negation: 'is greater than or equal to'
+    negation: 'is greater than or equal to',
   },
   'is between': {
     key: 'filters.number.isBetween',
@@ -356,7 +344,7 @@ export const numberFilterOperators = {
     pluralOf: 'is',
     relativeOf: 'is not between',
     isNegated: false,
-    negation: 'is not between'
+    negation: 'is not between',
   },
   'is not between': {
     key: 'filters.number.isNotBetween',
@@ -365,17 +353,17 @@ export const numberFilterOperators = {
     pluralOf: 'is not',
     relativeOf: 'is between',
     isNegated: true,
-    negationOf: 'is between'
-  }
-} as const satisfies FilterDetails<'number'>;
+    negationOf: 'is between',
+  },
+} as const satisfies FilterDetails<'number'>
 
 export const filterTypeOperatorDetails: FilterTypeOperatorDetails = {
   text: textFilterOperators,
   number: numberFilterOperators,
   date: dateFilterOperators,
   option: optionFilterOperators,
-  multiOption: multiOptionFilterOperators
-};
+  multiOption: multiOptionFilterOperators,
+}
 
 /*
  *
@@ -392,28 +380,28 @@ export function determineNewOperator<TType extends ColumnDataType>(
   type: TType,
   oldVals: FilterValues<TType>,
   nextVals: FilterValues<TType>,
-  currentOperator: FilterOperators[TType]
+  currentOperator: FilterOperators[TType],
 ): FilterOperators[TType] {
-  const a
-    = Array.isArray(oldVals) && Array.isArray(oldVals[0])
+  const a =
+    Array.isArray(oldVals) && Array.isArray(oldVals[0])
       ? oldVals[0].length
-      : oldVals.length;
-  const b
-    = Array.isArray(nextVals) && Array.isArray(nextVals[0])
+      : oldVals.length
+  const b =
+    Array.isArray(nextVals) && Array.isArray(nextVals[0])
       ? nextVals[0].length
-      : nextVals.length;
+      : nextVals.length
 
   /*
    * If filter size has not transitioned from single to multiple (or vice versa)
    * or is unchanged, return the current operator.
    */
   if (a === b || (a >= 2 && b >= 2) || (a <= 1 && b <= 1))
-    return currentOperator;
+    return currentOperator
 
-  const opDetails = filterTypeOperatorDetails[type][currentOperator];
+  const opDetails = filterTypeOperatorDetails[type][currentOperator]
 
-  if (a < b && b >= 2) return opDetails.singularOf ?? currentOperator;
-  if (a > b && b <= 1) return opDetails.pluralOf ?? currentOperator;
+  if (a < b && b >= 2) return opDetails.singularOf ?? currentOperator
+  if (a > b && b <= 1) return opDetails.pluralOf ?? currentOperator
 
-  return currentOperator;
+  return currentOperator
 }

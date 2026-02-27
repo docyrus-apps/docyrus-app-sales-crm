@@ -1,8 +1,8 @@
 // @ts-nocheck
-'use client';
+'use client'
 
-import { LineHeightPlugin } from '@platejs/basic-styles/react';
-import { KEYS } from 'platejs';
+import { LineHeightPlugin } from '@platejs/basic-styles/react'
+import { KEYS } from 'platejs'
 
 export const LineHeightKit = [
   LineHeightPlugin.configure({
@@ -14,4 +14,4 @@ export const LineHeightKit = [
       targetPlugins: [...KEYS.heading, KEYS.p],
     },
   }),
-];
+]

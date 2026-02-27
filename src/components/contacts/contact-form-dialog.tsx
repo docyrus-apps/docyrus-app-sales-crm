@@ -1,17 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { useForm } from '@tanstack/react-form'
 import { zodValidator } from '@tanstack/zod-form-adapter'
+import { useTranslation } from 'react-i18next'
 import { Loader2 } from 'lucide-react'
 import type { ContactFormData } from '@/schemas/contact-schema'
 import { Button } from '@/components/ui/button'
-import {
-  ResponsiveDialog,
-  ResponsiveDialogContent,
-  ResponsiveDialogDescription,
-  ResponsiveDialogFooter,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
-} from '@/components/ui/responsive-dialog'
+import { AwesomeDialog } from '@/components/docyrus/awesome-dialog'
+import { AwesomeDialogHeader } from '@/components/docyrus/awesome-dialog/awesome-dialog-header'
+import { AwesomeDialogBody } from '@/components/docyrus/awesome-dialog/awesome-dialog-body'
+import { AwesomeDialogFooter } from '@/components/docyrus/awesome-dialog/awesome-dialog-footer'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -34,6 +31,7 @@ export function ContactFormDialog({
   contact,
   mode,
 }: ContactFormDialogProps) {
+  const { t } = useTranslation()
   const createContact = useCreateContact()
   const updateContact = useUpdateContact()
   const { data: companies = [] } = useCompanies()
@@ -82,47 +80,55 @@ export function ContactFormDialog({
   const isSubmitting = createContact.isPending || updateContact.isPending
 
   return (
-    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialogContent className="max-w-lg">
-        <ResponsiveDialogHeader>
-          <ResponsiveDialogTitle>
-            {mode === 'create' ? 'Create New Contact' : 'Edit Contact'}
-          </ResponsiveDialogTitle>
-          <ResponsiveDialogDescription>
-            {mode === 'create'
-              ? 'Enter the details for the new contact'
-              : 'Update the contact information'}
-          </ResponsiveDialogDescription>
-        </ResponsiveDialogHeader>
+    <AwesomeDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      container="modal"
+      size="lg"
+    >
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          form.handleSubmit()
+        }}
+        className="flex flex-col flex-1 overflow-hidden"
+      >
+        <AwesomeDialogHeader
+          title={
+            mode === 'create'
+              ? t('contacts.form.createTitle')
+              : t('contacts.form.editTitle')
+          }
+          description={
+            mode === 'create'
+              ? t('contacts.form.createDescription')
+              : t('contacts.form.editDescription')
+          }
+        />
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            form.handleSubmit()
-          }}
-          className="flex flex-col flex-1 overflow-hidden"
-        >
-          <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4">
+        <AwesomeDialogBody>
+          <div className="space-y-4">
             {/* Name Field */}
             <form.Field name="name">
               {(field) => (
                 <Field>
                   <Label htmlFor={field.name}>
-                    Name <span className="text-destructive">*</span>
+                    {t('contacts.form.nameLabel')}{' '}
+                    <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id={field.name}
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="Enter contact name..."
+                    placeholder={t('contacts.form.namePlaceholder')}
                   />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
                       {typeof field.state.meta.errors[0] === 'string'
                         ? field.state.meta.errors[0]
                         : field.state.meta.errors[0]?.message ||
-                          'Validation error'}
+                          t('common.validationError')}
                     </p>
                   )}
                 </Field>
@@ -133,19 +139,21 @@ export function ContactFormDialog({
             <form.Field name="job_title">
               {(field) => (
                 <Field>
-                  <Label htmlFor={field.name}>Job Title</Label>
+                  <Label htmlFor={field.name}>
+                    {t('contacts.form.jobTitleLabel')}
+                  </Label>
                   <Input
                     id={field.name}
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="Enter job title..."
+                    placeholder={t('contacts.form.jobTitlePlaceholder')}
                   />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
                       {typeof field.state.meta.errors[0] === 'string'
                         ? field.state.meta.errors[0]
                         : field.state.meta.errors[0]?.message ||
-                          'Validation error'}
+                          t('common.validationError')}
                     </p>
                   )}
                 </Field>
@@ -156,20 +164,22 @@ export function ContactFormDialog({
             <form.Field name="email">
               {(field) => (
                 <Field>
-                  <Label htmlFor={field.name}>Email</Label>
+                  <Label htmlFor={field.name}>
+                    {t('contacts.form.emailLabel')}
+                  </Label>
                   <Input
                     id={field.name}
                     type="email"
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="email@example.com"
+                    placeholder={t('contacts.form.emailPlaceholder')}
                   />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
                       {typeof field.state.meta.errors[0] === 'string'
                         ? field.state.meta.errors[0]
                         : field.state.meta.errors[0]?.message ||
-                          'Validation error'}
+                          t('common.validationError')}
                     </p>
                   )}
                 </Field>
@@ -180,18 +190,20 @@ export function ContactFormDialog({
             <form.Field name="mobile">
               {(field) => (
                 <Field>
-                  <Label htmlFor={field.name}>Mobile</Label>
+                  <Label htmlFor={field.name}>
+                    {t('contacts.form.mobileLabel')}
+                  </Label>
                   <PhoneInput
                     value={field.state.value}
                     onChange={field.handleChange}
-                    placeholder="Enter phone number..."
+                    placeholder={t('contacts.form.mobilePlaceholder')}
                   />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
                       {typeof field.state.meta.errors[0] === 'string'
                         ? field.state.meta.errors[0]
                         : field.state.meta.errors[0]?.message ||
-                          'Validation error'}
+                          t('common.validationError')}
                     </p>
                   )}
                 </Field>
@@ -202,45 +214,47 @@ export function ContactFormDialog({
             <form.Field name="organization">
               {(field) => (
                 <Field>
-                  <Label htmlFor={field.name}>Organization</Label>
+                  <Label htmlFor={field.name}>
+                    {t('contacts.form.organizationLabel')}
+                  </Label>
                   <Combobox
                     options={companyOptions}
                     value={field.state.value}
                     onValueChange={(value) => field.handleChange(value)}
-                    placeholder="Select organization..."
-                    emptyText="No organization found"
+                    placeholder={t('contacts.form.organizationPlaceholder')}
+                    emptyText={t('contacts.form.organizationEmpty')}
                   />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
                       {typeof field.state.meta.errors[0] === 'string'
                         ? field.state.meta.errors[0]
                         : field.state.meta.errors[0]?.message ||
-                          'Validation error'}
+                          t('common.validationError')}
                     </p>
                   )}
                 </Field>
               )}
             </form.Field>
           </div>
+        </AwesomeDialogBody>
 
-          <ResponsiveDialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              {mode === 'create' ? 'Create Contact' : 'Update Contact'}
-            </Button>
-          </ResponsiveDialogFooter>
-        </form>
-      </ResponsiveDialogContent>
-    </ResponsiveDialog>
+        <AwesomeDialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+          >
+            {t('common.cancel')}
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {mode === 'create'
+              ? t('contacts.form.createButton')
+              : t('contacts.form.updateButton')}
+          </Button>
+        </AwesomeDialogFooter>
+      </form>
+    </AwesomeDialog>
   )
 }

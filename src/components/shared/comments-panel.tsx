@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Edit2, MessageSquare, Send, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
@@ -34,6 +35,7 @@ export function CommentsPanel({
   dataSource,
   recordId,
 }: CommentsPanelProps) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [newComment, setNewComment] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -72,10 +74,10 @@ export function CommentsPanel({
         queryKey: ['comments', dataSource, recordId],
       })
       setNewComment('')
-      toast.success('Comment added successfully')
+      toast.success(t('comments.addedSuccess'))
     },
     onError: (err: Error) => {
-      toast.error(`Failed to add comment: ${err.message}`)
+      toast.error(t('comments.addedError', { error: err.message }))
     },
   })
 
@@ -102,10 +104,10 @@ export function CommentsPanel({
       })
       setEditingId(null)
       setEditingBody('')
-      toast.success('Comment updated successfully')
+      toast.success(t('comments.updatedSuccess'))
     },
     onError: (err: Error) => {
-      toast.error(`Failed to update comment: ${err.message}`)
+      toast.error(t('comments.updatedError', { error: err.message }))
     },
   })
 
@@ -123,10 +125,10 @@ export function CommentsPanel({
       queryClient.invalidateQueries({
         queryKey: ['comments', dataSource, recordId],
       })
-      toast.success('Comment deleted successfully')
+      toast.success(t('comments.deletedSuccess'))
     },
     onError: (err: Error) => {
-      toast.error(`Failed to delete comment: ${err.message}`)
+      toast.error(t('comments.deletedError', { error: err.message }))
     },
   })
 
@@ -178,7 +180,7 @@ export function CommentsPanel({
       <Card className="border-destructive">
         <CardContent className="py-6">
           <p className="text-sm text-destructive">
-            Failed to load comments: {error.message}
+            {t('comments.failedToLoad', { error: error.message })}
           </p>
         </CardContent>
       </Card>
@@ -275,9 +277,11 @@ export function CommentsPanel({
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-8">
             <MessageSquare className="h-12 w-12 text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground">No comments yet</p>
+            <p className="text-sm text-muted-foreground">
+              {t('comments.empty')}
+            </p>
             <p className="text-xs text-muted-foreground">
-              Be the first to add a comment
+              {t('comments.beFirst')}
             </p>
           </CardContent>
         </Card>
@@ -288,7 +292,7 @@ export function CommentsPanel({
         <CardContent className="pt-6">
           <form onSubmit={handleSubmit} className="space-y-3">
             <Textarea
-              placeholder="Write a comment..."
+              placeholder={t('comments.placeholder')}
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               rows={3}
@@ -300,7 +304,7 @@ export function CommentsPanel({
                 disabled={createMutation.isPending || !newComment.trim()}
               >
                 <Send className="mr-2 h-4 w-4" />
-                Add Comment
+                {t('comments.addComment')}
               </Button>
             </div>
           </form>

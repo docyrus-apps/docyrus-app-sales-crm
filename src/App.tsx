@@ -3,6 +3,7 @@ import { Outlet } from '@tanstack/react-router'
 import { NuqsAdapter } from 'nuqs/adapters/tanstack-router'
 import { Agentation } from 'agentation'
 import { SignInButton, useDocyrusAuth, useDocyrusClient } from '@docyrus/signin'
+import { useTranslation } from 'react-i18next'
 import { Button } from './components/ui/button'
 import { setApiClient } from './lib/api'
 import { AppLayout } from './components/layout/app-layout'
@@ -18,6 +19,7 @@ import { GlobalDialogBar } from './components/docyrus/awesome-dialog'
 function App() {
   const { status } = useDocyrusAuth()
   const client = useDocyrusClient()
+  const { t } = useTranslation()
 
   // Command palette state
   const [commandOpen, setCommandOpen] = useState(false)
@@ -54,7 +56,7 @@ function App() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-pulse">Loading...</div>
+          <div className="animate-pulse">{t('auth.loading')}</div>
         </div>
       </div>
     )
@@ -72,9 +74,9 @@ function App() {
                   alt="Sales CRM by Docyrus"
                   className="h-12 w-12 mb-2"
                 />
-                <h1 className="text-2xl font-bold">Sales CRM by Docyrus</h1>
+                <h1 className="text-2xl font-bold">{t('auth.appTitle')}</h1>
                 <p className="text-muted-foreground text-sm text-balance">
-                  Sign in to access your account
+                  {t('auth.appSubtitle')}
                 </p>
               </div>
               <div className="grid gap-6">
@@ -87,8 +89,8 @@ function App() {
                       size="lg"
                     >
                       {btnStatus === 'loading'
-                        ? 'Redirecting...'
-                        : 'Sign in with Docyrus'}
+                        ? t('auth.redirecting')
+                        : t('auth.signInWithDocyrus')}
                     </Button>
                   )}
                 </SignInButton>

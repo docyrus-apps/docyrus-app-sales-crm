@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-import { type LucideIcon } from 'lucide-react';
+import { type LucideIcon } from 'lucide-react'
 
 import {
   ActivityIcon,
@@ -9,10 +9,10 @@ import {
   MessageSquareIcon,
   PaperclipIcon,
   PlusCircleIcon,
-  Trash2Icon
-} from 'lucide-react';
+  Trash2Icon,
+} from 'lucide-react'
 
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Timeline,
   TimelineConnector,
@@ -22,12 +22,12 @@ import {
   TimelineHeader,
   TimelineItem,
   TimelineTime,
-  TimelineTitle
-} from '@/components/ui/timeline';
-import { cn } from '@/lib/utils';
+  TimelineTitle,
+} from '@/components/ui/timeline'
+import { cn } from '@/lib/utils'
 
-import { formatDate } from './lib/format';
-import { type RecordActivity, type RecordActivityPanelProps } from './types';
+import { formatDate } from './lib/format'
+import { type RecordActivity, type RecordActivityPanelProps } from './types'
 
 const OPERATION_CONFIG: Record<
   string,
@@ -43,35 +43,40 @@ const OPERATION_CONFIG: Record<
   DELETE_COMMENT: { icon: MessageSquareIcon, className: 'text-red-500' },
   INSERT_FILE: { icon: PaperclipIcon, className: 'text-orange-500' },
   UPDATE_FILE: { icon: PaperclipIcon, className: 'text-orange-500' },
-  DELETE_FILE: { icon: PaperclipIcon, className: 'text-red-500' }
-};
+  DELETE_FILE: { icon: PaperclipIcon, className: 'text-red-500' },
+}
 
 const DEFAULT_CONFIG = {
   icon: ActivityIcon,
-  className: 'text-muted-foreground'
-};
+  className: 'text-muted-foreground',
+}
 
 function getOperationConfig(operation: string) {
-  return OPERATION_CONFIG[operation] ?? DEFAULT_CONFIG;
+  return OPERATION_CONFIG[operation] ?? DEFAULT_CONFIG
 }
 
 function getActorName(activity: RecordActivity): string {
-  const user = activity.created_by_user;
+  const user = activity.created_by_user
 
-  if (!user) return 'System';
-  const name = [user.firstname, user.lastname].filter(Boolean).join(' ');
+  if (!user) return 'System'
+  const name = [user.firstname, user.lastname].filter(Boolean).join(' ')
 
-  return name || user.name || 'System';
+  return name || user.name || 'System'
 }
 
 export function RecordActivityPanel({
   activities,
   isLoading,
-  className
+  className,
 }: RecordActivityPanelProps) {
   if (isLoading) {
     return (
-      <div className={cn('space-y-4 flex flex-col items-center justify-center', className)}>
+      <div
+        className={cn(
+          'space-y-4 flex flex-col items-center justify-center',
+          className,
+        )}
+      >
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span className="inline-block size-4 animate-spin rounded-full border-2 border-border border-t-foreground/70" />
           Loading activity…
@@ -88,27 +93,29 @@ export function RecordActivityPanel({
           ))}
         </div>
       </div>
-    );
+    )
   }
 
   if (!activities || activities.length === 0) {
     return (
-      <div className={`flex flex-col items-center gap-2 py-8 text-center ${className ?? ''}`}>
+      <div
+        className={`flex flex-col items-center gap-2 py-8 text-center ${className ?? ''}`}
+      >
         <ActivityIcon className="size-8 text-muted-foreground/50" />
         <p className="text-sm text-muted-foreground">No activity yet</p>
         <p className="text-xs text-muted-foreground">
           Activity will appear here when changes are made to this record.
         </p>
       </div>
-    );
+    )
   }
 
   return (
     <Timeline className={`[--timeline-dot-size:2rem] ${className ?? ''}`}>
       {activities.map((activity) => {
-        const config = getOperationConfig(activity.operation);
-        const Icon = config.icon;
-        const actorName = getActorName(activity);
+        const config = getOperationConfig(activity.operation)
+        const Icon = config.icon
+        const actorName = getActorName(activity)
 
         return (
           <TimelineItem key={activity.id}>
@@ -124,7 +131,7 @@ export function RecordActivityPanel({
                       month: 'short',
                       day: 'numeric',
                       hour: 'numeric',
-                      minute: '2-digit'
+                      minute: '2-digit',
                     })}
                   </TimelineTime>
                 )}
@@ -135,8 +142,8 @@ export function RecordActivityPanel({
               </TimelineDescription>
             </TimelineContent>
           </TimelineItem>
-        );
+        )
       })}
     </Timeline>
-  );
+  )
 }

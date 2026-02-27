@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   CheckSquare,
   Eye,
@@ -28,6 +29,7 @@ import { TaskFormSheet } from '@/components/tasks/task-form-sheet'
 import { Card, CardContent } from '@/components/ui/card'
 
 export function Tasks() {
+  const { t } = useTranslation()
   const { data: tasks, isLoading } = useTasks()
   const deleteTask = useDeleteTask()
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -39,7 +41,10 @@ export function Tasks() {
       {
         accessorKey: 'subject',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Subject" />
+          <DataTableColumnHeader
+            column={column}
+            label={t('tasks.columns.subject')}
+          />
         ),
         cell: ({ row }) => (
           <div className="font-medium max-w-md truncate">
@@ -51,7 +56,10 @@ export function Tasks() {
       {
         accessorKey: 'status',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Status" />
+          <DataTableColumnHeader
+            column={column}
+            label={t('tasks.columns.status')}
+          />
         ),
         cell: ({ row }) => {
           const status = row.getValue('status')
@@ -68,7 +76,10 @@ export function Tasks() {
       {
         accessorKey: 'start_date',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Start Date" />
+          <DataTableColumnHeader
+            column={column}
+            label={t('tasks.columns.startDate')}
+          />
         ),
         cell: ({ row }) => {
           const date = row.getValue('start_date')
@@ -89,7 +100,10 @@ export function Tasks() {
       {
         accessorKey: 'end_date',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Due Date" />
+          <DataTableColumnHeader
+            column={column}
+            label={t('tasks.columns.dueDate')}
+          />
         ),
         cell: ({ row }) => {
           const date = row.getValue('end_date')
@@ -110,7 +124,10 @@ export function Tasks() {
       {
         accessorKey: 'organization',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Organization" />
+          <DataTableColumnHeader
+            column={column}
+            label={t('tasks.columns.organization')}
+          />
         ),
         cell: ({ row }) => {
           const org = row.getValue('organization')
@@ -125,7 +142,10 @@ export function Tasks() {
       {
         accessorKey: 'record_owner',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Owner" />
+          <DataTableColumnHeader
+            column={column}
+            label={t('tasks.columns.owner')}
+          />
         ),
         cell: ({ row }) => {
           const owner = row.getValue('record_owner')
@@ -152,19 +172,19 @@ export function Tasks() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
+                  <span className="sr-only">{t('common.openMenu')}</span>
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('common.actions')}</DropdownMenuLabel>
                 <DropdownMenuItem
                   onClick={() => {
                     setViewingTask(task)
                   }}
                 >
                   <Eye className="mr-2 h-4 w-4" />
-                  View Details
+                  {t('common.viewDetails')}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => {
@@ -173,18 +193,18 @@ export function Tasks() {
                   }}
                 >
                   <Pencil className="mr-2 h-4 w-4" />
-                  Edit
+                  {t('common.edit')}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-destructive"
                   onClick={() => {
-                    if (confirm('Are you sure you want to delete this task?')) {
+                    if (confirm(t('tasks.confirmDelete'))) {
                       deleteTask.mutate(task.id)
                     }
                   }}
                 >
                   <Trash className="mr-2 h-4 w-4" />
-                  Delete
+                  {t('common.delete')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -192,7 +212,7 @@ export function Tasks() {
         },
       },
     ],
-    [deleteTask],
+    [deleteTask, t],
   )
 
   const { table } = useDataTable({
@@ -204,7 +224,7 @@ export function Tasks() {
   return (
     <>
       <PageHeader
-        title="Tasks"
+        title={t('tasks.title')}
         actions={
           <Button
             onClick={() => {
@@ -213,7 +233,7 @@ export function Tasks() {
             }}
           >
             <Plus className="mr-2 h-4 w-4" />
-            New Task
+            {t('tasks.newTask')}
           </Button>
         }
       />
@@ -234,9 +254,9 @@ export function Tasks() {
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <CheckSquare className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-lg font-medium">No tasks yet</p>
+              <p className="text-lg font-medium">{t('tasks.emptyTitle')}</p>
               <p className="text-sm text-muted-foreground mt-2">
-                Create your first task
+                {t('tasks.emptyDescription')}
               </p>
               <Button
                 className="mt-4"
@@ -246,7 +266,7 @@ export function Tasks() {
                 }}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                Create Task
+                {t('tasks.createTask')}
               </Button>
             </CardContent>
           </Card>

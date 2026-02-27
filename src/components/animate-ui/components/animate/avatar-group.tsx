@@ -1,5 +1,5 @@
-import * as React from 'react';
-import * as motion from 'motion/react-client';
+import * as React from 'react'
+import * as motion from 'motion/react-client'
 
 import {
   AvatarGroup as AvatarGroupPrimitive,
@@ -7,10 +7,10 @@ import {
   AvatarGroupTooltipArrow as AvatarGroupTooltipArrowPrimitive,
   type AvatarGroupProps as AvatarGroupPropsPrimitive,
   type AvatarGroupTooltipProps as AvatarGroupTooltipPropsPrimitive,
-} from '@/components/animate-ui/primitives/animate/avatar-group';
-import { cn } from '@/lib/utils';
+} from '@/components/animate-ui/primitives/animate/avatar-group'
+import { cn } from '@/lib/utils'
 
-type AvatarGroupProps = AvatarGroupPropsPrimitive;
+type AvatarGroupProps = AvatarGroupPropsPrimitive
 
 function AvatarGroup({
   className,
@@ -23,16 +23,16 @@ function AvatarGroup({
       invertOverlap={invertOverlap}
       {...props}
     />
-  );
+  )
 }
 
 type AvatarGroupTooltipProps = Omit<
   AvatarGroupTooltipPropsPrimitive,
   'asChild'
 > & {
-  children: React.ReactNode;
-  layout?: boolean | 'position' | 'size' | 'preserve-aspect';
-};
+  children: React.ReactNode
+  layout?: boolean | 'position' | 'size' | 'preserve-aspect'
+}
 
 function AvatarGroupTooltip({
   className,
@@ -56,7 +56,7 @@ function AvatarGroupTooltip({
         tipRadius={2}
       />
     </AvatarGroupTooltipPrimitive>
-  );
+  )
 }
 
 export {
@@ -64,4 +64,4 @@ export {
   AvatarGroupTooltip,
   type AvatarGroupProps,
   type AvatarGroupTooltipProps,
-};
+}

@@ -1,8 +1,8 @@
 // @ts-nocheck
-'use client';
+'use client'
 
-import { TextAlignPlugin } from '@platejs/basic-styles/react';
-import { KEYS } from 'platejs';
+import { TextAlignPlugin } from '@platejs/basic-styles/react'
+import { KEYS } from 'platejs'
 
 export const AlignKit = [
   TextAlignPlugin.configure({
@@ -16,4 +16,4 @@ export const AlignKit = [
       targetPlugins: [...KEYS.heading, KEYS.p, KEYS.img, KEYS.mediaEmbed],
     },
   }),
-];
+]

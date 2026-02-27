@@ -1,4 +1,5 @@
 import { Bell } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
 import { useNotifications } from '@/hooks/use-notifications'
@@ -6,11 +7,12 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent } from '@/components/ui/card'
 
 export function Notifications() {
+  const { t } = useTranslation()
   const { data: notifications, isLoading } = useNotifications()
 
   return (
     <>
-      <PageHeader title="Notifications" />
+      <PageHeader title={t('notifications.title')} />
       <PageContainer>
         {isLoading && <Skeleton className="h-64 w-full" />}
 
@@ -18,9 +20,9 @@ export function Notifications() {
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Bell className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-lg font-medium">No notifications</p>
+              <p className="text-lg font-medium">{t('notifications.empty')}</p>
               <p className="text-sm text-muted-foreground mt-2">
-                You're all caught up!
+                {t('notifications.allCaughtUp')}
               </p>
             </CardContent>
           </Card>

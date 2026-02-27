@@ -1,22 +1,22 @@
-'use client';
+'use client'
 
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
 
-import { type DocyrusFormFieldProps } from './types';
+import { type DocyrusFormFieldProps } from './types'
 
 export function TextFormField({
   field: fieldConfig,
   form,
   disabled,
-  className
+  className,
 }: DocyrusFormFieldProps) {
   return (
     <form.Field
       name={fieldConfig.slug}
       children={(field: any) => {
-        const isInvalid
-          = field.state.meta.isTouched && !field.state.meta.isValid;
+        const isInvalid =
+          field.state.meta.isTouched && !field.state.meta.isValid
 
         return (
           <Field data-invalid={isInvalid} className={className}>
@@ -26,12 +26,14 @@ export function TextFormField({
               name={field.name}
               value={field.state.value ?? ''}
               onBlur={field.handleBlur}
-              onChange={e => field.handleChange(e.target.value)}
+              onChange={(e) => field.handleChange(e.target.value)}
               aria-invalid={isInvalid}
-              disabled={disabled || fieldConfig.readOnly === true} />
+              disabled={disabled || fieldConfig.readOnly === true}
+            />
             {isInvalid && <FieldError errors={field.state.meta.errors} />}
           </Field>
-        );
-      }} />
-  );
+        )
+      }}
+    />
+  )
 }

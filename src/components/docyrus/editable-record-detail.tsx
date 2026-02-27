@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import {
   createContext,
@@ -10,104 +10,104 @@ import {
   useState,
   type ComponentProps,
   type ReactNode,
-  type RefObject
-} from 'react';
+  type RefObject,
+} from 'react'
 
-import { RotateCcw, Save } from 'lucide-react';
+import { RotateCcw, Save } from 'lucide-react'
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'
 import {
   ActionBar,
   ActionBarGroup,
-  ActionBarSeparator
-} from '@/components/ui/action-bar';
-import { Button } from '@/components/ui/button';
+  ActionBarSeparator,
+} from '@/components/ui/action-bar'
+import { Button } from '@/components/ui/button'
 import {
   Popover,
   PopoverContent,
   PopoverHeader,
   PopoverTitle,
-  PopoverTrigger
-} from '@/components/ui/popover';
+  PopoverTrigger,
+} from '@/components/ui/popover'
 
 import {
   EditableValue,
-  type EditableValueProps
-} from '@/components/docyrus/editable-value';
+  type EditableValueProps,
+} from '@/components/docyrus/editable-value'
 import {
   type EnumOption,
-  type IField
-} from '@/components/docyrus/form-fields/types';
+  type IField,
+} from '@/components/docyrus/form-fields/types'
 
 export interface RecordDetailField {
   /** Field configuration */
-  field: IField;
+  field: IField
   /** Enum options for select-based fields */
-  enumOptions?: Array<EnumOption>;
+  enumOptions?: Array<EnumOption>
   /** Whether this field is read-only */
-  readOnly?: boolean;
+  readOnly?: boolean
   /** App slug for dynamic enum loading */
-  appSlug?: string;
+  appSlug?: string
   /** Data source slug for dynamic enum loading */
-  dataSourceSlug?: string;
+  dataSourceSlug?: string
 }
 
 export interface FieldChange {
-  fieldSlug: string;
-  fieldName: string;
-  originalValue: unknown;
-  newValue: unknown;
+  fieldSlug: string
+  fieldName: string
+  originalValue: unknown
+  newValue: unknown
 }
 
 function valuesEqual(a: unknown, b: unknown): boolean {
-  if (Object.is(a, b)) return true;
-  if (a == null && b == null) return true;
-  if (a == null || b == null) return false;
+  if (Object.is(a, b)) return true
+  if (a == null && b == null) return true
+  if (a == null || b == null) return false
 
   if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) return false;
-    const sortedA = [...a].sort();
-    const sortedB = [...b].sort();
+    if (a.length !== b.length) return false
+    const sortedA = [...a].sort()
+    const sortedB = [...b].sort()
 
-    return sortedA.every((v, i) => Object.is(v, sortedB[i]));
+    return sortedA.every((v, i) => Object.is(v, sortedB[i]))
   }
 
   if (typeof a === 'object' && typeof b === 'object') {
-    return JSON.stringify(a) === JSON.stringify(b);
+    return JSON.stringify(a) === JSON.stringify(b)
   }
 
-  return false;
+  return false
 }
 
 function formatValue(value: unknown): string {
-  if (value === null || value === undefined) return '';
-  if (typeof value === 'boolean') return value ? 'true' : 'false';
-  if (typeof value === 'number') return String(value);
-  if (typeof value === 'string') return value;
-  if (Array.isArray(value)) return value.map(String).join(', ');
+  if (value === null || value === undefined) return ''
+  if (typeof value === 'boolean') return value ? 'true' : 'false'
+  if (typeof value === 'number') return String(value)
+  if (typeof value === 'string') return value
+  if (Array.isArray(value)) return value.map(String).join(', ')
 
-  return JSON.stringify(value);
+  return JSON.stringify(value)
 }
 
 function noop() {}
 
 interface EditableRecordDetailContextValue {
-  form: any;
-  fieldMap: Map<string, RecordDetailField>;
-  valuesRef: RefObject<Record<string, unknown>>;
-  changedFields: Set<string>;
-  handleFieldValueChange: (slug: string, value: unknown) => void;
-  readOnly: boolean;
-  disabled: boolean;
-  isSaving: boolean;
-  changedFieldCount: number;
-  getChanges: () => Array<FieldChange>;
-  handleSave: () => Promise<void>;
-  handleCancel: () => void;
+  form: any
+  fieldMap: Map<string, RecordDetailField>
+  valuesRef: RefObject<Record<string, unknown>>
+  changedFields: Set<string>
+  handleFieldValueChange: (slug: string, value: unknown) => void
+  readOnly: boolean
+  disabled: boolean
+  isSaving: boolean
+  changedFieldCount: number
+  getChanges: () => Array<FieldChange>
+  handleSave: () => Promise<void>
+  handleCancel: () => void
 }
 
-const EditableRecordDetailContext
-  = createContext<EditableRecordDetailContextValue | null>(null);
+const EditableRecordDetailContext =
+  createContext<EditableRecordDetailContextValue | null>(null)
 
 /**
  * A stable per-field component that holds its own value state.
@@ -118,33 +118,33 @@ function MacroFormField({
   valuesRef,
   onFieldChangeRef,
   resetSignal,
-  children
+  children,
 }: {
-  slug: string;
-  valuesRef: RefObject<Record<string, unknown>>;
-  onFieldChangeRef: RefObject<(slug: string, v: unknown) => void>;
-  resetSignal: number;
-  children: (field: any) => ReactNode;
+  slug: string
+  valuesRef: RefObject<Record<string, unknown>>
+  onFieldChangeRef: RefObject<(slug: string, v: unknown) => void>
+  resetSignal: number
+  children: (field: any) => ReactNode
 }) {
   const [localValue, setLocalValue] = useState<unknown>(
-    () => valuesRef.current[slug]
-  );
+    () => valuesRef.current[slug],
+  )
 
-  const lastResetRef = useRef(resetSignal);
+  const lastResetRef = useRef(resetSignal)
 
   if (lastResetRef.current !== resetSignal) {
-    lastResetRef.current = resetSignal;
-    setLocalValue(valuesRef.current[slug]);
+    lastResetRef.current = resetSignal
+    setLocalValue(valuesRef.current[slug])
   }
 
   const handleChange = useCallback(
     (v: unknown) => {
-      setLocalValue(v);
-      valuesRef.current[slug] = v;
-      onFieldChangeRef.current(slug, v);
+      setLocalValue(v)
+      valuesRef.current[slug] = v
+      onFieldChangeRef.current(slug, v)
     },
-    [slug, valuesRef, onFieldChangeRef]
-  );
+    [slug, valuesRef, onFieldChangeRef],
+  )
 
   return (
     <>
@@ -152,13 +152,13 @@ function MacroFormField({
         name: slug,
         state: {
           value: localValue,
-          meta: { isTouched: false, isValid: true, errors: [] }
+          meta: { isTouched: false, isValid: true, errors: [] },
         },
         handleChange,
-        handleBlur: () => {}
+        handleBlur: () => {},
       })}
     </>
-  );
+  )
 }
 
 /**
@@ -168,40 +168,38 @@ function MacroFormField({
  */
 function useMacroForm(
   record: Record<string, unknown>,
-  onFieldChangeRef: RefObject<(slug: string, v: unknown) => void>
+  onFieldChangeRef: RefObject<(slug: string, v: unknown) => void>,
 ) {
-  const valuesRef = useRef<Record<string, unknown>>({ ...record });
-  const resetSignalRef = useRef(0);
-  const [, forceUpdate] = useState(0);
+  const valuesRef = useRef<Record<string, unknown>>({ ...record })
+  const resetSignalRef = useRef(0)
+  const [, forceUpdate] = useState(0)
 
   const [form] = useState(() => ({
     Field: ({
       name,
-      children
+      children,
     }: {
-      name: string;
-      children: (field: any) => ReactNode;
+      name: string
+      children: (field: any) => ReactNode
     }) => (
       <MacroFormField
         slug={name}
         valuesRef={valuesRef}
         onFieldChangeRef={onFieldChangeRef}
-        resetSignal={resetSignalRef.current}>
+        resetSignal={resetSignalRef.current}
+      >
         {children}
       </MacroFormField>
-    )
-  }));
+    ),
+  }))
 
-  const resetForm = useCallback(
-    (newValues: Record<string, unknown>) => {
-      valuesRef.current = { ...newValues };
-      resetSignalRef.current += 1;
-      forceUpdate(n => n + 1);
-    },
-    []
-  );
+  const resetForm = useCallback((newValues: Record<string, unknown>) => {
+    valuesRef.current = { ...newValues }
+    resetSignalRef.current += 1
+    forceUpdate((n) => n + 1)
+  }, [])
 
-  return { form, valuesRef, resetForm };
+  return { form, valuesRef, resetForm }
 }
 
 function EditableRecordDetailActionBar({
@@ -210,26 +208,26 @@ function EditableRecordDetailActionBar({
   onSave,
   onDiscard,
   sideOffset = 16,
-  isSaving
+  isSaving,
 }: {
-  changedFieldCount: number;
-  getChanges: () => Array<FieldChange>;
-  onSave: () => Promise<void>;
-  onDiscard: () => void;
-  sideOffset?: number;
-  isSaving: boolean;
+  changedFieldCount: number
+  getChanges: () => Array<FieldChange>
+  onSave: () => Promise<void>
+  onDiscard: () => void
+  sideOffset?: number
+  isSaving: boolean
 }) {
-  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [popoverOpen, setPopoverOpen] = useState(false)
 
   const onSaveClick = useCallback(async () => {
-    await onSave();
-  }, [onSave]);
+    await onSave()
+  }, [onSave])
 
   const changes = useMemo(
     () => getChanges(),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- changedFieldCount triggers re-derive
-    [getChanges, changedFieldCount]
-  );
+    [getChanges, changedFieldCount],
+  )
 
   return (
     <ActionBar open onOpenChange={noop} sideOffset={sideOffset}>
@@ -237,37 +235,40 @@ function EditableRecordDetailActionBar({
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="rounded-sm px-2 py-1 text-sm font-medium tabular-nums underline decoration-dotted underline-offset-4 hover:decoration-solid">
-            {changedFieldCount}{' '}
-            {changedFieldCount === 1 ? 'field' : 'fields'} changed
+            className="rounded-sm px-2 py-1 text-sm font-medium tabular-nums underline decoration-dotted underline-offset-4 hover:decoration-solid"
+          >
+            {changedFieldCount} {changedFieldCount === 1 ? 'field' : 'fields'}{' '}
+            changed
           </button>
         </PopoverTrigger>
         <PopoverContent
           side="top"
           align="center"
-          className="max-h-72 w-80 overflow-y-auto p-0">
+          className="max-h-72 w-80 overflow-y-auto p-0"
+        >
           <PopoverHeader className="sticky top-0 z-10 border-b bg-popover px-3 py-2">
             <PopoverTitle>Pending Changes</PopoverTitle>
           </PopoverHeader>
           <div className="divide-y">
-            {changes.map(change => (
+            {changes.map((change) => (
               <div
                 key={change.fieldSlug}
-                className="flex items-center gap-1.5 px-3 py-2 text-xs">
+                className="flex items-center gap-1.5 px-3 py-2 text-xs"
+              >
                 <span className="shrink-0 font-medium">
                   {change.fieldName}:
                 </span>
                 <span
                   className="max-w-20 truncate text-muted-foreground line-through"
-                  title={formatValue(change.originalValue)}>
+                  title={formatValue(change.originalValue)}
+                >
                   {formatValue(change.originalValue) || '(empty)'}
                 </span>
-                <span className="shrink-0 text-muted-foreground">
-                  &rarr;
-                </span>
+                <span className="shrink-0 text-muted-foreground">&rarr;</span>
                 <span
                   className="max-w-20 truncate text-foreground"
-                  title={formatValue(change.newValue)}>
+                  title={formatValue(change.newValue)}
+                >
                   {formatValue(change.newValue) || '(empty)'}
                 </span>
               </div>
@@ -285,13 +286,14 @@ function EditableRecordDetailActionBar({
           variant="default"
           size="sm"
           onClick={onSaveClick}
-          disabled={isSaving}>
+          disabled={isSaving}
+        >
           <Save className="size-3.5" />
           {isSaving ? 'Saving...' : 'Save'}
         </Button>
       </ActionBarGroup>
     </ActionBar>
-  );
+  )
 }
 
 /**
@@ -299,12 +301,12 @@ function EditableRecordDetailActionBar({
  * Returns form, values, change tracking state, and save/cancel handlers.
  */
 export function useEditableRecordDetail() {
-  const ctx = useContext(EditableRecordDetailContext);
+  const ctx = useContext(EditableRecordDetailContext)
 
   if (!ctx) {
     throw new Error(
-      'useEditableRecordDetail must be used within <EditableRecordDetail>'
-    );
+      'useEditableRecordDetail must be used within <EditableRecordDetail>',
+    )
   }
 
   return {
@@ -317,28 +319,27 @@ export function useEditableRecordDetail() {
     getChanges: ctx.getChanges,
     handleSave: ctx.handleSave,
     handleCancel: ctx.handleCancel,
-    isSaving: ctx.isSaving
-  };
+    isSaving: ctx.isSaving,
+  }
 }
 
-export interface EditableRecordDetailFieldProps
-  extends Omit<
-    EditableValueProps,
-    | 'field'
-    | 'value'
-    | 'form'
-    | 'onValueChange'
-    | 'enumOptions'
-    | 'appSlug'
-    | 'dataSourceSlug'
-    | 'record'
-  > {
+export interface EditableRecordDetailFieldProps extends Omit<
+  EditableValueProps,
+  | 'field'
+  | 'value'
+  | 'form'
+  | 'onValueChange'
+  | 'enumOptions'
+  | 'appSlug'
+  | 'dataSourceSlug'
+  | 'record'
+> {
   /** Field slug — looks up config from context */
-  slug: string;
+  slug: string
   /** Optional label override */
-  label?: ReactNode;
+  label?: ReactNode
   /** Render label + value row. Default: true */
-  showLabel?: boolean;
+  showLabel?: boolean
 }
 
 /**
@@ -349,31 +350,29 @@ export interface EditableRecordDetailFieldProps
 const EditableRecordDetailField = forwardRef<
   HTMLDivElement,
   EditableRecordDetailFieldProps
->(({
-  slug, label, showLabel = true, className, ...props
-}, ref) => {
-  const ctx = useContext(EditableRecordDetailContext);
+>(({ slug, label, showLabel = true, className, ...props }, ref) => {
+  const ctx = useContext(EditableRecordDetailContext)
 
   if (!ctx) {
     throw new Error(
-      'EditableRecordDetailField must be used within <EditableRecordDetail>'
-    );
+      'EditableRecordDetailField must be used within <EditableRecordDetail>',
+    )
   }
 
-  const config = ctx.fieldMap.get(slug);
+  const config = ctx.fieldMap.get(slug)
 
-  if (!config) return null;
+  if (!config) return null
 
   const {
     field,
     enumOptions,
     readOnly: fieldReadOnly,
     appSlug,
-    dataSourceSlug
-  } = config;
+    dataSourceSlug,
+  } = config
 
-  const isChanged = ctx.changedFields.has(slug);
-  const value = ctx.valuesRef.current[slug];
+  const isChanged = ctx.changedFields.has(slug)
+  const value = ctx.valuesRef.current[slug]
 
   const editableValue = (
     <EditableValue
@@ -381,7 +380,7 @@ const EditableRecordDetailField = forwardRef<
       field={field}
       value={value}
       form={ctx.form}
-      onValueChange={v => ctx.handleFieldValueChange(slug, v)}
+      onValueChange={(v) => ctx.handleFieldValueChange(slug, v)}
       enumOptions={enumOptions}
       record={ctx.valuesRef.current}
       readOnly={ctx.readOnly || fieldReadOnly}
@@ -389,14 +388,15 @@ const EditableRecordDetailField = forwardRef<
       appSlug={appSlug}
       dataSourceSlug={dataSourceSlug}
       className={cn(
-        isChanged
-        && 'bg-amber-50 dark:bg-amber-900/20 border-s-2 border-s-amber-400',
-        !showLabel && className
+        isChanged &&
+          'bg-amber-50 dark:bg-amber-900/20 border-s-2 border-s-amber-400',
+        !showLabel && className,
       )}
-      {...props} />
-  );
+      {...props}
+    />
+  )
 
-  if (!showLabel) return editableValue;
+  if (!showLabel) return editableValue
 
   return (
     <div ref={ref} className={cn('flex items-center gap-4', className)}>
@@ -405,34 +405,36 @@ const EditableRecordDetailField = forwardRef<
       </span>
       {editableValue}
     </div>
-  );
-});
+  )
+})
 
-EditableRecordDetailField.displayName = 'EditableRecordDetailField';
+EditableRecordDetailField.displayName = 'EditableRecordDetailField'
 
-export interface EditableRecordDetailProps
-  extends Omit<ComponentProps<'div'>, 'children'> {
+export interface EditableRecordDetailProps extends Omit<
+  ComponentProps<'div'>,
+  'children'
+> {
   /** Field configurations */
-  fields: Array<RecordDetailField>;
+  fields: Array<RecordDetailField>
   /** Current record values keyed by field slug */
-  record: Record<string, unknown>;
+  record: Record<string, unknown>
   /** Called when save is triggered */
   onSave?: (
     changes: Array<FieldChange>,
-    values: Record<string, unknown>
-  ) => void | Promise<void>;
+    values: Record<string, unknown>,
+  ) => void | Promise<void>
   /** Called when cancel is triggered */
-  onCancel?: () => void;
+  onCancel?: () => void
   /** External TanStack Form instance — skips internal macro-form */
-  form?: any;
+  form?: any
   /** Whether all fields are read-only */
-  readOnly?: boolean;
+  readOnly?: boolean
   /** Whether all fields are disabled */
-  disabled?: boolean;
+  disabled?: boolean
   /** Side offset for the floating action bar */
-  actionBarSideOffset?: number;
+  actionBarSideOffset?: number
   /** Content */
-  children: ReactNode;
+  children: ReactNode
 }
 
 const EditableRecordDetail = forwardRef<
@@ -453,105 +455,103 @@ const EditableRecordDetail = forwardRef<
       className,
       ...props
     },
-    ref
+    ref,
   ) => {
     const fieldMap = useMemo(() => {
-      const map = new Map<string, RecordDetailField>();
+      const map = new Map<string, RecordDetailField>()
 
       for (const entry of fields) {
-        map.set(entry.field.slug, entry);
+        map.set(entry.field.slug, entry)
       }
 
-      return map;
-    }, [fields]);
+      return map
+    }, [fields])
 
     const originalValuesRef = useRef<Record<string, unknown>>({
-      ...record
-    });
+      ...record,
+    })
 
-    const [changedFields, setChangedFields] = useState<Set<string>>(
-      new Set()
-    );
+    const [changedFields, setChangedFields] = useState<Set<string>>(new Set())
 
-    const [isSaving, setIsSaving] = useState(false);
-    const onSaveRef = useRef(onSave);
-    const onCancelRef = useRef(onCancel);
+    const [isSaving, setIsSaving] = useState(false)
+    const onSaveRef = useRef(onSave)
+    const onCancelRef = useRef(onCancel)
 
-    onSaveRef.current = onSave;
-    onCancelRef.current = onCancel;
+    onSaveRef.current = onSave
+    onCancelRef.current = onCancel
 
     const handleFieldValueChange = useCallback(
       (slug: string, newValue: unknown) => {
-        const original = originalValuesRef.current[slug];
+        const original = originalValuesRef.current[slug]
 
         setChangedFields((prev) => {
-          const next = new Set(prev);
+          const next = new Set(prev)
 
           if (valuesEqual(original, newValue)) {
-            next.delete(slug);
+            next.delete(slug)
           } else {
-            next.add(slug);
+            next.add(slug)
           }
 
-          return next;
-        });
+          return next
+        })
       },
-      []
-    );
+      [],
+    )
 
-    const onFieldChangeRef = useRef(handleFieldValueChange);
+    const onFieldChangeRef = useRef(handleFieldValueChange)
 
-    onFieldChangeRef.current = handleFieldValueChange;
+    onFieldChangeRef.current = handleFieldValueChange
 
     const {
       form: internalForm,
       valuesRef,
-      resetForm
-    } = useMacroForm(record, onFieldChangeRef);
+      resetForm,
+    } = useMacroForm(record, onFieldChangeRef)
 
-    const activeForm = externalForm ?? internalForm;
+    const activeForm = externalForm ?? internalForm
 
     const getChanges = useCallback((): Array<FieldChange> => {
-      const changes: Array<FieldChange> = [];
+      const changes: Array<FieldChange> = []
 
       for (const slug of changedFields) {
-        const config = fieldMap.get(slug);
+        const config = fieldMap.get(slug)
 
-        if (!config) continue;
+        if (!config) continue
 
         changes.push({
           fieldSlug: slug,
           fieldName: config.field.name,
           originalValue: originalValuesRef.current[slug],
-          newValue: valuesRef.current[slug]
-        });
+          newValue: valuesRef.current[slug],
+        })
       }
 
-      return changes;
-    }, [changedFields, fieldMap, valuesRef]);
+      return changes
+    }, [changedFields, fieldMap, valuesRef])
 
     const handleSave = useCallback(async () => {
-      setIsSaving(true);
+      setIsSaving(true)
 
       try {
-        const changes = getChanges();
+        const changes = getChanges()
 
-        await onSaveRef.current?.(changes, { ...valuesRef.current });
+        await onSaveRef.current?.(changes, { ...valuesRef.current })
 
-        originalValuesRef.current = { ...valuesRef.current };
-        setChangedFields(new Set());
+        originalValuesRef.current = { ...valuesRef.current }
+        setChangedFields(new Set())
       } finally {
-        setIsSaving(false);
+        setIsSaving(false)
       }
-    }, [getChanges, valuesRef]);
+    }, [getChanges, valuesRef])
 
     const handleCancel = useCallback(() => {
-      resetForm(originalValuesRef.current);
-      setChangedFields(new Set());
-      onCancelRef.current?.();
-    }, [resetForm]);
+      resetForm(originalValuesRef.current)
+      setChangedFields(new Set())
+      onCancelRef.current?.()
+    }, [resetForm])
 
-    const changedFieldCount = changedFields.size;
+    const changedFieldCount = changedFields.size
 
     const ctxValue = useMemo<EditableRecordDetailContextValue>(
       () => ({
@@ -566,7 +566,7 @@ const EditableRecordDetail = forwardRef<
         changedFieldCount,
         getChanges,
         handleSave,
-        handleCancel
+        handleCancel,
       }),
       [
         activeForm,
@@ -580,9 +580,9 @@ const EditableRecordDetail = forwardRef<
         changedFieldCount,
         getChanges,
         handleSave,
-        handleCancel
-      ]
-    );
+        handleCancel,
+      ],
+    )
 
     return (
       <EditableRecordDetailContext value={ctxValue}>
@@ -590,7 +590,8 @@ const EditableRecordDetail = forwardRef<
           ref={ref}
           data-slot="editable-record-detail"
           className={cn('relative w-full', className)}
-          {...props}>
+          {...props}
+        >
           {children}
         </div>
         {changedFieldCount > 0 && (
@@ -600,13 +601,14 @@ const EditableRecordDetail = forwardRef<
             onSave={handleSave}
             onDiscard={handleCancel}
             sideOffset={actionBarSideOffset}
-            isSaving={isSaving} />
+            isSaving={isSaving}
+          />
         )}
       </EditableRecordDetailContext>
-    );
-  }
-);
+    )
+  },
+)
 
-EditableRecordDetail.displayName = 'EditableRecordDetail';
+EditableRecordDetail.displayName = 'EditableRecordDetail'
 
-export { EditableRecordDetail, EditableRecordDetailField };
+export { EditableRecordDetail, EditableRecordDetailField }

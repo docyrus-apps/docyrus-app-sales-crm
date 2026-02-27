@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { Link, useLocation, useParams } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { AppSidebar } from './app-sidebar'
 import type { ReactNode } from 'react'
 import {
@@ -17,25 +18,26 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 
-const SEGMENT_LABELS: Record<string, string> = {
-  deals: 'Deals',
-  leads: 'Leads',
-  companies: 'Organizations',
-  contacts: 'Contacts',
-  tasks: 'Tasks',
-  notifications: 'Notifications',
-  emails: 'Emails',
-  events: 'Events',
-  notes: 'Notes',
-  products: 'Products',
-  'sales-orders': 'Sales Orders',
-  activities: 'Activities',
-  reports: 'Reports',
+const SEGMENT_BREADCRUMB_KEYS: Record<string, string> = {
+  deals: 'breadcrumb.deals',
+  leads: 'breadcrumb.leads',
+  companies: 'breadcrumb.companies',
+  contacts: 'breadcrumb.contacts',
+  tasks: 'breadcrumb.tasks',
+  notifications: 'breadcrumb.notifications',
+  emails: 'breadcrumb.emails',
+  events: 'breadcrumb.events',
+  notes: 'breadcrumb.notes',
+  products: 'breadcrumb.products',
+  'sales-orders': 'breadcrumb.salesOrders',
+  activities: 'breadcrumb.activities',
+  reports: 'breadcrumb.reports',
 }
 
 function AppBreadcrumb() {
   const location = useLocation()
   const params = useParams({ strict: false })
+  const { t } = useTranslation()
 
   const segments = useMemo(() => {
     return location.pathname.split('/').filter(Boolean)
@@ -54,26 +56,27 @@ function AppBreadcrumb() {
       // Skip dynamic param segments
       if (segment === entityId && entityId) continue
 
-      const label =
-        SEGMENT_LABELS[segment] ??
-        segment.charAt(0).toUpperCase() + segment.slice(1)
+      const key = SEGMENT_BREADCRUMB_KEYS[segment]
+      const label = key
+        ? t(key)
+        : segment.charAt(0).toUpperCase() + segment.slice(1)
       items.push({ label, href })
     }
 
     // Append entity ID as last crumb for detail pages
     if (entityId) {
-      items.push({ label: 'Detail' })
+      items.push({ label: t('breadcrumb.detail') })
     }
 
     return items
-  }, [segments, entityId])
+  }, [segments, entityId, t])
 
   if (crumbs.length === 0) {
     return (
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbPage>Home</BreadcrumbPage>
+            <BreadcrumbPage>{t('breadcrumb.home')}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -85,7 +88,7 @@ function AppBreadcrumb() {
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            <Link to="/">Home</Link>
+            <Link to="/">{t('breadcrumb.home')}</Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
         {crumbs.map((crumb, i) => {

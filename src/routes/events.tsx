@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Calendar as CalendarIcon, List, Plus } from 'lucide-react'
 import { endOfMonth, format, startOfMonth } from 'date-fns'
 import { PageContainer } from '@/components/layout/page-container'
@@ -20,6 +21,7 @@ import { EventFormDialog } from '@/components/events/event-form-dialog'
 import { formatDate } from '@/lib/formatters'
 
 export function Events() {
+  const { t } = useTranslation()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar')
@@ -64,24 +66,24 @@ export function Events() {
   return (
     <>
       <PageHeader
-        title="Events"
+        title={t('events.title')}
         actions={
           <div className="flex items-center gap-2">
             <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)}>
               <TabsList>
                 <TabsTrigger value="calendar">
                   <CalendarIcon className="h-4 w-4 mr-1" />
-                  Calendar
+                  {t('events.calendar')}
                 </TabsTrigger>
                 <TabsTrigger value="list">
                   <List className="h-4 w-4 mr-1" />
-                  List
+                  {t('viewSwitcher.list')}
                 </TabsTrigger>
               </TabsList>
             </Tabs>
             <Button onClick={() => setIsFormOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              New Event
+              {t('events.newEvent')}
             </Button>
           </div>
         }
@@ -98,8 +100,10 @@ export function Events() {
             {/* Calendar */}
             <Card>
               <CardHeader>
-                <CardTitle>Calendar</CardTitle>
-                <CardDescription>Select a date to view events</CardDescription>
+                <CardTitle>{t('events.calendar')}</CardTitle>
+                <CardDescription>
+                  {t('events.selectDateToView')}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {isLoading ? (
@@ -128,10 +132,14 @@ export function Events() {
             <Card>
               <CardHeader>
                 <CardTitle>
-                  Events on {selectedDate && format(selectedDate, 'PPP')}
+                  {t('events.eventsOn', {
+                    date: selectedDate ? format(selectedDate, 'PPP') : '',
+                  })}
                 </CardTitle>
                 <CardDescription>
-                  {eventsOnSelectedDate.length} event(s) scheduled
+                  {t('events.eventCount', {
+                    count: eventsOnSelectedDate.length,
+                  })}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -144,16 +152,18 @@ export function Events() {
                 ) : eventsOnSelectedDate.length === 0 ? (
                   <div className="text-center py-12">
                     <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-lg font-medium">No events scheduled</p>
+                    <p className="text-lg font-medium">
+                      {t('events.noEventsScheduled')}
+                    </p>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Create an event to get started
+                      {t('events.createEventToStart')}
                     </p>
                     <Button
                       className="mt-4"
                       onClick={() => setIsFormOpen(true)}
                     >
                       <Plus className="mr-2 h-4 w-4" />
-                      Create Event
+                      {t('events.createEvent')}
                     </Button>
                   </div>
                 ) : (
@@ -207,9 +217,11 @@ export function Events() {
           /* List View */
           <Card>
             <CardHeader>
-              <CardTitle>All Events</CardTitle>
+              <CardTitle>{t('events.allEvents')}</CardTitle>
               <CardDescription>
-                All scheduled events ({allEventsSorted.length} events)
+                {t('events.allScheduledEvents', {
+                  count: allEventsSorted.length,
+                })}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -223,13 +235,13 @@ export function Events() {
               ) : allEventsSorted.length === 0 ? (
                 <div className="text-center py-12">
                   <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-lg font-medium">No events</p>
+                  <p className="text-lg font-medium">{t('events.noEvents')}</p>
                   <p className="text-sm text-muted-foreground mt-2">
-                    Schedule your first event
+                    {t('events.scheduleFirstEvent')}
                   </p>
                   <Button className="mt-4" onClick={() => setIsFormOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
-                    Create Event
+                    {t('events.createEvent')}
                   </Button>
                 </div>
               ) : (

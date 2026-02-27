@@ -1,7 +1,7 @@
-import { DocyrusIcon } from '@/components/docyrus/docyrus-icon';
+import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 
 interface FileEmptyStateProps {
-  editable: boolean;
+  editable: boolean
 }
 
 export function FileEmptyState({ editable }: FileEmptyStateProps) {
@@ -9,7 +9,8 @@ export function FileEmptyState({ editable }: FileEmptyStateProps) {
     <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
       <DocyrusIcon
         icon="far file-circle-plus"
-        className="size-8 text-muted-foreground/50" />
+        className="size-8 text-muted-foreground/50"
+      />
       <div>
         <p className="text-sm font-medium text-muted-foreground">
           No files attached
@@ -21,5 +22,5 @@ export function FileEmptyState({ editable }: FileEmptyStateProps) {
         </p>
       </div>
     </div>
-  );
+  )
 }

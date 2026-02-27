@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { NotepadText, Plus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { ColumnDef } from '@tanstack/react-table'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
@@ -23,6 +24,7 @@ const priorityVariant: Record<
 }
 
 export function Notes() {
+  const { t } = useTranslation()
   const { data: notes, isLoading } = useNotes()
 
   const columns = useMemo<Array<ColumnDef<any>>>(
@@ -30,7 +32,10 @@ export function Notes() {
       {
         accessorKey: 'done',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Done" />
+          <DataTableColumnHeader
+            column={column}
+            label={t('notes.columns.done')}
+          />
         ),
         cell: ({ row }) => (
           <Checkbox checked={!!row.getValue('done')} disabled />
@@ -41,7 +46,10 @@ export function Notes() {
       {
         accessorKey: 'title',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Title" />
+          <DataTableColumnHeader
+            column={column}
+            label={t('notes.columns.title')}
+          />
         ),
         cell: ({ row }) => {
           const done = row.getValue('done')
@@ -58,7 +66,10 @@ export function Notes() {
       {
         accessorKey: 'priority',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Priority" />
+          <DataTableColumnHeader
+            column={column}
+            label={t('notes.columns.priority')}
+          />
         ),
         cell: ({ row }) => {
           const priority = row.getValue('priority')
@@ -74,7 +85,10 @@ export function Notes() {
       {
         accessorKey: 'due_date',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Due Date" />
+          <DataTableColumnHeader
+            column={column}
+            label={t('notes.columns.dueDate')}
+          />
         ),
         cell: ({ row }) => {
           const date = row.getValue('due_date')
@@ -93,7 +107,7 @@ export function Notes() {
         enableSorting: true,
       },
     ],
-    [],
+    [t],
   )
 
   const { table } = useDataTable({
@@ -104,7 +118,7 @@ export function Notes() {
 
   return (
     <>
-      <PageHeader title="Notes" />
+      <PageHeader title={t('notes.title')} />
       <PageContainer>
         {isLoading && <DataTableSkeleton columnCount={4} rowCount={10} />}
 
@@ -112,9 +126,9 @@ export function Notes() {
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <NotepadText className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-lg font-medium">No notes yet</p>
+              <p className="text-lg font-medium">{t('notes.emptyTitle')}</p>
               <p className="text-sm text-muted-foreground mt-2">
-                Your todo notes will appear here
+                {t('notes.emptyDescription')}
               </p>
             </CardContent>
           </Card>

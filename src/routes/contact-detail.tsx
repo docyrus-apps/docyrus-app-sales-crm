@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Pencil } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
 import { Button } from '@/components/ui/button'
@@ -18,6 +19,7 @@ import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
 
 export function ContactDetail() {
+  const { t } = useTranslation()
   const { contactId } = useParams({ strict: false })
   const { tab } = useSearch({ from: '/contacts/$contactId' })
   const navigate = useNavigate({ from: '/contacts/$contactId' })
@@ -42,14 +44,16 @@ export function ContactDetail() {
       <PageContainer>
         <Card className="border-destructive">
           <CardHeader>
-            <CardTitle className="text-destructive">Error</CardTitle>
+            <CardTitle className="text-destructive">
+              {t('common.error')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <p>Failed to load contact details</p>
+            <p>{t('contacts.failedToLoad')}</p>
             <Link to="/contacts">
               <Button variant="outline" className="mt-4">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Contacts
+                {t('contacts.backToContacts')}
               </Button>
             </Link>
           </CardContent>
@@ -64,7 +68,7 @@ export function ContactDetail() {
         <Link to="/contacts">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Contacts
+            {t('contacts.backToContacts')}
           </Button>
         </Link>
       </div>
@@ -74,7 +78,7 @@ export function ContactDetail() {
         <div className="space-y-4">
           <Card className="group">
             <CardHeader>
-              <CardTitle>Contact Details</CardTitle>
+              <CardTitle>{t('contacts.contactDetails')}</CardTitle>
               <CardAction>
                 <Button
                   variant="ghost"
@@ -89,15 +93,17 @@ export function ContactDetail() {
             <CardContent className="space-y-4">
               <div>
                 <div className="text-sm font-medium text-muted-foreground">
-                  Name
+                  {t('contacts.name')}
                 </div>
-                <div className="mt-1 font-medium">{contact.name || 'N/A'}</div>
+                <div className="mt-1 font-medium">
+                  {contact.name || t('common.na')}
+                </div>
               </div>
 
               {contact.job_title && (
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">
-                    Job Title
+                    {t('contacts.jobTitle')}
                   </div>
                   <div className="mt-1">{contact.job_title}</div>
                 </div>
@@ -106,7 +112,7 @@ export function ContactDetail() {
               {contact.email && (
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">
-                    Email
+                    {t('contacts.email')}
                   </div>
                   <div className="mt-1">{contact.email}</div>
                 </div>
@@ -115,7 +121,7 @@ export function ContactDetail() {
               {contact.mobile && (
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">
-                    Mobile
+                    {t('contacts.mobile')}
                   </div>
                   <div className="mt-1">{contact.mobile}</div>
                 </div>
@@ -126,7 +132,7 @@ export function ContactDetail() {
           {contact.organization && typeof contact.organization === 'object' && (
             <Card>
               <CardHeader>
-                <CardTitle>Organization</CardTitle>
+                <CardTitle>{t('contacts.organization')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <Link
@@ -137,7 +143,7 @@ export function ContactDetail() {
                   className="text-sm font-medium text-primary hover:underline"
                 >
                   {(contact.organization as { id: string; name: string })
-                    .name || 'N/A'}
+                    .name || t('common.na')}
                 </Link>
               </CardContent>
             </Card>
@@ -148,41 +154,55 @@ export function ContactDetail() {
         <div className="lg:col-span-2">
           <Tabs value={tab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="comments">Comments</TabsTrigger>
-              <TabsTrigger value="files">Files</TabsTrigger>
+              <TabsTrigger value="overview">
+                {t('contacts.tabs.overview')}
+              </TabsTrigger>
+              <TabsTrigger value="comments">
+                {t('contacts.tabs.comments')}
+              </TabsTrigger>
+              <TabsTrigger value="files">
+                {t('contacts.tabs.files')}
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="mt-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Contact Information</CardTitle>
+                  <CardTitle>{t('contacts.contactInformation')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <div className="text-sm font-medium text-muted-foreground">
-                        Full Name
+                        {t('contacts.fullName')}
                       </div>
-                      <div className="mt-1">{contact.name || 'N/A'}</div>
+                      <div className="mt-1">
+                        {contact.name || t('common.na')}
+                      </div>
                     </div>
                     <div>
                       <div className="text-sm font-medium text-muted-foreground">
-                        Job Title
+                        {t('contacts.jobTitle')}
                       </div>
-                      <div className="mt-1">{contact.job_title || 'N/A'}</div>
+                      <div className="mt-1">
+                        {contact.job_title || t('common.na')}
+                      </div>
                     </div>
                     <div>
                       <div className="text-sm font-medium text-muted-foreground">
-                        Email
+                        {t('contacts.email')}
                       </div>
-                      <div className="mt-1">{contact.email || 'N/A'}</div>
+                      <div className="mt-1">
+                        {contact.email || t('common.na')}
+                      </div>
                     </div>
                     <div>
                       <div className="text-sm font-medium text-muted-foreground">
-                        Mobile
+                        {t('contacts.mobile')}
                       </div>
-                      <div className="mt-1">{contact.mobile || 'N/A'}</div>
+                      <div className="mt-1">
+                        {contact.mobile || t('common.na')}
+                      </div>
                     </div>
                   </div>
 
@@ -190,7 +210,7 @@ export function ContactDetail() {
                     typeof contact.organization === 'object' && (
                       <div>
                         <div className="text-sm font-medium text-muted-foreground">
-                          Organization
+                          {t('contacts.organization')}
                         </div>
                         <div className="mt-1">
                           <Link

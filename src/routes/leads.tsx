@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { Plus } from 'lucide-react'
 import type { ViewType } from '@/components/view-switcher'
 import { PageContainer } from '@/components/layout/page-container'
@@ -18,6 +19,7 @@ import { getLeadsColumns } from '@/components/leads/leads-columns'
 import { LeadsKanbanView } from '@/components/leads/leads-kanban-view'
 
 export function Leads() {
+  const { t } = useTranslation()
   const { data: leads, isLoading, error } = useLeads()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [viewType, setViewType] = useState<ViewType>('list')
@@ -32,13 +34,13 @@ export function Leads() {
   return (
     <>
       <PageHeader
-        title="Leads"
+        title={t('leads.title')}
         actions={
           <>
             <ViewSwitcher value={viewType} onValueChange={setViewType} />
             <Button onClick={() => setIsFormOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              New Lead
+              {t('leads.newLead')}
             </Button>
           </>
         }
@@ -76,7 +78,7 @@ export function Leads() {
           <Card className="border-destructive">
             <CardHeader>
               <CardTitle className="text-destructive">
-                Error loading leads
+                {t('leads.errorLoading')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -88,13 +90,13 @@ export function Leads() {
         {leads && leads.length === 0 && (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-lg font-medium">No leads yet</p>
+              <p className="text-lg font-medium">{t('leads.emptyTitle')}</p>
               <p className="text-sm text-muted-foreground mt-2">
-                Add your first lead to start tracking
+                {t('leads.emptyDescription')}
               </p>
               <Button className="mt-4" onClick={() => setIsFormOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
-                Create Lead
+                {t('leads.createLead')}
               </Button>
             </CardContent>
           </Card>
@@ -131,7 +133,7 @@ export function Leads() {
                     )}
                     {lead.lead_source && (
                       <p className="text-xs text-muted-foreground mt-1">
-                        Source:{' '}
+                        {t('leads.source')}:{' '}
                         {typeof lead.lead_source === 'object'
                           ? lead.lead_source.name
                           : lead.lead_source}

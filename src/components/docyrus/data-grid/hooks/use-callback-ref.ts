@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react'
 
 /**
  * @see https://github.com/radix-ui/primitives/blob/main/packages/react/use-callback-ref/src/useCallbackRef.tsx
@@ -9,18 +9,15 @@ import { useEffect, useMemo, useRef } from 'react';
  * prop or avoid re-executing effects when passed as a dependency
  */
 function useCallbackRef<T extends (...args: Array<never>) => unknown>(
-  callback: T | undefined
+  callback: T | undefined,
 ): T {
-  const callbackRef = useRef(callback);
+  const callbackRef = useRef(callback)
 
   useEffect(() => {
-    callbackRef.current = callback;
-  });
+    callbackRef.current = callback
+  })
 
-  return useMemo(
-    () => ((...args) => callbackRef.current?.(...args)) as T,
-    []
-  );
+  return useMemo(() => ((...args) => callbackRef.current?.(...args)) as T, [])
 }
 
-export { useCallbackRef };
+export { useCallbackRef }

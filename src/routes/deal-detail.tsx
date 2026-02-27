@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Pencil } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
 import { Button } from '@/components/ui/button'
@@ -20,6 +21,7 @@ import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
 
 export function DealDetail() {
+  const { t } = useTranslation()
   const { dealId } = useParams({ strict: false })
   const { tab } = useSearch({ from: '/deals/$dealId' })
   const navigate = useNavigate({ from: '/deals/$dealId' })
@@ -82,14 +84,16 @@ export function DealDetail() {
       <PageContainer>
         <Card className="border-destructive">
           <CardHeader>
-            <CardTitle className="text-destructive">Error</CardTitle>
+            <CardTitle className="text-destructive">
+              {t('common.error')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <p>Failed to load deal details</p>
+            <p>{t('deals.failedToLoad')}</p>
             <Link to="/deals">
               <Button variant="outline" className="mt-4">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Deals
+                {t('deals.backToDeals')}
               </Button>
             </Link>
           </CardContent>
@@ -104,7 +108,7 @@ export function DealDetail() {
         <Link to="/deals">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Pipeline
+            {t('deals.backToPipeline')}
           </Button>
         </Link>
       </div>
@@ -114,7 +118,7 @@ export function DealDetail() {
         <div className="space-y-4">
           <Card className="group">
             <CardHeader>
-              <CardTitle>Deal Details</CardTitle>
+              <CardTitle>{t('deals.dealDetails')}</CardTitle>
               <CardAction>
                 <Button
                   variant="ghost"
@@ -129,7 +133,7 @@ export function DealDetail() {
             <CardContent className="space-y-4">
               <div>
                 <div className="text-sm font-medium text-muted-foreground">
-                  Deal ID
+                  {t('deals.dealId')}
                 </div>
                 <div className="mt-1">{deal.id}</div>
               </div>
@@ -137,7 +141,7 @@ export function DealDetail() {
               {deal.stage && (
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">
-                    Stage
+                    {t('deals.stage')}
                   </div>
                   <div className="mt-1 font-medium">
                     {typeof deal.stage === 'object'
@@ -150,7 +154,7 @@ export function DealDetail() {
               {deal.deal_value && (
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">
-                    Deal Value
+                    {t('deals.dealValue')}
                   </div>
                   <div className="mt-1 text-2xl font-bold">
                     ${deal.deal_value.toLocaleString()}
@@ -161,7 +165,7 @@ export function DealDetail() {
               {deal.close_probability !== undefined && (
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">
-                    Close Probability
+                    {t('deals.closeProbability')}
                   </div>
                   <div className="mt-1">{deal.close_probability}%</div>
                 </div>
@@ -170,7 +174,7 @@ export function DealDetail() {
               {deal.expected_closing_date && (
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">
-                    Expected Close
+                    {t('deals.expectedClose')}
                   </div>
                   <div className="mt-1">
                     {new Date(deal.expected_closing_date).toLocaleDateString()}
@@ -181,7 +185,7 @@ export function DealDetail() {
               {deal.hot_prospect && (
                 <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-2">
                   <span className="text-sm font-medium text-destructive">
-                    🔥 Hot Prospect
+                    {t('deals.hotProspect')}
                   </span>
                 </div>
               )}
@@ -191,11 +195,11 @@ export function DealDetail() {
           {deal.organizations && typeof deal.organizations === 'object' && (
             <Card>
               <CardHeader>
-                <CardTitle>Organization</CardTitle>
+                <CardTitle>{t('deals.organization')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-sm font-medium">
-                  {(deal.organizations as any).name || 'N/A'}
+                  {(deal.organizations as any).name || t('common.na')}
                 </div>
               </CardContent>
             </Card>
@@ -206,48 +210,56 @@ export function DealDetail() {
         <div className="lg:col-span-2">
           <Tabs value={tab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="products">Products</TabsTrigger>
-              <TabsTrigger value="orders">Orders</TabsTrigger>
-              <TabsTrigger value="activity">Activity</TabsTrigger>
-              <TabsTrigger value="comments">Comments</TabsTrigger>
-              <TabsTrigger value="files">Files</TabsTrigger>
+              <TabsTrigger value="overview">
+                {t('deals.tabs.overview')}
+              </TabsTrigger>
+              <TabsTrigger value="products">
+                {t('deals.tabs.products')}
+              </TabsTrigger>
+              <TabsTrigger value="orders">{t('deals.tabs.orders')}</TabsTrigger>
+              <TabsTrigger value="activity">
+                {t('deals.tabs.activity')}
+              </TabsTrigger>
+              <TabsTrigger value="comments">
+                {t('deals.tabs.comments')}
+              </TabsTrigger>
+              <TabsTrigger value="files">{t('deals.tabs.files')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="mt-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Deal Overview</CardTitle>
+                  <CardTitle>{t('deals.dealOverview')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <div className="text-sm font-medium text-muted-foreground">
-                        Customer Type
+                        {t('deals.customerType')}
                       </div>
                       <div className="mt-1">
                         {deal.customer_type
                           ? typeof deal.customer_type === 'object'
                             ? deal.customer_type.name
                             : deal.customer_type
-                          : 'N/A'}
+                          : t('common.na')}
                       </div>
                     </div>
                     <div>
                       <div className="text-sm font-medium text-muted-foreground">
-                        Lead Source
+                        {t('deals.leadSource')}
                       </div>
                       <div className="mt-1">
                         {deal.lead_source
                           ? typeof deal.lead_source === 'object'
                             ? deal.lead_source.name
                             : deal.lead_source
-                          : 'N/A'}
+                          : t('common.na')}
                       </div>
                     </div>
                     <div>
                       <div className="text-sm font-medium text-muted-foreground">
-                        Expected Revenue
+                        {t('deals.expectedRevenue')}
                       </div>
                       <div className="mt-1">
                         ${deal.expected_revenue?.toLocaleString() || '0'}
@@ -255,7 +267,7 @@ export function DealDetail() {
                     </div>
                     <div>
                       <div className="text-sm font-medium text-muted-foreground">
-                        Owner
+                        {t('deals.owner')}
                       </div>
                       <div className="mt-1">
                         {deal.record_owner
@@ -263,7 +275,7 @@ export function DealDetail() {
                             ? (deal.record_owner as any).name ||
                               (deal.record_owner as any).id
                             : deal.record_owner
-                          : 'N/A'}
+                          : t('common.na')}
                       </div>
                     </div>
                   </div>
@@ -274,7 +286,7 @@ export function DealDetail() {
             <TabsContent value="products" className="mt-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Deal Products</CardTitle>
+                  <CardTitle>{t('deals.products.title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {productsLoading ? (
@@ -284,7 +296,7 @@ export function DealDetail() {
                     </div>
                   ) : !dealProducts?.length ? (
                     <p className="text-sm text-muted-foreground">
-                      No products added yet
+                      {t('deals.products.empty')}
                     </p>
                   ) : (
                     <div className="space-y-3">
@@ -297,10 +309,10 @@ export function DealDetail() {
                             <div className="font-medium">
                               {typeof item.product === 'object'
                                 ? item.product.name
-                                : item.product || 'N/A'}
+                                : item.product || t('common.na')}
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              Qty: {item.qty} &times; $
+                              {t('deals.products.qty')}: {item.qty} &times; $
                               {item.unit_price?.toLocaleString()}
                               {item.discount ? ` (-${item.discount}%)` : ''}
                             </div>
@@ -314,7 +326,7 @@ export function DealDetail() {
                             </div>
                             {item.tax_rate != null && (
                               <div className="text-sm text-muted-foreground">
-                                Tax: {item.tax_rate}%
+                                {t('deals.products.tax')}: {item.tax_rate}%
                               </div>
                             )}
                           </div>
@@ -329,7 +341,7 @@ export function DealDetail() {
             <TabsContent value="orders" className="mt-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Related Sales Orders</CardTitle>
+                  <CardTitle>{t('deals.orders.title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {ordersLoading ? (
@@ -339,7 +351,7 @@ export function DealDetail() {
                     </div>
                   ) : !salesOrders?.length ? (
                     <p className="text-sm text-muted-foreground">
-                      No orders yet
+                      {t('deals.orders.empty')}
                     </p>
                   ) : (
                     <div className="space-y-3">
@@ -353,12 +365,14 @@ export function DealDetail() {
                           <div className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50">
                             <div className="min-w-0 flex-1">
                               <div className="font-medium">
-                                Order #{order.id}
+                                {t('deals.orders.orderNumber', {
+                                  id: order.id,
+                                })}
                               </div>
                               <div className="text-sm text-muted-foreground">
                                 {typeof order.status === 'object'
                                   ? order.status.name
-                                  : order.status || 'N/A'}
+                                  : order.status || t('common.na')}
                                 {order.created_on &&
                                   ` · ${new Date(order.created_on).toLocaleDateString()}`}
                               </div>
@@ -380,11 +394,11 @@ export function DealDetail() {
             <TabsContent value="activity" className="mt-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Activity Timeline</CardTitle>
+                  <CardTitle>{t('deals.activity.title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    No activity yet
+                    {t('deals.activity.empty')}
                   </p>
                 </CardContent>
               </Card>

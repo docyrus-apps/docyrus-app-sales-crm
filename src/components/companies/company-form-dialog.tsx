@@ -1,17 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
+import { useTranslation } from 'react-i18next'
 import { useForm } from '@tanstack/react-form'
 import { zodValidator } from '@tanstack/zod-form-adapter'
 import { Loader2 } from 'lucide-react'
 import type { CompanyFormData } from '@/schemas/company-schema'
 import { Button } from '@/components/ui/button'
-import {
-  ResponsiveDialog,
-  ResponsiveDialogContent,
-  ResponsiveDialogDescription,
-  ResponsiveDialogFooter,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
-} from '@/components/ui/responsive-dialog'
+import { AwesomeDialog } from '@/components/docyrus/awesome-dialog'
+import { AwesomeDialogHeader } from '@/components/docyrus/awesome-dialog/awesome-dialog-header'
+import { AwesomeDialogBody } from '@/components/docyrus/awesome-dialog/awesome-dialog-body'
+import { AwesomeDialogFooter } from '@/components/docyrus/awesome-dialog/awesome-dialog-footer'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -39,6 +36,7 @@ export function CompanyFormDialog({
   company,
   mode,
 }: CompanyFormDialogProps) {
+  const { t } = useTranslation()
   const createCompany = useCreateCompany()
   const updateCompany = useUpdateCompany()
   const { options: industryOptions = [] } = useEnumOptions('industry')
@@ -104,365 +102,401 @@ export function CompanyFormDialog({
   const isSubmitting = createCompany.isPending || updateCompany.isPending
 
   return (
-    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialogContent className="max-w-2xl">
-        <ResponsiveDialogHeader>
-          <ResponsiveDialogTitle>
-            {mode === 'create' ? 'Create New Company' : 'Edit Company'}
-          </ResponsiveDialogTitle>
-          <ResponsiveDialogDescription>
-            {mode === 'create'
-              ? 'Enter the details for the new company'
-              : 'Update the company information'}
-          </ResponsiveDialogDescription>
-        </ResponsiveDialogHeader>
+    <AwesomeDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      container="modal"
+      size="lg"
+    >
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          form.handleSubmit()
+        }}
+        className="flex flex-col flex-1 overflow-hidden"
+      >
+        <AwesomeDialogHeader
+          title={
+            mode === 'create'
+              ? t('companies.form.createTitle')
+              : t('companies.form.editTitle')
+          }
+          description={
+            mode === 'create'
+              ? t('companies.form.createDescription')
+              : t('companies.form.editDescription')
+          }
+        />
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            form.handleSubmit()
-          }}
-          className="flex flex-col flex-1 overflow-hidden"
-        >
-          <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              {/* Name Field */}
-              <form.Field name="name">
-                {(field) => (
-                  <Field className="col-span-2">
-                    <Label htmlFor={field.name}>
-                      Company Name <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id={field.name}
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      placeholder="Enter company name..."
-                    />
-                    {field.state.meta.errors?.[0] && (
-                      <p className="text-sm text-destructive">
-                        {typeof field.state.meta.errors[0] === 'string'
-                          ? field.state.meta.errors[0]
-                          : field.state.meta.errors[0]?.message ||
-                            'Validation error'}
-                      </p>
-                    )}
-                  </Field>
-                )}
-              </form.Field>
-
-              {/* Industry Field */}
-              <form.Field name="industry">
-                {(field) => (
-                  <Field>
-                    <Label htmlFor={field.name}>Industry</Label>
-                    <Select
-                      value={field.state.value}
-                      onValueChange={field.handleChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select industry..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {industryOptions.map((option: any) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {field.state.meta.errors?.[0] && (
-                      <p className="text-sm text-destructive">
-                        {typeof field.state.meta.errors[0] === 'string'
-                          ? field.state.meta.errors[0]
-                          : field.state.meta.errors[0]?.message ||
-                            'Validation error'}
-                      </p>
-                    )}
-                  </Field>
-                )}
-              </form.Field>
-
-              {/* Type Field */}
-              <form.Field name="type">
-                {(field) => (
-                  <Field>
-                    <Label htmlFor={field.name}>Type</Label>
-                    <Select
-                      value={field.state.value}
-                      onValueChange={field.handleChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {typeOptions.map((option: any) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {field.state.meta.errors?.[0] && (
-                      <p className="text-sm text-destructive">
-                        {typeof field.state.meta.errors[0] === 'string'
-                          ? field.state.meta.errors[0]
-                          : field.state.meta.errors[0]?.message ||
-                            'Validation error'}
-                      </p>
-                    )}
-                  </Field>
-                )}
-              </form.Field>
-
-              {/* Status Field */}
-              <form.Field name="status">
-                {(field) => (
-                  <Field>
-                    <Label htmlFor={field.name}>Status</Label>
-                    <Select
-                      value={field.state.value}
-                      onValueChange={field.handleChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {statusOptions.map((option: any) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {field.state.meta.errors?.[0] && (
-                      <p className="text-sm text-destructive">
-                        {typeof field.state.meta.errors[0] === 'string'
-                          ? field.state.meta.errors[0]
-                          : field.state.meta.errors[0]?.message ||
-                            'Validation error'}
-                      </p>
-                    )}
-                  </Field>
-                )}
-              </form.Field>
-
-              {/* Email Field */}
-              <form.Field name="email">
-                {(field) => (
-                  <Field>
-                    <Label htmlFor={field.name}>Email</Label>
-                    <Input
-                      id={field.name}
-                      type="email"
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      placeholder="email@example.com"
-                    />
-                    {field.state.meta.errors?.[0] && (
-                      <p className="text-sm text-destructive">
-                        {typeof field.state.meta.errors[0] === 'string'
-                          ? field.state.meta.errors[0]
-                          : field.state.meta.errors[0]?.message ||
-                            'Validation error'}
-                      </p>
-                    )}
-                  </Field>
-                )}
-              </form.Field>
-
-              {/* Phone Field */}
-              <form.Field name="phone">
-                {(field) => (
-                  <Field>
-                    <Label htmlFor={field.name}>Phone</Label>
-                    <Input
-                      id={field.name}
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      placeholder="Enter phone number..."
-                    />
-                    {field.state.meta.errors?.[0] && (
-                      <p className="text-sm text-destructive">
-                        {typeof field.state.meta.errors[0] === 'string'
-                          ? field.state.meta.errors[0]
-                          : field.state.meta.errors[0]?.message ||
-                            'Validation error'}
-                      </p>
-                    )}
-                  </Field>
-                )}
-              </form.Field>
-
-              {/* Website Field */}
-              <form.Field name="website">
-                {(field) => (
-                  <Field className="col-span-2">
-                    <Label htmlFor={field.name}>Website</Label>
-                    <Input
-                      id={field.name}
-                      type="url"
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      placeholder="https://example.com"
-                    />
-                    {field.state.meta.errors?.[0] && (
-                      <p className="text-sm text-destructive">
-                        {typeof field.state.meta.errors[0] === 'string'
-                          ? field.state.meta.errors[0]
-                          : field.state.meta.errors[0]?.message ||
-                            'Validation error'}
-                      </p>
-                    )}
-                  </Field>
-                )}
-              </form.Field>
-
-              {/* Address Field */}
-              <form.Field name="address">
-                {(field) => (
-                  <Field className="col-span-2">
-                    <Label htmlFor={field.name}>Address</Label>
-                    <Input
-                      id={field.name}
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      placeholder="Enter address..."
-                    />
-                    {field.state.meta.errors?.[0] && (
-                      <p className="text-sm text-destructive">
-                        {typeof field.state.meta.errors[0] === 'string'
-                          ? field.state.meta.errors[0]
-                          : field.state.meta.errors[0]?.message ||
-                            'Validation error'}
-                      </p>
-                    )}
-                  </Field>
-                )}
-              </form.Field>
-
-              {/* Country Field */}
-              <form.Field name="country">
-                {(field) => (
-                  <Field>
-                    <Label htmlFor={field.name}>Country</Label>
-                    <Select
-                      value={field.state.value}
-                      onValueChange={field.handleChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select country..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {countryOptions.map((option: any) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {field.state.meta.errors?.[0] && (
-                      <p className="text-sm text-destructive">
-                        {typeof field.state.meta.errors[0] === 'string'
-                          ? field.state.meta.errors[0]
-                          : field.state.meta.errors[0]?.message ||
-                            'Validation error'}
-                      </p>
-                    )}
-                  </Field>
-                )}
-              </form.Field>
-
-              {/* City Field */}
-              <form.Field name="city">
-                {(field) => (
-                  <Field>
-                    <Label htmlFor={field.name}>City</Label>
-                    <Input
-                      id={field.name}
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      placeholder="Enter city..."
-                    />
-                    {field.state.meta.errors?.[0] && (
-                      <p className="text-sm text-destructive">
-                        {typeof field.state.meta.errors[0] === 'string'
-                          ? field.state.meta.errors[0]
-                          : field.state.meta.errors[0]?.message ||
-                            'Validation error'}
-                      </p>
-                    )}
-                  </Field>
-                )}
-              </form.Field>
-
-              {/* District Field */}
-              <form.Field name="district">
-                {(field) => (
-                  <Field>
-                    <Label htmlFor={field.name}>District</Label>
-                    <Input
-                      id={field.name}
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      placeholder="Enter district..."
-                    />
-                    {field.state.meta.errors?.[0] && (
-                      <p className="text-sm text-destructive">
-                        {typeof field.state.meta.errors[0] === 'string'
-                          ? field.state.meta.errors[0]
-                          : field.state.meta.errors[0]?.message ||
-                            'Validation error'}
-                      </p>
-                    )}
-                  </Field>
-                )}
-              </form.Field>
-
-              {/* Tax Number Field */}
-              <form.Field name="tax_number">
-                {(field) => (
-                  <Field>
-                    <Label htmlFor={field.name}>Tax Number</Label>
-                    <Input
-                      id={field.name}
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      placeholder="Enter tax number..."
-                    />
-                    {field.state.meta.errors?.[0] && (
-                      <p className="text-sm text-destructive">
-                        {typeof field.state.meta.errors[0] === 'string'
-                          ? field.state.meta.errors[0]
-                          : field.state.meta.errors[0]?.message ||
-                            'Validation error'}
-                      </p>
-                    )}
-                  </Field>
-                )}
-              </form.Field>
-            </div>
-          </div>
-
-          <ResponsiveDialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        <AwesomeDialogBody className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            {/* Name Field */}
+            <form.Field name="name">
+              {(field) => (
+                <Field className="col-span-2">
+                  <Label htmlFor={field.name}>
+                    {t('companies.form.companyNameLabel')}{' '}
+                    <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id={field.name}
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder={t('companies.form.companyNamePlaceholder')}
+                  />
+                  {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          t('common.validationError')}
+                    </p>
+                  )}
+                </Field>
               )}
-              {mode === 'create' ? 'Create Company' : 'Update Company'}
-            </Button>
-          </ResponsiveDialogFooter>
-        </form>
-      </ResponsiveDialogContent>
-    </ResponsiveDialog>
+            </form.Field>
+
+            {/* Industry Field */}
+            <form.Field name="industry">
+              {(field) => (
+                <Field>
+                  <Label htmlFor={field.name}>
+                    {t('companies.form.industryLabel')}
+                  </Label>
+                  <Select
+                    value={field.state.value}
+                    onValueChange={field.handleChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={t('companies.form.industryPlaceholder')}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {industryOptions.map((option: any) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          t('common.validationError')}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
+
+            {/* Type Field */}
+            <form.Field name="type">
+              {(field) => (
+                <Field>
+                  <Label htmlFor={field.name}>
+                    {t('companies.form.typeLabel')}
+                  </Label>
+                  <Select
+                    value={field.state.value}
+                    onValueChange={field.handleChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={t('companies.form.typePlaceholder')}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {typeOptions.map((option: any) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          t('common.validationError')}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
+
+            {/* Status Field */}
+            <form.Field name="status">
+              {(field) => (
+                <Field>
+                  <Label htmlFor={field.name}>
+                    {t('companies.form.statusLabel')}
+                  </Label>
+                  <Select
+                    value={field.state.value}
+                    onValueChange={field.handleChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={t('companies.form.statusPlaceholder')}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statusOptions.map((option: any) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          t('common.validationError')}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
+
+            {/* Email Field */}
+            <form.Field name="email">
+              {(field) => (
+                <Field>
+                  <Label htmlFor={field.name}>
+                    {t('companies.form.emailLabel')}
+                  </Label>
+                  <Input
+                    id={field.name}
+                    type="email"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder={t('companies.form.emailPlaceholder')}
+                  />
+                  {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          t('common.validationError')}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
+
+            {/* Phone Field */}
+            <form.Field name="phone">
+              {(field) => (
+                <Field>
+                  <Label htmlFor={field.name}>
+                    {t('companies.form.phoneLabel')}
+                  </Label>
+                  <Input
+                    id={field.name}
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder={t('companies.form.phonePlaceholder')}
+                  />
+                  {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          t('common.validationError')}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
+
+            {/* Website Field */}
+            <form.Field name="website">
+              {(field) => (
+                <Field className="col-span-2">
+                  <Label htmlFor={field.name}>
+                    {t('companies.form.websiteLabel')}
+                  </Label>
+                  <Input
+                    id={field.name}
+                    type="url"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder={t('companies.form.websitePlaceholder')}
+                  />
+                  {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          t('common.validationError')}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
+
+            {/* Address Field */}
+            <form.Field name="address">
+              {(field) => (
+                <Field className="col-span-2">
+                  <Label htmlFor={field.name}>
+                    {t('companies.form.addressLabel')}
+                  </Label>
+                  <Input
+                    id={field.name}
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder={t('companies.form.addressPlaceholder')}
+                  />
+                  {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          t('common.validationError')}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
+
+            {/* Country Field */}
+            <form.Field name="country">
+              {(field) => (
+                <Field>
+                  <Label htmlFor={field.name}>
+                    {t('companies.form.countryLabel')}
+                  </Label>
+                  <Select
+                    value={field.state.value}
+                    onValueChange={field.handleChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={t('companies.form.countryPlaceholder')}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {countryOptions.map((option: any) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          t('common.validationError')}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
+
+            {/* City Field */}
+            <form.Field name="city">
+              {(field) => (
+                <Field>
+                  <Label htmlFor={field.name}>
+                    {t('companies.form.cityLabel')}
+                  </Label>
+                  <Input
+                    id={field.name}
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder={t('companies.form.cityPlaceholder')}
+                  />
+                  {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          t('common.validationError')}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
+
+            {/* District Field */}
+            <form.Field name="district">
+              {(field) => (
+                <Field>
+                  <Label htmlFor={field.name}>
+                    {t('companies.form.districtLabel')}
+                  </Label>
+                  <Input
+                    id={field.name}
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder={t('companies.form.districtPlaceholder')}
+                  />
+                  {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          t('common.validationError')}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
+
+            {/* Tax Number Field */}
+            <form.Field name="tax_number">
+              {(field) => (
+                <Field>
+                  <Label htmlFor={field.name}>
+                    {t('companies.form.taxNumberLabel')}
+                  </Label>
+                  <Input
+                    id={field.name}
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder={t('companies.form.taxNumberPlaceholder')}
+                  />
+                  {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          t('common.validationError')}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
+          </div>
+        </AwesomeDialogBody>
+
+        <AwesomeDialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+          >
+            {t('common.cancel')}
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {mode === 'create'
+              ? t('companies.form.createButton')
+              : t('companies.form.updateButton')}
+          </Button>
+        </AwesomeDialogFooter>
+      </form>
+    </AwesomeDialog>
   )
 }

@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Eye, FileText, MoreHorizontal, Trash } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import type { ColumnDef } from '@tanstack/react-table'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
@@ -21,6 +22,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card'
 
 export function SalesOrders() {
+  const { t } = useTranslation()
   const { data: orders, isLoading } = useSalesOrders()
   const deleteOrder = useDeleteSalesOrder()
 
@@ -29,7 +31,10 @@ export function SalesOrders() {
       {
         accessorKey: 'id',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Order #" />
+          <DataTableColumnHeader
+            column={column}
+            label={t('salesOrders.columns.orderNumber')}
+          />
         ),
         cell: ({ row }) => {
           const id = row.getValue('id')
@@ -48,7 +53,10 @@ export function SalesOrders() {
       {
         accessorKey: 'organization',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Organization" />
+          <DataTableColumnHeader
+            column={column}
+            label={t('salesOrders.columns.organization')}
+          />
         ),
         cell: ({ row }) => {
           const org = row.getValue('organization')
@@ -63,7 +71,10 @@ export function SalesOrders() {
       {
         accessorKey: 'status',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Status" />
+          <DataTableColumnHeader
+            column={column}
+            label={t('salesOrders.columns.status')}
+          />
         ),
         cell: ({ row }) => {
           const status = row.getValue('status')
@@ -80,7 +91,10 @@ export function SalesOrders() {
       {
         accessorKey: 'sub_total',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Subtotal" />
+          <DataTableColumnHeader
+            column={column}
+            label={t('salesOrders.columns.subtotal')}
+          />
         ),
         cell: ({ row }) => {
           const amount = row.getValue('sub_total')
@@ -91,7 +105,10 @@ export function SalesOrders() {
       {
         accessorKey: 'tax_total',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Tax" />
+          <DataTableColumnHeader
+            column={column}
+            label={t('salesOrders.columns.tax')}
+          />
         ),
         cell: ({ row }) => {
           const amount = row.getValue('tax_total')
@@ -102,7 +119,10 @@ export function SalesOrders() {
       {
         accessorKey: 'grand_total',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Grand Total" />
+          <DataTableColumnHeader
+            column={column}
+            label={t('salesOrders.columns.grandTotal')}
+          />
         ),
         cell: ({ row }) => {
           const amount = row.getValue('grand_total')
@@ -117,7 +137,10 @@ export function SalesOrders() {
       {
         accessorKey: 'created_on',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Created" />
+          <DataTableColumnHeader
+            column={column}
+            label={t('salesOrders.columns.created')}
+          />
         ),
         cell: ({ row }) => {
           const date = row.getValue('created_on')
@@ -143,35 +166,31 @@ export function SalesOrders() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
+                  <span className="sr-only">{t('common.openMenu')}</span>
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('common.actions')}</DropdownMenuLabel>
                 <DropdownMenuItem asChild>
                   <Link
                     to="/sales-orders/$orderId"
                     params={{ orderId: order.id }}
                   >
                     <Eye className="mr-2 h-4 w-4" />
-                    View Details
+                    {t('common.viewDetails')}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-destructive"
                   onClick={() => {
-                    if (
-                      confirm(
-                        'Are you sure you want to delete this sales order?',
-                      )
-                    ) {
+                    if (confirm(t('salesOrders.confirmDelete'))) {
                       deleteOrder.mutate(order.id)
                     }
                   }}
                 >
                   <Trash className="mr-2 h-4 w-4" />
-                  Delete
+                  {t('common.delete')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -179,7 +198,7 @@ export function SalesOrders() {
         },
       },
     ],
-    [deleteOrder],
+    [deleteOrder, t],
   )
 
   const { table } = useDataTable({
@@ -190,7 +209,7 @@ export function SalesOrders() {
 
   return (
     <>
-      <PageHeader title="Sales Orders" />
+      <PageHeader title={t('salesOrders.title')} />
       <PageContainer>
         {isLoading && <DataTableSkeleton columnCount={8} rowCount={10} />}
 
@@ -198,9 +217,11 @@ export function SalesOrders() {
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-lg font-medium">No sales orders yet</p>
+              <p className="text-lg font-medium">
+                {t('salesOrders.emptyTitle')}
+              </p>
               <p className="text-sm text-muted-foreground mt-2">
-                Sales orders will appear here
+                {t('salesOrders.emptyDescription')}
               </p>
             </CardContent>
           </Card>

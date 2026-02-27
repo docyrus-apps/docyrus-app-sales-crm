@@ -1,4 +1,4 @@
-import * as React from 'react';
+import * as React from 'react'
 
 import {
   Tabs as TabsPrimitive,
@@ -13,10 +13,10 @@ import {
   type TabsTriggerProps as TabsTriggerPrimitiveProps,
   type TabsContentProps as TabsContentPrimitiveProps,
   type TabsContentsProps as TabsContentsPrimitiveProps,
-} from '@/components/animate-ui/primitives/radix/tabs';
-import { cn } from '@/lib/utils';
+} from '@/components/animate-ui/primitives/radix/tabs'
+import { cn } from '@/lib/utils'
 
-type TabsProps = TabsPrimitiveProps;
+type TabsProps = TabsPrimitiveProps
 
 function Tabs({ className, ...props }: TabsProps) {
   return (
@@ -24,10 +24,10 @@ function Tabs({ className, ...props }: TabsProps) {
       className={cn('flex flex-col gap-2', className)}
       {...props}
     />
-  );
+  )
 }
 
-type TabsListProps = TabsListPrimitiveProps;
+type TabsListProps = TabsListPrimitiveProps
 
 function TabsList({ className, ...props }: TabsListProps) {
   return (
@@ -40,10 +40,10 @@ function TabsList({ className, ...props }: TabsListProps) {
         {...props}
       />
     </TabsHighlightPrimitive>
-  );
+  )
 }
 
-type TabsTriggerProps = TabsTriggerPrimitiveProps;
+type TabsTriggerProps = TabsTriggerPrimitiveProps
 
 function TabsTrigger({ className, ...props }: TabsTriggerProps) {
   return (
@@ -56,16 +56,16 @@ function TabsTrigger({ className, ...props }: TabsTriggerProps) {
         {...props}
       />
     </TabsHighlightItemPrimitive>
-  );
+  )
 }
 
-type TabsContentsProps = TabsContentsPrimitiveProps;
+type TabsContentsProps = TabsContentsPrimitiveProps
 
 function TabsContents(props: TabsContentsProps) {
-  return <TabsContentsPrimitive {...props} />;
+  return <TabsContentsPrimitive {...props} />
 }
 
-type TabsContentProps = TabsContentPrimitiveProps;
+type TabsContentProps = TabsContentPrimitiveProps
 
 function TabsContent({ className, ...props }: TabsContentProps) {
   return (
@@ -73,7 +73,7 @@ function TabsContent({ className, ...props }: TabsContentProps) {
       className={cn('flex-1 outline-none', className)}
       {...props}
     />
-  );
+  )
 }
 
 export {
@@ -87,4 +87,4 @@ export {
   type TabsTriggerProps,
   type TabsContentsProps,
   type TabsContentProps,
-};
+}

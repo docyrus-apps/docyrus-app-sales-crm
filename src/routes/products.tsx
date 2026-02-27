@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { MoreHorizontal, Package, Pencil, Plus, Trash } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { PageContainer } from '@/components/layout/page-container'
@@ -20,6 +21,7 @@ import { ProductFormDialog } from '@/components/products/product-form-dialog'
 import { Card, CardContent } from '@/components/ui/card'
 
 export function Products() {
+  const { t } = useTranslation()
   const { data: products, isLoading } = useProducts()
   const deleteProduct = useDeleteProduct()
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -30,7 +32,10 @@ export function Products() {
       {
         accessorKey: 'product_code',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Product Code" />
+          <DataTableColumnHeader
+            column={column}
+            label={t('products.columns.productCode')}
+          />
         ),
         cell: ({ row }) => (
           <div className="font-medium">{row.getValue('product_code')}</div>
@@ -40,7 +45,10 @@ export function Products() {
       {
         accessorKey: 'id',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Name" />
+          <DataTableColumnHeader
+            column={column}
+            label={t('products.columns.name')}
+          />
         ),
         cell: ({ row }) => {
           const id = row.getValue('id')
@@ -51,7 +59,10 @@ export function Products() {
       {
         accessorKey: 'category',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Category" />
+          <DataTableColumnHeader
+            column={column}
+            label={t('products.columns.category')}
+          />
         ),
         cell: ({ row }) => {
           const category = row.getValue('category')
@@ -68,7 +79,10 @@ export function Products() {
       {
         accessorKey: 'Unit',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Unit" />
+          <DataTableColumnHeader
+            column={column}
+            label={t('products.columns.unit')}
+          />
         ),
         cell: ({ row }) => {
           const unit = row.getValue('Unit')
@@ -83,7 +97,10 @@ export function Products() {
       {
         accessorKey: 'unit_price',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Unit Price" />
+          <DataTableColumnHeader
+            column={column}
+            label={t('products.columns.unitPrice')}
+          />
         ),
         cell: ({ row }) => {
           const price = row.getValue('unit_price')
@@ -98,7 +115,10 @@ export function Products() {
       {
         accessorKey: 'tax',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Tax" />
+          <DataTableColumnHeader
+            column={column}
+            label={t('products.columns.tax')}
+          />
         ),
         cell: ({ row }) => {
           const tax = row.getValue('tax')
@@ -114,12 +134,12 @@ export function Products() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
+                  <span className="sr-only">{t('common.openMenu')}</span>
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('common.actions')}</DropdownMenuLabel>
                 <DropdownMenuItem
                   onClick={() => {
                     setEditingProduct(product)
@@ -127,20 +147,18 @@ export function Products() {
                   }}
                 >
                   <Pencil className="mr-2 h-4 w-4" />
-                  Edit
+                  {t('common.edit')}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-destructive"
                   onClick={() => {
-                    if (
-                      confirm('Are you sure you want to delete this product?')
-                    ) {
+                    if (confirm(t('products.confirmDelete'))) {
                       deleteProduct.mutate(product.id)
                     }
                   }}
                 >
                   <Trash className="mr-2 h-4 w-4" />
-                  Delete
+                  {t('common.delete')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -148,7 +166,7 @@ export function Products() {
         },
       },
     ],
-    [deleteProduct],
+    [deleteProduct, t],
   )
 
   const { table } = useDataTable({
@@ -160,7 +178,7 @@ export function Products() {
   return (
     <>
       <PageHeader
-        title="Products"
+        title={t('products.title')}
         actions={
           <Button
             onClick={() => {
@@ -169,7 +187,7 @@ export function Products() {
             }}
           >
             <Plus className="mr-2 h-4 w-4" />
-            New Product
+            {t('products.newProduct')}
           </Button>
         }
       />
@@ -190,9 +208,9 @@ export function Products() {
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Package className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-lg font-medium">No products yet</p>
+              <p className="text-lg font-medium">{t('products.emptyTitle')}</p>
               <p className="text-sm text-muted-foreground mt-2">
-                Add your first product to the catalog
+                {t('products.emptyDescription')}
               </p>
               <Button
                 className="mt-4"
@@ -202,7 +220,7 @@ export function Products() {
                 }}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                Create Product
+                {t('products.createProduct')}
               </Button>
             </CardContent>
           </Card>

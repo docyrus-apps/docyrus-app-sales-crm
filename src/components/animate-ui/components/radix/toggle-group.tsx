@@ -1,5 +1,5 @@
-import * as React from 'react';
-import { type VariantProps } from 'class-variance-authority';
+import * as React from 'react'
+import { type VariantProps } from 'class-variance-authority'
 
 import {
   ToggleGroup as ToggleGroupPrimitive,
@@ -9,16 +9,16 @@ import {
   useToggleGroup as useToggleGroupPrimitive,
   type ToggleGroupProps as ToggleGroupPrimitiveProps,
   type ToggleGroupItemProps as ToggleGroupItemPrimitiveProps,
-} from '@/components/animate-ui/primitives/radix/toggle-group';
-import { toggleVariants } from '@/components/animate-ui/components/radix/toggle';
-import { cn } from '@/lib/utils';
-import { getStrictContext } from '@/lib/get-strict-context';
+} from '@/components/animate-ui/primitives/radix/toggle-group'
+import { toggleVariants } from '@/components/animate-ui/components/radix/toggle'
+import { cn } from '@/lib/utils'
+import { getStrictContext } from '@/lib/get-strict-context'
 
 const [ToggleGroupProvider, useToggleGroup] =
-  getStrictContext<VariantProps<typeof toggleVariants>>('ToggleGroupContext');
+  getStrictContext<VariantProps<typeof toggleVariants>>('ToggleGroupContext')
 
 type ToggleGroupProps = ToggleGroupPrimitiveProps &
-  VariantProps<typeof toggleVariants>;
+  VariantProps<typeof toggleVariants>
 
 function ToggleGroup({
   className,
@@ -47,11 +47,11 @@ function ToggleGroup({
         )}
       </ToggleGroupProvider>
     </ToggleGroupPrimitive>
-  );
+  )
 }
 
 type ToggleGroupItemProps = ToggleGroupItemPrimitiveProps &
-  VariantProps<typeof toggleVariants>;
+  VariantProps<typeof toggleVariants>
 
 function ToggleGroupItem({
   className,
@@ -60,8 +60,8 @@ function ToggleGroupItem({
   size,
   ...props
 }: ToggleGroupItemProps) {
-  const { variant: contextVariant, size: contextSize } = useToggleGroup();
-  const { type } = useToggleGroupPrimitive();
+  const { variant: contextVariant, size: contextSize } = useToggleGroup()
+  const { type } = useToggleGroupPrimitive()
 
   return (
     <ToggleGroupHighlightItemPrimitive
@@ -84,7 +84,7 @@ function ToggleGroupItem({
         {children}
       </ToggleGroupItemPrimitive>
     </ToggleGroupHighlightItemPrimitive>
-  );
+  )
 }
 
 export {
@@ -92,4 +92,4 @@ export {
   ToggleGroupItem,
   type ToggleGroupProps,
   type ToggleGroupItemProps,
-};
+}

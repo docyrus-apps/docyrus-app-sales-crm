@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { Plus } from 'lucide-react'
 import type { ViewType } from '@/components/view-switcher'
 import { PageContainer } from '@/components/layout/page-container'
@@ -17,6 +18,7 @@ import { getDealsColumns } from '@/components/deals/deals-columns'
 import { DealsKanbanView } from '@/components/deals/deals-kanban-view'
 
 export function Deals() {
+  const { t } = useTranslation()
   const { data: deals, isLoading, error } = useDeals()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [viewType, setViewType] = useState<ViewType>('list')
@@ -31,13 +33,13 @@ export function Deals() {
   return (
     <>
       <PageHeader
-        title="Deals"
+        title={t('deals.title')}
         actions={
           <>
             <ViewSwitcher value={viewType} onValueChange={setViewType} />
             <Button onClick={() => setIsFormOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              New Deal
+              {t('deals.newDeal')}
             </Button>
           </>
         }
@@ -75,7 +77,7 @@ export function Deals() {
           <Card className="border-destructive">
             <CardHeader>
               <CardTitle className="text-destructive">
-                Error loading deals
+                {t('deals.errorLoading')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -87,13 +89,13 @@ export function Deals() {
         {deals && deals.length === 0 && (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-lg font-medium">No deals yet</p>
+              <p className="text-lg font-medium">{t('deals.emptyTitle')}</p>
               <p className="text-sm text-muted-foreground mt-2">
-                Create your first deal to get started
+                {t('deals.emptyDescription')}
               </p>
               <Button className="mt-4" onClick={() => setIsFormOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
-                Create Deal
+                {t('deals.createDeal')}
               </Button>
             </CardContent>
           </Card>
@@ -116,7 +118,7 @@ export function Deals() {
                   <CardContent>
                     {deal.stage && (
                       <p className="text-sm text-muted-foreground">
-                        Stage:{' '}
+                        {t('deals.stage')}:{' '}
                         {typeof deal.stage === 'object'
                           ? deal.stage.name
                           : deal.stage}

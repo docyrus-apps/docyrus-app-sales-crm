@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useForm } from '@tanstack/react-form'
 import { zodValidator } from '@tanstack/zod-form-adapter'
 import { CalendarIcon, Loader2 } from 'lucide-react'
@@ -7,13 +8,11 @@ import { format } from 'date-fns'
 import type { EventFormData } from '@/schemas/event-schema'
 import { Button } from '@/components/ui/button'
 import {
-  ResponsiveDialog,
-  ResponsiveDialogContent,
-  ResponsiveDialogDescription,
-  ResponsiveDialogFooter,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
-} from '@/components/ui/responsive-dialog'
+  AwesomeDialog,
+  AwesomeDialogBody,
+  AwesomeDialogFooter,
+  AwesomeDialogHeader,
+} from '@/components/docyrus/awesome-dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -40,6 +39,7 @@ export function EventFormDialog({
   event,
   mode,
 }: EventFormDialogProps) {
+  const { t } = useTranslation()
   const createEvent = useCreateEvent()
   const updateEvent = useUpdateEvent()
 
@@ -105,48 +105,56 @@ export function EventFormDialog({
   const isSubmitting = form.state.isSubmitting
 
   return (
-    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialogContent className="max-w-2xl">
-        <ResponsiveDialogHeader>
-          <ResponsiveDialogTitle>
-            {mode === 'create' ? 'Create Event' : 'Edit Event'}
-          </ResponsiveDialogTitle>
-          <ResponsiveDialogDescription>
-            {mode === 'create'
-              ? 'Add a new event to your calendar'
-              : 'Update event details'}
-          </ResponsiveDialogDescription>
-        </ResponsiveDialogHeader>
+    <AwesomeDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      container="modal"
+      size="lg"
+    >
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          form.handleSubmit()
+        }}
+        className="flex flex-col flex-1 overflow-hidden"
+      >
+        <AwesomeDialogHeader
+          title={
+            mode === 'create'
+              ? t('events.form.createTitle')
+              : t('events.form.editTitle')
+          }
+          description={
+            mode === 'create'
+              ? t('events.form.createDescription')
+              : t('events.form.editDescription')
+          }
+        />
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            form.handleSubmit()
-          }}
-          className="flex flex-col flex-1 overflow-hidden"
-        >
-          <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4">
+        <AwesomeDialogBody>
+          <div className="space-y-4">
             {/* Subject */}
             <form.Field name="subject">
               {(field) => (
                 <div className="space-y-2">
                   <Label htmlFor="subject">
-                    Subject <span className="text-red-500">*</span>
+                    {t('events.form.subjectLabel')}{' '}
+                    <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="subject"
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
-                    placeholder="Enter event subject"
+                    placeholder={t('events.form.subjectPlaceholder')}
                   />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-red-500">
                       {typeof field.state.meta.errors[0] === 'string'
                         ? field.state.meta.errors[0]
                         : field.state.meta.errors[0]?.message ||
-                          'Validation error'}
+                          t('common.validationError')}
                     </p>
                   )}
                 </div>
@@ -157,13 +165,15 @@ export function EventFormDialog({
             <form.Field name="description">
               {(field) => (
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
+                  <Label htmlFor="description">
+                    {t('events.form.descriptionLabel')}
+                  </Label>
                   <Textarea
                     id="description"
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
-                    placeholder="Enter event description"
+                    placeholder={t('events.form.descriptionPlaceholder')}
                     rows={3}
                   />
                   {field.state.meta.errors?.[0] && (
@@ -171,7 +181,7 @@ export function EventFormDialog({
                       {typeof field.state.meta.errors[0] === 'string'
                         ? field.state.meta.errors[0]
                         : field.state.meta.errors[0]?.message ||
-                          'Validation error'}
+                          t('common.validationError')}
                     </p>
                   )}
                 </div>
@@ -183,7 +193,7 @@ export function EventFormDialog({
               <form.Field name="start_date">
                 {(field) => (
                   <div className="space-y-2">
-                    <Label>Start Date & Time</Label>
+                    <Label>{t('events.form.startDateTimeLabel')}</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
@@ -197,7 +207,7 @@ export function EventFormDialog({
                           {startDate ? (
                             format(startDate, 'PPP p')
                           ) : (
-                            <span>Pick a date</span>
+                            <span>{t('common.pickADate')}</span>
                           )}
                         </Button>
                       </PopoverTrigger>
@@ -210,7 +220,7 @@ export function EventFormDialog({
                         />
                         <div className="p-3 border-t">
                           <Label htmlFor="start-time" className="text-xs">
-                            Time
+                            {t('common.time')}
                           </Label>
                           <Input
                             id="start-time"
@@ -237,7 +247,7 @@ export function EventFormDialog({
                         {typeof field.state.meta.errors[0] === 'string'
                           ? field.state.meta.errors[0]
                           : field.state.meta.errors[0]?.message ||
-                            'Validation error'}
+                            t('common.validationError')}
                       </p>
                     )}
                   </div>
@@ -248,7 +258,7 @@ export function EventFormDialog({
               <form.Field name="end_date">
                 {(field) => (
                   <div className="space-y-2">
-                    <Label>End Date & Time</Label>
+                    <Label>{t('events.form.endDateTimeLabel')}</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
@@ -262,7 +272,7 @@ export function EventFormDialog({
                           {endDate ? (
                             format(endDate, 'PPP p')
                           ) : (
-                            <span>Pick a date</span>
+                            <span>{t('common.pickADate')}</span>
                           )}
                         </Button>
                       </PopoverTrigger>
@@ -275,7 +285,7 @@ export function EventFormDialog({
                         />
                         <div className="p-3 border-t">
                           <Label htmlFor="end-time" className="text-xs">
-                            Time
+                            {t('common.time')}
                           </Label>
                           <Input
                             id="end-time"
@@ -300,7 +310,7 @@ export function EventFormDialog({
                         {typeof field.state.meta.errors[0] === 'string'
                           ? field.state.meta.errors[0]
                           : field.state.meta.errors[0]?.message ||
-                            'Validation error'}
+                            t('common.validationError')}
                       </p>
                     )}
                   </div>
@@ -312,20 +322,22 @@ export function EventFormDialog({
             <form.Field name="calendar">
               {(field) => (
                 <div className="space-y-2">
-                  <Label htmlFor="calendar">Calendar</Label>
+                  <Label htmlFor="calendar">
+                    {t('events.form.calendarLabel')}
+                  </Label>
                   <Input
                     id="calendar"
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
-                    placeholder="e.g., Work, Personal"
+                    placeholder={t('events.form.calendarPlaceholder')}
                   />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-red-500">
                       {typeof field.state.meta.errors[0] === 'string'
                         ? field.state.meta.errors[0]
                         : field.state.meta.errors[0]?.message ||
-                          'Validation error'}
+                          t('common.validationError')}
                     </p>
                   )}
                 </div>
@@ -336,13 +348,15 @@ export function EventFormDialog({
             <form.Field name="event_notes">
               {(field) => (
                 <div className="space-y-2">
-                  <Label htmlFor="event_notes">Event Notes</Label>
+                  <Label htmlFor="event_notes">
+                    {t('events.form.eventNotesLabel')}
+                  </Label>
                   <Textarea
                     id="event_notes"
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
-                    placeholder="Additional notes about the event"
+                    placeholder={t('events.form.eventNotesPlaceholder')}
                     rows={2}
                   />
                   {field.state.meta.errors?.[0] && (
@@ -350,32 +364,32 @@ export function EventFormDialog({
                       {typeof field.state.meta.errors[0] === 'string'
                         ? field.state.meta.errors[0]
                         : field.state.meta.errors[0]?.message ||
-                          'Validation error'}
+                          t('common.validationError')}
                     </p>
                   )}
                 </div>
               )}
             </form.Field>
           </div>
+        </AwesomeDialogBody>
 
-          <ResponsiveDialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              {mode === 'create' ? 'Create Event' : 'Update Event'}
-            </Button>
-          </ResponsiveDialogFooter>
-        </form>
-      </ResponsiveDialogContent>
-    </ResponsiveDialog>
+        <AwesomeDialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+          >
+            {t('common.cancel')}
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {mode === 'create'
+              ? t('events.form.createButton')
+              : t('events.form.updateButton')}
+          </Button>
+        </AwesomeDialogFooter>
+      </form>
+    </AwesomeDialog>
   )
 }
