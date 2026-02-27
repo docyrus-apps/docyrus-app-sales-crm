@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Camera, Loader2, Save } from 'lucide-react'
 
 import { toast } from 'sonner'
-import { UsersCollection } from '@/collections/users.collection'
+import { useUsersCollection } from '@/collections/users.collection'
 import { apiClient } from '@/lib/api'
 import { Button } from '@/components/animate-ui/components/buttons/button'
 import { Input } from '@/components/ui/input'
@@ -159,7 +159,7 @@ function profileReducer(
 
 export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
   const { t } = useTranslation()
-  const { getMyInfo, updateMe } = UsersCollection
+  const { getMyInfo, updateMe } = useUsersCollection()
   const [state, dispatch] = useReducer(profileReducer, initialState)
   const fileInputRef = useRef<HTMLInputElement>(null)
 

@@ -1,13 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { ICollectionListParams } from '@/collections/types'
-import { base_crmProductCollection } from '@/collections'
+import { useBaseCrmProductCollection } from '@/collections'
 
 export function useProducts(params?: ICollectionListParams) {
+  const productCollection = useBaseCrmProductCollection()
+
   return useQuery({
     queryKey: ['products', params],
     queryFn: async () => {
-      const response = await base_crmProductCollection.list({
+      const response = await productCollection.list({
         ...params,
         columns: params?.columns || [
           'id',
@@ -25,11 +27,13 @@ export function useProducts(params?: ICollectionListParams) {
 }
 
 export function useProduct(productId: string | undefined) {
+  const productCollection = useBaseCrmProductCollection()
+
   return useQuery({
     queryKey: ['products', productId],
     queryFn: async () => {
       if (!productId) throw new Error('Product ID is required')
-      return await base_crmProductCollection.get(productId, {
+      return await productCollection.get(productId, {
         columns: [
           'id',
           'product_code',
@@ -46,10 +50,10 @@ export function useProduct(productId: string | undefined) {
 }
 
 export function useCreateProduct() {
+  const productCollection = useBaseCrmProductCollection()
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: any) =>
-      await base_crmProductCollection.create(data),
+    mutationFn: async (data: any) => await productCollection.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] })
       toast.success('Product created successfully')
@@ -60,11 +64,12 @@ export function useCreateProduct() {
 }
 
 export function useUpdateProduct() {
+  const productCollection = useBaseCrmProductCollection()
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ productId, data }: { productId: string; data: any }) =>
-      await base_crmProductCollection.update(productId, data),
-    onSuccess: (data, variables) => {
+      await productCollection.update(productId, data),
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['products'] })
       queryClient.invalidateQueries({
         queryKey: ['products', variables.productId],
@@ -77,10 +82,11 @@ export function useUpdateProduct() {
 }
 
 export function useDeleteProduct() {
+  const productCollection = useBaseCrmProductCollection()
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (productId: string) =>
-      await base_crmProductCollection.delete(productId),
+      await productCollection.delete(productId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] })
       toast.success('Product deleted successfully')

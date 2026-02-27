@@ -1,154 +1,185 @@
 // Generated collection for base/thread
-import { useDocyrusClient } from '@docyrus/signin';
-import type { QueryParamValue } from '@docyrus/api-client';
-import type { ICollectionListParams } from './types';
+import { useDocyrusClient } from '@docyrus/signin'
+import type { QueryParamValue } from '@docyrus/api-client'
+import type { ICollectionListParams } from './types'
 
 export interface BaseThreadEntity {
-
   /** ID */
-  id?: string;
+  id?: string
 
   /** Record owner */
-  record_owner?: string;
+  record_owner?: string
 
   /** Created On */
-  created_on?: string;
+  created_on?: string
 
   /** Created By */
-  created_by?: string;
+  created_by?: string
 
   /** Last Modified On */
-  last_modified_on?: string;
+  last_modified_on?: string
 
   /** Last Modified By */
-  last_modified_by?: string;
+  last_modified_by?: string
 
   /** Subject */
-  subject?: string;
+  subject?: string
 
   /** Closed On */
-  closed_on?: string;
+  closed_on?: string
 
   /** Parent Record ID */
-  parent_record_id?: { id: string; name: string } | string;
+  parent_record_id?: { id: string; name: string } | string
 
   /** Follow Up On */
-  follow_up_on?: string;
+  follow_up_on?: string
 
   /** Case Type */
-  case_type?: { id: string; name: string } | any;
+  case_type?: { id: string; name: string } | any
 
   /** Sender CC */
-  sender_cc?: string;
+  sender_cc?: string
 
   /** Followers */
-  followers?: { id: string; name: string } | Array<string>;
+  followers?: { id: string; name: string } | Array<string>
 
   /** Sender Company */
-  sender_company?: string;
+  sender_company?: string
 
   /** Body */
-  body?: string;
+  body?: string
 
   /** Contact */
-  contact?: { id: string; name: string } | string;
+  contact?: { id: string; name: string } | string
 
   /** Sender E-Mail */
-  sender_email?: string;
+  sender_email?: string
 
   /** Data Source ID */
-  tenant_data_source_id?: { id: string; name: string } | string;
+  tenant_data_source_id?: { id: string; name: string } | string
 
   /** AI Agent */
-  tenant_ai_agent_id?: { id: string; name: string } | string;
+  tenant_ai_agent_id?: { id: string; name: string } | string
 
   /** Reminder Message */
-  reminder_message?: string;
+  reminder_message?: string
 
   /** Starred */
-  starred?: boolean;
+  starred?: boolean
 
   /** Sender BCC */
-  sender_bcc?: string;
+  sender_bcc?: string
 
   /** Notify On */
-  notify_on?: string;
+  notify_on?: string
 
   /** Body Text */
-  body_text?: string;
+  body_text?: string
 
   /** Organization */
-  organization?: { id: string; name: string } | string;
+  organization?: { id: string; name: string } | string
 
   /** Priority */
-  priority?: { id: string; name: string } | any;
+  priority?: { id: string; name: string } | any
 
   /** Case Status */
-  case_status?: { id: string; name: string } | any;
+  case_status?: { id: string; name: string } | any
 
   /** Category */
-  category?: { id: string; name: string } | string;
+  category?: { id: string; name: string } | string
 
   /** Product */
-  product?: { id: string; name: string } | string;
+  product?: { id: string; name: string } | string
 
   /** Message ID */
-  message_id?: string;
+  message_id?: string
 
   /** Send To Email */
-  send_to_email?: string;
+  send_to_email?: string
 
   /** Sender Name */
-  sender_name?: string;
+  sender_name?: string
 
   /** AI Agent Deployment */
-  tenant_ai_agent_deployment_id?: { id: string; name: string } | string;
+  tenant_ai_agent_deployment_id?: { id: string; name: string } | string
 
   /** Thread Mode */
-  thread_mode?: string;
+  thread_mode?: string
 
   /** Instructions */
-  instructions?: any;
+  instructions?: any
 
   /** View ID */
-  tenant_view_id?: { id: string; name: string } | string;
+  tenant_view_id?: { id: string; name: string } | string
 
   /** AI Project */
-  tenant_ai_project_id?: string;
+  tenant_ai_project_id?: string
 
   /** Thread Type */
-  thread_type?: string;
+  thread_type?: string
 
   /** Archived */
-  archived?: boolean;
+  archived?: boolean
 
   /** Sender Phone */
-  sender_phone?: string;
+  sender_phone?: string
 
   /** Incoming Channel */
-  incoming_channel?: { id: string; name: string } | any;
+  incoming_channel?: { id: string; name: string } | any
 }
 
 export function useBaseThreadCollection() {
-  const client = useDocyrusClient();
+  const client = useDocyrusClient()
 
   return {
     /** List records with optional filtering, sorting, and pagination. */
-    list: (params?: ICollectionListParams): Promise<Array<BaseThreadEntity>> => client!.get('/v1/apps/base/data-sources/thread/items', params as Record<string, QueryParamValue> | undefined),
+    list: (params?: ICollectionListParams): Promise<Array<BaseThreadEntity>> =>
+      client!.get(
+        '/v1/apps/base/data-sources/thread/items',
+        params as Record<string, QueryParamValue> | undefined,
+      ),
 
     /** Get record */
-    get: (recordId: string, params?: { columns?: Array<string> }): Promise<BaseThreadEntity> => client!.get('/v1/apps/base/data-sources/thread/items/{recordId}'.replace('{recordId}', recordId), params),
+    get: (
+      recordId: string,
+      params?: { columns?: Array<string> },
+    ): Promise<BaseThreadEntity> =>
+      client!.get(
+        '/v1/apps/base/data-sources/thread/items/{recordId}'.replace(
+          '{recordId}',
+          recordId,
+        ),
+        params,
+      ),
 
     /** Create record */
-    create: (data: Record<string, any>): Promise<BaseThreadEntity> => client!.post('/v1/apps/base/data-sources/thread/items', data),
+    create: (data: Record<string, any>): Promise<BaseThreadEntity> =>
+      client!.post('/v1/apps/base/data-sources/thread/items', data),
 
     /** Update record */
-    update: (recordId: string, data: Record<string, any>): Promise<BaseThreadEntity> => client!.patch('/v1/apps/base/data-sources/thread/items/{recordId}'.replace('{recordId}', recordId), data),
+    update: (
+      recordId: string,
+      data: Record<string, any>,
+    ): Promise<BaseThreadEntity> =>
+      client!.patch(
+        '/v1/apps/base/data-sources/thread/items/{recordId}'.replace(
+          '{recordId}',
+          recordId,
+        ),
+        data,
+      ),
 
     /** Delete record */
-    delete: (recordId: string): Promise<void> => client!.delete('/v1/apps/base/data-sources/thread/items/{recordId}'.replace('{recordId}', recordId)),
+    delete: (recordId: string): Promise<void> =>
+      client!.delete(
+        '/v1/apps/base/data-sources/thread/items/{recordId}'.replace(
+          '{recordId}',
+          recordId,
+        ),
+      ),
 
     /** Delete many records */
-    deleteMany: (data: { recordIds: Array<string> }): Promise<void> => client!.delete('/v1/apps/base/data-sources/thread/items', data)
-  };
+    deleteMany: (data: { recordIds: Array<string> }): Promise<void> =>
+      client!.delete('/v1/apps/base/data-sources/thread/items', data),
+  }
 }

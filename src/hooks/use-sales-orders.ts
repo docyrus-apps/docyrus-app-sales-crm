@@ -1,13 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { ICollectionListParams } from '@/collections/types'
-import { base_crmSalesOrderCollection } from '@/collections'
+import { useBaseCrmSalesOrderCollection } from '@/collections'
 
 export function useSalesOrders(params?: ICollectionListParams) {
+  const salesOrderCollection = useBaseCrmSalesOrderCollection()
+
   return useQuery({
     queryKey: ['sales-orders', params],
     queryFn: async () => {
-      const response = await base_crmSalesOrderCollection.list({
+      const response = await salesOrderCollection.list({
         ...params,
         columns: params?.columns || [
           'id',
@@ -25,11 +27,13 @@ export function useSalesOrders(params?: ICollectionListParams) {
 }
 
 export function useSalesOrder(orderId: string | undefined) {
+  const salesOrderCollection = useBaseCrmSalesOrderCollection()
+
   return useQuery({
     queryKey: ['sales-orders', orderId],
     queryFn: async () => {
       if (!orderId) throw new Error('Order ID is required')
-      return await base_crmSalesOrderCollection.get(orderId, {
+      return await salesOrderCollection.get(orderId, {
         columns: [
           'id',
           'organization(id,name,phone,email)',
@@ -46,10 +50,10 @@ export function useSalesOrder(orderId: string | undefined) {
 }
 
 export function useCreateSalesOrder() {
+  const salesOrderCollection = useBaseCrmSalesOrderCollection()
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: any) =>
-      await base_crmSalesOrderCollection.create(data),
+    mutationFn: async (data: any) => await salesOrderCollection.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sales-orders'] })
       toast.success('Sales order created successfully')
@@ -60,11 +64,12 @@ export function useCreateSalesOrder() {
 }
 
 export function useUpdateSalesOrder() {
+  const salesOrderCollection = useBaseCrmSalesOrderCollection()
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ orderId, data }: { orderId: string; data: any }) =>
-      await base_crmSalesOrderCollection.update(orderId, data),
-    onSuccess: (data, variables) => {
+      await salesOrderCollection.update(orderId, data),
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['sales-orders'] })
       queryClient.invalidateQueries({
         queryKey: ['sales-orders', variables.orderId],
@@ -77,10 +82,11 @@ export function useUpdateSalesOrder() {
 }
 
 export function useDeleteSalesOrder() {
+  const salesOrderCollection = useBaseCrmSalesOrderCollection()
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (orderId: string) =>
-      await base_crmSalesOrderCollection.delete(orderId),
+      await salesOrderCollection.delete(orderId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sales-orders'] })
       toast.success('Sales order deleted successfully')

@@ -1,52 +1,83 @@
 // Generated collection for base/section
-import { useDocyrusClient } from '@docyrus/signin';
-import type { QueryParamValue } from '@docyrus/api-client';
-import type { ICollectionListParams } from './types';
+import { useDocyrusClient } from '@docyrus/signin'
+import type { QueryParamValue } from '@docyrus/api-client'
+import type { ICollectionListParams } from './types'
 
 export interface BaseSectionEntity {
-
   /** ID */
-  id?: string;
+  id?: string
 
   /** Record owner */
-  record_owner?: string;
+  record_owner?: string
 
   /** Created On */
-  created_on?: string;
+  created_on?: string
 
   /** Created By */
-  created_by?: string;
+  created_by?: string
 
   /** Last Modified On */
-  last_modified_on?: string;
+  last_modified_on?: string
 
   /** Last Modified By */
-  last_modified_by?: string;
+  last_modified_by?: string
 
   /** Project */
-  project?: { id: string; name: string } | string;
+  project?: { id: string; name: string } | string
 }
 
 export function useBaseSectionCollection() {
-  const client = useDocyrusClient();
+  const client = useDocyrusClient()
 
   return {
     /** List records with optional filtering, sorting, and pagination. */
-    list: (params?: ICollectionListParams): Promise<Array<BaseSectionEntity>> => client!.get('/v1/apps/base/data-sources/section/items', params as Record<string, QueryParamValue> | undefined),
+    list: (params?: ICollectionListParams): Promise<Array<BaseSectionEntity>> =>
+      client!.get(
+        '/v1/apps/base/data-sources/section/items',
+        params as Record<string, QueryParamValue> | undefined,
+      ),
 
     /** Get record */
-    get: (recordId: string, params?: { columns?: Array<string> }): Promise<BaseSectionEntity> => client!.get('/v1/apps/base/data-sources/section/items/{recordId}'.replace('{recordId}', recordId), params),
+    get: (
+      recordId: string,
+      params?: { columns?: Array<string> },
+    ): Promise<BaseSectionEntity> =>
+      client!.get(
+        '/v1/apps/base/data-sources/section/items/{recordId}'.replace(
+          '{recordId}',
+          recordId,
+        ),
+        params,
+      ),
 
     /** Create record */
-    create: (data: Record<string, any>): Promise<BaseSectionEntity> => client!.post('/v1/apps/base/data-sources/section/items', data),
+    create: (data: Record<string, any>): Promise<BaseSectionEntity> =>
+      client!.post('/v1/apps/base/data-sources/section/items', data),
 
     /** Update record */
-    update: (recordId: string, data: Record<string, any>): Promise<BaseSectionEntity> => client!.patch('/v1/apps/base/data-sources/section/items/{recordId}'.replace('{recordId}', recordId), data),
+    update: (
+      recordId: string,
+      data: Record<string, any>,
+    ): Promise<BaseSectionEntity> =>
+      client!.patch(
+        '/v1/apps/base/data-sources/section/items/{recordId}'.replace(
+          '{recordId}',
+          recordId,
+        ),
+        data,
+      ),
 
     /** Delete record */
-    delete: (recordId: string): Promise<void> => client!.delete('/v1/apps/base/data-sources/section/items/{recordId}'.replace('{recordId}', recordId)),
+    delete: (recordId: string): Promise<void> =>
+      client!.delete(
+        '/v1/apps/base/data-sources/section/items/{recordId}'.replace(
+          '{recordId}',
+          recordId,
+        ),
+      ),
 
     /** Delete many records */
-    deleteMany: (data: { recordIds: Array<string> }): Promise<void> => client!.delete('/v1/apps/base/data-sources/section/items', data)
-  };
+    deleteMany: (data: { recordIds: Array<string> }): Promise<void> =>
+      client!.delete('/v1/apps/base/data-sources/section/items', data),
+  }
 }

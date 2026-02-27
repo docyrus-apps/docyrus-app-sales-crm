@@ -1,13 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { ICollectionListParams } from '@/collections/types'
-import { baseContactCollection } from '@/collections'
+import { useBaseContactCollection } from '@/collections'
 
 export function useContacts(params?: ICollectionListParams) {
+  const contactCollection = useBaseContactCollection()
+
   return useQuery({
     queryKey: ['contacts', params],
     queryFn: async () => {
-      const response = await baseContactCollection.list({
+      const response = await contactCollection.list({
         ...params,
         columns: params?.columns || [
           'id',
@@ -25,11 +27,13 @@ export function useContacts(params?: ICollectionListParams) {
 }
 
 export function useContact(contactId: string | undefined) {
+  const contactCollection = useBaseContactCollection()
+
   return useQuery({
     queryKey: ['contacts', contactId],
     queryFn: async () => {
       if (!contactId) throw new Error('Contact ID is required')
-      return await baseContactCollection.get(contactId, {
+      return await contactCollection.get(contactId, {
         columns: [
           'id',
           'name',
@@ -46,9 +50,10 @@ export function useContact(contactId: string | undefined) {
 }
 
 export function useCreateContact() {
+  const contactCollection = useBaseContactCollection()
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: any) => await baseContactCollection.create(data),
+    mutationFn: async (data: any) => await contactCollection.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] })
       toast.success('Contact created successfully')
@@ -59,11 +64,12 @@ export function useCreateContact() {
 }
 
 export function useUpdateContact() {
+  const contactCollection = useBaseContactCollection()
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ contactId, data }: { contactId: string; data: any }) =>
-      await baseContactCollection.update(contactId, data),
-    onSuccess: (data, variables) => {
+      await contactCollection.update(contactId, data),
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] })
       queryClient.invalidateQueries({
         queryKey: ['contacts', variables.contactId],
@@ -76,10 +82,11 @@ export function useUpdateContact() {
 }
 
 export function useDeleteContact() {
+  const contactCollection = useBaseContactCollection()
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (contactId: string) =>
-      await baseContactCollection.delete(contactId),
+      await contactCollection.delete(contactId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] })
       toast.success('Contact deleted successfully')

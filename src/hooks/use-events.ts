@@ -1,13 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { EventFormData } from '@/schemas/event-schema'
-import { baseEventCollection } from '@/collections/base-event.collection'
+import { useBaseEventCollection } from '@/collections/base-event.collection'
 
 export function useEvents(filters?: any) {
+  const eventCollection = useBaseEventCollection()
+
   return useQuery({
     queryKey: ['events', filters],
     queryFn: () =>
-      baseEventCollection.list({
+      eventCollection.list({
         columns: [
           'id',
           'subject',
@@ -24,12 +26,13 @@ export function useEvents(filters?: any) {
 }
 
 export function useEvent(eventId: string | undefined) {
+  const eventCollection = useBaseEventCollection()
+
   return useQuery({
     queryKey: ['events', eventId],
     queryFn: () => {
       if (!eventId) throw new Error('Event ID is required')
-      return baseEventCollection.get({
-        recordId: eventId,
+      return eventCollection.get(eventId, {
         columns: [
           'id',
           'subject',
@@ -47,10 +50,11 @@ export function useEvent(eventId: string | undefined) {
 }
 
 export function useCreateEvent() {
+  const eventCollection = useBaseEventCollection()
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: EventFormData) => baseEventCollection.create(data),
+    mutationFn: (data: EventFormData) => eventCollection.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] })
       toast.success('Event created successfully')
@@ -61,11 +65,12 @@ export function useCreateEvent() {
 }
 
 export function useUpdateEvent() {
+  const eventCollection = useBaseEventCollection()
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: ({ eventId, data }: { eventId: string; data: EventFormData }) =>
-      baseEventCollection.update({ recordId: eventId, data }),
+      eventCollection.update(eventId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] })
       toast.success('Event updated successfully')
@@ -76,10 +81,11 @@ export function useUpdateEvent() {
 }
 
 export function useDeleteEvent() {
+  const eventCollection = useBaseEventCollection()
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (eventId: string) => baseEventCollection.delete(eventId),
+    mutationFn: (eventId: string) => eventCollection.delete(eventId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] })
       toast.success('Event deleted successfully')

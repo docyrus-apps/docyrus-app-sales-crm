@@ -1,12 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import type { ICollectionListParams } from '@/collections/types'
-import { base_crmSalesOrderItemCollection } from '@/collections'
+import { useBaseCrmSalesOrderItemCollection } from '@/collections'
 
 export function useSalesOrderItems(params?: ICollectionListParams) {
+  const salesOrderItemCollection = useBaseCrmSalesOrderItemCollection()
+
   return useQuery({
     queryKey: ['sales-order-items', params],
     queryFn: async () => {
-      const response = await base_crmSalesOrderItemCollection.list({
+      const response = await salesOrderItemCollection.list({
         ...params,
         columns: params?.columns || [
           'id',

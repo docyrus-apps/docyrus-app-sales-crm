@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { EnumsCollection } from '@/collections'
+import { useEnumsCollection } from '@/collections'
 import { QUERY_CONFIG } from '@/lib/constants'
 
 /**
@@ -7,10 +7,12 @@ import { QUERY_CONFIG } from '@/lib/constants'
  * Enums are cached for 1 hour as they rarely change
  */
 export function useEnums() {
+  const enumsCollection = useEnumsCollection()
+
   return useQuery({
     queryKey: ['enums'],
     queryFn: async () => {
-      const response = await EnumsCollection.getEnums()
+      const response = await enumsCollection.getEnums()
       return response
     },
     staleTime: QUERY_CONFIG.STALE_TIME.ENUMS,

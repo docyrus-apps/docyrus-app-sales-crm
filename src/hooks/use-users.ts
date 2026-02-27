@@ -1,55 +1,32 @@
 import { useQuery } from '@tanstack/react-query'
-import type { ICollectionListParams } from '@/collections/types'
-import { UsersCollection } from '@/collections'
+import { useUsersCollection } from '@/collections'
 
 /**
- * Hook to list users with optional filters
+ * Hook to list users
  */
-export function useUsers(params?: ICollectionListParams) {
+export function useUsers() {
+  const usersCollection = useUsersCollection()
+
   return useQuery({
-    queryKey: ['users', params],
+    queryKey: ['users'],
     queryFn: async () => {
-      const response = await UsersCollection.list({
-        ...params,
-        columns: params?.columns || [
-          'id',
-          'email',
-          'firstname',
-          'lastname',
-          'mobile',
-          'job_title',
-        ],
-      })
+      const response = await usersCollection.getUsers()
       return response
     },
   })
 }
 
 /**
- * Hook to get a single user by ID
+ * Hook to get current user info
  */
-export function useUser(userId: string | undefined) {
+export function useMyInfo() {
+  const usersCollection = useUsersCollection()
+
   return useQuery({
-    queryKey: ['users', userId],
+    queryKey: ['users', 'me'],
     queryFn: async () => {
-      if (!userId) {
-        throw new Error('User ID is required')
-      }
-      const response = await UsersCollection.get(userId, {
-        columns: [
-          'id',
-          'email',
-          'firstname',
-          'lastname',
-          'mobile',
-          'job_title',
-          'gender',
-          'time_zone',
-          'language',
-        ],
-      })
+      const response = await usersCollection.getMyInfo()
       return response
     },
-    enabled: !!userId,
   })
 }

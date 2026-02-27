@@ -124,265 +124,277 @@ export function CommandPalette({
         <CommandList>
           <CommandEmpty>{t('commandPalette.noResults')}</CommandEmpty>
 
-        {/* Quick Actions */}
-        {!search && (
-          <>
-            <CommandGroup heading={t('commandPalette.quickActions')}>
-              {onCreateDeal && (
-                <CommandItem
-                  onSelect={() => handleSelect(onCreateDeal)}
-                  className="gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>{t('commandPalette.newDeal')}</span>
-                </CommandItem>
-              )}
-              {onCreateLead && (
-                <CommandItem
-                  onSelect={() => handleSelect(onCreateLead)}
-                  className="gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>{t('commandPalette.newLead')}</span>
-                </CommandItem>
-              )}
-              {onCreateTask && (
-                <CommandItem
-                  onSelect={() => handleSelect(onCreateTask)}
-                  className="gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>{t('commandPalette.newTask')}</span>
-                </CommandItem>
-              )}
-              {onCreateEvent && (
-                <CommandItem
-                  onSelect={() => handleSelect(onCreateEvent)}
-                  className="gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>{t('commandPalette.newEvent')}</span>
-                </CommandItem>
-              )}
-            </CommandGroup>
-            <CommandSeparator />
-          </>
-        )}
+          {/* Quick Actions */}
+          {!search && (
+            <>
+              <CommandGroup heading={t('commandPalette.quickActions')}>
+                {onCreateDeal && (
+                  <CommandItem
+                    onSelect={() => handleSelect(onCreateDeal)}
+                    className="gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>{t('commandPalette.newDeal')}</span>
+                  </CommandItem>
+                )}
+                {onCreateLead && (
+                  <CommandItem
+                    onSelect={() => handleSelect(onCreateLead)}
+                    className="gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>{t('commandPalette.newLead')}</span>
+                  </CommandItem>
+                )}
+                {onCreateTask && (
+                  <CommandItem
+                    onSelect={() => handleSelect(onCreateTask)}
+                    className="gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>{t('commandPalette.newTask')}</span>
+                  </CommandItem>
+                )}
+                {onCreateEvent && (
+                  <CommandItem
+                    onSelect={() => handleSelect(onCreateEvent)}
+                    className="gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>{t('commandPalette.newEvent')}</span>
+                  </CommandItem>
+                )}
+              </CommandGroup>
+              <CommandSeparator />
+            </>
+          )}
 
-        {/* Navigation */}
-        {!search && (
-          <>
-            <CommandGroup heading={t('commandPalette.navigation')}>
-              <CommandItem
-                onSelect={() => handleSelect(() => navigate({ to: '/deals' }))}
-                className="gap-2"
-              >
-                <DollarSign className="h-4 w-4" />
-                <span>{t('commandPalette.dealsPipeline')}</span>
-              </CommandItem>
-              <CommandItem
-                onSelect={() => handleSelect(() => navigate({ to: '/leads' }))}
-                className="gap-2"
-              >
-                <Users className="h-4 w-4" />
-                <span>{t('commandPalette.leads')}</span>
-              </CommandItem>
-              <CommandItem
-                onSelect={() =>
-                  handleSelect(() => navigate({ to: '/companies' }))
-                }
-                className="gap-2"
-              >
-                <Building2 className="h-4 w-4" />
-                <span>{t('commandPalette.companies')}</span>
-              </CommandItem>
-              <CommandItem
-                onSelect={() => handleSelect(() => navigate({ to: '/tasks' }))}
-                className="gap-2"
-              >
-                <CheckSquare className="h-4 w-4" />
-                <span>{t('commandPalette.tasks')}</span>
-              </CommandItem>
-              <CommandItem
-                onSelect={() => handleSelect(() => navigate({ to: '/events' }))}
-                className="gap-2"
-              >
-                <Calendar className="h-4 w-4" />
-                <span>{t('commandPalette.events')}</span>
-              </CommandItem>
-              <CommandItem
-                onSelect={() => handleSelect(() => navigate({ to: '/emails' }))}
-                className="gap-2"
-              >
-                <Mail className="h-4 w-4" />
-                <span>{t('commandPalette.emails')}</span>
-              </CommandItem>
-              <CommandItem
-                onSelect={() =>
-                  handleSelect(() => navigate({ to: '/products' }))
-                }
-                className="gap-2"
-              >
-                <Package className="h-4 w-4" />
-                <span>{t('commandPalette.products')}</span>
-              </CommandItem>
-              <CommandItem
-                onSelect={() =>
-                  handleSelect(() => navigate({ to: '/sales-orders' }))
-                }
-                className="gap-2"
-              >
-                <FileText className="h-4 w-4" />
-                <span>{t('commandPalette.salesOrders')}</span>
-              </CommandItem>
-            </CommandGroup>
-            <CommandSeparator />
-          </>
-        )}
-
-        {/* Search Results - Deals */}
-        {search && filteredDeals.length > 0 && (
-          <>
-            <CommandGroup heading={t('commandPalette.searchResults.deals')}>
-              {filteredDeals.map((deal: any) => (
+          {/* Navigation */}
+          {!search && (
+            <>
+              <CommandGroup heading={t('commandPalette.navigation')}>
                 <CommandItem
-                  key={deal.id}
                   onSelect={() =>
-                    handleSelect(() =>
-                      navigate({
-                        to: '/deals/$dealId',
-                        params: { dealId: deal.id },
-                      }),
-                    )
+                    handleSelect(() => navigate({ to: '/deals' }))
                   }
                   className="gap-2"
                 >
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span>
-                        {deal.organizations &&
-                        typeof deal.organizations === 'object'
-                          ? deal.organizations.name
-                          : 'Deal'}
-                      </span>
-                      {deal.stage && (
-                        <Badge variant="secondary" className="text-xs">
-                          {typeof deal.stage === 'object'
-                            ? deal.stage.name
-                            : deal.stage}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
+                  <DollarSign className="h-4 w-4" />
+                  <span>{t('commandPalette.dealsPipeline')}</span>
                 </CommandItem>
-              ))}
-            </CommandGroup>
-          </>
-        )}
-
-        {/* Search Results - Leads */}
-        {search && filteredLeads.length > 0 && (
-          <>
-            <CommandGroup heading={t('commandPalette.searchResults.leads')}>
-              {filteredLeads.map((lead: any) => (
                 <CommandItem
-                  key={lead.id}
                   onSelect={() =>
-                    handleSelect(() =>
-                      navigate({
-                        to: '/leads/$leadId',
-                        params: { leadId: lead.id },
-                      }),
-                    )
+                    handleSelect(() => navigate({ to: '/leads' }))
                   }
                   className="gap-2"
                 >
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span>
-                        {lead.title || `Lead #${lead.id.slice(0, 8)}`}
-                      </span>
-                      {lead.lead_status && (
-                        <Badge variant="secondary" className="text-xs">
-                          {typeof lead.lead_status === 'object'
-                            ? lead.lead_status.name
-                            : lead.lead_status}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
+                  <Users className="h-4 w-4" />
+                  <span>{t('commandPalette.leads')}</span>
                 </CommandItem>
-              ))}
-            </CommandGroup>
-          </>
-        )}
-
-        {/* Search Results - Companies */}
-        {search && filteredCompanies.length > 0 && (
-          <>
-            <CommandGroup heading={t('commandPalette.searchResults.companies')}>
-              {filteredCompanies.map((company: any) => (
                 <CommandItem
-                  key={company.id}
                   onSelect={() =>
-                    handleSelect(() =>
-                      navigate({
-                        to: '/companies/$companyId',
-                        params: { companyId: company.id },
-                      }),
-                    )
+                    handleSelect(() => navigate({ to: '/companies' }))
                   }
                   className="gap-2"
                 >
-                  <Building2 className="h-4 w-4 text-muted-foreground" />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span>{company.name}</span>
-                      {company.industry && (
-                        <Badge variant="secondary" className="text-xs">
-                          {typeof company.industry === 'object'
-                            ? company.industry.name
-                            : company.industry}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
+                  <Building2 className="h-4 w-4" />
+                  <span>{t('commandPalette.companies')}</span>
                 </CommandItem>
-              ))}
-            </CommandGroup>
-          </>
-        )}
-
-        {/* Search Results - Tasks */}
-        {search && filteredTasks.length > 0 && (
-          <>
-            <CommandGroup heading={t('commandPalette.searchResults.tasks')}>
-              {filteredTasks.map((task: any) => (
                 <CommandItem
-                  key={task.id}
-                  onSelect={() => handleSelect(() => {})}
+                  onSelect={() =>
+                    handleSelect(() => navigate({ to: '/tasks' }))
+                  }
                   className="gap-2"
                 >
-                  <CheckSquare className="h-4 w-4 text-muted-foreground" />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span>{task.subject}</span>
-                      {task.status && (
-                        <Badge variant="secondary" className="text-xs">
-                          {typeof task.status === 'object'
-                            ? task.status.name
-                            : task.status}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
+                  <CheckSquare className="h-4 w-4" />
+                  <span>{t('commandPalette.tasks')}</span>
                 </CommandItem>
-              ))}
-            </CommandGroup>
-          </>
-        )}
+                <CommandItem
+                  onSelect={() =>
+                    handleSelect(() => navigate({ to: '/events' }))
+                  }
+                  className="gap-2"
+                >
+                  <Calendar className="h-4 w-4" />
+                  <span>{t('commandPalette.events')}</span>
+                </CommandItem>
+                <CommandItem
+                  onSelect={() =>
+                    handleSelect(() => navigate({ to: '/emails' }))
+                  }
+                  className="gap-2"
+                >
+                  <Mail className="h-4 w-4" />
+                  <span>{t('commandPalette.emails')}</span>
+                </CommandItem>
+                <CommandItem
+                  onSelect={() =>
+                    handleSelect(() => navigate({ to: '/products' }))
+                  }
+                  className="gap-2"
+                >
+                  <Package className="h-4 w-4" />
+                  <span>{t('commandPalette.products')}</span>
+                </CommandItem>
+                <CommandItem
+                  onSelect={() =>
+                    handleSelect(() => navigate({ to: '/sales-orders' }))
+                  }
+                  className="gap-2"
+                >
+                  <FileText className="h-4 w-4" />
+                  <span>{t('commandPalette.salesOrders')}</span>
+                </CommandItem>
+              </CommandGroup>
+              <CommandSeparator />
+            </>
+          )}
+
+          {/* Search Results - Deals */}
+          {search && filteredDeals.length > 0 && (
+            <>
+              <CommandGroup heading={t('commandPalette.searchResults.deals')}>
+                {filteredDeals.map((deal: any) => (
+                  <CommandItem
+                    key={deal.id}
+                    onSelect={() =>
+                      handleSelect(() =>
+                        navigate({
+                          to: '/deals/$dealId',
+                          params: { dealId: deal.id },
+                        }),
+                      )
+                    }
+                    className="gap-2"
+                  >
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span>
+                          {deal.organizations &&
+                          typeof deal.organizations === 'object'
+                            ? deal.organizations.name
+                            : 'Deal'}
+                        </span>
+                        {deal.stage && (
+                          <Badge variant="secondary" className="text-xs">
+                            {typeof deal.stage === 'object'
+                              ? deal.stage.name
+                              : deal.stage}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </>
+          )}
+
+          {/* Search Results - Leads */}
+          {search && filteredLeads.length > 0 && (
+            <>
+              <CommandGroup heading={t('commandPalette.searchResults.leads')}>
+                {filteredLeads.map((lead: any) => (
+                  <CommandItem
+                    key={lead.id}
+                    onSelect={() =>
+                      handleSelect(() =>
+                        navigate({
+                          to: '/leads/$leadId',
+                          params: { leadId: lead.id },
+                        }),
+                      )
+                    }
+                    className="gap-2"
+                  >
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span>
+                          {lead.title || `Lead #${lead.id.slice(0, 8)}`}
+                        </span>
+                        {lead.lead_status && (
+                          <Badge variant="secondary" className="text-xs">
+                            {typeof lead.lead_status === 'object'
+                              ? lead.lead_status.name
+                              : lead.lead_status}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </>
+          )}
+
+          {/* Search Results - Companies */}
+          {search && filteredCompanies.length > 0 && (
+            <>
+              <CommandGroup
+                heading={t('commandPalette.searchResults.companies')}
+              >
+                {filteredCompanies.map((company: any) => (
+                  <CommandItem
+                    key={company.id}
+                    onSelect={() =>
+                      handleSelect(() =>
+                        navigate({
+                          to: '/companies/$companyId',
+                          params: { companyId: company.id },
+                        }),
+                      )
+                    }
+                    className="gap-2"
+                  >
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span>{company.name}</span>
+                        {company.industry && (
+                          <Badge variant="secondary" className="text-xs">
+                            {typeof company.industry === 'object'
+                              ? company.industry.name
+                              : company.industry}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </>
+          )}
+
+          {/* Search Results - Tasks */}
+          {search && filteredTasks.length > 0 && (
+            <>
+              <CommandGroup heading={t('commandPalette.searchResults.tasks')}>
+                {filteredTasks.map((task: any) => (
+                  <CommandItem
+                    key={task.id}
+                    onSelect={() => handleSelect(() => {})}
+                    className="gap-2"
+                  >
+                    <CheckSquare className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span>{task.subject}</span>
+                        {task.status && (
+                          <Badge variant="secondary" className="text-xs">
+                            {typeof task.status === 'object'
+                              ? task.status.name
+                              : task.status}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </>
+          )}
         </CommandList>
       </Command>
     </CommandDialog>

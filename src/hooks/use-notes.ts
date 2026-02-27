@@ -1,13 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { ICollectionListParams } from '@/collections/types'
-import { userTodoCollection } from '@/collections/user-todo.collection'
+import { useUserTodoCollection } from '@/collections/user-todo.collection'
 
 export function useNotes(params?: ICollectionListParams) {
+  const todoCollection = useUserTodoCollection()
+
   return useQuery({
     queryKey: ['notes', params],
     queryFn: async () => {
-      const response = await userTodoCollection.list({
+      const response = await todoCollection.list({
         ...params,
         columns: params?.columns || [
           'id',
@@ -32,9 +34,10 @@ export function useNotes(params?: ICollectionListParams) {
 }
 
 export function useCreateNote() {
+  const todoCollection = useUserTodoCollection()
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: any) => await userTodoCollection.create(data),
+    mutationFn: async (data: any) => await todoCollection.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes'] })
       toast.success('Note created successfully')

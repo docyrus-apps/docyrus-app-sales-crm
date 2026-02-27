@@ -1,16 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { ICollectionListParams } from '@/collections/types'
-import { base_crmDealsCollection } from '@/collections'
+import { useBaseCrmDealsCollection } from '@/collections'
 
 /**
  * Hook to list deals with optional filters
  */
 export function useDeals(params?: ICollectionListParams) {
+  const dealsCollection = useBaseCrmDealsCollection()
+
   return useQuery({
     queryKey: ['deals', params],
     queryFn: async () => {
-      const response = await base_crmDealsCollection.list({
+      const response = await dealsCollection.list({
         ...params,
         columns: params?.columns || [
           'id',
@@ -37,13 +39,15 @@ export function useDeals(params?: ICollectionListParams) {
  * Hook to get a single deal by ID
  */
 export function useDeal(dealId: string | undefined) {
+  const dealsCollection = useBaseCrmDealsCollection()
+
   return useQuery({
     queryKey: ['deals', dealId],
     queryFn: async () => {
       if (!dealId) {
         throw new Error('Deal ID is required')
       }
-      const response = await base_crmDealsCollection.get(dealId, {
+      const response = await dealsCollection.get(dealId, {
         columns: [
           'id',
           'record_owner',
@@ -75,11 +79,12 @@ export function useDeal(dealId: string | undefined) {
  * Hook to create a new deal
  */
 export function useCreateDeal() {
+  const dealsCollection = useBaseCrmDealsCollection()
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (data: any) => {
-      const response = await base_crmDealsCollection.create(data)
+      const response = await dealsCollection.create(data)
       return response
     },
     onSuccess: () => {
@@ -96,11 +101,12 @@ export function useCreateDeal() {
  * Hook to update a deal
  */
 export function useUpdateDeal() {
+  const dealsCollection = useBaseCrmDealsCollection()
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async ({ dealId, data }: { dealId: string; data: any }) => {
-      const response = await base_crmDealsCollection.update(dealId, data)
+      const response = await dealsCollection.update(dealId, data)
       return response
     },
     onSuccess: (_data, variables) => {
@@ -118,11 +124,12 @@ export function useUpdateDeal() {
  * Hook to delete a deal
  */
 export function useDeleteDeal() {
+  const dealsCollection = useBaseCrmDealsCollection()
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (dealId: string) => {
-      await base_crmDealsCollection.delete(dealId)
+      await dealsCollection.delete(dealId)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deals'] })
@@ -138,11 +145,12 @@ export function useDeleteDeal() {
  * Hook to delete multiple deals
  */
 export function useDeleteDeals() {
+  const dealsCollection = useBaseCrmDealsCollection()
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (dealIds: Array<string>) => {
-      await base_crmDealsCollection.deleteMany({ recordIds: dealIds })
+      await dealsCollection.deleteMany({ recordIds: dealIds })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deals'] })

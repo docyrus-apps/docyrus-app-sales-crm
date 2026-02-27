@@ -47,7 +47,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { UsersCollection } from '@/collections/users.collection'
+import { useUsersCollection } from '@/collections/users.collection'
 import { useNotifications } from '@/hooks/use-notifications'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { ThemeSelector } from '@/components/theme-selector'
@@ -129,6 +129,7 @@ export function AppSidebar() {
   const { state } = useSidebar()
   const { t } = useTranslation()
   const { data: notifications } = useNotifications()
+  const usersCollection = useUsersCollection()
   const [userProfile, setUserProfile] = useState<UserEntity | null>(null)
   const [profileDialogOpen, setProfileDialogOpen] = useState(false)
   const [changePasswordDialogOpen, setChangePasswordDialogOpen] =
@@ -137,8 +138,8 @@ export function AppSidebar() {
   const unreadCount = notifications?.filter((n: any) => !n.seen).length || 0
 
   useEffect(() => {
-    UsersCollection.getMyInfo().then(setUserProfile).catch(console.error)
-  }, [])
+    usersCollection.getMyInfo().then(setUserProfile).catch(console.error)
+  }, [usersCollection])
 
   const initials = userProfile
     ? `${(userProfile.firstname[0] || '').toUpperCase()}${(userProfile.lastname[0] || '').toUpperCase()}`

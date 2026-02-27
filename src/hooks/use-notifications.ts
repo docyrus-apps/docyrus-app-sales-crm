@@ -1,12 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { NotificationsCollection } from '@/collections'
+import { useNotificationsCollection } from '@/collections'
 import { QUERY_CONFIG } from '@/lib/constants'
 
 export function useNotifications() {
+  const notificationsCollection = useNotificationsCollection()
+
   return useQuery({
     queryKey: ['notifications'],
     queryFn: async () => {
-      const response = await NotificationsCollection.getNotifications()
+      const response = await notificationsCollection.getNotifications()
       return response
     },
     // Auto-refresh notifications every 30 seconds
@@ -21,10 +23,11 @@ export function useUnreadNotificationCount() {
 }
 
 export function useMarkNotificationAsRead() {
+  const notificationsCollection = useNotificationsCollection()
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (notificationId: string) => {
-      await NotificationsCollection.markNotificationAsRead(notificationId)
+      await notificationsCollection.markNotificationAsRead(notificationId)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
@@ -33,10 +36,11 @@ export function useMarkNotificationAsRead() {
 }
 
 export function useMarkAllNotificationsAsRead() {
+  const notificationsCollection = useNotificationsCollection()
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async () => {
-      await NotificationsCollection.markAllNotificationsAsRead()
+      await notificationsCollection.markAllNotificationsAsRead()
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] })

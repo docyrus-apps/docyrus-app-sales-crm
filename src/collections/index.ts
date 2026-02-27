@@ -1,40 +1,51 @@
 // Generated collections index
-export type { ICollectionListParams, ICollectionFilterRule, ICollectionFilterGroup, ICollectionCalculation, ICollectionOrderBy, ICollectionFormula, ICollectionBlockFormula, ICollectionChildQuery, ICollectionPivotMatrix, ICollectionPivot } from './types';
-export { useUserTodoCollection } from './user-todo.collection';
-export { useUserTodoListCollection } from './user-todo-list.collection';
-export { useUserTodoSectionCollection } from './user-todo-section.collection';
-export { useBaseActivityCollection } from './base-activity.collection';
-export { useBaseCalendarCollection } from './base-calendar.collection';
-export { useBaseCannedResponseCollection } from './base-canned_response.collection';
-export { useBaseCityCollection } from './base-city.collection';
-export { useBaseContactCollection } from './base-contact.collection';
-export { useBaseCountryCollection } from './base-country.collection';
-export { useBaseDocymentCollection } from './base-docyment.collection';
-export { useBaseEventCollection } from './base-event.collection';
-export { useBaseMessageCollection } from './base-message.collection';
-export { useBaseOrganizationCollection } from './base-organization.collection';
-export { useBaseProjectCollection } from './base-project.collection';
-export { useBaseSectionCollection } from './base-section.collection';
-export { useBaseStateCollection } from './base-state.collection';
-export { useBaseTaskCollection } from './base-task.collection';
-export { useBaseThreadCollection } from './base-thread.collection';
-export { useBaseThreadCategoryCollection } from './base-thread_category.collection';
-export { useBaseTimeEntryCollection } from './base-time_entry.collection';
-export { useBaseCrmDealProductCollection } from './base_crm-deal_product.collection';
-export { useBaseCrmDealsCollection } from './base_crm-deals.collection';
-export { useBaseCrmLeadsCollection } from './base_crm-leads.collection';
-export { useBaseCrmProductCollection } from './base_crm-product.collection';
-export { useBaseCrmSalesOrderCollection } from './base_crm-sales_order.collection';
-export { useBaseCrmSalesOrderItemCollection } from './base_crm-sales_order_item.collection';
-export { useBaseInboxSlaMetricCollection } from './base_inbox-sla_metric.collection';
-export { useBaseInboxSlaPoliciesCollection } from './base_inbox-sla_policies.collection';
-export { useBaseInboxSlaTargetCollection } from './base_inbox-sla_target.collection';
-export { useBaseInboxSlaTrackingCollection } from './base_inbox-sla_tracking.collection';
-export { useBasePmGoalCollection } from './base_pm-goal.collection';
-export { useBasePmPortfolioCollection } from './base_pm-portfolio.collection';
-export { useRecruiterCopilotJobApplicantCollection } from './recruiter_copilot-job_applicant.collection';
-export { useRecruiterCopilotJobDescriptionCollection } from './recruiter_copilot-job_description.collection';
-export { useRecruiterCopilotJobOpeningCollection } from './recruiter_copilot-job_opening.collection';
-export { useUsersCollection } from './users.collection';
-export { useNotificationsCollection } from './notifications.collection';
-export { useEnumsCollection } from './enums.collection';
+export type {
+  ICollectionListParams,
+  ICollectionFilterRule,
+  ICollectionFilterGroup,
+  ICollectionCalculation,
+  ICollectionOrderBy,
+  ICollectionFormula,
+  ICollectionBlockFormula,
+  ICollectionChildQuery,
+  ICollectionPivotMatrix,
+  ICollectionPivot,
+} from './types'
+export { useUserTodoCollection } from './user-todo.collection'
+export { useUserTodoListCollection } from './user-todo-list.collection'
+export { useUserTodoSectionCollection } from './user-todo-section.collection'
+export { useBaseActivityCollection } from './base-activity.collection'
+export { useBaseCalendarCollection } from './base-calendar.collection'
+export { useBaseCannedResponseCollection } from './base-canned_response.collection'
+export { useBaseCityCollection } from './base-city.collection'
+export { useBaseContactCollection } from './base-contact.collection'
+export { useBaseCountryCollection } from './base-country.collection'
+export { useBaseDocymentCollection } from './base-docyment.collection'
+export { useBaseEventCollection } from './base-event.collection'
+export { useBaseMessageCollection } from './base-message.collection'
+export { useBaseOrganizationCollection } from './base-organization.collection'
+export { useBaseProjectCollection } from './base-project.collection'
+export { useBaseSectionCollection } from './base-section.collection'
+export { useBaseStateCollection } from './base-state.collection'
+export { useBaseTaskCollection } from './base-task.collection'
+export { useBaseThreadCollection } from './base-thread.collection'
+export { useBaseThreadCategoryCollection } from './base-thread_category.collection'
+export { useBaseTimeEntryCollection } from './base-time_entry.collection'
+export { useBaseCrmDealProductCollection } from './base_crm-deal_product.collection'
+export { useBaseCrmDealsCollection } from './base_crm-deals.collection'
+export { useBaseCrmLeadsCollection } from './base_crm-leads.collection'
+export { useBaseCrmProductCollection } from './base_crm-product.collection'
+export { useBaseCrmSalesOrderCollection } from './base_crm-sales_order.collection'
+export { useBaseCrmSalesOrderItemCollection } from './base_crm-sales_order_item.collection'
+export { useBaseInboxSlaMetricCollection } from './base_inbox-sla_metric.collection'
+export { useBaseInboxSlaPoliciesCollection } from './base_inbox-sla_policies.collection'
+export { useBaseInboxSlaTargetCollection } from './base_inbox-sla_target.collection'
+export { useBaseInboxSlaTrackingCollection } from './base_inbox-sla_tracking.collection'
+export { useBasePmGoalCollection } from './base_pm-goal.collection'
+export { useBasePmPortfolioCollection } from './base_pm-portfolio.collection'
+export { useRecruiterCopilotJobApplicantCollection } from './recruiter_copilot-job_applicant.collection'
+export { useRecruiterCopilotJobDescriptionCollection } from './recruiter_copilot-job_description.collection'
+export { useRecruiterCopilotJobOpeningCollection } from './recruiter_copilot-job_opening.collection'
+export { useUsersCollection } from './users.collection'
+export { useNotificationsCollection } from './notifications.collection'
+export { useEnumsCollection } from './enums.collection'

@@ -1,55 +1,61 @@
 // Generated collection for user/todo-section
-import { useDocyrusClient } from '@docyrus/signin';
-import type { QueryParamValue } from '@docyrus/api-client';
-import type { ICollectionListParams } from './types';
+import { useDocyrusClient } from '@docyrus/signin'
+import type { QueryParamValue } from '@docyrus/api-client'
+import type { ICollectionListParams } from './types'
 
 export interface UserTodoSectionEntity {
-
   /** Section ID */
-  id: string;
+  id: string
 
   /** User ID who created the section */
-  created_by: string;
+  created_by: string
 
   /** Last modified by user ID */
-  last_modified_by: string;
+  last_modified_by: string
 
   /** Title of the section */
-  title: string;
+  title: string
 
   /** Connected items as JSON */
-  connected_items: Record<string, any>;
+  connected_items: Record<string, any>
 
   /** Parent Section ID */
-  parent: string;
+  parent: string
 
   /** Sort order number */
-  sort_order: number;
+  sort_order: number
 
   /** Associated list ID */
-  list: string;
+  list: string
 
   /** JSON Content */
-  content: Record<string, any>;
+  content: Record<string, any>
 
   /** Section type */
-  type: string;
+  type: string
 
   /** Is section archived? */
-  archived: boolean;
+  archived: boolean
 
   /** Section name */
-  name: string;
+  name: string
 }
 
 export function useUserTodoSectionCollection() {
-  const client = useDocyrusClient();
+  const client = useDocyrusClient()
 
   return {
     /** List records with optional filtering, sorting, and pagination. */
-    list: (params?: ICollectionListParams): Promise<Array<UserTodoSectionEntity>> => client!.get('/v1/apps/user/data-sources/todo-section/items', params as Record<string, QueryParamValue> | undefined),
+    list: (
+      params?: ICollectionListParams,
+    ): Promise<Array<UserTodoSectionEntity>> =>
+      client!.get(
+        '/v1/apps/user/data-sources/todo-section/items',
+        params as Record<string, QueryParamValue> | undefined,
+      ),
 
     /** Create todo section */
-    create: (data: Record<string, any>): Promise<UserTodoSectionEntity> => client!.post('/v1/apps/user/data-sources/todo-section/items', data)
-  };
+    create: (data: Record<string, any>): Promise<UserTodoSectionEntity> =>
+      client!.post('/v1/apps/user/data-sources/todo-section/items', data),
+  }
 }
