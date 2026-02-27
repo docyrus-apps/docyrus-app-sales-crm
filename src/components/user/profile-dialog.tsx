@@ -51,7 +51,7 @@ interface FormErrors {
 }
 
 const ACCEPTED_IMAGE_TYPES = 'image/png,image/jpeg,image/webp,image/gif'
-const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
+const MAX_FILE_SIZE = 3 * 1024 * 1024 // 3 MB (backend limit)
 
 interface ProfileState {
   user: UserWithPhoto | null
@@ -254,22 +254,23 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
 
   const handleImageSave = useCallback(
     async (dataUrl: string) => {
+      if (!apiClient) return
       dispatch({ type: 'UPLOAD_START' })
       try {
         // Convert data URL to File
         const response = await fetch(dataUrl)
         const blob = await response.blob()
-        const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' })
+        const file = new File([blob], 'avatar.png', { type: 'image/png' })
 
         const formData = new FormData()
         formData.append('photo', file)
 
-        const result = await apiClient.put<UserWithPhoto>(
+        const result = await apiClient.put<{ fileUrl: string }>(
           '/v1/users/me/photo',
           formData,
         )
 
-        const newPhotoUrl = result?.photo
+        const newPhotoUrl = result?.fileUrl
         dispatch({
           type: 'UPLOAD_SUCCESS',
           photoUrl: newPhotoUrl,
