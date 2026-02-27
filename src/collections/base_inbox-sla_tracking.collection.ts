@@ -1,105 +1,73 @@
 // Generated collection for base_inbox/sla_tracking
-import { apiClient } from '../lib/api'
-import type { QueryParamValue } from '@docyrus/api-client'
-import type { ICollectionListParams } from './types'
+import { useDocyrusClient } from '@docyrus/signin';
+import type { QueryParamValue } from '@docyrus/api-client';
+import type { ICollectionListParams } from './types';
 
 export interface BaseInboxSlaTrackingEntity {
+
   /** ID */
-  id?: string
+  id?: string;
 
   /** Record owner */
-  record_owner?: string
+  record_owner?: string;
 
   /** Created On */
-  created_on?: string
+  created_on?: string;
 
   /** Created By */
-  created_by?: string
+  created_by?: string;
 
   /** Last Modified On */
-  last_modified_on?: string
+  last_modified_on?: string;
 
   /** Last Modified By */
-  last_modified_by?: string
+  last_modified_by?: string;
 
   /** Thread/Ticket */
-  thread: { id: string; name: string } | string
+  thread: { id: string; name: string } | string;
 
   /** SLA Metric */
-  sla_metric: { id: string; name: string } | string
+  sla_metric: { id: string; name: string } | string;
 
   /** Start Time */
-  start_time: string
+  start_time: string;
 
   /** Target Completion Time */
-  target_completion_time: string
+  target_completion_time: string;
 
   /** Actual Completion Time */
-  actual_completion_time?: string
+  actual_completion_time?: string;
 
   /** Status */
-  status: { id: string; name: string } | any
+  status: { id: string; name: string } | any;
 
   /** Remaining Minutes */
-  remaining_minutes?: number
+  remaining_minutes?: number;
 
   /** Is Breached */
-  is_breached?: boolean
+  is_breached?: boolean;
 }
 
-export const base_inboxSlaTrackingCollection = {
-  /** List records with optional filtering, sorting, and pagination. */
-  list: (
-    params?: ICollectionListParams,
-  ): Promise<Array<BaseInboxSlaTrackingEntity>> =>
-    apiClient.get(
-      '/v1/apps/base_inbox/data-sources/sla_tracking/items',
-      params as Record<string, QueryParamValue> | undefined,
-    ),
+export function useBaseInboxSlaTrackingCollection() {
+  const client = useDocyrusClient();
 
-  /** Get record */
-  get: (
-    recordId: string,
-    params?: { columns?: Array<string> },
-  ): Promise<BaseInboxSlaTrackingEntity> =>
-    apiClient.get(
-      '/v1/apps/base_inbox/data-sources/sla_tracking/items/{recordId}'.replace(
-        '{recordId}',
-        recordId,
-      ),
-      params,
-    ),
+  return {
+    /** List records with optional filtering, sorting, and pagination. */
+    list: (params?: ICollectionListParams): Promise<Array<BaseInboxSlaTrackingEntity>> => client!.get('/v1/apps/base_inbox/data-sources/sla_tracking/items', params as Record<string, QueryParamValue> | undefined),
 
-  /** Create record */
-  create: (data: { data: any }): Promise<BaseInboxSlaTrackingEntity> =>
-    apiClient.post('/v1/apps/base_inbox/data-sources/sla_tracking/items', data),
+    /** Get record */
+    get: (recordId: string, params?: { columns?: Array<string> }): Promise<BaseInboxSlaTrackingEntity> => client!.get('/v1/apps/base_inbox/data-sources/sla_tracking/items/{recordId}'.replace('{recordId}', recordId), params),
 
-  /** Update record */
-  update: (
-    recordId: string,
-    data: { data: any },
-  ): Promise<BaseInboxSlaTrackingEntity> =>
-    apiClient.patch(
-      '/v1/apps/base_inbox/data-sources/sla_tracking/items/{recordId}'.replace(
-        '{recordId}',
-        recordId,
-      ),
-      data,
-    ),
+    /** Create record */
+    create: (data: Record<string, any>): Promise<BaseInboxSlaTrackingEntity> => client!.post('/v1/apps/base_inbox/data-sources/sla_tracking/items', data),
 
-  /** Delete record */
-  delete: (recordId: string): Promise<void> =>
-    apiClient.delete(
-      '/v1/apps/base_inbox/data-sources/sla_tracking/items/{recordId}'.replace(
-        '{recordId}',
-        recordId,
-      ),
-    ),
+    /** Update record */
+    update: (recordId: string, data: Record<string, any>): Promise<BaseInboxSlaTrackingEntity> => client!.patch('/v1/apps/base_inbox/data-sources/sla_tracking/items/{recordId}'.replace('{recordId}', recordId), data),
 
-  /** Delete many records */
-  deleteMany: (data: { recordIds: Array<string> }): Promise<void> =>
-    apiClient.delete(
-      '/v1/apps/base_inbox/data-sources/sla_tracking/items',
-      data,
-    ),
+    /** Delete record */
+    delete: (recordId: string): Promise<void> => client!.delete('/v1/apps/base_inbox/data-sources/sla_tracking/items/{recordId}'.replace('{recordId}', recordId)),
+
+    /** Delete many records */
+    deleteMany: (data: { recordIds: Array<string> }): Promise<void> => client!.delete('/v1/apps/base_inbox/data-sources/sla_tracking/items', data)
+  };
 }

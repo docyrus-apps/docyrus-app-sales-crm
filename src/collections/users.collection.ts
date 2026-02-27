@@ -1,223 +1,217 @@
 // Generated collection for users
-import { apiClient } from '../lib/api'
+import { useDocyrusClient } from '@docyrus/signin';
 
 export interface UserEntity {
+
   /** Tenant/Company ID */
-  id?: string
+  id?: string;
 
   /** Created On */
-  created_on?: string
+  created_on?: string;
 
   /** Created By */
-  created_by?: string
+  created_by?: string;
 
   /** Last Modified On */
-  last_modified_on?: string
+  last_modified_on?: string;
 
   /** Last Modified By */
-  last_modified_by?: string
+  last_modified_by?: string;
 
   /** Email address (username) */
-  email: string
+  email: string;
 
   /** First name */
-  firstname: string
+  firstname: string;
 
   /** Last name */
-  lastname: string
+  lastname: string;
 
   /** Gender */
-  gender: string
+  gender: string;
 
   /** Telephone number */
-  mobile: string
+  mobile: string;
 
   /** Time zone id */
-  time_zone: string
+  time_zone: string;
 
   /** Language/locale id */
-  language: string
+  language: string;
 
   /** Job title */
-  job_title: string
+  job_title: string;
 
   /** Primary role */
-  primary_role: string
+  primary_role: string;
 
   /** Additional Roles */
-  role: Array<any>
+  role: Array<any>;
 
   /** Date of birth */
-  date_of_birth: string
+  date_of_birth: string;
 
   /** Notify User by Email */
-  notify_user: boolean
+  notify_user: boolean;
 
   /** Organization Unit id */
-  tenant_user_hierarchy_unit_id: string
+  tenant_user_hierarchy_unit_id: string;
 
   /** Tenant/Company Name */
-  name: string
+  name: string;
 
   /** Tenant/Company No */
-  no: string
+  no: string;
 }
 
 export interface UserCreateParams {
+
   /** Email address (username) */
-  email: string
+  email: string;
 
   /** Password */
-  password: string
+  password: string;
 
   /** First name */
-  firstname: string
+  firstname: string;
 
   /** Last name */
-  lastname: string
+  lastname: string;
 
   /** Gender */
-  gender: string
+  gender: string;
 
   /** Telephone number */
-  mobile: string
+  mobile: string;
 
   /** Time zone id */
-  time_zone: string
+  time_zone: string;
 
   /** Language/locale id */
-  language: string
+  language: string;
 
   /** Job title */
-  job_title: string
+  job_title: string;
 
   /** Primary role */
-  primary_role: string
+  primary_role: string;
 
   /** Additional Roles */
-  role: Array<any>
+  role: Array<any>;
 
   /** Date of birth */
-  date_of_birth: string
+  date_of_birth: string;
 
   /** Notify User by Email */
-  notify_user: boolean
+  notify_user: boolean;
 
   /** Organization Unit id */
-  tenant_user_hierarchy_unit_id: string
+  tenant_user_hierarchy_unit_id: string;
 }
 
 export interface UserUpdateParams {
+
   /** Password */
-  password?: string
+  password?: string;
 
   /** First name */
-  firstname?: string
+  firstname?: string;
 
   /** Last name */
-  lastname?: string
+  lastname?: string;
 
   /** Gender */
-  gender?: string
+  gender?: string;
 
   /** Telephone number */
-  mobile?: string
+  mobile?: string;
 
   /** Time zone id */
-  time_zone?: string
+  time_zone?: string;
 
   /** Language/locale id */
-  language?: string
+  language?: string;
 
   /** Job title */
-  job_title?: string
+  job_title?: string;
 
   /** Primary role */
-  primary_role?: string
+  primary_role?: string;
 
   /** Additional Roles */
-  role?: Array<any>
+  role?: Array<any>;
 
   /** Date of birth */
-  date_of_birth?: string
+  date_of_birth?: string;
 
   /** Notify User by Email */
-  notify_user?: boolean
+  notify_user?: boolean;
 
   /** Organization Unit id */
-  tenant_user_hierarchy_unit_id?: string
+  tenant_user_hierarchy_unit_id?: string;
 }
 
 export interface UserDeviceDto {
+
   /** Device platform */
-  platform: string
+  platform: string;
 
   /** Push notification token */
-  push_token: string
+  push_token: string;
 
   /** Whether device is enabled */
-  enabled?: boolean
+  enabled?: boolean;
 }
 
-export const UsersCollection = {
-  /**
-   * List all users
-   * @returns Array<UserEntity>
-   */
-  getUsers: (): Promise<Array<UserEntity>> =>
-    apiClient.get<Array<UserEntity>>('/v1/users'),
+export function useUsersCollection() {
+  const client = useDocyrusClient();
 
-  /**
-   * Create user
-   * @param data - Request body
-   * @returns UserEntity
-   */
-  createUser: (data: UserCreateParams): Promise<UserEntity> =>
-    apiClient.post<UserEntity>('/v1/users', data),
+  return {
+    /**
+     * List all users
+     * @returns Array<UserEntity>
+     */
+    getUsers: (): Promise<Array<UserEntity>> => client!.get<Array<UserEntity>>('/v1/users'),
 
-  /**
-   * Get my info
-   * @returns UserEntity
-   */
-  getMyInfo: (): Promise<UserEntity> =>
-    apiClient.get<UserEntity>('/v1/users/me'),
+    /**
+     * Create user
+     * @param data - Request body
+     * @returns UserEntity
+     */
+    createUser: (data: UserCreateParams): Promise<UserEntity> => client!.post<UserEntity>('/v1/users', data),
 
-  /**
-   * Update current user
-   * @param data - Request body
-   * @returns UserEntity
-   */
-  updateMe: (data: UserUpdateParams): Promise<UserEntity> =>
-    apiClient.patch<UserEntity>('/v1/users/me', data),
+    /**
+     * Get my info
+     * @returns UserEntity
+     */
+    getMyInfo: (): Promise<UserEntity> => client!.get<UserEntity>('/v1/users/me'),
 
-  /**
-   * Update user
-   * @param userId -
-   * @param data - Request body
-   * @returns UserEntity
-   */
-  updateUser: (userId: string, data: UserUpdateParams): Promise<UserEntity> =>
-    apiClient.patch<UserEntity>(
-      '/v1/users/{userId}'.replace('{userId}', userId.toString()),
-      data,
-    ),
+    /**
+     * Update current user
+     * @param data - Request body
+     * @returns UserEntity
+     */
+    updateMe: (data: UserUpdateParams): Promise<UserEntity> => client!.patch<UserEntity>('/v1/users/me', data),
 
-  /**
-   * Change user status
-   * @param userId -
-   * @param status -
-   */
-  changeUserStatus: (userId: string, status: number) =>
-    apiClient.put(
-      '/v1/users/{userId}/status/{status}'
-        .replace('{userId}', userId.toString())
-        .replace('{status}', status.toString()),
-    ),
+    /**
+     * Update user
+     * @param userId -
+     * @param data - Request body
+     * @returns UserEntity
+     */
+    updateUser: (userId: string, data: UserUpdateParams): Promise<UserEntity> => client!.patch<UserEntity>('/v1/users/{userId}'.replace('{userId}', userId.toString()), data),
 
-  /**
-   * Save user device for notifications
-   * @param data - Request body
-   */
-  saveUserDevice: (data: UserDeviceDto) =>
-    apiClient.post('/v1/users/device', data),
+    /**
+     * Change user status
+     * @param userId -
+     * @param status -
+     */
+    changeUserStatus: (userId: string, status: number) => client!.put('/v1/users/{userId}/status/{status}'.replace('{userId}', userId.toString()).replace('{status}', status.toString())),
+
+    /**
+     * Save user device for notifications
+     * @param data - Request body
+     */
+    saveUserDevice: (data: UserDeviceDto) => client!.post('/v1/users/device', data)
+  };
 }

@@ -1,93 +1,64 @@
 // Generated collection for base_inbox/sla_target
-import { apiClient } from '../lib/api'
-import type { QueryParamValue } from '@docyrus/api-client'
-import type { ICollectionListParams } from './types'
+import { useDocyrusClient } from '@docyrus/signin';
+import type { QueryParamValue } from '@docyrus/api-client';
+import type { ICollectionListParams } from './types';
 
 export interface BaseInboxSlaTargetEntity {
+
   /** ID */
-  id?: string
+  id?: string;
 
   /** Record owner */
-  record_owner?: string
+  record_owner?: string;
 
   /** Created On */
-  created_on?: string
+  created_on?: string;
 
   /** Created By */
-  created_by?: string
+  created_by?: string;
 
   /** Last Modified On */
-  last_modified_on?: string
+  last_modified_on?: string;
 
   /** Last Modified By */
-  last_modified_by?: string
+  last_modified_by?: string;
 
   /** SLA Policy */
-  sla_policy: { id: string; name: string } | string
+  sla_policy: { id: string; name: string } | string;
 
   /** SLA Metric */
-  sla_metric: { id: string; name: string } | string
+  sla_metric: { id: string; name: string } | string;
 
   /** Priority */
-  priority: { id: string; name: string } | any
+  priority: { id: string; name: string } | any;
 
   /** Target Minutes */
-  target_minutes: number
+  target_minutes: number;
 
   /** Warning Threshold % */
-  warning_threshold_percent?: number
+  warning_threshold_percent?: number;
 }
 
-export const base_inboxSlaTargetCollection = {
-  /** List records with optional filtering, sorting, and pagination. */
-  list: (
-    params?: ICollectionListParams,
-  ): Promise<Array<BaseInboxSlaTargetEntity>> =>
-    apiClient.get(
-      '/v1/apps/base_inbox/data-sources/sla_target/items',
-      params as Record<string, QueryParamValue> | undefined,
-    ),
+export function useBaseInboxSlaTargetCollection() {
+  const client = useDocyrusClient();
 
-  /** Get record */
-  get: (
-    recordId: string,
-    params?: { columns?: Array<string> },
-  ): Promise<BaseInboxSlaTargetEntity> =>
-    apiClient.get(
-      '/v1/apps/base_inbox/data-sources/sla_target/items/{recordId}'.replace(
-        '{recordId}',
-        recordId,
-      ),
-      params,
-    ),
+  return {
+    /** List records with optional filtering, sorting, and pagination. */
+    list: (params?: ICollectionListParams): Promise<Array<BaseInboxSlaTargetEntity>> => client!.get('/v1/apps/base_inbox/data-sources/sla_target/items', params as Record<string, QueryParamValue> | undefined),
 
-  /** Create record */
-  create: (data: { data: any }): Promise<BaseInboxSlaTargetEntity> =>
-    apiClient.post('/v1/apps/base_inbox/data-sources/sla_target/items', data),
+    /** Get record */
+    get: (recordId: string, params?: { columns?: Array<string> }): Promise<BaseInboxSlaTargetEntity> => client!.get('/v1/apps/base_inbox/data-sources/sla_target/items/{recordId}'.replace('{recordId}', recordId), params),
 
-  /** Update record */
-  update: (
-    recordId: string,
-    data: { data: any },
-  ): Promise<BaseInboxSlaTargetEntity> =>
-    apiClient.patch(
-      '/v1/apps/base_inbox/data-sources/sla_target/items/{recordId}'.replace(
-        '{recordId}',
-        recordId,
-      ),
-      data,
-    ),
+    /** Create record */
+    create: (data: Record<string, any>): Promise<BaseInboxSlaTargetEntity> => client!.post('/v1/apps/base_inbox/data-sources/sla_target/items', data),
 
-  /** Delete record */
-  delete: (recordId: string): Promise<void> =>
-    apiClient.delete(
-      '/v1/apps/base_inbox/data-sources/sla_target/items/{recordId}'.replace(
-        '{recordId}',
-        recordId,
-      ),
-    ),
+    /** Update record */
+    update: (recordId: string, data: Record<string, any>): Promise<BaseInboxSlaTargetEntity> => client!.patch('/v1/apps/base_inbox/data-sources/sla_target/items/{recordId}'.replace('{recordId}', recordId), data),
 
-  /** Delete many records */
-  deleteMany: (data: { recordIds: Array<string> }): Promise<void> =>
-    apiClient.delete('/v1/apps/base_inbox/data-sources/sla_target/items', data),
+    /** Delete record */
+    delete: (recordId: string): Promise<void> => client!.delete('/v1/apps/base_inbox/data-sources/sla_target/items/{recordId}'.replace('{recordId}', recordId)),
+
+    /** Delete many records */
+    deleteMany: (data: { recordIds: Array<string> }): Promise<void> => client!.delete('/v1/apps/base_inbox/data-sources/sla_target/items', data)
+  };
 }

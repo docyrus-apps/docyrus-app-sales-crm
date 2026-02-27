@@ -1,120 +1,91 @@
 // Generated collection for base/organization
-import { apiClient } from '../lib/api'
-import type { QueryParamValue } from '@docyrus/api-client'
-import type { ICollectionListParams } from './types'
+import { useDocyrusClient } from '@docyrus/signin';
+import type { QueryParamValue } from '@docyrus/api-client';
+import type { ICollectionListParams } from './types';
 
 export interface BaseOrganizationEntity {
+
   /** ID */
-  id?: string
+  id?: string;
 
   /** Record owner */
-  record_owner?: string
+  record_owner?: string;
 
   /** Created On */
-  created_on?: string
+  created_on?: string;
 
   /** Created By */
-  created_by?: string
+  created_by?: string;
 
   /** Last Modified On */
-  last_modified_on?: string
+  last_modified_on?: string;
 
   /** Last Modified By */
-  last_modified_by?: string
+  last_modified_by?: string;
 
   /** Website */
-  website?: string
+  website?: string;
 
   /** Phone */
-  phone?: string
+  phone?: string;
 
   /** Name */
-  name: string
+  name: string;
 
   /** Tax Code */
-  tax_number?: string
+  tax_number?: string;
 
   /** Industry */
-  industry?: { id: string; name: string } | any
+  industry?: { id: string; name: string } | any;
 
   /** Email */
-  email?: string
+  email?: string;
 
   /** District */
-  district?: string
+  district?: string;
 
   /** Address */
-  address?: string
+  address?: string;
 
   /** Map Location */
-  map_location?: Record<string, any>
+  map_location?: Record<string, any>;
 
   /** Country */
-  country?: { id: string; name: string } | string
+  country?: { id: string; name: string } | string;
 
   /** Status */
-  status?: { id: string; name: string } | any
+  status?: { id: string; name: string } | any;
 
   /** City */
-  city?: string
+  city?: string;
 
   /** Tax Area */
-  tax_area?: string
+  tax_area?: string;
 
   /** Type */
-  type?: { id: string; name: string } | any
+  type?: { id: string; name: string } | any;
 }
 
-export const baseOrganizationCollection = {
-  /** List records with optional filtering, sorting, and pagination. */
-  list: (
-    params?: ICollectionListParams,
-  ): Promise<Array<BaseOrganizationEntity>> =>
-    apiClient.get(
-      '/v1/apps/base/data-sources/organization/items',
-      params as Record<string, QueryParamValue> | undefined,
-    ),
+export function useBaseOrganizationCollection() {
+  const client = useDocyrusClient();
 
-  /** Get record */
-  get: (
-    recordId: string,
-    params?: { columns?: Array<string> },
-  ): Promise<BaseOrganizationEntity> =>
-    apiClient.get(
-      '/v1/apps/base/data-sources/organization/items/{recordId}'.replace(
-        '{recordId}',
-        recordId,
-      ),
-      params,
-    ),
+  return {
+    /** List records with optional filtering, sorting, and pagination. */
+    list: (params?: ICollectionListParams): Promise<Array<BaseOrganizationEntity>> => client!.get('/v1/apps/base/data-sources/organization/items', params as Record<string, QueryParamValue> | undefined),
 
-  /** Create record */
-  create: (data: { data: any }): Promise<BaseOrganizationEntity> =>
-    apiClient.post('/v1/apps/base/data-sources/organization/items', data),
+    /** Get record */
+    get: (recordId: string, params?: { columns?: Array<string> }): Promise<BaseOrganizationEntity> => client!.get('/v1/apps/base/data-sources/organization/items/{recordId}'.replace('{recordId}', recordId), params),
 
-  /** Update record */
-  update: (
-    recordId: string,
-    data: { data: any },
-  ): Promise<BaseOrganizationEntity> =>
-    apiClient.patch(
-      '/v1/apps/base/data-sources/organization/items/{recordId}'.replace(
-        '{recordId}',
-        recordId,
-      ),
-      data,
-    ),
+    /** Create record */
+    create: (data: Record<string, any>): Promise<BaseOrganizationEntity> => client!.post('/v1/apps/base/data-sources/organization/items', data),
 
-  /** Delete record */
-  delete: (recordId: string): Promise<void> =>
-    apiClient.delete(
-      '/v1/apps/base/data-sources/organization/items/{recordId}'.replace(
-        '{recordId}',
-        recordId,
-      ),
-    ),
+    /** Update record */
+    update: (recordId: string, data: Record<string, any>): Promise<BaseOrganizationEntity> => client!.patch('/v1/apps/base/data-sources/organization/items/{recordId}'.replace('{recordId}', recordId), data),
 
-  /** Delete many records */
-  deleteMany: (data: { recordIds: Array<string> }): Promise<void> =>
-    apiClient.delete('/v1/apps/base/data-sources/organization/items', data),
+    /** Delete record */
+    delete: (recordId: string): Promise<void> => client!.delete('/v1/apps/base/data-sources/organization/items/{recordId}'.replace('{recordId}', recordId)),
+
+    /** Delete many records */
+    deleteMany: (data: { recordIds: Array<string> }): Promise<void> => client!.delete('/v1/apps/base/data-sources/organization/items', data)
+  };
 }

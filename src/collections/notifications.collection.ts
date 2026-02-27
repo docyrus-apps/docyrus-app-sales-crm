@@ -1,79 +1,70 @@
 // Generated collection for notifications
-import { apiClient } from '../lib/api'
+import { useDocyrusClient } from '@docyrus/signin';
 
 export interface NotificationEntity {
+
   /** Notification ID */
-  id: string
+  id: string;
 
   /** Notification subject */
-  subject: string
+  subject: string;
 
   /** Notification message */
-  message: string
+  message: string;
 
   /** Notification status */
-  status: string
+  status: string;
 
   /** Whether notification is seen */
-  seen: boolean
+  seen: boolean;
 
   /** Notification created on */
-  created_on: string
+  created_on: string;
 
   /** Notification notify on */
-  notify_on: string
+  notify_on: string;
 
   /** Notification created by */
-  created_by: string
+  created_by: string;
 
   /** Notification record owner */
-  record_owner: string
+  record_owner: string;
 
   /** Notification created by ID */
-  created_by_id: string
+  created_by_id: string;
 
   /** Notification created by full name */
-  created_by_fullname: string
+  created_by_fullname: string;
 
   /** Notification created by photo */
-  created_by_photo: string
+  created_by_photo: string;
 }
 
-export const NotificationsCollection = {
-  /**
-   * Get notifications
-   * @returns Array<NotificationEntity>
-   */
-  getNotifications: (): Promise<Array<NotificationEntity>> =>
-    apiClient.get<Array<NotificationEntity>>('/v1/notifications'),
+export function useNotificationsCollection() {
+  const client = useDocyrusClient();
 
-  /**
-   * Mark notification as read
-   * @param notification_id -
-   */
-  markNotificationAsRead: (notification_id: string) =>
-    apiClient.put(
-      '/v1/notifications/{notification_id}/status/read'.replace(
-        '{notification_id}',
-        notification_id.toString(),
-      ),
-    ),
+  return {
+    /**
+     * Get notifications
+     * @returns Array<NotificationEntity>
+     */
+    getNotifications: (): Promise<Array<NotificationEntity>> => client!.get<Array<NotificationEntity>>('/v1/notifications'),
 
-  /**
-   * Mark notification as unread
-   * @param notification_id -
-   */
-  markNotificationAsUnread: (notification_id: string) =>
-    apiClient.put(
-      '/v1/notifications/{notification_id}/status/unread'.replace(
-        '{notification_id}',
-        notification_id.toString(),
-      ),
-    ),
+    /**
+     * Mark notification as read
+     * @param notification_id -
+     */
+    markNotificationAsRead: (notification_id: string) => client!.put('/v1/notifications/{notification_id}/status/read'.replace('{notification_id}', notification_id.toString())),
 
-  /**
-   * Mark all notifications as read
-   */
-  markAllNotificationsAsRead: () =>
-    apiClient.put('/v1/notifications/status/read'),
+    /**
+     * Mark notification as unread
+     * @param notification_id -
+     */
+    markNotificationAsUnread: (notification_id: string) => client!.put('/v1/notifications/{notification_id}/status/unread'.replace('{notification_id}', notification_id.toString())),
+
+    /**
+     * Mark all notifications as read
+     */
+    markAllNotificationsAsRead: () => client!.put('/v1/notifications/status/read')
+  };
 }

@@ -1,57 +1,57 @@
 // Generated collection for enums
-import { apiClient } from '../lib/api'
+import { useDocyrusClient } from '@docyrus/signin';
 
 export interface EnumEntity {
+
   /** Unique identifier */
-  id: string
+  id: string;
 
   /** Enum name */
-  name: string
+  name: string;
 
   /** Description of the enum */
-  description?: string
+  description?: string | null;
 
   /** Color code */
-  color?: string
+  color?: string | null;
 
   /** Icon identifier */
-  icon?: string
+  icon?: string | null;
 
   /** Whether the enum is active */
-  active: boolean
+  active: boolean;
 
   /** Parent enum ID */
-  parent?: string
+  parent?: string | null;
 
   /** Enum number identifier */
-  no: number
+  no: number;
 
   /** Sort order */
-  sortOrder?: number
+  sortOrder?: number | null;
 
   /** Whether this is a final option */
-  isFinalOption?: boolean
+  isFinalOption?: boolean | null;
 
   /** App slug */
-  appSlug: string
+  appSlug: string;
 
   /** Data source slug */
-  dataSourceSlug: string
+  dataSourceSlug: string;
 
   /** Field slug */
-  fieldSlug: string
+  fieldSlug: string;
 }
 
-export const EnumsCollection = {
-  /**
-   * List all enums
-   * List all enums in a tree structure
-   * @returns Record<string, Record<string, Record<string, Array<EnumEntity>>>>
-   */
-  getEnums: (): Promise<
-    Record<string, Record<string, Record<string, Array<EnumEntity>>>>
-  > =>
-    apiClient.get<
-      Record<string, Record<string, Record<string, Array<EnumEntity>>>>
-    >('/v1/apps/enums'),
+export function useEnumsCollection() {
+  const client = useDocyrusClient();
+
+  return {
+    /**
+     * List all enums
+     * List all enums in a tree structure
+     * @returns Record<string, Record<string, Record<string, Array<EnumEntity>>>>
+     */
+    getEnums: (): Promise<Record<string, Record<string, Record<string, Array<EnumEntity>>>>> => client!.get<Record<string, Record<string, Record<string, Array<EnumEntity>>>>>('/v1/apps/enums')
+  };
 }

@@ -1,91 +1,67 @@
 // Generated collection for base/project
-import { apiClient } from '../lib/api'
-import type { QueryParamValue } from '@docyrus/api-client'
-import type { ICollectionListParams } from './types'
+import { useDocyrusClient } from '@docyrus/signin';
+import type { QueryParamValue } from '@docyrus/api-client';
+import type { ICollectionListParams } from './types';
 
 export interface BaseProjectEntity {
+
   /** ID */
-  id?: string
+  id?: string;
 
   /** Record owner */
-  record_owner?: string
+  record_owner?: string;
 
   /** Created On */
-  created_on?: string
+  created_on?: string;
 
   /** Created By */
-  created_by?: string
+  created_by?: string;
 
   /** Last Modified On */
-  last_modified_on?: string
+  last_modified_on?: string;
 
   /** Last Modified By */
-  last_modified_by?: string
+  last_modified_by?: string;
 
   /** Name */
-  name: string
+  name: string;
 
   /** Project Description */
-  description?: Record<string, any>
+  description?: Record<string, any>;
 
   /** Status */
-  status?: { id: string; name: string } | any
+  status?: { id: string; name: string } | any;
 
   /** Organization */
-  organization?: { id: string; name: string } | string
+  organization?: { id: string; name: string } | string;
 
   /** Portfolio */
-  portfolio?: { id: string; name: string } | string
+  portfolio?: { id: string; name: string } | string;
 
   /** Followers */
-  followers?: { id: string; name: string } | Array<string>
+  followers?: { id: string; name: string } | Array<string>;
 }
 
-export const baseProjectCollection = {
-  /** List records with optional filtering, sorting, and pagination. */
-  list: (params?: ICollectionListParams): Promise<Array<BaseProjectEntity>> =>
-    apiClient.get(
-      '/v1/apps/base/data-sources/project/items',
-      params as Record<string, QueryParamValue> | undefined,
-    ),
+export function useBaseProjectCollection() {
+  const client = useDocyrusClient();
 
-  /** Get record */
-  get: (
-    recordId: string,
-    params?: { columns?: Array<string> },
-  ): Promise<BaseProjectEntity> =>
-    apiClient.get(
-      '/v1/apps/base/data-sources/project/items/{recordId}'.replace(
-        '{recordId}',
-        recordId,
-      ),
-      params,
-    ),
+  return {
+    /** List records with optional filtering, sorting, and pagination. */
+    list: (params?: ICollectionListParams): Promise<Array<BaseProjectEntity>> => client!.get('/v1/apps/base/data-sources/project/items', params as Record<string, QueryParamValue> | undefined),
 
-  /** Create record */
-  create: (data: { data: any }): Promise<BaseProjectEntity> =>
-    apiClient.post('/v1/apps/base/data-sources/project/items', data),
+    /** Get record */
+    get: (recordId: string, params?: { columns?: Array<string> }): Promise<BaseProjectEntity> => client!.get('/v1/apps/base/data-sources/project/items/{recordId}'.replace('{recordId}', recordId), params),
 
-  /** Update record */
-  update: (recordId: string, data: { data: any }): Promise<BaseProjectEntity> =>
-    apiClient.patch(
-      '/v1/apps/base/data-sources/project/items/{recordId}'.replace(
-        '{recordId}',
-        recordId,
-      ),
-      data,
-    ),
+    /** Create record */
+    create: (data: Record<string, any>): Promise<BaseProjectEntity> => client!.post('/v1/apps/base/data-sources/project/items', data),
 
-  /** Delete record */
-  delete: (recordId: string): Promise<void> =>
-    apiClient.delete(
-      '/v1/apps/base/data-sources/project/items/{recordId}'.replace(
-        '{recordId}',
-        recordId,
-      ),
-    ),
+    /** Update record */
+    update: (recordId: string, data: Record<string, any>): Promise<BaseProjectEntity> => client!.patch('/v1/apps/base/data-sources/project/items/{recordId}'.replace('{recordId}', recordId), data),
 
-  /** Delete many records */
-  deleteMany: (data: { recordIds: Array<string> }): Promise<void> =>
-    apiClient.delete('/v1/apps/base/data-sources/project/items', data),
+    /** Delete record */
+    delete: (recordId: string): Promise<void> => client!.delete('/v1/apps/base/data-sources/project/items/{recordId}'.replace('{recordId}', recordId)),
+
+    /** Delete many records */
+    deleteMany: (data: { recordIds: Array<string> }): Promise<void> => client!.delete('/v1/apps/base/data-sources/project/items', data)
+  };
 }

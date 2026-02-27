@@ -1,127 +1,100 @@
 // Generated collection for base/time_entry
-import { apiClient } from '../lib/api'
-import type { QueryParamValue } from '@docyrus/api-client'
-import type { ICollectionListParams } from './types'
+import { useDocyrusClient } from '@docyrus/signin';
+import type { QueryParamValue } from '@docyrus/api-client';
+import type { ICollectionListParams } from './types';
 
 export interface BaseTimeEntryEntity {
+
   /** ID */
-  id?: string
+  id?: string;
 
   /** Record owner */
-  record_owner?: string
+  record_owner?: string;
 
   /** Created On */
-  created_on?: string
+  created_on?: string;
 
   /** Created By */
-  created_by?: string
+  created_by?: string;
 
   /** Last Modified On */
-  last_modified_on?: string
+  last_modified_on?: string;
 
   /** Last Modified By */
-  last_modified_by?: string
+  last_modified_by?: string;
 
   /** Billable Duration */
-  duration_billable?: number
+  duration_billable?: number;
 
   /** Billing Status */
-  billing_status?: { id: string; name: string } | any
+  billing_status?: { id: string; name: string } | any;
 
   /** Contact Billed */
-  contact_billed?: string
+  contact_billed?: string;
 
   /** Duration */
-  duration: number
+  duration: number;
 
   /** Time &amp; Material Report */
-  time_and_material_report?: { id: string; name: string } | string
+  time_and_material_report?: { id: string; name: string } | string;
 
   /** Record Owner Billed */
-  record_owner_billed?: { id: string; name: string } | string
+  record_owner_billed?: { id: string; name: string } | string;
 
   /** Description Billed */
-  description_billed?: string
+  description_billed?: string;
 
   /** Billable */
-  billable?: boolean
+  billable?: boolean;
 
   /** Duration Billed */
-  duration_billed?: number
+  duration_billed?: number;
 
   /** Date Billed */
-  date_billed?: string
+  date_billed?: string;
 
   /** Description */
-  description: string
+  description: string;
 
   /** Contact */
-  contact?: string
+  contact?: string;
 
   /** Date */
-  date: string
+  date: string;
 
   /** Task */
-  task?: { id: string; name: string } | string
+  task?: { id: string; name: string } | string;
 
   /** Project */
-  project?: { id: string; name: string } | string
+  project?: { id: string; name: string } | string;
 
   /** Operation */
-  operation?: { id: string; name: string } | string
+  operation?: { id: string; name: string } | string;
 
   /** Organization */
-  organization?: { id: string; name: string } | string
+  organization?: { id: string; name: string } | string;
 }
 
-export const baseTimeEntryCollection = {
-  /** List records with optional filtering, sorting, and pagination. */
-  list: (params?: ICollectionListParams): Promise<Array<BaseTimeEntryEntity>> =>
-    apiClient.get(
-      '/v1/apps/base/data-sources/time_entry/items',
-      params as Record<string, QueryParamValue> | undefined,
-    ),
+export function useBaseTimeEntryCollection() {
+  const client = useDocyrusClient();
 
-  /** Get record */
-  get: (
-    recordId: string,
-    params?: { columns?: Array<string> },
-  ): Promise<BaseTimeEntryEntity> =>
-    apiClient.get(
-      '/v1/apps/base/data-sources/time_entry/items/{recordId}'.replace(
-        '{recordId}',
-        recordId,
-      ),
-      params,
-    ),
+  return {
+    /** List records with optional filtering, sorting, and pagination. */
+    list: (params?: ICollectionListParams): Promise<Array<BaseTimeEntryEntity>> => client!.get('/v1/apps/base/data-sources/time_entry/items', params as Record<string, QueryParamValue> | undefined),
 
-  /** Create record */
-  create: (data: { data: any }): Promise<BaseTimeEntryEntity> =>
-    apiClient.post('/v1/apps/base/data-sources/time_entry/items', data),
+    /** Get record */
+    get: (recordId: string, params?: { columns?: Array<string> }): Promise<BaseTimeEntryEntity> => client!.get('/v1/apps/base/data-sources/time_entry/items/{recordId}'.replace('{recordId}', recordId), params),
 
-  /** Update record */
-  update: (
-    recordId: string,
-    data: { data: any },
-  ): Promise<BaseTimeEntryEntity> =>
-    apiClient.patch(
-      '/v1/apps/base/data-sources/time_entry/items/{recordId}'.replace(
-        '{recordId}',
-        recordId,
-      ),
-      data,
-    ),
+    /** Create record */
+    create: (data: Record<string, any>): Promise<BaseTimeEntryEntity> => client!.post('/v1/apps/base/data-sources/time_entry/items', data),
 
-  /** Delete record */
-  delete: (recordId: string): Promise<void> =>
-    apiClient.delete(
-      '/v1/apps/base/data-sources/time_entry/items/{recordId}'.replace(
-        '{recordId}',
-        recordId,
-      ),
-    ),
+    /** Update record */
+    update: (recordId: string, data: Record<string, any>): Promise<BaseTimeEntryEntity> => client!.patch('/v1/apps/base/data-sources/time_entry/items/{recordId}'.replace('{recordId}', recordId), data),
 
-  /** Delete many records */
-  deleteMany: (data: { recordIds: Array<string> }): Promise<void> =>
-    apiClient.delete('/v1/apps/base/data-sources/time_entry/items', data),
+    /** Delete record */
+    delete: (recordId: string): Promise<void> => client!.delete('/v1/apps/base/data-sources/time_entry/items/{recordId}'.replace('{recordId}', recordId)),
+
+    /** Delete many records */
+    deleteMany: (data: { recordIds: Array<string> }): Promise<void> => client!.delete('/v1/apps/base/data-sources/time_entry/items', data)
+  };
 }
