@@ -46,7 +46,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useUsersCollection } from '@/collections/users.collection'
 import { useNotifications } from '@/hooks/use-notifications'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -130,7 +130,9 @@ export function AppSidebar() {
   const { t } = useTranslation()
   const { data: notifications } = useNotifications()
   const usersCollection = useUsersCollection()
-  const [userProfile, setUserProfile] = useState<UserEntity | null>(null)
+  const [userProfile, setUserProfile] = useState<
+    (UserEntity & { photo?: string }) | null
+  >(null)
   const [profileDialogOpen, setProfileDialogOpen] = useState(false)
   const [changePasswordDialogOpen, setChangePasswordDialogOpen] =
     useState(false)
@@ -139,7 +141,8 @@ export function AppSidebar() {
 
   useEffect(() => {
     usersCollection.getMyInfo().then(setUserProfile).catch(console.error)
-  }, [usersCollection])
+    // eslint-disable-next-line -- usersCollection is a new ref each render, run only on mount
+  }, [])
 
   const initials = userProfile
     ? `${(userProfile.firstname[0] || '').toUpperCase()}${(userProfile.lastname[0] || '').toUpperCase()}`
@@ -232,6 +235,12 @@ export function AppSidebar() {
                   className="rounded-lg bg-card shadow-sm data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
                   <Avatar className="h-8 w-8 rounded-lg">
+                    {userProfile?.photo && (
+                      <AvatarImage
+                        src={userProfile.photo}
+                        alt={displayName ?? ''}
+                      />
+                    )}
                     <AvatarFallback className="rounded-lg">
                       {initials}
                     </AvatarFallback>
@@ -256,6 +265,12 @@ export function AppSidebar() {
                 <DropdownMenuLabel className="p-0 font-normal">
                   <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                     <Avatar className="h-8 w-8 rounded-lg">
+                      {userProfile?.photo && (
+                        <AvatarImage
+                          src={userProfile.photo}
+                          alt={displayName ?? ''}
+                        />
+                      )}
                       <AvatarFallback className="rounded-lg">
                         {initials}
                       </AvatarFallback>
