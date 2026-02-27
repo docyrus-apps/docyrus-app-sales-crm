@@ -4,7 +4,7 @@ import { X } from 'lucide-react'
 
 import { Separator } from '@/components/ui/separator'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 
 import { getColumn } from '../lib/helpers'
 import { FilterOperator } from './filter-operator'

@@ -24,7 +24,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { cva, type VariantProps } from 'class-variance-authority'
 
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   Collapsible,

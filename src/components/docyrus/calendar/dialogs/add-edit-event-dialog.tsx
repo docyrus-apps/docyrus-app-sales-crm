@@ -9,7 +9,7 @@ import { addMinutes, format, set } from 'date-fns'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import {
   Dialog,
   DialogClose,

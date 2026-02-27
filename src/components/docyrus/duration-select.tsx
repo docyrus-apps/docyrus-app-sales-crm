@@ -6,7 +6,7 @@ import { type ReactNode } from 'react'
 
 import { Clock } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import {
   Popover,
   PopoverContent,

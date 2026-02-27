@@ -5,7 +5,7 @@ import { Check, Eye, EyeOff, Loader2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { apiClient } from '@/lib/api'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import { Input } from '@/components/ui/input'
 import {
   Field,

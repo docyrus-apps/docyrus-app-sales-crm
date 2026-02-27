@@ -6,7 +6,7 @@ import { zodValidator } from '@tanstack/zod-form-adapter'
 import { CalendarIcon, Loader2 } from 'lucide-react'
 import { format } from 'date-fns'
 import type { TaskFormData } from '@/schemas/task-schema'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import {
   AwesomeDialog,
   AwesomeDialogBody,

@@ -1,7 +1,7 @@
 'use client'
 import { Menu } from '@/components/admin-panel/menu'
 import { SidebarToggle } from '@/components/admin-panel/sidebar-toggle'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import { useSidebar } from '@/hooks/use-sidebar'
 import { useStore } from '@/hooks/use-store'
 import { cn } from '@/lib/utils'

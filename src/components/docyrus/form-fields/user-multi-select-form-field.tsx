@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { Check, ChevronsUpDown, X } from 'lucide-react'
 
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {

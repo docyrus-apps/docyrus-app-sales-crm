@@ -35,7 +35,7 @@ import {
   AwesomeCardTrend,
   AwesomeCardValue,
 } from '@/components/docyrus/awesome-card'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDeals } from '@/hooks/use-deals'

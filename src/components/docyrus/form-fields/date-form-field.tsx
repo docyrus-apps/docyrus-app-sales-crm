@@ -6,7 +6,7 @@ import { CalendarIcon } from 'lucide-react'
 import { format } from 'date-fns'
 
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import { Calendar } from '@/components/ui/calendar'
 import {
   Popover,

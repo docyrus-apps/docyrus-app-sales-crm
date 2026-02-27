@@ -13,7 +13,7 @@ import {
 import { Plate, usePlateEditor } from 'platejs/react'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 
 import {
   DropdownMenu,

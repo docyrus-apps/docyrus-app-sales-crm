@@ -3,7 +3,7 @@
 import { formatDate } from 'date-fns'
 import { motion } from 'motion/react'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 
 import { buttonHover, transition } from '../animations'
 import { useCalendar } from '../contexts/calendar-context'

@@ -40,7 +40,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 
 import { Calendar } from '@/components/ui/calendar'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 
 import { numberFilterOperators } from '../core/operators'
 import { useDebounceCallback } from '../hooks/use-debounce-callback'

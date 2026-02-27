@@ -1,5 +1,5 @@
 import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 
 import { type DocyrusFile } from './lib/file-utils'
 import { getSourceIcon } from './lib/file-utils'

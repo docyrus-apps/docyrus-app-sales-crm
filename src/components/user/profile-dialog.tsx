@@ -5,7 +5,7 @@ import { Camera, Loader2, Save } from 'lucide-react'
 import { toast } from 'sonner'
 import { UsersCollection } from '@/collections/users.collection'
 import { apiClient } from '@/lib/api'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import { Input } from '@/components/ui/input'
 import {
   Field,

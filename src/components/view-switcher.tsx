@@ -1,6 +1,6 @@
 import { ChevronDown, Columns3, LayoutGrid, List } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import {
   DropdownMenu,
   DropdownMenuContent,

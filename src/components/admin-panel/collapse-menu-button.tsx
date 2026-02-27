@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { ChevronDown, Dot, LucideIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import { DropdownMenuArrow } from '@radix-ui/react-dropdown-menu'
 import {
   Collapsible,

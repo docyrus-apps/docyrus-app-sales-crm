@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { LayoutGrid, LogOut, User } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   Tooltip,

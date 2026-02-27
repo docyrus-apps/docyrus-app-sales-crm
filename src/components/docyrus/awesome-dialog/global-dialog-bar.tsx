@@ -4,7 +4,7 @@ import { AppWindow, X } from 'lucide-react'
 
 import { useGlobalDialog } from './contexts/global-dialog-context'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 
 import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 

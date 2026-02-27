@@ -30,7 +30,7 @@ import {
 
 import { Checkbox } from '@/components/ui/checkbox'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 
 import { isAnyOf } from '../lib/array'
 import { getColumn } from '../lib/helpers'

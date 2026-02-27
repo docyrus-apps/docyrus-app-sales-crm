@@ -8,7 +8,7 @@ import { format } from 'date-fns'
 import { type DateRange } from 'react-day-picker'
 
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import { Calendar } from '@/components/ui/calendar'
 import {
   Popover,

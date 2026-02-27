@@ -3,7 +3,7 @@
 import { motion } from 'motion/react'
 import { Plus } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 
 import { slideFromLeft, slideFromRight, transition } from '../animations'
 import { useCalendar } from '../contexts/calendar-context'

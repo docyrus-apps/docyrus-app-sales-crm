@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { MenuIcon, PanelsTopLeft } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import { Menu } from '@/components/admin-panel/menu'
 import {
   Sheet,

@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Pencil } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import {
   Card,
   CardAction,

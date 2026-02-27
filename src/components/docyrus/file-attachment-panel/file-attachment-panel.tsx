@@ -6,7 +6,7 @@ import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 
 import { DeleteConfirmDialog } from '@/components/docyrus/delete-confirm-dialog'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 
 import { ScrollArea } from '@/components/ui/scroll-area'
 

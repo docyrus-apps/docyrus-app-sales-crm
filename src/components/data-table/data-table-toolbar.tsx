@@ -8,7 +8,7 @@ import { DataTableDateFilter } from '@/components/data-table/data-table-date-fil
 import { DataTableFacetedFilter } from '@/components/data-table/data-table-faceted-filter'
 import { DataTableSliderFilter } from '@/components/data-table/data-table-slider-filter'
 import { DataTableViewOptions } from '@/components/data-table/data-table-view-options'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 

@@ -9,7 +9,7 @@ import {
   getDefaultClassNames,
 } from 'react-day-picker'
 
-import { buttonVariants } from '@/components/ui/button'
+import { buttonVariants } from '@/components/animate-ui/components/buttons/button'
 import { cn } from '@/lib/utils'
 
 const dayPickerVariants = cva('bg-background p-3', {

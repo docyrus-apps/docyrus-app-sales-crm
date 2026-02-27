@@ -8,7 +8,7 @@ import { type Transition } from 'motion/react'
 
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import {

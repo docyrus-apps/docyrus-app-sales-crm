@@ -4,7 +4,7 @@ import { useState } from 'react'
 
 import { ChevronDown, Copy, GripVertical, Plus, Trash2 } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'

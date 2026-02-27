@@ -92,7 +92,7 @@ import {
   type PlaceAutocompleteProps,
 } from '@/components/docyrus/place-autocomplete'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import { ButtonGroup } from '@/components/ui/button-group'
 import {
   DropdownMenu,

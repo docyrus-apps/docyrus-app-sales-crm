@@ -5,7 +5,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { ChevronsUpDownIcon, SearchIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import {

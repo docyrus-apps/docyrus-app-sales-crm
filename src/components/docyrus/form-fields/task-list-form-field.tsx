@@ -4,7 +4,7 @@ import { Plus, Trash2 } from 'lucide-react'
 
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import { Checkbox } from '@/components/ui/checkbox'
 
 import { type DocyrusFormFieldProps } from './types'

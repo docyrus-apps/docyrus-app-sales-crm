@@ -4,7 +4,7 @@ import { memo, useCallback, useRef, type ComponentProps } from 'react'
 
 import { type TableMeta } from '@tanstack/react-table'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import {
   Dialog,
   DialogContent,

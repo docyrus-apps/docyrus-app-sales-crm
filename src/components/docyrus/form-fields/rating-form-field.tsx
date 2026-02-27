@@ -3,7 +3,7 @@
 import { Star } from 'lucide-react'
 
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import { cn } from '@/lib/utils'
 
 import { type DocyrusFormFieldProps } from './types'

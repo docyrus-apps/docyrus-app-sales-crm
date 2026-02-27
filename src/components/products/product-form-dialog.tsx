@@ -4,7 +4,7 @@ import { zodValidator } from '@tanstack/zod-form-adapter'
 import { useTranslation } from 'react-i18next'
 import { Loader2 } from 'lucide-react'
 import type { ProductFormData } from '@/schemas/product-schema'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import {
   AwesomeDialog,
   AwesomeDialogBody,

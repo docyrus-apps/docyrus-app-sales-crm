@@ -14,7 +14,7 @@ import debounce from 'lodash/debounce.js'
 import { EraserIcon, PlusIcon } from 'lucide-react'
 import { useEditorRef, useEditorSelector } from 'platejs/react'
 
-import { buttonVariants } from '@/components/ui/button'
+import { buttonVariants } from '@/components/animate-ui/components/buttons/button'
 import {
   DropdownMenu,
   DropdownMenuContent,

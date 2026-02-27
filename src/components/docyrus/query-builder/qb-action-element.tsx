@@ -5,7 +5,7 @@ import { memo } from 'react'
 import { type ActionProps } from 'react-querybuilder'
 
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 
 const QBActionElement = memo(
   ({

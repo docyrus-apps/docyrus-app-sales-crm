@@ -5,7 +5,7 @@ import { type ReactNode, useCallback, useEffect, useState } from 'react'
 import { Loader2, ShieldAlert } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
-import { buttonVariants } from '@/components/ui/button'
+import { buttonVariants } from '@/components/animate-ui/components/buttons/button'
 
 import { MorphPopover } from '@/components/docyrus/morph-popover'
 

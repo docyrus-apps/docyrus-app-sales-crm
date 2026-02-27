@@ -15,7 +15,7 @@ import { SearchIcon, XIcon } from 'lucide-react'
 
 import { useDirection } from '@/components/ui/direction'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import {
   Dialog,
   DialogClose,

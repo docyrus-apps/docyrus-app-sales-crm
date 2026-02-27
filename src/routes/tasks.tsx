@@ -11,7 +11,7 @@ import {
 import type { ColumnDef } from '@tanstack/react-table'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import { Badge } from '@/components/ui/badge'
 import { useDeleteTask, useTasks } from '@/hooks/use-tasks'
 import { DataTable } from '@/components/data-table/data-table'

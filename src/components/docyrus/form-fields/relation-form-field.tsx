@@ -7,7 +7,7 @@ import { cva } from 'class-variance-authority'
 
 import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'

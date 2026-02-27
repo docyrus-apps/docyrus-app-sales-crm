@@ -1,7 +1,7 @@
 import { type DragEvent, useCallback, useRef, useState } from 'react'
 
 import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 
 interface FileUploadZoneProps {
   accept?: string

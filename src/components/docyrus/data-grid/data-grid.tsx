@@ -19,7 +19,7 @@ import {
   ActionBarSeparator,
 } from '@/components/ui/action-bar'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 
 import { useAsRef } from '@/hooks/use-as-ref'
 

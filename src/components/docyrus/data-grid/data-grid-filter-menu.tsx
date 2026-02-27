@@ -34,7 +34,7 @@ import {
   DataTableFilter,
   useDataTableFilters,
 } from '@/components/docyrus/data-table-filter'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import { cn } from '@/lib/utils'
 
 import { type FilterOperator, type FilterValue } from './types'

@@ -3,7 +3,7 @@ import { Eye } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 
 export function getCompaniesColumns(): Array<ColumnDef<any>> {
   return [

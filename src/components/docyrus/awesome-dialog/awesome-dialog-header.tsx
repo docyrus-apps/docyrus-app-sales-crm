@@ -6,7 +6,7 @@ import { useAwesomeDialog } from './contexts/dialog-context'
 import { useOptionalGlobalDialog } from './contexts/global-dialog-context'
 import type { AwesomeDialogHeaderProps } from './types'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 
 import { AvatarThumbnail } from '@/components/docyrus/avatar-thumbnail'
 import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'

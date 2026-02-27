@@ -10,7 +10,7 @@ import {
 import { AvatarSelect } from '@/components/docyrus/avatar-select'
 import { AvatarThumbnail } from '@/components/docyrus/avatar-thumbnail'
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import {
   Popover,
   PopoverContent,

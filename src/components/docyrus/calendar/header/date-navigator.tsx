@@ -8,7 +8,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 
 import { type TCalendarView } from '../types'
 import { type IEvent } from '../interfaces'

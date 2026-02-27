@@ -32,7 +32,7 @@ import {
   XIcon,
 } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import {
   Tooltip,
   TooltipContent,

@@ -6,7 +6,7 @@ import { Check, ChevronsUpDown, X } from 'lucide-react'
 
 import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/animate-ui/components/buttons/button'
 import { Badge } from '@/components/ui/badge'
 import {
   Popover,
