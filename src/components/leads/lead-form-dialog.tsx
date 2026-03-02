@@ -279,7 +279,7 @@ export function LeadFormDialog({
                   </Label>
                   <PhoneInput
                     value={field.state.value}
-                    onChange={field.handleChange}
+                    onValueChange={field.handleChange}
                     placeholder={t('leads.form.phonePlaceholder')}
                   />
                   {field.state.meta.errors?.[0] && (
