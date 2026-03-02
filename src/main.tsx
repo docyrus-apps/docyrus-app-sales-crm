@@ -227,6 +227,56 @@ const oauthScopes = (
   .split(' ')
   .filter(Boolean)
 
+function isEmbeddedInIframe() {
+  try {
+    return window.self !== window.top
+  } catch {
+    return true
+  }
+}
+
+function resolveAllowedHostOrigins(): Array<string> {
+  const origins = new Set<string>()
+
+  const envOrigins = (import.meta.env.VITE_ALLOWED_HOST_ORIGINS || '')
+    .split(',')
+    .map((origin: string) => origin.trim())
+    .filter(Boolean)
+
+  for (const origin of envOrigins) {
+    origins.add(origin)
+  }
+
+  const locationWithAncestors = window.location as Location & Record<string, unknown>
+  const ancestorOrigins = locationWithAncestors.ancestorOrigins as
+    | { length: number; [index: number]: string }
+    | undefined
+
+  if (ancestorOrigins && ancestorOrigins.length > 0) {
+    const parentOrigin = ancestorOrigins[0]
+    if (parentOrigin) {
+      origins.add(parentOrigin)
+    }
+  }
+
+  if (document.referrer) {
+    try {
+      origins.add(new URL(document.referrer).origin)
+    } catch {
+      // Ignore invalid referrer URLs.
+    }
+  }
+
+  return Array.from(origins)
+}
+
+const allowedHostOrigins = resolveAllowedHostOrigins()
+const forceMode =
+  isEmbeddedInIframe()
+  && new URLSearchParams(window.location.search).get('embedded') === 'true'
+    ? 'iframe'
+    : undefined
+
 const rootElement = document.getElementById('app')
 if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
@@ -238,6 +288,8 @@ if (rootElement && !rootElement.innerHTML) {
         redirectUri={`${window.location.origin}${import.meta.env.VITE_OAUTH2_REDIRECT_URI}`}
         scopes={oauthScopes}
         callbackPath="/auth/callback"
+        allowedHostOrigins={allowedHostOrigins.length > 0 ? allowedHostOrigins : undefined}
+        forceMode={forceMode}
       >
         <TanStackQueryProvider.Provider>
           <I18nextProvider i18n={i18n}>
