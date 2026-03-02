@@ -25,6 +25,7 @@ export function useTasks(params?: ICollectionListParams) {
           'parent',
           'created_on',
         ],
+        orderBy: params?.orderBy || 'created_on DESC',
       })
       return response
     },

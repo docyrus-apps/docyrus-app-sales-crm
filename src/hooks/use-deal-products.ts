@@ -22,6 +22,7 @@ export function useDealProducts(params?: ICollectionListParams) {
           'gross_total',
           'net_total',
         ],
+        orderBy: params?.orderBy || 'created_on DESC',
       })
       return response
     },

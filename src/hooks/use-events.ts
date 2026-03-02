@@ -21,6 +21,7 @@ export function useEvents(filters?: any) {
           'created_on',
         ],
         filters,
+        orderBy: 'created_on DESC',
       }),
   })
 }

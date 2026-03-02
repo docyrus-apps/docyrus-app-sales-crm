@@ -20,6 +20,7 @@ export function useSalesOrders(params?: ICollectionListParams) {
           'grand_total',
           'created_on',
         ],
+        orderBy: params?.orderBy || 'created_on DESC',
       })
       return response
     },

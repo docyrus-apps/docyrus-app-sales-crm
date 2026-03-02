@@ -20,6 +20,7 @@ export function useProducts(params?: ICollectionListParams) {
           'tax',
           'created_on',
         ],
+        orderBy: params?.orderBy || 'created_on DESC',
       })
       return response
     },

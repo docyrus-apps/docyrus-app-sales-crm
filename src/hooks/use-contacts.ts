@@ -20,6 +20,7 @@ export function useContacts(params?: ICollectionListParams) {
           'organization(id,name)',
           'created_on',
         ],
+        orderBy: params?.orderBy || 'created_on DESC',
       })
       return response
     },

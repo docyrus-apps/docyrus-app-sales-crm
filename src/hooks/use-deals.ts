@@ -29,6 +29,7 @@ export function useDeals(params?: ICollectionListParams) {
           'lead_source',
           'created_on',
         ],
+        orderBy: params?.orderBy || 'created_on DESC',
       })
       return response
     },

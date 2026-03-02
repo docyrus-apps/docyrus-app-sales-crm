@@ -28,6 +28,7 @@ export function useLeads(params?: ICollectionListParams) {
           'record_owner',
           'created_on',
         ],
+        orderBy: params?.orderBy || 'created_on DESC',
       })
       return response
     },

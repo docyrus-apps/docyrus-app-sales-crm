@@ -29,6 +29,7 @@ export function useCompanies(params?: ICollectionListParams) {
           'tax_number',
           'created_on',
         ],
+        orderBy: params?.orderBy || 'created_on DESC',
       })
       return response
     },
