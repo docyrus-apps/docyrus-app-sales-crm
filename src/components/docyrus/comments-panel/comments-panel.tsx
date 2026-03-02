@@ -1,64 +1,62 @@
-'use client'
+'use client';
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react';
 
-import { type Value } from 'platejs'
+import { type Value } from 'platejs';
 
-import { DeleteConfirmDialog } from '@/components/docyrus/delete-confirm-dialog'
+import { DeleteConfirmDialog } from '@/components/docyrus/delete-confirm-dialog';
 
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { ScrollArea } from '@/components/ui/scroll-area';
 
-import { Separator } from '@/components/ui/separator'
+import { Separator } from '@/components/ui/separator';
 
-import { Skeleton } from '@/components/ui/skeleton'
+import { Skeleton } from '@/components/ui/skeleton';
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
-import { CommentCreateForm } from './comment-create-form'
-import { CommentEmptyState } from './comment-empty-state'
-import { CommentThread } from './comment-thread'
-import { CommentMentionUsersContext } from './comment-mention-input'
+import { CommentCreateForm } from './comment-create-form';
+import { CommentEmptyState } from './comment-empty-state';
+import { CommentThread } from './comment-thread';
+import { CommentMentionUsersContext } from './comment-mention-input';
 
 import {
   type CommentThread as CommentThreadType,
   type CommentsPanelProps,
-  type MentionUser,
-} from './types'
+  type MentionUser
+} from './types';
 
-import { useDisclosure } from './hooks/use-disclosure'
-import { serializeCommentMarkdown } from './lib/comment-markdown'
+import { useDisclosure } from './hooks/use-disclosure';
+import { serializeCommentMarkdown } from './lib/comment-markdown';
 
 function buildThreads(
   comments: Array<{
-    id: string
-    parent_id: string | null
-    created_on: string
-  }>,
+    id: string;
+    parent_id: string | null;
+    created_on: string;
+  }>
 ): Array<CommentThreadType> {
-  const topLevel = comments.filter((c) => c.parent_id === null)
-  const repliesByParent = new Map<string, typeof comments>()
+  const topLevel = comments.filter(c => c.parent_id === null);
+  const repliesByParent = new Map<string, typeof comments>();
 
   for (const c of comments) {
     if (c.parent_id !== null) {
-      const existing = repliesByParent.get(c.parent_id) ?? []
+      const existing = repliesByParent.get(c.parent_id) ?? [];
 
-      existing.push(c)
-      repliesByParent.set(c.parent_id, existing)
+      existing.push(c);
+      repliesByParent.set(c.parent_id, existing);
     }
   }
 
   return topLevel
     .sort(
-      (a, b) =>
-        new Date(a.created_on).getTime() - new Date(b.created_on).getTime(),
+      (a, b) => new Date(a.created_on).getTime() - new Date(b.created_on).getTime()
     )
-    .map((comment) => ({
+    .map(comment => ({
       comment: comment as CommentThreadType['comment'],
       replies: (repliesByParent.get(comment.id) ?? []).sort(
-        (a, b) =>
-          new Date(a.created_on).getTime() - new Date(b.created_on).getTime(),
-      ) as CommentThreadType['replies'],
-    }))
+        (a, b) => new Date(a.created_on).getTime() - new Date(b.created_on).getTime()
+      ) as CommentThreadType['replies']
+    }));
 }
 
 export function CommentsPanel({
@@ -74,101 +72,95 @@ export function CommentsPanel({
   onDeleteComment,
   isCreatePending = false,
   isDeletePending = false,
-  className,
+  className
 }: CommentsPanelProps) {
-  const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [replyingToCommentId, setReplyingToCommentId] = useState<string | null>(
-    null,
-  )
+    null
+  );
   const [commentToDeleteId, setCommentToDeleteId] = useState<string | null>(
-    null,
-  )
-  const deleteDialog = useDisclosure()
+    null
+  );
+  const deleteDialog = useDisclosure();
 
   const usersMap = useMemo(() => {
-    const map = new Map<string, NonNullable<typeof users>[0]>()
+    const map = new Map<string, NonNullable<typeof users>[0]>();
 
     if (users) {
       for (const user of users) {
         if (user.id) {
-          map.set(user.id, user)
+          map.set(user.id, user);
         }
       }
     }
 
-    return map
-  }, [users])
+    return map;
+  }, [users]);
 
   const mentionUsers = useMemo<Array<MentionUser>>(() => {
-    if (!users) return []
+    if (!users) return [];
 
     return users
-      .filter((u) => u.id)
-      .map((u) => ({
+      .filter(u => u.id)
+      .map(u => ({
         key: u.id,
         text: `${u.firstname} ${u.lastname}`,
-        initials: `${u.firstname?.[0] ?? ''}${u.lastname?.[0] ?? ''}`,
-      }))
-  }, [users])
+        initials: `${u.firstname?.[0] ?? ''}${u.lastname?.[0] ?? ''}`
+      }));
+  }, [users]);
 
-  const threads = useMemo(() => buildThreads(comments ?? []), [comments])
+  const threads = useMemo(() => buildThreads(comments ?? []), [comments]);
 
   const handleCreateComment = useCallback(
     async (content: Value, parentId?: string, files?: Array<File>) => {
-      const message = serializeCommentMarkdown(content)
+      const message = serializeCommentMarkdown(content);
 
       await onCreateComment?.({
         message,
         parentId,
-        attachments: files && files.length > 0 ? files : undefined,
-      })
-      setReplyingToCommentId(null)
+        attachments: files && files.length > 0 ? files : undefined
+      });
+      setReplyingToCommentId(null);
     },
-    [onCreateComment],
-  )
+    [onCreateComment]
+  );
 
   const handleSaveEdit = useCallback(
     async (commentId: string, content: Value) => {
-      const message = serializeCommentMarkdown(content)
+      const message = serializeCommentMarkdown(content);
 
-      await onUpdateComment?.(commentId, message)
-      setEditingCommentId(null)
+      await onUpdateComment?.(commentId, message);
+      setEditingCommentId(null);
     },
-    [onUpdateComment],
-  )
+    [onUpdateComment]
+  );
 
   const handleDeleteClick = useCallback(
     (commentId: string) => {
-      setCommentToDeleteId(commentId)
-      deleteDialog.onOpen()
+      setCommentToDeleteId(commentId);
+      deleteDialog.onOpen();
     },
-    [deleteDialog],
-  )
+    [deleteDialog]
+  );
 
   const handleDeleteConfirm = useCallback(async () => {
-    if (!commentToDeleteId) return
-    await onDeleteComment?.(commentToDeleteId)
-    deleteDialog.onClose()
-    setCommentToDeleteId(null)
-  }, [commentToDeleteId, onDeleteComment, deleteDialog])
+    if (!commentToDeleteId) return;
+    await onDeleteComment?.(commentToDeleteId);
+    deleteDialog.onClose();
+    setCommentToDeleteId(null);
+  }, [commentToDeleteId, onDeleteComment, deleteDialog]);
 
-  const currentUserId = currentUser?.id
+  const currentUserId = currentUser?.id;
   const resolvedHeight = maxHeight
-    ? typeof maxHeight === 'number'
-      ? `${maxHeight}px`
-      : maxHeight
-    : '24rem'
-  const panelStyle = { maxHeight: resolvedHeight }
+    ? (typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight)
+    : '24rem';
+  const panelStyle = { maxHeight: resolvedHeight };
 
   return (
     <CommentMentionUsersContext.Provider value={mentionUsers}>
       <div
-        className={cn(
-          '@container/comments-panel flex flex-col overflow-hidden',
-          className,
-        )}
-        style={panelStyle}
-      >
+        className={cn('@container/comments-panel flex flex-col overflow-hidden', className)}
+        style={panelStyle}>
         {/* Header */}
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
@@ -201,7 +193,7 @@ export function CommentsPanel({
             <CommentEmptyState />
           ) : (
             <div className="flex flex-col gap-3 px-1">
-              {threads.map((thread) => (
+              {threads.map(thread => (
                 <CommentThread
                   key={thread.comment.id}
                   thread={thread}
@@ -218,8 +210,7 @@ export function CommentsPanel({
                   onStartReply={setReplyingToCommentId}
                   onCancelReply={() => setReplyingToCommentId(null)}
                   onSubmitReply={handleCreateComment}
-                  isCreatePending={isCreatePending}
-                />
+                  isCreatePending={isCreatePending} />
               ))}
             </div>
           )}
@@ -233,8 +224,7 @@ export function CommentsPanel({
               <CommentCreateForm
                 currentUser={currentUser}
                 onSubmit={handleCreateComment}
-                isPending={isCreatePending}
-              />
+                isPending={isCreatePending} />
             </div>
           </>
         )}
@@ -246,9 +236,8 @@ export function CommentsPanel({
           objectName="comment"
           count={1}
           onConfirm={handleDeleteConfirm}
-          isPending={isDeletePending}
-        />
+          isPending={isDeletePending} />
       </div>
     </CommentMentionUsersContext.Provider>
-  )
+  );
 }

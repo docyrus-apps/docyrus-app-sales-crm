@@ -1,36 +1,36 @@
-'use client'
+'use client';
 
-import { useCallback, useMemo, type ComponentProps } from 'react'
+import { useCallback, useMemo, type ComponentProps } from 'react';
 
-import { type Column, type Table } from '@tanstack/react-table'
+import { type Column, type Table } from '@tanstack/react-table';
 
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+  SelectValue
+} from '@/components/ui/select';
 
-import { getGroupableCellVariant } from './lib/data-grid-grouping'
+import { getGroupableCellVariant } from './lib/data-grid-grouping';
 
 interface DataGridGroupMenuProps<TData> extends ComponentProps<
   typeof SelectContent
 > {
-  table: Table<TData>
-  disabled?: boolean
+  table: Table<TData>;
+  disabled?: boolean;
 }
 
 function getColumnLabel<TData>(column: Column<TData, unknown>): string {
-  const label = column.columnDef.meta?.label
+  const label = column.columnDef.meta?.label;
 
-  if (label) return label
+  if (label) return label;
 
-  const { header } = column.columnDef
+  const { header } = column.columnDef;
 
-  if (typeof header === 'string') return header
+  if (typeof header === 'string') return header;
 
-  return column.id
+  return column.id;
 }
 
 export function DataGridGroupMenu<TData>({
@@ -38,53 +38,52 @@ export function DataGridGroupMenu<TData>({
   disabled,
   ...props
 }: DataGridGroupMenuProps<TData>) {
-  const { grouping } = table.getState()
+  const { grouping } = table.getState();
 
   const groupableColumns = useMemo(
-    () =>
-      table.getAllLeafColumns().filter((column) => {
-        if (column.id === 'select' || column.id === 'actions') {
-          return false
-        }
+    () => table.getAllLeafColumns().filter((column) => {
+      if (column.id === 'select' || column.id === 'actions') {
+        return false;
+      }
 
-        const variant = getGroupableCellVariant(column.columnDef.meta?.cell)
+      const variant = getGroupableCellVariant(column.columnDef.meta?.cell);
 
-        return Boolean(variant) && column.getCanGroup()
-      }),
-    [table],
-  )
+      return Boolean(variant) && column.getCanGroup();
+    }),
+    [table]
+  );
 
-  const groupedColumnId = grouping[0]
+  const groupedColumnId = grouping[0];
   const hasCurrentGrouping = groupableColumns.some(
-    (column) => column.id === groupedColumnId,
-  )
-  const value = hasCurrentGrouping && groupedColumnId ? groupedColumnId : 'none'
+    column => column.id === groupedColumnId
+  );
+  const value = hasCurrentGrouping && groupedColumnId ? groupedColumnId : 'none';
 
   const selectedLabel = useMemo(() => {
-    if (value === 'none') return 'No grouping'
+    if (value === 'none') return 'No grouping';
     const selectedColumn = groupableColumns.find(
-      (column) => column.id === value,
-    )
+      column => column.id === value
+    );
 
-    return selectedColumn ? getColumnLabel(selectedColumn) : 'No grouping'
-  }, [groupableColumns, value])
+    return selectedColumn ? getColumnLabel(selectedColumn) : 'No grouping';
+  }, [groupableColumns, value]);
 
   const onValueChange = useCallback(
     (nextValue: string) => {
       if (nextValue === 'none') {
-        table.setGrouping([])
-        table.setExpanded({})
+        table.setGrouping([]);
+        table.setExpanded({});
 
-        return
+        return;
       }
 
-      table.setGrouping([nextValue])
-      table.setExpanded(true)
+      table.setGrouping([nextValue]);
+      table.setExpanded(true);
     },
-    [table],
-  )
+    [table]
+  );
 
-  const isDisabled = disabled || groupableColumns.length === 0
+  const isDisabled = disabled || groupableColumns.length === 0;
 
   return (
     <Select value={value} onValueChange={onValueChange} disabled={isDisabled}>
@@ -93,12 +92,12 @@ export function DataGridGroupMenu<TData>({
       </SelectTrigger>
       <SelectContent {...props}>
         <SelectItem value="none">No grouping</SelectItem>
-        {groupableColumns.map((column) => (
+        {groupableColumns.map(column => (
           <SelectItem key={column.id} value={column.id}>
             {getColumnLabel(column)}
           </SelectItem>
         ))}
       </SelectContent>
     </Select>
-  )
+  );
 }

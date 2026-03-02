@@ -1,12 +1,12 @@
 // @ts-nocheck
-'use client'
+'use client';
 
-import * as React from 'react'
+import * as React from 'react';
 
-import type { DropdownMenuProps } from '@radix-ui/react-dropdown-menu'
-import type { TElement } from 'platejs'
+import type { DropdownMenuProps } from '@radix-ui/react-dropdown-menu';
+import type { TElement } from 'platejs';
 
-import { DropdownMenuItemIndicator } from '@radix-ui/react-dropdown-menu'
+import { DropdownMenuItemIndicator } from '@radix-ui/react-dropdown-menu';
 import {
   CheckIcon,
   ChevronRightIcon,
@@ -24,19 +24,22 @@ import {
   PilcrowIcon,
   QuoteIcon,
   SquareIcon,
-} from 'lucide-react'
-import { KEYS } from 'platejs'
-import { useEditorRef, useSelectionFragmentProp } from 'platejs/react'
+} from 'lucide-react';
+import { KEYS } from 'platejs';
+import { useEditorRef, useSelectionFragmentProp } from 'platejs/react';
 
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { getBlockType, setBlockType } from '@/components/editor/transforms'
+} from '@/components/ui/dropdown-menu';
+import {
+  getBlockType,
+  setBlockType,
+} from '@/components/editor/transforms';
 
-import { ToolbarButton, ToolbarMenuGroup } from './toolbar'
+import { ToolbarButton, ToolbarMenuGroup } from './toolbar';
 
 export const turnIntoItems = [
   {
@@ -135,22 +138,22 @@ export const turnIntoItems = [
     label: '3 columns',
     value: 'action_three_columns',
   },
-]
+];
 
 export function TurnIntoToolbarButton(props: DropdownMenuProps) {
-  const editor = useEditorRef()
-  const [open, setOpen] = React.useState(false)
+  const editor = useEditorRef();
+  const [open, setOpen] = React.useState(false);
 
   const value = useSelectionFragmentProp({
     defaultValue: KEYS.p,
     getProp: (node) => getBlockType(node as TElement),
-  })
+  });
   const selectedItem = React.useMemo(
     () =>
       turnIntoItems.find((item) => item.value === (value ?? KEYS.p)) ??
       turnIntoItems[0],
-    [value],
-  )
+    [value]
+  );
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen} modal={false} {...props}>
@@ -168,15 +171,15 @@ export function TurnIntoToolbarButton(props: DropdownMenuProps) {
       <DropdownMenuContent
         className="ignore-click-outside/toolbar min-w-0"
         onCloseAutoFocus={(e) => {
-          e.preventDefault()
-          editor.tf.focus()
+          e.preventDefault();
+          editor.tf.focus();
         }}
         align="start"
       >
         <ToolbarMenuGroup
           value={value}
           onValueChange={(type) => {
-            setBlockType(editor, type)
+            setBlockType(editor, type);
           }}
           label="Turn into"
         >
@@ -198,5 +201,5 @@ export function TurnIntoToolbarButton(props: DropdownMenuProps) {
         </ToolbarMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }

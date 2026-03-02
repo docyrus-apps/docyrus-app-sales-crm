@@ -1,35 +1,35 @@
-'use client'
+'use client';
 
-import { FileIcon } from 'lucide-react'
+import { FileIcon } from 'lucide-react';
 
-import { Field, FieldError, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
 
-import { type DocyrusFormFieldProps } from './types'
+import { type DocyrusFormFieldProps } from './types';
 
 export function FileFormField({
   field: fieldConfig,
   form,
   disabled,
-  className,
+  className
 }: DocyrusFormFieldProps) {
   return (
     <form.Field
       name={fieldConfig.slug}
       children={(field: any) => {
-        const isInvalid =
-          field.state.meta.isTouched && !field.state.meta.isValid
+        const isInvalid
+          = field.state.meta.isTouched && !field.state.meta.isValid;
         const currentValue = field.state.value as
           | { name?: string; signed_url?: string }
           | string
-          | null
+          | null;
 
-        const fileName =
-          typeof currentValue === 'object' && currentValue?.name
+        const fileName
+          = typeof currentValue === 'object' && currentValue?.name
             ? currentValue.name
             : typeof currentValue === 'string'
               ? currentValue
-              : null
+              : null;
 
         return (
           <Field data-invalid={isInvalid} className={className}>
@@ -46,17 +46,15 @@ export function FileFormField({
               type="file"
               onBlur={field.handleBlur}
               onChange={(e) => {
-                const file = e.target.files?.[0]
+                const file = e.target.files?.[0];
 
-                field.handleChange(file ?? null)
+                field.handleChange(file ?? null);
               }}
               aria-invalid={isInvalid}
-              disabled={disabled || fieldConfig.readOnly === true}
-            />
+              disabled={disabled || fieldConfig.readOnly === true} />
             {isInvalid && <FieldError errors={field.state.meta.errors} />}
           </Field>
-        )
-      }}
-    />
-  )
+        );
+      }} />
+  );
 }

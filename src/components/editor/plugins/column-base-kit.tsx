@@ -1,12 +1,12 @@
 // @ts-nocheck
-import { BaseColumnItemPlugin, BaseColumnPlugin } from '@platejs/layout'
+import { BaseColumnItemPlugin, BaseColumnPlugin } from '@platejs/layout';
 
 import {
   ColumnElementStatic,
   ColumnGroupElementStatic,
-} from '@/components/editor/ui/column-node-static'
+} from '@/components/editor/ui/column-node-static';
 
 export const BaseColumnKit = [
   BaseColumnPlugin.withComponent(ColumnGroupElementStatic),
   BaseColumnItemPlugin.withComponent(ColumnElementStatic),
-]
+];

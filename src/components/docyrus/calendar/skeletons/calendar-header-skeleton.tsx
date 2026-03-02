@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { Skeleton } from '@/components/ui/skeleton'
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function CalendarHeaderSkeleton() {
   return (
@@ -21,5 +21,5 @@ export function CalendarHeaderSkeleton() {
         <Skeleton className="h-8 w-8" />
       </div>
     </div>
-  )
+  );
 }

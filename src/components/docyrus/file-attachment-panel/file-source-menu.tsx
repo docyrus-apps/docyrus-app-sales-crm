@@ -1,18 +1,18 @@
-import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
-import { Button } from '@/components/animate-ui/components/buttons/button'
+import { DocyrusIcon } from '@/components/docyrus/docyrus-icon';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 
 interface FileSourceMenuProps {
-  onUploadClick: () => void
-  onOneDriveClick?: () => void
-  onGoogleDriveClick?: () => void
-  showOneDrive: boolean
-  showGoogleDrive: boolean
+  onUploadClick: () => void;
+  onOneDriveClick?: () => void;
+  onGoogleDriveClick?: () => void;
+  showOneDrive: boolean;
+  showGoogleDrive: boolean;
 }
 
 export function FileSourceMenu({
@@ -20,30 +20,30 @@ export function FileSourceMenu({
   onOneDriveClick,
   onGoogleDriveClick,
   showOneDrive,
-  showGoogleDrive,
+  showGoogleDrive
 }: FileSourceMenuProps) {
-  const hasExternalSources = showOneDrive || showGoogleDrive
+  const hasExternalSources = showOneDrive || showGoogleDrive;
 
   if (!hasExternalSources) {
     return (
       <Button variant="ghost" size="sm" onClick={onUploadClick}>
-        <DocyrusIcon icon="far plus" className="size-3.5" />
+        <DocyrusIcon icon="fal plus" className="size-3.5" />
         <span className="hidden @sm/file-panel:inline">Add</span>
       </Button>
-    )
+    );
   }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm">
-          <DocyrusIcon icon="far plus" className="size-3.5" />
+          <DocyrusIcon icon="fal plus" className="size-3.5" />
           <span className="hidden @sm/file-panel:inline">Add</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={onUploadClick}>
-          <DocyrusIcon icon="far upload" className="size-3.5" />
+          <DocyrusIcon icon="fal upload" className="size-3.5" />
           Upload from computer
         </DropdownMenuItem>
         {showOneDrive && (
@@ -60,5 +60,5 @@ export function FileSourceMenu({
         )}
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }

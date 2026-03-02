@@ -1,56 +1,50 @@
-'use client'
+'use client';
 
 import {
-  memo,
-  useCallback,
-  useEffect,
-  useRef,
-  type ChangeEvent,
-  type KeyboardEvent,
-  type PointerEvent,
-} from 'react'
+  memo, useCallback, useEffect, useRef, type ChangeEvent, type KeyboardEvent, type PointerEvent
+} from 'react';
 
-import { ChevronDown, ChevronUp, X } from 'lucide-react'
+import { ChevronDown, ChevronUp, X } from 'lucide-react';
 
-import { Button } from '@/components/animate-ui/components/buttons/button'
-import { Input } from '@/components/ui/input'
-import { useAsRef } from '@/hooks/use-as-ref'
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useAsRef } from '@/hooks/use-as-ref';
 
-import { type SearchState } from './types'
-import { useDebouncedCallback } from './hooks/use-debounced-callback'
+import { type SearchState } from './types';
+import { useDebouncedCallback } from './hooks/use-debounced-callback';
 
-type DataGridSearchProps = SearchState
+type DataGridSearchProps = SearchState;
 
 export const DataGridSearch = memo(DataGridSearchImpl, (prev, next) => {
-  if (prev.searchOpen !== next.searchOpen) return false
+  if (prev.searchOpen !== next.searchOpen) return false;
 
-  if (!next.searchOpen) return true
+  if (!next.searchOpen) return true;
 
   if (
-    prev.searchQuery !== next.searchQuery ||
-    prev.matchIndex !== next.matchIndex
+    prev.searchQuery !== next.searchQuery
+    || prev.matchIndex !== next.matchIndex
   ) {
-    return false
+    return false;
   }
 
-  if (prev.searchMatches.length !== next.searchMatches.length) return false
+  if (prev.searchMatches.length !== next.searchMatches.length) return false;
 
   for (let i = 0; i < prev.searchMatches.length; i++) {
-    const prevMatch = prev.searchMatches[i]
-    const nextMatch = next.searchMatches[i]
+    const prevMatch = prev.searchMatches[i];
+    const nextMatch = next.searchMatches[i];
 
-    if (!prevMatch || !nextMatch) return false
+    if (!prevMatch || !nextMatch) return false;
 
     if (
-      prevMatch.rowIndex !== nextMatch.rowIndex ||
-      prevMatch.columnId !== nextMatch.columnId
+      prevMatch.rowIndex !== nextMatch.rowIndex
+      || prevMatch.columnId !== nextMatch.columnId
     ) {
-      return false
+      return false;
     }
   }
 
-  return true
-})
+  return true;
+});
 
 function DataGridSearchImpl({
   searchMatches,
@@ -61,78 +55,78 @@ function DataGridSearchImpl({
   onSearchQueryChange,
   onSearch,
   onNavigateToNextMatch,
-  onNavigateToPrevMatch,
+  onNavigateToPrevMatch
 }: DataGridSearchProps) {
   const propsRef = useAsRef({
     onSearchOpenChange,
     onSearchQueryChange,
     onSearch,
     onNavigateToNextMatch,
-    onNavigateToPrevMatch,
-  })
+    onNavigateToPrevMatch
+  });
 
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (searchOpen) {
       requestAnimationFrame(() => {
-        inputRef.current?.focus()
-      })
+        inputRef.current?.focus();
+      });
     }
-  }, [searchOpen])
+  }, [searchOpen]);
 
   useEffect(() => {
-    if (!searchOpen) return
+    if (!searchOpen) return;
 
     function onEscape(event: globalThis.KeyboardEvent) {
       if (event.key === 'Escape') {
-        event.preventDefault()
-        propsRef.current.onSearchOpenChange(false)
+        event.preventDefault();
+        propsRef.current.onSearchOpenChange(false);
       }
     }
 
-    document.addEventListener('keydown', onEscape)
+    document.addEventListener('keydown', onEscape);
 
-    return () => document.removeEventListener('keydown', onEscape)
-  }, [searchOpen, propsRef])
+    return () => document.removeEventListener('keydown', onEscape);
+  }, [searchOpen, propsRef]);
 
   const onKeyDown = useCallback(
     (event: KeyboardEvent) => {
-      event.stopPropagation()
+      event.stopPropagation();
 
       if (event.key === 'Enter') {
-        event.preventDefault()
+        event.preventDefault();
         if (event.shiftKey) {
-          propsRef.current.onNavigateToPrevMatch()
+          propsRef.current.onNavigateToPrevMatch();
         } else {
-          propsRef.current.onNavigateToNextMatch()
+          propsRef.current.onNavigateToNextMatch();
         }
       }
     },
-    [propsRef],
-  )
+    [propsRef]
+  );
 
   const debouncedSearch = useDebouncedCallback((query: string) => {
-    propsRef.current.onSearch(query)
-  }, 150)
+    propsRef.current.onSearch(query);
+  }, 150);
 
   const onChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
-      const { value } = event.target
+      const { value } = event.target;
 
-      propsRef.current.onSearchQueryChange(value)
-      debouncedSearch(value)
+      propsRef.current.onSearchQueryChange(value);
+      debouncedSearch(value);
     },
-    [propsRef, debouncedSearch],
-  )
+    [propsRef, debouncedSearch]
+  );
 
   const onTriggerPointerDown = useCallback(
     (event: PointerEvent<HTMLButtonElement>) => {
-      const { target } = event
+      const { target } = event;
 
-      if (!(target instanceof HTMLElement)) return
+      if (!(target instanceof HTMLElement)) return;
       if (target.hasPointerCapture(event.pointerId)) {
-        target.releasePointerCapture(event.pointerId)
+        target.releasePointerCapture(event.pointerId);
       }
 
       /*
@@ -140,47 +134,46 @@ function DataGridSearchImpl({
        * This allows text selection in the input while still preventing focus stealing elsewhere
        */
       if (
-        event.button === 0 &&
-        event.ctrlKey === false &&
-        event.pointerType === 'mouse' &&
-        !(event.target instanceof HTMLInputElement)
+        event.button === 0
+        && event.ctrlKey === false
+        && event.pointerType === 'mouse'
+        && !(event.target instanceof HTMLInputElement)
       ) {
-        event.preventDefault()
+        event.preventDefault();
       }
     },
-    [],
-  )
+    []
+  );
 
   const onPrevMatchPointerDown = useCallback(
     (event: PointerEvent<HTMLButtonElement>) => onTriggerPointerDown(event),
-    [onTriggerPointerDown],
-  )
+    [onTriggerPointerDown]
+  );
 
   const onNextMatchPointerDown = useCallback(
     (event: PointerEvent<HTMLButtonElement>) => onTriggerPointerDown(event),
-    [onTriggerPointerDown],
-  )
+    [onTriggerPointerDown]
+  );
 
   const onClose = useCallback(() => {
-    propsRef.current.onSearchOpenChange(false)
-  }, [propsRef])
+    propsRef.current.onSearchOpenChange(false);
+  }, [propsRef]);
 
   const onPrevMatch = useCallback(() => {
-    propsRef.current.onNavigateToPrevMatch()
-  }, [propsRef])
+    propsRef.current.onNavigateToPrevMatch();
+  }, [propsRef]);
 
   const onNextMatch = useCallback(() => {
-    propsRef.current.onNavigateToNextMatch()
-  }, [propsRef])
+    propsRef.current.onNavigateToNextMatch();
+  }, [propsRef]);
 
-  if (!searchOpen) return null
+  if (!searchOpen) return null;
 
   return (
     <div
       role="search"
       data-slot="grid-search"
-      className="fade-in-0 slide-in-from-top-2 absolute inset-e-4 top-4 z-50 flex animate-in flex-col gap-2 rounded-lg border bg-background p-2 shadow-lg"
-    >
+      className="fade-in-0 slide-in-from-top-2 absolute inset-e-4 top-4 z-50 flex animate-in flex-col gap-2 rounded-lg border bg-background p-2 shadow-lg">
       <div className="flex items-center gap-2">
         <Input
           autoComplete="off"
@@ -192,8 +185,7 @@ function DataGridSearchImpl({
           ref={inputRef}
           value={searchQuery}
           onChange={onChange}
-          onKeyDown={onKeyDown}
-        />
+          onKeyDown={onKeyDown} />
         <div className="flex items-center gap-1">
           <Button
             aria-label="Previous match"
@@ -202,8 +194,7 @@ function DataGridSearchImpl({
             className="size-7"
             onClick={onPrevMatch}
             onPointerDown={onPrevMatchPointerDown}
-            disabled={searchMatches.length === 0}
-          >
+            disabled={searchMatches.length === 0}>
             <ChevronUp />
           </Button>
           <Button
@@ -213,8 +204,7 @@ function DataGridSearchImpl({
             className="size-7"
             onClick={onNextMatch}
             onPointerDown={onNextMatchPointerDown}
-            disabled={searchMatches.length === 0}
-          >
+            disabled={searchMatches.length === 0}>
             <ChevronDown />
           </Button>
           <Button
@@ -222,8 +212,7 @@ function DataGridSearchImpl({
             variant="ghost"
             size="icon"
             className="size-7"
-            onClick={onClose}
-          >
+            onClick={onClose}>
             <X />
           </Button>
         </div>
@@ -240,5 +229,5 @@ function DataGridSearchImpl({
         )}
       </div>
     </div>
-  )
+  );
 }

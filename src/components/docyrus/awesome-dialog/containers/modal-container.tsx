@@ -1,11 +1,12 @@
-'use client'
+'use client';
 
-import { Dialog as DialogPrimitive } from 'radix-ui'
+import { type ReactNode } from 'react';
 
-import { MODAL_SIZES } from '../types'
-import type { DialogSize } from '../types'
-import type { ReactNode } from 'react'
-import { cn } from '@/lib/utils'
+import { Dialog as DialogPrimitive, VisuallyHidden } from 'radix-ui';
+
+import { cn } from '@/lib/utils';
+
+import { MODAL_SIZES, type DialogSize } from '../types';
 
 export function ModalContainer({
   open,
@@ -14,24 +15,21 @@ export function ModalContainer({
   className,
   size = 'default',
   isFullscreen = false,
-  zIndex,
+  zIndex
 }: {
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
-  children: ReactNode
-  className?: string
-  size?: DialogSize
-  isFullscreen?: boolean
-  zIndex?: number
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  children: ReactNode;
+  className?: string;
+  size?: DialogSize;
+  isFullscreen?: boolean;
+  zIndex?: number;
 }) {
   const sizeStyle = isFullscreen
     ? {
-        width: '100vw',
-        maxWidth: '100vw',
-        height: '100vh',
-        maxHeight: '100vh',
+        width: '100vw', maxWidth: '100vw', height: '100vh', maxHeight: '100vh'
       }
-    : { width: MODAL_SIZES[size].width, maxHeight: MODAL_SIZES[size].maxHeight }
+    : { width: MODAL_SIZES[size].width, maxHeight: MODAL_SIZES[size].maxHeight };
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
@@ -39,31 +37,32 @@ export function ModalContainer({
         <DialogPrimitive.Overlay
           data-slot="awesome-dialog-overlay"
           className="data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs fixed inset-0"
-          style={{ zIndex: zIndex ?? 50 }}
-        />
+          style={{ zIndex: zIndex ?? 50 }} />
         <div
           data-slot="awesome-dialog-positioner"
           className={cn(
             'pointer-events-none fixed inset-0 flex items-center justify-center',
-            isFullscreen ? 'p-0' : 'p-4',
+            isFullscreen ? 'p-0' : 'p-4'
           )}
-          style={{ zIndex: zIndex ? zIndex + 1 : 51 }}
-        >
+          style={{ zIndex: zIndex ? zIndex + 1 : 51 }}>
           <DialogPrimitive.Content
+            aria-describedby={undefined}
             data-slot="awesome-dialog-container"
             className={cn(
               'data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95',
               'pointer-events-auto flex w-full flex-col outline-none duration-200',
               'max-w-[calc(100%-2rem)]',
               isFullscreen && 'max-w-none h-full',
-              className,
+              className
             )}
-            style={sizeStyle}
-          >
+            style={sizeStyle}>
+            <VisuallyHidden.Root>
+              <DialogPrimitive.Title>Dialog</DialogPrimitive.Title>
+            </VisuallyHidden.Root>
             {children}
           </DialogPrimitive.Content>
         </div>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>
-  )
+  );
 }

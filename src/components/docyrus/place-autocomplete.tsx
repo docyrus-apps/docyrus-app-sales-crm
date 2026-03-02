@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import {
   forwardRef,
@@ -6,58 +6,58 @@ import {
   useEffect,
   useRef,
   useState,
-  type InputHTMLAttributes,
-} from 'react'
+  type InputHTMLAttributes
+} from 'react';
 
-import { cva, type VariantProps } from 'class-variance-authority'
-import { MapPin, Search, X } from 'lucide-react'
+import { cva, type VariantProps } from 'class-variance-authority';
+import { MapPin, Search, X } from 'lucide-react';
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandItem,
-  CommandList,
-} from '@/components/ui/command'
-import { Spinner } from '@/components/ui/spinner'
+  CommandList
+} from '@/components/ui/command';
+import { Spinner } from '@/components/ui/spinner';
 
 /* -------------------------------------------------------------------------- */
 /*  GeoJSON types (subset for Photon API)                                     */
 /* -------------------------------------------------------------------------- */
 
 interface PlaceFeatureProperties {
-  osm_id: number
-  osm_type: 'N' | 'W' | 'R'
-  osm_key: string
-  osm_value: string
-  type: string
-  name?: string
-  housenumber?: string
-  street?: string
-  locality?: string
-  district?: string
-  postcode?: string
-  city?: string
-  county?: string
-  state?: string
-  country?: string
-  countrycode?: string
-  extent?: [number, number, number, number]
+  osm_id: number;
+  osm_type: 'N' | 'W' | 'R';
+  osm_key: string;
+  osm_value: string;
+  type: string;
+  name?: string;
+  housenumber?: string;
+  street?: string;
+  locality?: string;
+  district?: string;
+  postcode?: string;
+  city?: string;
+  county?: string;
+  state?: string;
+  country?: string;
+  countrycode?: string;
+  extent?: [number, number, number, number];
 }
 
 interface PlaceFeature {
-  type: 'Feature'
+  type: 'Feature';
   geometry: {
-    type: 'Point'
-    coordinates: [number, number]
-  }
-  properties: PlaceFeatureProperties
+    type: 'Point';
+    coordinates: [number, number];
+  };
+  properties: PlaceFeatureProperties;
 }
 
 interface PlaceFeatureCollection {
-  type: 'FeatureCollection'
-  features: PlaceFeature[]
+  type: 'FeatureCollection';
+  features: PlaceFeature[];
 }
 
 /* -------------------------------------------------------------------------- */
@@ -66,21 +66,21 @@ interface PlaceFeatureCollection {
 
 interface PlaceSearchOptions {
   /** Search text (address, place name, or POI). */
-  query: string
+  query: string;
   /** Preferred language for results (e.g., "en", "de", "fr"). */
-  lang?: string
+  lang?: string;
   /** Maximum number of results to return. */
-  limit?: number
+  limit?: number;
   /** Bounding box to restrict results: [minLon, minLat, maxLon, maxLat]. */
-  bbox?: [number, number, number, number]
+  bbox?: [number, number, number, number];
   /** Latitude used to bias results toward a specific location. */
-  lat?: number
+  lat?: number;
   /** Longitude used to bias results toward a specific location. */
-  lon?: number
+  lon?: number;
   /** Zoom level for location biasing (higher = more local). */
-  zoom?: number
+  zoom?: number;
   /** Strength of the location bias. */
-  locationBiasScale?: number
+  locationBiasScale?: number;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -92,56 +92,53 @@ const placeAutocompleteVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          'border-input focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50',
-        outline:
-          'border-border focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50',
-        ghost:
-          'border-transparent shadow-none focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50',
+        default: 'border-input focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50',
+        outline: 'border-border focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50',
+        ghost: 'border-transparent shadow-none focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50'
       },
       size: {
         sm: 'h-8 px-2 text-xs',
         default: 'h-9 px-2.5 text-sm',
-        lg: 'h-11 px-3 text-base',
-      },
+        lg: 'h-11 px-3 text-base'
+      }
     },
     defaultVariants: {
       variant: 'default',
-      size: 'default',
-    },
-  },
-)
+      size: 'default'
+    }
+  }
+);
 
 /* -------------------------------------------------------------------------- */
 /*  Helpers                                                                   */
 /* -------------------------------------------------------------------------- */
 
 function formatAddress(properties: PlaceFeatureProperties) {
-  const parts: string[] = []
+  const parts: string[] = [];
 
-  if (properties.name) parts.push(properties.name)
+  if (properties.name) parts.push(properties.name);
 
   if (properties.housenumber && properties.street) {
-    parts.push(`${properties.housenumber} ${properties.street}`)
+    parts.push(`${properties.housenumber} ${properties.street}`);
   } else if (properties.street) {
-    parts.push(properties.street)
+    parts.push(properties.street);
   }
 
   if (properties.city) {
-    parts.push(properties.city)
+    parts.push(properties.city);
   } else if (properties.locality) {
-    parts.push(properties.locality)
+    parts.push(properties.locality);
   }
 
   if (properties.state && properties.state !== properties.city) {
-    parts.push(properties.state)
+    parts.push(properties.state);
   }
 
   if (properties.country) {
-    parts.push(properties.country)
+    parts.push(properties.country);
   }
 
-  return [...new Set(parts)].join(', ')
+  return [...new Set(parts)].join(', ');
 }
 
 function buildSearchUrl({
@@ -152,26 +149,25 @@ function buildSearchUrl({
   limit,
   locationBiasScale,
   lon,
-  zoom,
+  zoom
 }: PlaceSearchOptions) {
-  const url = new URL('https://photon.komoot.io/api')
+  const url = new URL('https://photon.komoot.io/api');
 
-  url.searchParams.set('q', query)
+  url.searchParams.set('q', query);
 
-  if (lang) url.searchParams.set('lang', lang)
-  if (limit) url.searchParams.set('limit', String(limit))
-  if (bbox) url.searchParams.set('bbox', bbox.join(','))
+  if (lang) url.searchParams.set('lang', lang);
+  if (limit) url.searchParams.set('limit', String(limit));
+  if (bbox) url.searchParams.set('bbox', bbox.join(','));
 
   if (lat !== undefined && lon !== undefined) {
-    url.searchParams.set('lat', String(lat))
-    url.searchParams.set('lon', String(lon))
+    url.searchParams.set('lat', String(lat));
+    url.searchParams.set('lon', String(lon));
   }
 
-  if (zoom !== undefined) url.searchParams.set('zoom', String(zoom))
-  if (locationBiasScale !== undefined)
-    url.searchParams.set('location_bias_scale', String(locationBiasScale))
+  if (zoom !== undefined) url.searchParams.set('zoom', String(zoom));
+  if (locationBiasScale !== undefined) url.searchParams.set('location_bias_scale', String(locationBiasScale));
 
-  return String(url)
+  return String(url);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -179,15 +175,15 @@ function buildSearchUrl({
 /* -------------------------------------------------------------------------- */
 
 function useDebounce<T>(value: T, delay: number = 300) {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value)
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedValue(value), delay)
+    const timer = setTimeout(() => setDebouncedValue(value), delay);
 
-    return () => clearTimeout(timer)
-  }, [value, delay])
+    return () => clearTimeout(timer);
+  }, [value, delay]);
 
-  return debouncedValue
+  return debouncedValue;
 }
 
 function usePlaceSearch({
@@ -195,65 +191,63 @@ function usePlaceSearch({
   query,
   ...opts
 }: { debounceMs: number } & PlaceSearchOptions) {
-  const [results, setResults] = useState<PlaceFeature[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<Error | null>(null)
-  const [hasSearched, setHasSearched] = useState(false)
+  const [results, setResults] = useState<PlaceFeature[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
 
-  const debouncedQuery = useDebounce(query, debounceMs)
+  const debouncedQuery = useDebounce(query, debounceMs);
 
   useEffect(() => {
     if (!debouncedQuery.trim()) {
-      setResults([])
-      setIsLoading(false)
-      setHasSearched(false)
+      setResults([]);
+      setIsLoading(false);
+      setHasSearched(false);
 
-      return
+      return;
     }
 
-    const abortController = new AbortController()
+    const abortController = new AbortController();
 
     async function fetchResults() {
-      setIsLoading(true)
-      setError(null)
-      setHasSearched(true)
+      setIsLoading(true);
+      setError(null);
+      setHasSearched(true);
 
       try {
-        const url = buildSearchUrl({ query: debouncedQuery, ...opts })
-        const response = await fetch(url, { signal: abortController.signal })
+        const url = buildSearchUrl({ query: debouncedQuery, ...opts });
+        const response = await fetch(url, { signal: abortController.signal });
 
         if (!response.ok) {
-          throw new Error(
-            `Photon API error: ${response.status} ${response.statusText}`,
-          )
+          throw new Error(`Photon API error: ${response.status} ${response.statusText}`);
         }
 
-        const data: PlaceFeatureCollection = await response.json()
-        const seen = new Set<number>()
+        const data: PlaceFeatureCollection = await response.json();
+        const seen = new Set<number>();
         const dedupedFeatures = data.features.filter((feature) => {
-          const id = feature.properties.osm_id
+          const id = feature.properties.osm_id;
 
-          if (seen.has(id)) return false
-          seen.add(id)
+          if (seen.has(id)) return false;
+          seen.add(id);
 
-          return true
-        })
+          return true;
+        });
 
-        setResults(dedupedFeatures)
+        setResults(dedupedFeatures);
       } catch (err) {
         if (err instanceof Error && err.name !== 'AbortError') {
-          setError(err)
-          setResults([])
+          setError(err);
+          setResults([]);
         }
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
     }
 
-    fetchResults()
+    fetchResults();
 
-    return () => abortController.abort()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => abortController.abort();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     debouncedQuery,
     opts.lang,
@@ -262,15 +256,12 @@ function usePlaceSearch({
     opts.lat,
     opts.lon,
     opts.zoom,
-    opts.locationBiasScale,
-  ])
+    opts.locationBiasScale
+  ]);
 
   return {
-    results,
-    isLoading,
-    error,
-    hasSearched,
-  }
+    results, isLoading, error, hasSearched
+  };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -278,22 +269,21 @@ function usePlaceSearch({
 /* -------------------------------------------------------------------------- */
 
 export interface PlaceAutocompleteProps
-  extends
-    Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'size'>,
-    Omit<PlaceSearchOptions, 'query'>,
-    VariantProps<typeof placeAutocompleteVariants> {
+  extends Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'size'>,
+  Omit<PlaceSearchOptions, 'query'>,
+  VariantProps<typeof placeAutocompleteVariants> {
   /** Debounce delay in milliseconds before triggering a search. */
-  debounceMs?: number
+  debounceMs?: number;
   /** Current input value (controlled). */
-  value?: string
+  value?: string;
   /** Initial input value (uncontrolled). */
-  defaultValue?: string
+  defaultValue?: string;
   /** Called when the input value changes. */
-  onChange?: (value: string) => void
+  onChange?: (value: string) => void;
   /** Called when a place is selected from the results. */
-  onPlaceSelect?: (feature: PlaceFeature) => void
+  onPlaceSelect?: (feature: PlaceFeature) => void;
   /** Called when the search results change. */
-  onResultsChange?: (results: PlaceFeature[]) => void
+  onResultsChange?: (results: PlaceFeature[]) => void;
 }
 
 const PlaceAutocomplete = forwardRef<HTMLInputElement, PlaceAutocompleteProps>(
@@ -319,25 +309,27 @@ const PlaceAutocomplete = forwardRef<HTMLInputElement, PlaceAutocompleteProps>(
       disabled = false,
       ...props
     },
-    ref,
+    ref
   ) => {
-    const [internalValue, setInternalValue] = useState(defaultValue)
-    const [searchQuery, setSearchQuery] = useState('')
-    const internalRef = useRef<HTMLInputElement>(null)
+    const [internalValue, setInternalValue] = useState(defaultValue);
+    const [searchQuery, setSearchQuery] = useState('');
+    const internalRef = useRef<HTMLInputElement>(null);
 
-    const isControlled = controlledValue !== undefined
-    const displayValue = isControlled ? controlledValue : internalValue
+    const isControlled = controlledValue !== undefined;
+    const displayValue = isControlled ? controlledValue : internalValue;
 
     const setRefs = useCallback(
       (node: HTMLInputElement | null) => {
-        internalRef.current = node
-        if (typeof ref === 'function') ref(node)
-        else if (ref) ref.current = node
+        internalRef.current = node;
+        if (typeof ref === 'function') ref(node);
+        else if (ref) ref.current = node;
       },
-      [ref],
-    )
+      [ref]
+    );
 
-    const { results, isLoading, error, hasSearched } = usePlaceSearch({
+    const {
+      results, isLoading, error, hasSearched
+    } = usePlaceSearch({
       query: searchQuery,
       debounceMs,
       lang,
@@ -346,39 +338,36 @@ const PlaceAutocomplete = forwardRef<HTMLInputElement, PlaceAutocompleteProps>(
       lat,
       lon,
       zoom,
-      locationBiasScale,
-    })
+      locationBiasScale
+    });
 
     useEffect(() => {
-      onResultsChange?.(results)
-    }, [results, onResultsChange])
+      onResultsChange?.(results);
+    }, [results, onResultsChange]);
 
     const handleClear = useCallback(() => {
-      if (!isControlled) setInternalValue('')
-      setSearchQuery('')
-      controlledOnChange?.('')
-      internalRef.current?.focus()
-    }, [isControlled, controlledOnChange])
+      if (!isControlled) setInternalValue('');
+      setSearchQuery('');
+      controlledOnChange?.('');
+      internalRef.current?.focus();
+    }, [isControlled, controlledOnChange]);
 
-    const hasNoResults =
-      hasSearched && !isLoading && !error && results.length === 0
-    const showCommandList = error || hasNoResults || results.length > 0
+    const hasNoResults = hasSearched && !isLoading && !error && results.length === 0;
+    const showCommandList = error || hasNoResults || results.length > 0;
 
     return (
       <Command
         className="h-fit overflow-visible bg-transparent"
         shouldFilter={false}
-        loop
-      >
+        loop>
         <div className="relative">
           <div
             className={cn(
               placeAutocompleteVariants({ variant, size }),
               showCommandList && 'rounded-b-none',
               disabled && 'pointer-events-none cursor-not-allowed opacity-50',
-              className,
-            )}
-          >
+              className
+            )}>
             <span className="shrink-0 text-muted-foreground">
               <Search className="size-4" />
             </span>
@@ -388,11 +377,11 @@ const PlaceAutocomplete = forwardRef<HTMLInputElement, PlaceAutocompleteProps>(
               data-slot="input"
               value={displayValue}
               onChange={(event) => {
-                const newValue = event.target.value
+                const newValue = event.target.value;
 
-                if (!isControlled) setInternalValue(newValue)
-                setSearchQuery(newValue)
-                controlledOnChange?.(newValue)
+                if (!isControlled) setInternalValue(newValue);
+                setSearchQuery(newValue);
+                controlledOnChange?.(newValue);
               }}
               placeholder={placeholder}
               disabled={disabled}
@@ -401,8 +390,7 @@ const PlaceAutocomplete = forwardRef<HTMLInputElement, PlaceAutocompleteProps>(
               autoCapitalize="off"
               spellCheck={false}
               className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
-              {...props}
-            />
+              {...props} />
             {isLoading && (
               <span className="shrink-0 text-muted-foreground">
                 <Spinner className="size-4" />
@@ -415,8 +403,7 @@ const PlaceAutocomplete = forwardRef<HTMLInputElement, PlaceAutocompleteProps>(
                 aria-label="Clear search"
                 className="shrink-0 cursor-pointer text-muted-foreground hover:text-foreground"
                 onClick={handleClear}
-                disabled={disabled}
-              >
+                disabled={disabled}>
                 <X className="size-4" />
               </button>
             ) : null}
@@ -429,10 +416,11 @@ const PlaceAutocomplete = forwardRef<HTMLInputElement, PlaceAutocompleteProps>(
                 'data-[state=open]:animate-in data-[state=closed]:animate-out',
                 'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
                 'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
-                'data-[state=open]:slide-in-from-top-2 data-[state=closed]:slide-out-to-top-2',
+                'data-[state=open]:slide-in-from-top-2 data-[state=closed]:slide-out-to-top-2'
+              )}>
+              {error && (
+                <CommandEmpty>Error: {error.message}</CommandEmpty>
               )}
-            >
-              {error && <CommandEmpty>Error: {error.message}</CommandEmpty>}
               {hasNoResults && (
                 <CommandEmpty>
                   No places found for &ldquo;{displayValue}&rdquo;.
@@ -441,34 +429,33 @@ const PlaceAutocomplete = forwardRef<HTMLInputElement, PlaceAutocompleteProps>(
               {results.length > 0 && (
                 <CommandGroup>
                   {results.map((feature) => {
-                    const address = formatAddress(feature.properties)
+                    const address = formatAddress(feature.properties);
 
                     return (
                       <CommandItem
                         key={feature.properties.osm_id}
                         value={String(feature.properties.osm_id)}
                         onSelect={() => {
-                          const selected = formatAddress(feature.properties)
+                          const selected = formatAddress(feature.properties);
 
-                          if (!isControlled) setInternalValue(selected)
-                          setSearchQuery('')
-                          controlledOnChange?.(selected)
-                          onPlaceSelect?.(feature)
-                        }}
-                      >
+                          if (!isControlled) setInternalValue(selected);
+                          setSearchQuery('');
+                          controlledOnChange?.(selected);
+                          onPlaceSelect?.(feature);
+                        }}>
                         <MapPin className="size-4 shrink-0" />
                         <div className="flex flex-col items-start text-start">
                           <span className="font-medium">
-                            {feature.properties.name ||
-                              feature.properties.street ||
-                              'Unknown'}
+                            {feature.properties.name
+                              || feature.properties.street
+                              || 'Unknown'}
                           </span>
                           <span className="text-muted-foreground text-xs">
                             {address}
                           </span>
                         </div>
                       </CommandItem>
-                    )
+                    );
                   })}
                 </CommandGroup>
               )}
@@ -476,11 +463,11 @@ const PlaceAutocomplete = forwardRef<HTMLInputElement, PlaceAutocompleteProps>(
           )}
         </div>
       </Command>
-    )
-  },
-)
+    );
+  }
+);
 
-PlaceAutocomplete.displayName = 'PlaceAutocomplete'
+PlaceAutocomplete.displayName = 'PlaceAutocomplete';
 
 export {
   PlaceAutocomplete,
@@ -488,5 +475,5 @@ export {
   formatAddress,
   type PlaceFeature,
   type PlaceFeatureProperties,
-  type PlaceSearchOptions,
-}
+  type PlaceSearchOptions
+};

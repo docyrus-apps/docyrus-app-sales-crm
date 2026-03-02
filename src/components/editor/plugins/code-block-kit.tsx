@@ -1,20 +1,20 @@
 // @ts-nocheck
-'use client'
+'use client';
 
 import {
   CodeBlockPlugin,
   CodeLinePlugin,
   CodeSyntaxPlugin,
-} from '@platejs/code-block/react'
-import { all, createLowlight } from 'lowlight'
+} from '@platejs/code-block/react';
+import { all, createLowlight } from 'lowlight';
 
 import {
   CodeBlockElement,
   CodeLineElement,
   CodeSyntaxLeaf,
-} from '@/components/editor/ui/code-block-node'
+} from '@/components/editor/ui/code-block-node';
 
-const lowlight = createLowlight(all)
+const lowlight = createLowlight(all);
 
 export const CodeBlockKit = [
   CodeBlockPlugin.configure({
@@ -24,4 +24,4 @@ export const CodeBlockKit = [
   }),
   CodeLinePlugin.withComponent(CodeLineElement),
   CodeSyntaxPlugin.withComponent(CodeSyntaxLeaf),
-]
+];

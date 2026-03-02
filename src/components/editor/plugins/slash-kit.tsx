@@ -1,10 +1,10 @@
 // @ts-nocheck
-'use client'
+'use client';
 
-import { SlashInputPlugin, SlashPlugin } from '@platejs/slash-command/react'
-import { KEYS } from 'platejs'
+import { SlashInputPlugin, SlashPlugin } from '@platejs/slash-command/react';
+import { KEYS } from 'platejs';
 
-import { SlashInputElement } from '@/components/editor/ui/slash-node'
+import { SlashInputElement } from '@/components/editor/ui/slash-node';
 
 export const SlashKit = [
   SlashPlugin.configure({
@@ -16,4 +16,4 @@ export const SlashKit = [
     },
   }),
   SlashInputPlugin.withComponent(SlashInputElement),
-]
+];

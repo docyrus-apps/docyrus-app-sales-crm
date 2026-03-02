@@ -1,22 +1,21 @@
-import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
-import { Progress } from '@/components/ui/progress'
+import { DocyrusIcon } from '@/components/docyrus/docyrus-icon';
+import { Progress } from '@/components/ui/progress';
 
-import { type UploadingFile } from './types'
-import { getFileIcon } from './lib/file-utils'
+import { type UploadingFile } from './types';
+import { getFileIcon } from './lib/file-utils';
 
 interface FileUploadProgressProps {
-  file: UploadingFile
+  file: UploadingFile;
 }
 
 export function FileUploadProgress({ file }: FileUploadProgressProps) {
-  const iconInfo = getFileIcon(file.file.type)
+  const iconInfo = getFileIcon(file.file.type);
 
   return (
     <div className="flex items-center gap-3 rounded-md border px-3 py-2">
       <DocyrusIcon
         icon={iconInfo.icon}
-        className={`size-4 shrink-0 ${iconInfo.color}`}
-      />
+        className={`size-4 shrink-0 ${iconInfo.color}`} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm">{file.file.name}</p>
         {file.status === 'uploading' && (
@@ -30,17 +29,16 @@ export function FileUploadProgress({ file }: FileUploadProgressProps) {
       </div>
       {file.status === 'uploading' && (
         <DocyrusIcon
-          icon="far spinner-third"
+          icon="fal spinner-third"
           animation="spin"
-          className="size-3.5 text-muted-foreground"
-        />
+          className="size-3.5 text-muted-foreground" />
       )}
       {file.status === 'complete' && (
-        <DocyrusIcon icon="far check" className="size-3.5 text-green-500" />
+        <DocyrusIcon icon="fal check" className="size-3.5 text-green-500" />
       )}
       {file.status === 'error' && (
-        <DocyrusIcon icon="far xmark" className="size-3.5 text-destructive" />
+        <DocyrusIcon icon="fal xmark" className="size-3.5 text-destructive" />
       )}
     </div>
-  )
+  );
 }

@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 export {
   GanttProvider,
@@ -20,8 +20,8 @@ export {
   GanttAddFeatureHelper,
   GanttToday,
   GanttMarker,
-  GanttCreateMarkerTrigger,
-} from './gantt'
+  GanttCreateMarkerTrigger
+} from './gantt';
 
 export type {
   GanttStatus,
@@ -47,5 +47,5 @@ export type {
   GanttColumnProps,
   GanttAddFeatureHelperProps,
   GanttTodayProps,
-  GanttCreateMarkerTriggerProps,
-} from './gantt'
+  GanttCreateMarkerTriggerProps
+} from './gantt';

@@ -1,4 +1,4 @@
-import { type TEventColor } from './types'
+import { type TEventColor } from './types';
 
 export const COLORS: Array<TEventColor> = [
   'blue',
@@ -6,5 +6,5 @@ export const COLORS: Array<TEventColor> = [
   'red',
   'yellow',
   'purple',
-  'orange',
-]
+  'orange'
+];

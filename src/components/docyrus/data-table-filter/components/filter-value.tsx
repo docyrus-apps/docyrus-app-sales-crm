@@ -5,26 +5,28 @@ import {
   useCallback,
   useEffect,
   useMemo,
-  useState,
-} from 'react'
+  useState
+} from 'react';
 
-import { format, isEqual } from 'date-fns'
-import { Ellipsis } from 'lucide-react'
+import { format, isEqual } from 'date-fns';
+import { Ellipsis } from 'lucide-react';
 
-import { type DateRange } from 'react-day-picker'
+import { type DateRange } from 'react-day-picker';
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Tabs, TabsContent, TabsList, TabsTrigger
+} from '@/components/ui/tabs';
 
-import { Slider } from '@/components/ui/slider'
+import { Slider } from '@/components/ui/slider';
 
 import {
   Popover,
   PopoverAnchor,
   PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+  PopoverTrigger
+} from '@/components/ui/popover';
 
 import {
   Command,
@@ -33,48 +35,48 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
-} from '@/components/ui/command'
+  CommandSeparator
+} from '@/components/ui/command';
 
-import { Checkbox } from '@/components/ui/checkbox'
+import { Checkbox } from '@/components/ui/checkbox';
 
-import { Calendar } from '@/components/ui/calendar'
+import { Calendar } from '@/components/ui/calendar';
 
-import { Button } from '@/components/animate-ui/components/buttons/button'
+import { Button } from '@/components/ui/button';
 
-import { numberFilterOperators } from '../core/operators'
-import { useDebounceCallback } from '../hooks/use-debounce-callback'
-import { take } from '../lib/array'
-import { createNumberRange } from '../lib/helpers'
-import { t } from '../lib/i18n'
-import { DebouncedInput } from '../ui/debounced-input'
+import { numberFilterOperators } from '../core/operators';
+import { useDebounceCallback } from '../hooks/use-debounce-callback';
+import { take } from '../lib/array';
+import { createNumberRange } from '../lib/helpers';
+import { t } from '../lib/i18n';
+import { DebouncedInput } from '../ui/debounced-input';
 
-import { type Locale } from '../lib/i18n'
+import { type Locale } from '../lib/i18n';
 import {
   type Column,
   type ColumnDataType,
   type ColumnOptionExtended,
   type DataTableFilterActions,
   type FilterModel,
-  type FilterStrategy,
-} from '../core/types'
+  type FilterStrategy
+} from '../core/types';
 
 interface FilterValueProps<TData, TType extends ColumnDataType> {
-  filter?: FilterModel<TType>
-  column: Column<TData, TType>
-  actions: DataTableFilterActions
-  strategy: FilterStrategy
-  locale?: Locale
+  filter?: FilterModel<TType>;
+  column: Column<TData, TType>;
+  actions: DataTableFilterActions;
+  strategy: FilterStrategy;
+  locale?: Locale;
 }
 
-export const FilterValue = memo(__FilterValue) as typeof __FilterValue
+export const FilterValue = memo(__FilterValue) as typeof __FilterValue;
 
 function __FilterValue<TData, TType extends ColumnDataType>({
   filter,
   column,
   actions,
   strategy,
-  locale,
+  locale
 }: FilterValueProps<TData, TType>) {
   return (
     <Popover>
@@ -82,45 +84,41 @@ function __FilterValue<TData, TType extends ColumnDataType>({
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
-          className="m-0 h-full w-fit whitespace-nowrap rounded-none p-0 px-2 text-xs"
-        >
+          className="m-0 h-full w-fit whitespace-nowrap rounded-none p-0 px-2 text-xs">
           <FilterValueDisplay
             filter={filter}
             column={column}
             actions={actions}
-            locale={locale}
-          />
+            locale={locale} />
         </Button>
       </PopoverTrigger>
       <PopoverContent
         align="start"
         side="bottom"
-        className="w-fit p-0 origin-(--radix-popover-content-transform-origin)"
-      >
+        className="w-fit p-0 origin-(--radix-popover-content-transform-origin)">
         <FilterValueController
           filter={filter}
           column={column}
           actions={actions}
           strategy={strategy}
-          locale={locale}
-        />
+          locale={locale} />
       </PopoverContent>
     </Popover>
-  )
+  );
 }
 
 interface FilterValueDisplayProps<TData, TType extends ColumnDataType> {
-  filter?: FilterModel<TType>
-  column: Column<TData, TType>
-  actions: DataTableFilterActions
-  locale?: Locale
+  filter?: FilterModel<TType>;
+  column: Column<TData, TType>;
+  actions: DataTableFilterActions;
+  locale?: Locale;
 }
 
 export function FilterValueDisplay<TData, TType extends ColumnDataType>({
   filter,
   column,
   actions,
-  locale = 'en',
+  locale = 'en'
 }: FilterValueDisplayProps<TData, TType>) {
   switch (column.type) {
     case 'option':
@@ -129,9 +127,8 @@ export function FilterValueDisplay<TData, TType extends ColumnDataType>({
           filter={filter as FilterModel<'option'>}
           column={column as Column<TData, 'option'>}
           actions={actions}
-          locale={locale}
-        />
-      )
+          locale={locale} />
+      );
 
     case 'multiOption':
       return (
@@ -139,9 +136,8 @@ export function FilterValueDisplay<TData, TType extends ColumnDataType>({
           filter={filter as FilterModel<'multiOption'>}
           column={column as Column<TData, 'multiOption'>}
           actions={actions}
-          locale={locale}
-        />
-      )
+          locale={locale} />
+      );
 
     case 'date':
       return (
@@ -149,9 +145,8 @@ export function FilterValueDisplay<TData, TType extends ColumnDataType>({
           filter={filter as FilterModel<'date'>}
           column={column as Column<TData, 'date'>}
           actions={actions}
-          locale={locale}
-        />
-      )
+          locale={locale} />
+      );
 
     case 'text':
       return (
@@ -159,9 +154,8 @@ export function FilterValueDisplay<TData, TType extends ColumnDataType>({
           filter={filter as FilterModel<'text'>}
           column={column as Column<TData, 'text'>}
           actions={actions}
-          locale={locale}
-        />
-      )
+          locale={locale} />
+      );
 
     case 'number':
       return (
@@ -169,12 +163,11 @@ export function FilterValueDisplay<TData, TType extends ColumnDataType>({
           filter={filter as FilterModel<'number'>}
           column={column as Column<TData, 'number'>}
           actions={actions}
-          locale={locale}
-        />
-      )
+          locale={locale} />
+      );
 
     default:
-      return null
+      return null;
   }
 }
 
@@ -182,10 +175,10 @@ export function FilterValueOptionDisplay<TData>({
   filter,
   column,
   actions: _actions,
-  locale: _locale = 'en',
+  locale: _locale = 'en'
 }: FilterValueDisplayProps<TData, 'option'>) {
-  const options = useMemo(() => column.getOptions(), [column])
-  const selected = options.filter((o) => filter?.values.includes(o.value))
+  const options = useMemo(() => column.getOptions(), [column]);
+  const selected = options.filter(o => filter?.values.includes(o.value));
 
   /*
    * We display the selected options based on how many are selected
@@ -197,63 +190,63 @@ export function FilterValueOptionDisplay<TData>({
    * 2) the number of selected options
    */
   if (selected.length === 1) {
-    const { label, icon: Icon } = selected[0]
-    const hasIcon = !!Icon
+    const { label, icon: Icon } = selected[0];
+    const hasIcon = !!Icon;
 
     return (
       <span className="inline-flex items-center gap-1">
-        {hasIcon &&
-          (isValidElement(Icon) ? (
+        {hasIcon
+          && (isValidElement(Icon) ? (
             Icon
           ) : (
             <Icon className="size-4 text-primary" />
           ))}
         <span>{label}</span>
       </span>
-    )
+    );
   }
-  const name = column.displayName.toLowerCase()
-  const pluralName = name.endsWith('s') ? `${name}es` : `${name}s`
+  const name = column.displayName.toLowerCase();
+  const pluralName = name.endsWith('s') ? `${name}es` : `${name}s`;
 
-  const hasOptionIcons = !options?.some((o) => !o.icon)
+  const hasOptionIcons = !options?.some(o => !o.icon);
 
   return (
     <div className="inline-flex items-center gap-0.5">
-      {hasOptionIcons &&
-        take(selected, 3).map(({ value, icon }) => {
-          if (!icon) return null
-          const Icon = icon
+      {hasOptionIcons
+        && take(selected, 3).map(({ value, icon }) => {
+          if (!icon) return null;
+          const Icon = icon;
 
           return isValidElement(Icon) ? (
             Icon
           ) : (
             <Icon key={value} className="size-4" />
-          )
+          );
         })}
       <span className={cn(hasOptionIcons && 'ml-1.5')}>
         {selected.length} {pluralName}
       </span>
     </div>
-  )
+  );
 }
 
 export function FilterValueMultiOptionDisplay<TData>({
   filter,
   column,
   actions: _actions,
-  locale: _locale = 'en',
+  locale: _locale = 'en'
 }: FilterValueDisplayProps<TData, 'multiOption'>) {
-  const options = useMemo(() => column.getOptions(), [column])
-  const selected = options.filter((o) => filter?.values.includes(o.value))
+  const options = useMemo(() => column.getOptions(), [column]);
+  const selected = options.filter(o => filter?.values.includes(o.value));
 
   if (selected.length === 1) {
-    const { label, icon: Icon } = selected[0]
-    const hasIcon = !!Icon
+    const { label, icon: Icon } = selected[0];
+    const hasIcon = !!Icon;
 
     return (
       <span className="inline-flex items-center gap-1.5">
-        {hasIcon &&
-          (isValidElement(Icon) ? (
+        {hasIcon
+          && (isValidElement(Icon) ? (
             Icon
           ) : (
             <Icon className="size-4 text-primary" />
@@ -261,26 +254,26 @@ export function FilterValueMultiOptionDisplay<TData>({
 
         <span>{label}</span>
       </span>
-    )
+    );
   }
 
-  const name = column.displayName.toLowerCase()
+  const name = column.displayName.toLowerCase();
 
-  const hasOptionIcons = !options?.some((o) => !o.icon)
+  const hasOptionIcons = !options?.some(o => !o.icon);
 
   return (
     <div className="inline-flex items-center gap-1.5">
       {hasOptionIcons && (
         <div key="icons" className="inline-flex items-center gap-0.5">
           {take(selected, 3).map(({ value, icon }) => {
-            if (!icon) return null
-            const Icon = icon
+            if (!icon) return null;
+            const Icon = icon;
 
             return isValidElement(Icon) ? (
               cloneElement(Icon, { key: value })
             ) : (
               <Icon key={value} className="size-4" />
-            )
+            );
           })}
         </div>
       )}
@@ -288,107 +281,107 @@ export function FilterValueMultiOptionDisplay<TData>({
         {selected.length} {name}
       </span>
     </div>
-  )
+  );
 }
 
 function formatDateRange(start: Date, end: Date) {
-  const sameMonth = start.getMonth() === end.getMonth()
-  const sameYear = start.getFullYear() === end.getFullYear()
+  const sameMonth = start.getMonth() === end.getMonth();
+  const sameYear = start.getFullYear() === end.getFullYear();
 
   if (sameMonth && sameYear) {
-    return `${format(start, 'MMM d')} - ${format(end, 'd, yyyy')}`
+    return `${format(start, 'MMM d')} - ${format(end, 'd, yyyy')}`;
   }
 
   if (sameYear) {
-    return `${format(start, 'MMM d')} - ${format(end, 'MMM d, yyyy')}`
+    return `${format(start, 'MMM d')} - ${format(end, 'MMM d, yyyy')}`;
   }
 
-  return `${format(start, 'MMM d, yyyy')} - ${format(end, 'MMM d, yyyy')}`
+  return `${format(start, 'MMM d, yyyy')} - ${format(end, 'MMM d, yyyy')}`;
 }
 
 export function FilterValueDateDisplay<TData>({
   filter,
   column: _column,
   actions: _actions,
-  locale: _locale = 'en',
+  locale: _locale = 'en'
 }: FilterValueDisplayProps<TData, 'date'>) {
-  if (!filter) return null
-  if (filter.values.length === 0) return <Ellipsis className="size-4" />
+  if (!filter) return null;
+  if (filter.values.length === 0) return <Ellipsis className="size-4" />;
   if (filter.values.length === 1) {
-    const value = filter.values[0]
+    const value = filter.values[0];
 
-    const formattedDateStr = format(value, 'MMM d, yyyy')
+    const formattedDateStr = format(value, 'MMM d, yyyy');
 
-    return <span>{formattedDateStr}</span>
+    return <span>{formattedDateStr}</span>;
   }
 
-  const formattedRangeStr = formatDateRange(filter.values[0], filter.values[1])
+  const formattedRangeStr = formatDateRange(filter.values[0], filter.values[1]);
 
-  return <span>{formattedRangeStr}</span>
+  return <span>{formattedRangeStr}</span>;
 }
 
 export function FilterValueTextDisplay<TData>({
   filter,
   column: _column,
   actions: _actions,
-  locale: _locale = 'en',
+  locale: _locale = 'en'
 }: FilterValueDisplayProps<TData, 'text'>) {
-  if (!filter) return null
+  if (!filter) return null;
   if (filter.values.length === 0 || filter.values[0].trim() === '')
-    return <Ellipsis className="size-4" />
+    return <Ellipsis className="size-4" />;
 
-  const value = filter.values[0]
+  const value = filter.values[0];
 
-  return <span>{value}</span>
+  return <span>{value}</span>;
 }
 
 export function FilterValueNumberDisplay<TData>({
   filter,
   column: _column,
   actions: _actions,
-  locale = 'en',
+  locale = 'en'
 }: FilterValueDisplayProps<TData, 'number'>) {
-  if (!filter || !filter.values || filter.values.length === 0) return null
+  if (!filter || !filter.values || filter.values.length === 0) return null;
 
   if (
-    filter.operator === 'is between' ||
-    filter.operator === 'is not between'
+    filter.operator === 'is between'
+    || filter.operator === 'is not between'
   ) {
-    const minValue = filter.values[0]
-    const maxValue = filter.values[1]
+    const minValue = filter.values[0];
+    const maxValue = filter.values[1];
 
     return (
       <span className="tabular-nums tracking-tight">
         {minValue} {t('and', locale)} {maxValue}
       </span>
-    )
+    );
   }
 
-  const value = filter.values[0]
+  const value = filter.values[0];
 
-  return <span className="tabular-nums tracking-tight">{value}</span>
+  return <span className="tabular-nums tracking-tight">{value}</span>;
 }
 
 /** **** Property Filter Value Controller ******/
 
 interface FilterValueControllerProps<TData, TType extends ColumnDataType> {
-  filter?: FilterModel<TType>
-  column: Column<TData, TType>
-  actions: DataTableFilterActions
-  strategy: FilterStrategy
-  locale?: Locale
+  filter?: FilterModel<TType>;
+  column: Column<TData, TType>;
+  actions: DataTableFilterActions;
+  strategy: FilterStrategy;
+  locale?: Locale;
 }
 
 export const FilterValueController = memo(
-  __FilterValueController,
-) as typeof __FilterValueController
+  __FilterValueController
+) as typeof __FilterValueController;
 
 function __FilterValueController<TData, TType extends ColumnDataType>({
   filter,
   column,
   actions,
   strategy,
-  locale = 'en',
+  locale = 'en'
 }: FilterValueControllerProps<TData, TType>) {
   switch (column.type) {
     case 'option':
@@ -398,9 +391,8 @@ function __FilterValueController<TData, TType extends ColumnDataType>({
           column={column as Column<TData, 'option'>}
           actions={actions}
           strategy={strategy}
-          locale={locale}
-        />
-      )
+          locale={locale} />
+      );
 
     case 'multiOption':
       return (
@@ -409,9 +401,8 @@ function __FilterValueController<TData, TType extends ColumnDataType>({
           column={column as Column<TData, 'multiOption'>}
           actions={actions}
           strategy={strategy}
-          locale={locale}
-        />
-      )
+          locale={locale} />
+      );
 
     case 'date':
       return (
@@ -420,9 +411,8 @@ function __FilterValueController<TData, TType extends ColumnDataType>({
           column={column as Column<TData, 'date'>}
           actions={actions}
           strategy={strategy}
-          locale={locale}
-        />
-      )
+          locale={locale} />
+      );
 
     case 'text':
       return (
@@ -431,9 +421,8 @@ function __FilterValueController<TData, TType extends ColumnDataType>({
           column={column as Column<TData, 'text'>}
           actions={actions}
           strategy={strategy}
-          locale={locale}
-        />
-      )
+          locale={locale} />
+      );
 
     case 'number':
       return (
@@ -442,39 +431,41 @@ function __FilterValueController<TData, TType extends ColumnDataType>({
           column={column as Column<TData, 'number'>}
           actions={actions}
           strategy={strategy}
-          locale={locale}
-        />
-      )
+          locale={locale} />
+      );
 
     default:
-      return null
+      return null;
   }
 }
 
 interface OptionItemProps {
-  option: ColumnOptionExtended & { initialSelected: boolean }
-  onToggle: (value: string, checked: boolean) => void
+  option: ColumnOptionExtended & { initialSelected: boolean };
+  onToggle: (value: string, checked: boolean) => void;
 }
 
-const OptionItem = memo(({ option, onToggle }: OptionItemProps) => {
-  const { value, label, icon: Icon, selected, count } = option
+const OptionItem = memo(({
+  option,
+  onToggle
+}: OptionItemProps) => {
+  const {
+    value, label, icon: Icon, selected, count
+  } = option;
   const handleSelect = useCallback(() => {
-    onToggle(value, !selected)
-  }, [onToggle, value, selected])
+    onToggle(value, !selected);
+  }, [onToggle, value, selected]);
 
   return (
     <CommandItem
       key={value}
       onSelect={handleSelect}
-      className="group flex items-center justify-between gap-1.5"
-    >
+      className="group flex items-center justify-between gap-1.5">
       <div className="flex items-center gap-1.5">
         <Checkbox
           checked={selected}
-          className="opacity-0 data-[state=checked]:opacity-100 group-data-[selected=true]:opacity-100 dark:border-ring mr-1"
-        />
-        {Icon &&
-          (isValidElement(Icon) ? (
+          className="opacity-0 data-[state=checked]:opacity-100 group-data-[selected=true]:opacity-100 dark:border-ring mr-1" />
+        {Icon
+          && (isValidElement(Icon) ? (
             Icon
           ) : (
             <Icon className="size-4 text-primary" />
@@ -485,64 +476,58 @@ const OptionItem = memo(({ option, onToggle }: OptionItemProps) => {
             className={cn(
               count == null && 'hidden',
               'ml-0.5 tabular-nums tracking-tight text-muted-foreground',
-              count === 0 && 'slashed-zero',
-            )}
-          >
+              count === 0 && 'slashed-zero'
+            )}>
             {typeof count === 'number' ? (count < 100 ? count : '100+') : ''}
           </sup>
         </span>
       </div>
     </CommandItem>
-  )
-})
+  );
+});
 
 export function FilterValueOptionController<TData>({
   filter,
   column,
   actions,
-  locale = 'en',
+  locale = 'en'
 }: FilterValueControllerProps<TData, 'option'>) {
   const initialOptions = useMemo(() => {
-    const counts = column.getFacetedUniqueValues()
+    const counts = column.getFacetedUniqueValues();
 
-    return column.getOptions().map((o) => ({
+    return column.getOptions().map(o => ({
       ...o,
       selected: filter?.values.includes(o.value) ?? false,
       initialSelected: filter?.values.includes(o.value) ?? false,
-      count: counts?.get(o.value) ?? 0,
-    }))
-  }, [column, filter?.values])
+      count: counts?.get(o.value) ?? 0
+    }));
+  }, [column, filter?.values]);
 
-  const [options, setOptions] = useState(initialOptions)
+  const [options, setOptions] = useState(initialOptions);
 
   useEffect(() => {
-    setOptions((prev) =>
-      prev.map((o) => ({
-        ...o,
-        selected: filter?.values.includes(o.value) ?? false,
-      })),
-    )
-  }, [filter?.values])
+    setOptions(prev => prev.map(o => ({ ...o, selected: filter?.values.includes(o.value) ?? false })));
+  }, [filter?.values]);
 
   const handleToggle = useCallback(
     (value: string, checked: boolean) => {
-      if (checked) actions.addFilterValue(column, [value])
-      else actions.removeFilterValue(column, [value])
+      if (checked) actions.addFilterValue(column, [value]);
+      else actions.removeFilterValue(column, [value]);
     },
-    [actions, column],
-  )
+    [actions, column]
+  );
 
   const { selectedOptions, unselectedOptions } = useMemo(() => {
-    const sel: typeof options = []
-    const unsel: typeof options = []
+    const sel: typeof options = [];
+    const unsel: typeof options = [];
 
     for (const o of options) {
-      if (o.initialSelected) sel.push(o)
-      else unsel.push(o)
+      if (o.initialSelected) sel.push(o);
+      else unsel.push(o);
     }
 
-    return { selectedOptions: sel, unselectedOptions: unsel }
-  }, [options])
+    return { selectedOptions: sel, unselectedOptions: unsel };
+  }, [options]);
 
   return (
     <Command loop>
@@ -550,82 +535,74 @@ export function FilterValueOptionController<TData>({
       <CommandEmpty>{t('noresults', locale)}</CommandEmpty>
       <CommandList className="max-h-fit">
         <CommandGroup className={cn(selectedOptions.length === 0 && 'hidden')}>
-          {selectedOptions.map((option) => (
+          {selectedOptions.map(option => (
             <OptionItem
               key={option.value}
               option={option}
-              onToggle={handleToggle}
-            />
+              onToggle={handleToggle} />
           ))}
         </CommandGroup>
         <CommandSeparator />
         <CommandGroup
-          className={cn(unselectedOptions.length === 0 && 'hidden')}
-        >
-          {unselectedOptions.map((option) => (
+          className={cn(unselectedOptions.length === 0 && 'hidden')}>
+          {unselectedOptions.map(option => (
             <OptionItem
               key={option.value}
               option={option}
-              onToggle={handleToggle}
-            />
+              onToggle={handleToggle} />
           ))}
         </CommandGroup>
       </CommandList>
     </Command>
-  )
+  );
 }
 
 export function FilterValueMultiOptionController<TData>({
   filter,
   column,
   actions,
-  locale = 'en',
+  locale = 'en'
 }: FilterValueControllerProps<TData, 'multiOption'>) {
   const initialOptions = useMemo(() => {
-    const counts = column.getFacetedUniqueValues()
+    const counts = column.getFacetedUniqueValues();
 
     return column.getOptions().map((o) => {
-      const selected = filter?.values.includes(o.value) ?? false
+      const selected = filter?.values.includes(o.value) ?? false;
 
       return {
         ...o,
         selected,
         initialSelected: selected,
-        count: counts?.get(o.value) ?? 0,
-      }
-    })
-  }, [column, filter?.values])
+        count: counts?.get(o.value) ?? 0
+      };
+    });
+  }, [column, filter?.values]);
 
-  const [options, setOptions] = useState(initialOptions)
+  const [options, setOptions] = useState(initialOptions);
 
   useEffect(() => {
-    setOptions((prev) =>
-      prev.map((o) => ({
-        ...o,
-        selected: filter?.values.includes(o.value) ?? false,
-      })),
-    )
-  }, [filter?.values])
+    setOptions(prev => prev.map(o => ({ ...o, selected: filter?.values.includes(o.value) ?? false })));
+  }, [filter?.values]);
 
   const handleToggle = useCallback(
     (value: string, checked: boolean) => {
-      if (checked) actions.addFilterValue(column, [value])
-      else actions.removeFilterValue(column, [value])
+      if (checked) actions.addFilterValue(column, [value]);
+      else actions.removeFilterValue(column, [value]);
     },
-    [actions, column],
-  )
+    [actions, column]
+  );
 
   const { selectedOptions, unselectedOptions } = useMemo(() => {
-    const sel: typeof options = []
-    const unsel: typeof options = []
+    const sel: typeof options = [];
+    const unsel: typeof options = [];
 
     for (const o of options) {
-      if (o.initialSelected) sel.push(o)
-      else unsel.push(o)
+      if (o.initialSelected) sel.push(o);
+      else unsel.push(o);
     }
 
-    return { selectedOptions: sel, unselectedOptions: unsel }
-  }, [options])
+    return { selectedOptions: sel, unselectedOptions: unsel };
+  }, [options]);
 
   return (
     <Command loop>
@@ -633,54 +610,51 @@ export function FilterValueMultiOptionController<TData>({
       <CommandEmpty>{t('noresults', locale)}</CommandEmpty>
       <CommandList>
         <CommandGroup className={cn(selectedOptions.length === 0 && 'hidden')}>
-          {selectedOptions.map((option) => (
+          {selectedOptions.map(option => (
             <OptionItem
               key={option.value}
               option={option}
-              onToggle={handleToggle}
-            />
+              onToggle={handleToggle} />
           ))}
         </CommandGroup>
         <CommandSeparator />
         <CommandGroup
-          className={cn(unselectedOptions.length === 0 && 'hidden')}
-        >
-          {unselectedOptions.map((option) => (
+          className={cn(unselectedOptions.length === 0 && 'hidden')}>
+          {unselectedOptions.map(option => (
             <OptionItem
               key={option.value}
               option={option}
-              onToggle={handleToggle}
-            />
+              onToggle={handleToggle} />
           ))}
         </CommandGroup>
       </CommandList>
     </Command>
-  )
+  );
 }
 
 export function FilterValueDateController<TData>({
   filter,
   column,
-  actions,
+  actions
 }: FilterValueControllerProps<TData, 'date'>) {
   const [date, setDate] = useState<DateRange | undefined>({
     from: filter?.values[0] ?? new Date(),
-    to: filter?.values[1] ?? undefined,
-  })
+    to: filter?.values[1] ?? undefined
+  });
 
   function changeDateRange(value: DateRange | undefined) {
-    const start = value?.from
-    const end =
-      start && value && value.to && !isEqual(start, value.to)
+    const start = value?.from;
+    const end
+      = start && value && value.to && !isEqual(start, value.to)
         ? value.to
-        : undefined
+        : undefined;
 
-    setDate({ from: start, to: end })
+    setDate({ from: start, to: end });
 
-    const isRange = start && end
-    const newValues = isRange ? [start, end] : start ? [start] : []
+    const isRange = start && end;
+    const newValues = isRange ? [start, end] : start ? [start] : [];
 
-    actions.setFilterValue(column, newValues)
+    actions.setFilterValue(column, newValues);
   }
 
   return (
@@ -694,24 +668,23 @@ export function FilterValueDateController<TData>({
               defaultMonth={date?.from}
               selected={date}
               onSelect={changeDateRange}
-              numberOfMonths={1}
-            />
+              numberOfMonths={1} />
           </div>
         </CommandGroup>
       </CommandList>
     </Command>
-  )
+  );
 }
 
 export function FilterValueTextController<TData>({
   filter,
   column,
   actions,
-  locale = 'en',
+  locale = 'en'
 }: FilterValueControllerProps<TData, 'text'>) {
   const changeText = (value: string | number) => {
-    actions.setFilterValue(column, [String(value)])
-  }
+    actions.setFilterValue(column, [String(value)]);
+  };
 
   return (
     <Command>
@@ -722,96 +695,92 @@ export function FilterValueTextController<TData>({
               placeholder={t('search', locale)}
               autoFocus
               value={filter?.values[0] ?? ''}
-              onChange={changeText}
-            />
+              onChange={changeText} />
           </CommandItem>
         </CommandGroup>
       </CommandList>
     </Command>
-  )
+  );
 }
 
 export function FilterValueNumberController<TData>({
   filter,
   column,
   actions,
-  locale = 'en',
+  locale = 'en'
 }: FilterValueControllerProps<TData, 'number'>) {
-  const minMax = useMemo(() => column.getFacetedMinMaxValues(), [column])
-  const [sliderMin, sliderMax] = [
-    minMax ? minMax[0] : 0,
-    minMax ? minMax[1] : 0,
-  ]
+  const minMax = useMemo(() => column.getFacetedMinMaxValues(), [column]);
+  const [sliderMin, sliderMax] = [minMax ? minMax[0] : 0, minMax ? minMax[1] : 0];
 
-  const [values, setValues] = useState(filter?.values ?? [0, 0])
+  const [values, setValues] = useState(filter?.values ?? [0, 0]);
 
   useEffect(() => {
     if (
-      filter?.values &&
-      filter.values.length === values.length &&
-      filter.values.every((v, i) => v === values[i])
+      filter?.values
+      && filter.values.length === values.length
+      && filter.values.every((v, i) => v === values[i])
     ) {
-      setValues(filter.values)
+      setValues(filter.values);
     }
-  }, [filter?.values, values])
+  }, [filter?.values, values]);
 
-  const isNumberRange =
-    filter && numberFilterOperators[filter.operator].target === 'multiple'
+  const isNumberRange
+    = filter && numberFilterOperators[filter.operator].target === 'multiple';
 
   const setFilterOperatorDebounced = useDebounceCallback(
     actions.setFilterOperator,
-    500,
-  )
+    500
+  );
   const setFilterValueDebounced = useDebounceCallback(
     actions.setFilterValue,
-    500,
-  )
+    500
+  );
 
   const changeNumber = (value: Array<number>) => {
-    setValues(value)
-    setFilterValueDebounced(column as any, value)
-  }
+    setValues(value);
+    setFilterValueDebounced(column as any, value);
+  };
 
   const changeMinNumber = (value: number) => {
-    const newValues = createNumberRange([value, values[1]])
+    const newValues = createNumberRange([value, values[1]]);
 
-    setValues(newValues)
-    setFilterValueDebounced(column as any, newValues)
-  }
+    setValues(newValues);
+    setFilterValueDebounced(column as any, newValues);
+  };
 
   const changeMaxNumber = (value: number) => {
-    const newValues = createNumberRange([values[0], value])
+    const newValues = createNumberRange([values[0], value]);
 
-    setValues(newValues)
-    setFilterValueDebounced(column as any, newValues)
-  }
+    setValues(newValues);
+    setFilterValueDebounced(column as any, newValues);
+  };
 
   const changeType = useCallback(
     (type: 'single' | 'range') => {
-      let newValues: Array<number> = []
+      let newValues: Array<number> = [];
 
       if (type === 'single')
-        newValues = [values[0]] // Keep the first value for single mode
+        newValues = [values[0]]; // Keep the first value for single mode
       else if (!minMax)
-        newValues = createNumberRange([values[0], values[1] ?? 0])
+        newValues = createNumberRange([values[0], values[1] ?? 0]);
       else {
-        const value = values[0]
+        const value = values[0];
 
-        newValues =
-          value - minMax[0] < minMax[1] - value
+        newValues
+          = value - minMax[0] < minMax[1] - value
             ? createNumberRange([value, minMax[1]])
-            : createNumberRange([minMax[0], value])
+            : createNumberRange([minMax[0], value]);
       }
 
-      const newOperator = type === 'single' ? 'is' : 'is between'
+      const newOperator = type === 'single' ? 'is' : 'is between';
 
-      setValues(newValues)
+      setValues(newValues);
 
-      setFilterOperatorDebounced.cancel()
-      setFilterValueDebounced.cancel()
+      setFilterOperatorDebounced.cancel();
+      setFilterValueDebounced.cancel();
 
-      actions.setFilterOperator(column.id, newOperator)
-      actions.setFilterValue(column, newValues)
+      actions.setFilterOperator(column.id, newOperator);
+      actions.setFilterValue(column, newValues);
     },
     [
       values,
@@ -819,9 +788,9 @@ export function FilterValueNumberController<TData>({
       actions,
       minMax,
       setFilterOperatorDebounced,
-      setFilterValueDebounced,
-    ],
-  )
+      setFilterValueDebounced
+    ]
+  );
 
   return (
     <Command>
@@ -830,8 +799,7 @@ export function FilterValueNumberController<TData>({
           <div className="flex flex-col w-full">
             <Tabs
               value={isNumberRange ? 'range' : 'single'}
-              onValueChange={(v) => changeType(v as 'single' | 'range')}
-            >
+              onValueChange={v => changeType(v as 'single' | 'range')}>
               <TabsList className="w-full *:text-xs">
                 <TabsTrigger value="single">{t('single', locale)}</TabsTrigger>
                 <TabsTrigger value="range">{t('range', locale)}</TabsTrigger>
@@ -840,12 +808,11 @@ export function FilterValueNumberController<TData>({
                 {minMax && (
                   <Slider
                     value={[values[0]]}
-                    onValueChange={(value) => changeNumber(value)}
+                    onValueChange={value => changeNumber(value)}
                     min={sliderMin}
                     max={sliderMax}
                     step={1}
-                    aria-orientation="horizontal"
-                  />
+                    aria-orientation="horizontal" />
                 )}
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-medium">
@@ -855,8 +822,7 @@ export function FilterValueNumberController<TData>({
                     id="single"
                     type="number"
                     value={values[0].toString()} // Use values[0] directly
-                    onChange={(v) => changeNumber([Number(v)])}
-                  />
+                    onChange={v => changeNumber([Number(v)])} />
                 </div>
               </TabsContent>
               <TabsContent value="range" className="flex flex-col gap-4 mt-4">
@@ -867,8 +833,7 @@ export function FilterValueNumberController<TData>({
                     min={sliderMin}
                     max={sliderMax}
                     step={1}
-                    aria-orientation="horizontal"
-                  />
+                    aria-orientation="horizontal" />
                 )}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center gap-2">
@@ -878,8 +843,7 @@ export function FilterValueNumberController<TData>({
                     <DebouncedInput
                       type="number"
                       value={values[0]}
-                      onChange={(v) => changeMinNumber(Number(v))}
-                    />
+                      onChange={v => changeMinNumber(Number(v))} />
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium">
@@ -888,8 +852,7 @@ export function FilterValueNumberController<TData>({
                     <DebouncedInput
                       type="number"
                       value={values[1]}
-                      onChange={(v) => changeMaxNumber(Number(v))}
-                    />
+                      onChange={v => changeMaxNumber(Number(v))} />
                   </div>
                 </div>
               </TabsContent>
@@ -898,5 +861,5 @@ export function FilterValueNumberController<TData>({
         </CommandGroup>
       </CommandList>
     </Command>
-  )
+  );
 }

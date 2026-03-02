@@ -1,29 +1,29 @@
-import { type IEvent, type IUser } from './interfaces'
+import { type IEvent, type IUser } from './interfaces';
 
-import { COLORS } from './constants'
+import { COLORS } from './constants';
 
 export const USERS_MOCK: Array<IUser> = [
   {
     id: 'f3b035ac-49f7-4e92-a715-35680bf63175',
     name: 'Michael Doe',
-    picturePath: null,
+    picturePath: null
   },
   {
     id: '3e36ea6e-78f3-40dd-ab8c-a6c737c3c422',
     name: 'Alice Johnson',
-    picturePath: null,
+    picturePath: null
   },
   {
     id: 'a7aff6bd-a50a-4d6a-ab57-76f76bb27cf5',
     name: 'Robert Smith',
-    picturePath: null,
+    picturePath: null
   },
   {
     id: 'dd503cf9-6c38-43cf-94cc-0d4032e2f77a',
     name: 'Emily Davis',
-    picturePath: null,
-  },
-]
+    picturePath: null
+  }
+];
 
 const events = [
   "Doctor's appointment",
@@ -111,22 +111,22 @@ const events = [
   'Book club meeting',
   'Grocery shopping',
   'Car maintenance',
-  'Home renovation meeting',
-]
+  'Home renovation meeting'
+];
 
 const mockGenerator = (numberOfEvents: number): Array<IEvent> => {
-  const result: Array<IEvent> = []
-  let currentId = 1
+  const result: Array<IEvent> = [];
+  let currentId = 1;
 
-  const randomUser = USERS_MOCK[Math.floor(Math.random() * USERS_MOCK.length)]
+  const randomUser = USERS_MOCK[Math.floor(Math.random() * USERS_MOCK.length)];
 
-  const now = new Date()
-  const startRange = new Date(now)
+  const now = new Date();
+  const startRange = new Date(now);
 
-  startRange.setDate(now.getDate() - 30)
-  const endRange = new Date(now)
+  startRange.setDate(now.getDate() - 30);
+  const endRange = new Date(now);
 
-  endRange.setDate(now.getDate() + 30)
+  endRange.setDate(now.getDate() + 30);
 
   const currentEvent = {
     id: currentId++,
@@ -136,40 +136,40 @@ const mockGenerator = (numberOfEvents: number): Array<IEvent> => {
     color: COLORS[Math.floor(Math.random() * COLORS.length)],
     description:
       'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-    user: randomUser,
-  }
+    user: randomUser
+  };
 
-  result.push(currentEvent)
+  result.push(currentEvent);
 
   for (let i = 0; i < numberOfEvents - 1; i++) {
-    const isMultiDay = Math.random() < 0.1
+    const isMultiDay = Math.random() < 0.1;
 
     const startDate = new Date(
-      startRange.getTime() +
-        Math.random() * (endRange.getTime() - startRange.getTime()),
-    )
+      startRange.getTime()
+      + Math.random() * (endRange.getTime() - startRange.getTime())
+    );
 
     startDate.setHours(
       8 + Math.floor(Math.random() * 12),
       Math.floor(Math.random() * 60),
       0,
-      0,
-    )
+      0
+    );
 
-    const endDate = new Date(startDate)
+    const endDate = new Date(startDate);
 
     if (isMultiDay) {
-      const additionalDays = Math.floor(Math.random() * 4) + 1
+      const additionalDays = Math.floor(Math.random() * 4) + 1;
 
-      endDate.setDate(startDate.getDate() + additionalDays)
+      endDate.setDate(startDate.getDate() + additionalDays);
       endDate.setHours(
         8 + Math.floor(Math.random() * 12),
         Math.floor(Math.random() * 60),
         0,
-        0,
-      )
+        0
+      );
     } else {
-      endDate.setHours(endDate.getHours() + Math.floor(Math.random() * 3) + 1)
+      endDate.setHours(endDate.getHours() + Math.floor(Math.random() * 3) + 1);
     }
 
     result.push({
@@ -180,11 +180,11 @@ const mockGenerator = (numberOfEvents: number): Array<IEvent> => {
       color: COLORS[Math.floor(Math.random() * COLORS.length)],
       description:
         'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-      user: USERS_MOCK[Math.floor(Math.random() * USERS_MOCK.length)],
-    })
+      user: USERS_MOCK[Math.floor(Math.random() * USERS_MOCK.length)]
+    });
   }
 
-  return result
-}
+  return result;
+};
 
-export const CALENDAR_ITEMS_MOCK: Array<IEvent> = mockGenerator(80)
+export const CALENDAR_ITEMS_MOCK: Array<IEvent> = mockGenerator(80);

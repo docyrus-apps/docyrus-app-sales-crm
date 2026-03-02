@@ -1,18 +1,23 @@
-'use client'
+'use client';
 
-import { type ReactNode, useCallback, useEffect, useState } from 'react'
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useState
+} from 'react';
 
-import { Loader2, ShieldAlert } from 'lucide-react'
+import { Loader2, ShieldAlert } from 'lucide-react';
 
-import { cn } from '@/lib/utils'
-import { buttonVariants } from '@/components/animate-ui/components/buttons/button'
+import { cn } from '@/lib/utils';
+import { buttonVariants } from '@/components/ui/button';
 
-import { MorphPopover } from '@/components/docyrus/morph-popover'
+import { MorphPopover } from '@/components/docyrus/morph-popover';
 
-const DEFAULT_COUNTDOWN_SECONDS = 6
-const MIN_COUNTDOWN_SECONDS = 1
-const COUNTDOWN_STEP_MS = 100
-const DEFAULT_TRIGGER_WIDTH = 120
+const DEFAULT_COUNTDOWN_SECONDS = 6;
+const MIN_COUNTDOWN_SECONDS = 1;
+const COUNTDOWN_STEP_MS = 100;
+const DEFAULT_TRIGGER_WIDTH = 120;
 
 const BUTTON_HEIGHT_BY_SIZE: Record<ButtonSize, number> = {
   default: 36,
@@ -22,58 +27,44 @@ const BUTTON_HEIGHT_BY_SIZE: Record<ButtonSize, number> = {
   icon: 36,
   'icon-xs': 24,
   'icon-sm': 32,
-  'icon-lg': 40,
-}
+  'icon-lg': 40
+};
 
 const ICON_BUTTON_SIZES: ButtonSize[] = [
   'icon',
   'icon-xs',
   'icon-sm',
-  'icon-lg',
-]
+  'icon-lg'
+];
 
-type ButtonVariant =
-  | 'default'
-  | 'outline'
-  | 'secondary'
-  | 'ghost'
-  | 'destructive'
-  | 'link'
-type ButtonSize =
-  | 'default'
-  | 'xs'
-  | 'sm'
-  | 'lg'
-  | 'icon'
-  | 'icon-xs'
-  | 'icon-sm'
-  | 'icon-lg'
+type ButtonVariant = 'default' | 'outline' | 'secondary' | 'ghost' | 'destructive' | 'link';
+type ButtonSize = 'default' | 'xs' | 'sm' | 'lg' | 'icon' | 'icon-xs' | 'icon-sm' | 'icon-lg';
 
 export interface ConfirmationButtonProps {
-  children: ReactNode
-  onConfirm: () => void | Promise<void>
-  confirmationTitle?: ReactNode
-  confirmationMessage?: ReactNode
-  confirmLabel?: string
-  cancelLabel?: string
-  countdownSeconds?: number
-  disabled?: boolean
-  onCancel?: () => void
-  onTimeout?: () => void
-  className?: string
-  triggerClassName?: string
-  contentClassName?: string
-  side?: 'top' | 'bottom'
-  sideOffset?: number
-  contentWidth?: number
-  triggerSize?: number
-  triggerWidth?: number
-  triggerHeight?: number
-  triggerRadius?: number
-  speed?: number
-  bgClassName?: string
-  buttonVariant?: ButtonVariant
-  buttonSize?: ButtonSize
+  children: ReactNode;
+  onConfirm: () => void | Promise<void>;
+  confirmationTitle?: ReactNode;
+  confirmationMessage?: ReactNode;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  countdownSeconds?: number;
+  disabled?: boolean;
+  onCancel?: () => void;
+  onTimeout?: () => void;
+  className?: string;
+  triggerClassName?: string;
+  contentClassName?: string;
+  side?: 'top' | 'bottom';
+  sideOffset?: number;
+  contentWidth?: number;
+  triggerSize?: number;
+  triggerWidth?: number;
+  triggerHeight?: number;
+  triggerRadius?: number;
+  speed?: number;
+  bgClassName?: string;
+  buttonVariant?: ButtonVariant;
+  buttonSize?: ButtonSize;
 }
 
 function ConfirmationButton({
@@ -100,109 +91,113 @@ function ConfirmationButton({
   speed,
   bgClassName,
   buttonVariant = 'destructive',
-  buttonSize = 'default',
+  buttonSize = 'default'
 }: ConfirmationButtonProps) {
-  const safeCountdownSeconds = Math.max(MIN_COUNTDOWN_SECONDS, countdownSeconds)
-  const totalMs = safeCountdownSeconds * 1000
+  const safeCountdownSeconds = Math.max(MIN_COUNTDOWN_SECONDS, countdownSeconds);
+  const totalMs = safeCountdownSeconds * 1000;
 
-  const [isOpen, setIsOpen] = useState(false)
-  const [remainingMs, setRemainingMs] = useState(totalMs)
-  const [isConfirming, setIsConfirming] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
+  const [remainingMs, setRemainingMs] = useState(totalMs);
+  const [isConfirming, setIsConfirming] = useState(false);
 
-  const isWaitingForConfirmation = isOpen && !isConfirming
-  const isBlocked = disabled || isWaitingForConfirmation || isConfirming
-  const isIconButtonSize = ICON_BUTTON_SIZES.includes(buttonSize)
-  const resolvedTriggerHeight =
-    triggerHeight ?? triggerSize ?? BUTTON_HEIGHT_BY_SIZE[buttonSize]
-  const resolvedTriggerWidth =
-    triggerWidth ??
-    triggerSize ??
-    (isIconButtonSize ? resolvedTriggerHeight : DEFAULT_TRIGGER_WIDTH)
-  const resolvedTriggerRadius =
-    triggerRadius ??
-    (isIconButtonSize ? Math.round(resolvedTriggerHeight / 2) : 6)
-  const secondsLeft = Math.max(
-    MIN_COUNTDOWN_SECONDS,
-    Math.ceil(remainingMs / 1000),
-  )
-  const progressValue = Math.max(
-    0,
-    Math.min(100, (remainingMs / totalMs) * 100),
-  )
+  const isWaitingForConfirmation = isOpen && !isConfirming;
+  const isBlocked = disabled || isWaitingForConfirmation || isConfirming;
+  const isIconButtonSize = ICON_BUTTON_SIZES.includes(buttonSize);
+  const resolvedTriggerHeight
+    = triggerHeight
+      ?? triggerSize
+      ?? BUTTON_HEIGHT_BY_SIZE[buttonSize];
+  const resolvedTriggerWidth
+    = triggerWidth
+      ?? triggerSize
+      ?? (isIconButtonSize ? resolvedTriggerHeight : DEFAULT_TRIGGER_WIDTH);
+  const resolvedTriggerRadius
+    = triggerRadius
+      ?? (isIconButtonSize ? Math.round(resolvedTriggerHeight / 2) : 6);
+  const secondsLeft = Math.max(MIN_COUNTDOWN_SECONDS, Math.ceil(remainingMs / 1000));
+  const progressValue = Math.max(0, Math.min(100, (remainingMs / totalMs) * 100));
 
   useEffect(() => {
     if (!isOpen) {
-      setRemainingMs(totalMs)
+      setRemainingMs(totalMs);
     }
-  }, [isOpen, totalMs])
+  }, [isOpen, totalMs]);
 
   useEffect(() => {
     if (!isOpen || isConfirming) {
-      return
+      return;
     }
 
-    const startedAt = Date.now()
+    const startedAt = Date.now();
     const intervalId = window.setInterval(() => {
-      const elapsed = Date.now() - startedAt
-      const nextRemaining = Math.max(totalMs - elapsed, 0)
+      const elapsed = Date.now() - startedAt;
+      const nextRemaining = Math.max(totalMs - elapsed, 0);
 
-      setRemainingMs(nextRemaining)
+      setRemainingMs(nextRemaining);
 
       if (nextRemaining === 0) {
-        window.clearInterval(intervalId)
-        setIsOpen(false)
-        onCancel?.()
-        onTimeout?.()
+        window.clearInterval(intervalId);
+        setIsOpen(false);
+        onCancel?.();
+        onTimeout?.();
       }
-    }, COUNTDOWN_STEP_MS)
+    }, COUNTDOWN_STEP_MS);
 
     return () => {
-      window.clearInterval(intervalId)
+      window.clearInterval(intervalId);
+    };
+  }, [
+    isOpen,
+    isConfirming,
+    onCancel,
+    onTimeout,
+    totalMs
+  ]);
+
+  const handleOpenChange = useCallback((nextOpen: boolean) => {
+    if (isConfirming) {
+      return;
     }
-  }, [isOpen, isConfirming, onCancel, onTimeout, totalMs])
 
-  const handleOpenChange = useCallback(
-    (nextOpen: boolean) => {
-      if (isConfirming) {
-        return
-      }
+    if (nextOpen && disabled) {
+      return;
+    }
 
-      if (nextOpen && disabled) {
-        return
-      }
+    if (!nextOpen && isOpen) {
+      onCancel?.();
+    }
 
-      if (!nextOpen && isOpen) {
-        onCancel?.()
-      }
-
-      setIsOpen(nextOpen)
-    },
-    [disabled, isConfirming, isOpen, onCancel],
-  )
+    setIsOpen(nextOpen);
+  }, [
+    disabled,
+    isConfirming,
+    isOpen,
+    onCancel
+  ]);
 
   const handleCancel = useCallback(() => {
     if (isConfirming) {
-      return
+      return;
     }
 
-    setIsOpen(false)
-    onCancel?.()
-  }, [isConfirming, onCancel])
+    setIsOpen(false);
+    onCancel?.();
+  }, [isConfirming, onCancel]);
 
   const handleConfirm = useCallback(async () => {
     if (isConfirming) {
-      return
+      return;
     }
 
-    setIsConfirming(true)
+    setIsConfirming(true);
 
     try {
-      await onConfirm()
-      setIsOpen(false)
+      await onConfirm();
+      setIsOpen(false);
     } finally {
-      setIsConfirming(false)
+      setIsConfirming(false);
     }
-  }, [isConfirming, onConfirm])
+  }, [isConfirming, onConfirm]);
 
   return (
     <MorphPopover
@@ -213,9 +208,9 @@ function ConfirmationButton({
       triggerClassName={cn(
         buttonVariants({
           variant: buttonVariant,
-          size: buttonSize,
+          size: buttonSize
         }),
-        triggerClassName,
+        triggerClassName
       )}
       disabled={isBlocked}
       isOpen={isOpen}
@@ -226,16 +221,13 @@ function ConfirmationButton({
       speed={speed}
       bgClassName={bgClassName}
       contentClassName={cn('w-full text-sm', contentClassName)}
-      className={className}
-    >
+      className={className}>
       <div className="space-y-3">
         <div className="flex items-start gap-2">
           <ShieldAlert className="mt-0.5 size-4 shrink-0 opacity-85" />
           <div className="space-y-1">
             <p className="text-sm font-semibold">{confirmationTitle}</p>
-            <p className="text-xs text-white/80 dark:text-black/70">
-              {confirmationMessage}
-            </p>
+            <p className="text-xs text-white/80 dark:text-black/70">{confirmationMessage}</p>
           </div>
         </div>
 
@@ -243,8 +235,7 @@ function ConfirmationButton({
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/20 dark:bg-black/15">
             <div
               className="h-full bg-white transition-[width] duration-100 ease-linear dark:bg-black"
-              style={{ width: `${String(progressValue)}%` }}
-            />
+              style={{ width: `${String(progressValue)}%` }} />
           </div>
           <p className="text-[11px] text-white/80 dark:text-black/70">
             Auto-cancel in {secondsLeft}s
@@ -256,19 +247,17 @@ function ConfirmationButton({
             type="button"
             onClick={handleCancel}
             disabled={isConfirming}
-            className="rounded-md bg-white/15 px-2.5 py-1 text-xs transition-colors hover:bg-white/25 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-black/10 dark:hover:bg-black/20"
-          >
+            className="rounded-md bg-white/15 px-2.5 py-1 text-xs transition-colors hover:bg-white/25 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-black/10 dark:hover:bg-black/20">
             {cancelLabel}
           </button>
 
           <button
             type="button"
             onClick={() => {
-              void handleConfirm()
+              void handleConfirm();
             }}
             disabled={isConfirming}
-            className="inline-flex items-center gap-1 rounded-md bg-white px-2.5 py-1 text-xs font-medium text-black transition-colors hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-black dark:text-white dark:hover:bg-black/90"
-          >
+            className="inline-flex items-center gap-1 rounded-md bg-white px-2.5 py-1 text-xs font-medium text-black transition-colors hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-black dark:text-white dark:hover:bg-black/90">
             {isConfirming ? (
               <>
                 <Loader2 className="size-3 animate-spin" />
@@ -281,8 +270,8 @@ function ConfirmationButton({
         </div>
       </div>
     </MorphPopover>
-  )
+  );
 }
 
-export { ConfirmationButton }
-export default ConfirmationButton
+export { ConfirmationButton };
+export default ConfirmationButton;

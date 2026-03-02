@@ -1,26 +1,27 @@
-'use client'
+'use client';
 
-import { Link } from 'lucide-react'
+import { Link } from 'lucide-react';
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
-import { type DocyrusValueProps } from './types'
+import { type DocyrusValueProps } from './types';
 
 export function UrlValue({ value, className }: DocyrusValueProps) {
   if (value == null || value === '') {
-    return <span className="text-muted-foreground">—</span>
+    return <span className="text-muted-foreground">—</span>;
   }
 
-  const url = String(value)
-  let hostname = url
+  const url = String(value);
+  let hostname = url;
 
   try {
-    const parsed = new URL(url.startsWith('http') ? url : `https://${url}`)
+    const parsed = new URL(url.startsWith('http') ? url : `https://${url}`);
 
-    ;({ hostname } = parsed)
-  } catch {}
+    ({ hostname } = parsed);
+  } catch {
+  }
 
-  const href = url.startsWith('http') ? url : `https://${url}`
+  const href = url.startsWith('http') ? url : `https://${url}`;
 
   return (
     <a
@@ -29,11 +30,10 @@ export function UrlValue({ value, className }: DocyrusValueProps) {
       rel="noopener noreferrer"
       className={cn(
         'inline-flex items-center gap-1 text-primary underline-offset-4 hover:underline truncate',
-        className,
-      )}
-    >
+        className
+      )}>
       <Link className="size-3.5 shrink-0" />
       <span className="truncate">{hostname}</span>
     </a>
-  )
+  );
 }

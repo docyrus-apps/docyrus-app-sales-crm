@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { Skeleton } from '@/components/ui/skeleton'
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function WeekViewSkeleton() {
   return (
@@ -10,8 +10,7 @@ export function WeekViewSkeleton() {
         {Array.from({ length: 7 }).map((_, i) => (
           <div
             key={`day-header-${i}`}
-            className="flex flex-col items-center justify-center py-2"
-          >
+            className="flex flex-col items-center justify-center py-2">
             <Skeleton className="h-6 w-10 rounded-full" />
             <Skeleton className="mt-1 h-4 w-6" />
           </div>
@@ -21,10 +20,7 @@ export function WeekViewSkeleton() {
       <div className="flex flex-1 overflow-y-auto">
         <div className="w-18 flex-shrink-0">
           {Array.from({ length: 12 }).map((_, i) => (
-            <div
-              key={`hour-label-${i}`}
-              className="relative h-12 border-b pr-2 text-right"
-            >
+            <div key={`hour-label-${i}`} className="relative h-12 border-b pr-2 text-right">
               <Skeleton className="absolute -top-3 right-2 h-4 w-10" />
             </div>
           ))}
@@ -41,5 +37,5 @@ export function WeekViewSkeleton() {
         </div>
       </div>
     </div>
-  )
+  );
 }

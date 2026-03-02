@@ -1,27 +1,23 @@
-'use client'
+'use client';
 
-import { memo, useId, useMemo } from 'react'
+import { memo, useId, useMemo } from 'react';
 
-import {
-  type ValueEditorProps,
-  useValueEditor,
-  getFirstOption,
-} from 'react-querybuilder'
+import { type ValueEditorProps, useValueEditor, getFirstOption } from 'react-querybuilder';
 
-import { cn } from '@/lib/utils'
-import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Switch } from '@/components/ui/switch'
-import { Textarea } from '@/components/ui/textarea'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+  SelectValue
+} from '@/components/ui/select';
 
 const QBValueEditor = memo((allProps: ValueEditorProps) => {
   const {
@@ -35,42 +31,38 @@ const QBValueEditor = memo((allProps: ValueEditorProps) => {
     type,
     values = [],
     fieldData,
-    testID,
-  } = allProps
+    testID
+  } = allProps;
 
-  useValueEditor(allProps)
+  useValueEditor(allProps);
 
-  const id = useId()
-  const ariaLabel = title || fieldData?.label || 'Value'
+  const id = useId();
+  const ariaLabel = title || fieldData?.label || 'Value';
 
   const flatValues = useMemo(() => {
-    const flat: { name: string; label: string }[] = []
+    const flat: { name: string; label: string }[] = [];
 
     for (const opt of values) {
       if ('options' in opt && Array.isArray(opt.options)) {
         for (const subOpt of opt.options) {
           flat.push({
             name: String(subOpt.name ?? subOpt.value ?? subOpt.label),
-            label: String(subOpt.label),
-          })
+            label: String(subOpt.label)
+          });
         }
       } else {
         flat.push({
-          name: String(
-            (opt as { name?: string; value?: string }).name ??
-              (opt as { value?: string }).value ??
-              opt.label,
-          ),
-          label: String(opt.label),
-        })
+          name: String((opt as { name?: string; value?: string }).name ?? (opt as { value?: string }).value ?? opt.label),
+          label: String(opt.label)
+        });
       }
     }
 
-    return flat
-  }, [values])
+    return flat;
+  }, [values]);
 
   if (operator === 'null' || operator === 'notNull') {
-    return null
+    return null;
   }
 
   switch (type) {
@@ -81,67 +73,61 @@ const QBValueEditor = memo((allProps: ValueEditorProps) => {
         <Select
           value={String(value ?? getFirstOption(values) ?? '')}
           disabled={disabled}
-          onValueChange={handleOnChange}
-        >
+          onValueChange={handleOnChange}>
           <SelectTrigger
             className={cn('qb-control h-8 min-w-[120px] text-xs', className)}
             title={title}
             aria-label={ariaLabel}
             size="sm"
-            data-testid={testID}
-          >
+            data-testid={testID}>
             <SelectValue placeholder={title} />
           </SelectTrigger>
           <SelectContent>
-            {flatValues.map((opt) => (
+            {flatValues.map(opt => (
               <SelectItem key={opt.name} value={opt.name}>
                 {opt.label}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-      )
+      );
 
     case 'checkbox':
       return (
         <div
           className={cn('qb-control flex items-center gap-2', className)}
-          data-testid={testID}
-        >
+          data-testid={testID}>
           <Checkbox
             id={id}
             checked={!!value}
             disabled={disabled}
-            onCheckedChange={(v) => handleOnChange(v)}
+            onCheckedChange={v => handleOnChange(v)}
             title={title}
-            aria-label={ariaLabel}
-          />
+            aria-label={ariaLabel} />
           <Label htmlFor={id} className="text-xs">
             {fieldData?.label ?? title}
           </Label>
         </div>
-      )
+      );
 
     case 'switch':
       return (
         <div
           className={cn('qb-control flex items-center gap-2', className)}
-          data-testid={testID}
-        >
+          data-testid={testID}>
           <Switch
             id={id}
             size="sm"
             checked={!!value}
             disabled={disabled}
-            onCheckedChange={(v) => handleOnChange(v)}
+            onCheckedChange={v => handleOnChange(v)}
             title={title}
-            aria-label={ariaLabel}
-          />
+            aria-label={ariaLabel} />
           <Label htmlFor={id} className="text-xs">
             {fieldData?.label ?? title}
           </Label>
         </div>
-      )
+      );
 
     case 'radio':
       return (
@@ -152,9 +138,8 @@ const QBValueEditor = memo((allProps: ValueEditorProps) => {
           className={cn('qb-control flex flex-row gap-3', className)}
           title={title}
           aria-label={ariaLabel}
-          data-testid={testID}
-        >
-          {flatValues.map((opt) => (
+          data-testid={testID}>
+          {flatValues.map(opt => (
             <div key={opt.name} className="flex items-center gap-1.5">
               <RadioGroupItem value={opt.name} id={`${id}-${opt.name}`} />
               <Label htmlFor={`${id}-${opt.name}`} className="text-xs">
@@ -163,7 +148,7 @@ const QBValueEditor = memo((allProps: ValueEditorProps) => {
             </div>
           ))}
         </RadioGroup>
-      )
+      );
 
     case 'textarea':
       return (
@@ -172,14 +157,10 @@ const QBValueEditor = memo((allProps: ValueEditorProps) => {
           title={title}
           aria-label={ariaLabel}
           disabled={disabled}
-          className={cn(
-            'qb-control h-8 min-h-8 min-w-[180px] text-xs',
-            className,
-          )}
-          onChange={(e) => handleOnChange(e.target.value)}
-          data-testid={testID}
-        />
-      )
+          className={cn('qb-control h-8 min-h-8 min-w-[180px] text-xs', className)}
+          onChange={e => handleOnChange(e.target.value)}
+          data-testid={testID} />
+      );
 
     default:
       return (
@@ -190,13 +171,12 @@ const QBValueEditor = memo((allProps: ValueEditorProps) => {
           aria-label={ariaLabel}
           disabled={disabled}
           className={cn('qb-control h-8 min-w-[140px] text-xs', className)}
-          onChange={(e) => handleOnChange(e.target.value)}
-          data-testid={testID}
-        />
-      )
+          onChange={e => handleOnChange(e.target.value)}
+          data-testid={testID} />
+      );
   }
-})
+});
 
-QBValueEditor.displayName = 'QBValueEditor'
+QBValueEditor.displayName = 'QBValueEditor';
 
-export { QBValueEditor }
+export { QBValueEditor };

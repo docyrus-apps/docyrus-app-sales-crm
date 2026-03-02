@@ -1,19 +1,21 @@
-'use client'
+'use client';
 
-import { type VariantProps } from 'class-variance-authority'
+import { type VariantProps } from 'class-variance-authority';
 
-import { cva } from 'class-variance-authority'
-import { endOfDay, isSameDay, parseISO, startOfDay } from 'date-fns'
+import { cva } from 'class-variance-authority';
+import {
+  endOfDay, isSameDay, parseISO, startOfDay
+} from 'date-fns';
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
-import { type IEvent } from '../../interfaces'
+import { type IEvent } from '../../interfaces';
 
-import { useCalendar } from '../../contexts/calendar-context'
-import { EventDetailsDialog } from '../../dialogs/event-details-dialog'
-import { DraggableEvent } from '../../dnd/draggable-event'
-import { formatTime } from '../../helpers'
-import { EventBullet } from './event-bullet'
+import { useCalendar } from '../../contexts/calendar-context';
+import { EventDetailsDialog } from '../../dialogs/event-details-dialog';
+import { DraggableEvent } from '../../dnd/draggable-event';
+import { formatTime } from '../../helpers';
+import { EventBullet } from './event-bullet';
 
 const eventBadgeVariants = cva(
   'flex w-full h-6.5 select-none items-center justify-between gap-1.5 truncate whitespace-nowrap rounded-md border px-2 text-xs cursor-grab',
@@ -36,32 +38,32 @@ const eventBadgeVariants = cva(
         'red-dot': 'bg-secondary text-foreground [&_svg]:fill-red-600',
         'orange-dot': 'bg-secondary text-foreground [&_svg]:fill-orange-600',
         'purple-dot': 'bg-secondary text-foreground [&_svg]:fill-purple-600',
-        'yellow-dot': 'bg-secondary text-foreground [&_svg]:fill-yellow-600',
+        'yellow-dot': 'bg-secondary text-foreground [&_svg]:fill-yellow-600'
       },
       multiDayPosition: {
         first: 'relative z-10 mr-0 rounded-r-none border-r-0 [&>span]:mr-2.5',
         middle:
           'relative z-10 mx-0 w-[calc(100%_+_1px)] rounded-none border-x-0',
         last: 'ml-0 rounded-l-none border-l-0',
-        none: '',
-      },
+        none: ''
+      }
     },
     defaultVariants: {
-      color: 'blue-dot',
-    },
-  },
-)
+      color: 'blue-dot'
+    }
+  }
+);
 
 interface IProps extends Omit<
   VariantProps<typeof eventBadgeVariants>,
   'color' | 'multiDayPosition'
 > {
-  event: IEvent
-  cellDate: Date
-  eventCurrentDay?: number
-  eventTotalDays?: number
-  className?: string
-  position?: 'first' | 'middle' | 'last' | 'none'
+  event: IEvent;
+  cellDate: Date;
+  eventCurrentDay?: number;
+  eventTotalDays?: number;
+  className?: string;
+  position?: 'first' | 'middle' | 'last' | 'none';
 }
 
 export function MonthEventBadge({
@@ -70,56 +72,56 @@ export function MonthEventBadge({
   eventCurrentDay,
   eventTotalDays,
   className,
-  position: propPosition,
+  position: propPosition
 }: IProps) {
-  const { badgeVariant, use24HourFormat } = useCalendar()
+  const { badgeVariant, use24HourFormat } = useCalendar();
 
-  const itemStart = startOfDay(parseISO(event.startDate))
-  const itemEnd = endOfDay(parseISO(event.endDate))
+  const itemStart = startOfDay(parseISO(event.startDate));
+  const itemEnd = endOfDay(parseISO(event.endDate));
 
-  if (cellDate < itemStart || cellDate > itemEnd) return null
+  if (cellDate < itemStart || cellDate > itemEnd) return null;
 
-  let position: 'first' | 'middle' | 'last' | 'none' = 'none'
+  let position: 'first' | 'middle' | 'last' | 'none' = 'none';
 
   if (propPosition) {
-    position = propPosition
+    position = propPosition;
   } else if (eventCurrentDay && eventTotalDays) {
-    position = 'none'
+    position = 'none';
   } else if (isSameDay(itemStart, itemEnd)) {
-    position = 'none'
+    position = 'none';
   } else if (isSameDay(cellDate, itemStart)) {
-    position = 'first'
+    position = 'first';
   } else if (isSameDay(cellDate, itemEnd)) {
-    position = 'last'
+    position = 'last';
   } else {
-    position = 'middle'
+    position = 'middle';
   }
 
-  const renderBadgeText = ['first', 'none'].includes(position)
-  const renderBadgeTime = ['last', 'none'].includes(position)
+  const renderBadgeText = ['first', 'none'].includes(position);
+  const renderBadgeTime = ['last', 'none'].includes(position);
 
   const color = (
     badgeVariant === 'dot' ? `${event.color}-dot` : event.color
-  ) as VariantProps<typeof eventBadgeVariants>['color']
+  ) as VariantProps<typeof eventBadgeVariants>['color'];
 
   const eventBadgeClasses = cn(
-    eventBadgeVariants({ color, multiDayPosition: position, className }),
-  )
+    eventBadgeVariants({ color, multiDayPosition: position, className })
+  );
 
   const marginClass = {
     first: 'ml-1 mr-0',
     middle: 'mx-0',
     last: 'ml-0 mr-1',
-    none: 'mx-1',
-  }[position]
+    none: 'mx-1'
+  }[position];
 
   return (
     <DraggableEvent event={event} className={marginClass}>
       <EventDetailsDialog event={event}>
         <button type="button" className={eventBadgeClasses}>
           <div className="flex items-center gap-1.5 truncate">
-            {!['middle', 'last'].includes(position) &&
-              badgeVariant === 'dot' && <EventBullet color={event.color} />}
+            {!['middle', 'last'].includes(position)
+              && badgeVariant === 'dot' && <EventBullet color={event.color} />}
 
             {renderBadgeText && (
               <p className="flex-1 truncate font-semibold">
@@ -143,5 +145,5 @@ export function MonthEventBadge({
         </button>
       </EventDetailsDialog>
     </DraggableEvent>
-  )
+  );
 }
