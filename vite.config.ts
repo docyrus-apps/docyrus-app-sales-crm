@@ -68,10 +68,10 @@ export default defineConfig({
     },
   },
   server: {
-    allowedHosts: ['.e2b.dev', '.docy.app', '.docy.dev'],
+    allowedHosts: ['.e2b.dev', '.docy.app', '.docy.dev', '.docyrus.app'],
     headers: {
       'Content-Security-Policy':
-        "frame-ancestors 'self' https://localhost:4200 http://localhost:3000 https://localhost:3000 https://alpha.build.docyrus.app https://build.docyrus.app https://docyrus.app https://alpha.build.docy.app https://docy.app",
+        "frame-ancestors 'self' https://localhost:4200 http://localhost:5173 http://localhost:3000 https://localhost:3000 https://alpha.build.docyrus.app https://build.docyrus.app https://docyrus.app https://alpha.build.docy.app https://docy.app",
     },
   },
 })
