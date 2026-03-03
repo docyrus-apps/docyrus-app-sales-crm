@@ -184,7 +184,7 @@ export function DataGrid<TData>({
           data-slot="grid"
           tabIndex={0}
           ref={dataGridRef}
-          className="relative grid select-none overflow-auto rounded-md border focus:outline-none"
+          className="relative flex flex-col select-none overflow-auto rounded-md border focus:outline-none"
           style={{
             ...columnSizeVars,
             ...(height === 'auto'
@@ -196,7 +196,7 @@ export function DataGrid<TData>({
             role="rowgroup"
             data-slot="grid-header"
             ref={headerRef}
-            className="sticky top-0 z-10 grid border-b bg-muted">
+            className="sticky top-0 z-10 shrink-0 grid border-b bg-muted">
             {table.getHeaderGroups().map((headerGroup, rowIndex) => (
               <div
                 key={headerGroup.id}
@@ -269,7 +269,7 @@ export function DataGrid<TData>({
           <div
             role="rowgroup"
             data-slot="grid-body"
-            className="relative grid"
+            className="relative grow grid"
             style={{
               height: `${virtualTotalSize}px`,
               contain: adjustLayout ? 'layout paint' : 'strict'
@@ -326,7 +326,7 @@ export function DataGrid<TData>({
               role="rowgroup"
               data-slot="grid-footer"
               ref={footerRef}
-              className="sticky bottom-0 z-10 grid border-t bg-muted">
+              className="sticky bottom-0 z-10 shrink-0 grid border-t bg-muted">
               <div
                 role="row"
                 aria-rowindex={rows.length + 2}
