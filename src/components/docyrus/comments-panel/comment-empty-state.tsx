@@ -1,11 +1,12 @@
-import { DocyrusIcon } from '@/components/docyrus/docyrus-icon';
+import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 
 export function CommentEmptyState() {
   return (
     <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
       <DocyrusIcon
         icon="fal message-lines"
-        className="size-8 text-muted-foreground/50" />
+        className="size-8 text-muted-foreground/50"
+      />
       <div>
         <p className="text-sm font-medium text-muted-foreground">
           No comments yet
@@ -15,5 +16,5 @@ export function CommentEmptyState() {
         </p>
       </div>
     </div>
-  );
+  )
 }

@@ -1,40 +1,42 @@
-'use client';
+'use client'
+
+import { useCallback, useMemo, useRef, useState } from 'react'
+
+import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
+
+import { DeleteConfirmDialog } from '@/components/docyrus/delete-confirm-dialog'
+
+import { Button } from '@/components/ui/button'
+
+import { ScrollArea } from '@/components/ui/scroll-area'
+
+import { Separator } from '@/components/ui/separator'
+
+import { Skeleton } from '@/components/ui/skeleton'
+
+import { cn } from '@/lib/utils'
 
 import {
-  useCallback, useMemo, useRef, useState
-} from 'react';
+  type FileAttachmentPanelProps,
+  type UploadingFile,
+  type ViewMode,
+} from './types'
 
-import { DocyrusIcon } from '@/components/docyrus/docyrus-icon';
+import { FileEmptyState } from './file-empty-state'
+import { FileGrid } from './file-grid'
+import { FileList } from './file-list'
+import { FileSourceMenu } from './file-source-menu'
+import { FileUploadProgress } from './file-upload-progress'
+import { FileUploadZone } from './file-upload-zone'
 
-import { DeleteConfirmDialog } from '@/components/docyrus/delete-confirm-dialog';
+import { type DocyrusFile } from './lib/file-utils'
+import { useDisclosure } from './hooks/use-disclosure'
 
-import { Button } from '@/components/ui/button';
+import { useGoogleDrivePicker } from './hooks/use-google-drive-picker'
+import { useOneDrivePicker } from './hooks/use-onedrive-picker'
+import { isImageFile } from './lib/file-utils'
 
-import { ScrollArea } from '@/components/ui/scroll-area';
-
-import { Separator } from '@/components/ui/separator';
-
-import { Skeleton } from '@/components/ui/skeleton';
-
-import { cn } from '@/lib/utils';
-
-import { type FileAttachmentPanelProps, type UploadingFile, type ViewMode } from './types';
-
-import { FileEmptyState } from './file-empty-state';
-import { FileGrid } from './file-grid';
-import { FileList } from './file-list';
-import { FileSourceMenu } from './file-source-menu';
-import { FileUploadProgress } from './file-upload-progress';
-import { FileUploadZone } from './file-upload-zone';
-
-import { type DocyrusFile } from './lib/file-utils';
-import { useDisclosure } from './hooks/use-disclosure';
-
-import { useGoogleDrivePicker } from './hooks/use-google-drive-picker';
-import { useOneDrivePicker } from './hooks/use-onedrive-picker';
-import { isImageFile } from './lib/file-utils';
-
-const MAX_FILE_SIZE_DEFAULT = 50 * 1024 * 1024; // 50 MB
+const MAX_FILE_SIZE_DEFAULT = 50 * 1024 * 1024 // 50 MB
 
 export function FileAttachmentPanel({
   files,
@@ -50,117 +52,132 @@ export function FileAttachmentPanel({
   onInsertExternalFiles,
   onFileOpen,
   isDeletePending = false,
-  className
+  className,
 }: FileAttachmentPanelProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
-  const [uploadingFiles, setUploadingFiles] = useState<Array<UploadingFile>>([]);
-  const [fileToDelete, setFileToDelete] = useState<DocyrusFile | null>(null);
-  const deleteDialog = useDisclosure();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('list')
+  const [uploadingFiles, setUploadingFiles] = useState<Array<UploadingFile>>([])
+  const [fileToDelete, setFileToDelete] = useState<DocyrusFile | null>(null)
+  const deleteDialog = useDisclosure()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const oneDrive = useOneDrivePicker();
-  const googleDrive = useGoogleDrivePicker();
+  const oneDrive = useOneDrivePicker()
+  const googleDrive = useGoogleDrivePicker()
 
   const hasImages = useMemo(
-    () => files?.some(f => isImageFile(f.file_type)) ?? false,
-    [files]
-  );
+    () => files?.some((f) => isImageFile(f.file_type)) ?? false,
+    [files],
+  )
 
   const handleFileOpen = useCallback(
     (file: DocyrusFile) => {
       if (onFileOpen) {
-        onFileOpen(file);
+        onFileOpen(file)
       } else if (file.signed_url) {
-        window.open(file.signed_url, '_blank', 'noopener,noreferrer');
+        window.open(file.signed_url, '_blank', 'noopener,noreferrer')
       }
     },
-    [onFileOpen]
-  );
+    [onFileOpen],
+  )
 
   const handleDeleteClick = useCallback(
     (file: DocyrusFile) => {
-      setFileToDelete(file);
-      deleteDialog.onOpen();
+      setFileToDelete(file)
+      deleteDialog.onOpen()
     },
-    [deleteDialog]
-  );
+    [deleteDialog],
+  )
 
   const handleDeleteConfirm = useCallback(async () => {
-    if (!fileToDelete) return;
-    await onDeleteFile?.(fileToDelete.id);
-    deleteDialog.onClose();
-    setFileToDelete(null);
-  }, [fileToDelete, onDeleteFile, deleteDialog]);
+    if (!fileToDelete) return
+    await onDeleteFile?.(fileToDelete.id)
+    deleteDialog.onClose()
+    setFileToDelete(null)
+  }, [fileToDelete, onDeleteFile, deleteDialog])
 
   const processUpload = useCallback(
     async (file: File) => {
-      const uploadId = crypto.randomUUID();
+      const uploadId = crypto.randomUUID()
 
-      setUploadingFiles(prev => [
+      setUploadingFiles((prev) => [
         ...prev,
         {
-          id: uploadId, file, progress: 0, status: 'uploading'
-        }
-      ]);
+          id: uploadId,
+          file,
+          progress: 0,
+          status: 'uploading',
+        },
+      ])
 
       try {
-        setUploadingFiles(prev => prev.map(uf => (uf.id === uploadId ? { ...uf, progress: 50 } : uf)));
-        await onUploadFile?.(file);
-        setUploadingFiles(prev => prev.map(uf => uf.id === uploadId
-          ? { ...uf, progress: 100, status: 'complete' }
-          : uf));
+        setUploadingFiles((prev) =>
+          prev.map((uf) => (uf.id === uploadId ? { ...uf, progress: 50 } : uf)),
+        )
+        await onUploadFile?.(file)
+        setUploadingFiles((prev) =>
+          prev.map((uf) =>
+            uf.id === uploadId
+              ? { ...uf, progress: 100, status: 'complete' }
+              : uf,
+          ),
+        )
         setTimeout(() => {
-          setUploadingFiles(prev => prev.filter(uf => uf.id !== uploadId));
-        }, 1500);
+          setUploadingFiles((prev) => prev.filter((uf) => uf.id !== uploadId))
+        }, 1500)
       } catch {
-        setUploadingFiles(prev => prev.map(uf => uf.id === uploadId
-          ? { ...uf, status: 'error', error: 'Upload failed' }
-          : uf));
+        setUploadingFiles((prev) =>
+          prev.map((uf) =>
+            uf.id === uploadId
+              ? { ...uf, status: 'error', error: 'Upload failed' }
+              : uf,
+          ),
+        )
       }
     },
-    [onUploadFile]
-  );
+    [onUploadFile],
+  )
 
   const handleFilesSelected = useCallback(
     (selectedFiles: Array<File>) => {
       if (maxFiles && files) {
-        const remaining = maxFiles - files.length;
+        const remaining = maxFiles - files.length
 
         if (remaining <= 0) {
-          return;
+          return
         }
-        selectedFiles = selectedFiles.slice(0, remaining);
+        selectedFiles = selectedFiles.slice(0, remaining)
       }
       for (const file of selectedFiles) {
-        void processUpload(file);
+        void processUpload(file)
       }
     },
-    [maxFiles, files, processUpload]
-  );
+    [maxFiles, files, processUpload],
+  )
 
   const handleUploadClick = useCallback(() => {
-    fileInputRef.current?.click();
-  }, []);
+    fileInputRef.current?.click()
+  }, [])
 
   const handleOneDriveClick = useCallback(async () => {
-    const files = await oneDrive.openPicker();
+    const files = await oneDrive.openPicker()
 
     if (files.length > 0) {
-      await onInsertExternalFiles?.(files);
+      await onInsertExternalFiles?.(files)
     }
-  }, [oneDrive, onInsertExternalFiles]);
+  }, [oneDrive, onInsertExternalFiles])
 
   const handleGoogleDriveClick = useCallback(async () => {
-    const files = await googleDrive.openPicker();
+    const files = await googleDrive.openPicker()
 
     if (files.length > 0) {
-      await onInsertExternalFiles?.(files);
+      await onInsertExternalFiles?.(files)
     }
-  }, [googleDrive, onInsertExternalFiles]);
+  }, [googleDrive, onInsertExternalFiles])
 
   const resolvedHeight = maxHeight
-    ? (typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight)
-    : undefined;
+    ? typeof maxHeight === 'number'
+      ? `${maxHeight}px`
+      : maxHeight
+    : undefined
 
   const renderLoading = () => (
     <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-4 px-1 text-sm text-muted-foreground">
@@ -189,16 +206,22 @@ export function FileAttachmentPanel({
         <Skeleton className="h-32 w-full rounded-lg border border-dashed border-border/60" />
       </div>
     </div>
-  );
+  )
 
   return (
     <div
-      className={cn('@container/file-panel flex flex-col min-h-0 overflow-hidden', className)}
+      className={cn(
+        '@container/file-panel flex flex-col min-h-0 overflow-hidden',
+        className,
+      )}
       style={
-        resolvedHeight ? {
-          maxHeight: resolvedHeight
-        } : undefined
-      }>
+        resolvedHeight
+          ? {
+              maxHeight: resolvedHeight,
+            }
+          : undefined
+      }
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
@@ -216,14 +239,16 @@ export function FileAttachmentPanel({
                 variant={viewMode === 'list' ? 'secondary' : 'ghost'}
                 size="sm"
                 className="size-7"
-                onClick={() => setViewMode('list')}>
+                onClick={() => setViewMode('list')}
+              >
                 <DocyrusIcon icon="fal list" className="size-3.5" />
               </Button>
               <Button
                 variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
                 size="sm"
                 className="size-7"
-                onClick={() => setViewMode('grid')}>
+                onClick={() => setViewMode('grid')}
+              >
                 <DocyrusIcon icon="fal grid-2" className="size-3.5" />
               </Button>
             </div>
@@ -234,7 +259,8 @@ export function FileAttachmentPanel({
               onOneDriveClick={handleOneDriveClick}
               onGoogleDriveClick={handleGoogleDriveClick}
               showOneDrive={oneDrive.isAvailable}
-              showGoogleDrive={googleDrive.isAvailable} />
+              showGoogleDrive={googleDrive.isAvailable}
+            />
           )}
         </div>
       </div>
@@ -250,7 +276,8 @@ export function FileAttachmentPanel({
             <FileUploadZone
               accept={accept}
               maxFileSize={maxFileSize}
-              onFilesSelected={handleFilesSelected} />
+              onFilesSelected={handleFilesSelected}
+            />
           ) : (
             <FileEmptyState editable={false} />
           )
@@ -261,20 +288,23 @@ export function FileAttachmentPanel({
                 files={files}
                 editable={editable}
                 onOpen={handleFileOpen}
-                onDelete={handleDeleteClick} />
+                onDelete={handleDeleteClick}
+              />
             ) : (
               <FileList
                 files={files}
                 editable={editable}
                 onOpen={handleFileOpen}
-                onDelete={handleDeleteClick} />
+                onDelete={handleDeleteClick}
+              />
             )}
 
             {editable && (
               <FileUploadZone
                 accept={accept}
                 maxFileSize={maxFileSize}
-                onFilesSelected={handleFilesSelected} />
+                onFilesSelected={handleFilesSelected}
+              />
             )}
           </div>
         )}
@@ -282,7 +312,7 @@ export function FileAttachmentPanel({
         {/* Upload progress */}
         {uploadingFiles.length > 0 && (
           <div className="mt-2 flex flex-col gap-1.5">
-            {uploadingFiles.map(uf => (
+            {uploadingFiles.map((uf) => (
               <FileUploadProgress key={uf.id} file={uf} />
             ))}
           </div>
@@ -298,10 +328,11 @@ export function FileAttachmentPanel({
         className="hidden"
         onChange={(e) => {
           if (e.target.files && e.target.files.length > 0) {
-            handleFilesSelected(Array.from(e.target.files));
-            e.target.value = '';
+            handleFilesSelected(Array.from(e.target.files))
+            e.target.value = ''
           }
-        }} />
+        }}
+      />
 
       {/* Delete confirmation dialog */}
       <DeleteConfirmDialog
@@ -310,7 +341,8 @@ export function FileAttachmentPanel({
         objectName="file"
         count={1}
         onConfirm={handleDeleteConfirm}
-        isPending={isDeletePending} />
+        isPending={isDeletePending}
+      />
     </div>
-  );
+  )
 }

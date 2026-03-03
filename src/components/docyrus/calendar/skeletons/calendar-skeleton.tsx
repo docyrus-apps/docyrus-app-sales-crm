@@ -1,7 +1,7 @@
-'use client';
+'use client'
 
-import { CalendarHeaderSkeleton } from './calendar-header-skeleton';
-import { MonthViewSkeleton } from './month-view-skeleton';
+import { CalendarHeaderSkeleton } from './calendar-header-skeleton'
+import { MonthViewSkeleton } from './month-view-skeleton'
 
 export function CalendarSkeleton() {
   return (
@@ -13,5 +13,5 @@ export function CalendarSkeleton() {
         </div>
       </div>
     </div>
-  );
+  )
 }

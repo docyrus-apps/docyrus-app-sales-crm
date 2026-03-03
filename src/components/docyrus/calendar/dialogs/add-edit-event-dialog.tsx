@@ -1,15 +1,15 @@
-'use client';
+'use client'
 
-import { type ReactNode } from 'react';
+import { type ReactNode } from 'react'
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react'
 
-import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
-import { addMinutes, format, set } from 'date-fns';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
+import { addMinutes, format, set } from 'date-fns'
+import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogClose,
@@ -18,80 +18,75 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
-} from '@/components/ui/dialog';
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+  FormMessage,
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { DateTimePicker } from '@/components/docyrus/date-time-picker';
+  SelectValue,
+} from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { DateTimePicker } from '@/components/docyrus/date-time-picker'
 
-import { type IEvent } from '../interfaces';
-import { type TEventFormData } from '../schemas';
-import { COLORS } from '../constants';
-import { useCalendar } from '../contexts/calendar-context';
-import { useDisclosure } from '../hooks';
-import { eventSchema } from '../schemas';
+import { type IEvent } from '../interfaces'
+import { type TEventFormData } from '../schemas'
+import { COLORS } from '../constants'
+import { useCalendar } from '../contexts/calendar-context'
+import { useDisclosure } from '../hooks'
+import { eventSchema } from '../schemas'
 
 interface IProps {
-  children: ReactNode;
-  startDate?: Date;
-  startTime?: { hour: number; minute: number };
-  event?: IEvent;
+  children: ReactNode
+  startDate?: Date
+  startTime?: { hour: number; minute: number }
+  event?: IEvent
 }
 
 export function AddEditEventDialog({
   children,
   startDate,
   startTime,
-  event
+  event,
 }: IProps) {
-  const { isOpen, onClose, onToggle } = useDisclosure();
-  const { addEvent, updateEvent } = useCalendar();
-  const isEditing = !!event;
+  const { isOpen, onClose, onToggle } = useDisclosure()
+  const { addEvent, updateEvent } = useCalendar()
+  const isEditing = !!event
 
   const initialDates = useMemo(() => {
     if (!isEditing) {
       if (!startDate) {
-        const now = new Date();
+        const now = new Date()
 
-        return { startDate: now, endDate: addMinutes(now, 30) };
+        return { startDate: now, endDate: addMinutes(now, 30) }
       }
       const start = startTime
         ? set(new Date(startDate), {
             hours: startTime.hour,
             minutes: startTime.minute,
-            seconds: 0
+            seconds: 0,
           })
-        : new Date(startDate);
-      const end = addMinutes(start, 30);
+        : new Date(startDate)
+      const end = addMinutes(start, 30)
 
-      return { startDate: start, endDate: end };
+      return { startDate: start, endDate: end }
     }
 
     return {
       startDate: new Date(event.startDate),
-      endDate: new Date(event.endDate)
-    };
-  }, [
-    startDate,
-    startTime,
-    event,
-    isEditing
-  ]);
+      endDate: new Date(event.endDate),
+    }
+  }, [startDate, startTime, event, isEditing])
 
   const form = useForm<TEventFormData>({
     resolver: standardSchemaResolver(eventSchema),
@@ -100,9 +95,9 @@ export function AddEditEventDialog({
       description: event?.description ?? '',
       startDate: initialDates.startDate,
       endDate: initialDates.endDate,
-      color: event?.color ?? 'blue'
-    }
-  });
+      color: event?.color ?? 'blue',
+    },
+  })
 
   useEffect(() => {
     form.reset({
@@ -110,9 +105,9 @@ export function AddEditEventDialog({
       description: event?.description ?? '',
       startDate: initialDates.startDate,
       endDate: initialDates.endDate,
-      color: event?.color ?? 'blue'
-    });
-  }, [event, initialDates, form]);
+      color: event?.color ?? 'blue',
+    })
+  }, [event, initialDates, form])
 
   const onSubmit = (values: TEventFormData) => {
     try {
@@ -126,33 +121,35 @@ export function AddEditEventDialog({
           : {
               id: Math.floor(Math.random() * 1000000).toString(),
               name: 'Current User',
-              picturePath: null
+              picturePath: null,
             },
-        color: values.color
-      };
-
-      if (isEditing) {
-        updateEvent(formattedEvent);
-        toast.success('Event updated successfully');
-      } else {
-        addEvent(formattedEvent);
-        toast.success('Event created successfully');
+        color: values.color,
       }
 
-      onClose();
-      form.reset();
+      if (isEditing) {
+        updateEvent(formattedEvent)
+        toast.success('Event updated successfully')
+      } else {
+        addEvent(formattedEvent)
+        toast.success('Event created successfully')
+      }
+
+      onClose()
+      form.reset()
     } catch (error) {
-      console.error(`Error ${isEditing ? 'editing' : 'adding'} event:`, error);
-      toast.error(`Failed to ${isEditing ? 'edit' : 'add'} event`);
+      console.error(`Error ${isEditing ? 'editing' : 'adding'} event:`, error)
+      toast.error(`Failed to ${isEditing ? 'edit' : 'add'} event`)
     }
-  };
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onToggle} modal={false}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEditing ? 'Edit Event' : 'Add New Event'}</DialogTitle>
+          <DialogTitle>
+            {isEditing ? 'Edit Event' : 'Add New Event'}
+          </DialogTitle>
           <DialogDescription>
             {isEditing
               ? 'Modify your existing event.'
@@ -164,7 +161,8 @@ export function AddEditEventDialog({
           <form
             id="event-form"
             onSubmit={form.handleSubmit(onSubmit)}
-            className="grid gap-4 py-4">
+            className="grid gap-4 py-4"
+          >
             <FormField
               control={form.control}
               name="title"
@@ -178,23 +176,27 @@ export function AddEditEventDialog({
                       id="title"
                       placeholder="Enter a title"
                       {...field}
-                      className={fieldState.invalid ? 'border-red-500' : ''} />
+                      className={fieldState.invalid ? 'border-red-500' : ''}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
-              )} />
+              )}
+            />
             <FormField
               control={form.control}
               name="startDate"
               render={({ field }) => (
                 <DateTimePicker form={form as never} field={field as never} />
-              )} />
+              )}
+            />
             <FormField
               control={form.control}
               name="endDate"
               render={({ field }) => (
                 <DateTimePicker form={form as never} field={field as never} />
-              )} />
+              )}
+            />
             <FormField
               control={form.control}
               name="color"
@@ -206,15 +208,17 @@ export function AddEditEventDialog({
                       <SelectTrigger
                         className={`w-full ${
                           fieldState.invalid ? 'border-red-500' : ''
-                        }`}>
+                        }`}
+                      >
                         <SelectValue placeholder="Select a variant" />
                       </SelectTrigger>
                       <SelectContent>
-                        {COLORS.map(color => (
+                        {COLORS.map((color) => (
                           <SelectItem value={color} key={color}>
                             <div className="flex items-center gap-2">
                               <div
-                                className={`size-3.5 rounded-full bg-${color}-600 dark:bg-${color}-700`} />
+                                className={`size-3.5 rounded-full bg-${color}-600 dark:bg-${color}-700`}
+                              />
                               {color}
                             </div>
                           </SelectItem>
@@ -224,7 +228,8 @@ export function AddEditEventDialog({
                   </FormControl>
                   <FormMessage />
                 </FormItem>
-              )} />
+              )}
+            />
             <FormField
               control={form.control}
               name="description"
@@ -235,11 +240,13 @@ export function AddEditEventDialog({
                     <Textarea
                       {...field}
                       placeholder="Enter a description"
-                      className={fieldState.invalid ? 'border-red-500' : ''} />
+                      className={fieldState.invalid ? 'border-red-500' : ''}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
-              )} />
+              )}
+            />
           </form>
         </Form>
         <DialogFooter className="flex justify-end gap-2">
@@ -254,5 +261,5 @@ export function AddEditEventDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

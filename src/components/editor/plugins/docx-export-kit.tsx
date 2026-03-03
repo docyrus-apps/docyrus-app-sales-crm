@@ -1,6 +1,6 @@
 // @ts-nocheck
-'use client';
+'use client'
 
-import { DocxExportPlugin } from '@platejs/docx-io';
+import { DocxExportPlugin } from '@platejs/docx-io'
 
-export const DocxExportKit = [DocxExportPlugin];
+export const DocxExportKit = [DocxExportPlugin]

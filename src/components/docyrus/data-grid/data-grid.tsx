@@ -1,61 +1,66 @@
-'use client';
+'use client'
 
 import {
-  useCallback, useMemo, type ComponentProps, type KeyboardEvent, type MouseEvent, type ReactNode
-} from 'react';
+  useCallback,
+  useMemo,
+  type ComponentProps,
+  type KeyboardEvent,
+  type MouseEvent,
+  type ReactNode,
+} from 'react'
 
-import { Plus, X } from 'lucide-react';
+import { Plus, X } from 'lucide-react'
 
 import {
   ActionBar,
   ActionBarClose,
   ActionBarGroup,
   ActionBarSelection,
-  ActionBarSeparator
-} from '@/components/ui/action-bar';
+  ActionBarSeparator,
+} from '@/components/ui/action-bar'
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'
 
-import { useAsRef } from '@/hooks/use-as-ref';
+import { useAsRef } from '@/hooks/use-as-ref'
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'
 
-import { type useDataGrid } from './hooks/use-data-grid';
-import { type DataGridCardConfig, type Direction } from './types';
+import { type useDataGrid } from './hooks/use-data-grid'
+import { type DataGridCardConfig, type Direction } from './types'
 
-import { DataGridChangeActionBar } from './data-grid-change-action-bar';
-import { DataGridColumnHeader } from './data-grid-column-header';
-import { DataGridContextMenu } from './data-grid-context-menu';
-import { DataGridGallery } from './data-grid-gallery';
-import { DataGridPasteDialog } from './data-grid-paste-dialog';
-import { DataGridRow } from './data-grid-row';
-import { DataGridSearch } from './data-grid-search';
+import { DataGridChangeActionBar } from './data-grid-change-action-bar'
+import { DataGridColumnHeader } from './data-grid-column-header'
+import { DataGridContextMenu } from './data-grid-context-menu'
+import { DataGridGallery } from './data-grid-gallery'
+import { DataGridPasteDialog } from './data-grid-paste-dialog'
+import { DataGridRow } from './data-grid-row'
+import { DataGridSearch } from './data-grid-search'
 
 import {
   flexRender,
   getColumnBorderVisibility,
-  getColumnPinningStyle
-} from './lib/data-grid';
+  getColumnPinningStyle,
+} from './lib/data-grid'
 
-const EMPTY_CELL_SELECTION_SET = new Set<string>();
+const EMPTY_CELL_SELECTION_SET = new Set<string>()
 
 export interface DataGridAction<TData> {
-  label: string;
-  icon?: ReactNode;
-  variant?: 'default' | 'destructive';
-  onAction: (selectedRows: Array<TData>) => void;
+  label: string
+  icon?: ReactNode
+  variant?: 'default' | 'destructive'
+  onAction: (selectedRows: Array<TData>) => void
 }
 
 interface DataGridProps<TData>
   extends
-  Omit<ReturnType<typeof useDataGrid<TData>>, 'dir'>,
-  Omit<ComponentProps<'div'>, 'contextMenu'> {
-  dir?: Direction;
-  height?: number | 'auto';
-  stretchColumns?: boolean;
-  addRowLabel?: string;
-  actions?: Array<DataGridAction<TData>>;
-  cardConfig?: DataGridCardConfig<TData>;
+    Omit<ReturnType<typeof useDataGrid<TData>>, 'dir'>,
+    Omit<ComponentProps<'div'>, 'contextMenu'> {
+  dir?: Direction
+  height?: number | 'auto'
+  stretchColumns?: boolean
+  addRowLabel?: string
+  actions?: Array<DataGridAction<TData>>
+  cardConfig?: DataGridCardConfig<TData>
 }
 
 export function DataGrid<TData>({
@@ -100,58 +105,58 @@ export function DataGrid<TData>({
   className,
   ...props
 }: DataGridProps<TData>) {
-  const { rows } = table.getRowModel();
-  const readOnly = tableMeta?.readOnly ?? false;
-  const { columnVisibility } = table.getState();
-  const { columnPinning } = table.getState();
+  const { rows } = table.getRowModel()
+  const readOnly = tableMeta?.readOnly ?? false
+  const { columnVisibility } = table.getState()
+  const { columnPinning } = table.getState()
 
-  const { rowSelection } = table.getState();
-  const selectedRowCount = Object.keys(rowSelection).length;
-  const showActionBar = !!actions && actions.length > 0 && selectedRowCount > 0;
+  const { rowSelection } = table.getState()
+  const selectedRowCount = Object.keys(rowSelection).length
+  const showActionBar = !!actions && actions.length > 0 && selectedRowCount > 0
 
   const onActionBarOpenChange = useCallback(
     (open: boolean) => {
       if (!open) {
-        table.resetRowSelection();
+        table.resetRowSelection()
       }
     },
-    [table]
-  );
+    [table],
+  )
 
   const selectedRows = useMemo(() => {
-    if (!showActionBar) return [];
-    void rowSelection;
+    if (!showActionBar) return []
+    void rowSelection
 
-    return table.getSelectedRowModel().rows.map(r => r.original);
-  }, [showActionBar, table, rowSelection]);
+    return table.getSelectedRowModel().rows.map((r) => r.original)
+  }, [showActionBar, table, rowSelection])
 
-  const onRowAddRef = useAsRef(onRowAddProp);
+  const onRowAddRef = useAsRef(onRowAddProp)
 
   const onRowAdd = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
-      onRowAddRef.current?.(event);
+      onRowAddRef.current?.(event)
     },
-    [onRowAddRef]
-  );
+    [onRowAddRef],
+  )
 
   const onDataGridContextMenu = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
-      event.preventDefault();
+      event.preventDefault()
     },
-    []
-  );
+    [],
+  )
 
   const onFooterCellKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
-      if (!onRowAddRef.current) return;
+      if (!onRowAddRef.current) return
 
       if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        onRowAddRef.current();
+        event.preventDefault()
+        onRowAddRef.current()
       }
     },
-    [onRowAddRef]
-  );
+    [onRowAddRef],
+  )
 
   return (
     <div
@@ -161,20 +166,23 @@ export function DataGrid<TData>({
       className={cn(
         'relative flex w-full flex-col',
         height === 'auto' && 'h-full',
-        className
-      )}>
+        className,
+      )}
+    >
       {searchState && <DataGridSearch {...searchState} />}
       <DataGridContextMenu
         tableMeta={tableMeta}
         columns={columns}
-        contextMenu={contextMenu} />
+        contextMenu={contextMenu}
+      />
       <DataGridPasteDialog tableMeta={tableMeta} pasteDialog={pasteDialog} />
       {displayMode === 'gallery' ? (
         <DataGridGallery
           table={table}
           tableMeta={tableMeta}
           cardConfig={cardConfig}
-          height={height} />
+          height={height}
+        />
       ) : (
         <div
           role="grid"
@@ -189,14 +197,16 @@ export function DataGrid<TData>({
             ...columnSizeVars,
             ...(height === 'auto'
               ? { height: '100%' }
-              : { maxHeight: `${height}px` })
+              : { maxHeight: `${height}px` }),
           }}
-          onContextMenu={onDataGridContextMenu}>
+          onContextMenu={onDataGridContextMenu}
+        >
           <div
             role="rowgroup"
             data-slot="grid-header"
             ref={headerRef}
-            className="sticky top-0 z-10 shrink-0 grid border-b bg-muted">
+            className="sticky top-0 z-10 shrink-0 grid border-b bg-muted"
+          >
             {table.getHeaderGroups().map((headerGroup, rowIndex) => (
               <div
                 key={headerGroup.id}
@@ -204,23 +214,25 @@ export function DataGrid<TData>({
                 aria-rowindex={rowIndex + 1}
                 data-slot="grid-header-row"
                 tabIndex={-1}
-                className="flex w-full">
+                className="flex w-full"
+              >
                 {headerGroup.headers.map((header, colIndex) => {
-                  const { sorting } = table.getState();
+                  const { sorting } = table.getState()
                   const currentSort = sorting.find(
-                    sort => sort.id === header.column.id
-                  );
-                  const isSortable = header.column.getCanSort();
+                    (sort) => sort.id === header.column.id,
+                  )
+                  const isSortable = header.column.getCanSort()
 
-                  const nextHeader = headerGroup.headers[colIndex + 1];
-                  const isLastColumn = colIndex === headerGroup.headers.length - 1;
+                  const nextHeader = headerGroup.headers[colIndex + 1]
+                  const isLastColumn =
+                    colIndex === headerGroup.headers.length - 1
 
-                  const { showEndBorder, showStartBorder }
-                    = getColumnBorderVisibility({
+                  const { showEndBorder, showStartBorder } =
+                    getColumnBorderVisibility({
                       column: header.column,
                       nextColumn: nextHeader?.column,
-                      isLastColumn
-                    });
+                      isLastColumn,
+                    })
 
                   return (
                     <div
@@ -241,27 +253,31 @@ export function DataGrid<TData>({
                       className={cn('relative', {
                         grow: stretchColumns && header.column.id !== 'select',
                         'border-e':
-                            showEndBorder && header.column.id !== 'select',
+                          showEndBorder && header.column.id !== 'select',
                         'border-s':
-                            showStartBorder && header.column.id !== 'select'
+                          showStartBorder && header.column.id !== 'select',
                       })}
                       style={{
-                        ...getColumnPinningStyle({ column: header.column, dir }),
-                        width: `calc(var(--header-${header.id}-size) * 1px)`
-                      }}>
+                        ...getColumnPinningStyle({
+                          column: header.column,
+                          dir,
+                        }),
+                        width: `calc(var(--header-${header.id}-size) * 1px)`,
+                      }}
+                    >
                       {header.isPlaceholder ? null : typeof header.column
-                        .columnDef.header === 'function' ? (
-                            <div className="size-full px-3 py-1.5">
-                              {flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                            </div>
-                          ) : (
-                            <DataGridColumnHeader header={header} table={table} />
+                          .columnDef.header === 'function' ? (
+                        <div className="size-full px-3 py-1.5">
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
                           )}
+                        </div>
+                      ) : (
+                        <DataGridColumnHeader header={header} table={table} />
+                      )}
                     </div>
-                  );
+                  )
                 })}
               </div>
             ))}
@@ -272,27 +288,27 @@ export function DataGrid<TData>({
             className="relative grow grid"
             style={{
               height: `${virtualTotalSize}px`,
-              contain: adjustLayout ? 'layout paint' : 'strict'
-            }}>
+              contain: adjustLayout ? 'layout paint' : 'strict',
+            }}
+          >
             {virtualItems.map((virtualItem) => {
-              const row = rows[virtualItem.index];
+              const row = rows[virtualItem.index]
 
-              if (!row) return null;
+              if (!row) return null
 
-              const cellSelectionKeys
-                = cellSelectionMap?.get(virtualItem.index)
-                  ?? EMPTY_CELL_SELECTION_SET;
+              const cellSelectionKeys =
+                cellSelectionMap?.get(virtualItem.index) ??
+                EMPTY_CELL_SELECTION_SET
 
-              const searchMatchColumns
-                = searchMatchesByRow?.get(virtualItem.index) ?? null;
-              const isActiveSearchRow
-                = activeSearchMatch?.rowIndex === virtualItem.index;
+              const searchMatchColumns =
+                searchMatchesByRow?.get(virtualItem.index) ?? null
+              const isActiveSearchRow =
+                activeSearchMatch?.rowIndex === virtualItem.index
 
-              const changedColumns
-                = changedCellsByRowId?.get(row.id) ?? null;
+              const changedColumns = changedCellsByRowId?.get(row.id) ?? null
 
-              const rowBgColor = rowColorMap?.get(row.id) ?? null;
-              const cellColorsByColumn = cellColorMap?.get(row.id) ?? null;
+              const rowBgColor = rowColorMap?.get(row.id) ?? null
+              const cellColorsByColumn = cellColorMap?.get(row.id) ?? null
 
               return (
                 <DataGridRow
@@ -310,15 +326,18 @@ export function DataGrid<TData>({
                   cellSelectionKeys={cellSelectionKeys}
                   isFullSelection={isFullSelection}
                   searchMatchColumns={searchMatchColumns}
-                  activeSearchMatch={isActiveSearchRow ? activeSearchMatch : null}
+                  activeSearchMatch={
+                    isActiveSearchRow ? activeSearchMatch : null
+                  }
                   changedColumns={changedColumns}
                   rowBgColor={rowBgColor}
                   cellColorsByColumn={cellColorsByColumn}
                   dir={dir}
                   adjustLayout={adjustLayout}
                   stretchColumns={stretchColumns}
-                  readOnly={readOnly} />
-              );
+                  readOnly={readOnly}
+                />
+              )
             })}
           </div>
           {!readOnly && onRowAdd && (
@@ -326,23 +345,26 @@ export function DataGrid<TData>({
               role="rowgroup"
               data-slot="grid-footer"
               ref={footerRef}
-              className="sticky bottom-0 z-10 shrink-0 grid border-t bg-muted">
+              className="sticky bottom-0 z-10 shrink-0 grid border-t bg-muted"
+            >
               <div
                 role="row"
                 aria-rowindex={rows.length + 2}
                 data-slot="grid-add-row"
                 tabIndex={-1}
-                className="flex w-full">
+                className="flex w-full"
+              >
                 <div
                   role="gridcell"
                   tabIndex={0}
                   className="relative flex h-9 grow items-center transition-colors hover:bg-accent/40 focus:bg-accent/40 focus:outline-none"
                   style={{
                     width: table.getTotalSize(),
-                    minWidth: table.getTotalSize()
+                    minWidth: table.getTotalSize(),
                   }}
                   onClick={onRowAdd}
-                  onKeyDown={onFooterCellKeyDown}>
+                  onKeyDown={onFooterCellKeyDown}
+                >
                   <div className="sticky inset-s-0 flex items-center gap-2 px-3 text-muted-foreground">
                     <Plus className="size-3.5" />
                     <span className="text-sm">{addRowLabel}</span>
@@ -364,12 +386,15 @@ export function DataGrid<TData>({
           </ActionBarSelection>
           <ActionBarSeparator />
           <ActionBarGroup>
-            {actions.map(action => (
+            {actions.map((action) => (
               <Button
                 key={action.label}
-                variant={action.variant === 'destructive' ? 'destructive' : 'secondary'}
+                variant={
+                  action.variant === 'destructive' ? 'destructive' : 'secondary'
+                }
                 size="sm"
-                onClick={() => action.onAction(selectedRows)}>
+                onClick={() => action.onAction(selectedRows)}
+              >
                 {action.icon}
                 {action.label}
               </Button>
@@ -377,19 +402,20 @@ export function DataGrid<TData>({
           </ActionBarGroup>
         </ActionBar>
       )}
-      {changedRowCount > 0
-        && onChangesSave
-        && onChangesDiscard
-        && changeMapRef && (
-        <DataGridChangeActionBar
-          changedRowCount={changedRowCount}
-          changeMapRef={changeMapRef}
-          table={table}
-          onSave={onChangesSave}
-          onDiscard={onChangesDiscard}
-          sideOffset={showActionBar ? 72 : 16}
-          getRowLabel={getRowLabel} />
-      )}
+      {changedRowCount > 0 &&
+        onChangesSave &&
+        onChangesDiscard &&
+        changeMapRef && (
+          <DataGridChangeActionBar
+            changedRowCount={changedRowCount}
+            changeMapRef={changeMapRef}
+            table={table}
+            onSave={onChangesSave}
+            onDiscard={onChangesDiscard}
+            sideOffset={showActionBar ? 72 : 16}
+            getRowLabel={getRowLabel}
+          />
+        )}
     </div>
-  );
+  )
 }

@@ -1,8 +1,8 @@
 // @ts-nocheck
-'use client';
+'use client'
 
-import { CalloutPlugin } from '@platejs/callout/react';
+import { CalloutPlugin } from '@platejs/callout/react'
 
-import { CalloutElement } from '@/components/editor/ui/callout-node';
+import { CalloutElement } from '@/components/editor/ui/callout-node'
 
-export const CalloutKit = [CalloutPlugin.withComponent(CalloutElement)];
+export const CalloutKit = [CalloutPlugin.withComponent(CalloutElement)]

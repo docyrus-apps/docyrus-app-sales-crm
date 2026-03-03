@@ -1,22 +1,22 @@
-'use client';
+'use client'
 
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
 
-import { type DocyrusFormFieldProps } from './types';
+import { type DocyrusFormFieldProps } from './types'
 
 export function PercentFormField({
   field: fieldConfig,
   form,
   disabled,
-  className
+  className,
 }: DocyrusFormFieldProps) {
   return (
     <form.Field
       name={fieldConfig.slug}
       children={(field: any) => {
-        const isInvalid
-          = field.state.meta.isTouched && !field.state.meta.isValid;
+        const isInvalid =
+          field.state.meta.isTouched && !field.state.meta.isValid
 
         return (
           <Field data-invalid={isInvalid} className={className}>
@@ -32,20 +32,22 @@ export function PercentFormField({
                 value={field.state.value ?? ''}
                 onBlur={field.handleBlur}
                 onChange={(e) => {
-                  const val = e.target.value;
+                  const val = e.target.value
 
-                  field.handleChange(val === '' ? null : Number(val));
+                  field.handleChange(val === '' ? null : Number(val))
                 }}
                 aria-invalid={isInvalid}
                 disabled={disabled || fieldConfig.readOnly === true}
-                className="pr-8" />
+                className="pr-8"
+              />
               <span className="text-muted-foreground pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm">
                 %
               </span>
             </div>
             {isInvalid && <FieldError errors={field.state.meta.errors} />}
           </Field>
-        );
-      }} />
-  );
+        )
+      }}
+    />
+  )
 }

@@ -1,22 +1,17 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { MoreHorizontal, Package, Pencil, Plus, Trash } from 'lucide-react'
+import { Package, Plus } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
+import {
+  DataGrid,
+  DataGridSkeleton,
+  DataGridSkeletonGrid,
+  useDataGrid,
+} from '@/components/docyrus/data-grid'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/animate-ui/components/buttons/button'
 import { useDeleteProduct, useProducts } from '@/hooks/use-products'
-import { DataTable } from '@/components/data-table/data-table'
-import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header'
-import { DataTableSkeleton } from '@/components/data-table/data-table-skeleton'
-import { useDataTable } from '@/hooks/use-data-table'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { ProductFormDialog } from '@/components/products/product-form-dialog'
 import { Card, CardContent } from '@/components/ui/card'
 
@@ -31,148 +26,83 @@ export function Products() {
     () => [
       {
         accessorKey: 'product_code',
-        header: ({ column }) => (
-          <DataTableColumnHeader
-            column={column}
-            label={t('products.columns.productCode')}
-          />
-        ),
-        cell: ({ row }) => (
-          <div className="font-medium">{row.getValue('product_code')}</div>
-        ),
+        header: t('products.columns.productCode'),
+        meta: { cell: { variant: 'short-text' } },
         enableSorting: true,
+        size: 140,
       },
       {
         accessorKey: 'id',
-        header: ({ column }) => (
-          <DataTableColumnHeader
-            column={column}
-            label={t('products.columns.name')}
-          />
-        ),
-        cell: ({ row }) => {
-          const id = row.getValue('id')
-          return <div>{id}</div>
-        },
+        header: t('products.columns.name'),
+        meta: { cell: { variant: 'short-text' } },
         enableSorting: true,
+        size: 180,
       },
       {
-        accessorKey: 'category',
-        header: ({ column }) => (
-          <DataTableColumnHeader
-            column={column}
-            label={t('products.columns.category')}
-          />
-        ),
-        cell: ({ row }) => {
-          const category = row.getValue('category')
-          return (
-            <div>
-              {typeof category === 'object' && category?.name
-                ? category.name
-                : category || '-'}
-            </div>
-          )
-        },
+        id: 'category',
+        accessorFn: (row) =>
+          typeof row.category === 'object'
+            ? (row.category?.name ?? '')
+            : (row.category ?? ''),
+        header: t('products.columns.category'),
+        meta: { cell: { variant: 'short-text' } },
         enableSorting: true,
+        size: 150,
       },
       {
-        accessorKey: 'Unit',
-        header: ({ column }) => (
-          <DataTableColumnHeader
-            column={column}
-            label={t('products.columns.unit')}
-          />
-        ),
-        cell: ({ row }) => {
-          const unit = row.getValue('Unit')
-          return (
-            <div>
-              {typeof unit === 'object' && unit?.name ? unit.name : unit || '-'}
-            </div>
-          )
-        },
+        id: 'Unit',
+        accessorFn: (row) =>
+          typeof row.Unit === 'object'
+            ? (row.Unit?.name ?? '')
+            : (row.Unit ?? ''),
+        header: t('products.columns.unit'),
+        meta: { cell: { variant: 'short-text' } },
         enableSorting: true,
+        size: 100,
       },
       {
         accessorKey: 'unit_price',
-        header: ({ column }) => (
-          <DataTableColumnHeader
-            column={column}
-            label={t('products.columns.unitPrice')}
-          />
-        ),
-        cell: ({ row }) => {
-          const price = row.getValue('unit_price')
-          return (
-            <div className="font-medium">
-              {price ? `$${price.toLocaleString()}` : '-'}
-            </div>
-          )
-        },
+        header: t('products.columns.unitPrice'),
+        meta: { cell: { variant: 'currency' } },
         enableSorting: true,
+        size: 130,
       },
       {
         accessorKey: 'tax',
-        header: ({ column }) => (
-          <DataTableColumnHeader
-            column={column}
-            label={t('products.columns.tax')}
-          />
-        ),
-        cell: ({ row }) => {
-          const tax = row.getValue('tax')
-          return <div>{tax ? `${tax}%` : '-'}</div>
-        },
+        header: t('products.columns.tax'),
+        meta: { cell: { variant: 'percent' } },
         enableSorting: true,
+        size: 100,
+      },
+    ],
+    [t],
+  )
+
+  const { table, ...dataGridProps } = useDataGrid({
+    data: products || [],
+    columns,
+    getRowId: (row: any) => row.id,
+    readOnly: true,
+    actions: [
+      {
+        label: t('common.edit'),
+        onAction: (rows) => {
+          if (rows.length === 1) {
+            setEditingProduct(rows[0])
+            setIsFormOpen(true)
+          }
+        },
       },
       {
-        id: 'actions',
-        cell: ({ row }) => {
-          const product = row.original
-          return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">{t('common.openMenu')}</span>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{t('common.actions')}</DropdownMenuLabel>
-                <DropdownMenuItem
-                  onClick={() => {
-                    setEditingProduct(product)
-                    setIsFormOpen(true)
-                  }}
-                >
-                  <Pencil className="mr-2 h-4 w-4" />
-                  {t('common.edit')}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-destructive"
-                  onClick={() => {
-                    if (confirm(t('products.confirmDelete'))) {
-                      deleteProduct.mutate(product.id)
-                    }
-                  }}
-                >
-                  <Trash className="mr-2 h-4 w-4" />
-                  {t('common.delete')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )
+        label: t('common.delete'),
+        variant: 'destructive',
+        onAction: (rows) => {
+          if (confirm(t('products.confirmDelete'))) {
+            rows.forEach((row: any) => deleteProduct.mutate(row.id))
+          }
         },
       },
     ],
-    [deleteProduct, t],
-  )
-
-  const { table } = useDataTable({
-    data: products || [],
-    columns,
-    pageCount: -1,
   })
 
   return (
@@ -202,7 +132,11 @@ export function Products() {
           product={editingProduct}
         />
 
-        {isLoading && <DataTableSkeleton columnCount={7} rowCount={10} />}
+        {isLoading && (
+          <DataGridSkeleton>
+            <DataGridSkeletonGrid />
+          </DataGridSkeleton>
+        )}
 
         {!isLoading && products && products.length === 0 && (
           <Card>
@@ -227,7 +161,7 @@ export function Products() {
         )}
 
         {!isLoading && products && products.length > 0 && (
-          <DataTable table={table} />
+          <DataGrid table={table} {...dataGridProps} height={600} />
         )}
       </PageContainer>
     </>

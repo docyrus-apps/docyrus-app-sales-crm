@@ -1,122 +1,67 @@
-import { Link } from '@tanstack/react-router'
-import { Eye } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
-import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/animate-ui/components/buttons/button'
 
 export function getDealsColumns(): Array<ColumnDef<any>> {
   return [
     {
-      id: 'actions',
-      header: () => <span className="sr-only">Actions</span>,
-      cell: ({ row }) => (
-        <Link to="/deals/$dealId" params={{ dealId: row.original.id }}>
-          <Button variant="ghost" size="icon" className="size-8">
-            <Eye className="size-4" />
-          </Button>
-        </Link>
-      ),
-      enableSorting: false,
-      enableHiding: false,
-      size: 40,
-    },
-    {
-      accessorKey: 'stage',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} label="Stage" />
-      ),
-      cell: ({ row }) => {
-        const val = row.getValue('stage')
-        const name =
-          typeof val === 'object' && val?.name ? val.name : (val as string)
-        return name ? <Badge variant="outline">{name}</Badge> : <span>-</span>
-      },
+      id: 'stage',
+      accessorFn: (row) =>
+        typeof row.stage === 'object'
+          ? (row.stage?.name ?? '')
+          : (row.stage ?? ''),
+      header: 'Stage',
+      meta: { cell: { variant: 'short-text' } },
       enableSorting: true,
+      size: 140,
     },
     {
       accessorKey: 'deal_value',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} label="Value" />
-      ),
-      cell: ({ row }) => {
-        const value = row.getValue('deal_value')
-        return (
-          <div className="font-medium">
-            {value != null ? `$${value.toLocaleString()}` : '-'}
-          </div>
-        )
-      },
+      header: 'Value',
+      meta: { cell: { variant: 'currency' } },
       enableSorting: true,
+      size: 140,
     },
     {
       accessorKey: 'expected_revenue',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} label="Expected Revenue" />
-      ),
-      cell: ({ row }) => {
-        const value = row.getValue('expected_revenue')
-        return <div>{value != null ? `$${value.toLocaleString()}` : '-'}</div>
-      },
+      header: 'Expected Revenue',
+      meta: { cell: { variant: 'currency' } },
       enableSorting: true,
+      size: 180,
     },
     {
-      accessorKey: 'organizations',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} label="Company" />
-      ),
-      cell: ({ row }) => {
-        const val = row.getValue('organizations')
-        const name =
-          typeof val === 'object' && val?.name ? val.name : (val as string)
-        return <div className="truncate max-w-xs">{name || '-'}</div>
-      },
+      id: 'organizations',
+      accessorFn: (row) =>
+        typeof row.organizations === 'object'
+          ? (row.organizations?.name ?? '')
+          : (row.organizations ?? ''),
+      header: 'Company',
+      meta: { cell: { variant: 'short-text' } },
       enableSorting: true,
+      size: 180,
     },
     {
-      accessorKey: 'contact_person',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} label="Contact" />
-      ),
-      cell: ({ row }) => {
-        const val = row.getValue('contact_person')
-        const name =
-          typeof val === 'object' && val?.name ? val.name : (val as string)
-        return <div className="truncate max-w-xs">{name || '-'}</div>
-      },
+      id: 'contact_person',
+      accessorFn: (row) =>
+        typeof row.contact_person === 'object'
+          ? (row.contact_person?.name ?? '')
+          : (row.contact_person ?? ''),
+      header: 'Contact',
+      meta: { cell: { variant: 'short-text' } },
       enableSorting: true,
+      size: 160,
     },
     {
       accessorKey: 'close_probability',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} label="Probability" />
-      ),
-      cell: ({ row }) => {
-        const value = row.getValue('close_probability')
-        return <div>{value != null ? `${value}%` : '-'}</div>
-      },
+      header: 'Probability',
+      meta: { cell: { variant: 'percent' } },
       enableSorting: true,
+      size: 120,
     },
     {
       accessorKey: 'expected_closing_date',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} label="Close Date" />
-      ),
-      cell: ({ row }) => {
-        const date = row.getValue('expected_closing_date')
-        return (
-          <div>
-            {date
-              ? new Date(date as string).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                })
-              : '-'}
-          </div>
-        )
-      },
+      header: 'Close Date',
+      meta: { cell: { variant: 'date' } },
       enableSorting: true,
+      size: 130,
     },
   ]
 }

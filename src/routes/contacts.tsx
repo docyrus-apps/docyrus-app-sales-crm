@@ -7,14 +7,16 @@ import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/animate-ui/components/buttons/button'
 import { useContacts } from '@/hooks/use-contacts'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ContactFormDialog } from '@/components/contacts/contact-form-dialog'
 import { ViewSwitcher } from '@/components/view-switcher'
-import { DataTable } from '@/components/data-table/data-table'
-import { DataTableSkeleton } from '@/components/data-table/data-table-skeleton'
-import { useDataTable } from '@/hooks/use-data-table'
+import {
+  DataGrid,
+  DataGridSkeleton,
+  DataGridSkeletonGrid,
+  useDataGrid,
+} from '@/components/docyrus/data-grid'
 import { getContactsColumns } from '@/components/contacts/contacts-columns'
 
 export function Contacts() {
@@ -24,10 +26,11 @@ export function Contacts() {
   const [viewType, setViewType] = useState<ViewType>('list')
 
   const columns = useMemo(() => getContactsColumns(), [])
-  const { table } = useDataTable({
+  const { table, ...dataGridProps } = useDataGrid({
     data: contacts || [],
     columns,
-    pageCount: -1,
+    getRowId: (row: any) => row.id,
+    readOnly: true,
   })
 
   return (
@@ -53,14 +56,16 @@ export function Contacts() {
 
         {isLoading && viewType === 'card' && (
           <div className="space-y-4">
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-32 w-full" />
+            <div className="h-32 w-full animate-pulse rounded-md bg-muted" />
+            <div className="h-32 w-full animate-pulse rounded-md bg-muted" />
+            <div className="h-32 w-full animate-pulse rounded-md bg-muted" />
           </div>
         )}
 
         {isLoading && viewType === 'list' && (
-          <DataTableSkeleton columnCount={7} rowCount={10} />
+          <DataGridSkeleton>
+            <DataGridSkeletonGrid />
+          </DataGridSkeleton>
         )}
 
         {error && (
@@ -142,7 +147,7 @@ export function Contacts() {
         )}
 
         {contacts && contacts.length > 0 && viewType === 'list' && (
-          <DataTable table={table} />
+          <DataGrid table={table} {...dataGridProps} height={600} />
         )}
       </PageContainer>
     </>

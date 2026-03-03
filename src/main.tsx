@@ -247,7 +247,8 @@ function resolveAllowedHostOrigins(): Array<string> {
     origins.add(origin)
   }
 
-  const locationWithAncestors = window.location as Location & Record<string, unknown>
+  const locationWithAncestors = window.location as Location &
+    Record<string, unknown>
   const ancestorOrigins = locationWithAncestors.ancestorOrigins as
     | { length: number; [index: number]: string }
     | undefined
@@ -272,8 +273,8 @@ function resolveAllowedHostOrigins(): Array<string> {
 
 const allowedHostOrigins = resolveAllowedHostOrigins()
 const forceMode =
-  isEmbeddedInIframe()
-  && new URLSearchParams(window.location.search).get('embedded') === 'true'
+  isEmbeddedInIframe() &&
+  new URLSearchParams(window.location.search).get('embedded') === 'true'
     ? 'iframe'
     : undefined
 
@@ -288,7 +289,9 @@ if (rootElement && !rootElement.innerHTML) {
         redirectUri={`${window.location.origin}${import.meta.env.VITE_OAUTH2_REDIRECT_URI}`}
         scopes={oauthScopes}
         callbackPath="/auth/callback"
-        allowedHostOrigins={allowedHostOrigins.length > 0 ? allowedHostOrigins : undefined}
+        allowedHostOrigins={
+          allowedHostOrigins.length > 0 ? allowedHostOrigins : undefined
+        }
         forceMode={forceMode}
       >
         <TanStackQueryProvider.Provider>

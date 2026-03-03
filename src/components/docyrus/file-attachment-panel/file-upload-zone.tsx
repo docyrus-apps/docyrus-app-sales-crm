@@ -1,58 +1,56 @@
-import {
-  type DragEvent, useCallback, useRef, useState
-} from 'react';
+import { type DragEvent, useCallback, useRef, useState } from 'react'
 
-import { DocyrusIcon } from '@/components/docyrus/docyrus-icon';
-import { Button } from '@/components/ui/button';
+import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
+import { Button } from '@/components/ui/button'
 
 interface FileUploadZoneProps {
-  accept?: string;
-  maxFileSize?: number;
-  onFilesSelected: (files: Array<File>) => void;
+  accept?: string
+  maxFileSize?: number
+  onFilesSelected: (files: Array<File>) => void
 }
 
 export function FileUploadZone({
   accept,
   maxFileSize,
-  onFilesSelected
+  onFilesSelected,
 }: FileUploadZoneProps) {
-  const [isDragActive, setIsDragActive] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [isDragActive, setIsDragActive] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const handleFiles = useCallback(
     (fileList: FileList) => {
-      const files = Array.from(fileList);
+      const files = Array.from(fileList)
       const valid = maxFileSize
-        ? files.filter(f => f.size <= maxFileSize)
-        : files;
+        ? files.filter((f) => f.size <= maxFileSize)
+        : files
 
       if (valid.length > 0) {
-        onFilesSelected(valid);
+        onFilesSelected(valid)
       }
     },
-    [maxFileSize, onFilesSelected]
-  );
+    [maxFileSize, onFilesSelected],
+  )
 
   const handleDrop = useCallback(
     (e: DragEvent) => {
-      e.preventDefault();
-      setIsDragActive(false);
+      e.preventDefault()
+      setIsDragActive(false)
       if (e.dataTransfer.files.length > 0) {
-        handleFiles(e.dataTransfer.files);
+        handleFiles(e.dataTransfer.files)
       }
     },
-    [handleFiles]
-  );
+    [handleFiles],
+  )
 
   const handleDragOver = useCallback((e: DragEvent) => {
-    e.preventDefault();
-    setIsDragActive(true);
-  }, []);
+    e.preventDefault()
+    setIsDragActive(true)
+  }, [])
 
   const handleDragLeave = useCallback((e: DragEvent) => {
-    e.preventDefault();
-    setIsDragActive(false);
-  }, []);
+    e.preventDefault()
+    setIsDragActive(false)
+  }, [])
 
   return (
     <div
@@ -63,10 +61,12 @@ export function FileUploadZone({
         isDragActive
           ? 'border-primary bg-primary/5'
           : 'border-muted-foreground/25 hover:border-muted-foreground/40'
-      }`}>
+      }`}
+    >
       <DocyrusIcon
         icon="fal cloud-arrow-up"
-        className={`size-8 ${isDragActive ? 'text-primary' : 'text-muted-foreground/50'}`} />
+        className={`size-8 ${isDragActive ? 'text-primary' : 'text-muted-foreground/50'}`}
+      />
       <div className="text-center">
         <p className="text-sm text-muted-foreground">
           Drag & drop files here, or{' '}
@@ -74,7 +74,8 @@ export function FileUploadZone({
             variant="link"
             size="sm"
             className="h-auto p-0 text-sm"
-            onClick={() => inputRef.current?.click()}>
+            onClick={() => inputRef.current?.click()}
+          >
             browse
           </Button>
         </p>
@@ -92,10 +93,11 @@ export function FileUploadZone({
         className="hidden"
         onChange={(e) => {
           if (e.target.files && e.target.files.length > 0) {
-            handleFiles(e.target.files);
-            e.target.value = '';
+            handleFiles(e.target.files)
+            e.target.value = ''
           }
-        }} />
+        }}
+      />
     </div>
-  );
+  )
 }

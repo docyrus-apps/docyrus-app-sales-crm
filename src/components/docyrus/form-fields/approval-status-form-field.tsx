@@ -1,17 +1,8 @@
-'use client';
+'use client'
 
-import {
-  useEffect, useId, useMemo, useState
-} from 'react';
+import { useEffect, useId, useMemo, useState } from 'react'
 
-import {
-  CalendarDays,
-  Check,
-  RefreshCcw,
-  Send,
-  Undo2,
-  X
-} from 'lucide-react';
+import { CalendarDays, Check, RefreshCcw, Send, Undo2, X } from 'lucide-react'
 
 import {
   type ApprovalUserSnapshot,
@@ -25,19 +16,23 @@ import {
   getApprovalUserInitials,
   getApprovalUserName,
   normalizeApprovalUserSnapshot,
-  normalizeApprovalValue
-} from '@/components/docyrus/lib/approval-status';
-import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
-import { Textarea } from '@/components/ui/textarea';
+  normalizeApprovalValue,
+} from '@/components/docyrus/lib/approval-status'
+import { cn } from '@/lib/utils'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Field, FieldError, FieldLabel } from '@/components/ui/field'
+import { Textarea } from '@/components/ui/textarea'
 
-import { type DocyrusFormFieldProps } from './types';
+import { type DocyrusFormFieldProps } from './types'
 
-const COMMENTABLE_STATUSES = new Set<string>([APPROVAL_STATUS.DRAFT, APPROVAL_STATUS.WAITING_FOR_APPROVAL, APPROVAL_STATUS.REVISION_REQUESTED]);
+const COMMENTABLE_STATUSES = new Set<string>([
+  APPROVAL_STATUS.DRAFT,
+  APPROVAL_STATUS.WAITING_FOR_APPROVAL,
+  APPROVAL_STATUS.REVISION_REQUESTED,
+])
 
 const PRIMARY_ACTION_CLASS_BY_STATUS: Record<string, string> = {
   [APPROVAL_STATUS.DRAFT]:
@@ -45,64 +40,64 @@ const PRIMARY_ACTION_CLASS_BY_STATUS: Record<string, string> = {
   [APPROVAL_STATUS.WAITING_FOR_APPROVAL]:
     'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-400',
   [APPROVAL_STATUS.REVISION_REQUESTED]:
-    'bg-sky-600 text-white hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-400'
-};
+    'bg-sky-600 text-white hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-400',
+}
 
 interface ApprovalFieldOptions {
-  placeholder?: string;
-  canRespond?: boolean;
-  currentUser?: ApprovalUserSnapshot | null;
+  placeholder?: string
+  canRespond?: boolean
+  currentUser?: ApprovalUserSnapshot | null
 }
 
 function createApprovalStepId(): string {
   if (
-    typeof globalThis !== 'undefined'
-    && 'crypto' in globalThis
-    && typeof globalThis.crypto?.randomUUID === 'function'
+    typeof globalThis !== 'undefined' &&
+    'crypto' in globalThis &&
+    typeof globalThis.crypto?.randomUUID === 'function'
   ) {
-    return globalThis.crypto.randomUUID();
+    return globalThis.crypto.randomUUID()
   }
 
-  return `approval-step-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return `approval-step-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 }
 
 function getApprovalFieldOptions(
-  fieldConfig: DocyrusFormFieldProps['field']
+  fieldConfig: DocyrusFormFieldProps['field'],
 ): ApprovalFieldOptions {
-  const raw = fieldConfig.options;
+  const raw = fieldConfig.options
 
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
-    return {};
+    return {}
   }
 
-  const record = raw as Record<string, unknown>;
+  const record = raw as Record<string, unknown>
 
   return {
     placeholder:
       typeof record.placeholder === 'string' ? record.placeholder : undefined,
     canRespond:
       typeof record.canRespond === 'boolean' ? record.canRespond : undefined,
-    currentUser: normalizeApprovalUserSnapshot(record.currentUser)
-  };
+    currentUser: normalizeApprovalUserSnapshot(record.currentUser),
+  }
 }
 
 function ApprovalStatusSummary({
-  approval
+  approval,
 }: {
-  approval: ApprovalValueObject;
+  approval: ApprovalValueObject
 }) {
   const actorName = getApprovalUserName(
     approval.respondedByUser,
-    approval.respondedBy ?? null
-  );
-  const avatarUrl = getApprovalUserAvatarUrl(approval.respondedByUser);
-  const hasMeta
-    = !!approval.comments
-      || !!approval.respondedAt
-      || !!approval.respondedBy
-      || !!approval.respondedByUser;
+    approval.respondedBy ?? null,
+  )
+  const avatarUrl = getApprovalUserAvatarUrl(approval.respondedByUser)
+  const hasMeta =
+    !!approval.comments ||
+    !!approval.respondedAt ||
+    !!approval.respondedBy ||
+    !!approval.respondedByUser
 
-  if (!hasMeta) return null;
+  if (!hasMeta) return null
 
   return (
     <div className="flex w-fit items-start gap-2 rounded-md bg-slate-100 px-2 py-2 dark:bg-slate-900/50">
@@ -114,7 +109,8 @@ function ApprovalStatusSummary({
         <div className="flex flex-wrap items-center gap-1.5">
           <Badge
             variant="secondary"
-            className={cn(getApprovalStatusBadgeClasses(approval.status))}>
+            className={cn(getApprovalStatusBadgeClasses(approval.status))}
+          >
             {approval.status}
           </Badge>
           {approval.comments && (
@@ -136,35 +132,39 @@ function ApprovalStatusSummary({
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 function ApprovalStatusHistory({
-  steps
+  steps,
 }: {
-  steps: ApprovalValueObject['steps'];
+  steps: ApprovalValueObject['steps']
 }) {
-  if (!steps.length) return null;
+  if (!steps.length) return null
 
   return (
     <div className="flex flex-col divide-y rounded-md border bg-muted/20">
       {steps.map((step, index) => {
         const actorName = getApprovalUserName(
           step.respondedByUser ?? null,
-          step.respondedBy ?? null
-        );
+          step.respondedBy ?? null,
+        )
 
         return (
           <div
-            key={step.id ?? `${step.status ?? 'step'}-${step.respondedAt ?? index}`}
-            className="flex flex-wrap items-center gap-1.5 px-2 py-1.5 text-xs">
+            key={
+              step.id ?? `${step.status ?? 'step'}-${step.respondedAt ?? index}`
+            }
+            className="flex flex-wrap items-center gap-1.5 px-2 py-1.5 text-xs"
+          >
             <span className="text-muted-foreground inline-flex items-center gap-1">
               <CalendarDays className="size-3" />
               {formatApprovalTimestamp(step.respondedAt)}
             </span>
             <Badge
               variant="secondary"
-              className={cn(getApprovalStatusBadgeClasses(step.status))}>
+              className={cn(getApprovalStatusBadgeClasses(step.status))}
+            >
               {step.status ?? APPROVAL_STATUS.DRAFT}
             </Badge>
             <span className="text-muted-foreground">by</span>
@@ -175,63 +175,68 @@ function ApprovalStatusHistory({
               <span className="text-muted-foreground">{step.comments}</span>
             )}
           </div>
-        );
+        )
       })}
     </div>
-  );
+  )
 }
 
 function ApprovalStatusFormFieldInner({
   field,
   fieldConfig,
   disabled,
-  className
+  className,
 }: {
-  field: any;
-  fieldConfig: DocyrusFormFieldProps['field'];
-  disabled?: boolean;
-  className?: string;
+  field: any
+  fieldConfig: DocyrusFormFieldProps['field']
+  disabled?: boolean
+  className?: string
 }) {
-  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
-  const isFieldDisabled = disabled || fieldConfig.readOnly === true;
-  const options = useMemo(() => getApprovalFieldOptions(fieldConfig), [fieldConfig]);
+  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+  const isFieldDisabled = disabled || fieldConfig.readOnly === true
+  const options = useMemo(
+    () => getApprovalFieldOptions(fieldConfig),
+    [fieldConfig],
+  )
   const approval = useMemo(
     () => normalizeApprovalValue(field.state.value),
-    [field.state.value]
-  );
+    [field.state.value],
+  )
 
   const [showCommentsInput, setShowCommentsInput] = useState<boolean>(
-    !!approval.comments
-  );
-  const [commentsDraft, setCommentsDraft] = useState<string>(approval.comments ?? '');
-  const commentsToggleId = useId();
+    !!approval.comments,
+  )
+  const [commentsDraft, setCommentsDraft] = useState<string>(
+    approval.comments ?? '',
+  )
+  const commentsToggleId = useId()
 
   useEffect(() => {
-    setShowCommentsInput(!!approval.comments);
-    setCommentsDraft(approval.comments ?? '');
-  }, [field.state.value, approval.comments]);
+    setShowCommentsInput(!!approval.comments)
+    setCommentsDraft(approval.comments ?? '')
+  }, [field.state.value, approval.comments])
 
-  const canRespond = options.canRespond ?? true;
-  const { status } = approval;
-  const isCommentSectionVisible = COMMENTABLE_STATUSES.has(status);
-  const showSummary
-    = status !== APPROVAL_STATUS.DRAFT
-      && status !== APPROVAL_STATUS.WAITING_FOR_APPROVAL;
-  const hasSummaryMeta
-    = !!approval.respondedAt
-      || !!approval.respondedBy
-      || !!approval.respondedByUser
-      || !!approval.comments;
+  const canRespond = options.canRespond ?? true
+  const { status } = approval
+  const isCommentSectionVisible = COMMENTABLE_STATUSES.has(status)
+  const showSummary =
+    status !== APPROVAL_STATUS.DRAFT &&
+    status !== APPROVAL_STATUS.WAITING_FOR_APPROVAL
+  const hasSummaryMeta =
+    !!approval.respondedAt ||
+    !!approval.respondedBy ||
+    !!approval.respondedByUser ||
+    !!approval.comments
 
-  const currentUser = options.currentUser ?? null;
-  const currentUserId = getApprovalUserId(currentUser);
+  const currentUser = options.currentUser ?? null
+  const currentUserId = getApprovalUserId(currentUser)
 
   const commitStatus = (nextStatus: ApprovalWorkflowStatus) => {
-    if (isFieldDisabled) return;
+    if (isFieldDisabled) return
 
-    const nowIso = new Date().toISOString();
-    const nextComment = showCommentsInput ? commentsDraft.trim() : '';
-    const normalizedComment = nextComment.length > 0 ? nextComment : null;
+    const nowIso = new Date().toISOString()
+    const nextComment = showCommentsInput ? commentsDraft.trim() : ''
+    const normalizedComment = nextComment.length > 0 ? nextComment : null
 
     const nextStep = {
       id: createApprovalStepId(),
@@ -239,8 +244,8 @@ function ApprovalStatusFormFieldInner({
       respondedAt: nowIso,
       respondedBy: currentUserId,
       respondedByUser: currentUser,
-      comments: normalizedComment
-    };
+      comments: normalizedComment,
+    }
 
     const nextValue: ApprovalValueObject = {
       ...approval,
@@ -249,12 +254,12 @@ function ApprovalStatusFormFieldInner({
       respondedBy: currentUserId,
       respondedByUser: currentUser,
       comments: normalizedComment,
-      steps: [nextStep, ...approval.steps]
-    };
+      steps: [nextStep, ...approval.steps],
+    }
 
-    field.handleChange(nextValue);
-    field.handleBlur();
-  };
+    field.handleChange(nextValue)
+    field.handleBlur()
+  }
 
   return (
     <Field data-invalid={isInvalid} className={className}>
@@ -267,7 +272,8 @@ function ApprovalStatusFormFieldInner({
           <div className="flex flex-wrap items-center gap-2">
             <Badge
               variant="secondary"
-              className={cn(getApprovalStatusBadgeClasses(approval.status))}>
+              className={cn(getApprovalStatusBadgeClasses(approval.status))}
+            >
               {approval.status}
             </Badge>
           </div>
@@ -279,22 +285,27 @@ function ApprovalStatusFormFieldInner({
               htmlFor={commentsToggleId}
               className={cn(
                 'flex w-fit items-center gap-2 text-sm',
-                isFieldDisabled && 'opacity-60'
-              )}>
+                isFieldDisabled && 'opacity-60',
+              )}
+            >
               <Checkbox
                 id={commentsToggleId}
                 checked={showCommentsInput}
-                onCheckedChange={checked => setShowCommentsInput(checked === true)}
-                disabled={isFieldDisabled} />
+                onCheckedChange={(checked) =>
+                  setShowCommentsInput(checked === true)
+                }
+                disabled={isFieldDisabled}
+              />
               <span>Add comments</span>
             </label>
             {showCommentsInput && (
               <Textarea
                 value={commentsDraft}
-                onChange={e => setCommentsDraft(e.target.value)}
+                onChange={(e) => setCommentsDraft(e.target.value)}
                 disabled={isFieldDisabled}
                 placeholder={options.placeholder ?? 'Add approval comments...'}
-                rows={3} />
+                rows={3}
+              />
             )}
           </div>
         )}
@@ -306,7 +317,8 @@ function ApprovalStatusFormFieldInner({
               size="sm"
               disabled={isFieldDisabled}
               className={PRIMARY_ACTION_CLASS_BY_STATUS[APPROVAL_STATUS.DRAFT]}
-              onClick={() => commitStatus(APPROVAL_STATUS.WAITING_FOR_APPROVAL)}>
+              onClick={() => commitStatus(APPROVAL_STATUS.WAITING_FOR_APPROVAL)}
+            >
               <Send className="size-3.5" />
               Send for Approval
             </Button>
@@ -318,8 +330,13 @@ function ApprovalStatusFormFieldInner({
                 type="button"
                 size="sm"
                 disabled={isFieldDisabled || !canRespond}
-                className={PRIMARY_ACTION_CLASS_BY_STATUS[APPROVAL_STATUS.WAITING_FOR_APPROVAL]}
-                onClick={() => commitStatus(APPROVAL_STATUS.APPROVED)}>
+                className={
+                  PRIMARY_ACTION_CLASS_BY_STATUS[
+                    APPROVAL_STATUS.WAITING_FOR_APPROVAL
+                  ]
+                }
+                onClick={() => commitStatus(APPROVAL_STATUS.APPROVED)}
+              >
                 <Check className="size-3.5" />
                 Approve
               </Button>
@@ -329,7 +346,8 @@ function ApprovalStatusFormFieldInner({
                 variant="outline"
                 disabled={isFieldDisabled || !canRespond}
                 className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/40"
-                onClick={() => commitStatus(APPROVAL_STATUS.REJECTED)}>
+                onClick={() => commitStatus(APPROVAL_STATUS.REJECTED)}
+              >
                 <X className="size-3.5" />
                 Reject
               </Button>
@@ -339,7 +357,8 @@ function ApprovalStatusFormFieldInner({
                 variant="outline"
                 disabled={isFieldDisabled || !canRespond}
                 className="border-amber-200 text-amber-700 hover:bg-amber-50 hover:text-amber-800 dark:border-amber-900 dark:text-amber-300 dark:hover:bg-amber-950/40"
-                onClick={() => commitStatus(APPROVAL_STATUS.REVISION_REQUESTED)}>
+                onClick={() => commitStatus(APPROVAL_STATUS.REVISION_REQUESTED)}
+              >
                 <RefreshCcw className="size-3.5" />
                 Request Revision
               </Button>
@@ -352,8 +371,15 @@ function ApprovalStatusFormFieldInner({
                 type="button"
                 size="sm"
                 disabled={isFieldDisabled}
-                className={PRIMARY_ACTION_CLASS_BY_STATUS[APPROVAL_STATUS.REVISION_REQUESTED]}
-                onClick={() => commitStatus(APPROVAL_STATUS.WAITING_FOR_APPROVAL)}>
+                className={
+                  PRIMARY_ACTION_CLASS_BY_STATUS[
+                    APPROVAL_STATUS.REVISION_REQUESTED
+                  ]
+                }
+                onClick={() =>
+                  commitStatus(APPROVAL_STATUS.WAITING_FOR_APPROVAL)
+                }
+              >
                 <Send className="size-3.5" />
                 Resend Approval Request
               </Button>
@@ -363,7 +389,8 @@ function ApprovalStatusFormFieldInner({
                 variant="outline"
                 disabled={isFieldDisabled}
                 className="border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800 dark:border-rose-900 dark:text-rose-300 dark:hover:bg-rose-950/40"
-                onClick={() => commitStatus(APPROVAL_STATUS.WITHDRAWN)}>
+                onClick={() => commitStatus(APPROVAL_STATUS.WITHDRAWN)}
+              >
                 <Undo2 className="size-3.5" />
                 Withdraw Approval Request
               </Button>
@@ -375,14 +402,14 @@ function ApprovalStatusFormFieldInner({
       </div>
       {isInvalid && <FieldError errors={field.state.meta.errors} />}
     </Field>
-  );
+  )
 }
 
 export function ApprovalStatusFormField({
   field: fieldConfig,
   form,
   disabled,
-  className
+  className,
 }: DocyrusFormFieldProps) {
   return (
     <form.Field
@@ -392,7 +419,9 @@ export function ApprovalStatusFormField({
           field={field}
           fieldConfig={fieldConfig}
           disabled={disabled}
-          className={className} />
-      )} />
-  );
+          className={className}
+        />
+      )}
+    />
+  )
 }

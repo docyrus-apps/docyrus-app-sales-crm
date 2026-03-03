@@ -1,118 +1,67 @@
-import { Link } from '@tanstack/react-router'
-import { Eye } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
-import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/animate-ui/components/buttons/button'
 
 export function getCompaniesColumns(): Array<ColumnDef<any>> {
   return [
     {
-      id: 'actions',
-      header: () => <span className="sr-only">Actions</span>,
-      cell: ({ row }) => (
-        <Link
-          to="/companies/$companyId"
-          params={{ companyId: row.original.id }}
-        >
-          <Button variant="ghost" size="icon" className="size-8">
-            <Eye className="size-4" />
-          </Button>
-        </Link>
-      ),
-      enableSorting: false,
-      enableHiding: false,
-      size: 40,
-    },
-    {
       accessorKey: 'name',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} label="Name" />
-      ),
-      cell: ({ row }) => (
-        <div className="font-medium max-w-xs truncate">
-          {row.getValue('name') || '-'}
-        </div>
-      ),
+      header: 'Name',
+      meta: { cell: { variant: 'short-text' } },
       enableSorting: true,
+      size: 220,
     },
     {
-      accessorKey: 'industry',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} label="Industry" />
-      ),
-      cell: ({ row }) => {
-        const val = row.getValue('industry')
-        const name =
-          typeof val === 'object' && val?.name ? val.name : (val as string)
-        return name ? <Badge variant="secondary">{name}</Badge> : <span>-</span>
-      },
+      id: 'industry',
+      accessorFn: (row) =>
+        typeof row.industry === 'object'
+          ? (row.industry?.name ?? '')
+          : (row.industry ?? ''),
+      header: 'Industry',
+      meta: { cell: { variant: 'short-text' } },
       enableSorting: true,
+      size: 160,
     },
     {
-      accessorKey: 'status',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} label="Status" />
-      ),
-      cell: ({ row }) => {
-        const val = row.getValue('status')
-        const name =
-          typeof val === 'object' && val?.name ? val.name : (val as string)
-        return name ? <Badge variant="outline">{name}</Badge> : <span>-</span>
-      },
+      id: 'status',
+      accessorFn: (row) =>
+        typeof row.status === 'object'
+          ? (row.status?.name ?? '')
+          : (row.status ?? ''),
+      header: 'Status',
+      meta: { cell: { variant: 'short-text' } },
       enableSorting: true,
+      size: 120,
     },
     {
       accessorKey: 'email',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} label="Email" />
-      ),
-      cell: ({ row }) => (
-        <div className="truncate max-w-xs">{row.getValue('email') || '-'}</div>
-      ),
+      header: 'Email',
+      meta: { cell: { variant: 'email' } },
       enableSorting: true,
+      size: 200,
     },
     {
       accessorKey: 'phone',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} label="Phone" />
-      ),
-      cell: ({ row }) => <div>{row.getValue('phone') || '-'}</div>,
+      header: 'Phone',
+      meta: { cell: { variant: 'phone' } },
       enableSorting: true,
+      size: 140,
     },
     {
-      accessorKey: 'city',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} label="City" />
-      ),
-      cell: ({ row }) => {
-        const val = row.getValue('city')
-        const name =
-          typeof val === 'object' && val?.name ? val.name : (val as string)
-        return <div>{name || '-'}</div>
-      },
+      id: 'city',
+      accessorFn: (row) =>
+        typeof row.city === 'object'
+          ? (row.city?.name ?? '')
+          : (row.city ?? ''),
+      header: 'City',
+      meta: { cell: { variant: 'short-text' } },
       enableSorting: true,
+      size: 130,
     },
     {
       accessorKey: 'created_on',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} label="Created" />
-      ),
-      cell: ({ row }) => {
-        const date = row.getValue('created_on')
-        return (
-          <div>
-            {date
-              ? new Date(date as string).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                })
-              : '-'}
-          </div>
-        )
-      },
+      header: 'Created',
+      meta: { cell: { variant: 'date' } },
       enableSorting: true,
+      size: 130,
     },
   ]
 }

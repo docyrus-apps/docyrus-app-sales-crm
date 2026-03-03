@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/ui/skeleton'
 
 export function DayViewSkeleton() {
   return (
@@ -16,7 +16,10 @@ export function DayViewSkeleton() {
       <div className="flex flex-1 overflow-y-auto">
         <div className="w-18 flex-shrink-0">
           {Array.from({ length: 12 }).map((_, i) => (
-            <div key={`hour-label-${i}`} className="relative h-12 border-b pr-2 text-right">
+            <div
+              key={`hour-label-${i}`}
+              className="relative h-12 border-b pr-2 text-right"
+            >
               <Skeleton className="absolute -top-3 right-2 h-4 w-10" />
             </div>
           ))}
@@ -31,5 +34,5 @@ export function DayViewSkeleton() {
         </div>
       </div>
     </div>
-  );
+  )
 }

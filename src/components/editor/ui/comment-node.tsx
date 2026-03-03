@@ -1,28 +1,28 @@
 // @ts-nocheck
-'use client';
+'use client'
 
-import * as React from 'react';
+import * as React from 'react'
 
-import type { TCommentText } from 'platejs';
-import type { PlateLeafProps } from 'platejs/react';
+import type { TCommentText } from 'platejs'
+import type { PlateLeafProps } from 'platejs/react'
 
-import { getCommentCount } from '@platejs/comment';
-import { PlateLeaf, useEditorPlugin, usePluginOption } from 'platejs/react';
+import { getCommentCount } from '@platejs/comment'
+import { PlateLeaf, useEditorPlugin, usePluginOption } from 'platejs/react'
 
-import { cn } from '@/lib/utils';
-import { commentPlugin } from '@/components/editor/plugins/comment-kit';
+import { cn } from '@/lib/utils'
+import { commentPlugin } from '@/components/editor/plugins/comment-kit'
 
 export function CommentLeaf(props: PlateLeafProps<TCommentText>) {
-  const { children, leaf } = props;
+  const { children, leaf } = props
 
-  const { api, setOption } = useEditorPlugin(commentPlugin);
-  const hoverId = usePluginOption(commentPlugin, 'hoverId');
-  const activeId = usePluginOption(commentPlugin, 'activeId');
+  const { api, setOption } = useEditorPlugin(commentPlugin)
+  const hoverId = usePluginOption(commentPlugin, 'hoverId')
+  const activeId = usePluginOption(commentPlugin, 'activeId')
 
-  const isOverlapping = getCommentCount(leaf) > 1;
-  const currentId = api.comment.nodeId(leaf);
-  const isActive = activeId === currentId;
-  const isHover = hoverId === currentId;
+  const isOverlapping = getCommentCount(leaf) > 1
+  const currentId = api.comment.nodeId(leaf)
+  const isActive = activeId === currentId
+  const isHover = hoverId === currentId
 
   return (
     <PlateLeaf
@@ -33,7 +33,7 @@ export function CommentLeaf(props: PlateLeafProps<TCommentText>) {
         isOverlapping && 'border-b-2 border-b-highlight/[.7] bg-highlight/25',
         (isHover || isActive) &&
           isOverlapping &&
-          'border-b-highlight bg-highlight/45'
+          'border-b-highlight bg-highlight/45',
       )}
       attributes={{
         ...props.attributes,
@@ -44,5 +44,5 @@ export function CommentLeaf(props: PlateLeafProps<TCommentText>) {
     >
       {children}
     </PlateLeaf>
-  );
+  )
 }

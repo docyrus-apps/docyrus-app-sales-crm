@@ -1,19 +1,19 @@
 // @ts-nocheck
-'use client';
+'use client'
 
-import type { PlatePluginConfig } from 'platejs/react';
+import type { PlatePluginConfig } from 'platejs/react'
 
 import {
   FontBackgroundColorPlugin,
   FontColorPlugin,
   FontFamilyPlugin,
   FontSizePlugin,
-} from '@platejs/basic-styles/react';
-import { KEYS } from 'platejs';
+} from '@platejs/basic-styles/react'
+import { KEYS } from 'platejs'
 
 const options = {
   inject: { targetPlugins: [KEYS.p] },
-} satisfies PlatePluginConfig;
+} satisfies PlatePluginConfig
 
 export const FontKit = [
   FontColorPlugin.configure({
@@ -27,4 +27,4 @@ export const FontKit = [
   FontBackgroundColorPlugin.configure(options),
   FontSizePlugin.configure(options),
   FontFamilyPlugin.configure(options),
-];
+]

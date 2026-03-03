@@ -1,43 +1,43 @@
-'use client';
+'use client'
 
-import { User } from 'lucide-react';
+import { User } from 'lucide-react'
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { cn } from '@/lib/utils'
 
-import { type DocyrusValueProps } from './types';
+import { type DocyrusValueProps } from './types'
 
 interface ExpandedUser {
-  id: string;
-  name?: string;
-  display_name?: string;
-  email?: string;
-  avatar_url?: string;
-  profile_image_url?: string;
+  id: string
+  name?: string
+  display_name?: string
+  email?: string
+  avatar_url?: string
+  profile_image_url?: string
 }
 
 function isExpandedUser(val: unknown): val is ExpandedUser {
-  return typeof val === 'object' && val !== null && 'id' in val;
+  return typeof val === 'object' && val !== null && 'id' in val
 }
 
 function getInitials(name: string): string {
   return name
     .split(' ')
-    .map(part => part[0])
+    .map((part) => part[0])
     .filter(Boolean)
     .slice(0, 2)
     .join('')
-    .toUpperCase();
+    .toUpperCase()
 }
 
 export function UserValue({ value, className }: DocyrusValueProps) {
   if (value == null || value === '') {
-    return <span className="text-muted-foreground">—</span>;
+    return <span className="text-muted-foreground">—</span>
   }
 
   if (isExpandedUser(value)) {
-    const name = value.display_name ?? value.name ?? value.email ?? value.id;
-    const avatarUrl = value.avatar_url ?? value.profile_image_url;
+    const name = value.display_name ?? value.name ?? value.email ?? value.id
+    const avatarUrl = value.avatar_url ?? value.profile_image_url
 
     return (
       <span className={cn('inline-flex items-center gap-1.5', className)}>
@@ -47,7 +47,7 @@ export function UserValue({ value, className }: DocyrusValueProps) {
         </Avatar>
         <span className="truncate text-sm">{name}</span>
       </span>
-    );
+    )
   }
 
   return (
@@ -61,5 +61,5 @@ export function UserValue({ value, className }: DocyrusValueProps) {
         {String(value).slice(0, 8)}
       </span>
     </span>
-  );
+  )
 }
