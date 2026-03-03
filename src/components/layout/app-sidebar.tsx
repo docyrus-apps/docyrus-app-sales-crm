@@ -335,7 +335,11 @@ export function AppSidebar() {
               tooltip="Sales CRM"
               className="cursor-default"
             >
-              <img src="/logo.svg" alt="Docyrus" className="size-5 shrink-0" />
+              <img
+                src="/logo.svg"
+                alt="Docyrus"
+                className="h-8 w-8 shrink-0 rounded-lg object-contain"
+              />
               <span className="flex items-baseline gap-1 truncate">
                 <span className="text-sm font-semibold">
                   {t('sidebar.appName')}
