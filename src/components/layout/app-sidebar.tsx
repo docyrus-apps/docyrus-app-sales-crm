@@ -152,6 +152,14 @@ export function AppSidebar() {
       userProfile.email
     : 'Loading...'
 
+  const tenantName = userProfile?.tenant?.name ?? userProfile?.name ?? ''
+  const tenantLogoUrl = userProfile?.tenant?.logo_url
+  const tenantInitials = tenantName
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w.charAt(0).toUpperCase())
+    .join('')
+
   const isCollapsed = state === 'collapsed'
 
   const openCommandPalette = () => {
@@ -169,76 +177,15 @@ export function AppSidebar() {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link to="/">
-                <img src="/logo.svg" alt="Docyrus" className="size-8" />
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">
-                    {t('sidebar.appName')}
-                  </span>
-                </div>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
-
-      <SidebarContent>
-        {/* Search trigger */}
-        <SidebarGroup>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                tooltip={t('nav.searchTooltip')}
-                onClick={openCommandPalette}
-                className="rounded-lg bg-card text-muted-foreground shadow-sm"
-              >
-                <Search />
-                {!isCollapsed && (
-                  <>
-                    <span className="flex-1 text-left">
-                      {t('nav.searchAnything')}
-                    </span>
-                    <kbd className="pointer-events-none ml-auto inline-flex h-5 select-none items-center gap-0.5 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
-                      <span className="text-xs">&#8984;</span>K
-                    </kbd>
-                  </>
-                )}
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
-
-        <NavGroup
-          label={t('nav.mainNavigation')}
-          items={MAIN_NAV_KEYS}
-          matchRoute={matchRoute}
-          unreadCount={unreadCount}
-          t={t}
-        />
-        <NavGroup
-          label={t('nav.dataSources', 'Data Sources')}
-          items={DATA_SOURCES_NAV_KEYS}
-          matchRoute={matchRoute}
-          t={t}
-        />
-      </SidebarContent>
-
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
                   size="lg"
-                  className="rounded-lg bg-card shadow-sm data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                  className="cursor-pointer rounded-lg bg-card shadow-sm data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
                   <Avatar className="h-8 w-8 rounded-lg">
                     {userProfile?.photo && (
-                      <AvatarImage
-                        src={userProfile.photo}
-                        alt={displayName ?? ''}
-                      />
+                      <AvatarImage src={userProfile.photo} alt={displayName} />
                     )}
                     <AvatarFallback className="rounded-lg">
                       {initials}
@@ -248,8 +195,19 @@ export function AppSidebar() {
                     <span className="truncate font-semibold">
                       {displayName}
                     </span>
-                    <span className="truncate text-xs">
-                      {userProfile?.email ?? ''}
+                    <span className="flex items-center gap-1 truncate text-xs text-muted-foreground">
+                      {tenantLogoUrl ? (
+                        <img
+                          src={tenantLogoUrl}
+                          alt={tenantName}
+                          className="h-4 w-4 shrink-0 rounded object-contain"
+                        />
+                      ) : tenantInitials ? (
+                        <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded bg-primary/10 text-[10px] font-medium text-primary">
+                          {tenantInitials}
+                        </span>
+                      ) : null}
+                      <span className="truncate">{tenantName}</span>
                     </span>
                   </div>
                   <ChevronsUpDown className="ml-auto size-4" />
@@ -258,7 +216,7 @@ export function AppSidebar() {
               <DropdownMenuContent
                 className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
                 side="right"
-                align="end"
+                align="start"
                 sideOffset={4}
               >
                 <DropdownMenuLabel className="p-0 font-normal">
@@ -267,7 +225,7 @@ export function AppSidebar() {
                       {userProfile?.photo && (
                         <AvatarImage
                           src={userProfile.photo}
-                          alt={displayName ?? ''}
+                          alt={displayName}
                         />
                       )}
                       <AvatarFallback className="rounded-lg">
@@ -286,7 +244,9 @@ export function AppSidebar() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => setProfileDialogOpen(true)}>
+                  <DropdownMenuItem
+                    onClick={() => setProfileDialogOpen(true)}
+                  >
                     <BadgeCheck />
                     {t('sidebar.myProfile')}
                   </DropdownMenuItem>
@@ -322,6 +282,69 @@ export function AppSidebar() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+
+      <SidebarContent>
+        {/* Search trigger */}
+        <SidebarGroup>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                tooltip={t('nav.searchTooltip')}
+                onClick={openCommandPalette}
+                className="cursor-pointer rounded-lg bg-card text-muted-foreground shadow-sm"
+              >
+                <Search />
+                {!isCollapsed && (
+                  <>
+                    <span className="flex-1 text-left">
+                      {t('nav.searchAnything')}
+                    </span>
+                    <kbd className="pointer-events-none ml-auto inline-flex h-5 select-none items-center gap-0.5 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+                      <span className="text-xs">&#8984;</span>K
+                    </kbd>
+                  </>
+                )}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+
+        <NavGroup
+          label={t('nav.mainNavigation')}
+          items={MAIN_NAV_KEYS}
+          matchRoute={matchRoute}
+          unreadCount={unreadCount}
+          t={t}
+        />
+        <NavGroup
+          label={t('nav.dataSources', 'Data Sources')}
+          items={DATA_SOURCES_NAV_KEYS}
+          matchRoute={matchRoute}
+          t={t}
+        />
+      </SidebarContent>
+
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              size="lg"
+              tooltip="Sales CRM by Docyrus"
+              className="cursor-default"
+            >
+              <img src="/logo.svg" alt="Docyrus" className="size-8 shrink-0" />
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-semibold">
+                  {t('sidebar.appName')}
+                </span>
+                <span className="truncate text-xs text-muted-foreground">
+                  by Docyrus
+                </span>
+              </div>
+            </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

@@ -61,6 +61,14 @@ export interface UserEntity {
 
   /** Tenant/Company No */
   no: string
+
+  /** Tenant info */
+  tenant?: {
+    id: string
+    name: string
+    no: number
+    logo_url?: string
+  }
 }
 
 export interface UserCreateParams {

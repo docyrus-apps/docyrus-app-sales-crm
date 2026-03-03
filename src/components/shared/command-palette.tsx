@@ -131,7 +131,7 @@ export function CommandPalette({
                 {onCreateDeal && (
                   <CommandItem
                     onSelect={() => handleSelect(onCreateDeal)}
-                    className="gap-2"
+                    className="cursor-pointer gap-2"
                   >
                     <Plus className="h-4 w-4" />
                     <span>{t('commandPalette.newDeal')}</span>
@@ -140,7 +140,7 @@ export function CommandPalette({
                 {onCreateLead && (
                   <CommandItem
                     onSelect={() => handleSelect(onCreateLead)}
-                    className="gap-2"
+                    className="cursor-pointer gap-2"
                   >
                     <Plus className="h-4 w-4" />
                     <span>{t('commandPalette.newLead')}</span>
@@ -149,7 +149,7 @@ export function CommandPalette({
                 {onCreateTask && (
                   <CommandItem
                     onSelect={() => handleSelect(onCreateTask)}
-                    className="gap-2"
+                    className="cursor-pointer gap-2"
                   >
                     <Plus className="h-4 w-4" />
                     <span>{t('commandPalette.newTask')}</span>
@@ -158,7 +158,7 @@ export function CommandPalette({
                 {onCreateEvent && (
                   <CommandItem
                     onSelect={() => handleSelect(onCreateEvent)}
-                    className="gap-2"
+                    className="cursor-pointer gap-2"
                   >
                     <Plus className="h-4 w-4" />
                     <span>{t('commandPalette.newEvent')}</span>
@@ -177,7 +177,7 @@ export function CommandPalette({
                   onSelect={() =>
                     handleSelect(() => navigate({ to: '/deals' }))
                   }
-                  className="gap-2"
+                  className="cursor-pointer gap-2"
                 >
                   <DollarSign className="h-4 w-4" />
                   <span>{t('commandPalette.dealsPipeline')}</span>
@@ -186,7 +186,7 @@ export function CommandPalette({
                   onSelect={() =>
                     handleSelect(() => navigate({ to: '/leads' }))
                   }
-                  className="gap-2"
+                  className="cursor-pointer gap-2"
                 >
                   <Users className="h-4 w-4" />
                   <span>{t('commandPalette.leads')}</span>
@@ -195,7 +195,7 @@ export function CommandPalette({
                   onSelect={() =>
                     handleSelect(() => navigate({ to: '/companies' }))
                   }
-                  className="gap-2"
+                  className="cursor-pointer gap-2"
                 >
                   <Building2 className="h-4 w-4" />
                   <span>{t('commandPalette.companies')}</span>
@@ -204,7 +204,7 @@ export function CommandPalette({
                   onSelect={() =>
                     handleSelect(() => navigate({ to: '/tasks' }))
                   }
-                  className="gap-2"
+                  className="cursor-pointer gap-2"
                 >
                   <CheckSquare className="h-4 w-4" />
                   <span>{t('commandPalette.tasks')}</span>
@@ -213,7 +213,7 @@ export function CommandPalette({
                   onSelect={() =>
                     handleSelect(() => navigate({ to: '/events' }))
                   }
-                  className="gap-2"
+                  className="cursor-pointer gap-2"
                 >
                   <Calendar className="h-4 w-4" />
                   <span>{t('commandPalette.events')}</span>
@@ -222,7 +222,7 @@ export function CommandPalette({
                   onSelect={() =>
                     handleSelect(() => navigate({ to: '/emails' }))
                   }
-                  className="gap-2"
+                  className="cursor-pointer gap-2"
                 >
                   <Mail className="h-4 w-4" />
                   <span>{t('commandPalette.emails')}</span>
@@ -231,7 +231,7 @@ export function CommandPalette({
                   onSelect={() =>
                     handleSelect(() => navigate({ to: '/products' }))
                   }
-                  className="gap-2"
+                  className="cursor-pointer gap-2"
                 >
                   <Package className="h-4 w-4" />
                   <span>{t('commandPalette.products')}</span>
@@ -240,7 +240,7 @@ export function CommandPalette({
                   onSelect={() =>
                     handleSelect(() => navigate({ to: '/sales-orders' }))
                   }
-                  className="gap-2"
+                  className="cursor-pointer gap-2"
                 >
                   <FileText className="h-4 w-4" />
                   <span>{t('commandPalette.salesOrders')}</span>
@@ -265,7 +265,7 @@ export function CommandPalette({
                         }),
                       )
                     }
-                    className="gap-2"
+                    className="cursor-pointer gap-2"
                   >
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                     <div className="flex-1">
@@ -306,7 +306,7 @@ export function CommandPalette({
                         }),
                       )
                     }
-                    className="gap-2"
+                    className="cursor-pointer gap-2"
                   >
                     <Users className="h-4 w-4 text-muted-foreground" />
                     <div className="flex-1">
@@ -346,7 +346,7 @@ export function CommandPalette({
                         }),
                       )
                     }
-                    className="gap-2"
+                    className="cursor-pointer gap-2"
                   >
                     <Building2 className="h-4 w-4 text-muted-foreground" />
                     <div className="flex-1">
@@ -375,7 +375,7 @@ export function CommandPalette({
                   <CommandItem
                     key={task.id}
                     onSelect={() => handleSelect(() => {})}
-                    className="gap-2"
+                    className="cursor-pointer gap-2"
                   >
                     <CheckSquare className="h-4 w-4 text-muted-foreground" />
                     <div className="flex-1">
