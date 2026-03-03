@@ -332,18 +332,18 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              tooltip="Sales CRM by Docyrus"
+              tooltip="Sales CRM"
               className="cursor-default"
             >
-              <img src="/logo.svg" alt="Docyrus" className="size-8 shrink-0" />
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">
+              <img src="/logo.svg" alt="Docyrus" className="size-5 shrink-0" />
+              <span className="flex items-baseline gap-1 truncate">
+                <span className="text-sm font-semibold">
                   {t('sidebar.appName')}
                 </span>
-                <span className="truncate text-xs text-muted-foreground">
+                <span className="shrink-0 text-xs text-muted-foreground">
                   by Docyrus
                 </span>
-              </div>
+              </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

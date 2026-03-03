@@ -71,7 +71,7 @@ function App() {
               <div className="flex flex-col items-center gap-2 text-center">
                 <img
                   src="/logo.svg"
-                  alt="Sales CRM by Docyrus"
+                  alt="Sales CRM"
                   className="h-12 w-12 mb-2"
                 />
                 <h1 className="text-2xl font-bold">{t('auth.appTitle')}</h1>

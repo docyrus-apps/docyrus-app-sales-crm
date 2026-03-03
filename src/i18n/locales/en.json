@@ -38,7 +38,7 @@
     "dataSources": "Data Sources"
   },
   "sidebar": {
-    "appName": "Sales CRM by Docyrus",
+    "appName": "Sales CRM",
     "appDescription": "by Docyrus",
     "myProfile": "My Profile",
     "changePassword": "Change Password",
@@ -51,7 +51,7 @@
     "loading": "Loading...",
     "redirecting": "Redirecting...",
     "signInWithDocyrus": "Sign in with Docyrus",
-    "appTitle": "Sales CRM by Docyrus",
+    "appTitle": "Sales CRM",
     "appSubtitle": "Sign in to access your account",
     "signedOut": "You've been signed out",
     "signedOutDescription": "You can close this tab or",
