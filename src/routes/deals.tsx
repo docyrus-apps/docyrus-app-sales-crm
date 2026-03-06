@@ -38,7 +38,7 @@ type DealsView = 'board' | 'list'
 export function Deals() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [viewType, setViewType] = useState<DealsView>('list')
+  const [viewType, setViewType] = useState<DealsView>('board')
   const {
     data: deals,
     isLoading,
@@ -213,7 +213,7 @@ export function Deals() {
     viewType === 'board' && (isDealStagesLoading || isBoardLoading)
 
   return (
-    <>
+    <div className="flex min-h-0 flex-1 flex-col">
       <PageHeader
         title={t('deals.title')}
         icon={<DollarSign className="h-4 w-4 text-amber-500" />}
@@ -243,7 +243,11 @@ export function Deals() {
         }
       />
       <PageContainer
-        className={viewType === 'board' ? 'max-w-full overflow-x-auto' : ''}
+        className={
+          viewType === 'board'
+            ? 'flex min-h-0 flex-1 max-w-full flex-col overflow-hidden pb-0'
+            : ''
+        }
       >
         <DealFormDialog
           open={isFormOpen}
@@ -342,6 +346,6 @@ export function Deals() {
           />
         )}
       </PageContainer>
-    </>
+    </div>
   )
 }

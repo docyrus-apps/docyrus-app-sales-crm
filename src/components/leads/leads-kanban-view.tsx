@@ -125,7 +125,6 @@ function getStatusSurfaceStyle(color?: string | null) {
 
   return {
     borderColor: `color-mix(in srgb, ${color} 32%, transparent)`,
-    backgroundColor: `color-mix(in srgb, ${color} 10%, transparent)`,
   }
 }
 
@@ -241,179 +240,204 @@ export function LeadsKanbanView({
   )
 
   return (
-    <Kanban
-      value={columns}
-      onValueChange={setColumns}
-      getItemValue={(item) => item.id ?? ''}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      finalColumns={finalStatuses.map((status) => status.id)}
-      flatCursor
-    >
-      <KanbanBoard className="pb-4">
-        {activeStatuses.map((status) => (
-          <KanbanColumn
-            key={status.id}
-            value={status.id}
-            className="w-80 shrink-0 bg-muted"
-            style={getStatusSurfaceStyle(status.color)}
-          >
-            <div className="flex items-center justify-between rounded-xl border border-border/50 bg-background/65 px-3 py-3 shadow-sm backdrop-blur">
-              <div className="flex min-w-0 items-center gap-2">
-                {status.icon && (
-                  <span
-                    className="flex size-8 shrink-0 items-center justify-center rounded-lg"
-                    style={getStatusIconStyle(status.color)}
-                  >
-                    <DocyrusIcon icon={status.icon} className="size-4" />
-                  </span>
-                )}
-                <div className="min-w-0">
-                  <h3 className="truncate text-sm font-semibold">
-                    {status.name}
-                  </h3>
-                  <p className="text-[11px] text-muted-foreground">
-                    Active status
-                  </p>
-                </div>
-              </div>
-              <Badge variant="secondary" className="text-xs">
-                {columns[status.id]?.length ?? 0}
-              </Badge>
-            </div>
-            {(columns[status.id] ?? []).map((lead) => (
-              <KanbanItem key={lead.id} value={lead.id ?? ''} asHandle>
-                <Link to="/leads/$leadId" params={{ leadId: lead.id ?? '' }}>
-                  <Card className="group relative overflow-hidden rounded-3xl border-border/60 bg-background shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
-                    <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-br from-sky-500/12 via-transparent to-amber-400/12" />
-                    <CardHeader className="relative gap-4 pb-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex min-w-0 items-start gap-3">
-                          <Avatar className="size-12 rounded-2xl ring-1 ring-border/60">
-                            <AvatarImage
-                              src={
-                                typeof getLeadCompany(lead) === 'object'
-                                  ? getLeadCompany(lead)?.company_logo
-                                      ?.signed_url ?? undefined
-                                  : undefined
-                              }
-                              alt={
-                                typeof getLeadCompany(lead) === 'object'
-                                  ? getLeadCompany(lead)?.name ?? 'Company'
-                                  : 'Lead company'
-                              }
-                            />
-                            <AvatarFallback className="rounded-2xl bg-muted text-sm font-semibold text-foreground">
-                              {getInitials(
-                                (typeof getLeadCompany(lead) === 'object'
-                                  ? getLeadCompany(lead)?.name
-                                  : getLeadCompany(lead)) ||
-                                  lead.title ||
-                                  'Lead',
-                              )}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0 space-y-1">
-                            <CardTitle className="truncate text-sm font-semibold tracking-tight">
-                              {lead.title || `Lead #${lead.id?.slice(0, 8) ?? ''}`}
-                            </CardTitle>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <Building2 className="size-3.5" />
-                              <span className="truncate">
-                                {(typeof getLeadCompany(lead) === 'object'
-                                  ? getLeadCompany(lead)?.name
-                                  : getLeadCompany(lead)) || 'Independent lead'}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="rounded-2xl border border-sky-500/20 bg-sky-500/10 px-3 py-2 text-right">
-                          <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.16em] text-sky-700 dark:text-sky-300">
-                            <Sparkles className="size-3.5" />
-                            Source
-                          </div>
-                          <div className="mt-1 text-xs font-semibold text-foreground">
-                            {typeof lead.lead_source === 'object'
-                              ? lead.lead_source.name || 'Inbound'
-                              : lead.lead_source || 'Inbound'}
-                          </div>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="relative space-y-4 pt-0">
-                      <div className="grid gap-2">
-                        <div className="rounded-2xl border border-border/60 bg-muted/70 px-3 py-2">
-                          <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                            <Mail className="size-3.5" />
-                            Email
-                          </div>
-                          <p className="mt-1 truncate text-xs font-medium text-foreground">
-                            {lead.email || 'No email address'}
-                          </p>
-                        </div>
-                        <div className="rounded-2xl border border-border/60 bg-muted/70 px-3 py-2">
-                          <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                            <Globe className="size-3.5" />
-                            Web
-                          </div>
-                          <p className="mt-1 truncate text-xs font-medium text-foreground">
-                            {lead.website || lead.phone || 'No website or phone'}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between gap-2">
-                        <Badge variant="secondary" className="rounded-full px-2.5 py-1">
-                          {typeof lead.lead_type === 'object'
-                            ? lead.lead_type.name || 'Lead'
-                            : lead.lead_type || 'Lead'}
-                        </Badge>
-                        {lead.countries &&
-                          typeof lead.countries === 'object' &&
-                          'name' in lead.countries && (
-                            <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                              {lead.countries.name}
-                            </div>
-                          )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              </KanbanItem>
-            ))}
-          </KanbanColumn>
-        ))}
-      </KanbanBoard>
-      {finalStatuses.length > 0 && (
-        <KanbanFinalZone className="mt-6 flex-wrap pb-4">
-          {finalStatuses.map((status) => (
-            <KanbanFinalColumn
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <Kanban
+        value={columns}
+        onValueChange={setColumns}
+        getItemValue={(item) => item.id ?? ''}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        finalColumns={finalStatuses.map((status) => status.id)}
+        flatCursor
+      >
+        <KanbanBoard className="min-h-0 flex-1 overflow-x-auto overflow-y-hidden pb-4">
+          {activeStatuses.map((status) => (
+            <KanbanColumn
               key={status.id}
               value={status.id}
-              className="min-h-28 min-w-64 shrink-0"
+              className="flex h-full min-h-0 w-80 shrink-0 overflow-hidden bg-muted"
               style={getStatusSurfaceStyle(status.color)}
             >
-              <div className="flex flex-col items-center gap-3 text-center">
-                {status.icon && (
-                  <span
-                    className="flex size-10 items-center justify-center rounded-xl"
-                    style={getStatusIconStyle(status.color)}
-                  >
-                    <DocyrusIcon icon={status.icon} className="size-5" />
-                  </span>
-                )}
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold">{status.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Drop a lead here to mark it as final.
-                  </p>
+              <div className="flex items-center justify-between rounded-xl border border-border/50 bg-background/65 px-3 py-3 shadow-sm backdrop-blur">
+                <div className="flex min-w-0 items-center gap-2">
+                  {status.icon && (
+                    <span
+                      className="flex size-8 shrink-0 items-center justify-center rounded-lg"
+                      style={getStatusIconStyle(status.color)}
+                    >
+                      <DocyrusIcon icon={status.icon} className="size-4" />
+                    </span>
+                  )}
+                  <div className="min-w-0">
+                    <h3 className="truncate text-sm font-semibold">
+                      {status.name}
+                    </h3>
+                    <p className="text-[11px] text-muted-foreground">
+                      Active status
+                    </p>
+                  </div>
+                </div>
+                <Badge variant="secondary" className="text-xs">
+                  {columns[status.id]?.length ?? 0}
+                </Badge>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-1">
+                <div className="flex min-h-full flex-col gap-2">
+                  {(columns[status.id] ?? []).map((lead) => {
+                    const company = getLeadCompany(lead)
+                    const companyName =
+                      (typeof company === 'object' ? company?.name : company) ||
+                      'Independent lead'
+                    const companyLogo =
+                      typeof company === 'object'
+                        ? (company?.company_logo?.signed_url ?? undefined)
+                        : undefined
+                    const leadSource =
+                      lead.lead_source && typeof lead.lead_source === 'object'
+                        ? lead.lead_source.name || 'Inbound'
+                        : lead.lead_source || 'Inbound'
+                    const leadType =
+                      lead.lead_type && typeof lead.lead_type === 'object'
+                        ? lead.lead_type.name || 'Lead'
+                        : lead.lead_type || 'Lead'
+
+                    return (
+                      <KanbanItem
+                        key={lead.id}
+                        value={lead.id ?? ''}
+                        asHandle
+                        className="min-w-0"
+                      >
+                        <Link
+                          to="/leads/$leadId"
+                          params={{ leadId: lead.id ?? '' }}
+                          className="block min-w-0"
+                        >
+                          <Card className="group relative w-full min-w-0 overflow-hidden rounded-3xl border-border/60 bg-background shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+                            <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-br from-sky-500/12 via-transparent to-amber-400/12" />
+                            <CardHeader className="relative gap-4 pb-3">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex min-w-0 items-start gap-3">
+                                  <Avatar className="size-12 rounded-2xl ring-1 ring-border/60">
+                                    <AvatarImage
+                                      src={companyLogo}
+                                      alt={
+                                        typeof company === 'object'
+                                          ? (company?.name ?? 'Company')
+                                          : 'Lead company'
+                                      }
+                                    />
+                                    <AvatarFallback className="rounded-2xl bg-muted text-sm font-semibold text-foreground">
+                                      {getInitials(
+                                        companyName || lead.title || 'Lead',
+                                      )}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="min-w-0 space-y-1">
+                                    <CardTitle className="truncate text-sm font-semibold tracking-tight">
+                                      {lead.title ||
+                                        `Lead #${lead.id?.slice(0, 8) ?? ''}`}
+                                    </CardTitle>
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                      <Building2 className="size-3.5 shrink-0" />
+                                      <span className="truncate">
+                                        {companyName}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="shrink-0 rounded-2xl border border-sky-500/20 bg-sky-500/10 px-3 py-2 text-right">
+                                  <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.16em] text-sky-700 dark:text-sky-300">
+                                    <Sparkles className="size-3.5" />
+                                    Source
+                                  </div>
+                                  <div className="mt-1 text-xs font-semibold text-foreground">
+                                    {leadSource}
+                                  </div>
+                                </div>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="relative space-y-4 pt-0">
+                              <div className="grid gap-2">
+                                <div className="rounded-2xl border border-border/60 bg-muted/70 px-3 py-2">
+                                  <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                                    <Mail className="size-3.5 shrink-0" />
+                                    Email
+                                  </div>
+                                  <p className="mt-1 truncate text-xs font-medium text-foreground">
+                                    {lead.email || 'No email address'}
+                                  </p>
+                                </div>
+                                <div className="rounded-2xl border border-border/60 bg-muted/70 px-3 py-2">
+                                  <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                                    <Globe className="size-3.5 shrink-0" />
+                                    Web
+                                  </div>
+                                  <p className="mt-1 truncate text-xs font-medium text-foreground">
+                                    {lead.website ||
+                                      lead.phone ||
+                                      'No website or phone'}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between gap-2">
+                                <Badge
+                                  variant="secondary"
+                                  className="min-w-0 rounded-full px-2.5 py-1"
+                                >
+                                  <span className="truncate">{leadType}</span>
+                                </Badge>
+                                {lead.countries &&
+                                  typeof lead.countries === 'object' &&
+                                  'name' in lead.countries && (
+                                    <div className="truncate text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                                      {lead.countries.name}
+                                    </div>
+                                  )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </Link>
+                      </KanbanItem>
+                    )
+                  })}
                 </div>
               </div>
-            </KanbanFinalColumn>
+            </KanbanColumn>
           ))}
-        </KanbanFinalZone>
-      )}
-      <KanbanOverlay />
-    </Kanban>
+        </KanbanBoard>
+        {finalStatuses.length > 0 && (
+          <KanbanFinalZone className="shrink-0 gap-3 overflow-x-auto border-t bg-background/95 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+            {finalStatuses.map((status) => (
+              <KanbanFinalColumn
+                key={status.id}
+                value={status.id}
+                className="min-h-28 min-w-64 shrink-0 bg-muted"
+                style={getStatusSurfaceStyle(status.color)}
+              >
+                <div className="flex flex-col items-center gap-3 text-center">
+                  {status.icon && (
+                    <span
+                      className="flex size-10 items-center justify-center rounded-xl"
+                      style={getStatusIconStyle(status.color)}
+                    >
+                      <DocyrusIcon icon={status.icon} className="size-5" />
+                    </span>
+                  )}
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold">{status.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Drop a lead here to mark it as final.
+                    </p>
+                  </div>
+                </div>
+              </KanbanFinalColumn>
+            ))}
+          </KanbanFinalZone>
+        )}
+        <KanbanOverlay />
+      </Kanban>
+    </div>
   )
 }

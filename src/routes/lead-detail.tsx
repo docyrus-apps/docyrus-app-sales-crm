@@ -1,22 +1,52 @@
-import { useState } from 'react'
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
+import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Pencil } from 'lucide-react'
+import {
+  ArrowLeft,
+  FileText,
+  MessageSquare,
+  Pencil,
+  Activity,
+  ClipboardList,
+} from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
 import { Button } from '@/components/animate-ui/components/buttons/button'
 import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+  Tabs,
+  TabsContent,
+  TabsContents,
+  TabsList,
+  TabsTrigger,
+} from '@/components/animate-ui/components/radix/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useLead } from '@/hooks/use-leads'
 import { LeadFormDialog } from '@/components/leads/lead-form-dialog'
 import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
+import { ContactActivityPanel } from '@/components/docyrus/contact-activity-panel'
+import {
+  EditableRecordDetail,
+  EditableRecordDetailField,
+  type RecordDetailField,
+} from '@/components/docyrus/editable-record-detail'
+import type { IField } from '@/components/docyrus/form-fields/types'
+
+function makeField(
+  slug: string,
+  name: string,
+  type: IField['type'] = 'field-text',
+): IField {
+  return { id: slug, name, slug, type }
+}
+
+function extractName(value: unknown): unknown {
+  if (value && typeof value === 'object' && 'name' in value)
+    return (value as { name: string }).name
+  return value
+}
 
 export function LeadDetail() {
   const { t } = useTranslation()
@@ -29,6 +59,89 @@ export function LeadDetail() {
   const handleTabChange = (value: string) => {
     void navigate({ search: { tab: value }, replace: true })
   }
+
+  const fields = useMemo<Array<RecordDetailField>>(
+    () => [
+      { field: makeField('title', t('leads.titleLabel')), readOnly: true },
+      {
+        field: makeField('lead_status', t('leads.status')),
+        readOnly: true,
+      },
+      {
+        field: makeField('email', t('leads.email'), 'field-email'),
+        readOnly: true,
+      },
+      {
+        field: makeField('phone', t('leads.phone'), 'field-phone'),
+        readOnly: true,
+      },
+      { field: makeField('website', t('leads.website')), readOnly: true },
+      {
+        field: makeField('lead_source', t('leads.source')),
+        readOnly: true,
+      },
+      {
+        field: makeField('lead_type', t('leads.leadType')),
+        readOnly: true,
+      },
+      {
+        field: makeField('company_name', t('leads.company')),
+        readOnly: true,
+      },
+      { field: makeField('address', t('leads.address')), readOnly: true },
+      {
+        field: makeField('city', t('leads.city', { defaultValue: 'City' })),
+        readOnly: true,
+      },
+      {
+        field: makeField('state', t('leads.state', { defaultValue: 'State' })),
+        readOnly: true,
+      },
+      {
+        field: makeField(
+          'country',
+          t('leads.country', { defaultValue: 'Country' }),
+        ),
+        readOnly: true,
+      },
+      {
+        field: makeField(
+          'record_owner',
+          t('leads.owner', { defaultValue: 'Owner' }),
+        ),
+        readOnly: true,
+      },
+      {
+        field: makeField(
+          'contact_message',
+          t('leads.message'),
+          'field-textarea',
+        ),
+        readOnly: true,
+      },
+    ],
+    [t],
+  )
+
+  const record = useMemo(() => {
+    if (!lead) return {}
+    return {
+      title: lead.title ?? '',
+      lead_status: extractName(lead.lead_status) ?? '',
+      email: lead.email ?? '',
+      phone: lead.phone ?? '',
+      website: lead.website ?? '',
+      lead_source: extractName(lead.lead_source) ?? '',
+      lead_type: extractName(lead.lead_type) ?? '',
+      company_name: extractName(lead.company_name) ?? '',
+      address: lead.address ?? '',
+      city: extractName(lead.city) ?? '',
+      state: extractName(lead.state) ?? '',
+      country: extractName(lead.countries) ?? '',
+      record_owner: extractName(lead.record_owner) ?? '',
+      contact_message: lead.contact_message ?? '',
+    }
+  }, [lead])
 
   if (isLoading) {
     return (
@@ -62,206 +175,115 @@ export function LeadDetail() {
     )
   }
 
+  const statusName =
+    lead.lead_status && typeof lead.lead_status === 'object'
+      ? lead.lead_status.name
+      : lead.lead_status
+
   return (
     <PageContainer>
-      <div className="mb-6">
-        <Link to="/leads">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t('leads.backToLeads')}
-          </Button>
-        </Link>
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Link to="/leads">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {t('leads.backToLeads')}
+            </Button>
+          </Link>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-semibold">
+              {lead.title ||
+                t('leads.untitledLead', { defaultValue: 'Untitled Lead' })}
+            </h1>
+            {statusName && <Badge variant="secondary">{statusName}</Badge>}
+          </div>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => setIsEditOpen(true)}>
+          <Pencil className="mr-2 h-3.5 w-3.5" />
+          {t('common.editAll', { defaultValue: 'Edit All' })}
+        </Button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left Panel */}
-        <div className="space-y-4">
-          <Card className="group">
-            <CardHeader>
-              <CardTitle>{t('leads.leadDetails')}</CardTitle>
-              <CardAction>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100"
-                  onClick={() => setIsEditOpen(true)}
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                </Button>
-              </CardAction>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <div className="text-sm font-medium text-muted-foreground">
-                  {t('leads.titleLabel')}
-                </div>
-                <div className="mt-1 font-medium">
-                  {lead.title || t('common.na')}
-                </div>
-              </div>
+      <Tabs
+        value={tab || 'details'}
+        onValueChange={handleTabChange}
+        className="w-full"
+      >
+        <TabsList>
+          <TabsTrigger value="details">
+            <ClipboardList className="h-4 w-4" />
+            {t('leads.tabs.overview')}
+          </TabsTrigger>
+          <TabsTrigger value="activity">
+            <Activity className="h-4 w-4" />
+            {t('leads.tabs.activity')}
+          </TabsTrigger>
+          <TabsTrigger value="comments">
+            <MessageSquare className="h-4 w-4" />
+            {t('leads.tabs.comments')}
+          </TabsTrigger>
+          <TabsTrigger value="files">
+            <FileText className="h-4 w-4" />
+            {t('leads.tabs.files')}
+          </TabsTrigger>
+        </TabsList>
 
-              {lead.lead_status && (
-                <div>
-                  <div className="text-sm font-medium text-muted-foreground">
-                    {t('leads.status')}
-                  </div>
-                  <div className="mt-1">
-                    {typeof lead.lead_status === 'object'
-                      ? lead.lead_status.name
-                      : lead.lead_status}
-                  </div>
-                </div>
-              )}
-
-              {lead.email && (
-                <div>
-                  <div className="text-sm font-medium text-muted-foreground">
-                    {t('leads.email')}
-                  </div>
-                  <div className="mt-1">{lead.email}</div>
-                </div>
-              )}
-
-              {lead.phone && (
-                <div>
-                  <div className="text-sm font-medium text-muted-foreground">
-                    {t('leads.phone')}
-                  </div>
-                  <div className="mt-1">{lead.phone}</div>
-                </div>
-              )}
-
-              {lead.lead_source && (
-                <div>
-                  <div className="text-sm font-medium text-muted-foreground">
-                    {t('leads.source')}
-                  </div>
-                  <div className="mt-1">
-                    {typeof lead.lead_source === 'object'
-                      ? lead.lead_source.name
-                      : lead.lead_source}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {lead.company_name && typeof lead.company_name === 'object' && (
+        <TabsContents>
+          <TabsContent value="details" className="mt-4">
             <Card>
-              <CardHeader>
-                <CardTitle>{t('leads.company')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-sm font-medium">
-                  {(lead.company_name as any).name || t('common.na')}
-                </div>
+              <CardContent className="pt-6">
+                <EditableRecordDetail fields={fields} record={record} readOnly>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                    <EditableRecordDetailField slug="title" />
+                    <EditableRecordDetailField slug="lead_status" />
+                    <EditableRecordDetailField slug="email" />
+                    <EditableRecordDetailField slug="phone" />
+                    <EditableRecordDetailField slug="website" />
+                    <EditableRecordDetailField slug="lead_source" />
+                    <EditableRecordDetailField slug="lead_type" />
+                    <EditableRecordDetailField slug="company_name" />
+                    <EditableRecordDetailField slug="address" />
+                    <EditableRecordDetailField slug="city" />
+                    <EditableRecordDetailField slug="state" />
+                    <EditableRecordDetailField slug="country" />
+                    <EditableRecordDetailField slug="record_owner" />
+                  </div>
+                  {record.contact_message && (
+                    <div className="mt-4 pt-4 border-t">
+                      <EditableRecordDetailField slug="contact_message" />
+                    </div>
+                  )}
+                </EditableRecordDetail>
               </CardContent>
             </Card>
-          )}
-        </div>
+          </TabsContent>
 
-        {/* Right Panel - Tabs */}
-        <div className="lg:col-span-2">
-          <Tabs value={tab} onValueChange={handleTabChange} className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="overview">
-                {t('leads.tabs.overview')}
-              </TabsTrigger>
-              <TabsTrigger value="activity">
-                {t('leads.tabs.activity')}
-              </TabsTrigger>
-              <TabsTrigger value="comments">
-                {t('leads.tabs.comments')}
-              </TabsTrigger>
-              <TabsTrigger value="files">{t('leads.tabs.files')}</TabsTrigger>
-            </TabsList>
+          <TabsContent value="activity" className="mt-4">
+            <ContactActivityPanel
+              activities={[]}
+              contactName={lead.title}
+              isLoading={false}
+            />
+          </TabsContent>
 
-            <TabsContent value="overview" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t('leads.leadInformation')}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <div className="text-sm font-medium text-muted-foreground">
-                        {t('leads.leadType')}
-                      </div>
-                      <div className="mt-1">
-                        {lead.lead_type
-                          ? typeof lead.lead_type === 'object'
-                            ? lead.lead_type.name
-                            : lead.lead_type
-                          : t('common.na')}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-muted-foreground">
-                        {t('leads.website')}
-                      </div>
-                      <div className="mt-1">
-                        {lead.website || t('common.na')}
-                      </div>
-                    </div>
-                  </div>
+          <TabsContent value="comments" className="mt-4">
+            <CommentsPanel
+              appSlug="base_crm"
+              dataSource="leads"
+              recordId={leadId!}
+            />
+          </TabsContent>
 
-                  {lead.address && (
-                    <div>
-                      <div className="text-sm font-medium text-muted-foreground">
-                        {t('leads.address')}
-                      </div>
-                      <div className="mt-1">{lead.address}</div>
-                      {lead.city && (
-                        <div className="text-sm">
-                          {lead.city}, {lead.state}
-                        </div>
-                      )}
-                    </div>
-                  )}
+          <TabsContent value="files" className="mt-4">
+            <FileAttachments
+              appSlug="base_crm"
+              dataSource="leads"
+              recordId={leadId!}
+            />
+          </TabsContent>
+        </TabsContents>
+      </Tabs>
 
-                  {lead.contact_message && (
-                    <div>
-                      <div className="text-sm font-medium text-muted-foreground">
-                        {t('leads.message')}
-                      </div>
-                      <div className="mt-1 text-sm">{lead.contact_message}</div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="activity" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t('leads.activity.title')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    {t('leads.activity.empty')}
-                  </p>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="comments" className="mt-4">
-              <CommentsPanel
-                appSlug="base_crm"
-                dataSource="leads"
-                recordId={leadId!}
-              />
-            </TabsContent>
-
-            <TabsContent value="files" className="mt-4">
-              <FileAttachments
-                appSlug="base_crm"
-                dataSource="leads"
-                recordId={leadId!}
-              />
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
       <LeadFormDialog
         open={isEditOpen}
         onOpenChange={setIsEditOpen}

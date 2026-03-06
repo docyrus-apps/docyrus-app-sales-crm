@@ -651,8 +651,8 @@ export function Dashboard() {
                       <div className="flex items-center justify-between hover:bg-muted p-2 rounded-md transition-colors">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">
-                            {typeof deal.organizations === 'object'
-                              ? deal.organizations.name
+                            {typeof deal.organization === 'object'
+                              ? deal.organization.name
                               : 'Deal'}
                           </p>
                           <p className="text-xs text-muted-foreground">

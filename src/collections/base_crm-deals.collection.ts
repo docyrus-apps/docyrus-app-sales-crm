@@ -61,8 +61,8 @@ export interface BaseCrmDealsEntity {
   /** Country */
   country?: { id: string; name: string } | string
 
-  /** Organizations */
-  organizations?: { id: string; name: string } | string
+  /** Organization */
+  organization?: { id: string; name: string } | string
 
   /** Contact Person */
   contact_person?: { id: string; name: string } | string

@@ -84,7 +84,7 @@ function ensurePinnedStartColumns(view: SavedDataGridView): SavedDataGridView {
 export function Leads() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [viewType, setViewType] = useState<LeadsView>('list')
+  const [viewType, setViewType] = useState<LeadsView>('board')
   const {
     data: leads,
     isLoading,
@@ -313,7 +313,7 @@ export function Leads() {
     viewType === 'board' && (isLeadStatusesLoading || isBoardLoading)
 
   return (
-    <>
+    <div className="flex min-h-0 flex-1 flex-col">
       <PageHeader
         title={t('leads.title')}
         icon={<UserRoundSearch className="h-4 w-4 text-sky-500" />}
@@ -343,7 +343,11 @@ export function Leads() {
         }
       />
       <PageContainer
-        className={viewType === 'board' ? 'max-w-full overflow-x-auto' : ''}
+        className={
+          viewType === 'board'
+            ? 'flex min-h-0 flex-1 max-w-full flex-col overflow-hidden pb-0'
+            : ''
+        }
       >
         <LeadFormDialog
           open={isFormOpen}
@@ -463,6 +467,6 @@ export function Leads() {
           />
         )}
       </PageContainer>
-    </>
+    </div>
   )
 }

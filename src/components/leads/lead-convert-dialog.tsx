@@ -49,7 +49,7 @@ export function LeadConvertDialog({
     try {
       // Map lead data to deal data
       const dealData = {
-        organizations:
+        organization:
           typeof lead.company_name === 'object'
             ? lead.company_name.id
             : lead.company_name || '',

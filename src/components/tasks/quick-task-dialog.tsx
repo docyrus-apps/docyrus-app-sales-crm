@@ -97,9 +97,9 @@ function getInitials(name: string) {
 }
 
 function getOrganizationId(deal: any) {
-  return typeof deal.organizations === 'object'
-    ? deal.organizations.id
-    : deal.organizations
+  return typeof deal.organization === 'object'
+    ? deal.organization.id
+    : deal.organization
 }
 
 function getDealLabel(deal: any) {
@@ -189,7 +189,7 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
       'stage',
       'deal_value',
       'expected_revenue',
-      'organizations(id,name)',
+      'organization(id,name)',
       'created_on',
     ],
     orderBy: 'created_on DESC',

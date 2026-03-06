@@ -69,9 +69,9 @@ export function CommandPalette({
       ?.filter((deal: any) => {
         if (!search) return false
         const orgName =
-          deal.organizations && typeof deal.organizations === 'object'
-            ? deal.organizations.name || ''
-            : deal.organizations || ''
+          deal.organization && typeof deal.organization === 'object'
+            ? deal.organization.name || ''
+            : deal.organization || ''
         return orgName.toLowerCase().includes(search.toLowerCase())
       })
       .slice(0, 5) || []
@@ -271,9 +271,9 @@ export function CommandPalette({
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span>
-                          {deal.organizations &&
-                          typeof deal.organizations === 'object'
-                            ? deal.organizations.name
+                          {deal.organization &&
+                          typeof deal.organization === 'object'
+                            ? deal.organization.name
                             : 'Deal'}
                         </span>
                         {deal.stage && (

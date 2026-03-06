@@ -47,7 +47,7 @@ export function ActivityProductivityTab({
     columns: [
       'id',
       'deal_value',
-      'organizations(id,name)',
+      'organization(id,name)',
       'country(id,name)',
       'created_on',
     ],
@@ -104,9 +104,9 @@ export function ActivityProductivityTab({
 
     for (const deal of deals as Array<any>) {
       const companyName =
-        typeof deal.organizations === 'object'
-          ? deal.organizations?.name
-          : deal.organizations || 'Unknown'
+        typeof deal.organization === 'object'
+          ? deal.organization?.name
+          : deal.organization || 'Unknown'
       if (!companyMap[companyName]) {
         companyMap[companyName] = {
           company: companyName,

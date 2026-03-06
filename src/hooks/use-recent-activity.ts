@@ -48,7 +48,7 @@ export function useRecentActivity({ limit = 20 }: { limit?: number } = {}) {
         dealsCollection.list({
           columns: [
             'id',
-            'organizations(name)',
+            'organization(name)',
             'stage',
             'last_modified_on',
             'last_modified_by(firstname,lastname)',
@@ -87,7 +87,7 @@ export function useRecentActivity({ limit = 20 }: { limit?: number } = {}) {
         items.push({
           id: deal.id,
           type: 'deal',
-          title: getNestedName(d.organizations) || 'Untitled Deal',
+          title: getNestedName(d.organization) || 'Untitled Deal',
           subtitle: getNestedName(d.stage),
           modifiedOn: getString(d.last_modified_on),
           modifiedBy: getFullName(d.last_modified_by),

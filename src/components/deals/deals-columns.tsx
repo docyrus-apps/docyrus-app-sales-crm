@@ -28,11 +28,11 @@ export function getDealsColumns(): Array<ColumnDef<any>> {
       size: 180,
     },
     {
-      id: 'organizations',
+      id: 'organization',
       accessorFn: (row) =>
-        typeof row.organizations === 'object'
-          ? (row.organizations?.name ?? '')
-          : (row.organizations ?? ''),
+        typeof row.organization === 'object'
+          ? (row.organization?.name ?? '')
+          : (row.organization ?? ''),
       header: 'Company',
       meta: { cell: { variant: 'short-text' } },
       enableSorting: true,

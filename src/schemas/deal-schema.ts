@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 export const dealFormSchema = z.object({
-  organizations: z.string().min(1, 'Organization is required'),
+  organization: z.string().min(1, 'Organization is required'),
   contact_person: z.string().optional(),
   stage: z.string().min(1, 'Stage is required'),
   deal_value: z.number().min(0, 'Deal value must be positive').optional(),

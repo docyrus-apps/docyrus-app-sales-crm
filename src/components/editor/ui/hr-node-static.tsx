@@ -1,0 +1,15 @@
+// @ts-nocheck
+import type { SlateElementProps } from 'platejs/static'
+
+import { SlateElement } from 'platejs/static'
+
+export function HrElementStatic(props: SlateElementProps) {
+  return (
+    <SlateElement {...props}>
+      <div className="py-6" contentEditable={false}>
+        <hr className="h-0.5 rounded-sm border-none bg-muted bg-clip-content" />
+      </div>
+      {props.children}
+    </SlateElement>
+  )
+}

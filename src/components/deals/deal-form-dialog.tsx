@@ -64,10 +64,10 @@ export function DealFormDialog({
 
   const form = useForm<DealFormData>({
     defaultValues: {
-      organizations:
-        deal?.organizations && typeof deal.organizations === 'object'
-          ? deal.organizations.id
-          : deal?.organizations || '',
+      organization:
+        deal?.organization && typeof deal.organization === 'object'
+          ? deal.organization.id
+          : deal?.organization || '',
       contact_person:
         deal?.contact_person && typeof deal.contact_person === 'object'
           ? deal.contact_person.id
@@ -174,7 +174,7 @@ export function DealFormDialog({
         <AwesomeDialogBody className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             {/* Organization Field */}
-            <form.Field name="organizations">
+            <form.Field name="organization">
               {(field) => (
                 <Field>
                   <Label htmlFor={field.name}>
