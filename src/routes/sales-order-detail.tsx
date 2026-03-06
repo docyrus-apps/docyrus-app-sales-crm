@@ -1,15 +1,41 @@
+import { useMemo } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import { ArrowLeft } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import {
+  PricingEnginePanel,
+  type ILineItem,
+} from '@/components/docyrus/pricing-engine-panel'
+import {
+  bankersRound,
+  buildLineItemRows,
+  calculateTotals,
+} from '@/components/docyrus/pricing-engine-panel/lib/calculations'
 import { PageContainer } from '@/components/layout/page-container'
 import { Button } from '@/components/animate-ui/components/buttons/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSalesOrder } from '@/hooks/use-sales-orders'
 import { useSalesOrderItems } from '@/hooks/use-sales-order-items'
+import { UI_I18N_LOCALES, type UiI18nLocale } from '@/lib/ui-i18n'
+
+function getRelationName(
+  value?: { name?: string } | string | null,
+): string | undefined {
+  if (!value) return undefined
+  if (typeof value === 'object') return value.name
+
+  return value
+}
+
+function getRelationId(value?: { id?: string } | string | null): string | null {
+  if (!value || typeof value !== 'object') return null
+
+  return value.id ?? null
+}
 
 export function SalesOrderDetail() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { orderId } = useParams({ strict: false })
   const { data: order, isLoading, error } = useSalesOrder(orderId)
 
@@ -25,6 +51,7 @@ export function SalesOrderDetail() {
             'discount',
             'tax_rate',
             'total',
+            'gross_total',
             'net_total',
           ],
           filters: {
@@ -36,10 +63,108 @@ export function SalesOrderDetail() {
               },
             ],
           },
-          orderBy: 'created_on desc',
+          orderBy: 'created_on asc',
         }
       : undefined,
   )
+
+  const locale = useMemo<UiI18nLocale | undefined>(() => {
+    const language = i18n.resolvedLanguage?.split('-')[0]
+
+    if (language && UI_I18N_LOCALES.includes(language as UiI18nLocale)) {
+      return language as UiI18nLocale
+    }
+
+    return undefined
+  }, [i18n.resolvedLanguage])
+
+  const pricingDocument = useMemo(() => {
+    const pricingLineItems: Array<ILineItem> = (lineItems ?? []).map(
+      (item: any, index) => ({
+        id: item.id,
+        position: index,
+        productId: getRelationId(item.product),
+        categoryId: getRelationId(item.category),
+        name: getRelationName(item.product) || t('common.na'),
+        category: getRelationName(item.category) || '',
+        quantity: Number(item.qty ?? 0),
+        unitPrice: Number(item.unit_price ?? 0),
+        vatRate: Number(item.tax_rate ?? 0),
+        discountPercent: Number(item.discount ?? 0),
+      }),
+    )
+
+    const enableVat =
+      pricingLineItems.some((item) => item.vatRate > 0) ||
+      Number(order?.tax_total ?? 0) > 0
+
+    const vatRates = Array.from(
+      new Set(
+        pricingLineItems
+          .map((item) => item.vatRate)
+          .filter((rate) => Number.isFinite(rate)),
+      ),
+    ).sort((left, right) => left - right)
+
+    if (vatRates.length === 0) {
+      vatRates.push(0)
+    }
+
+    const config = {
+      showVatColumn: enableVat,
+      showDiscountColumn: pricingLineItems.some(
+        (item) => item.discountPercent > 0,
+      ),
+      showGrossColumn: true,
+      showCategoryColumn: pricingLineItems.some(
+        (item) => item.category.length > 0,
+      ),
+      discountBeforeVat: true,
+      enableVat,
+      enableLineDiscount: true,
+      enableGlobalDiscount: false,
+      enableAdjustment: false,
+      defaultVatRate: vatRates[vatRates.length - 1] ?? 0,
+      vatRates,
+      viewMode: 'net' as const,
+    }
+
+    const calculatedTotals = calculateTotals(
+      buildLineItemRows(pricingLineItems, config),
+      0,
+      0,
+      config,
+    )
+
+    const adjustment = bankersRound(
+      Number(order?.grand_total ?? 0) - calculatedTotals.grandTotal,
+    )
+
+    const hasAdjustment = adjustment !== 0
+
+    return {
+      lineItems: pricingLineItems,
+      globalDiscountPercent: 0,
+      adjustment,
+      currency: {
+        code: 'USD',
+        secondaryCurrencyCode: null,
+        exchangeRate: 1,
+      },
+      config: {
+        ...config,
+        enableAdjustment: hasAdjustment,
+      },
+      description: '',
+      termsAndConditions: '',
+      status: 'saved' as const,
+      totals: {
+        ...calculatedTotals,
+        adjustment,
+        grandTotal: bankersRound(calculatedTotals.grandTotal + adjustment),
+      },
+    }
+  }, [lineItems, order?.grand_total, order?.tax_total, t])
 
   if (isLoading) {
     return (
@@ -124,86 +249,36 @@ export function SalesOrderDetail() {
           </CardHeader>
           <CardContent>
             {itemsLoading ? (
-              <div className="space-y-3">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-              </div>
-            ) : !lineItems?.length ? (
-              <p className="text-sm text-muted-foreground">
-                {t('salesOrders.noLineItems')}
-              </p>
+              <Skeleton className="h-[32rem] w-full" />
             ) : (
-              <div className="space-y-3">
-                {lineItems.map((item: any) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between rounded-lg border p-3"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="font-medium">
-                        {typeof item.product === 'object'
-                          ? item.product.name
-                          : item.product || t('common.na')}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {typeof item.category === 'object'
-                          ? item.category.name
-                          : item.category || ''}
-                        {item.category ? ' · ' : ''}
-                        {t('salesOrders.qty')}: {item.qty} &times; $
-                        {item.unit_price?.toLocaleString()}
-                        {item.discount ? ` (-${item.discount}%)` : ''}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold">
-                        $
-                        {item.net_total?.toLocaleString() ??
-                          item.total?.toLocaleString() ??
-                          '0'}
-                      </div>
-                      {item.tax_rate != null && (
-                        <div className="text-sm text-muted-foreground">
-                          {t('salesOrders.tax')}: {item.tax_rate}%
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <PricingEnginePanel
+                value={pricingDocument}
+                defaultValue={pricingDocument}
+                title={t('salesOrders.salesOrderTitle', { id: order.id })}
+                locale={locale}
+                readOnly
+                showActions={false}
+                showDescription={false}
+                showTerms={false}
+                showVatColumn={pricingDocument.config.showVatColumn}
+                showDiscountColumn={pricingDocument.config.showDiscountColumn}
+                showGrossColumn={pricingDocument.config.showGrossColumn}
+                showCategoryColumn={pricingDocument.config.showCategoryColumn}
+                discountBeforeVat={pricingDocument.config.discountBeforeVat}
+                enableVat={pricingDocument.config.enableVat}
+                enableLineDiscount={pricingDocument.config.enableLineDiscount}
+                enableGlobalDiscount={
+                  pricingDocument.config.enableGlobalDiscount
+                }
+                enableAdjustment={pricingDocument.config.enableAdjustment}
+                defaultVatRate={pricingDocument.config.defaultVatRate}
+                vatRates={pricingDocument.config.vatRates}
+                defaultCurrency={pricingDocument.currency.code}
+                viewMode={pricingDocument.config.viewMode}
+                size="full"
+                variant="bordered"
+              />
             )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('salesOrders.orderTotals')}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">
-                {t('salesOrders.subtotal')}
-              </span>
-              <span className="font-medium">
-                ${order.sub_total?.toLocaleString() || '0.00'}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">
-                {t('salesOrders.taxTotal')}
-              </span>
-              <span className="font-medium">
-                ${order.tax_total?.toLocaleString() || '0.00'}
-              </span>
-            </div>
-            <div className="flex justify-between border-t pt-2">
-              <span className="font-semibold">
-                {t('salesOrders.grandTotal')}
-              </span>
-              <span className="text-lg font-bold">
-                ${order.grand_total?.toLocaleString() || '0.00'}
-              </span>
-            </div>
           </CardContent>
         </Card>
       </div>

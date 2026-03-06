@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useId, useMemo, useState } from 'react';
 
 import {
   Check, ChevronRight, ChevronsUpDown, FolderTree
@@ -171,6 +171,7 @@ export function PricingCategoryCell({ lineId, category, categoryId }: PricingCat
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const treeId = useId();
 
   const tree = useMemo(
     () => categoryCatalog ? buildCategoryTree(categoryCatalog) : [],
@@ -226,6 +227,8 @@ export function PricingCategoryCell({ lineId, category, categoryId }: PricingCat
             variant="ghost"
             role="combobox"
             aria-expanded={open}
+            aria-controls={treeId}
+            aria-haspopup="tree"
             className="h-8 w-[120px] justify-between px-2 font-normal shadow-none">
             <span className={cn('truncate', !selectedName && 'text-muted-foreground')}>
               {selectedName ?? (category || tUi(locale, 'pepSelectCategory'))}
@@ -233,7 +236,7 @@ export function PricingCategoryCell({ lineId, category, categoryId }: PricingCat
             <ChevronsUpDown className="ml-1 h-3.5 w-3.5 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[240px] p-0" align="start">
+        <PopoverContent id={treeId} className="w-[240px] p-0" align="start">
           <div className="border-b p-2">
             <Input
               placeholder={tUi(locale, 'pepSearchCategories')}

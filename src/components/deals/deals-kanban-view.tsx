@@ -283,10 +283,10 @@ export function DealsKanbanView({
             <KanbanColumn
               key={status.id}
               value={status.id}
-              className="flex h-full min-h-0 w-80 shrink-0 overflow-hidden bg-muted"
+              className="flex h-full min-h-0 w-80 shrink-0 overflow-hidden bg-primary-foreground"
               style={getStatusSurfaceStyle(status.color)}
             >
-              <div className="flex items-center justify-between rounded-xl border border-border/50 bg-background/65 px-3 py-3 shadow-sm backdrop-blur">
+              <div className="flex items-center justify-between gap-3 border-b border-border/60 px-3 pb-3">
                 <div className="flex min-w-0 items-center gap-2">
                   {status.icon && (
                     <span
@@ -309,7 +309,7 @@ export function DealsKanbanView({
                   {columns[status.id]?.length ?? 0}
                 </Badge>
               </div>
-              <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-1">
+              <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pl-2 pr-1">
                 <div className="flex min-h-full flex-col gap-2">
                   {(columns[status.id] ?? []).map((deal) => {
                     const organization = getDealOrganization(deal)
@@ -343,54 +343,50 @@ export function DealsKanbanView({
                           params={{ dealId: deal.id ?? '' }}
                           className="block min-w-0"
                         >
-                          <Card className="group relative w-full min-w-0 overflow-hidden rounded-3xl border-border/60 bg-background shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+                          <Card className="group relative w-full min-w-0 overflow-hidden border-border/60 bg-background shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
                             <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-br from-emerald-500/10 via-transparent to-sky-500/10" />
                             <CardHeader className="relative gap-4 pb-3">
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="flex min-w-0 items-start gap-3">
-                                  <Avatar className="size-12 rounded-2xl ring-1 ring-border/60">
-                                    <AvatarImage
-                                      src={
-                                        organization?.company_logo
-                                          ?.signed_url ?? undefined
-                                      }
-                                      alt={organization?.name ?? 'Company'}
-                                    />
-                                    <AvatarFallback className="rounded-2xl bg-muted text-sm font-semibold text-foreground">
-                                      {getInitials(
-                                        organization?.name ||
-                                          contactName ||
-                                          'Deal',
-                                      )}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div className="min-w-0 space-y-1">
-                                    <CardTitle className="truncate text-sm font-semibold tracking-tight">
-                                      {organizationName}
-                                    </CardTitle>
-                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                      <UserRound className="size-3.5 shrink-0" />
-                                      <span className="truncate">
-                                        {contactName}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="shrink-0 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-right">
-                                  <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.16em] text-emerald-700 dark:text-emerald-300">
-                                    <HandCoins className="size-3.5" />
-                                    Value
-                                  </div>
-                                  <div className="mt-1 text-sm font-semibold text-foreground">
-                                    $
-                                    {deal.deal_value?.toLocaleString() ||
-                                      deal.expected_revenue?.toLocaleString() ||
-                                      0}
+                              <div className="flex min-w-0 items-start gap-3">
+                                <Avatar className="size-12 rounded-2xl ring-1 ring-border/60">
+                                  <AvatarImage
+                                    src={
+                                      organization?.company_logo?.signed_url ??
+                                      undefined
+                                    }
+                                    alt={organization?.name ?? 'Company'}
+                                  />
+                                  <AvatarFallback className="rounded-2xl bg-muted text-sm font-semibold text-foreground">
+                                    {getInitials(
+                                      organization?.name || contactName || 'Deal',
+                                    )}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="min-w-0 space-y-1">
+                                  <CardTitle className="truncate text-sm font-semibold tracking-tight">
+                                    {organizationName}
+                                  </CardTitle>
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <UserRound className="size-3.5 shrink-0" />
+                                    <span className="truncate">
+                                      {contactName}
+                                    </span>
                                   </div>
                                 </div>
                               </div>
                             </CardHeader>
                             <CardContent className="relative space-y-4 pt-0">
+                              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2">
+                                <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.16em] text-emerald-700 dark:text-emerald-300">
+                                  <HandCoins className="size-3.5" />
+                                  Value
+                                </div>
+                                <div className="mt-1 text-lg font-semibold text-foreground">
+                                  $
+                                  {deal.deal_value?.toLocaleString() ||
+                                    deal.expected_revenue?.toLocaleString() ||
+                                    0}
+                                </div>
+                              </div>
                               <div className="grid grid-cols-2 gap-2">
                                 <div className="rounded-2xl border border-border/60 bg-muted/70 px-3 py-2">
                                   <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">

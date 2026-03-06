@@ -22,7 +22,7 @@ import {
   parseConfigDataViews,
   useConfigDataViews,
 } from '@/hooks/use-config-data-views'
-import { useEnumEntities } from '@/hooks/use-enums'
+import { mapEnumEntitiesToCellOptions, useEnumEntities } from '@/hooks/use-enums'
 import { useDeleteLead, useLeads, useUpdateLead } from '@/hooks/use-leads'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { LeadFormDialog } from '@/components/leads/lead-form-dialog'
@@ -111,7 +111,10 @@ export function Leads() {
   } = useEnumEntities('lead_status', {
     appSlug: 'base_crm',
     dataSourceSlug: 'leads',
-    enabled: viewType === 'board',
+  })
+  const { data: leadSources = [] } = useEnumEntities('lead_source', {
+    appSlug: 'base_crm',
+    dataSourceSlug: 'leads',
   })
 
   const finalLeadStatusIds = useMemo(
@@ -215,7 +218,22 @@ export function Leads() {
     if (!open) setDeleteTargets([])
   }, [])
 
-  const baseColumns = useMemo(() => getLeadsColumns(), [])
+  const leadStatusOptions = useMemo(
+    () => mapEnumEntitiesToCellOptions(leadStatuses),
+    [leadStatuses],
+  )
+  const leadSourceOptions = useMemo(
+    () => mapEnumEntitiesToCellOptions(leadSources),
+    [leadSources],
+  )
+  const baseColumns = useMemo(
+    () =>
+      getLeadsColumns({
+        leadStatusOptions,
+        leadSourceOptions,
+      }),
+    [leadSourceOptions, leadStatusOptions],
+  )
   const columns = useMemo(
     () => [
       getDataGridSelectColumn<any>(),

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 
 import { Check, ChevronsUpDown, Package } from 'lucide-react';
 
@@ -29,6 +29,7 @@ export function PricingProductCell({ lineId, name, productId }: PricingProductCe
   } = usePricingEngine();
 
   const [open, setOpen] = useState(false);
+  const listboxId = useId();
 
   const handleRemoteProductSelect = () => {
     if (!onProductSelect) return;
@@ -49,6 +50,8 @@ export function PricingProductCell({ lineId, name, productId }: PricingProductCe
             variant="ghost"
             role="combobox"
             aria-expanded={open}
+            aria-controls={listboxId}
+            aria-haspopup="listbox"
             className="h-8 w-full min-w-[120px] justify-between px-2 font-normal shadow-none">
             <span className={cn('truncate', !selectedProduct && 'text-muted-foreground')}>
               {selectedProduct?.name ?? (name || tUi(locale, 'pepSelectProduct'))}
@@ -56,7 +59,7 @@ export function PricingProductCell({ lineId, name, productId }: PricingProductCe
             <ChevronsUpDown className="ml-1 h-3.5 w-3.5 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[240px] p-0" align="start">
+        <PopoverContent id={listboxId} className="w-[240px] p-0" align="start">
           <Command>
             <CommandInput placeholder={tUi(locale, 'pepSearchProducts')} />
             <CommandList>

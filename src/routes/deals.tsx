@@ -12,7 +12,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/animate-ui/components/radix/tabs'
-import { useEnumEntities } from '@/hooks/use-enums'
+import { mapEnumEntitiesToCellOptions, useEnumEntities } from '@/hooks/use-enums'
 import { useDeals, useDeleteDeal, useUpdateDeal } from '@/hooks/use-deals'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DealFormDialog } from '@/components/deals/deal-form-dialog'
@@ -59,7 +59,6 @@ export function Deals() {
   } = useEnumEntities('stage', {
     appSlug: 'base_crm',
     dataSourceSlug: 'deals',
-    enabled: viewType === 'board',
   })
 
   const finalDealStageIds = useMemo(
@@ -163,7 +162,17 @@ export function Deals() {
     if (!open) setDeleteTargets([])
   }, [])
 
-  const baseColumns = useMemo(() => getDealsColumns(), [])
+  const dealStageOptions = useMemo(
+    () => mapEnumEntitiesToCellOptions(dealStages),
+    [dealStages],
+  )
+  const baseColumns = useMemo(
+    () =>
+      getDealsColumns({
+        stageOptions: dealStageOptions,
+      }),
+    [dealStageOptions],
+  )
   const columns = useMemo(
     () => [
       getDataGridSelectColumn<any>(),

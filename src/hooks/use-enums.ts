@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useEnumsCollection } from '@/collections'
 import type { EnumEntity } from '@/collections/enums.collection'
+import type { CellSelectOption } from '@/components/docyrus/data-grid/types'
 import { QUERY_CONFIG } from '@/lib/constants'
 
 interface UseEnumsOptions {
@@ -120,4 +121,15 @@ export function useEnumOptions(
     isLoading,
     error,
   }
+}
+
+export function mapEnumEntitiesToCellOptions(
+  entities: Array<EnumEntity>,
+): Array<CellSelectOption> {
+  return entities.map((option) => ({
+    label: option.name,
+    value: option.id,
+    color: option.color ?? undefined,
+    iconStr: option.icon ?? undefined,
+  }))
 }

@@ -1,6 +1,39 @@
 import type { ColumnDef } from '@tanstack/react-table'
+import type { CellSelectOption } from '@/components/docyrus/data-grid/types'
 
-export function getLeadsColumns(): Array<ColumnDef<any>> {
+function getRelationLabel(
+  value: { id?: string; name?: string } | string | null | undefined,
+) {
+  if (typeof value === 'string') return value
+  if (value && typeof value === 'object') return value.name ?? ''
+
+  return ''
+}
+
+function getEnumValue(
+  value: { id?: string; name?: string } | string | null | undefined,
+) {
+  if (typeof value === 'string') return value
+  if (value && typeof value === 'object') return value.id ?? ''
+
+  return ''
+}
+
+interface LeadsColumnOptions {
+  leadStatusOptions?: Array<CellSelectOption>
+  leadSourceOptions?: Array<CellSelectOption>
+}
+
+export function getLeadsColumns(
+  options: LeadsColumnOptions = {},
+): Array<ColumnDef<any>> {
+  const leadStatusLabelByValue = new Map(
+    (options.leadStatusOptions ?? []).map((option) => [option.value, option.label]),
+  )
+  const leadSourceLabelByValue = new Map(
+    (options.leadSourceOptions ?? []).map((option) => [option.value, option.label]),
+  )
+
   return [
     {
       accessorKey: 'title',
@@ -11,36 +44,65 @@ export function getLeadsColumns(): Array<ColumnDef<any>> {
     },
     {
       id: 'company_name',
-      accessorFn: (row) =>
-        typeof row.company_name === 'object'
-          ? (row.company_name?.name ?? '')
-          : (row.company_name ?? ''),
+      accessorFn: (row) => row.company_name ?? '',
       header: 'Company',
-      meta: { cell: { variant: 'short-text' } },
+      meta: {
+        cell: {
+          variant: 'relation',
+          dataSourceId: 'companies',
+        },
+      },
+      sortingFn: (rowA, rowB, columnId) =>
+        getRelationLabel(rowA.getValue(columnId)).localeCompare(
+          getRelationLabel(rowB.getValue(columnId)),
+        ),
       enableSorting: true,
       size: 180,
     },
     {
       id: 'lead_status',
-      accessorFn: (row) =>
-        typeof row.lead_status === 'object'
-          ? (row.lead_status?.name ?? '')
-          : (row.lead_status ?? ''),
+      accessorFn: (row) => getEnumValue(row.lead_status),
       header: 'Status',
-      meta: { cell: { variant: 'short-text' } },
+      meta: {
+        cell: {
+          variant: 'status',
+          options: options.leadStatusOptions ?? [],
+        },
+      },
+      sortingFn: (rowA, rowB, columnId) => {
+        const leftValue = String(rowA.getValue(columnId) ?? '')
+        const rightValue = String(rowB.getValue(columnId) ?? '')
+        const leftLabel = leadStatusLabelByValue.get(leftValue) ?? leftValue
+        const rightLabel = leadStatusLabelByValue.get(rightValue) ?? rightValue
+
+        return leftLabel.localeCompare(rightLabel)
+      },
       enableSorting: true,
-      size: 130,
+      size: 140,
     },
     {
       id: 'lead_source',
-      accessorFn: (row) =>
-        typeof row.lead_source === 'object'
-          ? (row.lead_source?.name ?? '')
-          : (row.lead_source ?? ''),
+      accessorFn: (row) => getEnumValue(row.lead_source),
       header: 'Source',
-      meta: { cell: { variant: 'short-text' } },
+      meta: {
+        cell: {
+          variant: 'enum',
+          appSlug: 'base_crm',
+          dataSourceSlug: 'leads',
+          fieldSlug: 'lead_source',
+          options: options.leadSourceOptions ?? [],
+        },
+      },
+      sortingFn: (rowA, rowB, columnId) => {
+        const leftValue = String(rowA.getValue(columnId) ?? '')
+        const rightValue = String(rowB.getValue(columnId) ?? '')
+        const leftLabel = leadSourceLabelByValue.get(leftValue) ?? leftValue
+        const rightLabel = leadSourceLabelByValue.get(rightValue) ?? rightValue
+
+        return leftLabel.localeCompare(rightLabel)
+      },
       enableSorting: true,
-      size: 130,
+      size: 150,
     },
     {
       accessorKey: 'email',
@@ -59,9 +121,9 @@ export function getLeadsColumns(): Array<ColumnDef<any>> {
     {
       accessorKey: 'created_on',
       header: 'Created',
-      meta: { cell: { variant: 'date' } },
+      meta: { cell: { variant: 'datetime' } },
       enableSorting: true,
-      size: 130,
+      size: 180,
     },
   ]
 }
