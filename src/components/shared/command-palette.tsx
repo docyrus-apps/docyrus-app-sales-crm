@@ -211,12 +211,12 @@ export function CommandPalette({
                 </CommandItem>
                 <CommandItem
                   onSelect={() =>
-                    handleSelect(() => navigate({ to: '/events' }))
+                    handleSelect(() => navigate({ to: '/calendar' }))
                   }
                   className="cursor-pointer gap-2"
                 >
                   <Calendar className="h-4 w-4" />
-                  <span>{t('commandPalette.events')}</span>
+                  <span>{t('commandPalette.calendar')}</span>
                 </CommandItem>
                 <CommandItem
                   onSelect={() =>

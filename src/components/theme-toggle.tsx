@@ -1,51 +1,34 @@
 import { Monitor, Moon, Sun } from 'lucide-react'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Button } from '@/components/animate-ui/components/buttons/button'
 import { useTheme } from '@/hooks/use-theme'
+import { cn } from '@/lib/utils'
+
+const MODES = [
+  { value: 'light' as const, icon: Sun, label: 'Light' },
+  { value: 'dark' as const, icon: Moon, label: 'Dark' },
+  { value: 'system' as const, icon: Monitor, label: 'System' },
+]
 
 export function ThemeToggle() {
-  const { theme, setTheme, resolvedTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="size-8">
-          {resolvedTheme === 'dark' ? (
-            <Moon className="size-4" />
-          ) : (
-            <Sun className="size-4" />
+    <div className="inline-flex items-center gap-0.5 rounded-md bg-muted p-0.5">
+      {MODES.map(({ value, icon: Icon, label }) => (
+        <button
+          key={value}
+          type="button"
+          onClick={() => setTheme(value)}
+          className={cn(
+            'inline-flex items-center justify-center rounded-sm px-2 py-1 text-xs font-medium transition-colors',
+            theme === value
+              ? 'bg-background text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground',
           )}
-          <span className="sr-only">Toggle theme</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem
-          onClick={() => setTheme('light')}
-          className={theme === 'light' ? 'bg-accent' : ''}
         >
-          <Sun className="size-4" />
-          <span>Light</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => setTheme('dark')}
-          className={theme === 'dark' ? 'bg-accent' : ''}
-        >
-          <Moon className="size-4" />
-          <span>Dark</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => setTheme('system')}
-          className={theme === 'system' ? 'bg-accent' : ''}
-        >
-          <Monitor className="size-4" />
-          <span>System</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <Icon className="mr-1 size-3" />
+          {label}
+        </button>
+      ))}
+    </div>
   )
 }

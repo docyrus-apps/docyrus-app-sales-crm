@@ -58,25 +58,38 @@ export function DataGridToolbar<TData>({
       className={cn('flex items-center gap-2 border-b px-3 py-2', className)}
       {...props}
     >
-      {startContent}
-      {enableFilter && <DataGridFilterMenu table={table} disabled={disabled} />}
-      {enableSort && <DataGridSortMenu table={table} disabled={disabled} />}
-      {enableGroup && <DataGridGroupMenu table={table} disabled={disabled} />}
-      {enableRowHeight && (
-        <DataGridRowHeightMenu table={table} disabled={disabled} />
+      {startContent && (
+        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
+          {startContent}
+        </div>
       )}
-      {enableDisplayMode && (
-        <DataGridDisplayMenu table={table} disabled={disabled} />
-      )}
-      {enableView && <DataGridViewMenu table={table} disabled={disabled} />}
-      <DataGridKeyboardShortcuts
-        enableSearch={enableSearch}
-        enablePaste={enablePaste}
-        enableRowAdd={enableRowAdd}
-        enableRowsDelete={enableRowsDelete}
-        enableUndoRedo={enableUndoRedo}
-      />
-      {endContent}
+      <div
+        className={cn(
+          'ml-auto flex items-center gap-2',
+          !startContent && 'w-full justify-end',
+        )}
+      >
+        {enableFilter && (
+          <DataGridFilterMenu table={table} disabled={disabled} />
+        )}
+        {enableSort && <DataGridSortMenu table={table} disabled={disabled} />}
+        {enableGroup && <DataGridGroupMenu table={table} disabled={disabled} />}
+        {enableRowHeight && (
+          <DataGridRowHeightMenu table={table} disabled={disabled} />
+        )}
+        {enableDisplayMode && (
+          <DataGridDisplayMenu table={table} disabled={disabled} />
+        )}
+        {enableView && <DataGridViewMenu table={table} disabled={disabled} />}
+        <DataGridKeyboardShortcuts
+          enableSearch={enableSearch}
+          enablePaste={enablePaste}
+          enableRowAdd={enableRowAdd}
+          enableRowsDelete={enableRowsDelete}
+          enableUndoRedo={enableUndoRedo}
+        />
+        {endContent}
+      </div>
     </div>
   )
 }

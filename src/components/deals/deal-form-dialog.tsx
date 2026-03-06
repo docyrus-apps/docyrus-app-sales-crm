@@ -489,8 +489,14 @@ export function DealFormDialog({
           >
             {t('common.cancel')}
           </Button>
-          <Button className='cursor-pointer' type="submit" disabled={isSubmitting}>
-            {isSubmitting && <Loader2 className="cursor-pointer mr-2 h-4 w-4 animate-spin" />}
+          <Button
+            className="cursor-pointer"
+            type="submit"
+            disabled={isSubmitting}
+          >
+            {isSubmitting && (
+              <Loader2 className="cursor-pointer mr-2 h-4 w-4 animate-spin" />
+            )}
             {mode === 'create'
               ? t('deals.form.createButton')
               : t('deals.form.updateButton')}

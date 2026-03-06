@@ -37,7 +37,7 @@ export function ResizableEvent({
   children,
   className,
 }: ResizableEventBlockProps) {
-  const { updateEvent, use24HourFormat } = useCalendar()
+  const { readOnly, updateEvent, use24HourFormat } = useCalendar()
 
   const [isResizing, setIsResizing] = useState(false)
   const [resizePreview, setResizePreview] = useState<{
@@ -160,6 +160,20 @@ export function ResizableEvent({
     }),
     [handleResizeStart, handleResize, handleResizeStop, isResizing],
   )
+
+  if (readOnly) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.2 }}
+        className={cn('relative group', className)}
+      >
+        {children}
+      </motion.div>
+    )
+  }
 
   return (
     <motion.div

@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { Link, useLocation, useParams } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { AppSidebar } from './app-sidebar'
+import { AppHeaderActions } from './app-header-actions'
 import type { ReactNode } from 'react'
 import {
   SidebarInset,
@@ -26,7 +27,7 @@ const SEGMENT_BREADCRUMB_KEYS: Record<string, string> = {
   tasks: 'breadcrumb.tasks',
   notifications: 'breadcrumb.notifications',
   emails: 'breadcrumb.emails',
-  events: 'breadcrumb.events',
+  calendar: 'breadcrumb.calendar',
   notes: 'breadcrumb.notes',
   products: 'breadcrumb.products',
   'sales-orders': 'breadcrumb.salesOrders',
@@ -124,15 +125,20 @@ export function AppLayout({ children }: AppLayoutProps) {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2">
+      <SidebarInset className="h-svh flex-col overflow-hidden">
+        <header className="flex h-14 flex-none items-center justify-between gap-3 border-b px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+          <div className="flex min-w-0 items-center gap-2">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
             <AppBreadcrumb />
           </div>
+          <div className="flex items-center gap-2">
+            <AppHeaderActions />
+          </div>
         </header>
-        <main className="flex flex-1 flex-col gap-4 p-4 pt-4">{children}</main>
+        <main className="relative flex grow flex-col overflow-hidden p-4 pt-4">
+          {children}
+        </main>
       </SidebarInset>
     </SidebarProvider>
   )

@@ -2,31 +2,24 @@
 
 import { useCallback, useMemo, useState } from 'react'
 
-import { type Value } from 'platejs'
-
-import { DeleteConfirmDialog } from '@/components/docyrus/delete-confirm-dialog'
-
-import { ScrollArea } from '@/components/ui/scroll-area'
-
-import { Separator } from '@/components/ui/separator'
-
-import { Skeleton } from '@/components/ui/skeleton'
-
-import { cn } from '@/lib/utils'
-
 import { CommentCreateForm } from './comment-create-form'
 import { CommentEmptyState } from './comment-empty-state'
 import { CommentThread } from './comment-thread'
 import { CommentMentionUsersContext } from './comment-mention-input'
 
-import {
-  type CommentThread as CommentThreadType,
-  type CommentsPanelProps,
-  type MentionUser,
-} from './types'
-
 import { useDisclosure } from './hooks/use-disclosure'
 import { serializeCommentMarkdown } from './lib/comment-markdown'
+import type {
+  CommentThread as CommentThreadType,
+  CommentsPanelProps,
+  MentionUser,
+} from './types'
+import type { Value } from 'platejs'
+import { cn } from '@/lib/utils'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Separator } from '@/components/ui/separator'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { DeleteConfirmDialog } from '@/components/docyrus/delete-confirm-dialog'
 
 function buildThreads(
   comments: Array<{
@@ -67,6 +60,7 @@ export function CommentsPanel({
   users,
   title = 'Comments',
   editable = true,
+  showCreateForm = editable,
   isLoading = false,
   maxHeight = '24rem',
   onCreateComment,
@@ -111,7 +105,7 @@ export function CommentsPanel({
       }))
   }, [users])
 
-  const threads = useMemo(() => buildThreads(comments ?? []), [comments])
+  const threads = useMemo(() => buildThreads(comments), [comments])
 
   const handleCreateComment = useCallback(
     async (content: Value, parentId?: string, files?: Array<File>) => {
@@ -173,7 +167,7 @@ export function CommentsPanel({
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-medium">{title}</h3>
-            {comments && comments.length > 0 && (
+            {comments.length > 0 && (
               <span className="text-xs text-muted-foreground">
                 ({comments.length})
               </span>
@@ -197,7 +191,7 @@ export function CommentsPanel({
                 </div>
               ))}
             </div>
-          ) : !comments || comments.length === 0 ? (
+          ) : comments.length === 0 ? (
             <CommentEmptyState />
           ) : (
             <div className="flex flex-col gap-3 px-1">
@@ -226,7 +220,7 @@ export function CommentsPanel({
         </ScrollArea>
 
         {/* Create form */}
-        {editable && (
+        {editable && showCreateForm && (
           <>
             <Separator className="my-2" />
             <div className="px-1">

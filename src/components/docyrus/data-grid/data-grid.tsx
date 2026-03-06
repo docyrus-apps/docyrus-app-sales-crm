@@ -206,6 +206,7 @@ export function DataGrid<TData>({
             data-slot="grid-header"
             ref={headerRef}
             className="sticky top-0 z-10 shrink-0 grid border-b bg-muted"
+            style={{ minWidth: table.getTotalSize() }}
           >
             {table.getHeaderGroups().map((headerGroup, rowIndex) => (
               <div
@@ -261,6 +262,7 @@ export function DataGrid<TData>({
                         ...getColumnPinningStyle({
                           column: header.column,
                           dir,
+                          background: 'var(--muted)',
                         }),
                         width: `calc(var(--header-${header.id}-size) * 1px)`,
                       }}
@@ -288,6 +290,7 @@ export function DataGrid<TData>({
             className="relative grow grid"
             style={{
               height: `${virtualTotalSize}px`,
+              minWidth: table.getTotalSize(),
               contain: adjustLayout ? 'layout paint' : 'strict',
             }}
           >
@@ -346,6 +349,7 @@ export function DataGrid<TData>({
               data-slot="grid-footer"
               ref={footerRef}
               className="sticky bottom-0 z-10 shrink-0 grid border-t bg-muted"
+              style={{ minWidth: table.getTotalSize() }}
             >
               <div
                 role="row"

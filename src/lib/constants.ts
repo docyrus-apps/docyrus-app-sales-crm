@@ -17,7 +17,7 @@ export const ROUTES = {
   CONTACTS: '/contacts',
   CONTACT_DETAIL: '/contacts/:contactId',
   TASKS: '/tasks',
-  EVENTS: '/events',
+  EVENTS: '/calendar',
   EMAILS: '/emails',
   THREAD_DETAIL: '/emails/:threadId',
   PRODUCTS: '/products',

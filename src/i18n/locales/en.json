@@ -60,13 +60,29 @@
     "completingSignIn": "Completing sign in..."
   },
   "notifications": {
-    "title": "Notifications",
-    "noNotifications": "No new notifications",
+    "title": "Inbox",
+    "all": "All",
+    "unread": "Unread",
+    "noNotifications": "No inbox items",
+    "markRead": "Mark as read",
     "markAllRead": "Mark all as read",
     "viewAll": "View All",
-    "pageTitle": "Notifications",
-    "empty": "No notifications",
+    "pageTitle": "Inbox",
+    "empty": "No inbox items",
     "allCaughtUp": "You're all caught up!"
+  },
+  "inbox": {
+    "listTitle": "Incoming comments",
+    "threadTitle": "Comment thread",
+    "selectThread": "Select a conversation to view the full thread.",
+    "unknownSender": "Unknown sender",
+    "untitledThread": "Untitled conversation",
+    "noMessages": "No messages in this conversation yet.",
+    "incoming": "Incoming",
+    "mine": "Mine",
+    "replies": "replies",
+    "noPreview": "No preview available",
+    "noEmail": "No email"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -88,6 +104,10 @@
     "noLeadsDataAvailable": "No leads data available",
     "total": "Total",
     "quickActions": "Quick Actions",
+    "newLeads": "New Leads",
+    "noNewLeads": "No new leads yet",
+    "untitledLead": "Untitled lead",
+    "unknownSource": "Unknown source",
     "viewDealsPipeline": "View Deals Pipeline",
     "manageLeads": "Manage Leads",
     "browseCompanies": "Browse Companies",
@@ -157,8 +177,28 @@
     }
   },
   "quickAdd": {
-    "tooltip": "Quick Add",
-    "label": "Quick Add"
+    "tooltip": "Quick Create",
+    "label": "Quick Create"
+  },
+  "quickTask": {
+    "dialogDescription": "Create a task from the header quick-create menu.",
+    "createOn": "Create task on",
+    "selectOrganization": "Select organization",
+    "searchOrganizations": "Search organizations...",
+    "noOrganizations": "No organizations found",
+    "selectDeal": "Select deal",
+    "searchDeals": "Search deals...",
+    "noDeals": "No deals found for this organization",
+    "namePlaceholder": "Task name",
+    "nameRequired": "Task name is required",
+    "addDetails": "Add details",
+    "descriptionPlaceholder": "Add a description, context, or notes",
+    "dueDate": "Due date",
+    "assignee": "Assignee",
+    "searchUsers": "Search users...",
+    "noUsers": "No users found",
+    "backlog": "Backlog",
+    "createMore": "Create more"
   },
   "deals": {
     "title": "Deals",
@@ -428,6 +468,7 @@
     "organization": "Organization",
     "tabs": {
       "overview": "Overview",
+      "activity": "Activity",
       "comments": "Comments",
       "files": "Files"
     },
@@ -528,6 +569,9 @@
       "updateButton": "Update Event"
     }
   },
+  "calendar": {
+    "title": "Calendar"
+  },
   "products": {
     "title": "Products",
     "newProduct": "New Product",
@@ -592,8 +636,26 @@
   },
   "activities": {
     "title": "Activities",
+    "newActivity": "New Activity",
     "pageTitle": "Activities",
-    "comingSoon": "Activity tracking coming soon."
+    "comingSoon": "Activity tracking coming soon.",
+    "form": {
+      "createTitle": "Create Activity",
+      "editTitle": "Edit Activity",
+      "createDescription": "Log a new activity for your team.",
+      "editDescription": "Update the activity details.",
+      "subjectLabel": "Subject",
+      "subjectPlaceholder": "Enter activity subject...",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Add notes or context...",
+      "startDateLabel": "Start date",
+      "endDateLabel": "End date",
+      "recordOwnerLabel": "Record Owner",
+      "recordOwnerPlaceholder": "Select record owner...",
+      "recordOwnerEmpty": "No user found",
+      "createButton": "Create Activity",
+      "updateButton": "Update Activity"
+    }
   },
   "emails": {
     "title": "Emails",
@@ -614,7 +676,54 @@
   "reports": {
     "title": "Reports",
     "pageTitle": "Reports",
-    "comingSoon": "Reporting features coming soon."
+    "subtitle": "Analyze sales performance, leads, and productivity trends.",
+    "comingSoon": "Reporting features coming soon.",
+    "dateRange": {
+      "7d": "7 Days",
+      "30d": "30 Days",
+      "90d": "90 Days",
+      "thisQuarter": "This Quarter",
+      "thisYear": "This Year",
+      "12mo": "12 Months"
+    },
+    "tabs": {
+      "revenuePipeline": "Revenue & Pipeline",
+      "leadAnalytics": "Lead Analytics",
+      "ordersProducts": "Orders & Products",
+      "activity": "Activity"
+    },
+    "revenueTrend": "Revenue Trend",
+    "pipelineValueByStage": "Pipeline Value by Stage",
+    "winLossAnalysis": "Win/Loss Analysis",
+    "avgDealSizeAndCycleTime": "Avg Deal Size & Cycle Time",
+    "leadConversionFunnel": "Lead Conversion Funnel",
+    "leadSourceEffectiveness": "Lead Source Effectiveness",
+    "leadAcquisitionTrend": "Lead Acquisition Trend",
+    "salesOrderRevenue": "Sales Order Revenue",
+    "topProductsByRevenue": "Top Products by Revenue",
+    "productCategoryBreakdown": "Product Category Breakdown",
+    "taskCompletionRate": "Task Completion Rate",
+    "companyEngagement": "Company Engagement",
+    "geographicAnalysis": "Geographic Analysis",
+    "won": "Won",
+    "lost": "Lost",
+    "pipeline": "Pipeline",
+    "totalValue": "Total Value",
+    "weightedValue": "Weighted Value",
+    "avgDealSize": "Avg Deal Size",
+    "avgCycleTimeDays": "Avg Cycle Time",
+    "days": "days",
+    "lossReasons": "Loss Reasons",
+    "unknownReason": "Unknown",
+    "totalLeads": "Total",
+    "converted": "Converted",
+    "subtotal": "Subtotal",
+    "tax": "Tax",
+    "categories": "Categories",
+    "completed": "Completed",
+    "overdue": "Overdue",
+    "open": "Open",
+    "dealCount": "Deals"
   },
   "commandPalette": {
     "searchPlaceholder": "Search deals, leads, companies, tasks...",
@@ -629,7 +738,7 @@
     "leads": "Leads",
     "companies": "Companies",
     "tasks": "Tasks",
-    "events": "Events",
+    "calendar": "Calendar",
     "emails": "Emails",
     "products": "Products",
     "salesOrders": "Sales Orders",
@@ -699,9 +808,9 @@
     "companies": "Organizations",
     "contacts": "Contacts",
     "tasks": "Tasks",
-    "notifications": "Notifications",
+    "notifications": "Inbox",
     "emails": "Emails",
-    "events": "Events",
+    "calendar": "Calendar",
     "notes": "Notes",
     "products": "Products",
     "salesOrders": "Sales Orders",
@@ -709,6 +818,7 @@
     "reports": "Reports"
   },
   "viewSwitcher": {
+    "board": "Board",
     "list": "List",
     "card": "Card",
     "kanban": "Kanban"

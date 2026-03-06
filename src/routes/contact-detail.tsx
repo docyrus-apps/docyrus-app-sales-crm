@@ -17,6 +17,7 @@ import { useContact } from '@/hooks/use-contacts'
 import { ContactFormDialog } from '@/components/contacts/contact-form-dialog'
 import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
+import { ContactActivityPanel } from '@/components/docyrus/contact-activity-panel'
 
 export function ContactDetail() {
   const { t } = useTranslation()
@@ -153,9 +154,12 @@ export function ContactDetail() {
         {/* Right Panel - Tabs */}
         <div className="lg:col-span-2">
           <Tabs value={tab} onValueChange={handleTabChange} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="overview">
                 {t('contacts.tabs.overview')}
+              </TabsTrigger>
+              <TabsTrigger value="activity">
+                {t('contacts.tabs.activity')}
               </TabsTrigger>
               <TabsTrigger value="comments">
                 {t('contacts.tabs.comments')}
@@ -236,6 +240,14 @@ export function ContactDetail() {
                     )}
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="activity" className="mt-4">
+              <ContactActivityPanel
+                activities={[]}
+                contactName={contact.name}
+                isLoading={false}
+              />
             </TabsContent>
 
             <TabsContent value="comments" className="mt-4">

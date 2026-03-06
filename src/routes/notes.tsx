@@ -118,7 +118,10 @@ export function Notes() {
 
   return (
     <>
-      <PageHeader title={t('notes.title')} />
+      <PageHeader
+        title={t('notes.title')}
+        icon={<NotepadText className="h-4 w-4 text-rose-500" />}
+      />
       <PageContainer>
         {isLoading && <DataTableSkeleton columnCount={4} rowCount={10} />}
 

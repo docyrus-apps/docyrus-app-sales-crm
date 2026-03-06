@@ -8,6 +8,7 @@ import { motion } from 'motion/react'
 
 import { type IEvent } from '../interfaces'
 
+import { useCalendar } from '../contexts/calendar-context'
 import { useDragDrop } from '../contexts/dnd-context'
 
 interface DraggableEventProps {
@@ -22,6 +23,7 @@ export function DraggableEvent({
   className,
 }: DraggableEventProps) {
   const { startDrag, endDrag, isDragging, draggedEvent } = useDragDrop()
+  const { readOnly } = useCalendar()
   const ref = useRef<HTMLDivElement>(null)
 
   const isCurrentlyDragged = isDragging && draggedEvent?.id === event.id
@@ -32,10 +34,16 @@ export function DraggableEvent({
 
   const handleDragStart = useCallback(
     (e: DragEvent<HTMLDivElement>) => {
+      if (readOnly) {
+        e.preventDefault()
+
+        return
+      }
+
       e.dataTransfer.setData('text/plain', event.id.toString())
       startDrag(event)
     },
-    [event, startDrag],
+    [event, readOnly, startDrag],
   )
 
   const handleDragEnd = useCallback(() => {
@@ -45,8 +53,8 @@ export function DraggableEvent({
   return (
     <motion.div
       ref={ref}
-      className={`${className || ''} ${isCurrentlyDragged ? 'opacity-50 cursor-grabbing' : 'cursor-grab'}`}
-      draggable
+      className={`${className || ''} ${readOnly ? '' : isCurrentlyDragged ? 'opacity-50 cursor-grabbing' : 'cursor-grab'}`}
+      draggable={!readOnly}
       onClick={(e: MouseEvent<HTMLDivElement>) => handleClick(e)}
       // @ts-expect-error -- native HTML drag events conflict with motion's gesture types
       onDragStart={handleDragStart}

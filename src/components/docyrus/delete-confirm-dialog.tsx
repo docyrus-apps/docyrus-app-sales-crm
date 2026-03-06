@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 
-import { tUi, type UiI18nLocale } from '@/components/docyrus/lib/ui-i18n'
+import { tUi, type UiI18nLocale } from '@/lib/ui-i18n'
 
 interface DeleteConfirmDialogProps {
   open: boolean

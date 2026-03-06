@@ -147,6 +147,10 @@ export interface NotificationsPanelProps
    */
   footer?: ReactNode
   /**
+   * Empty state content when there are no notifications
+   */
+  emptyState?: ReactNode
+  /**
    * Callback when a notification action is triggered
    */
   onNotificationAction?: (notificationId: string, action: string) => void
@@ -189,6 +193,7 @@ const NotificationsPanel = forwardRef<HTMLDivElement, NotificationsPanelProps>(
       tabs,
       notifications,
       footer,
+      emptyState,
       onNotificationAction,
       ...props
     },
@@ -228,114 +233,114 @@ const NotificationsPanel = forwardRef<HTMLDivElement, NotificationsPanelProps>(
 
         {/* Notifications List */}
         <div className="divide-y divide-border">
-          {notifications && notifications.length > 0 ? (
-            notifications.map((notification) => (
-              <div
-                key={notification.id}
-                className={cn(
-                  notificationItemVariants({ variant: notification.variant }),
-                )}
-              >
-                <div className="flex items-start gap-4">
-                  {/* Icon */}
-                  <div className="flex-shrink-0 relative">
-                    {notification.icon ? (
-                      <div
-                        className={cn(
-                          notificationIconVariants({
-                            variant: notification.type,
-                          }),
-                        )}
-                      >
-                        {notification.icon}
-                      </div>
-                    ) : (
-                      <div
-                        className={cn(
-                          notificationIconVariants({
-                            variant: notification.type,
-                          }),
-                        )}
-                      />
-                    )}
-                    {notification.badge && (
-                      <span
-                        className={cn(
-                          notificationBadgeVariants({
-                            variant: notification.type,
-                          }),
-                        )}
-                      >
-                        {notification.badge}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline justify-between">
-                      <div className="text-xs font-semibold text-foreground">
-                        {notification.title}
-                      </div>
-                      {notification.timestamp && (
-                        <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                          {notification.timestamp}
+          {notifications && notifications.length > 0
+            ? notifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  className={cn(
+                    notificationItemVariants({ variant: notification.variant }),
+                  )}
+                >
+                  <div className="flex items-start gap-4">
+                    {/* Icon */}
+                    <div className="flex-shrink-0 relative">
+                      {notification.icon ? (
+                        <div
+                          className={cn(
+                            notificationIconVariants({
+                              variant: notification.type,
+                            }),
+                          )}
+                        >
+                          {notification.icon}
+                        </div>
+                      ) : (
+                        <div
+                          className={cn(
+                            notificationIconVariants({
+                              variant: notification.type,
+                            }),
+                          )}
+                        />
+                      )}
+                      {notification.badge && (
+                        <span
+                          className={cn(
+                            notificationBadgeVariants({
+                              variant: notification.type,
+                            }),
+                          )}
+                        >
+                          {notification.badge}
                         </span>
                       )}
                     </div>
 
-                    {notification.subtitle && (
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        {notification.subtitle}
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline justify-between">
+                        <div className="text-xs font-semibold text-foreground">
+                          {notification.title}
+                        </div>
+                        {notification.timestamp && (
+                          <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                            {notification.timestamp}
+                          </span>
+                        )}
                       </div>
-                    )}
 
-                    {notification.content && (
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        {notification.content}
-                      </div>
-                    )}
-
-                    {/* Actions */}
-                    {notification.actions &&
-                      notification.actions.length > 0 && (
-                        <div className="mt-3 flex items-center gap-3">
-                          {notification.actions.map((action) => (
-                            <button
-                              key={action.label}
-                              onClick={() => {
-                                action.onClick?.()
-                                onNotificationAction?.(
-                                  notification.id,
-                                  action.label,
-                                )
-                              }}
-                              className={cn(
-                                notificationButtonVariants({
-                                  variant: action.variant || 'default',
-                                }),
-                              )}
-                            >
-                              {action.icon}
-                              <span>{action.label}</span>
-                            </button>
-                          ))}
+                      {notification.subtitle && (
+                        <div className="mt-1 text-xs text-muted-foreground">
+                          {notification.subtitle}
                         </div>
                       )}
-                  </div>
 
-                  {/* Unread Indicator */}
-                  {notification.showUnreadIndicator && (
-                    <div className="w-2 h-2 rounded-full bg-orange-500 mt-2" />
-                  )}
+                      {notification.content && (
+                        <div className="mt-1 text-xs text-muted-foreground">
+                          {notification.content}
+                        </div>
+                      )}
+
+                      {/* Actions */}
+                      {notification.actions &&
+                        notification.actions.length > 0 && (
+                          <div className="mt-3 flex items-center gap-3">
+                            {notification.actions.map((action) => (
+                              <button
+                                key={action.label}
+                                onClick={() => {
+                                  action.onClick?.()
+                                  onNotificationAction?.(
+                                    notification.id,
+                                    action.label,
+                                  )
+                                }}
+                                className={cn(
+                                  notificationButtonVariants({
+                                    variant: action.variant || 'default',
+                                  }),
+                                )}
+                              >
+                                {action.icon}
+                                <span>{action.label}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                    </div>
+
+                    {/* Unread Indicator */}
+                    {notification.showUnreadIndicator && (
+                      <div className="w-2 h-2 rounded-full bg-orange-500 mt-2" />
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))
-          ) : (
-            <div className="px-8 py-12 text-center text-muted-foreground">
-              No notifications
-            </div>
-          )}
+              ))
+            : (emptyState ?? (
+                <div className="px-8 py-12 text-center text-muted-foreground">
+                  No notifications
+                </div>
+              ))}
         </div>
 
         {/* Footer */}

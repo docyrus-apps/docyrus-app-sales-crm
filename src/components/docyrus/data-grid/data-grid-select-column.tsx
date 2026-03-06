@@ -231,7 +231,7 @@ interface GetDataGridSelectColumnOptions<TData> extends Omit<
 }
 
 export function getDataGridSelectColumn<TData>({
-  size = 40,
+  size = 42,
   hitboxSize = 'default',
   enableHiding = false,
   enableResizing = false,

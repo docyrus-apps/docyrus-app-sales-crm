@@ -3,10 +3,17 @@ import { toast } from 'sonner'
 import type { ICollectionListParams } from '@/collections/types'
 import { useBaseCrmLeadsCollection } from '@/collections'
 
+interface UseLeadsOptions {
+  enabled?: boolean
+}
+
 /**
  * Hook to list leads with optional filters
  */
-export function useLeads(params?: ICollectionListParams) {
+export function useLeads(
+  params?: ICollectionListParams,
+  options: UseLeadsOptions = {},
+) {
   const leadsCollection = useBaseCrmLeadsCollection()
 
   return useQuery({
@@ -32,6 +39,7 @@ export function useLeads(params?: ICollectionListParams) {
       })
       return response
     },
+    enabled: options.enabled,
   })
 }
 

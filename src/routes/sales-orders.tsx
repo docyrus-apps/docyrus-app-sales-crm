@@ -1,25 +1,82 @@
-import { useMemo } from 'react'
-import { FileText } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
+import { FileText, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { ColumnDef } from '@tanstack/react-table'
+import type { RowChange } from '@/components/docyrus/data-grid'
 import {
   DataGrid,
   DataGridSkeleton,
   DataGridSkeletonGrid,
+  getDataGridSelectColumn,
   useDataGrid,
 } from '@/components/docyrus/data-grid'
+import { DataGridStandardToolbar } from '@/components/docyrus/data-grid-standard-toolbar'
+import { RecordDeleteConfirmDialog } from '@/components/docyrus/record-delete-confirm-dialog'
+import { getDataGridRowActionsColumn } from '@/components/docyrus/data-grid-row-actions-column'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
-import { useDeleteSalesOrder, useSalesOrders } from '@/hooks/use-sales-orders'
+import {
+  useCreateSalesOrder,
+  useDeleteSalesOrder,
+  useSalesOrders,
+  useUpdateSalesOrder,
+} from '@/hooks/use-sales-orders'
 import { Card, CardContent } from '@/components/ui/card'
+import {
+  buildDuplicatePayload,
+  saveGridChanges,
+} from '@/lib/data-grid-record-utils'
 
 export function SalesOrders() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const { data: orders, isLoading } = useSalesOrders()
+  const createOrder = useCreateSalesOrder()
   const deleteOrder = useDeleteSalesOrder()
+  const updateOrder = useUpdateSalesOrder()
+  const [deleteTargets, setDeleteTargets] = useState<Array<any>>([])
 
-  const columns = useMemo<Array<ColumnDef<any>>>(
-    () => [
+  const onView = (order: any) => {
+    if (!order?.id) return
+
+    void navigate({
+      to: '/sales-orders/$orderId',
+      params: { orderId: order.id },
+    })
+  }
+
+  const onDuplicate = async (order: any) => {
+    const payload = buildDuplicatePayload(order)
+    await createOrder.mutateAsync(payload)
+  }
+
+  const onDeleteRequest = (rows: Array<any>) => {
+    if (rows.length === 0) return
+
+    setDeleteTargets(rows)
+  }
+
+  const onDeleteConfirm = async () => {
+    const ids = deleteTargets
+      .map((row) => row?.id)
+      .filter(Boolean) as Array<string>
+
+    await Promise.all(ids.map((id) => deleteOrder.mutateAsync(id)))
+    setDeleteTargets([])
+  }
+
+  const onChangesSave = async (
+    changes: Array<RowChange>,
+    gridData: Array<any>,
+  ) => {
+    await saveGridChanges(changes, gridData, (id, data) =>
+      updateOrder.mutateAsync({ orderId: id, data }),
+    )
+  }
+
+  const columns = useMemo<Array<ColumnDef<any>>>(() => {
+    const baseColumns: Array<ColumnDef<any>> = [
       {
         accessorKey: 'id',
         header: t('salesOrders.columns.orderNumber'),
@@ -77,31 +134,36 @@ export function SalesOrders() {
         enableSorting: true,
         size: 130,
       },
-    ],
-    [t],
-  )
+    ]
+
+    return [
+      getDataGridSelectColumn<any>(),
+      getDataGridRowActionsColumn<any>({
+        onView,
+        onEdit: onView,
+        onDuplicate,
+        onDelete: (row) => onDeleteRequest([row]),
+      }),
+      ...baseColumns,
+    ]
+  }, [t])
 
   const { table, ...dataGridProps } = useDataGrid({
     data: orders || [],
     columns,
     getRowId: (row: any) => row.id,
-    readOnly: true,
-    actions: [
-      {
-        label: t('common.delete'),
-        variant: 'destructive',
-        onAction: (rows) => {
-          if (confirm(t('salesOrders.confirmDelete'))) {
-            rows.forEach((row: any) => deleteOrder.mutate(row.id))
-          }
-        },
-      },
-    ],
+    readOnly: false,
+    enableGrouping: true,
+    enableChangeTracking: true,
+    onChangesSave,
   })
 
   return (
     <>
-      <PageHeader title={t('salesOrders.title')} />
+      <PageHeader
+        title={t('salesOrders.title')}
+        icon={<FileText className="h-4 w-4 text-red-500" />}
+      />
       <PageContainer>
         {isLoading && (
           <DataGridSkeleton>
@@ -124,8 +186,36 @@ export function SalesOrders() {
         )}
 
         {!isLoading && orders && orders.length > 0 && (
-          <DataGrid table={table} {...dataGridProps} height={600} />
+          <>
+            <DataGridStandardToolbar
+              table={table}
+              searchPlaceholder={t('common.search', 'Search...')}
+            />
+            <DataGrid
+              table={table}
+              {...dataGridProps}
+              height={600}
+              actions={[
+                {
+                  label: t('common.delete'),
+                  icon: <Trash2 className="size-4" />,
+                  variant: 'destructive',
+                  onAction: onDeleteRequest,
+                },
+              ]}
+            />
+          </>
         )}
+
+        <RecordDeleteConfirmDialog
+          open={deleteTargets.length > 0}
+          onOpenChange={(open) => {
+            if (!open) setDeleteTargets([])
+          }}
+          recordCount={deleteTargets.length}
+          onConfirm={onDeleteConfirm}
+          isPending={deleteOrder.isPending}
+        />
       </PageContainer>
     </>
   )

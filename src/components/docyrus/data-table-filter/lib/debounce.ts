@@ -16,7 +16,7 @@ export function debounce<T extends (...args: Array<any>) => any>(
   options: DebounceOptions = {},
 ): ((...args: Parameters<T>) => ReturnType<T> | undefined) & ControlFunctions {
   const { leading = false, trailing = true, maxWait } = options
-  let timeout: NodeJS.Timeout | null = null
+  let timeout: ReturnType<typeof setTimeout> | null = null
   let lastArgs: Parameters<T> | null = null
   let lastThis: any
   let result: ReturnType<T> | undefined

@@ -1,47 +1,143 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from '@tanstack/react-router'
-import { Building2, Plus } from 'lucide-react'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { Building2, Plus, Trash2 } from 'lucide-react'
+import type { RowChange } from '@/components/docyrus/data-grid'
 import type { ViewType } from '@/components/view-switcher'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/animate-ui/components/buttons/button'
-import { useCompanies } from '@/hooks/use-companies'
+import {
+  useCompanies,
+  useDeleteCompany,
+  useUpdateCompany,
+} from '@/hooks/use-companies'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { CompanyFormDialog } from '@/components/companies/company-form-dialog'
+import { DataGridStandardToolbar } from '@/components/docyrus/data-grid-standard-toolbar'
+import { RecordDeleteConfirmDialog } from '@/components/docyrus/record-delete-confirm-dialog'
+import { getDataGridRowActionsColumn } from '@/components/docyrus/data-grid-row-actions-column'
 import { ViewSwitcher } from '@/components/view-switcher'
 import {
   DataGrid,
   DataGridSkeleton,
   DataGridSkeletonGrid,
+  getDataGridSelectColumn,
   useDataGrid,
 } from '@/components/docyrus/data-grid'
 import { getCompaniesColumns } from '@/components/companies/companies-columns'
 import { CompaniesKanbanView } from '@/components/companies/companies-kanban-view'
+import {
+  buildDuplicatePayload,
+  saveGridChanges,
+} from '@/lib/data-grid-record-utils'
 
 export function Companies() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const { data: companies, isLoading, error } = useCompanies()
+  const deleteCompany = useDeleteCompany()
+  const updateCompany = useUpdateCompany()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [viewType, setViewType] = useState<ViewType>('list')
+  const [formMode, setFormMode] = useState<'create' | 'edit'>('create')
+  const [activeCompany, setActiveCompany] = useState<any>(null)
+  const [deleteTargets, setDeleteTargets] = useState<Array<any>>([])
 
-  const columns = useMemo(() => getCompaniesColumns(), [])
+  const onOpenCreate = useCallback(() => {
+    setFormMode('create')
+    setActiveCompany(null)
+    setIsFormOpen(true)
+  }, [])
+
+  const onOpenEdit = useCallback((company: any) => {
+    setFormMode('edit')
+    setActiveCompany(company)
+    setIsFormOpen(true)
+  }, [])
+
+  const onDuplicate = useCallback((company: any) => {
+    setFormMode('create')
+    setActiveCompany(buildDuplicatePayload(company))
+    setIsFormOpen(true)
+  }, [])
+
+  const onView = useCallback(
+    (company: any) => {
+      if (!company?.id) return
+
+      void navigate({
+        to: '/companies/$companyId',
+        params: { companyId: company.id },
+        search: { tab: 'overview' },
+      })
+    },
+    [navigate],
+  )
+
+  const onDeleteRequest = useCallback((rows: Array<any>) => {
+    if (rows.length === 0) return
+
+    setDeleteTargets(rows)
+  }, [])
+
+  const onDeleteConfirm = useCallback(async () => {
+    const ids = deleteTargets
+      .map((row) => row?.id)
+      .filter(Boolean) as Array<string>
+
+    await Promise.all(ids.map((id) => deleteCompany.mutateAsync(id)))
+    setDeleteTargets([])
+  }, [deleteCompany, deleteTargets])
+
+  const onDeleteDialogOpenChange = useCallback((open: boolean) => {
+    if (!open) setDeleteTargets([])
+  }, [])
+
+  const baseColumns = useMemo(() => getCompaniesColumns(), [])
+  const columns = useMemo(
+    () => [
+      getDataGridSelectColumn<any>(),
+      getDataGridRowActionsColumn<any>({
+        onView,
+        onEdit: onOpenEdit,
+        onDuplicate,
+        onDelete: (row) => onDeleteRequest([row]),
+      }),
+      ...baseColumns,
+    ],
+    [baseColumns, onDeleteRequest, onDuplicate, onOpenEdit, onView],
+  )
+
+  const onChangesSave = useCallback(
+    async (changes: Array<RowChange>, gridData: Array<any>) => {
+      await saveGridChanges(changes, gridData, (id, data) =>
+        updateCompany.mutateAsync({ companyId: id, data }),
+      )
+    },
+    [updateCompany],
+  )
+
   const { table, ...dataGridProps } = useDataGrid({
     data: companies || [],
     columns,
     getRowId: (row: any) => row.id,
-    readOnly: true,
+    readOnly: false,
+    enableGrouping: true,
+    enableChangeTracking: true,
+    onChangesSave,
   })
 
   return (
     <>
       <PageHeader
         title={t('companies.title')}
+        icon={<Building2 className="h-4 w-4 text-teal-500" />}
         actions={
           <>
             <ViewSwitcher value={viewType} onValueChange={setViewType} />
-            <Button onClick={() => setIsFormOpen(true)}>
+            <Button size="sm" onClick={onOpenCreate}>
               <Plus className="mr-2 h-4 w-4" />
               {t('companies.newCompany')}
             </Button>
@@ -53,8 +149,16 @@ export function Companies() {
       >
         <CompanyFormDialog
           open={isFormOpen}
-          onOpenChange={setIsFormOpen}
-          mode="create"
+          onOpenChange={(open) => {
+            setIsFormOpen(open)
+
+            if (!open) {
+              setActiveCompany(null)
+              setFormMode('create')
+            }
+          }}
+          company={activeCompany ?? undefined}
+          mode={formMode}
         />
 
         {isLoading && viewType === 'card' && (
@@ -117,6 +221,7 @@ export function Companies() {
                 key={company.id}
                 to="/companies/$companyId"
                 params={{ companyId: company.id }}
+                search={{ tab: 'overview' }}
               >
                 <Card className="transition-all hover:shadow-md cursor-pointer">
                   <CardHeader>
@@ -169,8 +274,34 @@ export function Companies() {
         )}
 
         {companies && companies.length > 0 && viewType === 'list' && (
-          <DataGrid table={table} {...dataGridProps} height={600} />
+          <>
+            <DataGridStandardToolbar
+              table={table}
+              searchPlaceholder={t('common.search', 'Search...')}
+            />
+            <DataGrid
+              table={table}
+              {...dataGridProps}
+              height={600}
+              actions={[
+                {
+                  label: t('common.delete'),
+                  icon: <Trash2 className="size-4" />,
+                  variant: 'destructive',
+                  onAction: onDeleteRequest,
+                },
+              ]}
+            />
+          </>
         )}
+
+        <RecordDeleteConfirmDialog
+          open={deleteTargets.length > 0}
+          onOpenChange={onDeleteDialogOpenChange}
+          recordCount={deleteTargets.length}
+          onConfirm={onDeleteConfirm}
+          isPending={deleteCompany.isPending}
+        />
 
         {companies && companies.length > 0 && viewType === 'kanban' && (
           <CompaniesKanbanView companies={companies} />

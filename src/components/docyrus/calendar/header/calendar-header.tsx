@@ -16,7 +16,7 @@ import { UserSelect } from './user-select'
 import Views from './view-tabs'
 
 export function CalendarHeader() {
-  const { view, events } = useCalendar()
+  const { events, readOnly, showUserFilter, view } = useCalendar()
 
   return (
     <div className="space-y-2 border-b p-3 sm:p-4">
@@ -51,13 +51,15 @@ export function CalendarHeader() {
         animate="animate"
         transition={transition}
       >
-        <UserSelect />
-        <AddEditEventDialog>
-          <Button size="sm">
-            <Plus className="size-4" />
-            <span className="hidden sm:inline">Add Event</span>
-          </Button>
-        </AddEditEventDialog>
+        {showUserFilter && <UserSelect />}
+        {!readOnly && (
+          <AddEditEventDialog>
+            <Button size="sm">
+              <Plus className="size-4" />
+              <span className="hidden sm:inline">Add Event</span>
+            </Button>
+          </AddEditEventDialog>
+        )}
         <Settings />
       </motion.div>
     </div>

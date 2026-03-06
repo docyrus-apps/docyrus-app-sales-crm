@@ -3,10 +3,17 @@ import { toast } from 'sonner'
 import type { ICollectionListParams } from '@/collections/types'
 import { useBaseCrmDealsCollection } from '@/collections'
 
+interface UseDealsOptions {
+  enabled?: boolean
+}
+
 /**
  * Hook to list deals with optional filters
  */
-export function useDeals(params?: ICollectionListParams) {
+export function useDeals(
+  params?: ICollectionListParams,
+  options: UseDealsOptions = {},
+) {
   const dealsCollection = useBaseCrmDealsCollection()
 
   return useQuery({
@@ -33,6 +40,7 @@ export function useDeals(params?: ICollectionListParams) {
       })
       return response
     },
+    enabled: options.enabled,
   })
 }
 

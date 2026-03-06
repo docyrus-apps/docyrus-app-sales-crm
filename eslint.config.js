@@ -1,7 +1,7 @@
 //  @ts-check
 
 import { tanstackConfig } from '@tanstack/eslint-config'
-
+import { baseConfig, reactConfig } from '@docyrus/rules/eslint'
 export default [
   ...tanstackConfig,
   {
@@ -36,5 +36,18 @@ export default [
       'src/types/data-table.ts',
       'src/config/data-table.ts',
     ],
+  },
+  ...baseConfig,
+  ...reactConfig,
+  {
+    rules: {
+      '@typescript-eslint/no-unnecessary-condition': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/ban-ts-comment': 'off',
+      '@eslint-react/no-array-index-key': 'off',
+      '@eslint-react/hooks-extra/no-direct-set-state-in-use-effect': 'off',
+      '@eslint-react/naming-convention/use-state': 'off',
+      'react-refresh/only-export-components': 'off',
+    },
   },
 ]

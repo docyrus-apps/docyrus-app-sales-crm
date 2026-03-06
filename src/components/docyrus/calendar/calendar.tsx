@@ -43,6 +43,8 @@ interface CalendarProps extends Omit<ComponentProps<'div'>, 'children'> {
   defaultView?: TCalendarView
   variant?: 'default' | 'bordered' | 'compact'
   size?: 'sm' | 'default' | 'lg'
+  readOnly?: boolean
+  showUserFilter?: boolean
 }
 
 const Calendar = forwardRef<HTMLDivElement, CalendarProps>(
@@ -54,6 +56,8 @@ const Calendar = forwardRef<HTMLDivElement, CalendarProps>(
       defaultView = 'month',
       variant,
       size,
+      readOnly = false,
+      showUserFilter = true,
       className,
       ...props
     },
@@ -64,7 +68,13 @@ const Calendar = forwardRef<HTMLDivElement, CalendarProps>(
     }
 
     return (
-      <CalendarProvider events={events} users={users} defaultView={defaultView}>
+      <CalendarProvider
+        events={events}
+        users={users}
+        defaultView={defaultView}
+        readOnly={readOnly}
+        showUserFilter={showUserFilter}
+      >
         <DndProvider>
           <div
             ref={ref}

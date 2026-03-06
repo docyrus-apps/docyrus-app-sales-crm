@@ -529,6 +529,8 @@ export interface SavedDataGridView {
   columnFilters?: ColumnFiltersState
   grouping?: Array<string>
   filterQuery?: RuleGroupType
+  rowColorRules?: Array<DataGridRowColorRule>
+  cellColorRules?: Array<DataGridCellColorRule>
 }
 
 export function isSavedDataGridView(
@@ -566,6 +568,25 @@ export function isSavedDataGridView(
         ))) &&
     (item.grouping === undefined ||
       (Array.isArray(item.grouping) &&
-        item.grouping.every((columnId) => typeof columnId === 'string')))
+        item.grouping.every((columnId) => typeof columnId === 'string'))) &&
+    (item.rowColorRules === undefined ||
+      (Array.isArray(item.rowColorRules) &&
+        item.rowColorRules.every(
+          (rule) =>
+            rule &&
+            typeof rule === 'object' &&
+            typeof rule.formula === 'string' &&
+            typeof rule.color === 'string',
+        ))) &&
+    (item.cellColorRules === undefined ||
+      (Array.isArray(item.cellColorRules) &&
+        item.cellColorRules.every(
+          (rule) =>
+            rule &&
+            typeof rule === 'object' &&
+            typeof rule.column === 'string' &&
+            typeof rule.formula === 'string' &&
+            typeof rule.color === 'string',
+        )))
   )
 }

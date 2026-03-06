@@ -29,6 +29,7 @@ export interface CommentsPanelProps {
   users?: Array<CommentUser>
   title?: string
   editable?: boolean
+  showCreateForm?: boolean
   isLoading?: boolean
   maxHeight?: number | string
   onCreateComment?: (payload: {

@@ -15,6 +15,8 @@ import { type TCalendarView, type TEventColor } from '../types'
 import { useLocalStorage } from '../hooks'
 
 interface ICalendarContext {
+  readOnly: boolean
+  showUserFilter: boolean
   selectedDate: Date
   view: TCalendarView
   setView: (view: TCalendarView) => void
@@ -60,12 +62,16 @@ export function CalendarProvider({
   events,
   badge = 'colored',
   defaultView = 'day',
+  readOnly = false,
+  showUserFilter = true,
 }: {
   children: ReactNode
   users: Array<IUser>
   events: Array<IEvent>
   defaultView?: TCalendarView
   badge?: 'dot' | 'colored'
+  readOnly?: boolean
+  showUserFilter?: boolean
 }) {
   const [settings, setSettings] = useLocalStorage<CalendarSettings>(
     'calendar-settings',
@@ -94,9 +100,34 @@ export function CalendarProvider({
     'all',
   )
   const [selectedColors, setSelectedColors] = useState<Array<TEventColor>>([])
+  const [addedEvents, setAddedEvents] = useState<Array<IEvent>>([])
+  const [updatedEvents, setUpdatedEvents] = useState<Record<number, IEvent>>({})
+  const [removedEventIds, setRemovedEventIds] = useState<Array<number>>([])
 
-  const [allEvents, setAllEvents] = useState<Array<IEvent>>(events)
-  const [filteredEvents, setFilteredEvents] = useState<Array<IEvent>>(events)
+  const allEvents = useMemo(() => {
+    const removedIds = new Set(removedEventIds)
+    const mergedEvents = events
+      .filter((event) => !removedIds.has(event.id))
+      .map((event) => updatedEvents[event.id] ?? event)
+
+    return mergedEvents.concat(
+      addedEvents.filter((event) => !removedIds.has(event.id)),
+    )
+  }, [addedEvents, events, removedEventIds, updatedEvents])
+
+  const filteredEvents = useMemo(() => {
+    return allEvents.filter((event) => {
+      if (selectedUserId !== 'all' && event.user.id !== selectedUserId) {
+        return false
+      }
+
+      if (selectedColors.length > 0 && !selectedColors.includes(event.color)) {
+        return false
+      }
+
+      return true
+    })
+  }, [allEvents, selectedColors, selectedUserId])
 
   const updateSettings = useCallback(
     (newPartialSettings: Partial<CalendarSettings>) => {
@@ -146,33 +177,16 @@ export function CalendarProvider({
         ? selectedColors.filter((c) => c !== color)
         : [...selectedColors, color]
 
-      if (newColors.length > 0) {
-        const filtered = allEvents.filter((event) =>
-          newColors.includes(event.color),
-        )
-
-        setFilteredEvents(filtered)
-      } else {
-        setFilteredEvents(allEvents)
-      }
-
       setSelectedColors(newColors)
     },
-    [allEvents, selectedColors],
+    [selectedColors],
   )
 
   const filterEventsBySelectedUser = useCallback(
     (userId: IUser['id'] | 'all') => {
       setSelectedUserId(userId)
-      if (userId === 'all') {
-        setFilteredEvents(allEvents)
-      } else {
-        const filtered = allEvents.filter((event) => event.user.id === userId)
-
-        setFilteredEvents(filtered)
-      }
     },
-    [allEvents],
+    [],
   )
 
   const handleSelectDate = useCallback((date: Date | undefined) => {
@@ -180,37 +194,71 @@ export function CalendarProvider({
     setSelectedDate(date)
   }, [])
 
-  const addEvent = useCallback((event: IEvent) => {
-    setAllEvents((prev) => [...prev, event])
-    setFilteredEvents((prev) => [...prev, event])
-  }, [])
+  const addEvent = useCallback(
+    (event: IEvent) => {
+      if (readOnly) {
+        return
+      }
 
-  const updateEvent = useCallback((event: IEvent) => {
-    const updated = {
-      ...event,
-      startDate: new Date(event.startDate).toISOString(),
-      endDate: new Date(event.endDate).toISOString(),
-    }
+      setRemovedEventIds((prev) => prev.filter((id) => id !== event.id))
+      setAddedEvents((prev) => [
+        ...prev.filter((item) => item.id !== event.id),
+        event,
+      ])
+    },
+    [readOnly],
+  )
 
-    setAllEvents((prev) => prev.map((e) => (e.id === event.id ? updated : e)))
-    setFilteredEvents((prev) =>
-      prev.map((e) => (e.id === event.id ? updated : e)),
-    )
-  }, [])
+  const updateEvent = useCallback(
+    (event: IEvent) => {
+      if (readOnly) {
+        return
+      }
 
-  const removeEvent = useCallback((eventId: number) => {
-    setAllEvents((prev) => prev.filter((e) => e.id !== eventId))
-    setFilteredEvents((prev) => prev.filter((e) => e.id !== eventId))
-  }, [])
+      const updated = {
+        ...event,
+        startDate: new Date(event.startDate).toISOString(),
+        endDate: new Date(event.endDate).toISOString(),
+      }
+
+      setAddedEvents((prev) =>
+        prev.map((item) => (item.id === event.id ? updated : item)),
+      )
+      setUpdatedEvents((prev) => ({ ...prev, [event.id]: updated }))
+    },
+    [readOnly],
+  )
+
+  const removeEvent = useCallback(
+    (eventId: number) => {
+      if (readOnly) {
+        return
+      }
+
+      setAddedEvents((prev) => prev.filter((event) => event.id !== eventId))
+      setUpdatedEvents((prev) => {
+        const next = { ...prev }
+
+        delete next[eventId]
+
+        return next
+      })
+      setRemovedEventIds((prev) =>
+        prev.includes(eventId) ? prev : [...prev, eventId],
+      )
+    },
+    [readOnly],
+  )
 
   const clearFilter = useCallback(() => {
-    setFilteredEvents(allEvents)
     setSelectedColors([])
     setSelectedUserId('all')
-  }, [allEvents])
+  }, [])
 
   const value = useMemo(
     () => ({
+      readOnly,
+      showUserFilter,
       selectedDate,
       setSelectedDate: handleSelectDate,
       selectedUserId,
@@ -243,6 +291,7 @@ export function CalendarProvider({
       filterEventsBySelectedUser,
       filteredEvents,
       handleSelectDate,
+      readOnly,
       removeEvent,
       selectedColors,
       selectedDate,
@@ -251,6 +300,7 @@ export function CalendarProvider({
       setBadgeVariant,
       setView,
       setSelectedUserId,
+      showUserFilter,
       toggleTimeFormat,
       updateEvent,
       use24HourFormat,

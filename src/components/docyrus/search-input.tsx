@@ -16,7 +16,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 
 import { cn } from '@/lib/utils'
 
-import { tUi, type UiI18nLocale } from '@/components/docyrus/lib/ui-i18n'
+import { tUi, type UiI18nLocale } from '@/lib/ui-i18n'
 
 const searchInputVariants = cva(
   'flex items-center gap-2 rounded-md border bg-background shadow-xs transition-[color,box-shadow]',

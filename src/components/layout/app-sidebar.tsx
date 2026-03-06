@@ -3,7 +3,6 @@ import { Link, useMatchRoute } from '@tanstack/react-router'
 import {
   BadgeCheck,
   BarChart3,
-  Bell,
   Building2,
   CalendarDays,
   CheckSquare,
@@ -11,6 +10,7 @@ import {
   Contact,
   DollarSign,
   Home,
+  Inbox,
   LogOut,
   NotepadText,
   Package,
@@ -55,31 +55,35 @@ import { ProfileDialog } from '@/components/user/profile-dialog'
 import { ChangePasswordDialog } from '@/components/user/change-password-dialog'
 import { LanguageSelector } from '@/components/shared/language-selector'
 
-const MAIN_NAV_KEYS = [
+type NavItem = {
+  titleKey: string
+  url: string
+  icon: typeof Home
+  hasBadge?: boolean
+}
+
+const MAIN_NAV_KEYS: NavItem[] = [
   { titleKey: 'nav.home', url: '/', icon: Home },
   {
     titleKey: 'notifications.title',
-    url: '/notifications',
-    icon: Bell,
-    hasBadge: true,
+    url: '/inbox',
+    icon: Inbox,
   },
   { titleKey: 'deals.title', url: '/deals', icon: DollarSign },
   { titleKey: 'leads.title', url: '/leads', icon: UserRoundSearch },
   { titleKey: 'tasks.title', url: '/tasks', icon: CheckSquare },
   { titleKey: 'notes.title', url: '/notes', icon: NotepadText },
   { titleKey: 'activities.title', url: '/activities', icon: Zap },
-  { titleKey: 'events.title', url: '/events', icon: CalendarDays },
+  { titleKey: 'calendar.title', url: '/calendar', icon: CalendarDays },
   { titleKey: 'reports.title', url: '/reports', icon: BarChart3 },
 ]
 
-const DATA_SOURCES_NAV_KEYS = [
+const DATA_SOURCES_NAV_KEYS: NavItem[] = [
   { titleKey: 'companies.title', url: '/companies', icon: Building2 },
   { titleKey: 'contacts.title', url: '/contacts', icon: Contact },
   { titleKey: 'products.title', url: '/products', icon: Package },
   { titleKey: 'salesOrders.title', url: '/sales-orders', icon: ShoppingCart },
 ]
-
-type NavItem = (typeof MAIN_NAV_KEYS)[number]
 
 function NavGroup({
   label,
@@ -244,9 +248,7 @@ export function AppSidebar() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  <DropdownMenuItem
-                    onClick={() => setProfileDialogOpen(true)}
-                  >
+                  <DropdownMenuItem onClick={() => setProfileDialogOpen(true)}>
                     <BadgeCheck />
                     {t('sidebar.myProfile')}
                   </DropdownMenuItem>
@@ -256,25 +258,24 @@ export function AppSidebar() {
                     <Settings />
                     {t('sidebar.changePassword')}
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Bell />
-                    {t('notifications.title')}
-                  </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  <div className="flex items-center justify-between px-2 py-1.5">
-                    <span className="text-sm">{t('sidebar.theme')}</span>
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">
+                    {t('sidebar.themeMode', 'Theme Mode')}
+                  </DropdownMenuLabel>
+                  <div className="px-2 pb-1.5">
                     <ThemeToggle />
                   </div>
-                  <div className="flex items-center justify-between px-2 py-1.5">
-                    <span className="text-sm">
-                      {t('sidebar.colorTheme', 'Color Theme')}
-                    </span>
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">
+                    {t('sidebar.colorTheme', 'Color Theme')}
+                  </DropdownMenuLabel>
+                  <div className="px-2 pb-1.5">
                     <ThemeSelector />
                   </div>
-                  <LanguageSelector />
                 </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <LanguageSelector />
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => signOut()}>
                   <LogOut />

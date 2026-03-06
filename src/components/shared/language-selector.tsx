@@ -6,7 +6,7 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-} from '@/components/ui/dropdown-menu'
+} from '@/components/animate-ui/components/radix/dropdown-menu'
 
 const LANGUAGES = [
   { code: 'en', label: 'English', flag: '🇺🇸' },

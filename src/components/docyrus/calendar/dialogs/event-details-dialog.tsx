@@ -42,7 +42,7 @@ interface IProps {
 export function EventDetailsDialog({ event, children }: IProps) {
   const startDate = parseISO(event.startDate)
   const endDate = parseISO(event.endDate)
-  const { use24HourFormat, removeEvent } = useCalendar()
+  const { readOnly, removeEvent, use24HourFormat } = useCalendar()
   const [deleteOpen, setDeleteOpen] = useState(false)
 
   const deleteEvent = () => {
@@ -110,32 +110,36 @@ export function EventDetailsDialog({ event, children }: IProps) {
             </div>
           </div>
         </ScrollArea>
-        <div className="flex justify-end gap-2">
-          <AddEditEventDialog event={event}>
-            <Button variant="outline">Edit</Button>
-          </AddEditEventDialog>
-          <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
-            Delete
-          </Button>
-        </div>
+        {!readOnly && (
+          <div className="flex justify-end gap-2">
+            <AddEditEventDialog event={event}>
+              <Button variant="outline">Edit</Button>
+            </AddEditEventDialog>
+            <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
+              Delete
+            </Button>
+          </div>
+        )}
         <DialogClose />
-        <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete event</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete this event? This action cannot
-                be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={deleteEvent}>
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {!readOnly && (
+          <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete event</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete this event? This action cannot
+                  be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={deleteEvent}>
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </DialogContent>
     </Dialog>
   )

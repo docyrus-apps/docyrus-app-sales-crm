@@ -259,7 +259,7 @@ function DataGridRowImpl<TData>({
       {...props}
       ref={rowRef}
       className={cn(
-        'absolute flex w-full border-b',
+        'absolute flex min-w-full border-b',
         !adjustLayout && 'will-change-transform',
         isGroupRow && 'bg-muted/40',
         className,

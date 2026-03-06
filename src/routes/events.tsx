@@ -1,290 +1,167 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { Calendar as CalendarIcon, List, Plus } from 'lucide-react'
-import { endOfMonth, format, startOfMonth } from 'date-fns'
+import { CalendarDays as CalendarIcon } from 'lucide-react'
+import type { IEvent, IUser, TEventColor } from '@/components/docyrus/calendar'
+import { useBaseEventCollection } from '@/collections/base-event.collection'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
-import { Button } from '@/components/animate-ui/components/buttons/button'
-import { Calendar } from '@/components/ui/calendar'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Calendar } from '@/components/docyrus/calendar'
 import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useEvents } from '@/hooks/use-events'
-import { EventFormDialog } from '@/components/events/event-form-dialog'
-import { formatDate } from '@/lib/formatters'
+import { Card, CardContent } from '@/components/ui/card'
 
-export function Events() {
+const EVENT_COLORS: Array<TEventColor> = [
+  'blue',
+  'green',
+  'red',
+  'yellow',
+  'purple',
+  'orange',
+]
+
+function getHashValue(input: string): number {
+  return input.split('').reduce((hash, character) => {
+    return ((hash << 5) - hash + character.charCodeAt(0)) | 0
+  }, 0)
+}
+
+function getEventColor(seed: string): TEventColor {
+  const hash = Math.abs(getHashValue(seed))
+
+  return EVENT_COLORS[hash % EVENT_COLORS.length] ?? EVENT_COLORS[0]
+}
+
+function getEventId(rawId: string | undefined, index: number): number {
+  if (!rawId) {
+    return index + 1
+  }
+
+  const numericValue = Number(rawId)
+
+  if (Number.isInteger(numericValue) && numericValue > 0) {
+    return numericValue
+  }
+
+  return Math.abs(getHashValue(rawId)) || index + 1
+}
+
+function getCalendarLabel(
+  calendar: { id: string; name: string } | string | undefined,
+) {
+  if (!calendar) {
+    return 'General'
+  }
+
+  return typeof calendar === 'string' ? calendar : calendar.name
+}
+
+export function CalendarPage() {
   const { t } = useTranslation()
-  const [isFormOpen, setIsFormOpen] = useState(false)
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
-  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar')
+  const { list } = useBaseEventCollection()
 
-  // Fetch events
-  const { data: events, isLoading } = useEvents()
+  const {
+    data: records = [],
+    error,
+    isLoading,
+  } = useQuery({
+    queryKey: ['events', 'calendar'],
+    queryFn: () =>
+      list({
+        columns: [
+          'id',
+          'subject',
+          'description',
+          'start_date',
+          'end_date',
+          'calendar(name)',
+        ],
+        orderBy: 'start_date ASC',
+      }),
+  })
 
-  // Filter events by selected date
-  const eventsOnSelectedDate = useMemo(() => {
-    if (!events || !selectedDate) return []
+  const users = useMemo<Array<IUser>>(() => {
+    const userMap = new Map<string, IUser>()
 
-    const selectedDateStr = format(selectedDate, 'yyyy-MM-dd')
+    for (const record of records) {
+      const label = getCalendarLabel(record.calendar)
+      const userId = `calendar-${label.toLowerCase().replace(/\s+/g, '-')}`
 
-    return events.filter((event: any) => {
-      if (!event.start_date) return false
-      const eventDateStr = format(new Date(event.start_date), 'yyyy-MM-dd')
-      return eventDateStr === selectedDateStr
-    })
-  }, [events, selectedDate])
+      if (!userMap.has(userId)) {
+        userMap.set(userId, {
+          id: userId,
+          name: label,
+          picturePath: null,
+        })
+      }
+    }
 
-  // Get dates that have events for calendar highlighting
-  const eventDates = useMemo(() => {
-    if (!events) return []
+    if (userMap.size === 0) {
+      userMap.set('calendar-general', {
+        id: 'calendar-general',
+        name: 'General',
+        picturePath: null,
+      })
+    }
 
-    return events
-      .filter((event: any) => event.start_date)
-      .map((event: any) => new Date(event.start_date))
-  }, [events])
+    return Array.from(userMap.values())
+  }, [records])
 
-  // All events sorted by date
-  const allEventsSorted = useMemo(() => {
-    if (!events) return []
+  const calendarEvents = useMemo<Array<IEvent>>(() => {
+    const defaultUser = users[0] ?? {
+      id: 'calendar-general',
+      name: 'General',
+      picturePath: null,
+    }
+    const userLookup = new Map(users.map((user) => [user.name, user]))
 
-    return events
-      .filter((event: any) => event.start_date)
-      .sort(
-        (a: any, b: any) =>
-          new Date(a.start_date).getTime() - new Date(b.start_date).getTime(),
-      )
-  }, [events])
+    return records
+      .filter((record) => Boolean(record.start_date))
+      .map((record, index) => {
+        const calendarLabel = getCalendarLabel(record.calendar)
+        const assignedUser = userLookup.get(calendarLabel) ?? defaultUser
+        const startDate = record.start_date ?? new Date().toISOString()
+        const endDate =
+          record.end_date ??
+          new Date(new Date(startDate).getTime() + 60 * 60 * 1000).toISOString()
+
+        return {
+          id: getEventId(record.id, index),
+          startDate,
+          endDate,
+          title: record.subject,
+          color: getEventColor(
+            record.id ?? `${record.subject}-${calendarLabel}`,
+          ),
+          description: record.description ?? '',
+          user: assignedUser,
+        }
+      })
+  }, [records, users])
 
   return (
     <>
       <PageHeader
-        title={t('events.title')}
-        actions={
-          <div className="flex items-center gap-2">
-            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)}>
-              <TabsList>
-                <TabsTrigger value="calendar">
-                  <CalendarIcon className="h-4 w-4 mr-1" />
-                  {t('events.calendar')}
-                </TabsTrigger>
-                <TabsTrigger value="list">
-                  <List className="h-4 w-4 mr-1" />
-                  {t('viewSwitcher.list')}
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <Button onClick={() => setIsFormOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              {t('events.newEvent')}
-            </Button>
-          </div>
-        }
+        title={t('calendar.title')}
+        icon={<CalendarIcon className="h-4 w-4 text-cyan-500" />}
+        titleSuffix={<Badge variant="secondary">{calendarEvents.length}</Badge>}
       />
       <PageContainer>
-        <EventFormDialog
-          open={isFormOpen}
-          onOpenChange={setIsFormOpen}
-          mode="create"
-        />
-
-        {viewMode === 'calendar' ? (
-          <div className="grid gap-4 md:grid-cols-[350px_1fr]">
-            {/* Calendar */}
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('events.calendar')}</CardTitle>
-                <CardDescription>
-                  {t('events.selectDateToView')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <Skeleton className="h-64 w-full" />
-                ) : (
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    className="rounded-md border"
-                    modifiers={{
-                      hasEvent: eventDates,
-                    }}
-                    modifiersStyles={{
-                      hasEvent: {
-                        fontWeight: 'bold',
-                        textDecoration: 'underline',
-                      },
-                    }}
-                  />
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Events for selected date */}
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  {t('events.eventsOn', {
-                    date: selectedDate ? format(selectedDate, 'PPP') : '',
-                  })}
-                </CardTitle>
-                <CardDescription>
-                  {t('events.eventCount', {
-                    count: eventsOnSelectedDate.length,
-                  })}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <div className="space-y-3">
-                    <Skeleton className="h-20 w-full" />
-                    <Skeleton className="h-20 w-full" />
-                    <Skeleton className="h-20 w-full" />
-                  </div>
-                ) : eventsOnSelectedDate.length === 0 ? (
-                  <div className="text-center py-12">
-                    <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-lg font-medium">
-                      {t('events.noEventsScheduled')}
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {t('events.createEventToStart')}
-                    </p>
-                    <Button
-                      className="mt-4"
-                      onClick={() => setIsFormOpen(true)}
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      {t('events.createEvent')}
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {eventsOnSelectedDate.map((event: any) => (
-                      <Card
-                        key={event.id}
-                        className="hover:shadow-md transition-all"
-                      >
-                        <CardHeader>
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <CardTitle className="text-base">
-                                {event.subject}
-                              </CardTitle>
-                              {event.description && (
-                                <CardDescription className="mt-1">
-                                  {event.description}
-                                </CardDescription>
-                              )}
-                            </div>
-                            {event.calendar && (
-                              <Badge variant="outline">{event.calendar}</Badge>
-                            )}
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <CalendarIcon className="h-4 w-4" />
-                              <span>
-                                {event.start_date &&
-                                  format(new Date(event.start_date), 'p')}
-                                {event.end_date &&
-                                  ` - ${format(new Date(event.end_date), 'p')}`}
-                              </span>
-                            </div>
-                          </div>
-                          {event.event_notes && (
-                            <p className="text-sm mt-2">{event.event_notes}</p>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        ) : (
-          /* List View */
+        {error ? (
           <Card>
-            <CardHeader>
-              <CardTitle>{t('events.allEvents')}</CardTitle>
-              <CardDescription>
-                {t('events.allScheduledEvents', {
-                  count: allEventsSorted.length,
-                })}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-20 w-full" />
-                  <Skeleton className="h-20 w-full" />
-                  <Skeleton className="h-20 w-full" />
-                  <Skeleton className="h-20 w-full" />
-                </div>
-              ) : allEventsSorted.length === 0 ? (
-                <div className="text-center py-12">
-                  <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-lg font-medium">{t('events.noEvents')}</p>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    {t('events.scheduleFirstEvent')}
-                  </p>
-                  <Button className="mt-4" onClick={() => setIsFormOpen(true)}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    {t('events.createEvent')}
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {allEventsSorted.map((event: any) => (
-                    <Card
-                      key={event.id}
-                      className="hover:shadow-md transition-all"
-                    >
-                      <CardContent className="pt-6">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1 space-y-1">
-                            <div className="flex items-center gap-2">
-                              <h4 className="font-medium">{event.subject}</h4>
-                              {event.calendar && (
-                                <Badge variant="outline" className="text-xs">
-                                  {event.calendar}
-                                </Badge>
-                              )}
-                            </div>
-                            {event.description && (
-                              <p className="text-sm text-muted-foreground">
-                                {event.description}
-                              </p>
-                            )}
-                            <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1">
-                              <div className="flex items-center gap-1">
-                                <CalendarIcon className="h-3 w-3" />
-                                <span>
-                                  {event.start_date &&
-                                    format(new Date(event.start_date), 'PPP p')}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
+            <CardContent className="flex min-h-60 items-center justify-center text-sm text-muted-foreground">
+              {error instanceof Error ? error.message : t('common.error')}
             </CardContent>
           </Card>
+        ) : (
+          <Calendar
+            events={calendarEvents}
+            users={users}
+            isLoading={isLoading}
+            defaultView="month"
+            size="lg"
+            readOnly
+            showUserFilter={false}
+          />
         )}
       </PageContainer>
     </>

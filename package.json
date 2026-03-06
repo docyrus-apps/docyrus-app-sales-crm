@@ -123,7 +123,7 @@
     "re-resizable": "^6.11.2",
     "react": "^19.2.4",
     "react-advanced-cropper": "^0.20.1",
-    "react-day-picker": "^9.13.2",
+    "react-day-picker": "^9.14.0",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^19.2.4",
@@ -151,7 +151,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
-    "@babel/core": "^7.29.0",
+    "@babel/core": "^9.13.2",
     "@docyrus/logo-asset-generator": "^0.3.2",
     "@tanstack/eslint-config": "^0.4.0",
     "@testing-library/dom": "^10.4.1",

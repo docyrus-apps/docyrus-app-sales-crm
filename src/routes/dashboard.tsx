@@ -1,12 +1,15 @@
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import {
+  BarChart3,
   Building2,
   Calendar,
   DollarSign,
   Flame,
+  PieChartIcon,
   TrendingUp,
+  UserPlus,
   Users,
 } from 'lucide-react'
 import type { PieData } from '@/components/charts/pie-context'
@@ -35,7 +38,6 @@ import {
   AwesomeCardTrend,
   AwesomeCardValue,
 } from '@/components/docyrus/awesome-card'
-import { Button } from '@/components/animate-ui/components/buttons/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDeals } from '@/hooks/use-deals'
@@ -52,6 +54,149 @@ const PIE_COLORS = [
   'hsl(252, 56%, 68%)',
   'hsl(140, 45%, 65%)',
 ]
+
+const WEEK_BUCKETS = 8
+const MONTH_BUCKETS = 8
+const WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000
+
+function getValidDate(value: unknown): Date | null {
+  if (!value) return null
+
+  const date = value instanceof Date ? value : new Date(String(value))
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+function getLeadLabel(lead: any, t: (key: string) => string) {
+  return (
+    lead.title?.trim() ||
+    `${t('dashboard.untitledLead')} #${lead.id.slice(0, 6)}`
+  )
+}
+
+function getSourceLabel(value: unknown, t: (key: string) => string) {
+  if (typeof value === 'object' && value && 'name' in value) {
+    return String((value as { name?: unknown }).name ?? '')
+  }
+
+  if (typeof value === 'string' && value.trim().length > 0) {
+    return value
+  }
+
+  return t('dashboard.unknownSource')
+}
+
+function buildWeeklySparkline(
+  records: Array<any> | undefined,
+  getDateValue: (record: any) => unknown,
+  getAmount?: (record: any) => number,
+) {
+  const buckets = Array.from({ length: WEEK_BUCKETS }, () => 0)
+  const start = Date.now() - (WEEK_BUCKETS - 1) * WEEK_IN_MS
+
+  for (const record of records ?? []) {
+    const date = getValidDate(getDateValue(record))
+    if (!date) continue
+
+    const bucketIndex = Math.floor((date.getTime() - start) / WEEK_IN_MS)
+    if (bucketIndex < 0 || bucketIndex >= WEEK_BUCKETS) continue
+
+    buckets[bucketIndex] += getAmount ? getAmount(record) : 1
+  }
+
+  return buckets
+}
+
+function buildMonthlyRevenueSparkline(records: Array<any> | undefined) {
+  const buckets = Array.from({ length: MONTH_BUCKETS }, () => 0)
+  const now = new Date()
+  const startMonth = new Date(
+    now.getFullYear(),
+    now.getMonth() - (MONTH_BUCKETS - 1),
+    1,
+  )
+
+  for (const record of records ?? []) {
+    const date = getValidDate(record.expected_closing_date ?? record.created_on)
+    if (!date) continue
+
+    const bucketIndex =
+      (date.getFullYear() - startMonth.getFullYear()) * 12 +
+      (date.getMonth() - startMonth.getMonth())
+
+    if (bucketIndex < 0 || bucketIndex >= MONTH_BUCKETS) continue
+
+    buckets[bucketIndex] += Number(record.deal_value ?? 0)
+  }
+
+  return buckets
+}
+
+function MiniSparkline({
+  data,
+  className,
+}: {
+  data: Array<number>
+  className?: string
+}) {
+  const gradientId = useId()
+  const width = 120
+  const height = 48
+  const padding = 4
+  const hasVariation = Math.max(...data, 0) !== Math.min(...data, 0)
+  const min = hasVariation ? Math.min(...data) : 0
+  const max = hasVariation ? Math.max(...data) : 1
+  const range = max - min || 1
+
+  const points = data.map((value, index) => {
+    const x =
+      data.length === 1
+        ? width / 2
+        : padding + (index * (width - padding * 2)) / (data.length - 1)
+    const y = hasVariation
+      ? padding + ((max - value) / range) * (height - padding * 2)
+      : height / 2
+
+    return { x, y }
+  })
+
+  const linePath = points
+    .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`)
+    .join(' ')
+
+  const areaPath = [
+    `M ${points[0]?.x ?? padding} ${height - padding}`,
+    ...points.map((point) => `L ${point.x} ${point.y}`),
+    `L ${points.at(-1)?.x ?? width - padding} ${height - padding}`,
+    'Z',
+  ].join(' ')
+
+  return (
+    <div className={className}>
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        className="h-full w-full"
+        aria-hidden="true"
+        preserveAspectRatio="none"
+      >
+        <defs>
+          <linearGradient id={gradientId} x1="0%" x2="0%" y1="0%" y2="100%">
+            <stop offset="0%" stopColor="currentColor" stopOpacity="0.24" />
+            <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={areaPath} fill={`url(#${gradientId})`} />
+        <path
+          d={linePath}
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2.5"
+        />
+      </svg>
+    </div>
+  )
+}
 
 function PieLeadsBySource({ data }: { data: Array<PieData> }) {
   const { t } = useTranslation()
@@ -75,8 +220,8 @@ function PieLeadsBySource({ data }: { data: Array<PieData> }) {
         hoveredIndex={hoveredIndex}
         onHoverChange={setHoveredIndex}
       >
-        {data.map((_, index) => (
-          <PieSlice key={index} index={index} hoverEffect="grow" />
+        {data.map((item, index) => (
+          <PieSlice key={item.label} index={index} hoverEffect="grow" />
         ))}
         <PieCenter defaultLabel={t('dashboard.total')} />
       </PieChart>
@@ -206,20 +351,36 @@ export function Dashboard() {
       .slice(0, 5)
   }, [tasks])
 
+  const newLeads = useMemo(() => (leads ?? []).slice(0, 5), [leads])
+
+  const sparklineData = useMemo(
+    () => ({
+      deals: buildWeeklySparkline(deals, (deal) => deal.created_on),
+      leads: buildWeeklySparkline(leads, (lead) => lead.created_on),
+      companies: buildWeeklySparkline(
+        companies,
+        (company) => company.created_on,
+      ),
+      revenue: buildMonthlyRevenueSparkline(deals),
+    }),
+    [companies, deals, leads],
+  )
+
   const isLoading =
     dealsLoading || leadsLoading || companiesLoading || tasksLoading
 
   return (
-    <>
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {t('dashboard.title')}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t('dashboard.subtitle')}
-        </p>
-      </div>
-      <PageContainer>
+    <div className="h-full overflow-y-auto">
+      <PageContainer className="space-y-8 pb-8">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {t('dashboard.title')}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t('dashboard.subtitle')}
+          </p>
+        </div>
+
         {/* Stat Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <AwesomeCard className="animate-fade-in-up">
@@ -233,12 +394,18 @@ export function Dashboard() {
               {isLoading ? (
                 <Skeleton className="h-8 w-20" />
               ) : (
-                <>
-                  <AwesomeCardValue>{stats.totalDeals}</AwesomeCardValue>
-                  <AwesomeCardTrend>
-                    {t('dashboard.activeDealsInPipeline')}
-                  </AwesomeCardTrend>
-                </>
+                <div className="flex items-end justify-between gap-4">
+                  <div className="min-w-0">
+                    <AwesomeCardValue>{stats.totalDeals}</AwesomeCardValue>
+                    <AwesomeCardTrend>
+                      {t('dashboard.activeDealsInPipeline')}
+                    </AwesomeCardTrend>
+                  </div>
+                  <MiniSparkline
+                    data={sparklineData.deals}
+                    className="h-12 w-24 text-emerald-500"
+                  />
+                </div>
               )}
             </AwesomeCardBody>
           </AwesomeCard>
@@ -254,12 +421,18 @@ export function Dashboard() {
               {isLoading ? (
                 <Skeleton className="h-8 w-20" />
               ) : (
-                <>
-                  <AwesomeCardValue>{stats.totalLeads}</AwesomeCardValue>
-                  <AwesomeCardTrend>
-                    {t('dashboard.totalLeads')}
-                  </AwesomeCardTrend>
-                </>
+                <div className="flex items-end justify-between gap-4">
+                  <div className="min-w-0">
+                    <AwesomeCardValue>{stats.totalLeads}</AwesomeCardValue>
+                    <AwesomeCardTrend>
+                      {t('dashboard.totalLeads')}
+                    </AwesomeCardTrend>
+                  </div>
+                  <MiniSparkline
+                    data={sparklineData.leads}
+                    className="h-12 w-24 text-sky-500"
+                  />
+                </div>
               )}
             </AwesomeCardBody>
           </AwesomeCard>
@@ -275,12 +448,18 @@ export function Dashboard() {
               {isLoading ? (
                 <Skeleton className="h-8 w-20" />
               ) : (
-                <>
-                  <AwesomeCardValue>{stats.totalCompanies}</AwesomeCardValue>
-                  <AwesomeCardTrend>
-                    {t('dashboard.activeCompanies')}
-                  </AwesomeCardTrend>
-                </>
+                <div className="flex items-end justify-between gap-4">
+                  <div className="min-w-0">
+                    <AwesomeCardValue>{stats.totalCompanies}</AwesomeCardValue>
+                    <AwesomeCardTrend>
+                      {t('dashboard.activeCompanies')}
+                    </AwesomeCardTrend>
+                  </div>
+                  <MiniSparkline
+                    data={sparklineData.companies}
+                    className="h-12 w-24 text-violet-500"
+                  />
+                </div>
               )}
             </AwesomeCardBody>
           </AwesomeCard>
@@ -296,14 +475,20 @@ export function Dashboard() {
               {isLoading ? (
                 <Skeleton className="h-8 w-20" />
               ) : (
-                <>
-                  <AwesomeCardValue>
-                    {formatCurrency(stats.monthlyRevenue)}
-                  </AwesomeCardValue>
-                  <AwesomeCardTrend>
-                    {t('dashboard.thisMonth')}
-                  </AwesomeCardTrend>
-                </>
+                <div className="flex items-end justify-between gap-4">
+                  <div className="min-w-0">
+                    <AwesomeCardValue>
+                      {formatCurrency(stats.monthlyRevenue)}
+                    </AwesomeCardValue>
+                    <AwesomeCardTrend>
+                      {t('dashboard.thisMonth')}
+                    </AwesomeCardTrend>
+                  </div>
+                  <MiniSparkline
+                    data={sparklineData.revenue}
+                    className="h-12 w-24 text-amber-500"
+                  />
+                </div>
               )}
             </AwesomeCardBody>
           </AwesomeCard>
@@ -316,6 +501,9 @@ export function Dashboard() {
               <AwesomeCardTitle>
                 {t('dashboard.pipelineByStage')}
               </AwesomeCardTitle>
+              <AwesomeCardIcon>
+                <BarChart3 className="size-4" />
+              </AwesomeCardIcon>
             </AwesomeCardHeader>
             <AwesomeCardBody>
               {isLoading ? (
@@ -356,6 +544,9 @@ export function Dashboard() {
               <AwesomeCardTitle>
                 {t('dashboard.leadsBySource')}
               </AwesomeCardTitle>
+              <AwesomeCardIcon>
+                <PieChartIcon className="size-4" />
+              </AwesomeCardIcon>
             </AwesomeCardHeader>
             <AwesomeCardBody>
               {isLoading ? (
@@ -375,27 +566,58 @@ export function Dashboard() {
         <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <AwesomeCard className="animate-fade-in-up">
             <AwesomeCardHeader>
-              <AwesomeCardTitle>{t('dashboard.quickActions')}</AwesomeCardTitle>
+              <AwesomeCardTitle>{t('dashboard.newLeads')}</AwesomeCardTitle>
+              <AwesomeCardIcon>
+                <UserPlus className="size-4" />
+              </AwesomeCardIcon>
             </AwesomeCardHeader>
-            <AwesomeCardBody className="space-y-2">
-              <Link to="/deals">
-                <Button variant="outline" className="w-full justify-start">
-                  <DollarSign className="mr-2 h-4 w-4" />
-                  {t('dashboard.viewDealsPipeline')}
-                </Button>
-              </Link>
-              <Link to="/leads">
-                <Button variant="outline" className="w-full justify-start">
-                  <Users className="mr-2 h-4 w-4" />
-                  {t('dashboard.manageLeads')}
-                </Button>
-              </Link>
-              <Link to="/companies">
-                <Button variant="outline" className="w-full justify-start">
-                  <Building2 className="mr-2 h-4 w-4" />
-                  {t('dashboard.browseCompanies')}
-                </Button>
-              </Link>
+            <AwesomeCardBody>
+              {leadsLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-14 w-full" />
+                  <Skeleton className="h-14 w-full" />
+                  <Skeleton className="h-14 w-full" />
+                </div>
+              ) : newLeads.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  {t('dashboard.noNewLeads')}
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {newLeads.map((lead: any) => (
+                    <Link
+                      key={lead.id}
+                      to="/leads/$leadId"
+                      params={{ leadId: lead.id }}
+                      className="block rounded-lg border border-border/60 bg-background/60 p-3 transition-colors hover:bg-muted/70"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">
+                            {getLeadLabel(lead, t)}
+                          </p>
+                          <p className="mt-1 truncate text-xs text-muted-foreground">
+                            {typeof lead.company_name === 'object' &&
+                            lead.company_name?.name
+                              ? lead.company_name.name
+                              : getSourceLabel(lead.lead_source, t)}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <Badge variant="outline" className="max-w-full">
+                            <span className="truncate">
+                              {getSourceLabel(lead.lead_source, t)}
+                            </span>
+                          </Badge>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {formatDate(lead.created_on)}
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </AwesomeCardBody>
           </AwesomeCard>
 
@@ -500,6 +722,6 @@ export function Dashboard() {
           </AwesomeCard>
         </div>
       </PageContainer>
-    </>
+    </div>
   )
 }

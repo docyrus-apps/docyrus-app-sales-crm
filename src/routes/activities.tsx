@@ -9,7 +9,10 @@ export function Activities() {
 
   return (
     <>
-      <PageHeader title={t('activities.title')} />
+      <PageHeader
+        title={t('activities.title')}
+        icon={<Zap className="h-4 w-4 text-orange-500" />}
+      />
       <PageContainer>
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">

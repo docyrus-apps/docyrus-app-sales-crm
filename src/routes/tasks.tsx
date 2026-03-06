@@ -1,29 +1,83 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CheckSquare, Plus } from 'lucide-react'
+import { CheckSquare, Plus, Trash2 } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
+import type { RowChange } from '@/components/docyrus/data-grid'
 import {
   DataGrid,
   DataGridSkeleton,
   DataGridSkeletonGrid,
+  getDataGridSelectColumn,
   useDataGrid,
 } from '@/components/docyrus/data-grid'
+import { DataGridStandardToolbar } from '@/components/docyrus/data-grid-standard-toolbar'
+import { RecordDeleteConfirmDialog } from '@/components/docyrus/record-delete-confirm-dialog'
+import { getDataGridRowActionsColumn } from '@/components/docyrus/data-grid-row-actions-column'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/animate-ui/components/buttons/button'
-import { useDeleteTask, useTasks } from '@/hooks/use-tasks'
+import { useDeleteTask, useTasks, useUpdateTask } from '@/hooks/use-tasks'
 import { TaskFormSheet } from '@/components/tasks/task-form-sheet'
 import { Card, CardContent } from '@/components/ui/card'
+import {
+  buildDuplicatePayload,
+  saveGridChanges,
+} from '@/lib/data-grid-record-utils'
 
 export function Tasks() {
   const { t } = useTranslation()
   const { data: tasks, isLoading } = useTasks()
   const deleteTask = useDeleteTask()
+  const updateTask = useUpdateTask()
   const [isFormOpen, setIsFormOpen] = useState(false)
-  const [editingTask, setEditingTask] = useState<any>(null)
+  const [formMode, setFormMode] = useState<'create' | 'edit'>('create')
+  const [activeTask, setActiveTask] = useState<any>(null)
+  const [deleteTargets, setDeleteTargets] = useState<Array<any>>([])
 
-  const columns = useMemo<Array<ColumnDef<any>>>(
-    () => [
+  const onOpenCreate = () => {
+    setFormMode('create')
+    setActiveTask(null)
+    setIsFormOpen(true)
+  }
+
+  const onOpenEdit = (task: any) => {
+    setFormMode('edit')
+    setActiveTask(task)
+    setIsFormOpen(true)
+  }
+
+  const onDuplicate = (task: any) => {
+    setFormMode('create')
+    setActiveTask(buildDuplicatePayload(task))
+    setIsFormOpen(true)
+  }
+
+  const onDeleteRequest = (rows: Array<any>) => {
+    if (rows.length === 0) return
+
+    setDeleteTargets(rows)
+  }
+
+  const onDeleteConfirm = async () => {
+    const ids = deleteTargets
+      .map((row) => row?.id)
+      .filter(Boolean) as Array<string>
+
+    await Promise.all(ids.map((id) => deleteTask.mutateAsync(id)))
+    setDeleteTargets([])
+  }
+
+  const onChangesSave = async (
+    changes: Array<RowChange>,
+    gridData: Array<any>,
+  ) => {
+    await saveGridChanges(changes, gridData, (id, data) =>
+      updateTask.mutateAsync({ taskId: id, data }),
+    )
+  }
+
+  const columns = useMemo<Array<ColumnDef<any>>>(() => {
+    const baseColumns: Array<ColumnDef<any>> = [
       {
         accessorKey: 'subject',
         header: t('tasks.columns.subject'),
@@ -86,48 +140,37 @@ export function Tasks() {
         enableSorting: true,
         size: 160,
       },
-    ],
-    [t],
-  )
+    ]
+
+    return [
+      getDataGridSelectColumn<any>(),
+      getDataGridRowActionsColumn<any>({
+        onView: onOpenEdit,
+        onEdit: onOpenEdit,
+        onDuplicate,
+        onDelete: (row) => onDeleteRequest([row]),
+      }),
+      ...baseColumns,
+    ]
+  }, [t])
 
   const { table, ...dataGridProps } = useDataGrid({
     data: tasks || [],
     columns,
     getRowId: (row: any) => row.id,
-    readOnly: true,
-    actions: [
-      {
-        label: t('common.edit'),
-        onAction: (rows) => {
-          if (rows.length === 1) {
-            setEditingTask(rows[0])
-            setIsFormOpen(true)
-          }
-        },
-      },
-      {
-        label: t('common.delete'),
-        variant: 'destructive',
-        onAction: (rows) => {
-          if (confirm(t('tasks.confirmDelete'))) {
-            rows.forEach((row: any) => deleteTask.mutate(row.id))
-          }
-        },
-      },
-    ],
+    readOnly: false,
+    enableGrouping: true,
+    enableChangeTracking: true,
+    onChangesSave,
   })
 
   return (
     <>
       <PageHeader
         title={t('tasks.title')}
+        icon={<CheckSquare className="h-4 w-4 text-emerald-500" />}
         actions={
-          <Button
-            onClick={() => {
-              setEditingTask(null)
-              setIsFormOpen(true)
-            }}
-          >
+          <Button size="sm" onClick={onOpenCreate}>
             <Plus className="mr-2 h-4 w-4" />
             {t('tasks.newTask')}
           </Button>
@@ -138,10 +181,13 @@ export function Tasks() {
           open={isFormOpen}
           onOpenChange={(open) => {
             setIsFormOpen(open)
-            if (!open) setEditingTask(null)
+            if (!open) {
+              setActiveTask(null)
+              setFormMode('create')
+            }
           }}
-          mode={editingTask ? 'edit' : 'create'}
-          task={editingTask}
+          mode={formMode}
+          task={activeTask ?? undefined}
         />
 
         {isLoading && (
@@ -158,13 +204,7 @@ export function Tasks() {
               <p className="text-sm text-muted-foreground mt-2">
                 {t('tasks.emptyDescription')}
               </p>
-              <Button
-                className="mt-4"
-                onClick={() => {
-                  setEditingTask(null)
-                  setIsFormOpen(true)
-                }}
-              >
+              <Button className="mt-4" onClick={onOpenCreate}>
                 <Plus className="mr-2 h-4 w-4" />
                 {t('tasks.createTask')}
               </Button>
@@ -173,8 +213,36 @@ export function Tasks() {
         )}
 
         {!isLoading && tasks && tasks.length > 0 && (
-          <DataGrid table={table} {...dataGridProps} height={600} />
+          <>
+            <DataGridStandardToolbar
+              table={table}
+              searchPlaceholder={t('common.search', 'Search...')}
+            />
+            <DataGrid
+              table={table}
+              {...dataGridProps}
+              height={600}
+              actions={[
+                {
+                  label: t('common.delete'),
+                  icon: <Trash2 className="size-4" />,
+                  variant: 'destructive',
+                  onAction: onDeleteRequest,
+                },
+              ]}
+            />
+          </>
         )}
+
+        <RecordDeleteConfirmDialog
+          open={deleteTargets.length > 0}
+          onOpenChange={(open) => {
+            if (!open) setDeleteTargets([])
+          }}
+          recordCount={deleteTargets.length}
+          onConfirm={onDeleteConfirm}
+          isPending={deleteTask.isPending}
+        />
       </PageContainer>
     </>
   )

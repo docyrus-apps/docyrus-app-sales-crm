@@ -39,7 +39,7 @@ export function ModalContainer({
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay
           data-slot="awesome-dialog-overlay"
-          className="data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs fixed inset-0"
+          className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs fixed inset-0"
           style={{ zIndex: zIndex ?? 50 }}
         />
         <div
@@ -54,7 +54,7 @@ export function ModalContainer({
             aria-describedby={undefined}
             data-slot="awesome-dialog-container"
             className={cn(
-              'data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95',
+              'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
               'pointer-events-auto flex w-full flex-col outline-none duration-200',
               'max-w-[calc(100%-2rem)]',
               isFullscreen && 'max-w-none h-full',

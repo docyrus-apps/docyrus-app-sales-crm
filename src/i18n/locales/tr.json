@@ -60,13 +60,29 @@
     "completingSignIn": "Giriş işlemi tamamlanıyor..."
   },
   "notifications": {
-    "title": "Bildirimler",
-    "noNotifications": "Yeni bildirim yok",
+    "title": "Gelen Kutusu",
+    "all": "Tümü",
+    "unread": "Okunmamış",
+    "noNotifications": "Gelen kutusunda öğe yok",
+    "markRead": "Okundu olarak işaretle",
     "markAllRead": "Tümünü okundu işaretle",
     "viewAll": "Tümünü Görüntüle",
-    "pageTitle": "Bildirimler",
-    "empty": "Bildirim yok",
+    "pageTitle": "Gelen Kutusu",
+    "empty": "Gelen kutusunda öğe yok",
     "allCaughtUp": "Hepsini gördünüz!"
+  },
+  "inbox": {
+    "listTitle": "Gelen yorumlar",
+    "threadTitle": "Yorum dizisi",
+    "selectThread": "Tam diziyi görüntülemek için bir konuşma seçin.",
+    "unknownSender": "Bilinmeyen gönderici",
+    "untitledThread": "Başlıksız konuşma",
+    "noMessages": "Bu konuşmada henüz mesaj yok.",
+    "incoming": "Gelen",
+    "mine": "Benim",
+    "replies": "yanıt",
+    "noPreview": "Önizleme yok",
+    "noEmail": "E-posta yok"
   },
   "dashboard": {
     "title": "Gösterge Paneli",
@@ -88,6 +104,10 @@
     "noLeadsDataAvailable": "Potansiyel müşteri verisi yok",
     "total": "Toplam",
     "quickActions": "Hızlı İşlemler",
+    "newLeads": "Yeni Potansiyel Müşteriler",
+    "noNewLeads": "Henüz yeni potansiyel müşteri yok",
+    "untitledLead": "Başlıksız potansiyel müşteri",
+    "unknownSource": "Bilinmeyen kaynak",
     "viewDealsPipeline": "Fırsat Hattını Görüntüle",
     "manageLeads": "Potansiyel Müşterileri Yönet",
     "browseCompanies": "Şirketlere Göz At",
@@ -148,8 +168,28 @@
     }
   },
   "quickAdd": {
-    "tooltip": "Hızlı Ekle",
-    "label": "Hızlı Ekle"
+    "tooltip": "Hızlı Oluştur",
+    "label": "Hızlı Oluştur"
+  },
+  "quickTask": {
+    "dialogDescription": "Üst çubuktaki hızlı oluştur menüsünden görev oluşturun.",
+    "createOn": "Görevi şurada oluştur",
+    "selectOrganization": "Şirket seçin",
+    "searchOrganizations": "Şirket ara...",
+    "noOrganizations": "Şirket bulunamadı",
+    "selectDeal": "Fırsat seçin",
+    "searchDeals": "Fırsat ara...",
+    "noDeals": "Bu şirket için fırsat bulunamadı",
+    "namePlaceholder": "Görev adı",
+    "nameRequired": "Görev adı zorunludur",
+    "addDetails": "Detay ekle",
+    "descriptionPlaceholder": "Açıklama, bağlam veya not ekleyin",
+    "dueDate": "Bitiş tarihi",
+    "assignee": "Atanan kişi",
+    "searchUsers": "Kullanıcı ara...",
+    "noUsers": "Kullanıcı bulunamadı",
+    "backlog": "Backlog",
+    "createMore": "Oluşturmaya devam et"
   },
   "deals": {
     "title": "Fırsatlar",
@@ -419,6 +459,7 @@
     "organization": "Şirket",
     "tabs": {
       "overview": "Genel Bakış",
+      "activity": "Aktivite",
       "comments": "Yorumlar",
       "files": "Dosyalar"
     },
@@ -519,6 +560,9 @@
       "updateButton": "Etkinliği Güncelle"
     }
   },
+  "calendar": {
+    "title": "Takvim"
+  },
   "products": {
     "title": "Ürünler",
     "newProduct": "Yeni Ürün",
@@ -584,7 +628,25 @@
   "activities": {
     "title": "Aktiviteler",
     "pageTitle": "Aktiviteler",
-    "comingSoon": "Aktivite takibi yakında eklenecektir."
+    "newActivity": "Yeni Aktivite",
+    "comingSoon": "Aktivite takibi yakında eklenecektir.",
+    "form": {
+      "createTitle": "Aktivite Oluştur",
+      "editTitle": "Aktiviteyi Düzenle",
+      "createDescription": "Ekibiniz için yeni bir aktivite kaydı oluşturun.",
+      "editDescription": "Aktivite detaylarını güncelleyin.",
+      "subjectLabel": "Konu",
+      "subjectPlaceholder": "Aktivite konusunu girin...",
+      "descriptionLabel": "Açıklama",
+      "descriptionPlaceholder": "Not veya bağlam ekleyin...",
+      "startDateLabel": "Başlangıç tarihi",
+      "endDateLabel": "Bitiş tarihi",
+      "recordOwnerLabel": "Kayıt Sahibi",
+      "recordOwnerPlaceholder": "Kayıt sahibi seçin...",
+      "recordOwnerEmpty": "Kullanıcı bulunamadı",
+      "createButton": "Aktivite Oluştur",
+      "updateButton": "Aktiviteyi Güncelle"
+    }
   },
   "emails": {
     "title": "E-postalar",
@@ -605,7 +667,54 @@
   "reports": {
     "title": "Raporlar",
     "pageTitle": "Raporlar",
-    "comingSoon": "Raporlama özellikleri yakında eklenecektir."
+    "subtitle": "Satış performansını, potansiyel müşterileri ve verimlilik trendlerini analiz edin.",
+    "comingSoon": "Raporlama özellikleri yakında eklenecektir.",
+    "dateRange": {
+      "7d": "7 Gün",
+      "30d": "30 Gün",
+      "90d": "90 Gün",
+      "thisQuarter": "Bu Çeyrek",
+      "thisYear": "Bu Yıl",
+      "12mo": "12 Ay"
+    },
+    "tabs": {
+      "revenuePipeline": "Gelir ve Hat",
+      "leadAnalytics": "Potansiyel Müşteri Analizi",
+      "ordersProducts": "Siparişler ve Ürünler",
+      "activity": "Aktivite"
+    },
+    "revenueTrend": "Gelir Trendi",
+    "pipelineValueByStage": "Aşamaya Göre Hat Değeri",
+    "winLossAnalysis": "Kazanma/Kaybetme Analizi",
+    "avgDealSizeAndCycleTime": "Ort. Fırsat Büyüklüğü ve Süre",
+    "leadConversionFunnel": "Dönüşüm Hunisi",
+    "leadSourceEffectiveness": "Kaynak Etkinliği",
+    "leadAcquisitionTrend": "Kazanım Trendi",
+    "salesOrderRevenue": "Satış Sipariş Geliri",
+    "topProductsByRevenue": "Gelire Göre En İyi Ürünler",
+    "productCategoryBreakdown": "Ürün Kategorisi Dağılımı",
+    "taskCompletionRate": "Görev Tamamlama Oranı",
+    "companyEngagement": "Şirket Etkileşimi",
+    "geographicAnalysis": "Coğrafi Analiz",
+    "won": "Kazanılan",
+    "lost": "Kaybedilen",
+    "pipeline": "Hat",
+    "totalValue": "Toplam Değer",
+    "weightedValue": "Ağırlıklı Değer",
+    "avgDealSize": "Ort. Fırsat Büyüklüğü",
+    "avgCycleTimeDays": "Ort. Kapanış Süresi",
+    "days": "gün",
+    "lossReasons": "Kayıp Nedenleri",
+    "unknownReason": "Bilinmeyen",
+    "totalLeads": "Toplam",
+    "converted": "Dönüştürülen",
+    "subtotal": "Ara Toplam",
+    "tax": "Vergi",
+    "categories": "Kategoriler",
+    "completed": "Tamamlanan",
+    "overdue": "Geciken",
+    "open": "Açık",
+    "dealCount": "Fırsatlar"
   },
   "commandPalette": {
     "searchPlaceholder": "Fırsat, potansiyel müşteri, şirket, görev ara...",
@@ -620,7 +729,7 @@
     "leads": "Potansiyel Müşteriler",
     "companies": "Şirketler",
     "tasks": "Görevler",
-    "events": "Etkinlikler",
+    "calendar": "Takvim",
     "emails": "E-postalar",
     "products": "Ürünler",
     "salesOrders": "Satış Siparişleri",
@@ -690,9 +799,9 @@
     "companies": "Şirketler",
     "contacts": "Kişiler",
     "tasks": "Görevler",
-    "notifications": "Bildirimler",
+    "notifications": "Gelen Kutusu",
     "emails": "E-postalar",
-    "events": "Etkinlikler",
+    "calendar": "Takvim",
     "notes": "Notlar",
     "products": "Ürünler",
     "salesOrders": "Satış Siparişleri",
@@ -700,6 +809,7 @@
     "reports": "Raporlar"
   },
   "viewSwitcher": {
+    "board": "Pano",
     "list": "Liste",
     "card": "Kart",
     "kanban": "Kanban"
