@@ -5,7 +5,7 @@ import type {
   DragStartEvent,
   UniqueIdentifier,
 } from '@dnd-kit/core'
-import { Building2, Globe, Mail, Sparkles } from 'lucide-react'
+import { ArrowUpRight, Building2, Globe, Mail, Sparkles } from 'lucide-react'
 import type { BaseCrmLeadsEntity } from '@/collections/base_crm-leads.collection'
 import type { EnumEntity } from '@/collections/enums.collection'
 import {
@@ -255,10 +255,10 @@ export function LeadsKanbanView({
             <KanbanColumn
               key={status.id}
               value={status.id}
-              className="flex h-full min-h-0 w-80 shrink-0 overflow-hidden bg-muted"
+              className="flex h-full min-h-0 w-80 shrink-0 overflow-hidden bg-primary-foreground"
               style={getStatusSurfaceStyle(status.color)}
             >
-              <div className="flex items-center justify-between rounded-xl border border-border/50 bg-background/65 px-3 py-3 shadow-sm backdrop-blur">
+              <div className="flex items-center justify-between gap-3 border-b border-border/60 px-3 pb-3">
                 <div className="flex min-w-0 items-center gap-2">
                   {status.icon && (
                     <span
@@ -281,7 +281,7 @@ export function LeadsKanbanView({
                   {columns[status.id]?.length ?? 0}
                 </Badge>
               </div>
-              <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-1">
+              <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pl-2 pr-1">
                 <div className="flex min-h-full flex-col gap-2">
                   {(columns[status.id] ?? []).map((lead) => {
                     const company = getLeadCompany(lead)
@@ -308,56 +308,60 @@ export function LeadsKanbanView({
                         asHandle
                         className="min-w-0"
                       >
-                        <Link
-                          to="/leads/$leadId"
-                          params={{ leadId: lead.id ?? '' }}
-                          className="block min-w-0"
-                        >
-                          <Card className="group relative w-full min-w-0 overflow-hidden rounded-3xl border-border/60 bg-background shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+                        <Card className="group relative w-full min-w-0 overflow-hidden border-border/60 bg-background shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+                          <Link
+                            to="/leads/$leadId"
+                            params={{ leadId: lead.id ?? '' }}
+                            className="absolute top-4 right-4 z-10 flex size-8 items-center justify-center rounded-full border border-border/60 bg-background/90 text-muted-foreground transition hover:bg-background hover:text-foreground"
+                            onPointerDown={(event) => event.stopPropagation()}
+                            onMouseDown={(event) => event.stopPropagation()}
+                            onTouchStart={(event) => event.stopPropagation()}
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <ArrowUpRight className="size-4" />
+                          </Link>
                             <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-br from-sky-500/12 via-transparent to-amber-400/12" />
                             <CardHeader className="relative gap-4 pb-3">
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="flex min-w-0 items-start gap-3">
-                                  <Avatar className="size-12 rounded-2xl ring-1 ring-border/60">
-                                    <AvatarImage
-                                      src={companyLogo}
-                                      alt={
-                                        typeof company === 'object'
-                                          ? (company?.name ?? 'Company')
-                                          : 'Lead company'
-                                      }
-                                    />
-                                    <AvatarFallback className="rounded-2xl bg-muted text-sm font-semibold text-foreground">
-                                      {getInitials(
-                                        companyName || lead.title || 'Lead',
-                                      )}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div className="min-w-0 space-y-1">
-                                    <CardTitle className="truncate text-sm font-semibold tracking-tight">
-                                      {lead.title ||
-                                        `Lead #${lead.id?.slice(0, 8) ?? ''}`}
-                                    </CardTitle>
-                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                      <Building2 className="size-3.5 shrink-0" />
-                                      <span className="truncate">
-                                        {companyName}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="shrink-0 rounded-2xl border border-sky-500/20 bg-sky-500/10 px-3 py-2 text-right">
-                                  <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.16em] text-sky-700 dark:text-sky-300">
-                                    <Sparkles className="size-3.5" />
-                                    Source
-                                  </div>
-                                  <div className="mt-1 text-xs font-semibold text-foreground">
-                                    {leadSource}
+                              <div className="flex min-w-0 items-start gap-3">
+                                <Avatar className="size-12 rounded-2xl ring-1 ring-border/60">
+                                  <AvatarImage
+                                    src={companyLogo}
+                                    alt={
+                                      typeof company === 'object'
+                                        ? (company?.name ?? 'Company')
+                                        : 'Lead company'
+                                    }
+                                  />
+                                  <AvatarFallback className="rounded-2xl bg-muted text-sm font-semibold text-foreground">
+                                    {getInitials(
+                                      companyName || lead.title || 'Lead',
+                                    )}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="min-w-0 space-y-1">
+                                  <CardTitle className="truncate text-sm font-semibold tracking-tight">
+                                    {lead.title ||
+                                      `Lead #${lead.id?.slice(0, 8) ?? ''}`}
+                                  </CardTitle>
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <Building2 className="size-3.5 shrink-0" />
+                                    <span className="truncate">
+                                      {companyName}
+                                    </span>
                                   </div>
                                 </div>
                               </div>
                             </CardHeader>
                             <CardContent className="relative space-y-4 pt-0">
+                              <div className="rounded-2xl border border-sky-500/20 bg-sky-500/10 px-3 py-2">
+                                <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.16em] text-sky-700 dark:text-sky-300">
+                                  <Sparkles className="size-3.5" />
+                                  Source
+                                </div>
+                                <div className="mt-1 text-sm font-semibold text-foreground">
+                                  {leadSource}
+                                </div>
+                              </div>
                               <div className="grid gap-2">
                                 <div className="rounded-2xl border border-border/60 bg-muted/70 px-3 py-2">
                                   <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
@@ -397,8 +401,7 @@ export function LeadsKanbanView({
                                   )}
                               </div>
                             </CardContent>
-                          </Card>
-                        </Link>
+                        </Card>
                       </KanbanItem>
                     )
                   })}

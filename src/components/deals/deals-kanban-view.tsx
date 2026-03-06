@@ -5,7 +5,13 @@ import type {
   DragStartEvent,
   UniqueIdentifier,
 } from '@dnd-kit/core'
-import { CalendarDays, Flame, HandCoins, UserRound } from 'lucide-react'
+import {
+  ArrowUpRight,
+  CalendarDays,
+  Flame,
+  HandCoins,
+  UserRound,
+} from 'lucide-react'
 import type { BaseCrmDealsEntity } from '@/collections/base_crm-deals.collection'
 import type { EnumEntity } from '@/collections/enums.collection'
 import {
@@ -338,12 +344,18 @@ export function DealsKanbanView({
                         asHandle
                         className="min-w-0"
                       >
-                        <Link
-                          to="/deals/$dealId"
-                          params={{ dealId: deal.id ?? '' }}
-                          className="block min-w-0"
-                        >
-                          <Card className="group relative w-full min-w-0 overflow-hidden border-border/60 bg-background shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+                        <Card className="group relative w-full min-w-0 overflow-hidden border-border/60 bg-background shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+                          <Link
+                            to="/deals/$dealId"
+                            params={{ dealId: deal.id ?? '' }}
+                            className="absolute top-4 right-4 z-10 flex size-8 items-center justify-center rounded-full border border-border/60 bg-background/90 text-muted-foreground transition hover:bg-background hover:text-foreground"
+                            onPointerDown={(event) => event.stopPropagation()}
+                            onMouseDown={(event) => event.stopPropagation()}
+                            onTouchStart={(event) => event.stopPropagation()}
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <ArrowUpRight className="size-4" />
+                          </Link>
                             <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-br from-emerald-500/10 via-transparent to-sky-500/10" />
                             <CardHeader className="relative gap-4 pb-3">
                               <div className="flex min-w-0 items-start gap-3">
@@ -447,8 +459,7 @@ export function DealsKanbanView({
                                 )}
                               </div>
                             </CardContent>
-                          </Card>
-                        </Link>
+                        </Card>
                       </KanbanItem>
                     )
                   })}
