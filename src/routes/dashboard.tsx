@@ -243,7 +243,22 @@ function PieLeadsBySource({ data }: { data: Array<PieData> }) {
 
 export function Dashboard() {
   const { t } = useTranslation()
-  const { data: deals, isLoading: dealsLoading } = useDeals()
+  const dashboardDealParams = useMemo(
+    () => ({
+      columns: [
+        'id',
+        'deal_value',
+        'stage',
+        'organization(id,name)',
+        'hot_prospect',
+        'expected_closing_date',
+        'created_on',
+      ],
+      orderBy: 'created_on DESC',
+    }),
+    [],
+  )
+  const { data: deals, isLoading: dealsLoading } = useDeals(dashboardDealParams)
   const { data: leads, isLoading: leadsLoading } = useLeads()
   const { data: companies, isLoading: companiesLoading } = useCompanies()
   const { data: tasks, isLoading: tasksLoading } = useTasks()
