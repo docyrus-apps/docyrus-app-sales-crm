@@ -1,4 +1,4 @@
-// Generated collection for base_crm/deals
+// Generated collection for base_crm/deal
 import { useDocyrusClient } from '@docyrus/signin'
 import type { QueryParamValue } from '@docyrus/api-client'
 import type { ICollectionListParams } from './types'
@@ -6,6 +6,12 @@ import type { ICollectionListParams } from './types'
 export interface BaseCrmDealsEntity {
   /** ID */
   id?: string
+
+  /** Name */
+  name?: string
+
+  /** Auto Number */
+  autonumber_id?: string | number
 
   /** Record owner */
   record_owner?: string
@@ -62,7 +68,16 @@ export interface BaseCrmDealsEntity {
   country?: { id: string; name: string } | string
 
   /** Organization */
-  organization?: { id: string; name: string } | string
+  organization?:
+    | {
+        id?: string
+        name?: string
+        phone?: string
+        email?: string
+        website?: string
+        company_logo?: { signed_url?: string | null } | null
+      }
+    | string
 
   /** Contact Person */
   contact_person?: { id: string; name: string } | string
@@ -77,7 +92,7 @@ export function useBaseCrmDealsCollection() {
       params?: ICollectionListParams,
     ): Promise<Array<BaseCrmDealsEntity>> =>
       client!.get(
-        '/v1/apps/base_crm/data-sources/deals/items',
+        '/v1/apps/base_crm/data-sources/deal/items',
         params as Record<string, QueryParamValue> | undefined,
       ),
 
@@ -87,7 +102,7 @@ export function useBaseCrmDealsCollection() {
       params?: { columns?: Array<string> },
     ): Promise<BaseCrmDealsEntity> =>
       client!.get(
-        '/v1/apps/base_crm/data-sources/deals/items/{recordId}'.replace(
+        '/v1/apps/base_crm/data-sources/deal/items/{recordId}'.replace(
           '{recordId}',
           recordId,
         ),
@@ -96,7 +111,7 @@ export function useBaseCrmDealsCollection() {
 
     /** Create record */
     create: (data: Record<string, any>): Promise<BaseCrmDealsEntity> =>
-      client!.post('/v1/apps/base_crm/data-sources/deals/items', data),
+      client!.post('/v1/apps/base_crm/data-sources/deal/items', data),
 
     /** Update record */
     update: (
@@ -104,7 +119,7 @@ export function useBaseCrmDealsCollection() {
       data: Record<string, any>,
     ): Promise<BaseCrmDealsEntity> =>
       client!.patch(
-        '/v1/apps/base_crm/data-sources/deals/items/{recordId}'.replace(
+        '/v1/apps/base_crm/data-sources/deal/items/{recordId}'.replace(
           '{recordId}',
           recordId,
         ),
@@ -114,7 +129,7 @@ export function useBaseCrmDealsCollection() {
     /** Delete record */
     delete: (recordId: string): Promise<void> =>
       client!.delete(
-        '/v1/apps/base_crm/data-sources/deals/items/{recordId}'.replace(
+        '/v1/apps/base_crm/data-sources/deal/items/{recordId}'.replace(
           '{recordId}',
           recordId,
         ),
@@ -122,6 +137,6 @@ export function useBaseCrmDealsCollection() {
 
     /** Delete many records */
     deleteMany: (data: { recordIds: Array<string> }): Promise<void> =>
-      client!.delete('/v1/apps/base_crm/data-sources/deals/items', data),
+      client!.delete('/v1/apps/base_crm/data-sources/deal/items', data),
   }
 }

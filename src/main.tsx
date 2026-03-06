@@ -59,7 +59,7 @@ const dealDetailRoute = createRoute({
   path: '/deals/$dealId',
   component: DealDetail,
   validateSearch: (search: Record<string, unknown>) => ({
-    tab: (search.tab as string) || 'overview',
+    tab: (search.tab as string) || 'activity',
   }),
 })
 

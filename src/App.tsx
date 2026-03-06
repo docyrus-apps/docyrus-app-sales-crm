@@ -98,7 +98,7 @@ function App() {
             </div>
           </div>
         </div>
-        {import.meta.env.DEV && <Agentation endpoint="http://localhost:4747" />}
+        {import.meta.env.DEV && <Agentation />}
       </>
     )
   }
@@ -139,7 +139,7 @@ function App() {
           mode="create"
         />
         <GlobalDialogBar />
-        {import.meta.env.DEV && <Agentation endpoint="http://localhost:4747" />}
+        {import.meta.env.DEV && <Agentation />}
       </TooltipProvider>
     </NuqsAdapter>
   )

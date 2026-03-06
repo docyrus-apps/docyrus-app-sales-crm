@@ -320,87 +320,86 @@ export function LeadsKanbanView({
                           >
                             <ArrowUpRight className="size-4" />
                           </Link>
-                            <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-br from-sky-500/12 via-transparent to-amber-400/12" />
-                            <CardHeader className="relative gap-4 pb-3">
-                              <div className="flex min-w-0 items-start gap-3">
-                                <Avatar className="size-12 rounded-2xl ring-1 ring-border/60">
-                                  <AvatarImage
-                                    src={companyLogo}
-                                    alt={
-                                      typeof company === 'object'
-                                        ? (company?.name ?? 'Company')
-                                        : 'Lead company'
-                                    }
-                                  />
-                                  <AvatarFallback className="rounded-2xl bg-muted text-sm font-semibold text-foreground">
-                                    {getInitials(
-                                      companyName || lead.title || 'Lead',
-                                    )}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="min-w-0 space-y-1">
-                                  <CardTitle className="truncate text-sm font-semibold tracking-tight">
-                                    {lead.title ||
-                                      `Lead #${lead.id?.slice(0, 8) ?? ''}`}
-                                  </CardTitle>
-                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    <Building2 className="size-3.5 shrink-0" />
-                                    <span className="truncate">
-                                      {companyName}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            </CardHeader>
-                            <CardContent className="relative space-y-4 pt-0">
-                              <div className="rounded-2xl border border-sky-500/20 bg-sky-500/10 px-3 py-2">
-                                <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.16em] text-sky-700 dark:text-sky-300">
-                                  <Sparkles className="size-3.5" />
-                                  Source
-                                </div>
-                                <div className="mt-1 text-sm font-semibold text-foreground">
-                                  {leadSource}
-                                </div>
-                              </div>
-                              <div className="grid gap-2">
-                                <div className="rounded-2xl border border-border/60 bg-muted/70 px-3 py-2">
-                                  <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                                    <Mail className="size-3.5 shrink-0" />
-                                    Email
-                                  </div>
-                                  <p className="mt-1 truncate text-xs font-medium text-foreground">
-                                    {lead.email || 'No email address'}
-                                  </p>
-                                </div>
-                                <div className="rounded-2xl border border-border/60 bg-muted/70 px-3 py-2">
-                                  <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                                    <Globe className="size-3.5 shrink-0" />
-                                    Web
-                                  </div>
-                                  <p className="mt-1 truncate text-xs font-medium text-foreground">
-                                    {lead.website ||
-                                      lead.phone ||
-                                      'No website or phone'}
-                                  </p>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center justify-between gap-2">
-                                <Badge
-                                  variant="secondary"
-                                  className="min-w-0 rounded-full px-2.5 py-1"
-                                >
-                                  <span className="truncate">{leadType}</span>
-                                </Badge>
-                                {lead.countries &&
-                                  typeof lead.countries === 'object' &&
-                                  'name' in lead.countries && (
-                                    <div className="truncate text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                                      {lead.countries.name}
-                                    </div>
+                          <CardHeader className="relative gap-4 pb-3">
+                            <div className="flex min-w-0 items-start gap-3">
+                              <Avatar className="size-12 rounded-2xl ring-1 ring-border/60">
+                                <AvatarImage
+                                  src={companyLogo}
+                                  alt={
+                                    typeof company === 'object'
+                                      ? (company?.name ?? 'Company')
+                                      : 'Lead company'
+                                  }
+                                />
+                                <AvatarFallback className="rounded-2xl bg-muted text-sm font-semibold text-foreground">
+                                  {getInitials(
+                                    companyName || lead.title || 'Lead',
                                   )}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="min-w-0 space-y-1">
+                                <CardTitle className="truncate text-sm font-semibold tracking-tight">
+                                  {lead.title ||
+                                    `Lead #${lead.id?.slice(0, 8) ?? ''}`}
+                                </CardTitle>
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                  <Building2 className="size-3.5 shrink-0" />
+                                  <span className="truncate">
+                                    {companyName}
+                                  </span>
+                                </div>
                               </div>
-                            </CardContent>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="relative space-y-4 pt-0">
+                            <div className="rounded-2xl border border-sky-500/20 bg-sky-500/10 px-3 py-2">
+                              <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.16em] text-sky-700 dark:text-sky-300">
+                                <Sparkles className="size-3.5" />
+                                Source
+                              </div>
+                              <div className="mt-1 text-sm font-semibold text-foreground">
+                                {leadSource}
+                              </div>
+                            </div>
+                            <div className="grid gap-2">
+                              <div className="rounded-2xl border border-border/60 bg-muted/70 px-3 py-2">
+                                <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                                  <Mail className="size-3.5 shrink-0" />
+                                  Email
+                                </div>
+                                <p className="mt-1 truncate text-xs font-medium text-foreground">
+                                  {lead.email || 'No email address'}
+                                </p>
+                              </div>
+                              <div className="rounded-2xl border border-border/60 bg-muted/70 px-3 py-2">
+                                <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                                  <Globe className="size-3.5 shrink-0" />
+                                  Web
+                                </div>
+                                <p className="mt-1 truncate text-xs font-medium text-foreground">
+                                  {lead.website ||
+                                    lead.phone ||
+                                    'No website or phone'}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-2">
+                              <Badge
+                                variant="secondary"
+                                className="min-w-0 rounded-full px-2.5 py-1"
+                              >
+                                <span className="truncate">{leadType}</span>
+                              </Badge>
+                              {lead.countries &&
+                                typeof lead.countries === 'object' &&
+                                'name' in lead.countries && (
+                                  <div className="truncate text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                                    {lead.countries.name}
+                                  </div>
+                                )}
+                            </div>
+                          </CardContent>
                         </Card>
                       </KanbanItem>
                     )

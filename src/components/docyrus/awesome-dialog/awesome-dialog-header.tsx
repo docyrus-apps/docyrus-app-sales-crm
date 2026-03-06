@@ -1,21 +1,19 @@
-'use client';
+'use client'
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react'
 
-import {
-  Maximize2, Minimize2, Minus, X
-} from 'lucide-react';
+import { Maximize2, Minimize2, Minus, X } from 'lucide-react'
 
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
-import { AvatarThumbnail } from '@/components/docyrus/avatar-thumbnail';
-import { DocyrusIcon } from '@/components/docyrus/docyrus-icon';
+import { AvatarThumbnail } from '@/components/docyrus/avatar-thumbnail'
+import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 
-import { type AwesomeDialogHeaderProps } from './types';
+import { type AwesomeDialogHeaderProps } from './types'
 
-import { useAwesomeDialog } from './contexts/dialog-context';
-import { useOptionalGlobalDialog } from './contexts/global-dialog-context';
+import { useAwesomeDialog } from './contexts/dialog-context'
+import { useOptionalGlobalDialog } from './contexts/global-dialog-context'
 
 export function AwesomeDialogHeader({
   children,
@@ -27,7 +25,7 @@ export function AwesomeDialogHeader({
   avatar,
   closable = true,
   headerButtons,
-  onClose
+  onClose,
 }: AwesomeDialogHeaderProps) {
   const {
     fullscreenable,
@@ -35,41 +33,43 @@ export function AwesomeDialogHeader({
     toggleFullscreen,
     minimizable,
     onClose: contextOnClose,
-    dialogId
-  } = useAwesomeDialog();
+    dialogId,
+  } = useAwesomeDialog()
 
-  const globalDialog = useOptionalGlobalDialog();
-  const globalDialogRef = useRef(globalDialog);
+  const globalDialog = useOptionalGlobalDialog()
+  const globalDialogRef = useRef(globalDialog)
 
-  globalDialogRef.current = globalDialog;
+  globalDialogRef.current = globalDialog
 
-  const handleClose = onClose ?? contextOnClose;
+  const handleClose = onClose ?? contextOnClose
 
   useEffect(() => {
-    if (!dialogId || !globalDialogRef.current) return;
-    if (!title && !icon) return;
-    globalDialogRef.current.register(dialogId, { title, icon });
-  }, [dialogId, title, icon]);
+    if (!dialogId || !globalDialogRef.current) return
+    if (!title && !icon) return
+    globalDialogRef.current.register(dialogId, { title, icon })
+  }, [dialogId, title, icon])
 
-  const canMinimize = minimizable && dialogId && globalDialog;
+  const canMinimize = minimizable && dialogId && globalDialog
   const handleMinimize = canMinimize
     ? () => globalDialog.minimize(dialogId)
-    : undefined;
+    : undefined
 
   return (
     <div
       data-slot="awesome-dialog-header"
       className={cn(
         'flex shrink-0 items-center gap-3 border-b bg-muted/50 px-4 py-3',
-        className
-      )}>
+        className,
+      )}
+    >
       {avatar && (
         <AvatarThumbnail
           color={avatar.color}
           icon={avatar.icon}
           image={avatar.image ? { signed_url: avatar.image } : undefined}
           size={8}
-          shape="rounded" />
+          shape="rounded"
+        />
       )}
 
       {icon && (
@@ -77,7 +77,8 @@ export function AwesomeDialogHeader({
           icon={icon}
           lib={iconLib}
           size="default"
-          className="text-muted-foreground" />
+          className="text-muted-foreground"
+        />
       )}
 
       {(title || description) && (
@@ -85,14 +86,16 @@ export function AwesomeDialogHeader({
           {title && (
             <div
               data-slot="awesome-dialog-title"
-              className="truncate text-base font-medium text-foreground">
+              className="truncate text-base font-medium text-foreground"
+            >
               {title}
             </div>
           )}
           {description && (
             <div
               data-slot="awesome-dialog-description"
-              className="truncate text-sm text-muted-foreground">
+              className="truncate text-sm text-muted-foreground"
+            >
               {description}
             </div>
           )}
@@ -113,7 +116,8 @@ export function AwesomeDialogHeader({
             variant="ghost"
             size="icon-sm"
             onClick={toggleFullscreen}
-            aria-label={isFullscreen ? 'Restore' : 'Maximize'}>
+            aria-label={isFullscreen ? 'Restore' : 'Maximize'}
+          >
             {isFullscreen ? <Minimize2 /> : <Maximize2 />}
           </Button>
         )}
@@ -123,7 +127,8 @@ export function AwesomeDialogHeader({
             variant="ghost"
             size="icon-sm"
             onClick={handleMinimize}
-            aria-label="Minimize">
+            aria-label="Minimize"
+          >
             <Minus />
           </Button>
         )}
@@ -133,11 +138,12 @@ export function AwesomeDialogHeader({
             variant="ghost"
             size="icon-sm"
             onClick={handleClose}
-            aria-label="Close">
+            aria-label="Close"
+          >
             <X />
           </Button>
         )}
       </div>
     </div>
-  );
+  )
 }

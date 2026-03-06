@@ -28,10 +28,16 @@ export function getLeadsColumns(
   options: LeadsColumnOptions = {},
 ): Array<ColumnDef<any>> {
   const leadStatusLabelByValue = new Map(
-    (options.leadStatusOptions ?? []).map((option) => [option.value, option.label]),
+    (options.leadStatusOptions ?? []).map((option) => [
+      option.value,
+      option.label,
+    ]),
   )
   const leadSourceLabelByValue = new Map(
-    (options.leadSourceOptions ?? []).map((option) => [option.value, option.label]),
+    (options.leadSourceOptions ?? []).map((option) => [
+      option.value,
+      option.label,
+    ]),
   )
 
   return [

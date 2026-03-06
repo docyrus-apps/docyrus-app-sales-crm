@@ -38,6 +38,28 @@ interface FileAttachment {
   }
 }
 
+const ACCEPTED_FILE_TYPES = [
+  'image/*',
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.webp',
+  'application/pdf',
+  '.pdf',
+  'application/msword',
+  '.doc',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  '.docx',
+  'application/vnd.ms-excel',
+  '.xls',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  '.xlsx',
+  'text/*',
+  '.txt',
+  '.csv',
+].join(', ')
+
 export function FileAttachments({
   appSlug,
   dataSource,
@@ -58,10 +80,9 @@ export function FileAttachments({
       const apiClient = getApiClient()
       if (!apiClient) throw new Error('API client not initialized')
 
-      const response = await apiClient.get(
+      return await apiClient.get(
         `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/files`,
       )
-      return response.data
     },
   })
 
@@ -76,7 +97,7 @@ export function FileAttachments({
         formData.append('files', file)
       })
 
-      const response = await apiClient.post(
+      return await apiClient.post(
         `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/files/upload`,
         formData,
         {
@@ -85,7 +106,6 @@ export function FileAttachments({
           },
         },
       )
-      return response.data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -137,7 +157,8 @@ export function FileAttachments({
         responseType: 'blob',
       })
 
-      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const blob = response instanceof Blob ? response : new Blob([response])
+      const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
       link.setAttribute('download', file.name)
@@ -201,17 +222,7 @@ export function FileAttachments({
           <FileUpload
             maxFiles={10}
             maxSize={10 * 1024 * 1024} // 10MB
-            accept={{
-              'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'],
-              'application/pdf': ['.pdf'],
-              'application/msword': ['.doc'],
-              'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-                ['.docx'],
-              'application/vnd.ms-excel': ['.xls'],
-              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
-                ['.xlsx'],
-              'text/*': ['.txt', '.csv'],
-            }}
+            accept={ACCEPTED_FILE_TYPES}
             onDrop={handleUpload}
             disabled={uploading || uploadMutation.isPending}
           />

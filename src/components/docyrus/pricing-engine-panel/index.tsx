@@ -1,12 +1,15 @@
-'use client';
+'use client'
 
-export { PricingEnginePanel, pricingEnginePanelVariants } from './pricing-engine-panel';
-export type { PricingEnginePanelProps } from './pricing-engine-panel';
+export {
+  PricingEnginePanel,
+  pricingEnginePanelVariants,
+} from './pricing-engine-panel'
+export type { PricingEnginePanelProps } from './pricing-engine-panel'
 export type {
   TPricingViewMode,
   TDiscountMode,
-  TPricingDocumentStatus
-} from './types';
+  TPricingDocumentStatus,
+} from './types'
 export type {
   ILineItem,
   ILineItemCalculated,
@@ -17,5 +20,5 @@ export type {
   IPricingConfig,
   IPricingDocumentData,
   IProductCatalogItem,
-  ICategoryCatalogItem
-} from './interfaces';
+  ICategoryCatalogItem,
+} from './interfaces'

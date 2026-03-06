@@ -22,7 +22,10 @@ import {
   parseConfigDataViews,
   useConfigDataViews,
 } from '@/hooks/use-config-data-views'
-import { mapEnumEntitiesToCellOptions, useEnumEntities } from '@/hooks/use-enums'
+import {
+  mapEnumEntitiesToCellOptions,
+  useEnumEntities,
+} from '@/hooks/use-enums'
 import { useDeleteLead, useLeads, useUpdateLead } from '@/hooks/use-leads'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { LeadFormDialog } from '@/components/leads/lead-form-dialog'
@@ -267,14 +270,11 @@ export function Leads() {
     onChangesSave,
   })
 
-  const fallbackView = useMemo(
-    () => ({
-      id: 'default-view',
-      name: 'All',
-      ...captureViewSnapshot(table),
-    }),
-    [table],
-  )
+  const [fallbackView] = useState<SavedDataGridView>(() => ({
+    id: 'default-view',
+    name: 'All',
+    ...captureViewSnapshot(table),
+  }))
 
   const gridViews = useMemo(() => {
     if (!configDataViews || configDataViews.length === 0) {

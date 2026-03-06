@@ -1,22 +1,27 @@
-'use client';
+'use client'
 
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input'
+import { Separator } from '@/components/ui/separator'
 
-import { tUi } from '@/lib/ui-i18n';
+import { tUi } from '@/lib/ui-i18n'
 
-import { usePricingEngine } from './contexts/pricing-context';
+import { usePricingEngine } from './contexts/pricing-context'
 
 export function PricingDiscountSection() {
   const {
-    globalDiscountPercent, adjustment, config, readOnly, locale,
-    setGlobalDiscountPercent, setAdjustment
-  } = usePricingEngine();
+    globalDiscountPercent,
+    adjustment,
+    config,
+    readOnly,
+    locale,
+    setGlobalDiscountPercent,
+    setAdjustment,
+  } = usePricingEngine()
 
-  const showGlobalDiscount = config.enableGlobalDiscount;
-  const showAdjustment = config.enableAdjustment;
+  const showGlobalDiscount = config.enableGlobalDiscount
+  const showAdjustment = config.enableAdjustment
 
-  if (!showGlobalDiscount && !showAdjustment) return null;
+  if (!showGlobalDiscount && !showAdjustment) return null
 
   return (
     <>
@@ -32,15 +37,18 @@ export function PricingDiscountSection() {
                 type="number"
                 value={globalDiscountPercent || ''}
                 onChange={(e) => {
-                  const val = Number.parseFloat(e.target.value);
+                  const val = Number.parseFloat(e.target.value)
 
-                  setGlobalDiscountPercent(Number.isNaN(val) ? 0 : val);
+                  setGlobalDiscountPercent(Number.isNaN(val) ? 0 : val)
                 }}
                 className="h-8 w-[80px] pr-6 text-right"
                 min={0}
                 max={100}
-                disabled={readOnly} />
-              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">%</span>
+                disabled={readOnly}
+              />
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                %
+              </span>
             </div>
           </div>
         )}
@@ -54,16 +62,17 @@ export function PricingDiscountSection() {
               type="number"
               value={adjustment || ''}
               onChange={(e) => {
-                const val = Number.parseFloat(e.target.value);
+                const val = Number.parseFloat(e.target.value)
 
-                setAdjustment(Number.isNaN(val) ? 0 : val);
+                setAdjustment(Number.isNaN(val) ? 0 : val)
               }}
               className="h-8 w-[120px] text-right"
               step="0.01"
-              disabled={readOnly} />
+              disabled={readOnly}
+            />
           </div>
         )}
       </div>
     </>
-  );
+  )
 }

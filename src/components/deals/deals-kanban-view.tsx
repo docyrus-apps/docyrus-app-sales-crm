@@ -356,109 +356,103 @@ export function DealsKanbanView({
                           >
                             <ArrowUpRight className="size-4" />
                           </Link>
-                            <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-br from-emerald-500/10 via-transparent to-sky-500/10" />
-                            <CardHeader className="relative gap-4 pb-3">
-                              <div className="flex min-w-0 items-start gap-3">
-                                <Avatar className="size-12 rounded-2xl ring-1 ring-border/60">
-                                  <AvatarImage
-                                    src={
-                                      organization?.company_logo?.signed_url ??
-                                      undefined
-                                    }
-                                    alt={organization?.name ?? 'Company'}
-                                  />
-                                  <AvatarFallback className="rounded-2xl bg-muted text-sm font-semibold text-foreground">
-                                    {getInitials(
-                                      organization?.name || contactName || 'Deal',
-                                    )}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="min-w-0 space-y-1">
-                                  <CardTitle className="truncate text-sm font-semibold tracking-tight">
-                                    {organizationName}
-                                  </CardTitle>
-                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    <UserRound className="size-3.5 shrink-0" />
-                                    <span className="truncate">
-                                      {contactName}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            </CardHeader>
-                            <CardContent className="relative space-y-4 pt-0">
-                              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2">
-                                <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.16em] text-emerald-700 dark:text-emerald-300">
-                                  <HandCoins className="size-3.5" />
-                                  Value
-                                </div>
-                                <div className="mt-1 text-lg font-semibold text-foreground">
-                                  $
-                                  {deal.deal_value?.toLocaleString() ||
-                                    deal.expected_revenue?.toLocaleString() ||
-                                    0}
-                                </div>
-                              </div>
-                              <div className="grid grid-cols-2 gap-2">
-                                <div className="rounded-2xl border border-border/60 bg-muted/70 px-3 py-2">
-                                  <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                                    <CalendarDays className="size-3.5 shrink-0" />
-                                    Close
-                                  </div>
-                                  <p className="mt-1 text-xs font-medium text-foreground">
-                                    {formatCloseDate(
-                                      deal.expected_closing_date,
-                                    )}
-                                  </p>
-                                </div>
-                                <div className="rounded-2xl border border-border/60 bg-muted/70 px-3 py-2">
-                                  <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                                    Probability
-                                  </div>
-                                  <p className="mt-1 text-xs font-medium text-foreground">
-                                    {deal.close_probability ?? 0}%
-                                  </p>
-                                </div>
-                              </div>
-
-                              <div className="space-y-2">
-                                <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                                  <span>Momentum</span>
-                                  <span>{deal.close_probability ?? 0}%</span>
-                                </div>
-                                <div className="h-2 rounded-full bg-muted-foreground/15">
-                                  <div
-                                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-sky-500 to-indigo-500"
-                                    style={{
-                                      width: `${Math.min(
-                                        Math.max(
-                                          deal.close_probability ?? 0,
-                                          6,
-                                        ),
-                                        100,
-                                      )}%`,
-                                    }}
-                                  />
-                                </div>
-                              </div>
-
-                              <div className="flex items-center justify-between gap-2">
-                                <Badge
-                                  variant="secondary"
-                                  className="min-w-0 rounded-full px-2.5 py-1"
-                                >
+                          <CardHeader className="relative gap-4 pb-3">
+                            <div className="flex min-w-0 items-start gap-3">
+                              <Avatar className="size-12 rounded-2xl ring-1 ring-border/60">
+                                <AvatarImage
+                                  src={
+                                    organization?.company_logo?.signed_url ??
+                                    undefined
+                                  }
+                                  alt={organization?.name ?? 'Company'}
+                                />
+                                <AvatarFallback className="rounded-2xl bg-muted text-sm font-semibold text-foreground">
+                                  {getInitials(
+                                    organization?.name || contactName || 'Deal',
+                                  )}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="min-w-0 space-y-1">
+                                <CardTitle className="truncate text-sm font-semibold tracking-tight">
+                                  {organizationName}
+                                </CardTitle>
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                  <UserRound className="size-3.5 shrink-0" />
                                   <span className="truncate">
-                                    {leadSourceName}
+                                    {contactName}
                                   </span>
-                                </Badge>
-                                {deal.hot_prospect && (
-                                  <div className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-700 dark:text-amber-300">
-                                    <Flame className="size-3.5" />
-                                    Hot prospect
-                                  </div>
-                                )}
+                                </div>
                               </div>
-                            </CardContent>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="relative space-y-4 pt-0">
+                            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2">
+                              <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.16em] text-emerald-700 dark:text-emerald-300">
+                                <HandCoins className="size-3.5" />
+                                Value
+                              </div>
+                              <div className="mt-1 text-lg font-semibold text-foreground">
+                                $
+                                {deal.deal_value?.toLocaleString() ||
+                                  deal.expected_revenue?.toLocaleString() ||
+                                  0}
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="rounded-2xl border border-border/60 bg-muted/70 px-3 py-2">
+                                <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                                  <CalendarDays className="size-3.5 shrink-0" />
+                                  Close
+                                </div>
+                                <p className="mt-1 text-xs font-medium text-foreground">
+                                  {formatCloseDate(deal.expected_closing_date)}
+                                </p>
+                              </div>
+                              <div className="rounded-2xl border border-border/60 bg-muted/70 px-3 py-2">
+                                <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                                  Probability
+                                </div>
+                                <p className="mt-1 text-xs font-medium text-foreground">
+                                  {deal.close_probability ?? 0}%
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                                <span>Momentum</span>
+                                <span>{deal.close_probability ?? 0}%</span>
+                              </div>
+                              <div className="h-2 rounded-full bg-muted-foreground/15">
+                                <div
+                                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-sky-500 to-indigo-500"
+                                  style={{
+                                    width: `${Math.min(
+                                      Math.max(deal.close_probability ?? 0, 6),
+                                      100,
+                                    )}%`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-2">
+                              <Badge
+                                variant="secondary"
+                                className="min-w-0 rounded-full px-2.5 py-1"
+                              >
+                                <span className="truncate">
+                                  {leadSourceName}
+                                </span>
+                              </Badge>
+                              {deal.hot_prospect && (
+                                <div className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-700 dark:text-amber-300">
+                                  <Flame className="size-3.5" />
+                                  Hot prospect
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
                         </Card>
                       </KanbanItem>
                     )

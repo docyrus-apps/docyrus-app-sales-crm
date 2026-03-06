@@ -639,6 +639,24 @@
     "newActivity": "New Activity",
     "pageTitle": "Activities",
     "comingSoon": "Activity tracking coming soon.",
+    "subtitle": "Track all changes and actions across your CRM.",
+    "empty": "No activities found",
+    "emptyDescription": "Activities will appear here as changes are made.",
+    "loadMore": "Load More",
+    "loading": "Loading activities...",
+    "filters": {
+      "dateRange": "Date Range",
+      "last7Days": "Last 7 Days",
+      "last30Days": "Last 30 Days",
+      "last90Days": "Last 90 Days",
+      "allTime": "All Time",
+      "dataSource": "Data Source"
+    },
+    "operations": {
+      "create": "Created",
+      "update": "Updated",
+      "delete": "Deleted"
+    },
     "form": {
       "createTitle": "Create Activity",
       "editTitle": "Edit Activity",

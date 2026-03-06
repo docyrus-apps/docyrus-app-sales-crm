@@ -12,7 +12,10 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/animate-ui/components/radix/tabs'
-import { mapEnumEntitiesToCellOptions, useEnumEntities } from '@/hooks/use-enums'
+import {
+  mapEnumEntitiesToCellOptions,
+  useEnumEntities,
+} from '@/hooks/use-enums'
 import { useDeals, useDeleteDeal, useUpdateDeal } from '@/hooks/use-deals'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DealFormDialog } from '@/components/deals/deal-form-dialog'
@@ -58,7 +61,7 @@ export function Deals() {
     error: dealStagesError,
   } = useEnumEntities('stage', {
     appSlug: 'base_crm',
-    dataSourceSlug: 'deals',
+    dataSourceSlug: 'deal',
   })
 
   const finalDealStageIds = useMemo(
@@ -137,7 +140,7 @@ export function Deals() {
       void navigate({
         to: '/deals/$dealId',
         params: { dealId: deal.id },
-        search: { tab: 'overview' },
+        search: { tab: 'activity' },
       })
     },
     [navigate],
