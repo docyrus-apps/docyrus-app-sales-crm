@@ -1,35 +1,35 @@
-'use client'
+'use client';
 
-import { type ComponentProps, type ReactNode } from 'react'
+import { type ComponentProps, type ReactNode } from 'react';
 
-import { type Table } from '@tanstack/react-table'
+import { type Table } from '@tanstack/react-table';
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
-import { DataGridDisplayMenu } from './data-grid-display-menu'
-import { DataGridFilterMenu } from './data-grid-filter-menu'
-import { DataGridGroupMenu } from './data-grid-group-menu'
-import { DataGridKeyboardShortcuts } from './data-grid-keyboard-shortcuts'
-import { DataGridRowHeightMenu } from './data-grid-row-height-menu'
-import { DataGridSortMenu } from './data-grid-sort-menu'
-import { DataGridViewMenu } from './data-grid-view-menu'
+import { DataGridDisplayMenu } from './data-grid-display-menu';
+import { DataGridFilterMenu } from './data-grid-filter-menu';
+import { DataGridGroupMenu } from './data-grid-group-menu';
+import { DataGridKeyboardShortcuts } from './data-grid-keyboard-shortcuts';
+import { DataGridRowHeightMenu } from './data-grid-row-height-menu';
+import { DataGridSortMenu } from './data-grid-sort-menu';
+import { DataGridViewMenu } from './data-grid-view-menu';
 
 interface DataGridToolbarProps<TData> extends ComponentProps<'div'> {
-  table: Table<TData>
-  enableFilter?: boolean
-  enableSort?: boolean
-  enableRowHeight?: boolean
-  enableView?: boolean
-  enableDisplayMode?: boolean
-  enableGroup?: boolean
-  enableSearch?: boolean
-  enablePaste?: boolean
-  enableRowAdd?: boolean
-  enableRowsDelete?: boolean
-  enableUndoRedo?: boolean
-  disabled?: boolean
-  startContent?: ReactNode
-  endContent?: ReactNode
+  table: Table<TData>;
+  enableFilter?: boolean;
+  enableSort?: boolean;
+  enableRowHeight?: boolean;
+  enableView?: boolean;
+  enableDisplayMode?: boolean;
+  enableGroup?: boolean;
+  enableSearch?: boolean;
+  enablePaste?: boolean;
+  enableRowAdd?: boolean;
+  enableRowsDelete?: boolean;
+  enableUndoRedo?: boolean;
+  disabled?: boolean;
+  startContent?: ReactNode;
+  endContent?: ReactNode;
 }
 
 export function DataGridToolbar<TData>({
@@ -56,40 +56,23 @@ export function DataGridToolbar<TData>({
       data-slot="grid-toolbar"
       data-grid-popover
       className={cn('flex items-center gap-2 border-b px-3 py-2', className)}
-      {...props}
-    >
-      {startContent && (
-        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
-          {startContent}
-        </div>
+      {...props}>
+      {startContent}
+      {enableFilter && <DataGridFilterMenu table={table} disabled={disabled} />}
+      {enableSort && <DataGridSortMenu table={table} disabled={disabled} />}
+      {enableGroup && <DataGridGroupMenu table={table} disabled={disabled} />}
+      {enableRowHeight && (
+        <DataGridRowHeightMenu table={table} disabled={disabled} />
       )}
-      <div
-        className={cn(
-          'ml-auto flex items-center gap-2',
-          !startContent && 'w-full justify-end',
-        )}
-      >
-        {enableFilter && (
-          <DataGridFilterMenu table={table} disabled={disabled} />
-        )}
-        {enableSort && <DataGridSortMenu table={table} disabled={disabled} />}
-        {enableGroup && <DataGridGroupMenu table={table} disabled={disabled} />}
-        {enableRowHeight && (
-          <DataGridRowHeightMenu table={table} disabled={disabled} />
-        )}
-        {enableDisplayMode && (
-          <DataGridDisplayMenu table={table} disabled={disabled} />
-        )}
-        {enableView && <DataGridViewMenu table={table} disabled={disabled} />}
-        <DataGridKeyboardShortcuts
-          enableSearch={enableSearch}
-          enablePaste={enablePaste}
-          enableRowAdd={enableRowAdd}
-          enableRowsDelete={enableRowsDelete}
-          enableUndoRedo={enableUndoRedo}
-        />
-        {endContent}
-      </div>
+      {enableDisplayMode && <DataGridDisplayMenu table={table} disabled={disabled} />}
+      {enableView && <DataGridViewMenu table={table} disabled={disabled} />}
+      <DataGridKeyboardShortcuts
+        enableSearch={enableSearch}
+        enablePaste={enablePaste}
+        enableRowAdd={enableRowAdd}
+        enableRowsDelete={enableRowsDelete}
+        enableUndoRedo={enableUndoRedo} />
+      {endContent}
     </div>
-  )
+  );
 }

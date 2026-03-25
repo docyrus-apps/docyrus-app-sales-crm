@@ -1,11 +1,11 @@
 // @ts-nocheck
-'use client'
+'use client';
 
-import * as React from 'react'
+import * as React from 'react';
 
-import type { PlateEditor, PlateElementProps } from 'platejs/react'
+import type { PlateEditor, PlateElementProps } from 'platejs/react';
 
-import { AIChatPlugin } from '@platejs/ai/react'
+import { AIChatPlugin } from '@platejs/ai/react';
 import {
   CalendarIcon,
   ChevronRightIcon,
@@ -25,14 +25,14 @@ import {
   Square,
   Table,
   TableOfContentsIcon,
-} from 'lucide-react'
-import { type TComboboxInputElement, KEYS } from 'platejs'
-import { PlateElement } from 'platejs/react'
+} from 'lucide-react';
+import { type TComboboxInputElement, KEYS } from 'platejs';
+import { PlateElement } from 'platejs/react';
 
 import {
   insertBlock,
   insertInlineElement,
-} from '@/components/editor/transforms'
+} from '@/components/editor/transforms';
 
 import {
   InlineCombobox,
@@ -42,20 +42,20 @@ import {
   InlineComboboxGroupLabel,
   InlineComboboxInput,
   InlineComboboxItem,
-} from './inline-combobox'
+} from './inline-combobox';
 
 type Group = {
-  group: string
+  group: string;
   items: {
-    icon: React.ReactNode
-    value: string
-    onSelect: (editor: PlateEditor, value: string) => void
-    className?: string
-    focusEditor?: boolean
-    keywords?: string[]
-    label?: string
-  }[]
-}
+    icon: React.ReactNode;
+    value: string;
+    onSelect: (editor: PlateEditor, value: string) => void;
+    className?: string;
+    focusEditor?: boolean;
+    keywords?: string[];
+    label?: string;
+  }[];
+};
 
 const groups: Group[] = [
   {
@@ -66,7 +66,7 @@ const groups: Group[] = [
         icon: <SparklesIcon />,
         value: 'AI',
         onSelect: (editor) => {
-          editor.getApi(AIChatPlugin).aiChat.show()
+          editor.getApi(AIChatPlugin).aiChat.show();
         },
       },
     ],
@@ -149,7 +149,7 @@ const groups: Group[] = [
     ].map((item) => ({
       ...item,
       onSelect: (editor, value) => {
-        insertBlock(editor, value, { upsert: true })
+        insertBlock(editor, value, { upsert: true });
       },
     })),
   },
@@ -195,7 +195,7 @@ const groups: Group[] = [
     ].map((item) => ({
       ...item,
       onSelect: (editor, value) => {
-        insertBlock(editor, value, { upsert: true })
+        insertBlock(editor, value, { upsert: true });
       },
     })),
   },
@@ -218,16 +218,16 @@ const groups: Group[] = [
     ].map((item) => ({
       ...item,
       onSelect: (editor, value) => {
-        insertInlineElement(editor, value)
+        insertInlineElement(editor, value);
       },
     })),
   },
-]
+];
 
 export function SlashInputElement(
-  props: PlateElementProps<TComboboxInputElement>,
+  props: PlateElementProps<TComboboxInputElement>
 ) {
-  const { editor, element } = props
+  const { editor, element } = props;
 
   return (
     <PlateElement {...props} as="span">
@@ -255,7 +255,7 @@ export function SlashInputElement(
                     <div className="mr-2 text-muted-foreground">{icon}</div>
                     {label ?? value}
                   </InlineComboboxItem>
-                ),
+                )
               )}
             </InlineComboboxGroup>
           ))}
@@ -264,5 +264,5 @@ export function SlashInputElement(
 
       {props.children}
     </PlateElement>
-  )
+  );
 }

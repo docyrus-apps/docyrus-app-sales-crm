@@ -1,36 +1,38 @@
-import { memo } from 'react'
+'use client';
 
-import { FilterXIcon } from 'lucide-react'
+import { memo } from 'react';
 
-import { cn } from '@/lib/utils'
+import { FilterXIcon } from 'lucide-react';
 
-import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils';
 
-import { type Locale } from '../lib/i18n'
-import { type DataTableFilterActions } from '../core/types'
+import { Button } from '@/components/ui/button';
 
-import { t } from '../lib/i18n'
+import { type Locale } from '../lib/i18n';
+import { type DataTableFilterActions } from '../core/types';
+
+import { t } from '../lib/i18n';
 
 interface FilterActionsProps {
-  hasFilters: boolean
-  actions?: DataTableFilterActions
-  locale?: Locale
+  hasFilters: boolean;
+  actions?: DataTableFilterActions;
+  locale?: Locale;
 }
 
-export const FilterActions = memo(__FilterActions)
+export const FilterActions = memo(__FilterActions);
 function __FilterActions({
   hasFilters,
   actions,
-  locale = 'en',
+  locale = 'en'
 }: FilterActionsProps) {
   return (
     <Button
-      className={cn('h-7 !px-2', !hasFilters && 'hidden')}
+      size="sm"
+      className={cn('!px-2', !hasFilters && 'hidden')}
       variant="destructive"
-      onClick={actions?.removeAllFilters}
-    >
+      onClick={actions?.removeAllFilters}>
       <FilterXIcon />
       <span className="hidden md:block">{t('clear', locale)}</span>
     </Button>
-  )
+  );
 }

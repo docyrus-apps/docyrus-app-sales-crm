@@ -1,30 +1,30 @@
-'use client'
+'use client';
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Switch } from '@/components/ui/switch'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Switch } from '@/components/ui/switch';
 
-import { useCalendar } from './contexts/calendar-context'
+import { useCalendar } from './contexts/calendar-context';
 
 function getInitials(name: string): string {
   return name
     .split(' ')
-    .map((n) => n[0])
+    .map(n => n[0])
     .join('')
     .toUpperCase()
-    .slice(0, 2)
+    .slice(0, 2);
 }
 
 interface CalendarSidebarProps {
-  weekTaskCount: number
-  highPriorityCount: number
+  weekTaskCount: number;
+  highPriorityCount: number;
 }
 
 export function CalendarSidebar({
   weekTaskCount,
-  highPriorityCount,
+  highPriorityCount
 }: CalendarSidebarProps) {
-  const { users } = useCalendar()
-  const teamMembers = users.slice(0, 5)
+  const { users } = useCalendar();
+  const teamMembers = users.slice(0, 5);
 
   return (
     <div className="space-y-6">
@@ -45,7 +45,7 @@ export function CalendarSidebar({
                 </Avatar>
                 <span className="text-sm">{user.name}</span>
               </div>
-            )
+            );
           })}
           {teamMembers.length === 0 && (
             <p className="text-xs text-muted-foreground">
@@ -89,11 +89,10 @@ export function CalendarSidebar({
         </p>
         <button
           type="button"
-          className="mt-3 w-full rounded-lg bg-primary-foreground/20 px-3 py-1.5 text-sm font-medium transition-colors hover:bg-primary-foreground/30"
-        >
+          className="mt-3 w-full rounded-lg bg-primary-foreground/20 px-3 py-1.5 text-sm font-medium transition-colors hover:bg-primary-foreground/30">
           View Analytics
         </button>
       </div>
     </div>
-  )
+  );
 }

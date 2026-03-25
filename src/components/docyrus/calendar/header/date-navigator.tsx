@@ -1,45 +1,47 @@
-'use client'
+'use client';
 
-import { useMemo } from 'react'
+import { useMemo } from 'react';
 
-import { formatDate } from 'date-fns'
-import { AnimatePresence, motion } from 'motion/react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { formatDate } from 'date-fns';
+import { AnimatePresence, motion } from 'motion/react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/components/ui/badge';
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/button';
 
-import { type TCalendarView } from '../types'
-import { type IEvent } from '../interfaces'
+import { type TCalendarView } from '../types';
+import { type IEvent } from '../interfaces';
 
-import { buttonHover, transition } from '../animations'
-import { useCalendar } from '../contexts/calendar-context'
-import { getEventsCount, navigateDate, rangeText } from '../helpers'
+import { buttonHover, transition } from '../animations';
+import { useCalendar } from '../contexts/calendar-context';
+import {
+  getEventsCount,
+  navigateDate,
+  rangeText
+} from '../helpers';
 
 interface IProps {
-  view: TCalendarView
-  events: Array<IEvent>
+  view: TCalendarView;
+  events: Array<IEvent>;
 }
 
-const MotionButton = motion.create(Button)
-const MotionBadge = motion.create(Badge)
+const MotionButton = motion.create(Button);
+const MotionBadge = motion.create(Badge);
 
 export function DateNavigator({ view, events }: IProps) {
-  const { selectedDate, setSelectedDate } = useCalendar()
+  const { selectedDate, setSelectedDate } = useCalendar();
 
-  const month = formatDate(selectedDate, 'MMMM')
-  const year = selectedDate.getFullYear()
+  const month = formatDate(selectedDate, 'MMMM');
+  const year = selectedDate.getFullYear();
 
   const eventCount = useMemo(
     () => getEventsCount(events, selectedDate, view),
-    [events, selectedDate, view],
-  )
+    [events, selectedDate, view]
+  );
 
-  const handlePrevious = () =>
-    setSelectedDate(navigateDate(selectedDate, view, 'previous'))
-  const handleNext = () =>
-    setSelectedDate(navigateDate(selectedDate, view, 'next'))
+  const handlePrevious = () => setSelectedDate(navigateDate(selectedDate, view, 'previous'));
+  const handleNext = () => setSelectedDate(navigateDate(selectedDate, view, 'next'));
 
   return (
     <div className="space-y-0.5">
@@ -48,8 +50,7 @@ export function DateNavigator({ view, events }: IProps) {
           className="text-lg font-semibold"
           initial={{ x: -20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          transition={transition}
-        >
+          transition={transition}>
           {month} {year}
         </motion.span>
         <AnimatePresence mode="wait">
@@ -59,8 +60,7 @@ export function DateNavigator({ view, events }: IProps) {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
-            transition={transition}
-          >
+            transition={transition}>
             {eventCount} events
           </MotionBadge>
         </AnimatePresence>
@@ -74,8 +74,7 @@ export function DateNavigator({ view, events }: IProps) {
           onClick={handlePrevious}
           variants={buttonHover}
           whileHover="hover"
-          whileTap="tap"
-        >
+          whileTap="tap">
           <ChevronLeft className="h-4 w-4" />
         </MotionButton>
 
@@ -83,8 +82,7 @@ export function DateNavigator({ view, events }: IProps) {
           className="text-sm text-muted-foreground"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={transition}
-        >
+          transition={transition}>
           {rangeText(view, selectedDate)}
         </motion.p>
 
@@ -95,11 +93,10 @@ export function DateNavigator({ view, events }: IProps) {
           onClick={handleNext}
           variants={buttonHover}
           whileHover="hover"
-          whileTap="tap"
-        >
+          whileTap="tap">
           <ChevronRight className="h-4 w-4" />
         </MotionButton>
       </div>
     </div>
-  )
+  );
 }

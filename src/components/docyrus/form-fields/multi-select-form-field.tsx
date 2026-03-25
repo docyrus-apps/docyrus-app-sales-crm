@@ -1,24 +1,22 @@
-'use client'
+'use client';
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react';
 
-import { ChevronsLeft, ChevronsRight } from 'lucide-react'
+import { ChevronsLeft, ChevronsRight } from 'lucide-react';
 
-import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
-import { tUi, type UiI18nLocale } from '@/components/docyrus/lib/ui-i18n'
-import { Field, FieldError, FieldLabel } from '@/components/ui/field'
-import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Input } from '@/components/ui/input'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { cn } from '@/lib/utils'
+import { DocyrusIcon } from '@/components/docyrus/docyrus-icon';
+import { tUi, type UiI18nLocale } from '@/lib/ui-i18n';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 import {
-  getEnumDotClassName,
-  getEnumDotStyle,
-  getEnumIconColor,
-} from './lib/utils'
-import { type DocyrusFormFieldProps } from './types'
+  getEnumDotClassName, getEnumDotStyle, getEnumIconColor
+} from './lib/utils';
+import { type DocyrusFormFieldProps } from './types';
 
 export function MultiSelectFormField({
   field: fieldConfig,
@@ -26,7 +24,7 @@ export function MultiSelectFormField({
   disabled,
   className,
   enumOptions = [],
-  locale,
+  locale
 }: DocyrusFormFieldProps & { locale?: UiI18nLocale }) {
   return (
     <form.Field
@@ -38,11 +36,9 @@ export function MultiSelectFormField({
           disabled={disabled}
           className={className}
           enumOptions={enumOptions}
-          locale={locale}
-        />
-      )}
-    />
-  )
+          locale={locale} />
+      )} />
+  );
 }
 
 function MultiSelectFieldInner({
@@ -51,114 +47,110 @@ function MultiSelectFieldInner({
   disabled,
   className,
   enumOptions,
-  locale,
+  locale
 }: {
-  field: any
-  fieldConfig: DocyrusFormFieldProps['field']
-  disabled?: boolean
-  className?: string
-  enumOptions: NonNullable<DocyrusFormFieldProps['enumOptions']>
-  locale?: UiI18nLocale
+  field: any;
+  fieldConfig: DocyrusFormFieldProps['field'];
+  disabled?: boolean;
+  className?: string;
+  enumOptions: NonNullable<DocyrusFormFieldProps['enumOptions']>;
+  locale?: UiI18nLocale;
 }) {
-  const [checkedAvailable, setCheckedAvailable] = useState<Set<string>>(
-    new Set(),
-  )
-  const [checkedSelected, setCheckedSelected] = useState<Set<string>>(new Set())
-  const [searchAvailable, setSearchAvailable] = useState('')
-  const [searchSelected, setSearchSelected] = useState('')
+  const [checkedAvailable, setCheckedAvailable] = useState<Set<string>>(new Set());
+  const [checkedSelected, setCheckedSelected] = useState<Set<string>>(new Set());
+  const [searchAvailable, setSearchAvailable] = useState('');
+  const [searchSelected, setSearchSelected] = useState('');
 
-  const isDisabled = disabled || fieldConfig.readOnly === true
-  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+  const isDisabled = disabled || fieldConfig.readOnly === true;
+  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
   const selected: Array<string> = useMemo(
-    () => (Array.isArray(field.state.value) ? field.state.value : []),
-    [field.state.value],
-  )
-  const selectedSet = useMemo(() => new Set(selected), [selected])
+    () => Array.isArray(field.state.value) ? field.state.value : [],
+    [field.state.value]
+  );
+  const selectedSet = useMemo(() => new Set(selected), [selected]);
 
   const availableOptions = useMemo(
-    () => enumOptions.filter((o) => !selectedSet.has(o.id)),
-    [enumOptions, selectedSet],
-  )
+    () => enumOptions.filter(o => !selectedSet.has(o.id)),
+    [enumOptions, selectedSet]
+  );
 
   const selectedOptions = useMemo(
-    () => enumOptions.filter((o) => selectedSet.has(o.id)),
-    [enumOptions, selectedSet],
-  )
+    () => enumOptions.filter(o => selectedSet.has(o.id)),
+    [enumOptions, selectedSet]
+  );
 
   const filteredAvailable = useMemo(() => {
-    if (!searchAvailable) return availableOptions
-    const q = searchAvailable.toLowerCase()
+    if (!searchAvailable) return availableOptions;
+    const q = searchAvailable.toLowerCase();
 
-    return availableOptions.filter((o) => o.name.toLowerCase().includes(q))
-  }, [availableOptions, searchAvailable])
+    return availableOptions.filter(o => o.name.toLowerCase().includes(q));
+  }, [availableOptions, searchAvailable]);
 
   const filteredSelected = useMemo(() => {
-    if (!searchSelected) return selectedOptions
-    const q = searchSelected.toLowerCase()
+    if (!searchSelected) return selectedOptions;
+    const q = searchSelected.toLowerCase();
 
-    return selectedOptions.filter((o) => o.name.toLowerCase().includes(q))
-  }, [selectedOptions, searchSelected])
+    return selectedOptions.filter(o => o.name.toLowerCase().includes(q));
+  }, [selectedOptions, searchSelected]);
 
   const moveToSelected = () => {
-    if (checkedAvailable.size === 0) return
-    field.handleChange([...selected, ...checkedAvailable])
-    setCheckedAvailable(new Set())
-  }
+    if (checkedAvailable.size === 0) return;
+    field.handleChange([...selected, ...checkedAvailable]);
+    setCheckedAvailable(new Set());
+  };
 
   const moveToAvailable = () => {
-    if (checkedSelected.size === 0) return
-    field.handleChange(
-      selected.filter((id: string) => !checkedSelected.has(id)),
-    )
-    setCheckedSelected(new Set())
-  }
+    if (checkedSelected.size === 0) return;
+    field.handleChange(selected.filter((id: string) => !checkedSelected.has(id)));
+    setCheckedSelected(new Set());
+  };
 
   const selectAllAvailable = () => {
-    setCheckedAvailable(new Set(filteredAvailable.map((o) => o.id)))
-  }
+    setCheckedAvailable(new Set(filteredAvailable.map(o => o.id)));
+  };
 
   const deselectAllAvailable = () => {
-    setCheckedAvailable(new Set())
-  }
+    setCheckedAvailable(new Set());
+  };
 
   const selectAllSelected = () => {
-    setCheckedSelected(new Set(filteredSelected.map((o) => o.id)))
-  }
+    setCheckedSelected(new Set(filteredSelected.map(o => o.id)));
+  };
 
   const deselectAllSelected = () => {
-    setCheckedSelected(new Set())
-  }
+    setCheckedSelected(new Set());
+  };
 
   const toggleAvailableCheck = (id: string) => {
     setCheckedAvailable((prev) => {
-      const next = new Set(prev)
+      const next = new Set(prev);
 
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
 
-      return next
-    })
-  }
+      return next;
+    });
+  };
 
   const toggleSelectedCheck = (id: string) => {
     setCheckedSelected((prev) => {
-      const next = new Set(prev)
+      const next = new Set(prev);
 
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
 
-      return next
-    })
-  }
+      return next;
+    });
+  };
 
-  const t = (key: Parameters<typeof tUi>[1]) => tUi(locale, key)
+  const t = (key: Parameters<typeof tUi>[1]) => tUi(locale, key);
 
   return (
     <Field data-invalid={isInvalid} className={className}>
       <FieldLabel htmlFor={field.name}>{fieldConfig.name}</FieldLabel>
       <div className="flex items-stretch gap-2">
         {/* Available panel */}
-        <div className="bg-background border-input flex min-h-[200px] flex-1 flex-col overflow-hidden rounded-md border">
+        <div className="bg-background border-input flex min-h-50 flex-1 flex-col overflow-hidden rounded-md border">
           <div className="border-b px-3 py-2">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">
@@ -171,17 +163,8 @@ function MultiSelectFieldInner({
                   size="sm"
                   className="h-6 px-1.5 text-xs"
                   disabled={isDisabled || filteredAvailable.length === 0}
-                  onClick={
-                    checkedAvailable.size === filteredAvailable.length &&
-                    filteredAvailable.length > 0
-                      ? deselectAllAvailable
-                      : selectAllAvailable
-                  }
-                >
-                  {checkedAvailable.size === filteredAvailable.length &&
-                  filteredAvailable.length > 0
-                    ? t('msDeselectAll')
-                    : t('msSelectAll')}
+                  onClick={checkedAvailable.size === filteredAvailable.length && filteredAvailable.length > 0 ? deselectAllAvailable : selectAllAvailable}>
+                  {checkedAvailable.size === filteredAvailable.length && filteredAvailable.length > 0 ? t('msDeselectAll') : t('msSelectAll')}
                 </Button>
               </div>
             </div>
@@ -189,10 +172,9 @@ function MultiSelectFieldInner({
               <Input
                 placeholder={t('searchPlaceholder')}
                 value={searchAvailable}
-                onChange={(e) => setSearchAvailable(e.target.value)}
+                onChange={e => setSearchAvailable(e.target.value)}
                 className="mt-1.5 h-7 text-xs"
-                disabled={isDisabled}
-              />
+                disabled={isDisabled} />
             )}
           </div>
           <ScrollArea className="flex-1">
@@ -202,14 +184,13 @@ function MultiSelectFieldInner({
                   {t('msNoItems')}
                 </p>
               ) : (
-                filteredAvailable.map((option) => (
+                filteredAvailable.map(option => (
                   <OptionRow
                     key={option.id}
                     option={option}
                     checked={checkedAvailable.has(option.id)}
                     disabled={isDisabled}
-                    onToggle={() => toggleAvailableCheck(option.id)}
-                  />
+                    onToggle={() => toggleAvailableCheck(option.id)} />
                 ))
               )}
             </div>
@@ -225,8 +206,7 @@ function MultiSelectFieldInner({
             className="size-8"
             disabled={isDisabled || checkedAvailable.size === 0}
             onClick={moveToSelected}
-            aria-label={t('msMoveRight')}
-          >
+            aria-label={t('msMoveRight')}>
             <ChevronsRight className="size-4" />
           </Button>
           <Button
@@ -236,14 +216,13 @@ function MultiSelectFieldInner({
             className="size-8"
             disabled={isDisabled || checkedSelected.size === 0}
             onClick={moveToAvailable}
-            aria-label={t('msMoveLeft')}
-          >
+            aria-label={t('msMoveLeft')}>
             <ChevronsLeft className="size-4" />
           </Button>
         </div>
 
         {/* Selected panel */}
-        <div className="bg-background border-input flex min-h-[200px] flex-1 flex-col overflow-hidden rounded-md border">
+        <div className="bg-background border-input flex min-h-50 flex-1 flex-col overflow-hidden rounded-md border">
           <div className="border-b px-3 py-2">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">
@@ -256,17 +235,8 @@ function MultiSelectFieldInner({
                   size="sm"
                   className="h-6 px-1.5 text-xs"
                   disabled={isDisabled || filteredSelected.length === 0}
-                  onClick={
-                    checkedSelected.size === filteredSelected.length &&
-                    filteredSelected.length > 0
-                      ? deselectAllSelected
-                      : selectAllSelected
-                  }
-                >
-                  {checkedSelected.size === filteredSelected.length &&
-                  filteredSelected.length > 0
-                    ? t('msDeselectAll')
-                    : t('msSelectAll')}
+                  onClick={checkedSelected.size === filteredSelected.length && filteredSelected.length > 0 ? deselectAllSelected : selectAllSelected}>
+                  {checkedSelected.size === filteredSelected.length && filteredSelected.length > 0 ? t('msDeselectAll') : t('msSelectAll')}
                 </Button>
               </div>
             </div>
@@ -274,10 +244,9 @@ function MultiSelectFieldInner({
               <Input
                 placeholder={t('searchPlaceholder')}
                 value={searchSelected}
-                onChange={(e) => setSearchSelected(e.target.value)}
+                onChange={e => setSearchSelected(e.target.value)}
                 className="mt-1.5 h-7 text-xs"
-                disabled={isDisabled}
-              />
+                disabled={isDisabled} />
             )}
           </div>
           <ScrollArea className="flex-1">
@@ -287,14 +256,13 @@ function MultiSelectFieldInner({
                   {t('msNoItems')}
                 </p>
               ) : (
-                filteredSelected.map((option) => (
+                filteredSelected.map(option => (
                   <OptionRow
                     key={option.id}
                     option={option}
                     checked={checkedSelected.has(option.id)}
                     disabled={isDisabled}
-                    onToggle={() => toggleSelectedCheck(option.id)}
-                  />
+                    onToggle={() => toggleSelectedCheck(option.id)} />
                 ))
               )}
             </div>
@@ -303,26 +271,23 @@ function MultiSelectFieldInner({
       </div>
       {isInvalid && <FieldError errors={field.state.meta.errors} />}
     </Field>
-  )
+  );
 }
 
 function OptionRow({
   option,
   checked,
   disabled,
-  onToggle,
+  onToggle
 }: {
   option: {
-    id: string
-    name: string
-    icon?: string
-    color?: string
-  }
-  checked: boolean
-  disabled: boolean
-  onToggle: () => void
+    id: string; name: string; icon?: string; color?: string;
+  };
+  checked: boolean;
+  disabled: boolean;
+  onToggle: () => void;
 }) {
-  const iconColor = getEnumIconColor(option.color)
+  const iconColor = getEnumIconColor(option.color);
 
   return (
     <label
@@ -330,31 +295,29 @@ function OptionRow({
         'flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm',
         'hover:bg-accent hover:text-accent-foreground',
         'select-none transition-colors',
-        disabled && 'pointer-events-none opacity-50',
-      )}
-    >
+        disabled && 'pointer-events-none opacity-50'
+      )}>
       <Checkbox
         checked={checked}
         onCheckedChange={onToggle}
-        disabled={disabled}
-      />
+        disabled={disabled} />
       {option.icon ? (
         <span
           className={cn('shrink-0', iconColor.className)}
-          style={iconColor.style}
-        >
-          <DocyrusIcon icon={option.icon} className="size-4 shrink-0" />
+          style={iconColor.style}>
+          <DocyrusIcon
+            icon={option.icon}
+            className="size-4 shrink-0" />
         </span>
       ) : option.color ? (
         <span
           className={cn(
             'size-2.5 shrink-0 rounded-full',
-            getEnumDotClassName(option.color),
+            getEnumDotClassName(option.color)
           )}
-          style={getEnumDotStyle(option.color)}
-        />
+          style={getEnumDotStyle(option.color)} />
       ) : null}
       <span className="truncate">{option.name}</span>
     </label>
-  )
+  );
 }

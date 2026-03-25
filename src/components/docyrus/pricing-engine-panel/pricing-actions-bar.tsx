@@ -1,22 +1,22 @@
-'use client'
+'use client';
 
-import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 
-import { tUi } from '@/lib/ui-i18n'
+import { tUi } from '@/lib/ui-i18n';
 
-import { usePricingEngine } from './contexts/pricing-context'
+import { usePricingEngine } from './contexts/pricing-context';
 
 interface PricingActionsBarProps {
-  showActions?: boolean
+  showActions?: boolean;
 }
 
-export function PricingActionsBar({
-  showActions = true,
-}: PricingActionsBarProps) {
-  const { save, saveDraft, readOnly, locale } = usePricingEngine()
+export function PricingActionsBar({ showActions = true }: PricingActionsBarProps) {
+  const {
+    save, saveDraft, readOnly, locale
+  } = usePricingEngine();
 
-  if (!showActions || readOnly) return null
+  if (!showActions || readOnly) return null;
 
   return (
     <>
@@ -25,8 +25,10 @@ export function PricingActionsBar({
         <Button variant="outline" onClick={saveDraft}>
           {tUi(locale, 'pepSaveDraft')}
         </Button>
-        <Button onClick={save}>{tUi(locale, 'pepSave')}</Button>
+        <Button onClick={save}>
+          {tUi(locale, 'pepSave')}
+        </Button>
       </div>
     </>
-  )
+  );
 }

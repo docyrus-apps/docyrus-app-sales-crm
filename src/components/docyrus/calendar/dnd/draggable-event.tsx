@@ -1,66 +1,56 @@
-'use client'
+'use client';
 
-import { type DragEvent, type MouseEvent, type ReactNode } from 'react'
+import { type DragEvent, type MouseEvent, type ReactNode } from 'react';
 
-import { useCallback, useRef } from 'react'
+import { useCallback, useRef } from 'react';
 
-import { motion } from 'motion/react'
+import { motion } from 'motion/react';
 
-import { type IEvent } from '../interfaces'
+import { type IEvent } from '../interfaces';
 
-import { useCalendar } from '../contexts/calendar-context'
-import { useDragDrop } from '../contexts/dnd-context'
+import { useDragDrop } from '../contexts/dnd-context';
 
 interface DraggableEventProps {
-  event: IEvent
-  children: ReactNode
-  className?: string
+  event: IEvent;
+  children: ReactNode;
+  className?: string;
 }
 
 export function DraggableEvent({
   event,
   children,
-  className,
+  className
 }: DraggableEventProps) {
-  const { startDrag, endDrag, isDragging, draggedEvent } = useDragDrop()
-  const { readOnly } = useCalendar()
-  const ref = useRef<HTMLDivElement>(null)
+  const {
+    startDrag, endDrag, isDragging, draggedEvent
+  } = useDragDrop();
+  const ref = useRef<HTMLDivElement>(null);
 
-  const isCurrentlyDragged = isDragging && draggedEvent?.id === event.id
+  const isCurrentlyDragged = isDragging && draggedEvent?.id === event.id;
 
   const handleClick = (e: MouseEvent<HTMLDivElement>) => {
-    e.stopPropagation()
-  }
+    e.stopPropagation();
+  };
 
-  const handleDragStart = useCallback(
-    (e: DragEvent<HTMLDivElement>) => {
-      if (readOnly) {
-        e.preventDefault()
-
-        return
-      }
-
-      e.dataTransfer.setData('text/plain', event.id.toString())
-      startDrag(event)
-    },
-    [event, readOnly, startDrag],
-  )
+  const handleDragStart = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.dataTransfer.setData('text/plain', event.id.toString());
+    startDrag(event);
+  }, [event, startDrag]);
 
   const handleDragEnd = useCallback(() => {
-    endDrag()
-  }, [endDrag])
+    endDrag();
+  }, [endDrag]);
 
   return (
     <motion.div
       ref={ref}
-      className={`${className || ''} ${readOnly ? '' : isCurrentlyDragged ? 'opacity-50 cursor-grabbing' : 'cursor-grab'}`}
-      draggable={!readOnly}
+      className={`${className || ''} ${isCurrentlyDragged ? 'opacity-50 cursor-grabbing' : 'cursor-grab'}`}
+      draggable
       onClick={(e: MouseEvent<HTMLDivElement>) => handleClick(e)}
       // @ts-expect-error -- native HTML drag events conflict with motion's gesture types
       onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
+      onDragEnd={handleDragEnd}>
       {children}
     </motion.div>
-  )
+  );
 }

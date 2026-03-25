@@ -1,24 +1,21 @@
-'use client'
+'use client';
 
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Separator } from '@/components/ui/separator'
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow
+} from '@/components/ui/table';
+import { Separator } from '@/components/ui/separator';
 
-import { tUi } from '@/lib/ui-i18n'
-import { formatMoney } from '@/components/docyrus/form-fields/lib/utils'
+import { tUi } from '@/lib/ui-i18n';
+import { formatMoney } from '@/components/docyrus/form-fields/lib/utils';
 
-import { usePricingEngine } from './contexts/pricing-context'
+import { usePricingEngine } from './contexts/pricing-context';
 
 export function PricingVatSummary() {
-  const { vatSummary, currency, config, locale } = usePricingEngine()
+  const {
+    vatSummary, currency, config, locale
+  } = usePricingEngine();
 
-  if (!config.enableVat || vatSummary.length === 0) return null
+  if (!config.enableVat || vatSummary.length === 0) return null;
 
   return (
     <>
@@ -31,16 +28,12 @@ export function PricingVatSummary() {
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead>{tUi(locale, 'pepRate')}</TableHead>
-              <TableHead className="text-right">
-                {tUi(locale, 'pepTaxableAmount')}
-              </TableHead>
-              <TableHead className="text-right">
-                {tUi(locale, 'pepVat')}
-              </TableHead>
+              <TableHead className="text-right">{tUi(locale, 'pepTaxableAmount')}</TableHead>
+              <TableHead className="text-right">{tUi(locale, 'pepVat')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {vatSummary.map((row) => (
+            {vatSummary.map(row => (
               <TableRow key={row.rate}>
                 <TableCell className="font-medium">{row.rate}%</TableCell>
                 <TableCell className="text-right tabular-nums">
@@ -55,5 +48,5 @@ export function PricingVatSummary() {
         </Table>
       </div>
     </>
-  )
+  );
 }

@@ -1,9 +1,9 @@
-import { type ILineItem, type IPricingConfig } from '../interfaces'
+import { type ILineItem, type IPricingConfig } from '../interfaces';
 
-let nextId = 1
+let nextId = 1;
 
 function generateId(): string {
-  return `line-${Date.now()}-${nextId++}`
+  return `line-${Date.now()}-${nextId++}`;
 }
 
 /**
@@ -11,7 +11,7 @@ function generateId(): string {
  */
 export function createLineItem(
   defaults: Pick<IPricingConfig, 'defaultVatRate'>,
-  overrides?: Partial<ILineItem>,
+  overrides?: Partial<ILineItem>
 ): ILineItem {
   return {
     id: generateId(),
@@ -24,8 +24,8 @@ export function createLineItem(
     unitPrice: 0,
     vatRate: defaults.defaultVatRate,
     discountPercent: 0,
-    ...overrides,
-  }
+    ...overrides
+  };
 }
 
 /**
@@ -33,11 +33,11 @@ export function createLineItem(
  */
 export function addLineItemToList(
   items: ILineItem[],
-  newItem: ILineItem,
+  newItem: ILineItem
 ): ILineItem[] {
-  const withPosition = { ...newItem, position: items.length }
+  const withPosition = { ...newItem, position: items.length };
 
-  return [...items, withPosition]
+  return [...items, withPosition];
 }
 
 /**
@@ -45,11 +45,11 @@ export function addLineItemToList(
  */
 export function removeLineItemFromList(
   items: ILineItem[],
-  id: string,
+  id: string
 ): ILineItem[] {
   return items
-    .filter((item) => item.id !== id)
-    .map((item, index) => ({ ...item, position: index }))
+    .filter(item => item.id !== id)
+    .map((item, index) => ({ ...item, position: index }));
 }
 
 /**
@@ -58,9 +58,9 @@ export function removeLineItemFromList(
 export function updateLineItemInList(
   items: ILineItem[],
   id: string,
-  updates: Partial<ILineItem>,
+  updates: Partial<ILineItem>
 ): ILineItem[] {
-  return items.map((item) => (item.id === id ? { ...item, ...updates } : item))
+  return items.map(item => item.id === id ? { ...item, ...updates } : item);
 }
 
 /**
@@ -68,20 +68,20 @@ export function updateLineItemInList(
  */
 export function duplicateLineItemInList(
   items: ILineItem[],
-  id: string,
+  id: string
 ): ILineItem[] {
-  const source = items.find((item) => item.id === id)
+  const source = items.find(item => item.id === id);
 
-  if (!source) return items
+  if (!source) return items;
 
   const duplicate: ILineItem = {
     ...source,
     id: generateId(),
     position: items.length,
-    productId: null,
-  }
+    productId: null
+  };
 
-  return [...items, duplicate]
+  return [...items, duplicate];
 }
 
 /**
@@ -90,12 +90,12 @@ export function duplicateLineItemInList(
 export function reorderLineItemList(
   items: ILineItem[],
   fromIndex: number,
-  toIndex: number,
+  toIndex: number
 ): ILineItem[] {
-  const result = [...items]
-  const [moved] = result.splice(fromIndex, 1)
+  const result = [...items];
+  const [moved] = result.splice(fromIndex, 1) as [ILineItem];
 
-  result.splice(toIndex, 0, moved)
+  result.splice(toIndex, 0, moved);
 
-  return result.map((item, index) => ({ ...item, position: index }))
+  return result.map((item, index) => ({ ...item, position: index }));
 }

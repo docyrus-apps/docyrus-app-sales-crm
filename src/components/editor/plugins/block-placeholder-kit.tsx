@@ -1,8 +1,8 @@
 // @ts-nocheck
-'use client'
+'use client';
 
-import { KEYS } from 'platejs'
-import { BlockPlaceholderPlugin } from 'platejs/react'
+import { KEYS } from 'platejs';
+import { BlockPlaceholderPlugin } from 'platejs/react';
 
 export const BlockPlaceholderKit = [
   BlockPlaceholderPlugin.configure({
@@ -15,4 +15,4 @@ export const BlockPlaceholderKit = [
       query: ({ path }) => path.length === 1,
     },
   }),
-]
+];

@@ -1,34 +1,34 @@
-'use client'
+'use client';
 
-import { CheckSquare } from 'lucide-react'
+import { CheckSquare } from 'lucide-react';
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
-import { type DocyrusValueProps } from './types'
+import { type DocyrusValueProps } from './types';
 
 interface TaskItem {
-  id?: string
-  title?: string
-  completed?: boolean
+  id?: string;
+  title?: string;
+  completed?: boolean;
 }
 
 function isTaskArray(val: unknown): val is Array<TaskItem> {
-  return Array.isArray(val)
+  return Array.isArray(val);
 }
 
 export function TaskListValue({ value, className }: DocyrusValueProps) {
   if (value == null || (Array.isArray(value) && value.length === 0)) {
-    return <span className="text-muted-foreground">—</span>
+    return <span className="text-muted-foreground">—</span>;
   }
 
   if (!isTaskArray(value)) {
     return (
       <span className={cn('truncate text-sm', className)}>{String(value)}</span>
-    )
+    );
   }
 
-  const total = value.length
-  const completed = value.filter((t) => t.completed).length
+  const total = value.length;
+  const completed = value.filter(t => t.completed).length;
 
   return (
     <span className={cn('inline-flex items-center gap-1 text-sm', className)}>
@@ -37,5 +37,5 @@ export function TaskListValue({ value, className }: DocyrusValueProps) {
         {completed}/{total} completed
       </span>
     </span>
-  )
+  );
 }

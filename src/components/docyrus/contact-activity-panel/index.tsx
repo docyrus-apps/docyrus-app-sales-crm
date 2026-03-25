@@ -1,4 +1,6 @@
-export { ContactActivityPanel } from './contact-activity-panel'
+'use client';
+
+export { ContactActivityPanel } from './contact-activity-panel';
 export type {
   ContactActivity,
   ContactActivityPanelProps,
@@ -8,12 +10,12 @@ export type {
   PostAttachment,
   PostReaction,
   CreatePostPayload,
-  MentionUser,
-} from './types'
+  MentionUser
+} from './types';
 export {
   ALL_ACTIVITY_TYPES,
   RECORD_ACTIVITY_TYPES,
   ACTIVITY_TYPE_CONFIG,
-  isCompactActivity,
-} from './activity-type-config'
-export type { ActivityTypeConfig } from './activity-type-config'
+  isCompactActivity
+} from './activity-type-config';
+export type { ActivityTypeConfig } from './activity-type-config';

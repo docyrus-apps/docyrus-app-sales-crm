@@ -1,22 +1,26 @@
-'use client'
+'use client';
 
-import { motion } from 'motion/react'
-import { Plus } from 'lucide-react'
+import { motion } from 'motion/react';
+import { Plus } from 'lucide-react';
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/button';
 
-import { slideFromLeft, slideFromRight, transition } from '../animations'
-import { useCalendar } from '../contexts/calendar-context'
-import { AddEditEventDialog } from '../dialogs/add-edit-event-dialog'
-import { Settings } from '../settings/settings'
-import { DateNavigator } from './date-navigator'
-import FilterEvents from './filter'
-import { TodayButton } from './today-button'
-import { UserSelect } from './user-select'
-import Views from './view-tabs'
+import {
+  slideFromLeft,
+  slideFromRight,
+  transition
+} from '../animations';
+import { useCalendar } from '../contexts/calendar-context';
+import { AddEditEventDialog } from '../dialogs/add-edit-event-dialog';
+import { Settings } from '../settings/settings';
+import { DateNavigator } from './date-navigator';
+import FilterEvents from './filter';
+import { TodayButton } from './today-button';
+import { UserSelect } from './user-select';
+import Views from './view-tabs';
 
 export function CalendarHeader() {
-  const { events, readOnly, showUserFilter, view } = useCalendar()
+  const { view, events } = useCalendar();
 
   return (
     <div className="space-y-2 border-b p-3 sm:p-4">
@@ -26,8 +30,7 @@ export function CalendarHeader() {
           variants={slideFromLeft}
           initial="initial"
           animate="animate"
-          transition={transition}
-        >
+          transition={transition}>
           <TodayButton />
           <DateNavigator view={view} events={events} />
         </motion.div>
@@ -37,8 +40,7 @@ export function CalendarHeader() {
           variants={slideFromRight}
           initial="initial"
           animate="animate"
-          transition={transition}
-        >
+          transition={transition}>
           <FilterEvents />
           <Views />
         </motion.div>
@@ -49,19 +51,16 @@ export function CalendarHeader() {
         variants={slideFromRight}
         initial="initial"
         animate="animate"
-        transition={transition}
-      >
-        {showUserFilter && <UserSelect />}
-        {!readOnly && (
-          <AddEditEventDialog>
-            <Button size="sm">
-              <Plus className="size-4" />
-              <span className="hidden sm:inline">Add Event</span>
-            </Button>
-          </AddEditEventDialog>
-        )}
+        transition={transition}>
+        <UserSelect />
+        <AddEditEventDialog>
+          <Button size="sm">
+            <Plus className="size-4" />
+            <span className="hidden sm:inline">Add Event</span>
+          </Button>
+        </AddEditEventDialog>
         <Settings />
       </motion.div>
     </div>
-  )
+  );
 }

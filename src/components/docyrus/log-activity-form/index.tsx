@@ -1,4 +1,6 @@
-export { LogActivityForm } from './log-activity-form'
+'use client';
+
+export { LogActivityForm } from './log-activity-form';
 export type {
   EmailAttachment,
   EventOption,
@@ -8,6 +10,6 @@ export type {
   SectionHandle,
   SelectorFieldConfig,
   SelectorOption,
-  StatusOption,
-} from './types'
-export { LOGGABLE_ACTIVITY_TYPES } from './types'
+  StatusOption
+} from './types';
+export { LOGGABLE_ACTIVITY_TYPES } from './types';

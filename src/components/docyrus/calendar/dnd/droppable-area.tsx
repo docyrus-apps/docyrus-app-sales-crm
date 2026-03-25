@@ -1,15 +1,15 @@
-'use client'
+'use client';
 
-import { type ReactNode } from 'react'
+import { type ReactNode } from 'react';
 
-import { useDragDrop } from '../contexts/dnd-context'
+import { useDragDrop } from '../contexts/dnd-context';
 
 interface DroppableAreaProps {
-  date: Date
-  hour?: number
-  minute?: number
-  children: ReactNode
-  className?: string
+  date: Date;
+  hour?: number;
+  minute?: number;
+  children: ReactNode;
+  className?: string;
 }
 
 export function DroppableArea({
@@ -17,9 +17,9 @@ export function DroppableArea({
   hour,
   minute,
   children,
-  className,
+  className
 }: DroppableAreaProps) {
-  const { handleEventDrop, isDragging } = useDragDrop()
+  const { handleEventDrop, isDragging } = useDragDrop();
 
   return (
     <div
@@ -28,19 +28,18 @@ export function DroppableArea({
       tabIndex={-1}
       className={`${className || ''} ${isDragging ? 'drop-target' : ''}`}
       onDragOver={(e) => {
-        e.preventDefault()
-        e.currentTarget.classList.add('bg-primary/10')
+        e.preventDefault();
+        e.currentTarget.classList.add('bg-primary/10');
       }}
       onDragLeave={(e) => {
-        e.currentTarget.classList.remove('bg-primary/10')
+        e.currentTarget.classList.remove('bg-primary/10');
       }}
       onDrop={(e) => {
-        e.preventDefault()
-        e.currentTarget.classList.remove('bg-primary/10')
-        handleEventDrop(date, hour, minute)
-      }}
-    >
+        e.preventDefault();
+        e.currentTarget.classList.remove('bg-primary/10');
+        handleEventDrop(date, hour, minute);
+      }}>
       {children}
     </div>
-  )
+  );
 }

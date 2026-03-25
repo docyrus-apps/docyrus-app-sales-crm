@@ -1,35 +1,32 @@
-import { type Value } from 'platejs'
+import { type Value } from 'platejs';
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/button';
 
-import {
-  type CommentThread as CommentThreadType,
-  type CommentUser,
-} from './types'
+import { type CommentThread as CommentThreadType, type CommentUser } from './types';
 
-import { CommentItem } from './comment-item'
-import { CommentCreateForm } from './comment-create-form'
+import { CommentItem } from './comment-item';
+import { CommentCreateForm } from './comment-create-form';
 
 interface CommentThreadProps {
-  thread: CommentThreadType
-  usersMap: Map<string, CommentUser>
-  currentUserId: string | undefined
-  currentUser: CommentUser | undefined
-  editingCommentId: string | null
-  replyingToCommentId: string | null
-  editable: boolean
-  onStartEdit: (commentId: string) => void
-  onCancelEdit: () => void
-  onSaveEdit: (commentId: string, content: Value) => void
-  onDelete: (commentId: string) => void
-  onStartReply: (commentId: string) => void
-  onCancelReply: () => void
+  thread: CommentThreadType;
+  usersMap: Map<string, CommentUser>;
+  currentUserId: string | undefined;
+  currentUser: CommentUser | undefined;
+  editingCommentId: string | null;
+  replyingToCommentId: string | null;
+  editable: boolean;
+  onStartEdit: (commentId: string) => void;
+  onCancelEdit: () => void;
+  onSaveEdit: (commentId: string, content: Value) => void;
+  onDelete: (commentId: string) => void;
+  onStartReply: (commentId: string) => void;
+  onCancelReply: () => void;
   onSubmitReply: (
     content: Value,
     parentId?: string,
-    files?: Array<File>,
-  ) => void
-  isCreatePending: boolean
+    files?: Array<File>
+  ) => void;
+  isCreatePending: boolean;
 }
 
 export function CommentThread({
@@ -47,10 +44,10 @@ export function CommentThread({
   onStartReply,
   onCancelReply,
   onSubmitReply,
-  isCreatePending,
+  isCreatePending
 }: CommentThreadProps) {
-  const { comment, replies } = thread
-  const isReplying = replyingToCommentId === comment.id
+  const { comment, replies } = thread;
+  const isReplying = replyingToCommentId === comment.id;
 
   return (
     <>
@@ -61,9 +58,8 @@ export function CommentThread({
         isEditing={editingCommentId === comment.id}
         onStartEdit={() => onStartEdit(comment.id)}
         onCancelEdit={onCancelEdit}
-        onSaveEdit={(content) => onSaveEdit(comment.id, content)}
-        onDelete={() => onDelete(comment.id)}
-      />
+        onSaveEdit={content => onSaveEdit(comment.id, content)}
+        onDelete={() => onDelete(comment.id)} />
 
       {editable && !isReplying && (
         <div className="pl-7">
@@ -71,8 +67,7 @@ export function CommentThread({
             variant="link"
             size="sm"
             className="h-auto p-0 text-xs text-muted-foreground"
-            onClick={() => onStartReply(comment.id)}
-          >
+            onClick={() => onStartReply(comment.id)}>
             Reply
           </Button>
         </div>
@@ -80,7 +75,7 @@ export function CommentThread({
 
       {replies.length > 0 && (
         <div className="pl-7">
-          {replies.map((reply) => (
+          {replies.map(reply => (
             <CommentItem
               key={reply.id}
               comment={reply}
@@ -89,9 +84,8 @@ export function CommentThread({
               isEditing={editingCommentId === reply.id}
               onStartEdit={() => onStartEdit(reply.id)}
               onCancelEdit={onCancelEdit}
-              onSaveEdit={(content) => onSaveEdit(reply.id, content)}
-              onDelete={() => onDelete(reply.id)}
-            />
+              onSaveEdit={content => onSaveEdit(reply.id, content)}
+              onDelete={() => onDelete(reply.id)} />
           ))}
         </div>
       )}
@@ -103,18 +97,16 @@ export function CommentThread({
             onSubmit={onSubmitReply}
             isPending={isCreatePending}
             parentId={comment.id}
-            placeholder="Reply..."
-          />
+            placeholder="Reply..." />
           <Button
             variant="link"
             size="sm"
             className="h-auto p-0 text-xs text-muted-foreground"
-            onClick={onCancelReply}
-          >
+            onClick={onCancelReply}>
             Cancel
           </Button>
         </div>
       )}
     </>
-  )
+  );
 }

@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import {
   type ReactNode,
@@ -6,32 +6,26 @@ import {
   useCallback,
   useContext,
   useMemo,
-  useState,
-} from 'react'
+  useState
+} from 'react';
 
-import {
-  type DialogContainer,
-  type DialogSide,
-  type DialogSize,
-} from '../types'
+import { type DialogContainer, type DialogSide, type DialogSize } from '../types';
 
 interface AwesomeDialogContextValue {
-  container: DialogContainer
-  side: DialogSide
-  size: DialogSize
-  isFullscreen: boolean
-  setFullscreen: (value: boolean) => void
-  toggleFullscreen: () => void
-  fullscreenable: boolean
-  minimizable: boolean
-  resizable: boolean
-  onClose: () => void
-  dialogId?: string
+  container: DialogContainer;
+  side: DialogSide;
+  size: DialogSize;
+  isFullscreen: boolean;
+  setFullscreen: (value: boolean) => void;
+  toggleFullscreen: () => void;
+  fullscreenable: boolean;
+  minimizable: boolean;
+  resizable: boolean;
+  onClose: () => void;
+  dialogId?: string;
 }
 
-const AwesomeDialogContext = createContext<AwesomeDialogContextValue | null>(
-  null,
-)
+const AwesomeDialogContext = createContext<AwesomeDialogContextValue | null>(null);
 
 export function AwesomeDialogProvider({
   children,
@@ -43,66 +37,63 @@ export function AwesomeDialogProvider({
   minimizable = false,
   resizable = false,
   onClose,
-  dialogId,
+  dialogId
 }: {
-  children: ReactNode
-  container?: DialogContainer
-  side?: DialogSide
-  size?: DialogSize
-  fullscreenable?: boolean
-  defaultFullscreen?: boolean
-  minimizable?: boolean
-  resizable?: boolean
-  onClose: () => void
-  dialogId?: string
+  children: ReactNode;
+  container?: DialogContainer;
+  side?: DialogSide;
+  size?: DialogSize;
+  fullscreenable?: boolean;
+  defaultFullscreen?: boolean;
+  minimizable?: boolean;
+  resizable?: boolean;
+  onClose: () => void;
+  dialogId?: string;
 }) {
-  const [isFullscreen, setFullscreen] = useState(defaultFullscreen)
+  const [isFullscreen, setFullscreen] = useState(defaultFullscreen);
 
   const toggleFullscreen = useCallback(() => {
-    setFullscreen((prev) => !prev)
-  }, [])
+    setFullscreen(prev => !prev);
+  }, []);
 
-  const value = useMemo<AwesomeDialogContextValue>(
-    () => ({
-      container,
-      side,
-      size,
-      isFullscreen,
-      setFullscreen,
-      toggleFullscreen,
-      fullscreenable,
-      minimizable,
-      resizable,
-      onClose,
-      dialogId,
-    }),
-    [
-      container,
-      side,
-      size,
-      isFullscreen,
-      toggleFullscreen,
-      fullscreenable,
-      minimizable,
-      resizable,
-      onClose,
-      dialogId,
-    ],
-  )
+  const value = useMemo<AwesomeDialogContextValue>(() => ({
+    container,
+    side,
+    size,
+    isFullscreen,
+    setFullscreen,
+    toggleFullscreen,
+    fullscreenable,
+    minimizable,
+    resizable,
+    onClose,
+    dialogId
+  }), [
+    container,
+    side,
+    size,
+    isFullscreen,
+    toggleFullscreen,
+    fullscreenable,
+    minimizable,
+    resizable,
+    onClose,
+    dialogId
+  ]);
 
   return (
     <AwesomeDialogContext.Provider value={value}>
       {children}
     </AwesomeDialogContext.Provider>
-  )
+  );
 }
 
 export function useAwesomeDialog(): AwesomeDialogContextValue {
-  const context = useContext(AwesomeDialogContext)
+  const context = useContext(AwesomeDialogContext);
 
   if (!context) {
-    throw new Error('useAwesomeDialog must be used within an AwesomeDialog.')
+    throw new Error('useAwesomeDialog must be used within an AwesomeDialog.');
   }
 
-  return context
+  return context;
 }

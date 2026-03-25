@@ -1,31 +1,27 @@
-'use client'
+'use client';
 
-import { forwardRef } from 'react'
+import { forwardRef } from 'react';
 
-import {
-  type CropperImage,
-  type CropperState,
-  type CropperTransitions,
-} from 'react-advanced-cropper'
+import { type CropperImage, type CropperState, type CropperTransitions } from 'react-advanced-cropper';
 
-import { getBackgroundStyle } from 'advanced-cropper'
+import { getBackgroundStyle } from 'advanced-cropper';
 
-import { AdjustableImage } from './adjustable-image'
+import { AdjustableImage } from './adjustable-image';
 
 interface CropperRef {
-  getState: () => CropperState
-  getTransitions: () => CropperTransitions
-  getImage: () => CropperImage
+  getState: () => CropperState;
+  getTransitions: () => CropperTransitions;
+  getImage: () => CropperImage;
 }
 
 interface AdjustableCropperBackgroundProps {
-  className?: string
-  cropper: CropperRef
-  crossOrigin?: 'anonymous' | 'use-credentials' | boolean
-  brightness?: number
-  saturation?: number
-  hue?: number
-  contrast?: number
+  className?: string;
+  cropper: CropperRef;
+  crossOrigin?: 'anonymous' | 'use-credentials' | boolean;
+  brightness?: number;
+  saturation?: number;
+  hue?: number;
+  contrast?: number;
 }
 
 const AdjustableCropperBackground = forwardRef<
@@ -40,16 +36,16 @@ const AdjustableCropperBackground = forwardRef<
       brightness = 0,
       saturation = 0,
       hue = 0,
-      contrast = 0,
+      contrast = 0
     },
-    ref,
+    ref
   ) => {
-    const state = cropper.getState()
-    const transitions = cropper.getTransitions()
-    const image = cropper.getImage()
+    const state = cropper.getState();
+    const transitions = cropper.getTransitions();
+    const image = cropper.getImage();
 
-    const style =
-      image && state ? getBackgroundStyle(image, state, transitions) : {}
+    const style
+      = image && state ? getBackgroundStyle(image, state, transitions) : {};
 
     return (
       <AdjustableImage
@@ -61,12 +57,11 @@ const AdjustableCropperBackground = forwardRef<
         contrast={contrast}
         ref={ref}
         className={className}
-        style={style}
-      />
-    )
-  },
-)
+        style={style} />
+    );
+  }
+);
 
-AdjustableCropperBackground.displayName = 'AdjustableCropperBackground'
+AdjustableCropperBackground.displayName = 'AdjustableCropperBackground';
 
-export { AdjustableCropperBackground }
+export { AdjustableCropperBackground };

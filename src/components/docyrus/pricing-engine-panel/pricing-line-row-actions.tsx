@@ -1,28 +1,26 @@
-'use client'
+'use client';
 
-import { Copy, Trash2 } from 'lucide-react'
+import { Copy, Trash2 } from 'lucide-react';
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/button';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger
+} from '@/components/ui/tooltip';
 
-import { tUi } from '@/lib/ui-i18n'
+import { tUi } from '@/lib/ui-i18n';
 
-import { usePricingEngine } from './contexts/pricing-context'
+import { usePricingEngine } from './contexts/pricing-context';
 
 interface PricingLineRowActionsProps {
-  lineId: string
+  lineId: string;
 }
 
 export function PricingLineRowActions({ lineId }: PricingLineRowActionsProps) {
-  const { removeLineItem, duplicateLineItem, readOnly, locale } =
-    usePricingEngine()
+  const {
+    removeLineItem, duplicateLineItem, readOnly, locale
+  } = usePricingEngine();
 
-  if (readOnly) return null
+  if (readOnly) return null;
 
   return (
     <TooltipProvider>
@@ -33,8 +31,7 @@ export function PricingLineRowActions({ lineId }: PricingLineRowActionsProps) {
               variant="ghost"
               size="icon"
               className="h-7 w-7"
-              onClick={() => duplicateLineItem(lineId)}
-            >
+              onClick={() => duplicateLineItem(lineId)}>
               <Copy className="h-3.5 w-3.5" />
             </Button>
           </TooltipTrigger>
@@ -47,8 +44,7 @@ export function PricingLineRowActions({ lineId }: PricingLineRowActionsProps) {
               variant="ghost"
               size="icon"
               className="h-7 w-7 text-destructive hover:text-destructive"
-              onClick={() => removeLineItem(lineId)}
-            >
+              onClick={() => removeLineItem(lineId)}>
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </TooltipTrigger>
@@ -56,5 +52,5 @@ export function PricingLineRowActions({ lineId }: PricingLineRowActionsProps) {
         </Tooltip>
       </div>
     </TooltipProvider>
-  )
+  );
 }

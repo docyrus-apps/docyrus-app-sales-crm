@@ -1,46 +1,44 @@
-'use client'
+'use client';
 
-import { type ComponentProps } from 'react'
+import { type ComponentProps } from 'react';
 
-import { cva, type VariantProps } from 'class-variance-authority'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { cva, type VariantProps } from 'class-variance-authority';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   DayPicker as ReactDayPicker,
-  getDefaultClassNames,
-} from 'react-day-picker'
+  getDefaultClassNames
+} from 'react-day-picker';
 
-import { buttonVariants } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const dayPickerVariants = cva('bg-background p-3', {
   variants: {
     variant: {
       default: '',
       outline: 'border border-border rounded-xl',
-      ghost: 'bg-transparent',
+      ghost: 'bg-transparent'
     },
     size: {
       default: '[--cell-size:36px] text-sm',
       sm: '[--cell-size:28px] p-2 text-xs',
-      lg: '[--cell-size:44px] p-4 text-base',
-    },
+      lg: '[--cell-size:44px] p-4 text-base'
+    }
   },
   defaultVariants: {
     variant: 'default',
-    size: 'default',
-  },
-})
+    size: 'default'
+  }
+});
 
 interface DayPickerDocProps {
-  showOutsideDays?: boolean
-  fixedWeeks?: boolean
-  numberOfMonths?: number
-  captionLayout?: 'label' | 'dropdown' | 'dropdown-months' | 'dropdown-years'
+  showOutsideDays?: boolean;
+  fixedWeeks?: boolean;
+  numberOfMonths?: number;
+  captionLayout?: 'label' | 'dropdown' | 'dropdown-months' | 'dropdown-years';
 }
 
-type DayPickerProps = ComponentProps<typeof ReactDayPicker> &
-  VariantProps<typeof dayPickerVariants> &
-  DayPickerDocProps
+type DayPickerProps = ComponentProps<typeof ReactDayPicker> & VariantProps<typeof dayPickerVariants> & DayPickerDocProps;
 
 function DayPicker({
   className,
@@ -50,7 +48,7 @@ function DayPicker({
   showOutsideDays = true,
   ...props
 }: DayPickerProps) {
-  const defaultClassNames = getDefaultClassNames()
+  const defaultClassNames = getDefaultClassNames();
 
   return (
     <ReactDayPicker
@@ -60,36 +58,36 @@ function DayPicker({
         root: cn('w-fit', defaultClassNames.root),
         months: cn(
           'relative flex flex-col gap-4 md:flex-row',
-          defaultClassNames.months,
+          defaultClassNames.months
         ),
         month: cn('flex flex-col gap-4', defaultClassNames.month),
         month_caption: cn(
           'relative flex h-7 items-center justify-center',
-          defaultClassNames.month_caption,
+          defaultClassNames.month_caption
         ),
         caption_label: cn(
           'text-sm font-medium',
-          defaultClassNames.caption_label,
+          defaultClassNames.caption_label
         ),
         nav: cn(
           'absolute inset-x-0 top-0 flex w-full justify-between z-10',
-          defaultClassNames.nav,
+          defaultClassNames.nav
         ),
         button_previous: cn(
           buttonVariants({ variant: 'outline' }),
           'h-[var(--cell-size)] w-[var(--cell-size)] bg-transparent p-0 opacity-50 hover:opacity-100',
-          defaultClassNames.button_previous,
+          defaultClassNames.button_previous
         ),
         button_next: cn(
           buttonVariants({ variant: 'outline' }),
           'h-[var(--cell-size)] w-[var(--cell-size)] bg-transparent p-0 opacity-50 hover:opacity-100',
-          defaultClassNames.button_next,
+          defaultClassNames.button_next
         ),
         month_grid: cn('w-full border-collapse', defaultClassNames.month_grid),
         weekdays: cn('flex', defaultClassNames.weekdays),
         weekday: cn(
           'text-muted-foreground w-[var(--cell-size)] font-normal text-[0.8rem]',
-          defaultClassNames.weekday,
+          defaultClassNames.weekday
         ),
         week: cn('flex w-full mt-2', defaultClassNames.week),
         day: cn(
@@ -100,12 +98,12 @@ function DayPicker({
           'first:[&:has([aria-selected])]:rounded-l-md',
           'last:[&:has([aria-selected])]:rounded-r-md',
           'focus-within:relative focus-within:z-20',
-          defaultClassNames.day,
+          defaultClassNames.day
         ),
         day_button: cn(
           buttonVariants({ variant: 'ghost' }),
           'h-[var(--cell-size)] w-[var(--cell-size)] p-0 font-normal aria-selected:opacity-100 rounded-md',
-          defaultClassNames.day_button,
+          defaultClassNames.day_button
         ),
         range_end: 'day-range-end',
         selected:
@@ -118,23 +116,22 @@ function DayPicker({
           'aria-selected:bg-accent aria-selected:text-accent-foreground',
         hidden: 'invisible',
         chevron: cn('fill-muted-foreground', defaultClassNames.chevron),
-        ...classNames,
+        ...classNames
       }}
       components={{
         Chevron: ({ orientation }) => {
           if (orientation === 'left') {
-            return <ChevronLeft className="size-4" />
+            return <ChevronLeft className="size-4" />;
           }
 
-          return <ChevronRight className="size-4" />
-        },
+          return <ChevronRight className="size-4" />;
+        }
       }}
-      {...props}
-    />
-  )
+      {...props} />
+  );
 }
 
-DayPicker.displayName = 'DayPicker'
+DayPicker.displayName = 'DayPicker';
 
-export { DayPicker, dayPickerVariants }
-export type { DayPickerProps }
+export { DayPicker, dayPickerVariants };
+export type { DayPickerProps };

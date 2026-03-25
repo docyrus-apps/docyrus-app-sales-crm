@@ -4,6 +4,8 @@ import {
   forwardRef,
   useCallback,
   useEffect,
+  useId,
+  useMemo,
   useRef,
   useState,
   type ComponentProps,
@@ -125,7 +127,7 @@ function MicroFormField({
 }: {
   slug: string;
   initialValue: unknown;
-  onChangeRef: RefObject<(v: unknown) => void>;
+  onChangeRef: RefObject<(name: string, v: unknown) => void>;
   children: (field: any) => ReactNode;
 }) {
   const [localValue, setLocalValue] = useState<unknown>(initialValue);
@@ -133,9 +135,9 @@ function MicroFormField({
   const handleChange = useCallback(
     (v: unknown) => {
       setLocalValue(v);
-      onChangeRef.current(v);
+      onChangeRef.current(slug, v);
     },
-    [onChangeRef]
+    [onChangeRef, slug]
   );
 
   return (
@@ -154,24 +156,31 @@ function MicroFormField({
 }
 
 /**
- * Creates a stable form object whose `Field` component is always the same
- * reference. The `onChangeRef` allows the parent to read the latest value
- * without causing re-creation of the form.
+ * Creates a stable form object with per-field initialization.
  *
- * `editCount` is used as a React key on MicroFormField so that each time
- * edit mode is entered the field remounts with the fresh `initialValue`.
+ * Main field uses `initialValue`; companion fields (e.g. `__budget_currency`)
+ * are initialized from `record[name]` so currency/country selects show the
+ * correct current value when entering edit mode.
+ *
+ * `editCount` is used as part of the React key on MicroFormField so that each
+ * time edit mode is entered the fields remount with fresh values.
  */
 function useMicroForm(
-  _slug: string,
+  slug: string,
   initialValue: unknown,
-  onChangeRef: RefObject<(v: unknown) => void>,
-  editCount: number
+  onChangeRef: RefObject<(name: string, v: unknown) => void>,
+  editCount: number,
+  record: Record<string, unknown> | undefined
 ) {
   const initialValueRef = useRef(initialValue);
   const editCountRef = useRef(editCount);
+  const recordRef = useRef(record);
+  const slugRef = useRef(slug);
 
   initialValueRef.current = initialValue;
   editCountRef.current = editCount;
+  recordRef.current = record;
+  slugRef.current = slug;
 
   const [form] = useState(() => ({
     Field: ({
@@ -180,15 +189,20 @@ function useMicroForm(
     }: {
       name: string;
       children: (field: any) => ReactNode;
-    }) => (
-      <MicroFormField
-        key={editCountRef.current}
-        slug={name}
-        initialValue={initialValueRef.current}
-        onChangeRef={onChangeRef}>
-        {children}
-      </MicroFormField>
-    )
+    }) => {
+      const isMainField = name === slugRef.current;
+      const fieldInitialValue = isMainField ? initialValueRef.current : (recordRef.current?.[name] ?? undefined);
+
+      return (
+        <MicroFormField
+          key={`${editCountRef.current}-${name}`}
+          slug={name}
+          initialValue={fieldInitialValue}
+          onChangeRef={onChangeRef}>
+          {children}
+        </MicroFormField>
+      );
+    }
   }));
 
   return form;
@@ -202,7 +216,7 @@ function EditableValueActions({
   onCancel: () => void;
 }) {
   return (
-    <div className="ml-1 flex shrink-0 items-center gap-0.5">
+    <div className="self-center ml-1 flex shrink-0 items-center gap-0.5">
       <Button
         type="button"
         variant="ghost"
@@ -234,6 +248,8 @@ export interface EditableValueProps
   value: unknown;
   /** Called when a new value is committed */
   onValueChange?: (value: unknown) => void;
+  /** Called when companion field values change (e.g. currency for money, country for phone) */
+  onCompanionChange?: (changes: Record<string, unknown>) => void;
   /** Full record for companion fields (phone country, money currency) */
   record?: Record<string, unknown>;
   /** Enum options for select-based fields */
@@ -254,6 +270,10 @@ export interface EditableValueProps
   editing?: boolean;
   /** Called when editing state changes */
   onEditingChange?: (editing: boolean) => void;
+  /** Whether change-tracking visuals should be applied */
+  trackChanges?: boolean;
+  /** Whether this field is currently marked as changed */
+  changed?: boolean;
   /** App slug for dynamic enum loading */
   appSlug?: string;
   /** Data source slug for dynamic enum loading */
@@ -266,6 +286,7 @@ const EditableValue = forwardRef<HTMLDivElement, EditableValueProps>(
       field,
       value,
       onValueChange,
+      onCompanionChange,
       record,
       enumOptions,
       form: externalForm,
@@ -276,6 +297,8 @@ const EditableValue = forwardRef<HTMLDivElement, EditableValueProps>(
       explicitSave: explicitSaveProp,
       editing: controlledEditing,
       onEditingChange,
+      trackChanges,
+      changed,
       appSlug,
       dataSourceSlug,
       variant,
@@ -304,37 +327,45 @@ const EditableValue = forwardRef<HTMLDivElement, EditableValueProps>(
      * Inline fields use the user's props (defaults: blur-to-save, no actions).
      */
     const forceExplicit = isMulti || EXPLICIT_SAVE_TYPES.has(field.type);
-    const effectiveExplicitSave = forceExplicit
-      ? true
-      : (explicitSaveProp ?? false);
-    const effectiveShowActions = forceExplicit
-      ? true
-      : (showActionsProp ?? false);
+    const effectiveExplicitSave = forceExplicit ? true : (explicitSaveProp ?? false);
+    const effectiveShowActions = forceExplicit ? true : (showActionsProp ?? false);
 
     const isInstantSave = INSTANT_SAVE_TYPES.has(field.type);
 
+    const id = useId();
     const [internalEditing, setInternalEditing] = useState(false);
     const isEditing = controlledEditing ?? internalEditing;
 
     /*
-     * Tracks how many times edit mode has been entered — used as a key
-     * to remount MicroFormField with the latest value on each edit.
+     * Tracks how many times edit mode has been entered — used as part of
+     * the key to remount MicroFormField with the latest value on each edit.
      */
     const editCountRef = useRef(0);
 
     const setEditing = useCallback(
       (v: boolean) => {
-        if (v) editCountRef.current += 1;
+        if (v) {
+          editCountRef.current += 1;
+          document.dispatchEvent(
+            new CustomEvent('docyrus:editable-open', { detail: { id } })
+          );
+        }
+
         setInternalEditing(v);
         onEditingChange?.(v);
       },
-      [onEditingChange]
+      [id, onEditingChange]
     );
 
     const editingValueRef = useRef<unknown>(value);
+    const companionChangesRef = useRef<Record<string, unknown>>({});
     const onValueChangeRef = useRef(onValueChange);
+    const onCompanionChangeRef = useRef(onCompanionChange);
+    const valueRef = useRef(value);
 
+    valueRef.current = value;
     onValueChangeRef.current = onValueChange;
+    onCompanionChangeRef.current = onCompanionChange;
 
     useEffect(() => {
       if (!isEditing) {
@@ -344,17 +375,21 @@ const EditableValue = forwardRef<HTMLDivElement, EditableValueProps>(
 
     useEffect(() => {
       if (isEditing) {
-        editingValueRef.current = value;
+        editingValueRef.current = valueRef.current;
+        companionChangesRef.current = {};
       }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on edit start
     }, [isEditing]);
 
     const setEditingRef = useRef(setEditing);
 
     setEditingRef.current = setEditing;
 
-    const onChangeRef = useRef((v: unknown) => {
-      editingValueRef.current = v;
+    const onChangeRef = useRef((name: string, v: unknown) => {
+      if (name === field.slug) {
+        editingValueRef.current = v;
+      } else {
+        companionChangesRef.current = { ...companionChangesRef.current, [name]: v };
+      }
     });
 
     /*
@@ -365,14 +400,22 @@ const EditableValue = forwardRef<HTMLDivElement, EditableValueProps>(
      */
     useEffect(() => {
       if (isInstantSave || (!forceExplicit && (isSingleSelect || (isPopover && !isMulti)))) {
-        onChangeRef.current = (v: unknown) => {
-          editingValueRef.current = v;
-          onValueChangeRef.current?.(v);
-          setEditingRef.current(false);
+        onChangeRef.current = (name: string, v: unknown) => {
+          if (name === field.slug) {
+            editingValueRef.current = v;
+            onValueChangeRef.current?.(v);
+            setEditingRef.current(false);
+          } else {
+            companionChangesRef.current = { ...companionChangesRef.current, [name]: v };
+          }
         };
       } else {
-        onChangeRef.current = (v: unknown) => {
-          editingValueRef.current = v;
+        onChangeRef.current = (name: string, v: unknown) => {
+          if (name === field.slug) {
+            editingValueRef.current = v;
+          } else {
+            companionChangesRef.current = { ...companionChangesRef.current, [name]: v };
+          }
         };
       }
     }, [
@@ -380,33 +423,107 @@ const EditableValue = forwardRef<HTMLDivElement, EditableValueProps>(
       forceExplicit,
       isSingleSelect,
       isPopover,
-      isMulti
+      isMulti,
+      field.slug
     ]);
 
-    const internalForm = useMicroForm(field.slug, value, onChangeRef, editCountRef.current);
-    const activeForm = externalForm ?? internalForm;
+    const proxyForm = useMemo(() => {
+      if (!externalForm) return null;
+
+      return {
+        ...externalForm,
+        Field: ({
+          name,
+          children
+        }: {
+          name: string;
+          children: (field: any) => ReactNode;
+        }) => (
+          <externalForm.Field
+            name={name}
+            children={(formField: any) => children({
+              ...formField,
+              handleChange: (nextValue: unknown) => {
+                formField.handleChange(nextValue);
+
+                if (name === field.slug) {
+                  editingValueRef.current = nextValue;
+
+                  if (
+                    isInstantSave
+                    || (!forceExplicit && (isSingleSelect || (isPopover && !isMulti)))
+                  ) {
+                    onValueChangeRef.current?.(nextValue);
+                    setEditingRef.current(false);
+                  }
+                }
+              }
+            })} />
+        )
+      };
+    }, [
+      externalForm,
+      field.slug,
+      forceExplicit,
+      isInstantSave,
+      isPopover,
+      isMulti,
+      isSingleSelect
+    ]);
+
+    const internalForm = useMicroForm(
+      field.slug,
+      value,
+      onChangeRef,
+      editCountRef.current,
+      record
+    );
+    const activeForm = proxyForm ?? internalForm;
 
     const handleSave = useCallback(() => {
-      onValueChange?.(editingValueRef.current);
+      onValueChangeRef.current?.(editingValueRef.current);
+
+      if (Object.keys(companionChangesRef.current).length > 0) {
+        onCompanionChangeRef.current?.(companionChangesRef.current);
+      }
+
       setEditing(false);
-    }, [onValueChange, setEditing]);
+    }, [setEditing]);
 
     const handleCancel = useCallback(() => {
       editingValueRef.current = value;
+      companionChangesRef.current = {};
       setEditing(false);
     }, [value, setEditing]);
 
     const handleClick = useCallback(() => {
       if (!isEditing && !isFieldReadOnly) {
+        /*
+         * Checkbox and switch are binary toggles — no edit container needed.
+         * Flip the value directly so the user gets single-click UX.
+         */
+        if (field.type === 'field-checkbox' || field.type === 'field-switch') {
+          onValueChangeRef.current?.(!(value as boolean));
+
+          return;
+        }
+
         setEditing(true);
       }
-    }, [isEditing, isFieldReadOnly, setEditing]);
+    }, [
+      isEditing,
+      isFieldReadOnly,
+      field.type,
+      value,
+      setEditing
+    ]);
 
     const handleBlur = useCallback(
       (e: FocusEvent<HTMLDivElement>) => {
         /*
          * Popover fields portal their content — blur fires when focus
-         * moves to the popover, so we must ignore blur entirely for these
+         * moves to the popover, so we must ignore blur entirely for these.
+         * Outside-click is handled by the pointerdown capture listener below.
          */
         if (isPopover) return;
 
@@ -471,6 +588,71 @@ const EditableValue = forwardRef<HTMLDivElement, EditableValueProps>(
       }
     }, [isEditing]);
 
+    /*
+     * When any other EditableValue enters edit mode, close this one.
+     * Uses a document-level custom event so no shared context is needed.
+     */
+    const handleCancelRef = useRef(handleCancel);
+
+    handleCancelRef.current = handleCancel;
+
+    useEffect(() => {
+      if (!isEditing) return;
+
+      const handler = (e: Event) => {
+        const { id: otherId } = (e as CustomEvent<{ id: string }>).detail;
+
+        if (otherId !== id) handleCancelRef.current();
+      };
+
+      document.addEventListener('docyrus:editable-open', handler);
+
+      return () => document.removeEventListener('docyrus:editable-open', handler);
+    }, [isEditing, id]);
+
+    /*
+     * Popover fields portal their content outside the wrapper. The standard
+     * blur-based approach doesn't work because focus moves to the portal.
+     *
+     * For forceExplicit compound fields (phone, money, multi-select) we skip
+     * this entirely — they have Check/Cancel buttons, and registering a
+     * pointerdown handler interferes with their internal popover interactions
+     * (e.g. PhoneInputCountrySelect).
+     *
+     * For auto-save popover fields (date, single-select) we still detect
+     * outside clicks to close/save.
+     */
+    useEffect(() => {
+      if (!isEditing || !isPopover || forceExplicit) return;
+
+      const handlePointerDown = (e: PointerEvent) => {
+        const target = e.target as HTMLElement;
+
+        if (wrapperRef.current?.contains(target)) return;
+
+        if (
+          target.closest?.(
+            '[data-radix-popper-content-wrapper],'
+            + ' [data-slot="select-content"],'
+            + ' [data-slot="popover-content"]'
+          )
+        ) {
+          return;
+        }
+
+        handleCancel();
+      };
+
+      document.addEventListener('pointerdown', handlePointerDown, true);
+
+      return () => document.removeEventListener('pointerdown', handlePointerDown, true);
+    }, [
+      isEditing,
+      isPopover,
+      forceExplicit,
+      handleCancel
+    ]);
+
     if (isEditing) {
       return (
         <div
@@ -482,6 +664,9 @@ const EditableValue = forwardRef<HTMLDivElement, EditableValueProps>(
           className={cn(
             editableValueVariants({ variant, size }),
             'relative',
+            trackChanges
+            && changed
+            && 'bg-amber-50 dark:bg-amber-900/20 border-s-2 border-s-amber-400',
             className
           )}
           {...props}>
@@ -501,16 +686,51 @@ const EditableValue = forwardRef<HTMLDivElement, EditableValueProps>(
             data-editing=""
             className={cn(
               'absolute inset-x-0 top-0 z-10',
-              'flex w-full items-start rounded-md',
+              'flex w-full items-center rounded-md',
               'border border-ring bg-background shadow-md'
             )}
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}>
+            {/* Inline style overrides inner input borders/rings — Tailwind v4's
+                **:data-[…] generates :where() with zero specificity which cannot
+                reliably override component-level styles. */}
+            <style>{`
+              [data-editing] :is(
+                [data-slot="input"],
+                [data-slot="mask-input"],
+                [data-slot="phone-input"],
+                [data-slot="phone-input-field"],
+                [data-slot="select-trigger"]
+              ) {
+                border-width: 0 !important;
+                box-shadow: none !important;
+                outline: none !important;
+              }
+              [data-editing] :is(
+                [data-slot="input"],
+                [data-slot="mask-input"],
+                [data-slot="phone-input-field"]
+              ):focus-visible {
+                border-width: 0 !important;
+                box-shadow: none !important;
+                outline: none !important;
+                --tw-ring-shadow: 0 0 #0000 !important;
+              }
+              [data-editing] [data-slot="phone-input"] {
+                height: 36px !important;
+              }
+              [data-editing] [data-slot="phone-input-country-select"] {
+                position: relative;
+                z-index: 1;
+              }
+            `}
+            </style>
             <div className={cn(
-              'w-full',
-              editableValueVariants({ size }),
+              'flex-1 min-w-0 flex items-center px-2',
+              size === 'sm' ? 'text-xs' : size === 'lg' ? 'text-base' : 'text-sm',
               '**:data-[slot=field-label]:hidden',
-              '**:data-[slot=field]:mb-0 **:data-[slot=field]:gap-1'
+              '**:data-[slot=field]:w-full **:data-[slot=field]:gap-0 **:data-[slot=field]:mb-0',
+              '**:data-[slot=phone-input]:h-9'
             )}>
               <DynamicFormField
                 field={field}
@@ -541,6 +761,9 @@ const EditableValue = forwardRef<HTMLDivElement, EditableValueProps>(
         tabIndex={isFieldReadOnly ? undefined : 0}
         className={cn(
           editableValueVariants({ variant, size }),
+          trackChanges
+          && changed
+          && 'bg-amber-50 dark:bg-amber-900/20 border-s-2 border-s-amber-400',
           !isFieldReadOnly
           && 'cursor-pointer hover:border-muted-foreground/30',
           className

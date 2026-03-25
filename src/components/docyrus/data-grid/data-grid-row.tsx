@@ -1,119 +1,115 @@
-'use client'
+'use client';
 
 import {
-  memo,
-  useCallback,
-  useMemo,
-  type ComponentProps,
-  type RefObject,
-} from 'react'
+  memo, useCallback, useMemo, type ComponentProps, type RefObject
+} from 'react';
 
 import {
   type ColumnPinningState,
   type Row,
   type TableMeta,
-  type VisibilityState,
-} from '@tanstack/react-table'
-import { type VirtualItem } from '@tanstack/react-virtual'
+  type VisibilityState
+} from '@tanstack/react-table';
+import { type VirtualItem } from '@tanstack/react-virtual';
 
-import { useComposedRefs } from '@/lib/compose-refs'
+import { useComposedRefs } from '@/lib/compose-refs';
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
-import { type CellPosition, type Direction, type RowHeightValue } from './types'
+import { type CellPosition, type Direction, type RowHeightValue } from './types';
 
-import { DataGridCell } from './data-grid-cell'
+import { DataGridCell } from './data-grid-cell';
 import {
   flexRender,
   getCellKey,
   getColumnBorderVisibility,
   getColumnPinningStyle,
-  getRowHeightValue,
-} from './lib/data-grid'
+  getRowHeightValue
+} from './lib/data-grid';
 
 interface DataGridRowProps<TData> extends ComponentProps<'div'> {
-  row: Row<TData>
-  tableMeta: TableMeta<TData>
-  virtualItem: VirtualItem
-  measureElement?: (node: Element | null) => void
-  rowMapRef: RefObject<Map<number, HTMLDivElement>>
-  rowHeight: RowHeightValue
-  columnVisibility: VisibilityState
-  columnPinning: ColumnPinningState
-  focusedCell: CellPosition | null
-  editingCell: CellPosition | null
-  cellSelectionKeys: Set<string>
-  isFullSelection: boolean
-  searchMatchColumns: Set<string> | null
-  activeSearchMatch: CellPosition | null
-  changedColumns: Set<string> | null
-  rowBgColor: string | null
-  cellColorsByColumn: Map<string, string> | null
-  dir: Direction
-  readOnly: boolean
-  stretchColumns: boolean
-  adjustLayout: boolean
+  row: Row<TData>;
+  tableMeta: TableMeta<TData>;
+  virtualItem: VirtualItem;
+  measureElement?: (node: Element | null) => void;
+  rowMapRef: RefObject<Map<number, HTMLDivElement>>;
+  rowHeight: RowHeightValue;
+  columnVisibility: VisibilityState;
+  columnPinning: ColumnPinningState;
+  focusedCell: CellPosition | null;
+  editingCell: CellPosition | null;
+  cellSelectionKeys: Set<string>;
+  isFullSelection: boolean;
+  searchMatchColumns: Set<string> | null;
+  activeSearchMatch: CellPosition | null;
+  changedColumns: Set<string> | null;
+  rowBgColor: string | null;
+  cellColorsByColumn: Map<string, string> | null;
+  dir: Direction;
+  readOnly: boolean;
+  stretchColumns: boolean;
+  adjustLayout: boolean;
 }
 
 export const DataGridRow = memo(DataGridRowImpl, (prev, next) => {
-  const prevRowIndex = prev.virtualItem.index
-  const nextRowIndex = next.virtualItem.index
+  const prevRowIndex = prev.virtualItem.index;
+  const nextRowIndex = next.virtualItem.index;
 
   if (prev.row.id !== next.row.id) {
-    return false
+    return false;
   }
 
   if (prev.row.original !== next.row.original) {
-    return false
+    return false;
   }
 
   if (prev.row.getIsGrouped() !== next.row.getIsGrouped()) {
-    return false
+    return false;
   }
 
   if (prev.row.getIsExpanded() !== next.row.getIsExpanded()) {
-    return false
+    return false;
   }
 
   if ((prev.row.groupingValue ?? '') !== (next.row.groupingValue ?? '')) {
-    return false
+    return false;
   }
 
   if ((prev.row.groupingColumnId ?? '') !== (next.row.groupingColumnId ?? '')) {
-    return false
+    return false;
   }
 
   if (prev.row.subRows.length !== next.row.subRows.length) {
-    return false
+    return false;
   }
 
   if (prev.virtualItem.start !== next.virtualItem.start) {
-    return false
+    return false;
   }
 
-  const prevHasFocus = prev.focusedCell?.rowIndex === prevRowIndex
-  const nextHasFocus = next.focusedCell?.rowIndex === nextRowIndex
+  const prevHasFocus = prev.focusedCell?.rowIndex === prevRowIndex;
+  const nextHasFocus = next.focusedCell?.rowIndex === nextRowIndex;
 
   if (prevHasFocus !== nextHasFocus) {
-    return false
+    return false;
   }
 
   if (nextHasFocus && prevHasFocus) {
     if (prev.focusedCell.columnId !== next.focusedCell.columnId) {
-      return false
+      return false;
     }
   }
 
-  const prevHasEditing = prev.editingCell?.rowIndex === prevRowIndex
-  const nextHasEditing = next.editingCell?.rowIndex === nextRowIndex
+  const prevHasEditing = prev.editingCell?.rowIndex === prevRowIndex;
+  const nextHasEditing = next.editingCell?.rowIndex === nextRowIndex;
 
   if (prevHasEditing !== nextHasEditing) {
-    return false
+    return false;
   }
 
   if (nextHasEditing && prevHasEditing) {
     if (prev.editingCell.columnId !== next.editingCell.columnId) {
-      return false
+      return false;
     }
   }
 
@@ -122,63 +118,63 @@ export const DataGridRow = memo(DataGridRowImpl, (prev, next) => {
    * Using stable Set reference that only includes this row's cells
    */
   if (prev.cellSelectionKeys !== next.cellSelectionKeys) {
-    return false
+    return false;
   }
 
   if (prev.isFullSelection !== next.isFullSelection) {
-    return false
+    return false;
   }
 
   if (prev.columnVisibility !== next.columnVisibility) {
-    return false
+    return false;
   }
 
   if (prev.rowHeight !== next.rowHeight) {
-    return false
+    return false;
   }
 
   if (prev.columnPinning !== next.columnPinning) {
-    return false
+    return false;
   }
 
   if (prev.readOnly !== next.readOnly) {
-    return false
+    return false;
   }
 
   if (prev.searchMatchColumns !== next.searchMatchColumns) {
-    return false
+    return false;
   }
 
   if (prev.activeSearchMatch?.columnId !== next.activeSearchMatch?.columnId) {
-    return false
+    return false;
   }
 
   if (prev.changedColumns !== next.changedColumns) {
-    return false
+    return false;
   }
 
   if (prev.rowBgColor !== next.rowBgColor) {
-    return false
+    return false;
   }
 
   if (prev.cellColorsByColumn !== next.cellColorsByColumn) {
-    return false
+    return false;
   }
 
   if (prev.dir !== next.dir) {
-    return false
+    return false;
   }
 
   if (prev.adjustLayout !== next.adjustLayout) {
-    return false
+    return false;
   }
 
   if (prev.stretchColumns !== next.stretchColumns) {
-    return false
+    return false;
   }
 
-  return true
-}) as typeof DataGridRowImpl
+  return true;
+}) as typeof DataGridRowImpl;
 
 function DataGridRowImpl<TData>({
   row,
@@ -207,45 +203,48 @@ function DataGridRowImpl<TData>({
   ref,
   ...props
 }: DataGridRowProps<TData>) {
-  const virtualRowIndex = virtualItem.index
+  const virtualRowIndex = virtualItem.index;
 
   const onRowChange = useCallback(
     (node: HTMLDivElement | null) => {
-      if (typeof virtualRowIndex === 'undefined') return
+      if (typeof virtualRowIndex === 'undefined') return;
 
       if (node) {
-        measureElement?.(node)
-        rowMapRef.current.set(virtualRowIndex, node)
+        measureElement?.(node);
+        rowMapRef.current.set(virtualRowIndex, node);
       } else {
-        rowMapRef.current.delete(virtualRowIndex)
+        rowMapRef.current.delete(virtualRowIndex);
       }
     },
-    [virtualRowIndex, measureElement, rowMapRef],
-  )
+    [virtualRowIndex, measureElement, rowMapRef]
+  );
 
-  const rowRef = useComposedRefs(ref, onRowChange)
+  const rowRef = useComposedRefs(ref, onRowChange);
 
-  const isRowSelected = row.getIsSelected()
+  const isRowSelected = row.getIsSelected();
 
   /*
    * Memoize visible cells to avoid recreating cell array on every render
    * columnVisibility and columnPinning are used as deps to trigger recalculation
    * when column visibility or pinning changes, even if the row reference is stable
    */
-  const visibleCells = useMemo(() => {
-    void columnVisibility
-    void columnPinning
+  const visibleCells = useMemo(
+    () => {
+      void columnVisibility;
+      void columnPinning;
 
-    return row.getVisibleCells()
-  }, [row, columnVisibility, columnPinning])
+      return row.getVisibleCells();
+    },
+    [row, columnVisibility, columnPinning]
+  );
 
-  const isGroupRow = row.getIsGrouped()
+  const isGroupRow = row.getIsGrouped();
 
   const groupedCell = useMemo(() => {
-    if (!isGroupRow) return null
+    if (!isGroupRow) return null;
 
-    return visibleCells.find((c) => c.getIsGrouped())
-  }, [isGroupRow, visibleCells])
+    return visibleCells.find(c => c.getIsGrouped());
+  }, [isGroupRow, visibleCells]);
 
   return (
     <div
@@ -259,30 +258,24 @@ function DataGridRowImpl<TData>({
       {...props}
       ref={rowRef}
       className={cn(
-        'absolute flex min-w-full border-b',
+        'group/grid-row absolute flex min-w-full border-b hover:bg-primary/5',
         !adjustLayout && 'will-change-transform',
         isGroupRow && 'bg-muted/40',
-        className,
+        className
       )}
       style={{
         height: `${getRowHeightValue(rowHeight)}px`,
-        ...(adjustLayout
-          ? { top: `${virtualItem.start}px` }
-          : { transform: `translateY(${virtualItem.start}px)` }),
-        ...(rowBgColor && !isGroupRow
-          ? { backgroundColor: rowBgColor }
-          : undefined),
-        ...style,
-      }}
-    >
+        ...(adjustLayout ? { top: `${virtualItem.start}px` } : { transform: `translateY(${virtualItem.start}px)` }),
+        ...(rowBgColor && !isGroupRow ? { backgroundColor: rowBgColor } : undefined),
+        ...style
+      }}>
       {isGroupRow && groupedCell ? (
         <div
           role="gridcell"
           aria-colindex={1}
           data-slot="grid-cell"
           tabIndex={-1}
-          className="grow"
-        >
+          className="grow">
           <DataGridCell
             cell={groupedCell}
             tableMeta={tableMeta}
@@ -295,37 +288,34 @@ function DataGridRowImpl<TData>({
             isSearchMatch={false}
             isActiveSearchMatch={false}
             isChanged={false}
-            readOnly
-          />
+            readOnly />
         </div>
       ) : (
         visibleCells.map((cell, colIndex) => {
-          const columnId = cell.column.id
+          const columnId = cell.column.id;
 
-          const isCellFocused =
-            focusedCell?.rowIndex === virtualRowIndex &&
-            focusedCell.columnId === columnId
-          const isCellEditing =
-            editingCell?.rowIndex === virtualRowIndex &&
-            editingCell.columnId === columnId
-          const isCellSelected =
-            isFullSelection ||
-            cellSelectionKeys.has(getCellKey(virtualRowIndex, columnId))
+          const isCellFocused
+            = focusedCell?.rowIndex === virtualRowIndex
+              && focusedCell.columnId === columnId;
+          const isCellEditing
+            = editingCell?.rowIndex === virtualRowIndex
+              && editingCell.columnId === columnId;
+          const isCellSelected = isFullSelection || cellSelectionKeys.has(
+            getCellKey(virtualRowIndex, columnId)
+          );
 
-          const isSearchMatch = searchMatchColumns?.has(columnId) ?? false
-          const isActiveSearchMatch = activeSearchMatch?.columnId === columnId
-          const isChanged = changedColumns?.has(columnId) ?? false
+          const isSearchMatch = searchMatchColumns?.has(columnId) ?? false;
+          const isActiveSearchMatch = activeSearchMatch?.columnId === columnId;
+          const isChanged = changedColumns?.has(columnId) ?? false;
 
-          const nextColumn =
-            colIndex < visibleCells.length - 1
-              ? visibleCells[colIndex + 1].column
-              : undefined
-          const isLastColumn = colIndex === visibleCells.length - 1
+          const nextColumn
+            = colIndex < visibleCells.length - 1 ? visibleCells[colIndex + 1]?.column : undefined;
+          const isLastColumn = colIndex === visibleCells.length - 1;
           const { showEndBorder, showStartBorder } = getColumnBorderVisibility({
             column: cell.column,
             nextColumn,
-            isLastColumn,
-          })
+            isLastColumn
+          });
 
           return (
             <div
@@ -336,21 +326,23 @@ function DataGridRowImpl<TData>({
               data-slot="grid-cell"
               tabIndex={-1}
               className={cn({
-                grow: stretchColumns && columnId !== 'select',
+                grow: stretchColumns && columnId !== 'select' && columnId !== 'actions',
                 'border-e': showEndBorder && columnId !== 'select',
-                'border-s': showStartBorder && columnId !== 'select',
+                'border-s': showStartBorder && columnId !== 'select'
               })}
               style={{
                 ...getColumnPinningStyle({ column: cell.column, dir }),
-                width: `calc(var(--col-${columnId}-size) * 1px)`,
-              }}
-            >
+                width: `calc(var(--col-${columnId}-size) * 1px)`
+              }}>
               {typeof cell.column.columnDef.header === 'function' ? (
                 <div
-                  className={cn('size-full px-3 py-1.5', {
-                    'bg-primary/10': isRowSelected,
-                  })}
-                >
+                  className={cn(
+                    'size-full py-1.5',
+                    columnId === 'actions' ? 'ps-0 pe-3' : 'px-3',
+                    isRowSelected && 'bg-primary/10',
+                    cell.column.columnDef.meta?.visibleOnHover
+                    && '[@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/grid-row:opacity-100 transition-opacity'
+                  )}>
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </div>
               ) : (
@@ -367,13 +359,12 @@ function DataGridRowImpl<TData>({
                   isActiveSearchMatch={isActiveSearchMatch}
                   isChanged={isChanged}
                   readOnly={readOnly}
-                  colorRuleBg={cellColorsByColumn?.get(columnId)}
-                />
+                  colorRuleBg={cellColorsByColumn?.get(columnId)} />
               )}
             </div>
-          )
+          );
         })
       )}
     </div>
-  )
+  );
 }

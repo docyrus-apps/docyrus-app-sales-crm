@@ -1,13 +1,13 @@
-'use client'
+'use client';
 
-import { cva } from 'class-variance-authority'
-import { motion } from 'motion/react'
+import { cva } from 'class-variance-authority';
+import { motion } from 'motion/react';
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
-import { type TEventColor } from '../../types'
+import { type TEventColor } from '../../types';
 
-import { transition } from '../../animations'
+import { transition } from '../../animations';
 
 const eventBulletVariants = cva('size-2 rounded-full', {
   variants: {
@@ -18,20 +18,20 @@ const eventBulletVariants = cva('size-2 rounded-full', {
       yellow: 'bg-yellow-600 dark:bg-yellow-500',
       purple: 'bg-purple-600 dark:bg-purple-500',
       orange: 'bg-orange-600 dark:bg-orange-500',
-      gray: 'bg-gray-600 dark:bg-gray-500',
-    },
+      gray: 'bg-gray-600 dark:bg-gray-500'
+    }
   },
   defaultVariants: {
-    color: 'blue',
-  },
-})
+    color: 'blue'
+  }
+});
 
 export function EventBullet({
   color,
-  className,
+  className
 }: {
-  color: TEventColor
-  className?: string
+  color: TEventColor;
+  className?: string;
 }) {
   return (
     <motion.div
@@ -39,7 +39,6 @@ export function EventBullet({
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       whileHover={{ scale: 1.2 }}
-      transition={transition}
-    />
-  )
+      transition={transition} />
+  );
 }

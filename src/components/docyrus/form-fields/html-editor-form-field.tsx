@@ -1,9 +1,13 @@
-'use client'
-
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+'use client';
 
 import {
-  ArrowDownToLineIcon,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef
+} from 'react';
+
+import {
   BaselineIcon,
   BoldIcon,
   Code2Icon,
@@ -11,71 +15,66 @@ import {
   PaintBucketIcon,
   StrikethroughIcon,
   UnderlineIcon,
-  WandSparklesIcon,
-} from 'lucide-react'
-import { type Value, KEYS } from 'platejs'
+  WandSparklesIcon
+} from 'lucide-react';
+import { type Value, KEYS } from 'platejs';
 import {
   Plate,
   createPlatePlugin,
   usePlateEditor,
-  useEditorReadOnly,
-} from 'platejs/react'
-import { createSlateEditor } from 'platejs'
-import { serializeHtml, getEditorDOMFromHtmlString } from 'platejs/static'
+  useEditorReadOnly
+} from 'platejs/react';
+import { createSlateEditor } from 'platejs';
+import { serializeHtml, getEditorDOMFromHtmlString } from 'platejs/static';
 
-import { BaseEditorKit } from '@/components/editor/editor-base-kit'
-import { Editor, EditorContainer } from '@/components/editor/editor'
-import { EditorStatic } from '@/components/editor/editor-static'
-import { AIToolbarButton } from '@/components/editor/ui/ai-toolbar-button'
-import { AlignToolbarButton } from '@/components/editor/ui/align-toolbar-button'
-import { EmojiToolbarButton } from '@/components/editor/ui/emoji-toolbar-button'
-import { ExportToolbarButton } from '@/components/editor/ui/export-toolbar-button'
-import { FixedToolbar } from '@/components/editor/ui/fixed-toolbar'
-import { FloatingToolbar } from '@/components/editor/ui/floating-toolbar'
-import { FontColorToolbarButton } from '@/components/editor/ui/font-color-toolbar-button'
-import { FontSizeToolbarButton } from '@/components/editor/ui/font-size-toolbar-button'
-import {
-  UndoToolbarButton,
-  RedoToolbarButton,
-} from '@/components/editor/ui/history-toolbar-button'
-import { ImportToolbarButton } from '@/components/editor/ui/import-toolbar-button'
-import {
-  IndentToolbarButton,
-  OutdentToolbarButton,
-} from '@/components/editor/ui/indent-toolbar-button'
-import { InsertToolbarButton } from '@/components/editor/ui/insert-toolbar-button'
-import { LineHeightToolbarButton } from '@/components/editor/ui/line-height-toolbar-button'
-import { LinkToolbarButton } from '@/components/editor/ui/link-toolbar-button'
+import { BaseEditorKit } from '@/components/editor/editor-base-kit';
+import { Editor, EditorContainer } from '@/components/editor/editor';
+import { EditorStatic } from '@/components/editor/editor-static';
+import { AIToolbarButton } from '@/components/editor/ui/ai-toolbar-button';
+import { AlignToolbarButton } from '@/components/editor/ui/align-toolbar-button';
+import { EmojiToolbarButton } from '@/components/editor/ui/emoji-toolbar-button';
+import { FixedToolbar } from '@/components/editor/ui/fixed-toolbar';
+import { FloatingToolbar } from '@/components/editor/ui/floating-toolbar';
+import { FontColorToolbarButton } from '@/components/editor/ui/font-color-toolbar-button';
+import { FontSizeToolbarButton } from '@/components/editor/ui/font-size-toolbar-button';
+import { UndoToolbarButton, RedoToolbarButton } from '@/components/editor/ui/history-toolbar-button';
+import { IndentToolbarButton, OutdentToolbarButton } from '@/components/editor/ui/indent-toolbar-button';
+import { InsertToolbarButton } from '@/components/editor/ui/insert-toolbar-button';
+import { LineHeightToolbarButton } from '@/components/editor/ui/line-height-toolbar-button';
+import { LinkToolbarButton } from '@/components/editor/ui/link-toolbar-button';
 import {
   BulletedListToolbarButton,
   NumberedListToolbarButton,
-  TodoListToolbarButton,
-} from '@/components/editor/ui/list-toolbar-button'
-import { MarkToolbarButton } from '@/components/editor/ui/mark-toolbar-button'
-import { MoreToolbarButton } from '@/components/editor/ui/more-toolbar-button'
-import { TableToolbarButton } from '@/components/editor/ui/table-toolbar-button'
-import { ToggleToolbarButton } from '@/components/editor/ui/toggle-toolbar-button'
-import { ToolbarGroup } from '@/components/editor/ui/toolbar'
-import { TurnIntoToolbarButton } from '@/components/editor/ui/turn-into-toolbar-button'
-import { Field, FieldError, FieldLabel } from '@/components/ui/field'
-import { TooltipProvider } from '@/components/ui/tooltip'
+  TodoListToolbarButton
+} from '@/components/editor/ui/list-toolbar-button';
+import { MarkToolbarButton } from '@/components/editor/ui/mark-toolbar-button';
+import { MoreToolbarButton } from '@/components/editor/ui/more-toolbar-button';
+import { TableToolbarButton } from '@/components/editor/ui/table-toolbar-button';
+import { ToggleToolbarButton } from '@/components/editor/ui/toggle-toolbar-button';
+import { ToolbarGroup } from '@/components/editor/ui/toolbar';
+import { TurnIntoToolbarButton } from '@/components/editor/ui/turn-into-toolbar-button';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
-import { type DocEditorPreset, getPresetPlugins } from './doc-editor-form-field'
-import { type DocyrusFormFieldProps } from './types'
+import {
+  type DocEditorPreset,
+  getPresetPlugins
+} from './doc-editor-form-field';
+import { type DocyrusFormFieldProps } from './types';
 
-export { type DocEditorPreset } from './doc-editor-form-field'
+export { type DocEditorPreset } from './doc-editor-form-field';
 
 export interface HtmlEditorFormFieldProps extends DocyrusFormFieldProps {
   /** Plate.js preset for the editor */
-  preset?: DocEditorPreset
+  preset?: DocEditorPreset;
 }
 
 /* ── Toolbar butonları ── */
 
 function HtmlEditorFloatingButtons({ preset }: { preset: DocEditorPreset }) {
-  const readOnly = useEditorReadOnly()
+  const readOnly = useEditorReadOnly();
 
-  if (readOnly) return null
+  if (readOnly) return null;
 
   return (
     <>
@@ -103,10 +102,7 @@ function HtmlEditorFloatingButtons({ preset }: { preset: DocEditorPreset }) {
           <UnderlineIcon />
         </MarkToolbarButton>
 
-        <MarkToolbarButton
-          nodeType={KEYS.strikethrough}
-          tooltip="Strikethrough (⌘+⇧+M)"
-        >
+        <MarkToolbarButton nodeType={KEYS.strikethrough} tooltip="Strikethrough (⌘+⇧+M)">
           <StrikethroughIcon />
         </MarkToolbarButton>
 
@@ -117,11 +113,11 @@ function HtmlEditorFloatingButtons({ preset }: { preset: DocEditorPreset }) {
         <LinkToolbarButton />
       </ToolbarGroup>
     </>
-  )
+  );
 }
 
 function HtmlEditorFixedButtons({ preset }: { preset: DocEditorPreset }) {
-  const readOnly = useEditorReadOnly()
+  const readOnly = useEditorReadOnly();
 
   return (
     <div className="flex w-full">
@@ -141,14 +137,6 @@ function HtmlEditorFixedButtons({ preset }: { preset: DocEditorPreset }) {
           )}
 
           <ToolbarGroup>
-            <ExportToolbarButton>
-              <ArrowDownToLineIcon />
-            </ExportToolbarButton>
-
-            <ImportToolbarButton />
-          </ToolbarGroup>
-
-          <ToolbarGroup>
             <InsertToolbarButton />
             <TurnIntoToolbarButton />
             <FontSizeToolbarButton />
@@ -163,17 +151,11 @@ function HtmlEditorFixedButtons({ preset }: { preset: DocEditorPreset }) {
               <ItalicIcon />
             </MarkToolbarButton>
 
-            <MarkToolbarButton
-              nodeType={KEYS.underline}
-              tooltip="Underline (⌘+U)"
-            >
+            <MarkToolbarButton nodeType={KEYS.underline} tooltip="Underline (⌘+U)">
               <UnderlineIcon />
             </MarkToolbarButton>
 
-            <MarkToolbarButton
-              nodeType={KEYS.strikethrough}
-              tooltip="Strikethrough (⌘+⇧+M)"
-            >
+            <MarkToolbarButton nodeType={KEYS.strikethrough} tooltip="Strikethrough (⌘+⇧+M)">
               <StrikethroughIcon />
             </MarkToolbarButton>
 
@@ -185,10 +167,7 @@ function HtmlEditorFixedButtons({ preset }: { preset: DocEditorPreset }) {
               <BaselineIcon />
             </FontColorToolbarButton>
 
-            <FontColorToolbarButton
-              nodeType={KEYS.backgroundColor}
-              tooltip="Background color"
-            >
+            <FontColorToolbarButton nodeType={KEYS.backgroundColor} tooltip="Background color">
               <PaintBucketIcon />
             </FontColorToolbarButton>
           </ToolbarGroup>
@@ -219,7 +198,7 @@ function HtmlEditorFixedButtons({ preset }: { preset: DocEditorPreset }) {
         </>
       )}
     </div>
-  )
+  );
 }
 
 /* ── Toolbar plugins ── */
@@ -232,11 +211,11 @@ function buildHtmlToolbarPlugins(preset: DocEditorPreset) {
         <FloatingToolbar>
           <HtmlEditorFloatingButtons preset={preset} />
         </FloatingToolbar>
-      ),
-    },
-  })
+      )
+    }
+  });
 
-  if (preset === 'default') return [floatingPlugin]
+  if (preset === 'default') return [floatingPlugin];
 
   const fixedPlugin = createPlatePlugin({
     key: 'html-editor-fixed-toolbar',
@@ -245,27 +224,27 @@ function buildHtmlToolbarPlugins(preset: DocEditorPreset) {
         <FixedToolbar>
           <HtmlEditorFixedButtons preset={preset} />
         </FixedToolbar>
-      ),
-    },
-  })
+      )
+    }
+  });
 
-  return [fixedPlugin, floatingPlugin]
+  return [fixedPlugin, floatingPlugin];
 }
 
 /* ── HTML serialize/deserialize ── */
 
-const createEmptyValue = (): Value => [{ type: 'p', children: [{ text: '' }] }]
+const createEmptyValue = (): Value => [{ type: 'p', children: [{ text: '' }] }];
 
 function htmlToPlateValue(editor: any, html: string): Value {
-  if (!html || !html.trim()) return createEmptyValue()
+  if (!html || !html.trim()) return createEmptyValue();
 
   try {
-    const element = getEditorDOMFromHtmlString(html)
-    const nodes = editor.api.html.deserialize({ element })
+    const element = getEditorDOMFromHtmlString(html);
+    const nodes = editor.api.html.deserialize({ element });
 
-    return nodes && nodes.length > 0 ? (nodes as Value) : createEmptyValue()
+    return (nodes && nodes.length > 0) ? nodes as Value : createEmptyValue();
   } catch {
-    return createEmptyValue()
+    return createEmptyValue();
   }
 }
 
@@ -273,15 +252,15 @@ async function plateValueToHtml(value: Value): Promise<string> {
   try {
     const staticEditor = createSlateEditor({
       plugins: BaseEditorKit,
-      value,
-    })
+      value
+    });
 
     return await serializeHtml(staticEditor, {
       editorComponent: EditorStatic,
-      props: { style: { padding: '0', paddingBottom: '' } },
-    })
+      props: { style: { padding: '0', paddingBottom: '' } }
+    });
   } catch {
-    return ''
+    return '';
   }
 }
 
@@ -292,67 +271,57 @@ function HtmlEditorInput({
   fieldConfig,
   disabled,
   className,
-  preset = 'rich',
+  preset = 'rich'
 }: {
-  field: any
-  fieldConfig: DocyrusFormFieldProps['field']
-  disabled?: boolean
-  className?: string
-  preset?: DocEditorPreset
+  field: any;
+  fieldConfig: DocyrusFormFieldProps['field'];
+  disabled?: boolean;
+  className?: string;
+  preset?: DocEditorPreset;
 }) {
-  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
-  const isReadOnly = disabled || fieldConfig.readOnly === true
-  const serializeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const lastHtmlRef = useRef<string>(field.state.value ?? '')
+  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+  const isReadOnly = disabled || fieldConfig.readOnly === true;
+  const serializeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastHtmlRef = useRef<string>(field.state.value ?? '');
 
   const plugins = useMemo(
     () => [...getPresetPlugins(preset), ...buildHtmlToolbarPlugins(preset)],
-    [preset],
-  )
+    [preset]
+  );
 
-  const initialValue = useRef<Value>(createEmptyValue())
-  const editor = usePlateEditor({ plugins, value: initialValue.current }, [
-    preset,
-  ])
+  const initialValue = useRef<Value>(createEmptyValue());
+  const editor = usePlateEditor({ plugins, value: initialValue.current }, [preset]);
 
   useEffect(() => {
-    const html = field.state.value ?? ''
+    const html = lastHtmlRef.current;
 
-    if (!html.trim()) return
+    if (!html.trim()) return;
 
-    const nodes = htmlToPlateValue(editor, html)
+    const nodes = htmlToPlateValue(editor, html);
 
-    editor.tf.replaceNodes(nodes, { at: [], children: true })
-    lastHtmlRef.current = html
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    editor.tf.replaceNodes(nodes, { at: [], children: true });
+  }, [editor]);
 
-  const serializePlateToHtml = useCallback(
-    (value: Value) => {
-      if (serializeTimerRef.current) {
-        clearTimeout(serializeTimerRef.current)
-      }
+  const serializePlateToHtml = useCallback((value: Value) => {
+    if (serializeTimerRef.current) {
+      clearTimeout(serializeTimerRef.current);
+    }
 
-      serializeTimerRef.current = setTimeout(async () => {
-        const html = await plateValueToHtml(value)
+    serializeTimerRef.current = setTimeout(async () => {
+      const html = await plateValueToHtml(value);
 
-        if (html === lastHtmlRef.current) return
+      if (html === lastHtmlRef.current) return;
 
-        lastHtmlRef.current = html
-        field.handleChange(html)
-      }, 300)
-    },
-    [field],
-  )
+      lastHtmlRef.current = html;
+      field.handleChange(html);
+    }, 300);
+  }, [field]);
 
-  useEffect(
-    () => () => {
-      if (serializeTimerRef.current) {
-        clearTimeout(serializeTimerRef.current)
-      }
-    },
-    [],
-  )
+  useEffect(() => () => {
+    if (serializeTimerRef.current) {
+      clearTimeout(serializeTimerRef.current);
+    }
+  }, []);
 
   return (
     <Field data-invalid={isInvalid} className={className}>
@@ -362,30 +331,27 @@ function HtmlEditorInput({
           editor={editor}
           readOnly={isReadOnly}
           onValueChange={({ value }) => {
-            serializePlateToHtml(value)
-          }}
-        >
+            serializePlateToHtml(value);
+          }}>
           <EditorContainer
             variant="select"
             aria-invalid={isInvalid}
-            className="min-h-[220px]"
-          >
+            className="min-h-55">
             <Editor
               id={field.name}
               variant="select"
-              className="min-h-[220px] text-sm"
+              className="min-h-55 text-sm"
               placeholder="Write your content..."
               onBlur={() => field.handleBlur()}
               disabled={isReadOnly}
               readOnly={isReadOnly}
-              aria-invalid={isInvalid}
-            />
+              aria-invalid={isInvalid} />
           </EditorContainer>
         </Plate>
       </TooltipProvider>
       {isInvalid && <FieldError errors={field.state.meta.errors} />}
     </Field>
-  )
+  );
 }
 
 export function HtmlEditorFormField({
@@ -393,7 +359,7 @@ export function HtmlEditorFormField({
   form,
   disabled,
   className,
-  preset = 'rich',
+  preset = 'rich'
 }: HtmlEditorFormFieldProps) {
   return (
     <form.Field
@@ -404,9 +370,7 @@ export function HtmlEditorFormField({
           fieldConfig={fieldConfig}
           disabled={disabled}
           className={className}
-          preset={preset}
-        />
-      )}
-    />
-  )
+          preset={preset} />
+      )} />
+  );
 }

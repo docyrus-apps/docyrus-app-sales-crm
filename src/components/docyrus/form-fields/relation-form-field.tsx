@@ -1,21 +1,25 @@
-'use client'
+'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback, useEffect, useMemo, useRef, useState
+} from 'react';
 
-import { Check, ChevronsUpDown, Loader2, Plus, Search } from 'lucide-react'
-import { cva } from 'class-variance-authority'
+import {
+  Check, ChevronsUpDown, Loader2, Plus, Search
+} from 'lucide-react';
+import { cva } from 'class-variance-authority';
 
-import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
-import { Field, FieldError, FieldLabel } from '@/components/ui/field'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { DocyrusIcon } from '@/components/docyrus/docyrus-icon';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+  PopoverTrigger
+} from '@/components/ui/popover';
 import {
   Command,
   CommandEmpty,
@@ -23,18 +27,15 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
-} from '@/components/ui/command'
-import { cn } from '@/lib/utils'
-import { useDebounce } from '@/hooks/use-debounce'
+  CommandSeparator
+} from '@/components/ui/command';
+import { cn } from '@/lib/utils';
+import { useDebounce } from '@/hooks/use-debounce';
 
 import {
-  flattenNestedOptions,
-  getEnumDotClassName,
-  getEnumDotStyle,
-  getEnumIconColor,
-} from './lib/utils'
-import { type DocyrusFormFieldProps, type EnumOption } from './types'
+  flattenNestedOptions, getEnumDotClassName, getEnumDotStyle, getEnumIconColor
+} from './lib/utils';
+import { type DocyrusFormFieldProps, type EnumOption } from './types';
 
 export const relationCardGridVariants = cva('w-full grid', {
   variants: {
@@ -42,18 +43,18 @@ export const relationCardGridVariants = cva('w-full grid', {
       1: 'grid-cols-1',
       2: 'grid-cols-1 sm:grid-cols-2',
       3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
-      4: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4',
-    },
+      4: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+    }
   },
   defaultVariants: {
-    columnCount: 1,
-  },
-})
+    columnCount: 1
+  }
+});
 
 export function RelationFormField(props: DocyrusFormFieldProps) {
-  if (props.variant === 'card') return <RelationCardGrid {...props} />
+  if (props.variant === 'card') return <RelationCardGrid {...props} />;
 
-  return <RelationDropdown {...props} />
+  return <RelationDropdown {...props} />;
 }
 
 function RelationDropdown({
@@ -67,63 +68,54 @@ function RelationDropdown({
   onCreateRecord,
   renderCreateForm,
   itemTemplate,
-  onSearch,
+  onSearch
 }: DocyrusFormFieldProps) {
-  const [open, setOpen] = useState(false)
-  const [creating, setCreating] = useState(false)
-  const [showCreateForm, setShowCreateForm] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [open, setOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const isNested = fieldConfig.nested === true
-  const nestedByProp = fieldConfig.nestedByProp ?? 'parent'
-  const mapping = fieldConfig.itemMapping
+  const isNested = fieldConfig.nested === true;
+  const nestedByProp = fieldConfig.nestedByProp ?? 'parent';
+  const mapping = fieldConfig.itemMapping;
 
   const flatOptions = useMemo(
-    () => (isNested ? flattenNestedOptions(enumOptions, nestedByProp) : null),
-    [enumOptions, isNested, nestedByProp],
-  )
+    () => isNested ? flattenNestedOptions(enumOptions, nestedByProp) : null,
+    [enumOptions, isNested, nestedByProp]
+  );
 
-  const debouncedQuery = useDebounce(searchQuery, 300)
+  const debouncedQuery = useDebounce(searchQuery, 300);
 
   useEffect(() => {
-    if (onSearch) onSearch(debouncedQuery)
-  }, [debouncedQuery, onSearch])
+    if (onSearch) onSearch(debouncedQuery);
+  }, [debouncedQuery, onSearch]);
 
   const getMappedValue = useCallback(
     (option: EnumOption, field: string | null | undefined) => {
-      if (!field) return undefined
+      if (!field) return undefined;
 
       return (option as unknown as Record<string, unknown>)[field] as
         | string
-        | undefined
+        | undefined;
     },
-    [],
-  )
+    []
+  );
 
   const renderOptionContent = useCallback(
     (option: EnumOption, depth = 0) => {
-      if (itemTemplate) return itemTemplate(option)
+      if (itemTemplate) return itemTemplate(option);
 
-      const iconValue = mapping?.iconField
-        ? getMappedValue(option, mapping.iconField)
-        : option.icon
-      const colorValue = mapping?.colorField
-        ? getMappedValue(option, mapping.colorField)
-        : option.color
-      const imageValue = mapping?.imageField
-        ? getMappedValue(option, mapping.imageField)
-        : undefined
-      const descriptionValue = mapping?.descriptionField
-        ? getMappedValue(option, mapping.descriptionField)
-        : undefined
+      const iconValue = mapping?.iconField ? getMappedValue(option, mapping.iconField) : option.icon;
+      const colorValue = mapping?.colorField ? getMappedValue(option, mapping.colorField) : option.color;
+      const imageValue = mapping?.imageField ? getMappedValue(option, mapping.imageField) : undefined;
+      const descriptionValue = mapping?.descriptionField ? getMappedValue(option, mapping.descriptionField) : undefined;
 
-      const iconColor = getEnumIconColor(colorValue)
+      const iconColor = getEnumIconColor(colorValue);
 
       return (
         <div
           className="flex min-w-0 items-start gap-2"
-          style={depth > 0 ? { paddingLeft: `${depth * 1}rem` } : undefined}
-        >
+          style={depth > 0 ? { paddingLeft: `${depth * 1}rem` } : undefined}>
           {imageValue ? (
             <Avatar size="sm" className="mt-0.5 shrink-0">
               <AvatarImage src={imageValue} />
@@ -134,18 +126,16 @@ function RelationDropdown({
           ) : iconValue ? (
             <span
               className={cn('mt-0.5 shrink-0', iconColor.className)}
-              style={iconColor.style}
-            >
+              style={iconColor.style}>
               <DocyrusIcon icon={iconValue} className="size-4" />
             </span>
           ) : colorValue ? (
             <span
               className={cn(
                 'mt-1.5 size-2.5 shrink-0 rounded-full',
-                getEnumDotClassName(colorValue),
+                getEnumDotClassName(colorValue)
               )}
-              style={getEnumDotStyle(colorValue)}
-            />
+              style={getEnumDotStyle(colorValue)} />
           ) : null}
           <div className="min-w-0 flex-1">
             <span className="truncate text-sm">{option.name}</span>
@@ -156,46 +146,46 @@ function RelationDropdown({
             )}
           </div>
         </div>
-      )
+      );
     },
-    [itemTemplate, mapping, getMappedValue],
-  )
+    [itemTemplate, mapping, getMappedValue]
+  );
 
   const handleCreateSimple = useCallback(
     async (formField: any, name: string) => {
-      if (!onCreateRecord || !name.trim()) return
-      setCreating(true)
+      if (!onCreateRecord || !name.trim()) return;
+      setCreating(true);
       try {
-        const created = await onCreateRecord(name.trim())
+        const created = await onCreateRecord(name.trim());
 
-        formField.handleChange(created.id)
-        setOpen(false)
-        setSearchQuery('')
+        formField.handleChange(created.id);
+        setOpen(false);
+        setSearchQuery('');
       } finally {
-        setCreating(false)
+        setCreating(false);
       }
     },
-    [onCreateRecord],
-  )
+    [onCreateRecord]
+  );
 
   const handleCreated = useCallback(
     (formField: any) => (option: EnumOption) => {
-      formField.handleChange(option.id)
-      setShowCreateForm(false)
-      setOpen(false)
-      setSearchQuery('')
+      formField.handleChange(option.id);
+      setShowCreateForm(false);
+      setOpen(false);
+      setSearchQuery('');
     },
-    [],
-  )
+    []
+  );
 
   return (
     <form.Field
       name={fieldConfig.slug}
       children={(field: any) => {
-        const isInvalid =
-          field.state.meta.isTouched && !field.state.meta.isValid
-        const currentValue = field.state.value ?? ''
-        const selectedOption = enumOptions.find((o) => o.id === currentValue)
+        const isInvalid
+          = field.state.meta.isTouched && !field.state.meta.isValid;
+        const currentValue = field.state.value ?? '';
+        const selectedOption = enumOptions.find(o => o.id === currentValue);
 
         return (
           <Field data-invalid={isInvalid} className={className}>
@@ -203,13 +193,12 @@ function RelationDropdown({
             <Popover
               open={open}
               onOpenChange={(v) => {
-                setOpen(v)
+                setOpen(v);
                 if (!v) {
-                  setShowCreateForm(false)
-                  setSearchQuery('')
+                  setShowCreateForm(false);
+                  setSearchQuery('');
                 }
-              }}
-            >
+              }}>
               <PopoverTrigger asChild>
                 <Button
                   id={field.name}
@@ -219,8 +208,7 @@ function RelationDropdown({
                   aria-invalid={isInvalid}
                   onBlur={field.handleBlur}
                   disabled={disabled || fieldConfig.readOnly === true}
-                  className="h-auto min-h-9 w-full justify-between"
-                >
+                  className="h-auto min-h-9 w-full justify-between">
                   {selectedOption ? (
                     <span className="min-w-0 truncate">
                       {renderOptionContent(selectedOption)}
@@ -231,18 +219,17 @@ function RelationDropdown({
                   <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-(--radix-popover-trigger-width) p-0">
+              <PopoverContent className="w-(--radix-popover-trigger-width) max-h-(--radix-popover-content-available-height) p-0">
                 {showCreateForm && renderCreateForm ? (
                   <div className="p-3">
                     {renderCreateForm({
-                      onCreated: handleCreated(field),
+                      onCreated: handleCreated(field)
                     })}
                     <Button
                       variant="ghost"
                       size="sm"
                       className="mt-2 w-full"
-                      onClick={() => setShowCreateForm(false)}
-                    >
+                      onClick={() => setShowCreateForm(false)}>
                       Cancel
                     </Button>
                   </div>
@@ -251,66 +238,50 @@ function RelationDropdown({
                     <CommandInput
                       placeholder="Search records..."
                       value={searchQuery}
-                      onValueChange={setSearchQuery}
-                    />
+                      onValueChange={setSearchQuery} />
                     <CommandList>
                       <CommandEmpty>No records found.</CommandEmpty>
                       <CommandGroup>
-                        {flatOptions
-                          ? flatOptions.map(({ option, depth }) => (
-                              <CommandItem
-                                key={option.id}
-                                value={option.name}
-                                onSelect={() => {
-                                  field.handleChange(
-                                    option.id === currentValue
-                                      ? null
-                                      : option.id,
-                                  )
-                                  setOpen(false)
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    'mr-2 size-4 shrink-0',
-                                    currentValue === option.id
-                                      ? 'opacity-100'
-                                      : 'opacity-0',
-                                  )}
-                                />
-                                {renderOptionContent(option, depth)}
-                              </CommandItem>
-                            ))
-                          : enumOptions.map((option) => (
-                              <CommandItem
-                                key={option.id}
-                                value={option.name}
-                                onSelect={() => {
-                                  field.handleChange(
-                                    option.id === currentValue
-                                      ? null
-                                      : option.id,
-                                  )
-                                  setOpen(false)
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    'mr-2 size-4 shrink-0',
-                                    currentValue === option.id
-                                      ? 'opacity-100'
-                                      : 'opacity-0',
-                                  )}
-                                />
-                                {renderOptionContent(option)}
-                              </CommandItem>
-                            ))}
+                        {flatOptions ? flatOptions.map(({ option, depth }) => (
+                          <CommandItem
+                            key={option.id}
+                            value={option.name}
+                            onSelect={() => {
+                              field.handleChange(
+                                option.id === currentValue ? null : option.id
+                              );
+                              setOpen(false);
+                            }}>
+                            <Check
+                              className={cn(
+                                'mr-2 size-4 shrink-0',
+                                currentValue === option.id ? 'opacity-100' : 'opacity-0'
+                              )} />
+                            {renderOptionContent(option, depth)}
+                          </CommandItem>
+                        )) : enumOptions.map(option => (
+                          <CommandItem
+                            key={option.id}
+                            value={option.name}
+                            onSelect={() => {
+                              field.handleChange(
+                                option.id === currentValue ? null : option.id
+                              );
+                              setOpen(false);
+                            }}>
+                            <Check
+                              className={cn(
+                                'mr-2 size-4 shrink-0',
+                                currentValue === option.id ? 'opacity-100' : 'opacity-0'
+                              )} />
+                            {renderOptionContent(option)}
+                          </CommandItem>
+                        ))}
                         {hasMore && onLoadMore && (
                           <CommandItem
                             value="__load_more__"
                             onSelect={() => onLoadMore()}
-                            className="text-muted-foreground justify-center"
-                          >
+                            className="text-muted-foreground justify-center">
                             <Loader2 className="mr-2 size-4 animate-spin opacity-50" />
                             Load more...
                           </CommandItem>
@@ -325,21 +296,18 @@ function RelationDropdown({
                               disabled={creating}
                               onSelect={() => {
                                 if (renderCreateForm) {
-                                  setShowCreateForm(true)
+                                  setShowCreateForm(true);
                                 } else if (onCreateRecord) {
-                                  handleCreateSimple(field, searchQuery)
+                                  handleCreateSimple(field, searchQuery);
                                 }
                               }}
-                              className="text-primary"
-                            >
+                              className="text-primary">
                               {creating ? (
                                 <Loader2 className="mr-2 size-4 animate-spin" />
                               ) : (
                                 <Plus className="mr-2 size-4" />
                               )}
-                              {searchQuery.trim()
-                                ? `Create "${searchQuery.trim()}"`
-                                : 'Create new record'}
+                              {searchQuery.trim() ? `Create "${searchQuery.trim()}"` : 'Create new record'}
                             </CommandItem>
                           </CommandGroup>
                         </>
@@ -351,10 +319,9 @@ function RelationDropdown({
             </Popover>
             {isInvalid && <FieldError errors={field.state.meta.errors} />}
           </Field>
-        )
-      }}
-    />
-  )
+        );
+      }} />
+  );
 }
 
 function RelationCardGrid({
@@ -371,113 +338,100 @@ function RelationCardGrid({
   columnCount = 2,
   onSearch,
   searching,
-  maxHeight = '360px',
+  maxHeight = '360px'
 }: DocyrusFormFieldProps) {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [creating, setCreating] = useState(false)
-  const [showCreateForm, setShowCreateForm] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
-  const isNested = fieldConfig.nested === true
-  const nestedByProp = fieldConfig.nestedByProp ?? 'parent'
-  const mapping = fieldConfig.itemMapping
-  const isDisabled = disabled || fieldConfig.readOnly === true
+  const isNested = fieldConfig.nested === true;
+  const nestedByProp = fieldConfig.nestedByProp ?? 'parent';
+  const mapping = fieldConfig.itemMapping;
+  const isDisabled = disabled || fieldConfig.readOnly === true;
 
-  const debouncedQuery = useDebounce(searchQuery, 300)
+  const debouncedQuery = useDebounce(searchQuery, 300);
 
   useEffect(() => {
-    if (onSearch) onSearch(debouncedQuery)
-  }, [debouncedQuery, onSearch])
+    if (onSearch) onSearch(debouncedQuery);
+  }, [debouncedQuery, onSearch]);
 
   const filteredOptions = useMemo(() => {
-    if (onSearch || !searchQuery.trim()) return enumOptions
-    const q = searchQuery.toLowerCase()
+    if (onSearch || !searchQuery.trim()) return enumOptions;
+    const q = searchQuery.toLowerCase();
 
-    return enumOptions.filter((o) => o.name.toLowerCase().includes(q))
-  }, [enumOptions, searchQuery, onSearch])
+    return enumOptions.filter(o => o.name.toLowerCase().includes(q));
+  }, [enumOptions, searchQuery, onSearch]);
 
   const flatOptions = useMemo(
-    () =>
-      isNested ? flattenNestedOptions(filteredOptions, nestedByProp) : null,
-    [filteredOptions, isNested, nestedByProp],
-  )
+    () => isNested ? flattenNestedOptions(filteredOptions, nestedByProp) : null,
+    [filteredOptions, isNested, nestedByProp]
+  );
 
   const optionsToRender = useMemo(
-    () =>
-      flatOptions
-        ? flatOptions.map(({ option, depth }) => ({ option, depth }))
-        : filteredOptions.map((option) => ({ option, depth: 0 })),
-    [flatOptions, filteredOptions],
-  )
+    () => flatOptions ? flatOptions.map(({ option, depth }) => ({ option, depth })) : filteredOptions.map(option => ({ option, depth: 0 })),
+    [flatOptions, filteredOptions]
+  );
 
-  const sentinelRef = useRef<HTMLDivElement>(null)
-  const loadingMoreRef = useRef(false)
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const loadingMoreRef = useRef(false);
 
   useEffect(() => {
-    if (!hasMore || !onLoadMore) return
+    if (!hasMore || !onLoadMore) return;
 
-    const sentinel = sentinelRef.current
+    const sentinel = sentinelRef.current;
 
-    if (!sentinel) return
+    if (!sentinel) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !loadingMoreRef.current) {
-          loadingMoreRef.current = true
-          onLoadMore()
+        if (entry?.isIntersecting && !loadingMoreRef.current) {
+          loadingMoreRef.current = true;
+          onLoadMore();
         }
       },
-      { threshold: 0.1 },
-    )
+      { threshold: 0.1 }
+    );
 
-    observer.observe(sentinel)
+    observer.observe(sentinel);
 
-    return () => observer.disconnect()
-  }, [hasMore, onLoadMore])
+    return () => observer.disconnect();
+  }, [hasMore, onLoadMore]);
 
-  const prevLengthRef = useRef(enumOptions.length)
+  const prevLengthRef = useRef(enumOptions.length);
 
   useEffect(() => {
     if (enumOptions.length !== prevLengthRef.current) {
-      loadingMoreRef.current = false
-      prevLengthRef.current = enumOptions.length
+      loadingMoreRef.current = false;
+      prevLengthRef.current = enumOptions.length;
     }
-  }, [enumOptions.length])
+  }, [enumOptions.length]);
 
   const getMappedValue = useCallback(
     (option: EnumOption, field: string | null | undefined) => {
-      if (!field) return undefined
+      if (!field) return undefined;
 
       return (option as unknown as Record<string, unknown>)[field] as
         | string
-        | undefined
+        | undefined;
     },
-    [],
-  )
+    []
+  );
 
   const renderOptionContent = useCallback(
     (option: EnumOption, depth = 0) => {
-      if (itemTemplate) return itemTemplate(option)
+      if (itemTemplate) return itemTemplate(option);
 
-      const iconValue = mapping?.iconField
-        ? getMappedValue(option, mapping.iconField)
-        : option.icon
-      const colorValue = mapping?.colorField
-        ? getMappedValue(option, mapping.colorField)
-        : option.color
-      const imageValue = mapping?.imageField
-        ? getMappedValue(option, mapping.imageField)
-        : undefined
-      const descriptionValue = mapping?.descriptionField
-        ? getMappedValue(option, mapping.descriptionField)
-        : undefined
+      const iconValue = mapping?.iconField ? getMappedValue(option, mapping.iconField) : option.icon;
+      const colorValue = mapping?.colorField ? getMappedValue(option, mapping.colorField) : option.color;
+      const imageValue = mapping?.imageField ? getMappedValue(option, mapping.imageField) : undefined;
+      const descriptionValue = mapping?.descriptionField ? getMappedValue(option, mapping.descriptionField) : undefined;
 
-      const iconColor = getEnumIconColor(colorValue)
+      const iconColor = getEnumIconColor(colorValue);
 
       return (
         <div
           className="flex min-w-0 flex-1 items-start gap-2"
-          style={depth > 0 ? { paddingLeft: `${depth * 1}rem` } : undefined}
-        >
+          style={depth > 0 ? { paddingLeft: `${depth * 1}rem` } : undefined}>
           {imageValue ? (
             <Avatar size="sm" className="mt-0.5 shrink-0">
               <AvatarImage src={imageValue} />
@@ -488,18 +442,16 @@ function RelationCardGrid({
           ) : iconValue ? (
             <span
               className={cn('mt-0.5 shrink-0', iconColor.className)}
-              style={iconColor.style}
-            >
+              style={iconColor.style}>
               <DocyrusIcon icon={iconValue} className="size-4" />
             </span>
           ) : colorValue ? (
             <span
               className={cn(
                 'mt-1.5 size-2.5 shrink-0 rounded-full',
-                getEnumDotClassName(colorValue),
+                getEnumDotClassName(colorValue)
               )}
-              style={getEnumDotStyle(colorValue)}
-            />
+              style={getEnumDotStyle(colorValue)} />
           ) : null}
           <div className="min-w-0 flex-1">
             <span className="truncate text-sm">{option.name}</span>
@@ -510,43 +462,43 @@ function RelationCardGrid({
             )}
           </div>
         </div>
-      )
+      );
     },
-    [itemTemplate, mapping, getMappedValue],
-  )
+    [itemTemplate, mapping, getMappedValue]
+  );
 
   const handleCreateSimple = useCallback(
     async (formField: any, name: string) => {
-      if (!onCreateRecord || !name.trim()) return
-      setCreating(true)
+      if (!onCreateRecord || !name.trim()) return;
+      setCreating(true);
       try {
-        const created = await onCreateRecord(name.trim())
+        const created = await onCreateRecord(name.trim());
 
-        formField.handleChange(created.id)
-        setSearchQuery('')
+        formField.handleChange(created.id);
+        setSearchQuery('');
       } finally {
-        setCreating(false)
+        setCreating(false);
       }
     },
-    [onCreateRecord],
-  )
+    [onCreateRecord]
+  );
 
   const handleCreated = useCallback(
     (formField: any) => (option: EnumOption) => {
-      formField.handleChange(option.id)
-      setShowCreateForm(false)
-      setSearchQuery('')
+      formField.handleChange(option.id);
+      setShowCreateForm(false);
+      setSearchQuery('');
     },
-    [],
-  )
+    []
+  );
 
   return (
     <form.Field
       name={fieldConfig.slug}
       children={(field: any) => {
-        const isInvalid =
-          field.state.meta.isTouched && !field.state.meta.isValid
-        const currentValue = field.state.value ?? ''
+        const isInvalid
+          = field.state.meta.isTouched && !field.state.meta.isValid;
+        const currentValue = field.state.value ?? '';
 
         return (
           <Field data-invalid={isInvalid} className={className}>
@@ -559,11 +511,10 @@ function RelationCardGrid({
                 id={field.name}
                 placeholder="Search records..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
                 onBlur={field.handleBlur}
                 disabled={isDisabled}
-                className="pl-9"
-              />
+                className="pl-9" />
               {searching && (
                 <Loader2 className="text-muted-foreground absolute right-2.5 top-1/2 size-4 -translate-y-1/2 animate-spin" />
               )}
@@ -572,14 +523,11 @@ function RelationCardGrid({
             {/* Scrollable card grid */}
             <ScrollArea
               className="mt-2 rounded-md border"
-              style={{ maxHeight }}
-            >
-              <div
-                className={cn(
-                  relationCardGridVariants({ columnCount }),
-                  'gap-2 p-2',
-                )}
-              >
+              style={{ maxHeight }}>
+              <div className={cn(
+                relationCardGridVariants({ columnCount }),
+                'gap-2 p-2'
+              )}>
                 {optionsToRender.map(({ option, depth }) => (
                   <button
                     key={option.id}
@@ -587,26 +535,21 @@ function RelationCardGrid({
                     disabled={isDisabled}
                     onClick={() => {
                       field.handleChange(
-                        option.id === currentValue ? null : option.id,
-                      )
+                        option.id === currentValue ? null : option.id
+                      );
                     }}
                     className={cn(
                       'flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-left transition-colors',
                       'border-input bg-background hover:bg-accent/50',
                       'focus-visible:ring-ring/50 focus-visible:ring-2 focus-visible:outline-none',
                       'disabled:cursor-not-allowed disabled:opacity-50',
-                      currentValue === option.id &&
-                        'border-primary bg-primary/5',
-                    )}
-                  >
+                      currentValue === option.id && 'border-primary bg-primary/5'
+                    )}>
                     <span
                       className={cn(
                         'relative mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors',
-                        currentValue === option.id
-                          ? 'border-primary bg-primary'
-                          : 'border-muted-foreground/30',
-                      )}
-                    >
+                        currentValue === option.id ? 'border-primary bg-primary' : 'border-muted-foreground/30'
+                      )}>
                       {currentValue === option.id && (
                         <Check className="size-3 text-primary-foreground" />
                       )}
@@ -622,26 +565,19 @@ function RelationCardGrid({
                     disabled={creating || isDisabled}
                     onClick={() => {
                       if (renderCreateForm) {
-                        setShowCreateForm(true)
+                        setShowCreateForm(true);
                       } else if (onCreateRecord) {
-                        handleCreateSimple(field, searchQuery)
+                        handleCreateSimple(field, searchQuery);
                       }
                     }}
                     className={cn(
                       'flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed p-3 text-sm transition-colors',
                       'border-input text-primary hover:bg-accent/50',
                       'focus-visible:ring-ring/50 focus-visible:ring-2 focus-visible:outline-none',
-                      'disabled:cursor-not-allowed disabled:opacity-50',
-                    )}
-                  >
-                    {creating ? (
-                      <Loader2 className="size-4 animate-spin" />
-                    ) : (
-                      <Plus className="size-4" />
-                    )}
-                    {searchQuery.trim()
-                      ? `Create "${searchQuery.trim()}"`
-                      : 'Create new record'}
+                      'disabled:cursor-not-allowed disabled:opacity-50'
+                    )}>
+                    {creating ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+                    {searchQuery.trim() ? `Create "${searchQuery.trim()}"` : 'Create new record'}
                   </button>
                 )}
               </div>
@@ -654,8 +590,7 @@ function RelationCardGrid({
                     variant="ghost"
                     size="sm"
                     className="mt-2 w-full"
-                    onClick={() => setShowCreateForm(false)}
-                  >
+                    onClick={() => setShowCreateForm(false)}>
                     Cancel
                   </Button>
                 </div>
@@ -672,8 +607,7 @@ function RelationCardGrid({
               {hasMore && onLoadMore && (
                 <div
                   ref={sentinelRef}
-                  className="flex items-center justify-center p-2"
-                >
+                  className="flex items-center justify-center p-2">
                   <Loader2 className="text-muted-foreground size-4 animate-spin" />
                 </div>
               )}
@@ -681,8 +615,7 @@ function RelationCardGrid({
 
             {isInvalid && <FieldError errors={field.state.meta.errors} />}
           </Field>
-        )
-      }}
-    />
-  )
+        );
+      }} />
+  );
 }

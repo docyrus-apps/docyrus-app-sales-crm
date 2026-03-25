@@ -1,17 +1,16 @@
-'use client'
+'use client';
 
-import { Skeleton } from '@/components/ui/skeleton'
+import { Skeleton } from '@/components/ui/skeleton';
 
-const MONTHS = Array.from({ length: 12 })
+const MONTHS = Array.from({ length: 12 });
 
 export function YearViewSkeleton() {
   return (
-    <div className="hidden sm:grid grid-cols-3 gap-4 flex-grow overflow-hidden auto-rows-fr lg:grid-cols-4">
+    <div className="hidden sm:grid grid-cols-3 gap-4 grow overflow-hidden auto-rows-fr lg:grid-cols-4">
       {MONTHS.map((_, monthIndex) => (
         <div
           key={`month-${monthIndex}`}
-          className="flex flex-col border rounded-md overflow-hidden h-full animate-pulse"
-        >
+          className="flex flex-col border rounded-md overflow-hidden h-full animate-pulse">
           <div className="bg-primary/5 px-1 py-2 text-center">
             <Skeleton className="h-4 w-24 mx-auto" />
           </div>
@@ -22,12 +21,11 @@ export function YearViewSkeleton() {
             ))}
           </div>
 
-          <div className="grid grid-cols-7 gap-0 p-1 flex-grow">
+          <div className="grid grid-cols-7 gap-0 p-1 grow">
             {Array.from({ length: 42 }).map((_cell, i) => (
               <div
                 key={`cell-${i}`}
-                className="flex flex-col items-center justify-center p-1"
-              >
+                className="flex flex-col items-center justify-center p-1">
                 <Skeleton className="h-4 w-4 rounded-full" />
                 <Skeleton className="h-1.5 w-3 mt-1" />
               </div>
@@ -36,5 +34,5 @@ export function YearViewSkeleton() {
         </div>
       ))}
     </div>
-  )
+  );
 }

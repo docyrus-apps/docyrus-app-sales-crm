@@ -1,87 +1,87 @@
-'use client'
+'use client';
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react';
 
-import { format, isWithinInterval, parseISO } from 'date-fns'
-import { Calendar, Clock, User } from 'lucide-react'
+import { format, isWithinInterval, parseISO } from 'date-fns';
+import { Calendar, Clock, User } from 'lucide-react';
 
-import { Calendar as DayPicker } from '@/components/ui/calendar'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { Calendar as DayPicker } from '@/components/ui/calendar';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
-import { type IEvent } from '../../interfaces'
-import { useCalendar } from '../../contexts/calendar-context'
+import { type IEvent } from '../../interfaces';
+import { useCalendar } from '../../contexts/calendar-context';
 
-import { AddEditEventDialog } from '../../dialogs/add-edit-event-dialog'
-import { DroppableArea } from '../../dnd/droppable-area'
-import { groupEvents } from '../../helpers'
-import { CalendarTimeline } from './calendar-time-line'
-import { DayViewMultiDayEventsRow } from './day-view-multi-day-events-row'
-import { RenderGroupedEvents } from './render-grouped-events'
+import { AddEditEventDialog } from '../../dialogs/add-edit-event-dialog';
+import { DroppableArea } from '../../dnd/droppable-area';
+import { groupEvents } from '../../helpers';
+import { CalendarTimeline } from './calendar-time-line';
+import { DayViewMultiDayEventsRow } from './day-view-multi-day-events-row';
+import { RenderGroupedEvents } from './render-grouped-events';
 
 interface IProps {
-  singleDayEvents: Array<IEvent>
-  multiDayEvents: Array<IEvent>
+  singleDayEvents: Array<IEvent>;
+  multiDayEvents: Array<IEvent>;
 }
 
 export function CalendarDayView({ singleDayEvents, multiDayEvents }: IProps) {
-  const { selectedDate, setSelectedDate, users, use24HourFormat } =
-    useCalendar()
-  const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const {
+    selectedDate, setSelectedDate, users, use24HourFormat
+  }
+    = useCalendar();
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  const hours = Array.from({ length: 24 }, (_, i) => i)
+  const hours = Array.from({ length: 24 }, (_, i) => i);
 
   useEffect(() => {
     const handleDragOver = (e: DragEvent) => {
-      if (!scrollAreaRef.current) return
+      if (!scrollAreaRef.current) return;
 
-      const scrollArea = scrollAreaRef.current
-      const rect = scrollArea.getBoundingClientRect()
-      const scrollSpeed = 15
+      const scrollArea = scrollAreaRef.current;
+      const rect = scrollArea.getBoundingClientRect();
+      const scrollSpeed = 15;
 
-      const scrollContainer =
-        scrollArea.querySelector('[data-radix-scroll-area-viewport]') ||
-        scrollArea
+      const scrollContainer
+        = scrollArea.querySelector('[data-radix-scroll-area-viewport]')
+          || scrollArea;
 
       if (e.clientY < rect.top + 60) {
-        scrollContainer.scrollTop -= scrollSpeed
+        scrollContainer.scrollTop -= scrollSpeed;
       }
 
       if (e.clientY > rect.bottom - 60) {
-        scrollContainer.scrollTop += scrollSpeed
+        scrollContainer.scrollTop += scrollSpeed;
       }
-    }
+    };
 
-    document.addEventListener('dragover', handleDragOver)
+    document.addEventListener('dragover', handleDragOver);
 
     return () => {
-      document.removeEventListener('dragover', handleDragOver)
-    }
-  }, [])
+      document.removeEventListener('dragover', handleDragOver);
+    };
+  }, []);
 
   const getCurrentEvents = (events: Array<IEvent>) => {
-    const now = new Date()
+    const now = new Date();
 
-    return events.filter((event) =>
-      isWithinInterval(now, {
-        start: parseISO(event.startDate),
-        end: parseISO(event.endDate),
-      }),
-    )
-  }
+    return events.filter(event => isWithinInterval(now, {
+      start: parseISO(event.startDate),
+      end: parseISO(event.endDate)
+    }));
+  };
 
-  const currentEvents = getCurrentEvents(singleDayEvents)
+  const currentEvents = getCurrentEvents(singleDayEvents);
 
   const dayEvents = singleDayEvents.filter((event) => {
-    const eventDate = parseISO(event.startDate)
+    const eventDate = parseISO(event.startDate);
 
     return (
-      eventDate.getDate() === selectedDate.getDate() &&
-      eventDate.getMonth() === selectedDate.getMonth() &&
-      eventDate.getFullYear() === selectedDate.getFullYear()
-    )
-  })
+      eventDate.getDate() === selectedDate.getDate()
+      && eventDate.getMonth() === selectedDate.getMonth()
+      && eventDate.getFullYear() === selectedDate.getFullYear()
+    );
+  });
 
-  const groupedEvents = groupEvents(dayEvents)
+  const groupedEvents = groupEvents(dayEvents);
 
   return (
     <div className="flex">
@@ -89,8 +89,7 @@ export function CalendarDayView({ singleDayEvents, multiDayEvents }: IProps) {
         <div>
           <DayViewMultiDayEventsRow
             selectedDate={selectedDate}
-            multiDayEvents={multiDayEvents}
-          />
+            multiDayEvents={multiDayEvents} />
 
           {/* Day header */}
           <div className="relative z-20 flex border-b">
@@ -104,7 +103,7 @@ export function CalendarDayView({ singleDayEvents, multiDayEvents }: IProps) {
           </div>
         </div>
 
-        <ScrollArea className="h-[800px]" type="always" ref={scrollAreaRef}>
+        <ScrollArea className="h-200" type="always" ref={scrollAreaRef}>
           <div className="flex">
             {/* Hours column */}
             <div className="relative w-18">
@@ -115,7 +114,7 @@ export function CalendarDayView({ singleDayEvents, multiDayEvents }: IProps) {
                       <span className="text-xs text-muted-foreground">
                         {format(
                           new Date().setHours(hour, 0, 0, 0),
-                          use24HourFormat ? 'HH:00' : 'h a',
+                          use24HourFormat ? 'HH:00' : 'h a'
                         )}
                       </span>
                     )}
@@ -131,8 +130,7 @@ export function CalendarDayView({ singleDayEvents, multiDayEvents }: IProps) {
                   <div
                     key={hour}
                     className="relative"
-                    style={{ height: '96px' }}
-                  >
+                    style={{ height: '96px' }}>
                     {index !== 0 && (
                       <div className="pointer-events-none absolute inset-x-0 top-0 border-b" />
                     )}
@@ -141,12 +139,10 @@ export function CalendarDayView({ singleDayEvents, multiDayEvents }: IProps) {
                       date={selectedDate}
                       hour={hour}
                       minute={0}
-                      className="absolute inset-x-0 top-0 h-[48px]"
-                    >
+                      className="absolute inset-x-0 top-0 h-12">
                       <AddEditEventDialog
                         startDate={selectedDate}
-                        startTime={{ hour, minute: 0 }}
-                      >
+                        startTime={{ hour, minute: 0 }}>
                         <div className="absolute inset-0 cursor-pointer transition-colors hover:bg-secondary" />
                       </AddEditEventDialog>
                     </DroppableArea>
@@ -157,12 +153,10 @@ export function CalendarDayView({ singleDayEvents, multiDayEvents }: IProps) {
                       date={selectedDate}
                       hour={hour}
                       minute={30}
-                      className="absolute inset-x-0 bottom-0 h-[48px]"
-                    >
+                      className="absolute inset-x-0 bottom-0 h-12">
                       <AddEditEventDialog
                         startDate={selectedDate}
-                        startTime={{ hour, minute: 30 }}
-                      >
+                        startTime={{ hour, minute: 30 }}>
                         <div className="absolute inset-0 cursor-pointer transition-colors hover:bg-secondary" />
                       </AddEditEventDialog>
                     </DroppableArea>
@@ -171,8 +165,7 @@ export function CalendarDayView({ singleDayEvents, multiDayEvents }: IProps) {
 
                 <RenderGroupedEvents
                   groupedEvents={groupedEvents}
-                  day={selectedDate}
-                />
+                  day={selectedDate} />
               </div>
 
               <CalendarTimeline />
@@ -186,9 +179,8 @@ export function CalendarDayView({ singleDayEvents, multiDayEvents }: IProps) {
           className="mx-auto w-fit"
           mode="single"
           selected={selectedDate}
-          onSelect={(date) => date && setSelectedDate(date)}
-          initialFocus
-        />
+          onSelect={date => date && setSelectedDate(date)}
+          initialFocus />
 
         <div className="flex-1 space-y-3">
           {currentEvents.length > 0 ? (
@@ -212,7 +204,7 @@ export function CalendarDayView({ singleDayEvents, multiDayEvents }: IProps) {
             <ScrollArea className="h-[422px] px-4" type="always">
               <div className="space-y-6 pb-4">
                 {currentEvents.map((event) => {
-                  const user = users.find((u) => u.id === event.user.id)
+                  const user = users.find(u => u.id === event.user.id);
 
                   return (
                     <div key={event.id} className="space-y-1.5">
@@ -241,17 +233,17 @@ export function CalendarDayView({ singleDayEvents, multiDayEvents }: IProps) {
                         <span className="text-sm text-muted-foreground">
                           {format(
                             parseISO(event.startDate),
-                            use24HourFormat ? 'HH:mm' : 'hh:mm a',
+                            use24HourFormat ? 'HH:mm' : 'hh:mm a'
                           )}{' '}
                           -
                           {format(
                             parseISO(event.endDate),
-                            use24HourFormat ? 'HH:mm' : 'hh:mm a',
+                            use24HourFormat ? 'HH:mm' : 'hh:mm a'
                           )}
                         </span>
                       </div>
                     </div>
-                  )
+                  );
                 })}
               </div>
             </ScrollArea>
@@ -259,5 +251,5 @@ export function CalendarDayView({ singleDayEvents, multiDayEvents }: IProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

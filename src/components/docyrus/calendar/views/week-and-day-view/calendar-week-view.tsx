@@ -1,32 +1,38 @@
-'use client'
+'use client';
 
-import { addDays, format, isSameDay, parseISO, startOfWeek } from 'date-fns'
-import { motion } from 'motion/react'
+import {
+  addDays, format, isSameDay, parseISO, startOfWeek
+} from 'date-fns';
+import { motion } from 'motion/react';
 
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { ScrollArea } from '@/components/ui/scroll-area';
 
-import { type IEvent } from '../../interfaces'
+import { type IEvent } from '../../interfaces';
 
-import { fadeIn, staggerContainer, transition } from '../../animations'
-import { useCalendar } from '../../contexts/calendar-context'
-import { AddEditEventDialog } from '../../dialogs/add-edit-event-dialog'
-import { DroppableArea } from '../../dnd/droppable-area'
-import { groupEvents } from '../../helpers'
-import { CalendarTimeline } from './calendar-time-line'
-import { RenderGroupedEvents } from './render-grouped-events'
-import { WeekViewMultiDayEventsRow } from './week-view-multi-day-events-row'
+import {
+  fadeIn,
+  staggerContainer,
+  transition
+} from '../../animations';
+import { useCalendar } from '../../contexts/calendar-context';
+import { AddEditEventDialog } from '../../dialogs/add-edit-event-dialog';
+import { DroppableArea } from '../../dnd/droppable-area';
+import { groupEvents } from '../../helpers';
+import { CalendarTimeline } from './calendar-time-line';
+import { RenderGroupedEvents } from './render-grouped-events';
+import { WeekViewMultiDayEventsRow } from './week-view-multi-day-events-row';
 
 interface IProps {
-  singleDayEvents: Array<IEvent>
-  multiDayEvents: Array<IEvent>
+  singleDayEvents: Array<IEvent>;
+  multiDayEvents: Array<IEvent>;
 }
 
 export function CalendarWeekView({ singleDayEvents, multiDayEvents }: IProps) {
-  const { selectedDate, use24HourFormat } = useCalendar()
+  const { selectedDate, use24HourFormat } = useCalendar();
 
-  const weekStart = startOfWeek(selectedDate)
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
-  const hours = Array.from({ length: 24 }, (_, i) => i)
+  const weekStart = startOfWeek(selectedDate);
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const hours = Array.from({ length: 24 }, (_, i) => i);
 
   return (
     <motion.div
@@ -34,14 +40,12 @@ export function CalendarWeekView({ singleDayEvents, multiDayEvents }: IProps) {
       animate="animate"
       exit="exit"
       variants={fadeIn}
-      transition={transition}
-    >
+      transition={transition}>
       <motion.div
         className="flex flex-col items-center justify-center border-b p-4 text-sm sm:hidden"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={transition}
-      >
+        transition={transition}>
         <p>Weekly view is not recommended on smaller devices.</p>
         <p>Please switch to a desktop device or use the daily view instead.</p>
       </motion.div>
@@ -50,16 +54,14 @@ export function CalendarWeekView({ singleDayEvents, multiDayEvents }: IProps) {
         <div>
           <WeekViewMultiDayEventsRow
             selectedDate={selectedDate}
-            multiDayEvents={multiDayEvents}
-          />
+            multiDayEvents={multiDayEvents} />
 
           {/* Week header */}
           <motion.div
             className="relative z-20 flex border-b"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={transition}
-          >
+            transition={transition}>
             {/* Time column header - responsive width */}
             <div className="w-18" />
             <div className="grid flex-1 grid-cols-7  border-l">
@@ -69,8 +71,7 @@ export function CalendarWeekView({ singleDayEvents, multiDayEvents }: IProps) {
                   className="py-1 sm:py-2 text-center text-xs font-medium text-muted-foreground"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05, ...transition }}
-                >
+                  transition={{ delay: index * 0.05, ...transition }}>
                   {/* Mobile: Show only day abbreviation and number */}
                   <span className="block sm:hidden">
                     {format(day, 'EEE').charAt(0)}
@@ -91,7 +92,7 @@ export function CalendarWeekView({ singleDayEvents, multiDayEvents }: IProps) {
           </motion.div>
         </div>
 
-        <ScrollArea className="h-[736px]" type="always">
+        <ScrollArea className="h-184" type="always">
           <div className="flex">
             {/* Hours column */}
             <motion.div className="relative w-18" variants={staggerContainer}>
@@ -102,14 +103,13 @@ export function CalendarWeekView({ singleDayEvents, multiDayEvents }: IProps) {
                   style={{ height: '96px' }}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.02, ...transition }}
-                >
+                  transition={{ delay: index * 0.02, ...transition }}>
                   <div className="absolute -top-3 right-2 flex h-6 items-center">
                     {index !== 0 && (
                       <span className="text-xs text-muted-foreground">
                         {format(
                           new Date().setHours(hour, 0, 0, 0),
-                          use24HourFormat ? 'HH:00' : 'h a',
+                          use24HourFormat ? 'HH:00' : 'h a'
                         )}
                       </span>
                     )}
@@ -121,16 +121,14 @@ export function CalendarWeekView({ singleDayEvents, multiDayEvents }: IProps) {
             {/* Week grid */}
             <motion.div
               className="relative flex-1 border-l"
-              variants={staggerContainer}
-            >
+              variants={staggerContainer}>
               <div className="grid grid-cols-7 divide-x">
                 {weekDays.map((day, dayIndex) => {
                   const dayEvents = singleDayEvents.filter(
-                    (event) =>
-                      isSameDay(parseISO(event.startDate), day) ||
-                      isSameDay(parseISO(event.endDate), day),
-                  )
-                  const groupedEvents = groupEvents(dayEvents)
+                    event => isSameDay(parseISO(event.startDate), day)
+                      || isSameDay(parseISO(event.endDate), day)
+                  );
+                  const groupedEvents = groupEvents(dayEvents);
 
                   return (
                     <motion.div
@@ -138,8 +136,7 @@ export function CalendarWeekView({ singleDayEvents, multiDayEvents }: IProps) {
                       className="relative"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      transition={{ delay: dayIndex * 0.1, ...transition }}
-                    >
+                      transition={{ delay: dayIndex * 0.1, ...transition }}>
                       {hours.map((hour, index) => (
                         <motion.div
                           key={hour}
@@ -147,8 +144,7 @@ export function CalendarWeekView({ singleDayEvents, multiDayEvents }: IProps) {
                           style={{ height: '96px' }}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          transition={{ delay: index * 0.01, ...transition }}
-                        >
+                          transition={{ delay: index * 0.01, ...transition }}>
                           {index !== 0 && (
                             <div className="pointer-events-none absolute inset-x-0 top-0 border-b" />
                           )}
@@ -157,12 +153,10 @@ export function CalendarWeekView({ singleDayEvents, multiDayEvents }: IProps) {
                             date={day}
                             hour={hour}
                             minute={0}
-                            className="absolute inset-x-0 top-0  h-[48px]"
-                          >
+                            className="absolute inset-x-0 top-0  h-12">
                             <AddEditEventDialog
                               startDate={day}
-                              startTime={{ hour, minute: 0 }}
-                            >
+                              startTime={{ hour, minute: 0 }}>
                               <div className="absolute inset-0 cursor-pointer transition-colors hover:bg-secondary" />
                             </AddEditEventDialog>
                           </DroppableArea>
@@ -173,12 +167,10 @@ export function CalendarWeekView({ singleDayEvents, multiDayEvents }: IProps) {
                             date={day}
                             hour={hour}
                             minute={30}
-                            className="absolute inset-x-0 bottom-0 h-[48px]"
-                          >
+                            className="absolute inset-x-0 bottom-0 h-12">
                             <AddEditEventDialog
                               startDate={day}
-                              startTime={{ hour, minute: 30 }}
-                            >
+                              startTime={{ hour, minute: 30 }}>
                               <div className="absolute inset-0 cursor-pointer transition-colors hover:bg-secondary" />
                             </AddEditEventDialog>
                           </DroppableArea>
@@ -187,10 +179,9 @@ export function CalendarWeekView({ singleDayEvents, multiDayEvents }: IProps) {
 
                       <RenderGroupedEvents
                         groupedEvents={groupedEvents}
-                        day={day}
-                      />
+                        day={day} />
                     </motion.div>
-                  )
+                  );
                 })}
               </div>
 
@@ -200,5 +191,5 @@ export function CalendarWeekView({ singleDayEvents, multiDayEvents }: IProps) {
         </ScrollArea>
       </motion.div>
     </motion.div>
-  )
+  );
 }

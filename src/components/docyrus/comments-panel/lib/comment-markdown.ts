@@ -1,4 +1,4 @@
-import { type Value } from 'platejs'
+import { type Value } from 'platejs';
 
 import {
   BaseBoldPlugin,
@@ -9,16 +9,16 @@ import {
   BaseStrikethroughPlugin,
   BaseSubscriptPlugin,
   BaseSuperscriptPlugin,
-  BaseUnderlinePlugin,
-} from '@platejs/basic-nodes'
+  BaseUnderlinePlugin
+} from '@platejs/basic-nodes';
 import {
   MarkdownPlugin,
   deserializeMd,
   remarkMention,
-  serializeMd,
-} from '@platejs/markdown'
-import { BaseMentionPlugin } from '@platejs/mention'
-import { createSlateEditor } from 'platejs'
+  serializeMd
+} from '@platejs/markdown';
+import { BaseMentionPlugin } from '@platejs/mention';
+import { createSlateEditor } from 'platejs';
 
 const commentPlugins = [
   BaseBoldPlugin,
@@ -33,34 +33,34 @@ const commentPlugins = [
   BaseMentionPlugin,
   MarkdownPlugin.configure({
     options: {
-      remarkPlugins: [remarkMention],
-    },
-  }),
-]
+      remarkPlugins: [remarkMention]
+    }
+  })
+];
 
 function createCommentEditor(value?: Value) {
   return createSlateEditor({
     plugins: commentPlugins,
-    value,
-  })
+    value
+  });
 }
 
 export function serializeCommentMarkdown(value: Value): string {
-  const editor = createCommentEditor(value)
+  const editor = createCommentEditor(value);
 
-  return serializeMd(editor)
+  return serializeMd(editor);
 }
 
 export function deserializeCommentMarkdown(content: string): Value {
   if (Array.isArray(content)) {
-    return content as unknown as Value
+    return content as unknown as Value;
   }
 
   if (!content || typeof content !== 'string') {
-    return [{ type: 'p', children: [{ text: '' }] }] as Value
+    return [{ type: 'p', children: [{ text: '' }] }] as Value;
   }
 
-  const editor = createCommentEditor()
+  const editor = createCommentEditor();
 
-  return deserializeMd(editor, content)
+  return deserializeMd(editor, content);
 }

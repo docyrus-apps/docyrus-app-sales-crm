@@ -1,34 +1,33 @@
-'use client'
+'use client';
 
 import {
   Field,
   FieldContent,
   FieldError,
-  FieldLabel,
-} from '@/components/ui/field'
-import { Switch } from '@/components/ui/switch'
+  FieldLabel
+} from '@/components/ui/field';
+import { Switch } from '@/components/ui/switch';
 
-import { type DocyrusFormFieldProps } from './types'
+import { type DocyrusFormFieldProps } from './types';
 
 export function SwitchFormField({
   field: fieldConfig,
   form,
   disabled,
-  className,
+  className
 }: DocyrusFormFieldProps) {
   return (
     <form.Field
       name={fieldConfig.slug}
       children={(field: any) => {
-        const isInvalid =
-          field.state.meta.isTouched && !field.state.meta.isValid
+        const isInvalid
+          = field.state.meta.isTouched && !field.state.meta.isValid;
 
         return (
           <Field
             data-invalid={isInvalid}
             orientation="horizontal"
-            className={className}
-          >
+            className={className}>
             <FieldContent>
               <FieldLabel htmlFor={field.name}>{fieldConfig.name}</FieldLabel>
               {isInvalid && <FieldError errors={field.state.meta.errors} />}
@@ -39,11 +38,9 @@ export function SwitchFormField({
               onCheckedChange={field.handleChange}
               onBlur={field.handleBlur}
               aria-invalid={isInvalid}
-              disabled={disabled || fieldConfig.readOnly === true}
-            />
+              disabled={disabled || fieldConfig.readOnly === true} />
           </Field>
-        )
-      }}
-    />
-  )
+        );
+      }} />
+  );
 }

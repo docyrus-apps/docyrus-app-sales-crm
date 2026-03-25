@@ -1,24 +1,24 @@
 // @ts-nocheck
-'use client'
+'use client';
 
-import * as React from 'react'
+import * as React from 'react';
 
-import type { VariantProps } from 'class-variance-authority'
+import type { VariantProps } from 'class-variance-authority';
 
 import {
   type ResizeHandle as ResizeHandlePrimitive,
   Resizable as ResizablePrimitive,
   useResizeHandle,
   useResizeHandleState,
-} from '@platejs/resizable'
-import { cva } from 'class-variance-authority'
+} from '@platejs/resizable';
+import { cva } from 'class-variance-authority';
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
 export const mediaResizeHandleVariants = cva(
   cn(
     'top-0 flex w-6 select-none flex-col justify-center',
-    "after:flex after:h-16 after:w-[3px] after:rounded-[6px] after:bg-ring after:opacity-0 after:content-['_'] group-hover:after:opacity-100",
+    "after:flex after:h-16 after:w-[3px] after:rounded-[6px] after:bg-ring after:opacity-0 after:content-['_'] group-hover:after:opacity-100"
   ),
   {
     variants: {
@@ -27,8 +27,8 @@ export const mediaResizeHandleVariants = cva(
         right: '-right-3 -mr-3 items-end pr-3',
       },
     },
-  },
-)
+  }
+);
 
 const resizeHandleVariants = cva('absolute z-40', {
   variants: {
@@ -39,7 +39,7 @@ const resizeHandleVariants = cva('absolute z-40', {
       top: 'w-full cursor-row-resize',
     },
   },
-})
+});
 
 export function ResizeHandle({
   className,
@@ -47,22 +47,22 @@ export function ResizeHandle({
   ...props
 }: React.ComponentProps<typeof ResizeHandlePrimitive> &
   VariantProps<typeof resizeHandleVariants>) {
-  const state = useResizeHandleState(options ?? {})
-  const resizeHandle = useResizeHandle(state)
+  const state = useResizeHandleState(options ?? {});
+  const resizeHandle = useResizeHandle(state);
 
-  if (state.readOnly) return null
+  if (state.readOnly) return null;
 
   return (
     <div
       className={cn(
         resizeHandleVariants({ direction: options?.direction }),
-        className,
+        className
       )}
       data-resizing={state.isResizing}
       {...resizeHandle.props}
       {...props}
     />
-  )
+  );
 }
 
 const resizableVariants = cva('', {
@@ -73,7 +73,7 @@ const resizableVariants = cva('', {
       right: 'ml-auto',
     },
   },
-})
+});
 
 export function Resizable({
   align,
@@ -86,5 +86,5 @@ export function Resizable({
       {...props}
       className={cn(resizableVariants({ align }), className)}
     />
-  )
+  );
 }

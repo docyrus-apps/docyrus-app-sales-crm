@@ -1,86 +1,81 @@
-'use client'
+'use client';
 
-import { Settings2 } from 'lucide-react'
+import { Settings2 } from 'lucide-react';
 
-import { Button } from '@/components/ui/button'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import { Separator } from '@/components/ui/separator'
-import { Switch } from '@/components/ui/switch'
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 
-import { tUi } from '@/lib/ui-i18n'
+import { tUi } from '@/lib/ui-i18n';
 
-import { usePricingEngine } from './contexts/pricing-context'
+import { usePricingEngine } from './contexts/pricing-context';
 
 export function PricingConfigPopover() {
-  const { config, setConfig, readOnly, locale } = usePricingEngine()
+  const {
+    config, setConfig, readOnly, locale
+  } = usePricingEngine();
 
-  if (readOnly) return null
+  if (readOnly) return null;
 
   const toggles: Array<{
-    key: string
-    label: string
-    value: boolean
-    onChange: (v: boolean) => void
+    key: string; label: string; value: boolean; onChange: (v: boolean) => void;
   }> = [
     {
       key: 'showVatColumn',
       label: tUi(locale, 'pepShowVat'),
       value: config.showVatColumn,
-      onChange: (v) => setConfig({ showVatColumn: v }),
+      onChange: v => setConfig({ showVatColumn: v })
     },
     {
       key: 'showDiscountColumn',
       label: tUi(locale, 'pepShowDiscount'),
       value: config.showDiscountColumn,
-      onChange: (v) => setConfig({ showDiscountColumn: v }),
+      onChange: v => setConfig({ showDiscountColumn: v })
     },
     {
       key: 'showGrossColumn',
       label: tUi(locale, 'pepShowGross'),
       value: config.showGrossColumn,
-      onChange: (v) => setConfig({ showGrossColumn: v }),
+      onChange: v => setConfig({ showGrossColumn: v })
     },
     {
       key: 'showCategoryColumn',
       label: tUi(locale, 'pepShowCategory'),
       value: config.showCategoryColumn,
-      onChange: (v) => setConfig({ showCategoryColumn: v }),
+      onChange: v => setConfig({ showCategoryColumn: v })
     },
     {
       key: 'enableVat',
       label: tUi(locale, 'pepEnableVat'),
       value: config.enableVat,
-      onChange: (v) => setConfig({ enableVat: v }),
+      onChange: v => setConfig({ enableVat: v })
     },
     {
       key: 'enableLineDiscount',
       label: tUi(locale, 'pepEnableLineDiscount'),
       value: config.enableLineDiscount,
-      onChange: (v) => setConfig({ enableLineDiscount: v }),
+      onChange: v => setConfig({ enableLineDiscount: v })
     },
     {
       key: 'enableGlobalDiscount',
       label: tUi(locale, 'pepEnableGlobalDiscount'),
       value: config.enableGlobalDiscount,
-      onChange: (v) => setConfig({ enableGlobalDiscount: v }),
+      onChange: v => setConfig({ enableGlobalDiscount: v })
     },
     {
       key: 'enableAdjustment',
       label: tUi(locale, 'pepEnableAdjustment'),
       value: config.enableAdjustment,
-      onChange: (v) => setConfig({ enableAdjustment: v }),
+      onChange: v => setConfig({ enableAdjustment: v })
     },
     {
       key: 'discountBeforeVat',
       label: tUi(locale, 'pepDiscountBeforeVat'),
       value: config.discountBeforeVat,
-      onChange: (v) => setConfig({ discountBeforeVat: v }),
-    },
-  ]
+      onChange: v => setConfig({ discountBeforeVat: v })
+    }
+  ];
 
   return (
     <Popover>
@@ -100,8 +95,7 @@ export function PricingConfigPopover() {
                 <label className="text-sm">{toggle.label}</label>
                 <Switch
                   checked={toggle.value}
-                  onCheckedChange={toggle.onChange}
-                />
+                  onCheckedChange={toggle.onChange} />
               </div>
               {i === 3 && <Separator className="mt-3" />}
             </div>
@@ -109,5 +103,5 @@ export function PricingConfigPopover() {
         </div>
       </PopoverContent>
     </Popover>
-  )
+  );
 }

@@ -1,11 +1,11 @@
 // @ts-nocheck
-'use client'
+'use client';
 
-import * as React from 'react'
+import * as React from 'react';
 
-import type { PlateLeafProps } from 'platejs/react'
+import type { PlateLeafProps } from 'platejs/react';
 
-import { PlateLeaf } from 'platejs/react'
+import { PlateLeaf } from 'platejs/react';
 
 export function KbdLeaf(props: PlateLeafProps) {
   return (
@@ -16,5 +16,5 @@ export function KbdLeaf(props: PlateLeafProps) {
     >
       {props.children}
     </PlateLeaf>
-  )
+  );
 }

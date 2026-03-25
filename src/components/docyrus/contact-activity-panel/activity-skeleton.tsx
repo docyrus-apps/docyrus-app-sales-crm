@@ -1,12 +1,12 @@
-'use client'
+'use client';
 
-import { Skeleton } from '@/components/ui/skeleton'
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   TimelineConnector,
   TimelineContent,
   TimelineDot,
-  TimelineItem,
-} from '@/components/ui/timeline'
+  TimelineItem
+} from '@/components/ui/timeline';
 
 export function ActivitySkeleton() {
   return (
@@ -29,7 +29,7 @@ export function ActivitySkeleton() {
         </div>
       </TimelineContent>
     </TimelineItem>
-  )
+  );
 }
 
 export function ActivityLoadingSkeleton({ count = 4 }: { count?: number }) {
@@ -55,5 +55,5 @@ export function ActivityLoadingSkeleton({ count = 4 }: { count?: number }) {
         ))}
       </div>
     </div>
-  )
+  );
 }

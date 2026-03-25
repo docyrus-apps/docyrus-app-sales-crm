@@ -1,8 +1,10 @@
-'use client'
+'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  useCallback, useEffect, useMemo, useState
+} from 'react';
 
-import { AlertTriangle, Loader2 } from 'lucide-react'
+import { AlertTriangle, Loader2 } from 'lucide-react';
 
 import {
   AlertDialog,
@@ -11,26 +13,26 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { cn } from '@/lib/utils'
+  TableRow
+} from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 
 import {
   type ChildAction,
   type DataSourceRelation,
-  type RecordDeleteConfirmDialogProps,
-} from './types'
+  type RecordDeleteConfirmDialogProps
+} from './types';
 
 export function RecordDeleteConfirmDialog({
   open,
@@ -39,64 +41,67 @@ export function RecordDeleteConfirmDialog({
   relations,
   isLoadingRelations,
   onConfirm,
-  isPending,
+  isPending
 }: RecordDeleteConfirmDialogProps) {
-  const childRelations = useMemo(() => relations ?? [], [relations])
+  const childRelations = useMemo(
+    () => relations ?? [],
+    [relations]
+  );
 
-  const [childActions, setChildActions] = useState<Record<string, ChildAction>>(
-    {},
-  )
+  const [childActions, setChildActions] = useState<
+    Record<string, ChildAction>
+  >({});
 
   useEffect(() => {
-    if (!open) return
-    const initial: Record<string, ChildAction> = {}
+    if (!open) return;
+    const initial: Record<string, ChildAction> = {};
 
     for (const rel of childRelations) {
-      initial[rel.dataSourceId] = 'keep'
+      initial[rel.dataSourceId] = 'keep';
     }
-    setChildActions(initial)
-  }, [open, childRelations])
+    setChildActions(initial);
+  }, [open, childRelations]);
 
   const allAction = useMemo<ChildAction | undefined>(() => {
-    if (childRelations.length === 0) return undefined
-    const values = Object.values(childActions)
+    if (childRelations.length === 0) return undefined;
+    const values = Object.values(childActions);
 
-    if (values.length === 0) return 'keep'
-    const first = values[0]
+    if (values.length === 0) return 'keep';
+    const first = values[0];
 
-    return values.every((v) => v === first) ? first : undefined
-  }, [childActions, childRelations])
+    return values.every(v => v === first) ? first : undefined;
+  }, [childActions, childRelations]);
 
   const onAllActionChange = useCallback((value: string) => {
-    const action = value as ChildAction
+    const action = value as ChildAction;
 
     setChildActions((prev) => {
-      const next = { ...prev }
+      const next = { ...prev };
 
       for (const key of Object.keys(next)) {
-        next[key] = action
+        next[key] = action;
       }
 
-      return next
-    })
-  }, [])
+      return next;
+    });
+  }, []);
 
   const onRelationActionChange = useCallback(
     (dataSourceId: string, value: string) => {
-      setChildActions((prev) => ({
+      setChildActions(prev => ({
         ...prev,
-        [dataSourceId]: value as ChildAction,
-      }))
+        [dataSourceId]: value as ChildAction
+      }));
     },
-    [],
-  )
+    []
+  );
 
   const onConfirmClick = useCallback(() => {
-    onConfirm(childActions)
-  }, [onConfirm, childActions])
+    onConfirm(childActions);
+  }, [onConfirm, childActions]);
 
-  const count = recordCount
-  const hasChildRelations = childRelations.length > 0
+  const count = recordCount;
+  const hasChildRelations = childRelations.length > 0;
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -105,9 +110,8 @@ export function RecordDeleteConfirmDialog({
         className={cn(
           'w-[min(90vw,960px)]',
           'data-[size=default]:max-w-none sm:data-[size=default]:max-w-none',
-          hasChildRelations ? 'sm:max-w-5xl' : 'sm:max-w-xl',
-        )}
-      >
+          hasChildRelations ? 'sm:max-w-5xl' : 'sm:max-w-xl'
+        )}>
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <AlertTriangle className="size-5 text-amber-500" />
@@ -130,8 +134,7 @@ export function RecordDeleteConfirmDialog({
             childActions={childActions}
             allAction={allAction}
             onAllActionChange={onAllActionChange}
-            onRelationActionChange={onRelationActionChange}
-          />
+            onRelationActionChange={onRelationActionChange} />
         ) : null}
 
         <AlertDialogFooter>
@@ -139,14 +142,13 @@ export function RecordDeleteConfirmDialog({
           <Button
             variant="destructive"
             disabled={isPending || isLoadingRelations}
-            onClick={onConfirmClick}
-          >
+            onClick={onConfirmClick}>
             {isPending ? 'Deleting...' : 'Delete'}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }
 
 function ChildRelationsForm({
@@ -154,13 +156,13 @@ function ChildRelationsForm({
   childActions,
   allAction,
   onAllActionChange,
-  onRelationActionChange,
+  onRelationActionChange
 }: {
-  childRelations: Array<DataSourceRelation>
-  childActions: Record<string, ChildAction>
-  allAction: ChildAction | undefined
-  onAllActionChange: (value: string) => void
-  onRelationActionChange: (dataSourceId: string, value: string) => void
+  childRelations: Array<DataSourceRelation>;
+  childActions: Record<string, ChildAction>;
+  allAction: ChildAction | undefined;
+  onAllActionChange: (value: string) => void;
+  onRelationActionChange: (dataSourceId: string, value: string) => void;
 }) {
   return (
     <div className="space-y-3">
@@ -176,8 +178,7 @@ function ChildRelationsForm({
         <RadioGroup
           value={allAction ?? ''}
           onValueChange={onAllActionChange}
-          className="flex items-center gap-6"
-        >
+          className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <RadioGroupItem value="keep" id="all-keep" />
             <Label htmlFor="all-keep" className="text-sm">
@@ -196,43 +197,42 @@ function ChildRelationsForm({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[180px]">Related Docybase</TableHead>
+            <TableHead className="w-45">Related Docybase</TableHead>
             <TableHead>Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {childRelations.map((rel) => (
+          {childRelations.map(rel => (
             <ChildRelationRow
               key={rel.dataSourceId}
               relation={rel}
               action={childActions[rel.dataSourceId] ?? 'keep'}
-              onActionChange={onRelationActionChange}
-            />
+              onActionChange={onRelationActionChange} />
           ))}
         </TableBody>
       </Table>
     </div>
-  )
+  );
 }
 
 function ChildRelationRow({
   relation,
   action,
-  onActionChange,
+  onActionChange
 }: {
-  relation: DataSourceRelation
-  action: ChildAction
-  onActionChange: (dataSourceId: string, value: string) => void
+  relation: DataSourceRelation;
+  action: ChildAction;
+  onActionChange: (dataSourceId: string, value: string) => void;
 }) {
-  const keepId = `${relation.dataSourceId}-keep`
-  const deleteId = `${relation.dataSourceId}-delete`
+  const keepId = `${relation.dataSourceId}-keep`;
+  const deleteId = `${relation.dataSourceId}-delete`;
 
   const onChange = useCallback(
     (value: string) => {
-      onActionChange(relation.dataSourceId, value)
+      onActionChange(relation.dataSourceId, value);
     },
-    [onActionChange, relation.dataSourceId],
-  )
+    [onActionChange, relation.dataSourceId]
+  );
 
   return (
     <TableRow>
@@ -244,8 +244,7 @@ function ChildRelationRow({
         <RadioGroup
           value={action}
           onValueChange={onChange}
-          className="flex items-center gap-6"
-        >
+          className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <RadioGroupItem value="keep" id={keepId} />
             <Label htmlFor={keepId} className="text-sm">
@@ -261,5 +260,5 @@ function ChildRelationRow({
         </RadioGroup>
       </TableCell>
     </TableRow>
-  )
+  );
 }

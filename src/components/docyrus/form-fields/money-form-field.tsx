@@ -1,32 +1,32 @@
-'use client'
+'use client';
 
-import { Field, FieldError, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+  SelectValue
+} from '@/components/ui/select';
 
-import { COMMON_CURRENCIES, getCompanionFieldSlug } from './lib/utils'
-import { type DocyrusFormFieldProps } from './types'
+import { COMMON_CURRENCIES, getCompanionFieldSlug } from './lib/utils';
+import { type DocyrusFormFieldProps } from './types';
 
 export function MoneyFormField({
   field: fieldConfig,
   form,
   disabled,
-  className,
+  className
 }: DocyrusFormFieldProps) {
-  const currencySlug = getCompanionFieldSlug(fieldConfig.slug, 'currency')
+  const currencySlug = getCompanionFieldSlug(fieldConfig.slug, 'currency');
 
   return (
     <form.Field
       name={fieldConfig.slug}
       children={(field: any) => {
-        const isInvalid =
-          field.state.meta.isTouched && !field.state.meta.isValid
+        const isInvalid
+          = field.state.meta.isTouched && !field.state.meta.isValid;
 
         return (
           <Field data-invalid={isInvalid} className={className}>
@@ -40,43 +40,38 @@ export function MoneyFormField({
                 value={field.state.value ?? ''}
                 onBlur={field.handleBlur}
                 onChange={(e) => {
-                  const val = e.target.value
+                  const val = e.target.value;
 
-                  field.handleChange(val === '' ? null : Number(val))
+                  field.handleChange(val === '' ? null : Number(val));
                 }}
                 aria-invalid={isInvalid}
                 disabled={disabled || fieldConfig.readOnly === true}
-                className="flex-1"
-              />
+                className="flex-1" />
               <form.Field
                 name={currencySlug}
                 children={(currencyField: any) => (
                   <Select
                     value={currencyField.state.value ?? 'USD'}
                     onValueChange={currencyField.handleChange}
-                    disabled={disabled || fieldConfig.readOnly === true}
-                  >
+                    disabled={disabled || fieldConfig.readOnly === true}>
                     <SelectTrigger
                       onBlur={currencyField.handleBlur}
-                      className="w-24 shrink-0"
-                    >
+                      className="w-24 shrink-0">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {COMMON_CURRENCIES.map((c) => (
+                      {COMMON_CURRENCIES.map(c => (
                         <SelectItem key={c.code} value={c.code}>
                           {c.code}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                )}
-              />
+                )} />
             </div>
             {isInvalid && <FieldError errors={field.state.meta.errors} />}
           </Field>
-        )
-      }}
-    />
-  )
+        );
+      }} />
+  );
 }

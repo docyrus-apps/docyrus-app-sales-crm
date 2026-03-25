@@ -1,42 +1,37 @@
-'use client'
+'use client';
 
-import { Input } from '@/components/ui/input'
+import { Input } from '@/components/ui/input';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { TableCell, TableRow } from '@/components/ui/table'
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+} from '@/components/ui/select';
+import { TableCell, TableRow } from '@/components/ui/table';
 
-import { formatMoney } from '@/components/docyrus/form-fields/lib/utils'
+import { formatMoney } from '@/components/docyrus/form-fields/lib/utils';
 
-import { usePricingEngine } from './contexts/pricing-context'
-import { type ILineItemRow } from './interfaces'
-import { PricingCategoryCell } from './pricing-category-cell'
-import { PricingLineRowActions } from './pricing-line-row-actions'
-import { PricingProductCell } from './pricing-product-cell'
+import { usePricingEngine } from './contexts/pricing-context';
+import { type ILineItemRow } from './interfaces';
+import { PricingCategoryCell } from './pricing-category-cell';
+import { PricingLineRowActions } from './pricing-line-row-actions';
+import { PricingProductCell } from './pricing-product-cell';
 
 interface PricingLineRowProps {
-  row: ILineItemRow
+  row: ILineItemRow;
 }
 
 export function PricingLineRow({ row }: PricingLineRowProps) {
-  const { updateLineItem, config, currency, readOnly } = usePricingEngine()
+  const {
+    updateLineItem, config, currency, readOnly
+  } = usePricingEngine();
 
-  const handleNumericChange = (
-    field: 'quantity' | 'unitPrice' | 'discountPercent',
-    value: string,
-  ) => {
-    const parsed = Number.parseFloat(value)
+  const handleNumericChange = (field: 'quantity' | 'unitPrice' | 'discountPercent', value: string) => {
+    const parsed = Number.parseFloat(value);
 
     if (!Number.isNaN(parsed) && parsed >= 0) {
-      updateLineItem(row.id, { [field]: parsed })
+      updateLineItem(row.id, { [field]: parsed });
     } else if (value === '') {
-      updateLineItem(row.id, { [field]: 0 })
+      updateLineItem(row.id, { [field]: 0 });
     }
-  }
+  };
 
   return (
     <TableRow className="group">
@@ -44,12 +39,8 @@ export function PricingLineRow({ row }: PricingLineRowProps) {
         {row.position + 1}
       </TableCell>
 
-      <TableCell className="min-w-[180px]">
-        <PricingProductCell
-          lineId={row.id}
-          name={row.name}
-          productId={row.productId}
-        />
+      <TableCell className="min-w-45">
+        <PricingProductCell lineId={row.id} name={row.name} productId={row.productId} />
       </TableCell>
 
       {config.showCategoryColumn && (
@@ -57,8 +48,7 @@ export function PricingLineRow({ row }: PricingLineRowProps) {
           <PricingCategoryCell
             lineId={row.id}
             category={row.category}
-            categoryId={row.categoryId}
-          />
+            categoryId={row.categoryId} />
         </TableCell>
       )}
 
@@ -66,23 +56,21 @@ export function PricingLineRow({ row }: PricingLineRowProps) {
         <Input
           type="number"
           value={row.quantity || ''}
-          onChange={(e) => handleNumericChange('quantity', e.target.value)}
+          onChange={e => handleNumericChange('quantity', e.target.value)}
           className="h-8 w-[70px] border-0 bg-transparent px-1 text-right shadow-none focus-visible:ring-1"
           min={0}
-          disabled={readOnly}
-        />
+          disabled={readOnly} />
       </TableCell>
 
       <TableCell>
         <Input
           type="number"
           value={row.unitPrice || ''}
-          onChange={(e) => handleNumericChange('unitPrice', e.target.value)}
-          className="h-8 w-[100px] border-0 bg-transparent px-1 text-right shadow-none focus-visible:ring-1"
+          onChange={e => handleNumericChange('unitPrice', e.target.value)}
+          className="h-8 w-25 border-0 bg-transparent px-1 text-right shadow-none focus-visible:ring-1"
           min={0}
           step="0.01"
-          disabled={readOnly}
-        />
+          disabled={readOnly} />
       </TableCell>
 
       <TableCell className="text-right text-sm tabular-nums">
@@ -96,22 +84,17 @@ export function PricingLineRow({ row }: PricingLineRowProps) {
               <Input
                 type="number"
                 value={row.discountPercent || ''}
-                onChange={(e) =>
-                  handleNumericChange('discountPercent', e.target.value)
-                }
+                onChange={e => handleNumericChange('discountPercent', e.target.value)}
                 className="h-8 w-[65px] border-0 bg-transparent px-1 text-right shadow-none focus-visible:ring-1"
                 min={0}
                 max={100}
-                disabled={readOnly}
-              />
+                disabled={readOnly} />
             ) : (
               <span className="text-muted-foreground text-sm">—</span>
             )}
           </TableCell>
           <TableCell className="text-right text-sm tabular-nums">
-            {row.discountAmount > 0
-              ? `-${formatMoney(row.discountAmount, currency.code)}`
-              : '—'}
+            {row.discountAmount > 0 ? `-${formatMoney(row.discountAmount, currency.code)}` : '—'}
           </TableCell>
         </>
       )}
@@ -126,16 +109,13 @@ export function PricingLineRow({ row }: PricingLineRowProps) {
             {config.enableVat ? (
               <Select
                 value={String(row.vatRate)}
-                onValueChange={(val) =>
-                  updateLineItem(row.id, { vatRate: Number(val) })
-                }
-                disabled={readOnly}
-              >
+                onValueChange={val => updateLineItem(row.id, { vatRate: Number(val) })}
+                disabled={readOnly}>
                 <SelectTrigger className="h-8 w-[75px] border-0 bg-transparent shadow-none focus:ring-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {config.vatRates.map((rate) => (
+                  {config.vatRates.map(rate => (
                     <SelectItem key={rate} value={String(rate)}>
                       {rate}%
                     </SelectItem>
@@ -147,9 +127,7 @@ export function PricingLineRow({ row }: PricingLineRowProps) {
             )}
           </TableCell>
           <TableCell className="text-right text-sm tabular-nums">
-            {row.vatAmount > 0
-              ? formatMoney(row.vatAmount, currency.code)
-              : '—'}
+            {row.vatAmount > 0 ? formatMoney(row.vatAmount, currency.code) : '—'}
           </TableCell>
         </>
       )}
@@ -160,11 +138,11 @@ export function PricingLineRow({ row }: PricingLineRowProps) {
         </TableCell>
       )}
 
-      <TableCell className="w-[72px]">
+      <TableCell className="w-18">
         <div className="opacity-0 transition-opacity group-hover:opacity-100">
           <PricingLineRowActions lineId={row.id} />
         </div>
       </TableCell>
     </TableRow>
-  )
+  );
 }

@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ComponentRef,
   type ComponentProps,
   type ReactNode,
   type RefObject
@@ -96,6 +97,7 @@ interface EditableRecordDetailContextValue {
   fieldMap: Map<string, RecordDetailField>;
   valuesRef: RefObject<Record<string, unknown>>;
   changedFields: Set<string>;
+  trackChanges: boolean;
   handleFieldValueChange: (slug: string, value: unknown) => void;
   readOnly: boolean;
   disabled: boolean;
@@ -116,13 +118,11 @@ const EditableRecordDetailContext
 function MacroFormField({
   slug,
   valuesRef,
-  onFieldChangeRef,
   resetSignal,
   children
 }: {
   slug: string;
   valuesRef: RefObject<Record<string, unknown>>;
-  onFieldChangeRef: RefObject<(slug: string, v: unknown) => void>;
   resetSignal: number;
   children: (field: any) => ReactNode;
 }) {
@@ -141,9 +141,8 @@ function MacroFormField({
     (v: unknown) => {
       setLocalValue(v);
       valuesRef.current[slug] = v;
-      onFieldChangeRef.current(slug, v);
     },
-    [slug, valuesRef, onFieldChangeRef]
+    [slug, valuesRef]
   );
 
   return (
@@ -167,8 +166,7 @@ function MacroFormField({
  * MacroFormField component with local state.
  */
 function useMacroForm(
-  record: Record<string, unknown>,
-  onFieldChangeRef: RefObject<(slug: string, v: unknown) => void>
+  record: Record<string, unknown>
 ) {
   const valuesRef = useRef<Record<string, unknown>>({ ...record });
   const resetSignalRef = useRef(0);
@@ -185,7 +183,6 @@ function useMacroForm(
       <MacroFormField
         slug={name}
         valuesRef={valuesRef}
-        onFieldChangeRef={onFieldChangeRef}
         resetSignal={resetSignalRef.current}>
         {children}
       </MacroFormField>
@@ -210,7 +207,8 @@ function EditableRecordDetailActionBar({
   onSave,
   onDiscard,
   sideOffset = 16,
-  isSaving
+  isSaving,
+  portalContainer
 }: {
   changedFieldCount: number;
   getChanges: () => Array<FieldChange>;
@@ -218,6 +216,7 @@ function EditableRecordDetailActionBar({
   onDiscard: () => void;
   sideOffset?: number;
   isSaving: boolean;
+  portalContainer?: Element | DocumentFragment | null;
 }) {
   const [popoverOpen, setPopoverOpen] = useState(false);
 
@@ -226,13 +225,16 @@ function EditableRecordDetailActionBar({
   }, [onSave]);
 
   const changes = useMemo(
-    () => getChanges(),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- changedFieldCount triggers re-derive
+    () => changedFieldCount === 0 ? [] : getChanges(),
     [getChanges, changedFieldCount]
   );
 
   return (
-    <ActionBar open onOpenChange={noop} sideOffset={sideOffset}>
+    <ActionBar
+      open
+      onOpenChange={noop}
+      sideOffset={sideOffset}
+      portalContainer={portalContainer}>
       <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
         <PopoverTrigger asChild>
           <button
@@ -332,6 +334,8 @@ export interface EditableRecordDetailFieldProps
     | 'appSlug'
     | 'dataSourceSlug'
     | 'record'
+    | 'trackChanges'
+    | 'changed'
   > {
   /** Field slug — looks up config from context */
   slug: string;
@@ -384,15 +388,13 @@ const EditableRecordDetailField = forwardRef<
       onValueChange={v => ctx.handleFieldValueChange(slug, v)}
       enumOptions={enumOptions}
       record={ctx.valuesRef.current}
+      trackChanges={ctx.trackChanges}
+      changed={isChanged}
       readOnly={ctx.readOnly || fieldReadOnly}
       disabled={ctx.disabled}
       appSlug={appSlug}
       dataSourceSlug={dataSourceSlug}
-      className={cn(
-        isChanged
-        && 'bg-amber-50 dark:bg-amber-900/20 border-s-2 border-s-amber-400',
-        !showLabel && className
-      )}
+      className={cn(!showLabel && className)}
       {...props} />
   );
 
@@ -429,6 +431,8 @@ export interface EditableRecordDetailProps
   readOnly?: boolean;
   /** Whether all fields are disabled */
   disabled?: boolean;
+  /** Whether changed fields should be visually highlighted */
+  trackChanges?: boolean;
   /** Side offset for the floating action bar */
   actionBarSideOffset?: number;
   /** Content */
@@ -448,6 +452,7 @@ const EditableRecordDetail = forwardRef<
       form: externalForm,
       readOnly = false,
       disabled = false,
+      trackChanges = true,
       actionBarSideOffset,
       children,
       className,
@@ -455,6 +460,8 @@ const EditableRecordDetail = forwardRef<
     },
     ref
   ) => {
+    const containerRef = useRef<ComponentRef<'div'>>(null);
+
     const fieldMap = useMemo(() => {
       const map = new Map<string, RecordDetailField>();
 
@@ -507,7 +514,7 @@ const EditableRecordDetail = forwardRef<
       form: internalForm,
       valuesRef,
       resetForm
-    } = useMacroForm(record, onFieldChangeRef);
+    } = useMacroForm(record);
 
     const activeForm = externalForm ?? internalForm;
 
@@ -559,6 +566,7 @@ const EditableRecordDetail = forwardRef<
         fieldMap,
         valuesRef,
         changedFields,
+        trackChanges,
         handleFieldValueChange,
         readOnly,
         disabled,
@@ -573,6 +581,7 @@ const EditableRecordDetail = forwardRef<
         fieldMap,
         valuesRef,
         changedFields,
+        trackChanges,
         handleFieldValueChange,
         readOnly,
         disabled,
@@ -587,7 +596,11 @@ const EditableRecordDetail = forwardRef<
     return (
       <EditableRecordDetailContext value={ctxValue}>
         <div
-          ref={ref}
+          ref={(node) => {
+            containerRef.current = node;
+            if (typeof ref === 'function') ref(node);
+            else if (ref) ref.current = node;
+          }}
           data-slot="editable-record-detail"
           className={cn('relative w-full', className)}
           {...props}>
@@ -600,7 +613,8 @@ const EditableRecordDetail = forwardRef<
             onSave={handleSave}
             onDiscard={handleCancel}
             sideOffset={actionBarSideOffset}
-            isSaving={isSaving} />
+            isSaving={isSaving}
+            portalContainer={containerRef.current} />
         )}
       </EditableRecordDetailContext>
     );

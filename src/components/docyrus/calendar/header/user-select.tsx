@@ -1,19 +1,19 @@
-'use client'
+'use client';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { AvatarGroup } from '@/components/ui/avatar-group'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AvatarGroup } from '@/components/ui/avatar-group';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+  SelectValue
+} from '@/components/ui/select';
 
-import { useCalendar } from '../contexts/calendar-context'
+import { useCalendar } from '../contexts/calendar-context';
 
 export function UserSelect() {
-  const { users, selectedUserId, filterEventsBySelectedUser } = useCalendar()
+  const { users, selectedUserId, filterEventsBySelectedUser } = useCalendar();
 
   return (
     <Select value={selectedUserId} onValueChange={filterEventsBySelectedUser}>
@@ -23,12 +23,11 @@ export function UserSelect() {
       <SelectContent align="end">
         <SelectItem value="all">
           <AvatarGroup className="mx-2 flex items-center" max={3} size={24}>
-            {users.map((user) => (
+            {users.map(user => (
               <Avatar key={user.id} className="size-6 text-xs">
                 <AvatarImage
                   src={user.picturePath ?? undefined}
-                  alt={user.name}
-                />
+                  alt={user.name} />
                 <AvatarFallback className="text-xs">
                   {user.name[0]}
                 </AvatarFallback>
@@ -38,18 +37,16 @@ export function UserSelect() {
           All
         </SelectItem>
 
-        {users.map((user) => (
+        {users.map(user => (
           <SelectItem
             key={user.id}
             value={user.id}
-            className="flex-1 cursor-pointer"
-          >
+            className="flex-1 cursor-pointer">
             <div className="flex items-center gap-2">
               <Avatar key={user.id} className="size-6">
                 <AvatarImage
                   src={user.picturePath ?? undefined}
-                  alt={user.name}
-                />
+                  alt={user.name} />
                 <AvatarFallback className="text-xs">
                   {user.name[0]}
                 </AvatarFallback>
@@ -61,5 +58,5 @@ export function UserSelect() {
         ))}
       </SelectContent>
     </Select>
-  )
+  );
 }
