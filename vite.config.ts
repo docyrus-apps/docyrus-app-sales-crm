@@ -68,7 +68,7 @@ export default defineConfig({
     },
   },
   server: {
-    allowedHosts: ['.e2b.dev', '.docy.app', '.docy.dev', '.docyrus.app'],
+    allowedHosts: ['.e2b.dev', '.e2b.app', '.docy.app', '.docy.dev', '.docyrus.app'],
     headers: {
       'Content-Security-Policy':
         "frame-ancestors 'self' https://localhost:4200 http://localhost:5173 http://localhost:3000 https://localhost:3000 https://studio.docyrus.app https://docyrus.app https://next.docyrus.app https://docy.app",
