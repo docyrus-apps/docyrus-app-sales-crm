@@ -7,7 +7,7 @@ export function setApiClient(client: RestApiClient) {
   apiClient = client
 
   // Add request interceptor for custom param handling
-  apiClient.use({
+  apiClient.addInterceptor({
     request: (config) => {
       if (config.params) {
         const params = { ...config.params }
