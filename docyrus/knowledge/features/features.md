@@ -34,3 +34,19 @@ This section highlights the files that appear to integrate with Docyrus APIs or 
 - +7 more
 
 <!-- docyrus-knowledge:auto:end -->
+
+<!-- docyrus-project-plan:features:begin -->
+## Planned Features
+
+Features tracked in the project plan.
+
+- Runtime, Auth & Developer Tooling
+- Executive Dashboard
+- Leads & Deals Pipeline
+- Companies & Contacts Workspace
+- Tasks, Activities & Calendar
+- Products & Sales Orders
+- Inbox, Email & Notes
+- Reports & Analytics
+
+<!-- docyrus-project-plan:features:end -->

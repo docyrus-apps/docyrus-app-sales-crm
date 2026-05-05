@@ -1,0 +1,362 @@
+{
+  "version": 2,
+  "projectVersion": "0.1.0",
+  "phases": [
+    {
+      "id": "phase-foundation",
+      "title": "Foundation Hardening",
+      "slug": "foundation-hardening",
+      "summary": "Stabilize the shared runtime, auth flow, routing shell, and data safety issues before expanding feature work.",
+      "projectVersion": "0.1.0",
+      "order": 1
+    },
+    {
+      "id": "phase-crm-core",
+      "title": "CRM Core Workflows",
+      "slug": "crm-core-workflows",
+      "summary": "Bring lead, deal, company, and contact workflows to a production-ready baseline.",
+      "projectVersion": "0.1.0",
+      "order": 2
+    },
+    {
+      "id": "phase-sales-ops",
+      "title": "Sales Operations",
+      "slug": "sales-operations",
+      "summary": "Strengthen task, activity, product, and sales order workflows that support day-to-day pipeline execution.",
+      "projectVersion": "0.1.0",
+      "order": 3
+    },
+    {
+      "id": "phase-communications-insights",
+      "title": "Communications & Insights",
+      "slug": "communications-insights",
+      "summary": "Improve inbox, email, calendar, dashboard, and reporting experiences for daily visibility and follow-up.",
+      "projectVersion": "0.1.0",
+      "order": 4
+    },
+    {
+      "id": "phase-quality-release",
+      "title": "Quality & Release Readiness",
+      "slug": "quality-release-readiness",
+      "summary": "Add verification coverage, performance review, and release preparation for a stable first delivery.",
+      "projectVersion": "0.1.0",
+      "order": 5
+    }
+  ],
+  "features": [
+    {
+      "id": "feature-runtime-auth-v1",
+      "featureGroupId": "feature-runtime-auth",
+      "title": "Runtime, Auth & Developer Tooling",
+      "slug": "runtime-auth-developer-tooling",
+      "summary": "The shared app shell, Docyrus authentication, query runtime, command infrastructure, and developer tooling at the root of the SPA.",
+      "version": 1,
+      "order": 1
+    },
+    {
+      "id": "feature-dashboard-v1",
+      "featureGroupId": "feature-dashboard",
+      "title": "Executive Dashboard",
+      "slug": "executive-dashboard",
+      "summary": "Home screen metrics and operational summaries for deals, leads, tasks, and recent pipeline activity.",
+      "version": 1,
+      "order": 2
+    },
+    {
+      "id": "feature-deals-leads-v1",
+      "featureGroupId": "feature-deals-leads",
+      "title": "Leads & Deals Pipeline",
+      "slug": "leads-deals-pipeline",
+      "summary": "Pipeline views, detail flows, conversion paths, and related revenue records for opportunity management.",
+      "version": 1,
+      "order": 3
+    },
+    {
+      "id": "feature-accounts-contacts-v1",
+      "featureGroupId": "feature-accounts-contacts",
+      "title": "Companies & Contacts Workspace",
+      "slug": "companies-contacts-workspace",
+      "summary": "Company and contact directories with relationship-aware detail pages and cross-linked CRM context.",
+      "version": 1,
+      "order": 4
+    },
+    {
+      "id": "feature-sales-execution-v1",
+      "featureGroupId": "feature-sales-execution",
+      "title": "Tasks, Activities & Calendar",
+      "slug": "tasks-activities-calendar",
+      "summary": "Execution workflows for follow-ups, meetings, and time-based coordination across the sales team.",
+      "version": 1,
+      "order": 5
+    },
+    {
+      "id": "feature-catalog-orders-v1",
+      "featureGroupId": "feature-catalog-orders",
+      "title": "Products & Sales Orders",
+      "slug": "products-sales-orders",
+      "summary": "Catalog management and order-building workflows that connect products, pricing, and customer orders.",
+      "version": 1,
+      "order": 6
+    },
+    {
+      "id": "feature-communications-v1",
+      "featureGroupId": "feature-communications",
+      "title": "Inbox, Email & Notes",
+      "slug": "inbox-email-notes",
+      "summary": "Communication views and lightweight note-taking that keep account context and follow-up history visible.",
+      "version": 1,
+      "order": 7
+    },
+    {
+      "id": "feature-reporting-v1",
+      "featureGroupId": "feature-reporting",
+      "title": "Reports & Analytics",
+      "slug": "reports-analytics",
+      "summary": "Pipeline, lead, productivity, and order analytics used by managers and reps to track sales performance.",
+      "version": 1,
+      "order": 8
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-runtime-stabilize",
+      "featureId": "feature-runtime-auth-v1",
+      "phaseId": "phase-foundation",
+      "title": "Stabilize root runtime, auth boot, and shared provider wiring",
+      "type": "work",
+      "assignee": "agent",
+      "status": "planned",
+      "summary": "Audit root providers, auth loading states, Docyrus client registration, and shared runtime assumptions so the SPA boots consistently in dev and production.",
+      "acceptanceCriteria": [
+        "Root providers are ordered consistently for auth, query, i18n, dialogs, and routing.",
+        "Authenticated and unauthenticated boot states avoid dead screens or premature data calls.",
+        "Shared runtime concerns are documented in repo knowledge or plan context."
+      ],
+      "order": 1
+    },
+    {
+      "id": "task-null-safety-sweep",
+      "featureId": "feature-runtime-auth-v1",
+      "phaseId": "phase-foundation",
+      "title": "Sweep relation and enum rendering for null-safe UI access",
+      "type": "bug-fix",
+      "assignee": "agent",
+      "status": "planned",
+      "summary": "Review list cards, dashboards, and detail summaries for unsafe `.name` access on nullable relation or enum values and fix the high-risk call sites.",
+      "acceptanceCriteria": [
+        "UI code does not assume nullable relation objects are always present.",
+        "Known `.name` crashes in dashboard and detail surfaces are eliminated.",
+        "Changes are verified by targeted build or type checks."
+      ],
+      "order": 2
+    },
+    {
+      "id": "task-build-typecheck-baseline",
+      "featureId": "feature-runtime-auth-v1",
+      "phaseId": "phase-foundation",
+      "title": "Establish a clean build and typecheck baseline",
+      "type": "work",
+      "assignee": "agent",
+      "status": "planned",
+      "summary": "Resolve current repo-level build and TypeScript blockers so future CRM feature work can be verified reliably.",
+      "acceptanceCriteria": [
+        "`pnpm build` succeeds consistently.",
+        "TypeScript verification path is documented or repaired.",
+        "Known toolchain warnings blocking routine validation are captured in the plan."
+      ],
+      "order": 3
+    },
+    {
+      "id": "task-dashboard-productionize",
+      "featureId": "feature-dashboard-v1",
+      "phaseId": "phase-crm-core",
+      "title": "Productionize dashboard metrics and summary cards",
+      "type": "new-implementation",
+      "assignee": "agent",
+      "status": "planned",
+      "summary": "Refine dashboard calculations, empty states, and summary panels so the landing page reflects trustworthy sales operations metrics.",
+      "acceptanceCriteria": [
+        "Dashboard cards use real operational data and stable fallback states.",
+        "Recent deals, leads, and upcoming work lists render safely with partial records.",
+        "The screen reads as a finished end-user dashboard rather than a prototype."
+      ],
+      "order": 1
+    },
+    {
+      "id": "task-deals-pipeline",
+      "featureId": "feature-deals-leads-v1",
+      "phaseId": "phase-crm-core",
+      "title": "Harden deals pipeline views and deal detail flows",
+      "type": "new-implementation",
+      "assignee": "agent",
+      "status": "planned",
+      "summary": "Bring deals list, kanban, detail panels, pricing, and related records into a cohesive opportunity-management workflow.",
+      "acceptanceCriteria": [
+        "Deals can be reviewed in both summary and detail contexts.",
+        "Deal detail surfaces related products, orders, comments, and files consistently.",
+        "Stage and organization rendering is reliable across list and detail views."
+      ],
+      "order": 2
+    },
+    {
+      "id": "task-leads-conversion",
+      "featureId": "feature-deals-leads-v1",
+      "phaseId": "phase-crm-core",
+      "title": "Complete lead qualification and conversion workflow",
+      "type": "new-implementation",
+      "assignee": "agent",
+      "status": "planned",
+      "summary": "Tighten lead list, kanban, detail, and conversion flows so reps can move qualified leads into active deals without losing context.",
+      "acceptanceCriteria": [
+        "Lead status and source data render consistently across list, board, and detail pages.",
+        "Conversion flows preserve key company and contact context.",
+        "Lead empty states and actions feel complete for end users."
+      ],
+      "order": 3
+    },
+    {
+      "id": "task-companies-contacts",
+      "featureId": "feature-accounts-contacts-v1",
+      "phaseId": "phase-crm-core",
+      "title": "Polish company and contact workspaces",
+      "type": "new-implementation",
+      "assignee": "agent",
+      "status": "planned",
+      "summary": "Refine company and contact directories plus detail screens to improve relationship visibility across deals, leads, and communications.",
+      "acceptanceCriteria": [
+        "Company and contact detail pages show linked CRM records clearly.",
+        "Directory cards and detail headers render consistent end-user labels and status chips.",
+        "Navigation between account, contact, lead, and deal records is intuitive."
+      ],
+      "order": 4
+    },
+    {
+      "id": "task-tasks-activities",
+      "featureId": "feature-sales-execution-v1",
+      "phaseId": "phase-sales-ops",
+      "title": "Strengthen task and activity management flows",
+      "type": "new-implementation",
+      "assignee": "agent",
+      "status": "planned",
+      "summary": "Improve task lists, quick-create flows, activity handling, and status updates for real day-to-day follow-up work.",
+      "acceptanceCriteria": [
+        "Task creation and editing flows are reliable from both global and contextual entry points.",
+        "Activity views expose clear next actions and status context.",
+        "Mutations refresh the relevant cached lists and detail views."
+      ],
+      "order": 1
+    },
+    {
+      "id": "task-calendar-operations",
+      "featureId": "feature-sales-execution-v1",
+      "phaseId": "phase-sales-ops",
+      "title": "Refine calendar scheduling experience",
+      "type": "new-implementation",
+      "assignee": "agent",
+      "status": "planned",
+      "summary": "Improve the event calendar experience so meetings and time-based work render with stable labels, assignments, and defaults.",
+      "acceptanceCriteria": [
+        "Calendar events render with safe user or calendar labels.",
+        "Time-based records map cleanly into the UI event model.",
+        "Empty and loading states are usable for sales teams."
+      ],
+      "order": 2
+    },
+    {
+      "id": "task-products-orders",
+      "featureId": "feature-catalog-orders-v1",
+      "phaseId": "phase-sales-ops",
+      "title": "Complete product and sales order workflows",
+      "type": "new-implementation",
+      "assignee": "agent",
+      "status": "planned",
+      "summary": "Tighten catalog forms, line-item pricing, and sales order detail views so quote-to-order handoff feels operationally complete.",
+      "acceptanceCriteria": [
+        "Products can be managed with correct category, unit, price, and tax metadata.",
+        "Sales orders render organization, status, totals, and line items clearly.",
+        "Pricing panels and order summaries remain consistent across create and detail flows."
+      ],
+      "order": 3
+    },
+    {
+      "id": "task-inbox-email-notes",
+      "featureId": "feature-communications-v1",
+      "phaseId": "phase-communications-insights",
+      "title": "Improve inbox, email, and notes usability",
+      "type": "new-implementation",
+      "assignee": "agent",
+      "status": "planned",
+      "summary": "Align communication surfaces with CRM context so reps can review threads, notes, and related records without leaving the workflow.",
+      "acceptanceCriteria": [
+        "Inbox and email screens expose meaningful CRM context for related records.",
+        "Notes behave as a lightweight but usable personal workspace.",
+        "Communication surfaces avoid dead ends and unfinished states."
+      ],
+      "order": 1
+    },
+    {
+      "id": "task-reports-analytics",
+      "featureId": "feature-reporting-v1",
+      "phaseId": "phase-communications-insights",
+      "title": "Harden sales reports and analytics views",
+      "type": "new-implementation",
+      "assignee": "agent",
+      "status": "planned",
+      "summary": "Review chart queries, summaries, and empty states so reporting tabs provide trustworthy operational insights.",
+      "acceptanceCriteria": [
+        "Report tabs render accurate pipeline, lead, activity, and order summaries.",
+        "Chart labels and aggregations match the underlying Docyrus data shape.",
+        "Analytics views remain usable when source datasets are sparse."
+      ],
+      "order": 2
+    },
+    {
+      "id": "task-verification-suite",
+      "featureId": "feature-runtime-auth-v1",
+      "phaseId": "phase-quality-release",
+      "title": "Add targeted verification for critical CRM flows",
+      "type": "api-test",
+      "assignee": "agent",
+      "status": "planned",
+      "summary": "Introduce or document repeatable verification for the highest-risk flows across auth, data loading, and core record mutations.",
+      "acceptanceCriteria": [
+        "Critical flows have a repeatable verification path.",
+        "API-facing hooks or workflows with elevated risk are covered by targeted checks.",
+        "Verification guidance is captured in repo docs or knowledge."
+      ],
+      "order": 1
+    },
+    {
+      "id": "task-browser-smoke",
+      "featureId": "feature-runtime-auth-v1",
+      "phaseId": "phase-quality-release",
+      "title": "Run browser smoke coverage on primary user journeys",
+      "type": "browser-automation-test",
+      "assignee": "agent",
+      "status": "planned",
+      "summary": "Validate navigation and high-value CRM workflows in a browser to catch layout, routing, and runtime regressions before release.",
+      "acceptanceCriteria": [
+        "Primary navigation routes load in-browser without runtime crashes.",
+        "At least the dashboard and one record workflow are smoke-tested end to end.",
+        "Findings feed back into the plan before release."
+      ],
+      "order": 2
+    },
+    {
+      "id": "task-release-readiness",
+      "featureId": "feature-runtime-auth-v1",
+      "phaseId": "phase-quality-release",
+      "title": "Prepare v0.1 release readiness checklist",
+      "type": "work",
+      "assignee": "agent",
+      "status": "planned",
+      "summary": "Consolidate release blockers, validation status, and launch readiness items for the first tagged version of the app.",
+      "acceptanceCriteria": [
+        "Open blockers are visible in the project plan.",
+        "Release validation steps are identified for code and product behavior.",
+        "The app can be assessed against a clear v0.1 go or no-go checklist."
+      ],
+      "order": 3
+    }
+  ]
+}
