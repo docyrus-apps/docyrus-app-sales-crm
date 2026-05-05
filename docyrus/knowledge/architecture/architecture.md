@@ -4,9 +4,10 @@ Relation and enum fields can resolve to `null`. UI code must guard for both obje
 
 ## Root Runtime Tooling
 
-The React root mounts Docyrus auth, TanStack Query, and Docyrus Devtools together. Devtools should receive the shared `queryClient`, and auth-managed API clients should be registered from inside the auth provider tree.
+The React root mounts Docyrus auth, TanStack Query, and the shared app shell without the Agentation overlay. Register auth-managed API clients inside the auth provider tree, and keep optional developer aids out of `src/App.tsx`.
 
 <!-- docyrus-knowledge:auto:begin -->
+
 # Architecture
 
 This file captures the repo's technical structure, build stack, and the places where cross-cutting behavior is most likely to change.

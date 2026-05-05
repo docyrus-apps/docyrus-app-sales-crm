@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Outlet } from '@tanstack/react-router'
 import { NuqsAdapter } from 'nuqs/adapters/tanstack-router'
-import { Agentation } from 'agentation'
 import { SignInButton, useDocyrusAuth, useDocyrusClient } from '@docyrus/signin'
 import { useTranslation } from 'react-i18next'
 import { Button } from './components/animate-ui/components/buttons/button'
@@ -98,7 +97,6 @@ function App() {
             </div>
           </div>
         </div>
-        {import.meta.env.DEV && <Agentation />}
       </>
     )
   }
@@ -139,7 +137,6 @@ function App() {
           mode="create"
         />
         <GlobalDialogBar />
-        {import.meta.env.DEV && <Agentation />}
       </TooltipProvider>
     </NuqsAdapter>
   )
