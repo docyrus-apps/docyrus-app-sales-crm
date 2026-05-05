@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "skills": {
+    "docyrus-api-dev": {
+      "source": "docyrus/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docyrus-api-dev/SKILL.md",
+      "computedHash": "abb484bd4ff395022ec0c0b09bb6739aed537e3f1795bb0cf477dbb27843e792"
+    },
+    "docyrus-cli-app": {
+      "source": "docyrus/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docyrus-cli-app/SKILL.md",
+      "computedHash": "f59363ca353f3217cd356bf639c4722d96b4629eebd43e9faf03338c9ea3678e"
+    },
+    "docyrus-platform": {
+      "source": "/usr/local/lib/node_modules/@docyrus/docyrus/resources/pi-agent/skills/docyrus-platform",
+      "sourceType": "local",
+      "computedHash": "39c24c8fc6062dbe590b7792fa51091e92100a5e10afb70f1ea27c451e86ce1d"
+    }
+  }
+}

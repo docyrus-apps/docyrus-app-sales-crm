@@ -360,3 +360,12 @@ The project includes specialized **Docyrus UI components** designed specifically
 - The only available backend operations are available in `openapi.json` file which is in OpenAPI 3.1 format
 - All available entities are generated into `src/collections` folder
 - There is no feature to add new data endpoints for now
+
+%% docyrus-knowledge:begin %%
+# Knowledge Graph Workflow
+
+- If `docyrus/knowledge/` exists, run `docyrus knowledge search` before coding so you start from documented intent instead of rediscovering it from source files.
+- Use `docyrus knowledge expand` when prompts contain `[[refs]]` so section names resolve to real file locations and summaries.
+- Keep `docyrus/knowledge/` in sync whenever you change functionality, architecture, tests, or behavior.
+- Before finishing, run `docyrus knowledge check` and fix any broken links, stale references, or missing `@docyrus` backlinks.
+%% docyrus-knowledge:end %%
