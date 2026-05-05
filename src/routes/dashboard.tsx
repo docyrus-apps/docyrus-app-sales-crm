@@ -612,8 +612,9 @@ export function Dashboard() {
                             {getLeadLabel(lead, t)}
                           </p>
                           <p className="mt-1 truncate text-xs text-muted-foreground">
-                            {typeof lead.company_name === 'object' &&
-                            lead.company_name?.name
+                            {lead.company_name &&
+                            typeof lead.company_name === 'object' &&
+                            lead.company_name.name
                               ? lead.company_name.name
                               : getSourceLabel(lead.lead_source, t)}
                           </p>
@@ -666,12 +667,13 @@ export function Dashboard() {
                       <div className="flex items-center justify-between hover:bg-muted p-2 rounded-md transition-colors">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">
-                            {typeof deal.organization === 'object'
+                            {deal.organization &&
+                            typeof deal.organization === 'object'
                               ? deal.organization.name
                               : 'Deal'}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {typeof deal.stage === 'object'
+                            {deal.stage && typeof deal.stage === 'object'
                               ? deal.stage.name
                               : deal.stage}
                           </p>

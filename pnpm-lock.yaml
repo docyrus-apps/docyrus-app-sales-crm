@@ -44,9 +44,15 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.2
         version: 3.2.2(react@19.2.5)
+      '@docyrus/addin-client':
+        specifier: ^0.2.3
+        version: 0.2.3
       '@docyrus/api-client':
         specifier: ^0.2.4
         version: 0.2.4
+      '@docyrus/devtools':
+        specifier: ^0.6.1
+        version: 0.6.1(@docyrus/addin-client@0.2.3)(@docyrus/api-client@0.2.4)(@tanstack/react-query@5.100.6(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@docyrus/dom-selector-client':
         specifier: ^0.6.1
         version: 0.6.1
@@ -930,12 +936,34 @@ packages:
     peerDependencies:
       react: '>=16.8.0'
 
+  '@docyrus/addin-client@0.2.3':
+    resolution: {integrity: sha512-FvfQIQWDmgKaIOGcM61XSmhY0ptugPZWplJ09GTh72UbSnAz62Gp3DySvjWSM5RO+AUbmhIlqflHfJ8hfBuW8A==}
+
   '@docyrus/api-client@0.2.4':
     resolution: {integrity: sha512-45j/gzQ9b6tW5EUC+biqqeszYjilHWrickx1jk0DMpFMBPRYgPZc50q9xjugK43jwnztKtZmhQ11dqcWlawhag==}
     peerDependencies:
       expo-crypto: '>=14.0.0'
     peerDependenciesMeta:
       expo-crypto:
+        optional: true
+
+  '@docyrus/devtools@0.6.1':
+    resolution: {integrity: sha512-0Xc8W8z9asio00FK6IvkmzQPiXal6g0fEv3Wre/Lej2uKOaIeH2U/Il4Wg85Roi7JBMD1neGZsP/kbMJfpYQDQ==}
+    peerDependencies:
+      '@docyrus/addin-client': '>=0.2.3'
+      '@docyrus/api-client': '>=0.1.0'
+      '@docyrus/app-client': '>=0.0.1'
+      '@tanstack/react-query': '>=5.0.0'
+      react: '>=19.2.0'
+      react-dom: '>=19.2.0'
+    peerDependenciesMeta:
+      '@docyrus/addin-client':
+        optional: true
+      '@docyrus/api-client':
+        optional: true
+      '@docyrus/app-client':
+        optional: true
+      '@tanstack/react-query':
         optional: true
 
   '@docyrus/dom-selector-client@0.6.1':
@@ -8005,7 +8033,18 @@ snapshots:
       react: 19.2.5
       tslib: 2.8.1
 
+  '@docyrus/addin-client@0.2.3': {}
+
   '@docyrus/api-client@0.2.4': {}
+
+  '@docyrus/devtools@0.6.1(@docyrus/addin-client@0.2.3)(@docyrus/api-client@0.2.4)(@tanstack/react-query@5.100.6(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
+    dependencies:
+      react: 19.2.5
+      react-dom: 19.2.5(react@19.2.5)
+    optionalDependencies:
+      '@docyrus/addin-client': 0.2.3
+      '@docyrus/api-client': 0.2.4
+      '@tanstack/react-query': 5.100.6(react@19.2.5)
 
   '@docyrus/dom-selector-client@0.6.1':
     dependencies:

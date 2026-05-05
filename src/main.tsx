@@ -7,12 +7,14 @@ import {
   createRouter,
 } from '@tanstack/react-router'
 import { DocyrusAuthProvider } from '@docyrus/signin'
+import { DocyrusDevtools } from '@docyrus/devtools'
 import { I18nextProvider } from 'react-i18next'
 
 import * as TanStackQueryProvider from './integrations/tanstack-query/root-provider.tsx'
 import i18n from './i18n'
 import { I18nDirectionProvider } from './components/ui/i18n-direction-provider'
 import { GlobalDialogProvider } from './components/docyrus/awesome-dialog'
+import { DocyrusDevtoolsClientRegistration } from './components/devtools/docyrus-devtools-client-registration'
 
 import './styles.css'
 import reportWebVitals from './reportWebVitals.ts'
@@ -301,13 +303,16 @@ if (rootElement && !rootElement.innerHTML) {
         forceMode={forceMode}
       >
         <TanStackQueryProvider.Provider>
-          <I18nextProvider i18n={i18n}>
-            <I18nDirectionProvider>
-              <GlobalDialogProvider persist storageKey="sales-crm-dialogs">
-                <RouterProvider router={router} />
-              </GlobalDialogProvider>
-            </I18nDirectionProvider>
-          </I18nextProvider>
+          <DocyrusDevtools queryClient={TanStackQueryProvider.queryClient}>
+            <DocyrusDevtoolsClientRegistration />
+            <I18nextProvider i18n={i18n}>
+              <I18nDirectionProvider>
+                <GlobalDialogProvider persist storageKey="sales-crm-dialogs">
+                  <RouterProvider router={router} />
+                </GlobalDialogProvider>
+              </I18nDirectionProvider>
+            </I18nextProvider>
+          </DocyrusDevtools>
         </TanStackQueryProvider.Provider>
       </DocyrusAuthProvider>
     </StrictMode>,

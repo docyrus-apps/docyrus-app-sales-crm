@@ -364,7 +364,7 @@ export function CompanyDetail() {
                         <div className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50">
                           <div className="min-w-0 flex-1">
                             <div className="font-medium">
-                              {typeof deal.stage === 'object'
+                              {deal.stage && typeof deal.stage === 'object'
                                 ? deal.stage.name
                                 : deal.stage || t('common.na')}
                             </div>
