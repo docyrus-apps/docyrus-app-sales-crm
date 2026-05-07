@@ -1,20 +1,15 @@
-'use client';
+'use client'
 
-import { tUi, type UiI18nLocale } from '@/lib/ui-i18n';
+import { tUi, type UiI18nLocale } from '@/lib/ui-i18n'
 
-import { useResourceSchedulerContext } from './resource-scheduler-context';
-import { ResourceSchedulerEventRow } from './resource-scheduler-event-row';
-import { ResourceSchedulerTimelineHeader } from './resource-scheduler-timeline-header';
-import { ResourceSchedulerToday } from './resource-scheduler-today';
+import { useResourceSchedulerContext } from './resource-scheduler-context'
+import { ResourceSchedulerEventRow } from './resource-scheduler-event-row'
+import { ResourceSchedulerTimelineHeader } from './resource-scheduler-timeline-header'
+import { ResourceSchedulerToday } from './resource-scheduler-today'
 
 export function ResourceSchedulerTimeline() {
-  const {
-    resources,
-    eventsByResource,
-    totalTimelineWidth,
-    isLoading,
-    locale
-  } = useResourceSchedulerContext();
+  const { resources, eventsByResource, totalTimelineWidth, isLoading, locale } =
+    useResourceSchedulerContext()
 
   return (
     <div className="relative" style={{ minWidth: totalTimelineWidth }}>
@@ -26,13 +21,14 @@ export function ResourceSchedulerTimeline() {
             {tUi(locale as UiI18nLocale, 'schedulerNoEvents')}
           </div>
         )}
-        {resources.map(resource => (
+        {resources.map((resource) => (
           <ResourceSchedulerEventRow
             key={resource.id}
             resourceId={resource.id}
-            events={eventsByResource.get(resource.id) ?? []} />
+            events={eventsByResource.get(resource.id) ?? []}
+          />
         ))}
       </div>
     </div>
-  );
+  )
 }

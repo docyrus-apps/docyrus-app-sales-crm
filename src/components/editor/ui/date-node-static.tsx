@@ -1,44 +1,27 @@
 // @ts-nocheck
+import * as React from 'react'
+
+import { getDateDisplayLabel } from '@platejs/date'
 import type { TDateElement } from 'platejs'
 import type { SlateElementProps } from 'platejs/static'
 
 import { SlateElement } from 'platejs/static'
+import { cn } from '@/lib/utils'
+import { inlineSuggestionVariants } from '@/lib/suggestion'
 
 export function DateElementStatic(props: SlateElementProps<TDateElement>) {
   const { element } = props
 
   return (
-    <SlateElement {...props} className="inline-block">
+    <SlateElement as="span" className="inline-block" {...props}>
       <span
-        className="w-fit rounded-sm bg-muted px-1 text-muted-foreground"
-        contentEditable={false}
+        className={cn(
+          'w-fit rounded-sm bg-muted px-1 text-muted-foreground',
+          inlineSuggestionVariants(),
+        )}
       >
-        {element.date ? (
-          (() => {
-            const today = new Date()
-            const elementDate = new Date(element.date)
-            const isToday =
-              elementDate.getDate() === today.getDate() &&
-              elementDate.getMonth() === today.getMonth() &&
-              elementDate.getFullYear() === today.getFullYear()
-
-            const isYesterday =
-              new Date(today.setDate(today.getDate() - 1)).toDateString() ===
-              elementDate.toDateString()
-            const isTomorrow =
-              new Date(today.setDate(today.getDate() + 2)).toDateString() ===
-              elementDate.toDateString()
-
-            if (isToday) return 'Today'
-            if (isYesterday) return 'Yesterday'
-            if (isTomorrow) return 'Tomorrow'
-
-            return elementDate.toLocaleDateString(undefined, {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-            })
-          })()
+        {element.date || element.rawDate ? (
+          getDateDisplayLabel(element)
         ) : (
           <span>Pick a date</span>
         )}

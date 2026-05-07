@@ -1,18 +1,18 @@
 // @ts-nocheck
-'use client';
+'use client'
 
-import * as React from 'react';
+import * as React from 'react'
 
-import type { DropdownMenuProps } from '@radix-ui/react-dropdown-menu';
+import type { DropdownMenuProps } from '@radix-ui/react-dropdown-menu'
 
 import {
   KeyboardIcon,
   MoreHorizontalIcon,
   SubscriptIcon,
   SuperscriptIcon,
-} from 'lucide-react';
-import { KEYS } from 'platejs';
-import { useEditorRef } from 'platejs/react';
+} from 'lucide-react'
+import { KEYS } from 'platejs'
+import { useEditorRef } from 'platejs/react'
 
 import {
   DropdownMenu,
@@ -20,13 +20,13 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu'
 
-import { ToolbarButton } from './toolbar';
+import { ToolbarButton } from './toolbar'
 
 export function MoreToolbarButton(props: DropdownMenuProps) {
-  const editor = useEditorRef();
-  const [open, setOpen] = React.useState(false);
+  const editor = useEditorRef()
+  const [open, setOpen] = React.useState(false)
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen} modal={false} {...props}>
@@ -43,9 +43,9 @@ export function MoreToolbarButton(props: DropdownMenuProps) {
         <DropdownMenuGroup>
           <DropdownMenuItem
             onSelect={() => {
-              editor.tf.toggleMark(KEYS.kbd);
-              editor.tf.collapse({ edge: 'end' });
-              editor.tf.focus();
+              editor.tf.toggleMark(KEYS.kbd)
+              editor.tf.collapse({ edge: 'end' })
+              editor.tf.focus()
             }}
           >
             <KeyboardIcon />
@@ -56,8 +56,8 @@ export function MoreToolbarButton(props: DropdownMenuProps) {
             onSelect={() => {
               editor.tf.toggleMark(KEYS.sup, {
                 remove: KEYS.sub,
-              });
-              editor.tf.focus();
+              })
+              editor.tf.focus()
             }}
           >
             <SuperscriptIcon />
@@ -68,8 +68,8 @@ export function MoreToolbarButton(props: DropdownMenuProps) {
             onSelect={() => {
               editor.tf.toggleMark(KEYS.sub, {
                 remove: KEYS.sup,
-              });
-              editor.tf.focus();
+              })
+              editor.tf.focus()
             }}
           >
             <SubscriptIcon />
@@ -79,5 +79,5 @@ export function MoreToolbarButton(props: DropdownMenuProps) {
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }

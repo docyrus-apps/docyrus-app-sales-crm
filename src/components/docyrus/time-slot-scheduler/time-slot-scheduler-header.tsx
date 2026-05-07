@@ -1,19 +1,23 @@
-'use client';
+'use client'
 
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-import { Button } from '@/components/ui/button';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Button } from '@/components/ui/button'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
-import { tUi } from '@/lib/ui-i18n';
+import { tUi } from '@/lib/ui-i18n'
 
-import { useTimeSlotSchedulerContext } from './time-slot-scheduler-context';
+import { useTimeSlotSchedulerContext } from './time-slot-scheduler-context'
 
 function TimeSlotSchedulerHeader() {
   const {
-    mode, onModeChange, onNavigate, onGoToToday, dateRangeLabel, locale
-  }
-    = useTimeSlotSchedulerContext();
+    mode,
+    onModeChange,
+    onNavigate,
+    onGoToToday,
+    dateRangeLabel,
+    locale,
+  } = useTimeSlotSchedulerContext()
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
@@ -23,7 +27,11 @@ function TimeSlotSchedulerHeader() {
           size="icon"
           className="size-8"
           onClick={() => onNavigate('prev')}
-          aria-label={tUi(locale, mode === 'columns' ? 'tssPreviousWeek' : 'tssPreviousMonth')}>
+          aria-label={tUi(
+            locale,
+            mode === 'columns' ? 'tssPreviousWeek' : 'tssPreviousMonth',
+          )}
+        >
           <ChevronLeft className="size-4" />
         </Button>
         <Button variant="outline" size="sm" onClick={onGoToToday}>
@@ -34,7 +42,11 @@ function TimeSlotSchedulerHeader() {
           size="icon"
           className="size-8"
           onClick={() => onNavigate('next')}
-          aria-label={tUi(locale, mode === 'columns' ? 'tssNextWeek' : 'tssNextMonth')}>
+          aria-label={tUi(
+            locale,
+            mode === 'columns' ? 'tssNextWeek' : 'tssNextMonth',
+          )}
+        >
           <ChevronRight className="size-4" />
         </Button>
       </div>
@@ -45,17 +57,26 @@ function TimeSlotSchedulerHeader() {
         type="single"
         value={mode}
         onValueChange={(v) => {
-          if (v) onModeChange(v as 'columns' | 'month');
-        }}>
-        <ToggleGroupItem value="columns" size="sm" aria-label={tUi(locale, 'tssColumnsView')}>
+          if (v) onModeChange(v as 'columns' | 'month')
+        }}
+      >
+        <ToggleGroupItem
+          value="columns"
+          size="sm"
+          aria-label={tUi(locale, 'tssColumnsView')}
+        >
           {tUi(locale, 'tssColumnsView')}
         </ToggleGroupItem>
-        <ToggleGroupItem value="month" size="sm" aria-label={tUi(locale, 'tssMonthView')}>
+        <ToggleGroupItem
+          value="month"
+          size="sm"
+          aria-label={tUi(locale, 'tssMonthView')}
+        >
           {tUi(locale, 'tssMonthView')}
         </ToggleGroupItem>
       </ToggleGroup>
     </div>
-  );
+  )
 }
 
-export { TimeSlotSchedulerHeader };
+export { TimeSlotSchedulerHeader }

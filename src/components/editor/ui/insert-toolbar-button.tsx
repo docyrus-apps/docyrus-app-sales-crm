@@ -1,9 +1,9 @@
 // @ts-nocheck
-'use client';
+'use client'
 
-import * as React from 'react';
+import * as React from 'react'
 
-import type { DropdownMenuProps } from '@radix-ui/react-dropdown-menu';
+import type { DropdownMenuProps } from '@radix-ui/react-dropdown-menu'
 
 import {
   CalendarIcon,
@@ -20,43 +20,43 @@ import {
   ListIcon,
   ListOrderedIcon,
   MinusIcon,
-  PenToolIcon,
   PilcrowIcon,
   PlusIcon,
   QuoteIcon,
   RadicalIcon,
   SquareIcon,
+  SuperscriptIcon,
   TableIcon,
   TableOfContentsIcon,
-} from 'lucide-react';
-import { KEYS } from 'platejs';
-import { type PlateEditor, useEditorRef } from 'platejs/react';
+} from 'lucide-react'
+import { KEYS } from 'platejs'
+import { type PlateEditor, useEditorRef } from 'platejs/react'
 
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu'
 import {
   insertBlock,
   insertInlineElement,
-} from '@/components/editor/transforms';
+} from '@/components/editor/transforms'
 
-import { ToolbarButton, ToolbarMenuGroup } from './toolbar';
+import { ToolbarButton, ToolbarMenuGroup } from './toolbar'
 
 type Group = {
-  group: string;
-  items: Item[];
-};
+  group: string
+  items: Item[]
+}
 
 type Item = {
-  icon: React.ReactNode;
-  value: string;
-  onSelect: (editor: PlateEditor, value: string) => void;
-  focusEditor?: boolean;
-  label?: string;
-};
+  icon: React.ReactNode
+  value: string
+  onSelect: (editor: PlateEditor, value: string) => void
+  focusEditor?: boolean
+  label?: string
+}
 
 const groups: Group[] = [
   {
@@ -105,7 +105,7 @@ const groups: Group[] = [
     ].map((item) => ({
       ...item,
       onSelect: (editor, value) => {
-        insertBlock(editor, value);
+        insertBlock(editor, value)
       },
     })),
   },
@@ -135,7 +135,7 @@ const groups: Group[] = [
     ].map((item) => ({
       ...item,
       onSelect: (editor, value) => {
-        insertBlock(editor, value);
+        insertBlock(editor, value)
       },
     })),
   },
@@ -155,7 +155,7 @@ const groups: Group[] = [
     ].map((item) => ({
       ...item,
       onSelect: (editor, value) => {
-        insertBlock(editor, value);
+        insertBlock(editor, value)
       },
     })),
   },
@@ -179,11 +179,6 @@ const groups: Group[] = [
         value: KEYS.equation,
       },
       {
-        icon: <PenToolIcon />,
-        label: 'Excalidraw',
-        value: KEYS.excalidraw,
-      },
-      {
         icon: <Code2 />,
         label: 'Code Drawing',
         value: KEYS.codeDrawing,
@@ -191,7 +186,7 @@ const groups: Group[] = [
     ].map((item) => ({
       ...item,
       onSelect: (editor, value) => {
-        insertBlock(editor, value);
+        insertBlock(editor, value)
       },
     })),
   },
@@ -210,6 +205,12 @@ const groups: Group[] = [
         value: KEYS.date,
       },
       {
+        focusEditor: true,
+        icon: <SuperscriptIcon />,
+        label: 'Footnote',
+        value: 'action_footnote',
+      },
+      {
         focusEditor: false,
         icon: <RadicalIcon />,
         label: 'Inline Equation',
@@ -218,15 +219,15 @@ const groups: Group[] = [
     ].map((item) => ({
       ...item,
       onSelect: (editor, value) => {
-        insertInlineElement(editor, value);
+        insertInlineElement(editor, value)
       },
     })),
   },
-];
+]
 
 export function InsertToolbarButton(props: DropdownMenuProps) {
-  const editor = useEditorRef();
-  const [open, setOpen] = React.useState(false);
+  const editor = useEditorRef()
+  const [open, setOpen] = React.useState(false)
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen} modal={false} {...props}>
@@ -247,8 +248,8 @@ export function InsertToolbarButton(props: DropdownMenuProps) {
                 key={value}
                 className="min-w-[180px]"
                 onSelect={() => {
-                  onSelect(editor, value);
-                  editor.tf.focus();
+                  onSelect(editor, value)
+                  editor.tf.focus()
                 }}
               >
                 {icon}
@@ -259,5 +260,5 @@ export function InsertToolbarButton(props: DropdownMenuProps) {
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }

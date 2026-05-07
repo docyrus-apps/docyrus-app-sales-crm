@@ -1,6 +1,11 @@
 // @ts-nocheck
-'use client';
+'use client'
 
+import {
+  BlockquoteRules,
+  HeadingRules,
+  HorizontalRuleRules,
+} from '@platejs/basic-nodes'
 import {
   BlockquotePlugin,
   H1Plugin,
@@ -10,10 +15,10 @@ import {
   H5Plugin,
   H6Plugin,
   HorizontalRulePlugin,
-} from '@platejs/basic-nodes/react';
-import { ParagraphPlugin } from 'platejs/react';
+} from '@platejs/basic-nodes/react'
+import { ParagraphPlugin } from 'platejs/react'
 
-import { BlockquoteElement } from '@/components/editor/ui/blockquote-node';
+import { BlockquoteElement } from '@/components/editor/ui/blockquote-node'
 import {
   H1Element,
   H2Element,
@@ -21,13 +26,14 @@ import {
   H4Element,
   H5Element,
   H6Element,
-} from '@/components/editor/ui/heading-node';
-import { HrElement } from '@/components/editor/ui/hr-node';
-import { ParagraphElement } from '@/components/editor/ui/paragraph-node';
+} from '@/components/editor/ui/heading-node'
+import { HrElement } from '@/components/editor/ui/hr-node'
+import { ParagraphElement } from '@/components/editor/ui/paragraph-node'
 
 export const BasicBlocksKit = [
   ParagraphPlugin.withComponent(ParagraphElement),
   H1Plugin.configure({
+    inputRules: [HeadingRules.markdown()],
     node: {
       component: H1Element,
     },
@@ -37,6 +43,7 @@ export const BasicBlocksKit = [
     shortcuts: { toggle: { keys: 'mod+alt+1' } },
   }),
   H2Plugin.configure({
+    inputRules: [HeadingRules.markdown()],
     node: {
       component: H2Element,
     },
@@ -46,6 +53,7 @@ export const BasicBlocksKit = [
     shortcuts: { toggle: { keys: 'mod+alt+2' } },
   }),
   H3Plugin.configure({
+    inputRules: [HeadingRules.markdown()],
     node: {
       component: H3Element,
     },
@@ -55,6 +63,7 @@ export const BasicBlocksKit = [
     shortcuts: { toggle: { keys: 'mod+alt+3' } },
   }),
   H4Plugin.configure({
+    inputRules: [HeadingRules.markdown()],
     node: {
       component: H4Element,
     },
@@ -64,6 +73,7 @@ export const BasicBlocksKit = [
     shortcuts: { toggle: { keys: 'mod+alt+4' } },
   }),
   H5Plugin.configure({
+    inputRules: [HeadingRules.markdown()],
     node: {
       component: H5Element,
     },
@@ -73,6 +83,7 @@ export const BasicBlocksKit = [
     shortcuts: { toggle: { keys: 'mod+alt+5' } },
   }),
   H6Plugin.configure({
+    inputRules: [HeadingRules.markdown()],
     node: {
       component: H6Element,
     },
@@ -82,8 +93,17 @@ export const BasicBlocksKit = [
     shortcuts: { toggle: { keys: 'mod+alt+6' } },
   }),
   BlockquotePlugin.configure({
+    inputRules: [BlockquoteRules.markdown()],
     node: { component: BlockquoteElement },
     shortcuts: { toggle: { keys: 'mod+shift+period' } },
   }),
-  HorizontalRulePlugin.withComponent(HrElement),
-];
+  HorizontalRulePlugin.configure({
+    inputRules: [
+      HorizontalRuleRules.markdown({ variant: '-' }),
+      HorizontalRuleRules.markdown({ variant: '_' }),
+    ],
+    node: {
+      component: HrElement,
+    },
+  }),
+]

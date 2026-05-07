@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-import { useMemo } from 'react';
+import { useMemo } from 'react'
 
 import {
   addDays,
@@ -10,87 +10,89 @@ import {
   isBefore,
   parseISO,
   startOfDay,
-  startOfWeek
-} from 'date-fns';
+  startOfWeek,
+} from 'date-fns'
 
-import { type IEvent } from '../../interfaces';
+import { type IEvent } from '../../interfaces'
 
-import { MonthEventBadge } from '../month-view/month-event-badge';
+import { MonthEventBadge } from '../month-view/month-event-badge'
 
 interface IProps {
-  selectedDate: Date;
-  multiDayEvents: Array<IEvent>;
+  selectedDate: Date
+  multiDayEvents: Array<IEvent>
 }
 
 export function WeekViewMultiDayEventsRow({
   selectedDate,
-  multiDayEvents
+  multiDayEvents,
 }: IProps) {
-  const weekStart = startOfWeek(selectedDate);
-  const weekEnd = endOfWeek(selectedDate);
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const weekStart = startOfWeek(selectedDate)
+  const weekEnd = endOfWeek(selectedDate)
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 
   const processedEvents = useMemo(() => {
     return multiDayEvents
       .map((event) => {
-        const start = parseISO(event.startDate);
-        const end = parseISO(event.endDate);
-        const adjustedStart = isBefore(start, weekStart) ? weekStart : start;
-        const adjustedEnd = isAfter(end, weekEnd) ? weekEnd : end;
-        const startIndex = differenceInDays(adjustedStart, weekStart);
-        const endIndex = differenceInDays(adjustedEnd, weekStart);
+        const start = parseISO(event.startDate)
+        const end = parseISO(event.endDate)
+        const adjustedStart = isBefore(start, weekStart) ? weekStart : start
+        const adjustedEnd = isAfter(end, weekEnd) ? weekEnd : end
+        const startIndex = differenceInDays(adjustedStart, weekStart)
+        const endIndex = differenceInDays(adjustedEnd, weekStart)
 
         return {
           ...event,
           adjustedStart,
           adjustedEnd,
           startIndex,
-          endIndex
-        };
+          endIndex,
+        }
       })
       .sort((a, b) => {
-        const startDiff = a.adjustedStart.getTime() - b.adjustedStart.getTime();
+        const startDiff = a.adjustedStart.getTime() - b.adjustedStart.getTime()
 
-        if (startDiff !== 0) return startDiff;
+        if (startDiff !== 0) return startDiff
 
-        return b.endIndex - b.startIndex - (a.endIndex - a.startIndex);
-      });
-  }, [multiDayEvents, weekStart, weekEnd]);
+        return b.endIndex - b.startIndex - (a.endIndex - a.startIndex)
+      })
+  }, [multiDayEvents, weekStart, weekEnd])
 
   const eventRows = useMemo(() => {
-    const rows: Array<typeof processedEvents> = [];
+    const rows: Array<typeof processedEvents> = []
 
     processedEvents.forEach((event) => {
-      let rowIndex = rows.findIndex(row => row.every(
-        e => e.endIndex < event.startIndex || e.startIndex > event.endIndex
-      ));
+      let rowIndex = rows.findIndex((row) =>
+        row.every(
+          (e) => e.endIndex < event.startIndex || e.startIndex > event.endIndex,
+        ),
+      )
 
       if (rowIndex === -1) {
-        rowIndex = rows.length;
-        rows.push([]);
+        rowIndex = rows.length
+        rows.push([])
       }
 
-      rows[rowIndex]?.push(event);
-    });
+      rows[rowIndex]?.push(event)
+    })
 
-    return rows;
-  }, [processedEvents]);
+    return rows
+  }, [processedEvents])
 
   const hasEventsInWeek = useMemo(() => {
     return multiDayEvents.some((event) => {
-      const start = parseISO(event.startDate);
-      const end = parseISO(event.endDate);
+      const start = parseISO(event.startDate)
+      const end = parseISO(event.endDate)
 
       return (
-        (start >= weekStart && start <= weekEnd)
-        || (end >= weekStart && end <= weekEnd)
-        || (start <= weekStart && end >= weekEnd)
-      );
-    });
-  }, [multiDayEvents, weekStart, weekEnd]);
+        (start >= weekStart && start <= weekEnd) ||
+        (end >= weekStart && end <= weekEnd) ||
+        (start <= weekStart && end >= weekEnd)
+      )
+    })
+  }, [multiDayEvents, weekStart, weekEnd])
 
   if (!hasEventsInWeek) {
-    return null;
+    return null
   }
 
   return (
@@ -100,33 +102,35 @@ export function WeekViewMultiDayEventsRow({
         {weekDays.map((day, dayIndex) => (
           <div
             key={day.toISOString()}
-            className="flex h-full flex-col gap-1 py-1">
+            className="flex h-full flex-col gap-1 py-1"
+          >
             {eventRows.map((row, rowIndex) => {
               const event = row.find(
-                e => e.startIndex <= dayIndex && e.endIndex >= dayIndex
-              );
+                (e) => e.startIndex <= dayIndex && e.endIndex >= dayIndex,
+              )
 
               if (!event) {
                 return (
                   <div
                     key={`empty-${rowIndex}-${dayIndex}`}
-                    className="h-6.5" />
-                );
+                    className="h-6.5"
+                  />
+                )
               }
 
-              let position: 'first' | 'middle' | 'last' | 'none' = 'none';
+              let position: 'first' | 'middle' | 'last' | 'none' = 'none'
 
               if (
-                dayIndex === event.startIndex
-                && dayIndex === event.endIndex
+                dayIndex === event.startIndex &&
+                dayIndex === event.endIndex
               ) {
-                position = 'none';
+                position = 'none'
               } else if (dayIndex === event.startIndex) {
-                position = 'first';
+                position = 'first'
               } else if (dayIndex === event.endIndex) {
-                position = 'last';
+                position = 'last'
               } else {
-                position = 'middle';
+                position = 'middle'
               }
 
               return (
@@ -134,12 +138,13 @@ export function WeekViewMultiDayEventsRow({
                   key={`${event.id}-${dayIndex}`}
                   event={event}
                   cellDate={startOfDay(day)}
-                  position={position} />
-              );
+                  position={position}
+                />
+              )
             })}
           </div>
         ))}
       </div>
     </div>
-  );
+  )
 }

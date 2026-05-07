@@ -1,24 +1,24 @@
-'use client';
+'use client'
 
-import { type IFieldType } from '../types';
+import { type IFieldType } from '../types'
 
 export function formatDuration(seconds: number | null | undefined): string {
-  if (seconds == null || Number.isNaN(seconds)) return '';
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
+  if (seconds == null || Number.isNaN(seconds)) return ''
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  const s = seconds % 60
 
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
 export function parseDuration(display: string): number {
-  const parts = display.split(':').map(Number);
+  const parts = display.split(':').map(Number)
 
   if (parts.length === 3)
-    return (parts[0] ?? 0) * 3600 + (parts[1] ?? 0) * 60 + (parts[2] ?? 0);
-  if (parts.length === 2) return (parts[0] ?? 0) * 60 + (parts[1] ?? 0);
+    return (parts[0] ?? 0) * 3600 + (parts[1] ?? 0) * 60 + (parts[2] ?? 0)
+  if (parts.length === 2) return (parts[0] ?? 0) * 60 + (parts[1] ?? 0)
 
-  return parts[0] ?? 0;
+  return parts[0] ?? 0
 }
 
 export function getCurrencySymbol(code: string): string {
@@ -27,94 +27,101 @@ export function getCurrencySymbol(code: string): string {
       new Intl.NumberFormat(undefined, {
         style: 'currency',
         currency: code,
-        currencyDisplay: 'narrowSymbol'
+        currencyDisplay: 'narrowSymbol',
       })
         .formatToParts(0)
-        .find(p => p.type === 'currency')?.value ?? code
-    );
+        .find((p) => p.type === 'currency')?.value ?? code
+    )
   } catch {
-    return code;
+    return code
   }
 }
 
 export function formatMoney(
   amount: number | null | undefined,
-  currency: string = 'USD'
+  currency: string = 'USD',
 ): string {
-  if (amount == null || Number.isNaN(amount)) return '';
+  if (amount == null || Number.isNaN(amount)) return ''
   try {
     return new Intl.NumberFormat(undefined, {
       style: 'currency',
-      currency
-    }).format(amount);
+      currency,
+    }).format(amount)
   } catch {
-    return `${amount.toFixed(2)} ${currency}`;
+    return `${amount.toFixed(2)} ${currency}`
   }
 }
 
 export function getCompanionFieldSlug(
   fieldSlug: string,
-  suffix: string
+  suffix: string,
 ): string {
-  return `__${fieldSlug}_${suffix}`;
+  return `__${fieldSlug}_${suffix}`
 }
 
 export function getCompanionValue(
   record: Record<string, unknown> | undefined,
   fieldSlug: string,
-  suffix: string
+  suffix: string,
 ): unknown {
-  if (!record) return undefined;
+  if (!record) return undefined
 
-  return record[getCompanionFieldSlug(fieldSlug, suffix)];
+  return record[getCompanionFieldSlug(fieldSlug, suffix)]
 }
 
 export function parseDateRange(
-  value: string | null | undefined
+  value: string | null | undefined,
 ): { start: Date; end: Date } | null {
-  if (!value) return null;
-  const match = value.match(/[[(](.*?),(.*?)[\])]/);
+  if (!value) return null
+  const match = value.match(/[[(](.*?),(.*?)[\])]/)
 
-  if (!match) return null;
-  const start = new Date(match[1]?.trim() ?? '');
-  const end = new Date(match[2]?.trim() ?? '');
+  if (!match) return null
+  const start = new Date(match[1]?.trim() ?? '')
+  const end = new Date(match[2]?.trim() ?? '')
 
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null;
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null
 
-  return { start, end };
+  return { start, end }
 }
 
-export function formatDateRange(start: Date, end: Date): string {
-  const fmt = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' });
+export function formatDateRange(
+  start: Date,
+  end: Date,
+  formatDate?: (value: unknown) => string,
+): string {
+  const fmt =
+    formatDate ??
+    ((value: unknown) => {
+      if (value instanceof Date) return value.toISOString()
 
-  return `${fmt.format(start)} – ${fmt.format(end)}`;
+      return value == null ? '' : String(value)
+    })
+
+  return `${fmt(start)} – ${fmt(end)}`
 }
 
 export function formatTime(value: string | null | undefined): string {
-  if (!value) return '';
+  if (!value) return ''
   try {
-    const [h, m] = value.split(':');
-    const date = new Date();
+    const [h, m] = value.split(':')
+    const date = new Date()
 
-    date.setHours(Number(h), Number(m), 0);
+    date.setHours(Number(h), Number(m), 0)
 
-    return date.toLocaleTimeString(undefined, {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
   } catch {
-    return value;
+    return value
   }
 }
 
 export function formatPhoneDisplay(
   phone: string | null | undefined,
-  countryCode: string | null | undefined
+  countryCode: string | null | undefined,
 ): string {
-  if (!phone) return '';
-  if (countryCode) return `${countryCode} ${phone}`;
+  if (!phone) return ''
+  if (countryCode) return `${countryCode} ${phone}`
 
-  return phone;
+  return phone
 }
 
 const SINGLE_SELECT_TYPES: Array<IFieldType> = [
@@ -123,53 +130,57 @@ const SINGLE_SELECT_TYPES: Array<IFieldType> = [
   'field-relation',
   'field-select',
   'field-status',
-  'field-userSelect'
-];
+  'field-userSelect',
+]
 
-const MULTI_SELECT_TYPES: Array<IFieldType> = ['field-multiSelect', 'field-userMultiSelect', 'field-tagSelect'];
+const MULTI_SELECT_TYPES: Array<IFieldType> = [
+  'field-multiSelect',
+  'field-userMultiSelect',
+  'field-tagSelect',
+]
 
 const VIRTUAL_TYPES: Array<IFieldType> = [
   'field-list',
   'field-display',
   'field-formula',
   'field-taskList',
-  'field-button'
-];
+  'field-button',
+]
 
 const COMPOSITE_TYPES: Array<IFieldType> = [
   'field-phone',
   'field-money',
   'field-status',
   'field-htmlEditor',
-  'field-emailEditor'
-];
+  'field-emailEditor',
+]
 
 const READ_ONLY_TYPES: Array<IFieldType> = [
   'field-display',
   'field-formula',
   'field-relatedField',
   'field-identity',
-  'field-autonumber'
-];
+  'field-autonumber',
+]
 
 export function isSelectField(type: IFieldType): boolean {
-  return SINGLE_SELECT_TYPES.includes(type) || MULTI_SELECT_TYPES.includes(type);
+  return SINGLE_SELECT_TYPES.includes(type) || MULTI_SELECT_TYPES.includes(type)
 }
 
 export function isMultiSelectField(type: IFieldType): boolean {
-  return MULTI_SELECT_TYPES.includes(type);
+  return MULTI_SELECT_TYPES.includes(type)
 }
 
 export function isVirtualField(type: IFieldType): boolean {
-  return VIRTUAL_TYPES.includes(type);
+  return VIRTUAL_TYPES.includes(type)
 }
 
 export function isCompositeField(type: IFieldType): boolean {
-  return COMPOSITE_TYPES.includes(type);
+  return COMPOSITE_TYPES.includes(type)
 }
 
 export function isReadOnlyField(type: IFieldType): boolean {
-  return READ_ONLY_TYPES.includes(type);
+  return READ_ONLY_TYPES.includes(type)
 }
 
 export const COMMON_CURRENCIES = [
@@ -197,5 +208,5 @@ export const COMMON_CURRENCIES = [
   { code: 'SAR', name: 'Saudi Riyal' },
   { code: 'RUB', name: 'Russian Ruble' },
   { code: 'ILS', name: 'Israeli Shekel' },
-  { code: 'THB', name: 'Thai Baht' }
-] as const;
+  { code: 'THB', name: 'Thai Baht' },
+] as const

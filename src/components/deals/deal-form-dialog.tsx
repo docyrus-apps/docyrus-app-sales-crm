@@ -37,6 +37,7 @@ interface DealFormDialogProps {
   onOpenChange: (open: boolean) => void
   deal?: any
   mode: 'create' | 'edit'
+  onSubmitSuccess?: () => void | Promise<void>
 }
 
 export function DealFormDialog({
@@ -44,6 +45,7 @@ export function DealFormDialog({
   onOpenChange,
   deal,
   mode,
+  onSubmitSuccess,
 }: DealFormDialogProps) {
   const { t } = useTranslation()
   const createDeal = useCreateDeal()
@@ -116,6 +118,8 @@ export function DealFormDialog({
       } else if (deal?.id) {
         await updateDeal.mutateAsync({ dealId: deal.id, data: cleanedData })
       }
+
+      await onSubmitSuccess?.()
       onOpenChange(false)
     },
   })

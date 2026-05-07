@@ -1,22 +1,25 @@
-'use client';
+'use client'
 
-import { Plus } from 'lucide-react';
+import { Plus } from 'lucide-react'
 
-import { Button } from '@/components/ui/button';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button'
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import {
-  Table, TableBody, TableHead, TableHeader, TableRow
-} from '@/components/ui/table';
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
-import { tUi } from '@/lib/ui-i18n';
+import { tUi } from '@/lib/ui-i18n'
 
-import { usePricingEngine } from './contexts/pricing-context';
-import { PricingLineRow } from './pricing-line-row';
+import { usePricingEngine } from './contexts/pricing-context'
+import { PricingLineRow } from './pricing-line-row'
 
 export function PricingLineTable() {
-  const {
-    lineItemRows, config, addLineItem, readOnly, locale
-  } = usePricingEngine();
+  const { lineItemRows, config, addLineItem, readOnly, locale } =
+    usePricingEngine()
 
   return (
     <div className="space-y-2">
@@ -25,28 +28,48 @@ export function PricingLineTable() {
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead className="w-10 text-center">#</TableHead>
-              <TableHead className="min-w-45">{tUi(locale, 'pepProduct')}</TableHead>
+              <TableHead className="min-w-45">
+                {tUi(locale, 'pepProduct')}
+              </TableHead>
               {config.showCategoryColumn && (
                 <TableHead>{tUi(locale, 'pepCategory')}</TableHead>
               )}
-              <TableHead className="text-right">{tUi(locale, 'pepQuantity')}</TableHead>
-              <TableHead className="text-right">{tUi(locale, 'pepUnitPrice')}</TableHead>
-              <TableHead className="text-right">{tUi(locale, 'pepSubtotal')}</TableHead>
+              <TableHead className="text-right">
+                {tUi(locale, 'pepQuantity')}
+              </TableHead>
+              <TableHead className="text-right">
+                {tUi(locale, 'pepUnitPrice')}
+              </TableHead>
+              <TableHead className="text-right">
+                {tUi(locale, 'pepSubtotal')}
+              </TableHead>
               {config.showDiscountColumn && (
                 <>
-                  <TableHead className="text-right">{tUi(locale, 'pepDiscountPercent')}</TableHead>
-                  <TableHead className="text-right">{tUi(locale, 'pepDiscountAmount')}</TableHead>
+                  <TableHead className="text-right">
+                    {tUi(locale, 'pepDiscountPercent')}
+                  </TableHead>
+                  <TableHead className="text-right">
+                    {tUi(locale, 'pepDiscountAmount')}
+                  </TableHead>
                 </>
               )}
-              <TableHead className="text-right">{tUi(locale, 'pepNet')}</TableHead>
+              <TableHead className="text-right">
+                {tUi(locale, 'pepNet')}
+              </TableHead>
               {config.showVatColumn && (
                 <>
-                  <TableHead className="text-right">{tUi(locale, 'pepVatRate')}</TableHead>
-                  <TableHead className="text-right">{tUi(locale, 'pepVat')}</TableHead>
+                  <TableHead className="text-right">
+                    {tUi(locale, 'pepVatRate')}
+                  </TableHead>
+                  <TableHead className="text-right">
+                    {tUi(locale, 'pepVat')}
+                  </TableHead>
                 </>
               )}
               {config.showGrossColumn && (
-                <TableHead className="text-right">{tUi(locale, 'pepGross')}</TableHead>
+                <TableHead className="text-right">
+                  {tUi(locale, 'pepGross')}
+                </TableHead>
               )}
               <TableHead className="w-18" />
             </TableRow>
@@ -56,12 +79,13 @@ export function PricingLineTable() {
               <TableRow>
                 <td
                   colSpan={20}
-                  className="py-8 text-center text-sm text-muted-foreground">
+                  className="py-8 text-center text-sm text-muted-foreground"
+                >
                   {tUi(locale, 'pepNoLines')}
                 </td>
               </TableRow>
             ) : (
-              lineItemRows.map(row => (
+              lineItemRows.map((row) => (
                 <PricingLineRow key={row.id} row={row} />
               ))
             )}
@@ -75,11 +99,12 @@ export function PricingLineTable() {
           variant="outline"
           size="sm"
           className="ml-2"
-          onClick={() => addLineItem()}>
+          onClick={() => addLineItem()}
+        >
           <Plus className="mr-1 h-4 w-4" />
           {tUi(locale, 'pepAddLine')}
         </Button>
       )}
     </div>
-  );
+  )
 }

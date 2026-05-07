@@ -1,17 +1,18 @@
-'use client';
+'use client'
 
-import { format } from 'date-fns';
+import { format } from 'date-fns'
 
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area'
 
-import { tUi } from '@/lib/ui-i18n';
+import { tUi } from '@/lib/ui-i18n'
 
-import { useTimeSlotSchedulerContext } from './time-slot-scheduler-context';
-import { TimeSlotSchedulerMonthCalendar } from './time-slot-scheduler-month-calendar';
-import { TimeSlotSchedulerSlotButton } from './time-slot-scheduler-slot-button';
+import { useTimeSlotSchedulerContext } from './time-slot-scheduler-context'
+import { TimeSlotSchedulerMonthCalendar } from './time-slot-scheduler-month-calendar'
+import { TimeSlotSchedulerSlotButton } from './time-slot-scheduler-slot-button'
 
 function TimeSlotSchedulerMonthView() {
-  const { selectedDay, selectedDaySlots, locale } = useTimeSlotSchedulerContext();
+  const { selectedDay, selectedDaySlots, locale } =
+    useTimeSlotSchedulerContext()
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 md:flex-row">
@@ -26,7 +27,7 @@ function TimeSlotSchedulerMonthView() {
             <ScrollArea className="flex-1">
               <div className="space-y-1.5">
                 {selectedDaySlots && selectedDaySlots.slots.length > 0 ? (
-                  selectedDaySlots.slots.map(slot => (
+                  selectedDaySlots.slots.map((slot) => (
                     <TimeSlotSchedulerSlotButton key={slot.id} slot={slot} />
                   ))
                 ) : (
@@ -39,12 +40,14 @@ function TimeSlotSchedulerMonthView() {
           </>
         ) : (
           <div className="flex flex-1 items-center justify-center">
-            <p className="text-sm text-muted-foreground">{tUi(locale, 'tssSelectSlot')}</p>
+            <p className="text-sm text-muted-foreground">
+              {tUi(locale, 'tssSelectSlot')}
+            </p>
           </div>
         )}
       </div>
     </div>
-  );
+  )
 }
 
-export { TimeSlotSchedulerMonthView };
+export { TimeSlotSchedulerMonthView }

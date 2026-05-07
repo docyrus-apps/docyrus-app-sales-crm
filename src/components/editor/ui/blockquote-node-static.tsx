@@ -1,7 +1,7 @@
 // @ts-nocheck
-import type { SlateElementProps } from 'platejs/static'
+import * as React from 'react'
 
-import { SlateElement } from 'platejs/static'
+import { type SlateElementProps, SlateElement } from 'platejs/static'
 
 export function BlockquoteElementStatic(props: SlateElementProps) {
   return (

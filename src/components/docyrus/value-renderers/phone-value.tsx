@@ -1,39 +1,41 @@
-'use client';
+'use client'
 
-import { Phone } from 'lucide-react';
+import { Phone } from 'lucide-react'
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'
 
-import { type DocyrusValueProps } from './types';
+import { type DocyrusValueProps } from './types'
 
-import { formatPhoneDisplay, getCompanionValue } from './utils';
+import { formatPhoneDisplay, getCompanionValue } from './utils'
 
 export function PhoneValue({
   field,
   value,
   record,
-  className
+  className,
 }: DocyrusValueProps) {
   if (value == null || value === '') {
-    return <span className="text-muted-foreground">—</span>;
+    return <span className="text-muted-foreground">—</span>
   }
 
-  const phone = String(value);
-  const countryCode = getCompanionValue(record, field.slug, 'country_code');
-  const display = formatPhoneDisplay(
-    phone,
+  const phone = String(value)
+  const countryCode =
+    getCompanionValue(record, field.slug, 'country') ??
+    getCompanionValue(record, field.slug, 'country_code')
+  const normalizedCountryCode =
     typeof countryCode === 'string' ? countryCode : null
-  );
+  const display = formatPhoneDisplay(phone, normalizedCountryCode)
 
   return (
     <a
-      href={`tel:${typeof countryCode === 'string' ? countryCode : ''}${phone}`}
+      href={`tel:${normalizedCountryCode ?? ''}${phone}`}
       className={cn(
         'inline-flex items-center gap-1 text-primary underline-offset-4 hover:underline truncate',
-        className
-      )}>
+        className,
+      )}
+    >
       <Phone className="size-3.5 shrink-0" />
       <span className="truncate">{display}</span>
     </a>
-  );
+  )
 }

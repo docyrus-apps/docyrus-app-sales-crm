@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import {
   forwardRef,
@@ -7,46 +7,45 @@ import {
   useMemo,
   useRef,
   useState,
-  type HTMLAttributes
-} from 'react';
+  type HTMLAttributes,
+} from 'react'
 
-import { AnimatePresence, motion } from 'motion/react';
-import { cva, type VariantProps } from 'class-variance-authority';
+import { AnimatePresence, motion } from 'motion/react'
+import { cva, type VariantProps } from 'class-variance-authority'
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'
 
-import { type NotificationStackProps } from './types';
+import { type NotificationStackProps } from './types'
 
-import { NotificationStackCard } from './notification-stack-card';
+import { NotificationStackCard } from './notification-stack-card'
 
-const SCALE_STEP = 0.05;
-const OFFSET_STEP = 10;
-const OPACITY_STEP = 0.15;
+const SCALE_STEP = 0.05
+const OFFSET_STEP = 10
+const OPACITY_STEP = 0.15
 
-const notificationStackVariants = cva(
-  'relative w-full max-w-2xl',
-  {
-    variants: {
-      variant: {
-        default: '',
-        bordered: '[&_[data-slot=stack-card]]:shadow-md'
-      },
-      size: {
-        sm: '',
-        default: '',
-        lg: ''
-      }
+const notificationStackVariants = cva('relative w-full max-w-2xl', {
+  variants: {
+    variant: {
+      default: '',
+      bordered: '[&_[data-slot=stack-card]]:shadow-md',
     },
-    defaultVariants: {
-      variant: 'default',
-      size: 'default'
-    }
-  }
-);
+    size: {
+      sm: '',
+      default: '',
+      lg: '',
+    },
+  },
+  defaultVariants: {
+    variant: 'default',
+    size: 'default',
+  },
+})
 
 const NotificationStack = forwardRef<
   HTMLDivElement,
-  NotificationStackProps & HTMLAttributes<HTMLDivElement> & VariantProps<typeof notificationStackVariants>
+  NotificationStackProps &
+    HTMLAttributes<HTMLDivElement> &
+    VariantProps<typeof notificationStackVariants>
 >(
   (
     {
@@ -63,85 +62,91 @@ const NotificationStack = forwardRef<
       className,
       ...props
     },
-    ref
+    ref,
   ) => {
-    const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
-    const loadMoreCalledRef = useRef(false);
+    const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
+    const loadMoreCalledRef = useRef(false)
 
     const visibleNotifications = useMemo(() => {
       return notifications
-        .filter(n => !dismissedIds.has(n.id))
-        .slice(0, maxVisible);
-    }, [notifications, dismissedIds, maxVisible]);
+        .filter((n) => !dismissedIds.has(n.id))
+        .slice(0, maxVisible)
+    }, [notifications, dismissedIds, maxVisible])
 
-    const remainingCount = notifications.filter(n => !dismissedIds.has(n.id)).length;
+    const remainingCount = notifications.filter(
+      (n) => !dismissedIds.has(n.id),
+    ).length
 
     useEffect(() => {
       if (
-        remainingCount <= loadMoreThreshold
-        && remainingCount > 0
-        && onLoadMore
-        && !loadMoreCalledRef.current
+        remainingCount <= loadMoreThreshold &&
+        remainingCount > 0 &&
+        onLoadMore &&
+        !loadMoreCalledRef.current
       ) {
-        loadMoreCalledRef.current = true;
-        onLoadMore();
+        loadMoreCalledRef.current = true
+        onLoadMore()
       }
-    }, [remainingCount, loadMoreThreshold, onLoadMore]);
+    }, [remainingCount, loadMoreThreshold, onLoadMore])
 
     useEffect(() => {
       if (remainingCount > loadMoreThreshold) {
-        loadMoreCalledRef.current = false;
+        loadMoreCalledRef.current = false
       }
-    }, [remainingCount, loadMoreThreshold]);
+    }, [remainingCount, loadMoreThreshold])
 
     const handleDismiss = useCallback(
       (id: string) => {
-        setDismissedIds(prev => new Set(prev).add(id));
-        onDismiss?.(id);
+        setDismissedIds((prev) => new Set(prev).add(id))
+        onDismiss?.(id)
       },
-      [onDismiss]
-    );
+      [onDismiss],
+    )
 
     const handleAction = useCallback(
       (id: string, action: string) => {
-        onAction?.(id, action);
-        setDismissedIds(prev => new Set(prev).add(id));
-        onDismiss?.(id);
+        onAction?.(id, action)
+        setDismissedIds((prev) => new Set(prev).add(id))
+        onDismiss?.(id)
       },
-      [onAction, onDismiss]
-    );
+      [onAction, onDismiss],
+    )
 
     if (visibleNotifications.length === 0) {
       return (
         <div
           ref={ref}
-          className={cn(notificationStackVariants({ variant, size, className }))}
-          {...props}>
+          className={cn(
+            notificationStackVariants({ variant, size, className }),
+          )}
+          {...props}
+        >
           {emptyState ?? (
             <div className="flex items-center justify-center rounded-lg border border-dashed border-border bg-card p-12 text-sm text-muted-foreground">
               No notifications
             </div>
           )}
         </div>
-      );
+      )
     }
 
-    const stackDepth = Math.min(visibleNotifications.length, maxVisible);
-    const stackOffset = (stackDepth - 1) * OFFSET_STEP;
+    const stackDepth = Math.min(visibleNotifications.length, maxVisible)
+    const stackOffset = (stackDepth - 1) * OFFSET_STEP
 
     return (
       <div
         ref={ref}
         className={cn(notificationStackVariants({ variant, size, className }))}
         style={{ paddingBottom: `${stackOffset}px` }}
-        {...props}>
+        {...props}
+      >
         <div className="relative">
           <AnimatePresence mode="popLayout">
             {visibleNotifications.map((notification, index) => {
-              const itemScale = 1 - index * SCALE_STEP;
-              const translateY = index * OFFSET_STEP;
-              const zIndex = visibleNotifications.length - index;
-              const itemOpacity = 1 - index * OPACITY_STEP;
+              const itemScale = 1 - index * SCALE_STEP
+              const translateY = index * OFFSET_STEP
+              const zIndex = visibleNotifications.length - index
+              const itemOpacity = 1 - index * OPACITY_STEP
 
               return (
                 <motion.div
@@ -153,17 +158,17 @@ const NotificationStack = forwardRef<
                     scale: itemScale,
                     opacity: itemOpacity,
                     y: translateY,
-                    zIndex
+                    zIndex,
                   }}
                   exit={{
                     x: 300,
                     opacity: 0,
-                    transition: { duration: 0.3, ease: 'easeIn' }
+                    transition: { duration: 0.3, ease: 'easeIn' },
                   }}
                   transition={{
                     type: 'spring',
                     stiffness: 300,
-                    damping: 30
+                    damping: 30,
                   }}
                   style={{
                     position: index === 0 ? 'relative' : 'absolute',
@@ -172,24 +177,26 @@ const NotificationStack = forwardRef<
                     width: '100%',
                     transformOrigin: 'top center',
                     zIndex,
-                    pointerEvents: index === 0 ? 'auto' : 'none'
-                  }}>
+                    pointerEvents: index === 0 ? 'auto' : 'none',
+                  }}
+                >
                   <NotificationStackCard
                     notification={notification}
                     size={size}
                     onDismiss={handleDismiss}
                     onClick={onClick}
-                    onAction={handleAction} />
+                    onAction={handleAction}
+                  />
                 </motion.div>
-              );
+              )
             })}
           </AnimatePresence>
         </div>
       </div>
-    );
-  }
-);
+    )
+  },
+)
 
-NotificationStack.displayName = 'NotificationStack';
+NotificationStack.displayName = 'NotificationStack'
 
-export { NotificationStack, notificationStackVariants };
+export { NotificationStack, notificationStackVariants }

@@ -1,41 +1,42 @@
-import { DocyrusIcon } from '@/components/docyrus/docyrus-icon';
-import { Button } from '@/components/ui/button';
+import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
+import { Button } from '@/components/ui/button'
 
-import { type DocyrusFile } from './lib/file-utils';
-import { getSourceIcon } from './lib/file-utils';
+import { type DocyrusFile } from './lib/file-utils'
+import { getSourceIcon } from './lib/file-utils'
 
 interface FileGridProps {
-  files: Array<DocyrusFile>;
-  editable: boolean;
-  onOpen: (file: DocyrusFile) => void;
-  onDelete: (file: DocyrusFile) => void;
+  files: Array<DocyrusFile>
+  editable: boolean
+  onOpen: (file: DocyrusFile) => void
+  onDelete: (file: DocyrusFile) => void
 }
 
-export function FileGrid({
-  files, editable, onOpen, onDelete
-}: FileGridProps) {
+export function FileGrid({ files, editable, onOpen, onDelete }: FileGridProps) {
   return (
     <div className="grid grid-cols-2 gap-2 @md/file-panel:grid-cols-3 @lg/file-panel:grid-cols-4">
       {files.map((file) => {
-        const sourceIcon = getSourceIcon(file.source);
+        const sourceIcon = getSourceIcon(file.source)
 
         return (
           <div
             key={file.id}
             className="group relative cursor-pointer overflow-hidden rounded-lg border bg-muted/30"
-            onClick={() => onOpen(file)}>
+            onClick={() => onOpen(file)}
+          >
             <div className="aspect-square">
               {file.signed_url ? (
                 <img
                   src={file.signed_url}
                   alt={file.file_name}
                   className="size-full object-cover"
-                  loading="lazy" />
+                  loading="lazy"
+                />
               ) : (
                 <div className="flex size-full items-center justify-center">
                   <DocyrusIcon
                     icon="fal file-image"
-                    className="size-8 text-muted-foreground/40" />
+                    className="size-8 text-muted-foreground/40"
+                  />
                 </div>
               )}
             </div>
@@ -48,7 +49,8 @@ export function FileGrid({
               <div className="absolute right-1.5 top-1.5">
                 <DocyrusIcon
                   icon={sourceIcon}
-                  className="size-3.5 text-white drop-shadow-sm" />
+                  className="size-3.5 text-white drop-shadow-sm"
+                />
               </div>
             )}
             {editable && (
@@ -58,16 +60,17 @@ export function FileGrid({
                   size="sm"
                   className="size-6"
                   onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(file);
-                  }}>
+                    e.stopPropagation()
+                    onDelete(file)
+                  }}
+                >
                   <DocyrusIcon icon="fal trash" className="size-3" />
                 </Button>
               </div>
             )}
           </div>
-        );
+        )
       })}
     </div>
-  );
+  )
 }

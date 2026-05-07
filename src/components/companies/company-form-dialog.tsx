@@ -28,6 +28,7 @@ interface CompanyFormDialogProps {
   onOpenChange: (open: boolean) => void
   company?: any
   mode: 'create' | 'edit'
+  onSubmitSuccess?: () => void | Promise<void>
 }
 
 export function CompanyFormDialog({
@@ -35,6 +36,7 @@ export function CompanyFormDialog({
   onOpenChange,
   company,
   mode,
+  onSubmitSuccess,
 }: CompanyFormDialogProps) {
   const { t } = useTranslation()
   const createCompany = useCreateCompany()
@@ -95,6 +97,8 @@ export function CompanyFormDialog({
           data: cleanedData,
         })
       }
+
+      await onSubmitSuccess?.()
       onOpenChange(false)
     },
   })

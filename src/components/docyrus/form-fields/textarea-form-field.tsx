@@ -1,37 +1,43 @@
-'use client';
+'use client'
 
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
-import { Textarea } from '@/components/ui/textarea';
+import { Field, FieldError } from '@/components/ui/field'
+import { Textarea } from '@/components/ui/textarea'
 
-import { type DocyrusFormFieldProps } from './types';
+import { FormFieldLabel } from './form-field-label'
+import { type DocyrusFormFieldProps } from './types'
 
 export function TextareaFormField({
   field: fieldConfig,
   form,
   disabled,
-  className
+  required,
+  className,
 }: DocyrusFormFieldProps) {
   return (
     <form.Field
       name={fieldConfig.slug}
       children={(field: any) => {
-        const isInvalid
-          = field.state.meta.isTouched && !field.state.meta.isValid;
+        const isInvalid =
+          field.state.meta.isTouched && !field.state.meta.isValid
 
         return (
           <Field data-invalid={isInvalid} className={className}>
-            <FieldLabel htmlFor={field.name}>{fieldConfig.name}</FieldLabel>
+            <FormFieldLabel htmlFor={field.name} required={required}>
+              {fieldConfig.name}
+            </FormFieldLabel>
             <Textarea
               id={field.name}
               name={field.name}
               value={field.state.value ?? ''}
               onBlur={field.handleBlur}
-              onChange={e => field.handleChange(e.target.value)}
+              onChange={(e) => field.handleChange(e.target.value)}
               aria-invalid={isInvalid}
-              disabled={disabled || fieldConfig.readOnly === true} />
+              disabled={disabled || fieldConfig.readOnly === true}
+            />
             {isInvalid && <FieldError errors={field.state.meta.errors} />}
           </Field>
-        );
-      }} />
-  );
+        )
+      }}
+    />
+  )
 }

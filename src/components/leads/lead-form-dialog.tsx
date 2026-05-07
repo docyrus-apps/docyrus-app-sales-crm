@@ -33,6 +33,7 @@ interface LeadFormDialogProps {
   onOpenChange: (open: boolean) => void
   lead?: any
   mode: 'create' | 'edit'
+  onSubmitSuccess?: () => void | Promise<void>
 }
 
 export function LeadFormDialog({
@@ -40,6 +41,7 @@ export function LeadFormDialog({
   onOpenChange,
   lead,
   mode,
+  onSubmitSuccess,
 }: LeadFormDialogProps) {
   const { t } = useTranslation()
   const createLead = useCreateLead()
@@ -110,6 +112,8 @@ export function LeadFormDialog({
       } else if (lead?.id) {
         await updateLead.mutateAsync({ leadId: lead.id, data: cleanedData })
       }
+
+      await onSubmitSuccess?.()
       onOpenChange(false)
     },
   })

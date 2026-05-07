@@ -1,91 +1,87 @@
-'use client';
+'use client'
 
-import {
-  useCallback, useEffect, useMemo, useRef, useState
-} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import {
-  CalendarIcon, Check, ChevronRight, ChevronsUpDown
-} from 'lucide-react';
-import { format } from 'date-fns';
+import { CalendarIcon, Check, ChevronRight, ChevronsUpDown } from 'lucide-react'
 
-import { DocyrusIcon } from '@/components/docyrus/docyrus-icon';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
+import { Field, FieldError } from '@/components/ui/field'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Calendar } from '@/components/ui/calendar';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
+  SelectValue,
+} from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Calendar } from '@/components/ui/calendar'
+import { Label } from '@/components/ui/label'
+import { Separator } from '@/components/ui/separator'
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger
-} from '@/components/ui/popover';
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger
-} from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 
+import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useDateFormat } from '@/lib/use-date-format'
+
+import { FormFieldLabel } from './form-field-label'
 import {
   getCompanionFieldSlug,
   getEnumDotClassName,
   getEnumDotStyle,
-  getEnumIconColor
-} from './lib/utils';
-import { type DocyrusFormFieldProps, type EnumOption } from './types';
+  getEnumIconColor,
+  toLocalDateString,
+} from './lib/utils'
+import { type DocyrusFormFieldProps, type EnumOption } from './types'
+
+const compactMonthFmt = new Intl.DateTimeFormat(undefined, { month: 'short' })
+const compactYearFmt = new Intl.DateTimeFormat(undefined, { year: '2-digit' })
 
 function formatCompactDate(iso: string): { line1: string; line2: string } {
-  const d = new Date(iso);
-  const day = d.getDate();
-  const suffixes = [
-    'th',
-    'st',
-    'nd',
-    'rd'
-  ];
-  const v = day % 100;
-  const suffix = suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0];
+  const d = new Date(iso)
+  const day = d.getDate()
+  const suffixes = ['th', 'st', 'nd', 'rd']
+  const v = day % 100
+  const suffix = suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0]
 
   return {
     line1: `${day}${suffix}`,
-    line2: `${format(d, 'MMM')} '${format(d, 'yy')}`
-  };
+    line2: `${compactMonthFmt.format(d)} '${compactYearFmt.format(d)}`,
+  }
 }
 
 interface StatusDraft {
-  status: string;
-  secondary: string;
-  description: string;
-  followupDate: string | null;
+  status: string
+  secondary: string
+  description: string
+  followupDate: string | null
 }
 
 export function StatusFormField({
   field: fieldConfig,
   form,
   disabled,
+  required,
   className,
-  enumOptions = []
+  enumOptions = [],
 }: DocyrusFormFieldProps) {
-  const secondarySlug = getCompanionFieldSlug(fieldConfig.slug, 'secondary');
-  const descriptionSlug = getCompanionFieldSlug(
-    fieldConfig.slug,
-    'description'
-  );
+  const secondarySlug = getCompanionFieldSlug(fieldConfig.slug, 'secondary')
+  const descriptionSlug = getCompanionFieldSlug(fieldConfig.slug, 'description')
   const followupDateSlug = getCompanionFieldSlug(
     fieldConfig.slug,
-    'followup_date'
-  );
+    'followup_date',
+  )
 
   return (
     <form.Field
@@ -96,13 +92,16 @@ export function StatusFormField({
           fieldConfig={fieldConfig}
           form={form}
           disabled={disabled}
+          required={required}
           className={className}
           enumOptions={enumOptions}
           secondarySlug={secondarySlug}
           descriptionSlug={descriptionSlug}
-          followupDateSlug={followupDateSlug} />
-      )} />
-  );
+          followupDateSlug={followupDateSlug}
+        />
+      )}
+    />
+  )
 }
 
 function StatusFormFieldInner({
@@ -110,60 +109,67 @@ function StatusFormFieldInner({
   fieldConfig,
   form,
   disabled,
+  required,
   className,
   enumOptions,
   secondarySlug,
   descriptionSlug,
-  followupDateSlug
+  followupDateSlug,
 }: {
-  field: any;
-  fieldConfig: DocyrusFormFieldProps['field'];
-  form: any;
-  disabled?: boolean;
-  className?: string;
-  enumOptions: Array<EnumOption>;
-  secondarySlug: string;
-  descriptionSlug: string;
-  followupDateSlug: string;
+  field: any
+  fieldConfig: DocyrusFormFieldProps['field']
+  form: any
+  disabled?: boolean
+  required?: boolean
+  className?: string
+  enumOptions: Array<EnumOption>
+  secondarySlug: string
+  descriptionSlug: string
+  followupDateSlug: string
 }) {
-  const isInvalid
-    = field.state.meta.isTouched && !field.state.meta.isValid;
-  const currentValue = field.state.value ?? '';
-  const isDisabled = disabled || fieldConfig.readOnly === true;
+  const { t } = useUiTranslation()
+  const { formatDate } = useDateFormat()
+  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+  const currentValue = field.state.value ?? ''
+  const isDisabled = disabled || fieldConfig.readOnly === true
 
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState<StatusDraft>({
     status: '',
     secondary: '',
     description: '',
-    followupDate: null
-  });
-  const [datePickerOpen, setDatePickerOpen] = useState(false);
+    followupDate: null,
+  })
+  const [datePickerOpen, setDatePickerOpen] = useState(false)
 
   const [committed, setCommitted] = useState<Omit<StatusDraft, 'status'>>({
     secondary: '',
     description: '',
-    followupDate: null
-  });
+    followupDate: null,
+  })
 
-  const secondaryRef = useRef<any>(null);
-  const descriptionRef = useRef<any>(null);
-  const followupRef = useRef<any>(null);
+  const secondaryRef = useRef<any>(null)
+  const descriptionRef = useRef<any>(null)
+  const followupRef = useRef<any>(null)
 
   const parentOptions = useMemo(
-    () => enumOptions.filter(o => !o.parent),
-    [enumOptions]
-  );
+    () => enumOptions.filter((o) => !o.parent),
+    [enumOptions],
+  )
 
-  const selectedOption = enumOptions.find(o => o.id === currentValue);
+  const selectedOption = enumOptions.find((o) => o.id === currentValue)
 
-  const secondaryOption = enumOptions.find(o => o.id === committed.secondary);
-  const hasCompanionData = !!(committed.secondary || committed.description || committed.followupDate);
+  const secondaryOption = enumOptions.find((o) => o.id === committed.secondary)
+  const hasCompanionData = !!(
+    committed.secondary ||
+    committed.description ||
+    committed.followupDate
+  )
 
   const childOptionsForDraft = useMemo(
-    () => enumOptions.filter(o => o.parent === draft.status),
-    [enumOptions, draft.status]
-  );
+    () => enumOptions.filter((o) => o.parent === draft.status),
+    [enumOptions, draft.status],
+  )
 
   const handleOpenChange = useCallback(
     (isOpen: boolean) => {
@@ -172,108 +178,107 @@ function StatusFormFieldInner({
           status: field.state.value ?? '',
           secondary: '',
           description: '',
-          followupDate: null
-        });
+          followupDate: null,
+        })
         /*
          * We need to read companion fields from the form, but since they
          * are separate form fields we'll read them after render
          */
-        setDatePickerOpen(false);
+        setDatePickerOpen(false)
       }
-      setOpen(isOpen);
+      setOpen(isOpen)
     },
-    [field.state.value]
-  );
+    [field.state.value],
+  )
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setCommitted({
         secondary: secondaryRef.current?.state?.value ?? '',
         description: descriptionRef.current?.state?.value ?? '',
-        followupDate: followupRef.current?.state?.value ?? null
-      });
-    }, 0);
+        followupDate: followupRef.current?.state?.value ?? null,
+      })
+    }, 0)
 
-    return () => clearTimeout(timer);
-  }, []);
+    return () => clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) return
 
     const timer = setTimeout(() => {
-      setDraft(prev => ({
+      setDraft((prev) => ({
         ...prev,
         secondary: secondaryRef.current?.state?.value ?? '',
         description: descriptionRef.current?.state?.value ?? '',
-        followupDate: followupRef.current?.state?.value ?? null
-      }));
-    }, 0);
+        followupDate: followupRef.current?.state?.value ?? null,
+      }))
+    }, 0)
 
-    return () => clearTimeout(timer);
-  }, [open]);
+    return () => clearTimeout(timer)
+  }, [open])
 
-  const handleSelectStatus = useCallback(
-    (statusId: string) => {
-      setDraft(prev => ({
-        ...prev,
-        status: statusId,
-        secondary: statusId === prev.status ? prev.secondary : ''
-      }));
-    },
-    []
-  );
+  const handleSelectStatus = useCallback((statusId: string) => {
+    setDraft((prev) => ({
+      ...prev,
+      status: statusId,
+      secondary: statusId === prev.status ? prev.secondary : '',
+    }))
+  }, [])
 
-  const handleConfirm = useCallback(
-    () => {
-      field.handleChange(draft.status);
+  const handleConfirm = useCallback(() => {
+    field.handleChange(draft.status)
 
-      if (secondaryRef.current) {
-        secondaryRef.current.handleChange(draft.secondary);
-      }
-      if (descriptionRef.current) {
-        descriptionRef.current.handleChange(draft.description);
-      }
-      if (followupRef.current) {
-        followupRef.current.handleChange(draft.followupDate);
-      }
+    if (secondaryRef.current) {
+      secondaryRef.current.handleChange(draft.secondary)
+    }
+    if (descriptionRef.current) {
+      descriptionRef.current.handleChange(draft.description)
+    }
+    if (followupRef.current) {
+      followupRef.current.handleChange(draft.followupDate)
+    }
 
-      setCommitted({
-        secondary: draft.secondary,
-        description: draft.description,
-        followupDate: draft.followupDate
-      });
+    setCommitted({
+      secondary: draft.secondary,
+      description: draft.description,
+      followupDate: draft.followupDate,
+    })
 
-      setOpen(false);
-    },
-    [field, draft]
-  );
+    setOpen(false)
+  }, [field, draft])
 
   return (
     <Field data-invalid={isInvalid} className={className}>
-      <FieldLabel htmlFor={field.name}>{fieldConfig.name}</FieldLabel>
+      <FormFieldLabel htmlFor={field.name} required={required}>
+        {fieldConfig.name}
+      </FormFieldLabel>
 
       {/* Hidden companion fields to sync with form */}
       <form.Field
         name={secondarySlug}
         children={(f: any) => {
-          secondaryRef.current = f;
+          secondaryRef.current = f
 
-          return null;
-        }} />
+          return null
+        }}
+      />
       <form.Field
         name={descriptionSlug}
         children={(f: any) => {
-          descriptionRef.current = f;
+          descriptionRef.current = f
 
-          return null;
-        }} />
+          return null
+        }}
+      />
       <form.Field
         name={followupDateSlug}
         children={(f: any) => {
-          followupRef.current = f;
+          followupRef.current = f
 
-          return null;
-        }} />
+          return null
+        }}
+      />
 
       <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
@@ -287,20 +292,27 @@ function StatusFormFieldInner({
             disabled={isDisabled}
             className={cn(
               'w-full justify-between',
-              selectedOption && hasCompanionData && 'h-auto py-1.5'
-            )}>
+              selectedOption && hasCompanionData && 'h-auto py-1.5',
+            )}
+          >
             {selectedOption ? (
               <div className="flex min-w-0 flex-1 items-center gap-2">
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                   {/* Line 1: Status breadcrumb badges */}
                   <span className="flex items-center gap-1">
-                    <Badge variant="secondary" className="gap-1 px-1.5 py-0 text-xs font-medium">
+                    <Badge
+                      variant="secondary"
+                      className="gap-1 px-1.5 py-0 text-xs font-medium"
+                    >
                       <StatusOptionLabel option={selectedOption} />
                     </Badge>
                     {secondaryOption && (
                       <>
                         <ChevronRight className="size-3 shrink-0 text-muted-foreground" />
-                        <Badge variant="outline" className="gap-1 px-1.5 py-0 text-xs font-normal">
+                        <Badge
+                          variant="outline"
+                          className="gap-1 px-1.5 py-0 text-xs font-normal"
+                        >
                           <StatusOptionLabel option={secondaryOption} />
                         </Badge>
                       </>
@@ -328,37 +340,44 @@ function StatusFormFieldInner({
                     <span className="font-semibold text-foreground">
                       {formatCompactDate(committed.followupDate).line1}
                     </span>
-                    <span>{formatCompactDate(committed.followupDate).line2}</span>
+                    <span>
+                      {formatCompactDate(committed.followupDate).line2}
+                    </span>
                   </span>
                 )}
               </div>
             ) : (
-              <span className="text-muted-foreground">Select status...</span>
+              <span className="text-muted-foreground">
+                {t('ui.formField.statusSelectPlaceholder', 'Select status...')}
+              </span>
             )}
             <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent
           className="w-(--radix-popover-trigger-width) p-0"
-          align="start">
+          align="start"
+        >
           <div className="flex flex-col">
             {/* Status list */}
             <div className="max-h-48 overflow-y-auto p-1">
-              {parentOptions.map(option => (
+              {parentOptions.map((option) => (
                 <button
                   key={option.id}
                   type="button"
                   className={cn(
                     'flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm transition-colors',
                     'hover:bg-accent hover:text-accent-foreground',
-                    draft.status === option.id && 'bg-accent'
+                    draft.status === option.id && 'bg-accent',
                   )}
-                  onClick={() => handleSelectStatus(option.id)}>
+                  onClick={() => handleSelectStatus(option.id)}
+                >
                   <Check
                     className={cn(
                       'size-4 shrink-0',
-                      draft.status === option.id ? 'opacity-100' : 'opacity-0'
-                    )} />
+                      draft.status === option.id ? 'opacity-100' : 'opacity-0',
+                    )}
+                  />
                   <StatusOptionLabel option={option} />
                 </button>
               ))}
@@ -372,15 +391,25 @@ function StatusFormFieldInner({
                   {/* Sub-status select (conditional on child options) */}
                   {childOptionsForDraft.length > 0 && (
                     <div className="flex flex-col gap-1.5">
-                      <Label className="text-xs">Sub-status</Label>
+                      <Label className="text-xs">
+                        {t('ui.formField.statusSubStatus', 'Sub-status')}
+                      </Label>
                       <Select
                         value={draft.secondary}
-                        onValueChange={v => setDraft(prev => ({ ...prev, secondary: v }))}>
+                        onValueChange={(v) =>
+                          setDraft((prev) => ({ ...prev, secondary: v }))
+                        }
+                      >
                         <SelectTrigger className="h-8 w-full text-xs">
-                          <SelectValue placeholder="Select reason..." />
+                          <SelectValue
+                            placeholder={t(
+                              'ui.formField.statusSelectReason',
+                              'Select reason...',
+                            )}
+                          />
                         </SelectTrigger>
                         <SelectContent>
-                          {childOptionsForDraft.map(option => (
+                          {childOptionsForDraft.map((option) => (
                             <SelectItem key={option.id} value={option.id}>
                               <StatusOptionLabel option={option} />
                             </SelectItem>
@@ -392,56 +421,74 @@ function StatusFormFieldInner({
 
                   {/* Notes textarea */}
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs">Notes</Label>
+                    <Label className="text-xs">
+                      {t('ui.formField.statusNotes', 'Notes')}
+                    </Label>
                     <Textarea
                       value={draft.description}
-                      onChange={e => setDraft(prev => ({
-                        ...prev,
-                        description: e.target.value
-                      }))}
-                      placeholder="Add notes..."
-                      className="min-h-16 resize-none text-xs" />
+                      onChange={(e) =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
+                      placeholder={t(
+                        'ui.formField.statusAddNotes',
+                        'Add notes...',
+                      )}
+                      className="min-h-16 resize-none text-xs"
+                    />
                   </div>
 
                   {/* Follow-up date */}
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs">Follow-up date</Label>
+                    <Label className="text-xs">
+                      {t('ui.formField.statusFollowUpDate', 'Follow-up date')}
+                    </Label>
                     <Popover
                       open={datePickerOpen}
-                      onOpenChange={setDatePickerOpen}>
+                      onOpenChange={setDatePickerOpen}
+                    >
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
                           size="sm"
                           className={cn(
                             'w-full justify-start text-left text-xs font-normal',
-                            !draft.followupDate && 'text-muted-foreground'
-                          )}>
+                            !draft.followupDate && 'text-muted-foreground',
+                          )}
+                        >
                           <CalendarIcon className="mr-2 size-3.5" />
-                          {draft.followupDate ? format(new Date(draft.followupDate), 'PPP') : 'Pick a date'}
+                          {draft.followupDate
+                            ? formatDate(new Date(draft.followupDate))
+                            : t('ui.formField.statusPickDate', 'Pick a date')}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                           mode="single"
-                          selected={draft.followupDate ? new Date(draft.followupDate) : undefined}
+                          selected={
+                            draft.followupDate
+                              ? new Date(draft.followupDate)
+                              : undefined
+                          }
                           onSelect={(date) => {
-                            setDraft(prev => ({
+                            setDraft((prev) => ({
                               ...prev,
-                              followupDate: date ? date.toISOString() : null
-                            }));
-                            setDatePickerOpen(false);
-                          }} />
+                              followupDate: date
+                                ? toLocalDateString(date)
+                                : null,
+                            }))
+                            setDatePickerOpen(false)
+                          }}
+                        />
                       </PopoverContent>
                     </Popover>
                   </div>
 
                   {/* Confirm button */}
-                  <Button
-                    size="sm"
-                    className="w-full"
-                    onClick={handleConfirm}>
-                    Confirm
+                  <Button size="sm" className="w-full" onClick={handleConfirm}>
+                    {t('ui.formField.statusConfirm', 'Confirm')}
                   </Button>
                 </div>
               </>
@@ -451,31 +498,28 @@ function StatusFormFieldInner({
       </Popover>
       {isInvalid && <FieldError errors={field.state.meta.errors} />}
     </Field>
-  );
+  )
 }
 
 function StatusOptionLabel({ option }: { option: EnumOption }) {
-  const iconColor = getEnumIconColor(option.color);
+  const iconColor = getEnumIconColor(option.color)
 
   return (
     <span className="flex items-center gap-2">
       {option.icon ? (
-        <span
-          className={iconColor.className}
-          style={iconColor.style}>
-          <DocyrusIcon
-            icon={option.icon}
-            className="size-4 shrink-0" />
+        <span className={iconColor.className} style={iconColor.style}>
+          <DocyrusIcon icon={option.icon} className="size-4 shrink-0" />
         </span>
       ) : option.color ? (
         <Badge
           className={cn(
             'size-2.5 shrink-0 rounded-full p-0',
-            getEnumDotClassName(option.color)
+            getEnumDotClassName(option.color),
           )}
-          style={getEnumDotStyle(option.color)} />
+          style={getEnumDotStyle(option.color)}
+        />
       ) : null}
       {option.name}
     </span>
-  );
+  )
 }

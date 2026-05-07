@@ -36,12 +36,12 @@ These endpoints may be hidden from generated Swagger/OpenAPI output because the 
 
 These manage record-level shares, not role CRUD.
 
-| Method | Path | Purpose |
-| :----- | :--- | :------ |
-| `GET` | `/v1/users/acl?dataSourceId={uuid}&recordId={uuid}` | Fetch direct and effective ACL rows for a record |
-| `POST` | `/v1/users/acl/share` | Upsert record share rows |
-| `DELETE` | `/v1/users/acl/share` | Revoke matching share rows |
-| `PUT` | `/v1/users/acl/owner` | Transfer record ownership |
+| Method   | Path                                                | Purpose                                          |
+| :------- | :-------------------------------------------------- | :----------------------------------------------- |
+| `GET`    | `/v1/users/acl?dataSourceId={uuid}&recordId={uuid}` | Fetch direct and effective ACL rows for a record |
+| `POST`   | `/v1/users/acl/share`                               | Upsert record share rows                         |
+| `DELETE` | `/v1/users/acl/share`                               | Revoke matching share rows                       |
+| `PUT`    | `/v1/users/acl/owner`                               | Transfer record ownership                        |
 
 #### Share payload notes
 
@@ -80,13 +80,13 @@ These manage record-level shares, not role CRUD.
 
 ### 2) Role endpoints
 
-| Method | Path | Purpose |
-| :----- | :--- | :------ |
-| `GET` | `/v1/users/acl/roles` | List tenant roles |
-| `GET` | `/v1/users/acl/roles/:roleId` | Get one role |
-| `POST` | `/v1/users/acl/roles` | Create role |
-| `PATCH` | `/v1/users/acl/roles/:roleId` | Partial update role |
-| `DELETE` | `/v1/users/acl/roles/:roleId` | Hard delete role |
+| Method   | Path                          | Purpose             |
+| :------- | :---------------------------- | :------------------ |
+| `GET`    | `/v1/users/acl/roles`         | List tenant roles   |
+| `GET`    | `/v1/users/acl/roles/:roleId` | Get one role        |
+| `POST`   | `/v1/users/acl/roles`         | Create role         |
+| `PATCH`  | `/v1/users/acl/roles/:roleId` | Partial update role |
+| `DELETE` | `/v1/users/acl/roles/:roleId` | Hard delete role    |
 
 #### Role create/update rules
 
@@ -112,13 +112,13 @@ Frontend implication: after role deletion, refresh role lists, user-role lists, 
 
 ### 3) User-role endpoints
 
-| Method | Path | Purpose |
-| :----- | :--- | :------ |
-| `GET` | `/v1/users/acl/user-roles` | List assignments across the tenant |
-| `GET` | `/v1/users/acl/users/:userId/roles` | List assignments for one user |
-| `POST` | `/v1/users/acl/users/:userId/roles` | Add roles to a user |
-| `PUT` | `/v1/users/acl/users/:userId/roles` | Replace the full role set for a user |
-| `DELETE` | `/v1/users/acl/users/:userId/roles/:roleId` | Remove one role assignment |
+| Method   | Path                                        | Purpose                              |
+| :------- | :------------------------------------------ | :----------------------------------- |
+| `GET`    | `/v1/users/acl/user-roles`                  | List assignments across the tenant   |
+| `GET`    | `/v1/users/acl/users/:userId/roles`         | List assignments for one user        |
+| `POST`   | `/v1/users/acl/users/:userId/roles`         | Add roles to a user                  |
+| `PUT`    | `/v1/users/acl/users/:userId/roles`         | Replace the full role set for a user |
+| `DELETE` | `/v1/users/acl/users/:userId/roles/:roleId` | Remove one role assignment           |
 
 #### User-role behavior
 
@@ -133,13 +133,13 @@ Frontend implication: after role deletion, refresh role lists, user-role lists, 
 
 Role queries are role-based filtering rules attached to roles and optionally scoped to a specific data source.
 
-| Method | Path | Purpose |
-| :----- | :--- | :------ |
-| `GET` | `/v1/users/acl/role-queries` | List role queries |
-| `GET` | `/v1/users/acl/role-queries/:roleQueryId` | Get one role query |
-| `POST` | `/v1/users/acl/role-queries` | Create role query |
-| `PATCH` | `/v1/users/acl/role-queries/:roleQueryId` | Partial update role query |
-| `DELETE` | `/v1/users/acl/role-queries/:roleQueryId` | Hard delete role query |
+| Method   | Path                                      | Purpose                   |
+| :------- | :---------------------------------------- | :------------------------ |
+| `GET`    | `/v1/users/acl/role-queries`              | List role queries         |
+| `GET`    | `/v1/users/acl/role-queries/:roleQueryId` | Get one role query        |
+| `POST`   | `/v1/users/acl/role-queries`              | Create role query         |
+| `PATCH`  | `/v1/users/acl/role-queries/:roleQueryId` | Partial update role query |
+| `DELETE` | `/v1/users/acl/role-queries/:roleQueryId` | Hard delete role query    |
 
 #### Role-query rules
 
@@ -228,68 +228,68 @@ Common backend error patterns:
 
 ```ts
 export interface IAclRole {
-  activitySummaryReportQueryId: string | null;
-  createdBy: string | null;
-  createdOn: string | null;
-  databaseId: string | null;
-  disableLogin: number | null;
-  id: string;
-  lastModifiedBy: string | null;
-  lastModifiedOn: string | null;
-  name: string;
-  ownership: "APP" | "CUSTOM" | "PRODUCT" | "SYSTEM" | "USER";
-  privileges: string;
-  slug: string;
-  status: number | null;
-  tenantAppId: string | null;
-  uid: string;
+  activitySummaryReportQueryId: string | null
+  createdBy: string | null
+  createdOn: string | null
+  databaseId: string | null
+  disableLogin: number | null
+  id: string
+  lastModifiedBy: string | null
+  lastModifiedOn: string | null
+  name: string
+  ownership: 'APP' | 'CUSTOM' | 'PRODUCT' | 'SYSTEM' | 'USER'
+  privileges: string
+  slug: string
+  status: number | null
+  tenantAppId: string | null
+  uid: string
 }
 
 export interface IAclUserRoleAssignment {
-  createdOn: string | null;
-  id: string;
+  createdOn: string | null
+  id: string
   role: {
-    databaseId: string | null;
-    id: string;
-    name: string;
-    slug: string;
-    uid: string;
-  };
-  roleId: string;
-  status: number | null;
-  userId: string;
+    databaseId: string | null
+    id: string
+    name: string
+    slug: string
+    uid: string
+  }
+  roleId: string
+  status: number | null
+  userId: string
 }
 
 export interface IAclRoleQuery {
-  createdBy: string | null;
-  createdOn: string | null;
-  dataSourceId: string | null;
-  filterChildRelations: boolean;
-  id: string;
-  lastModifiedBy: string | null;
-  lastModifiedOn: string | null;
-  name: string | null;
-  query: Record<string, unknown> | null;
-  restrictionLevel: "hidden" | "read-only" | "not-deletable";
-  roleIds: string[];
-  tenantAppId: string | null;
+  createdBy: string | null
+  createdOn: string | null
+  dataSourceId: string | null
+  filterChildRelations: boolean
+  id: string
+  lastModifiedBy: string | null
+  lastModifiedOn: string | null
+  name: string | null
+  query: Record<string, unknown> | null
+  restrictionLevel: 'hidden' | 'read-only' | 'not-deletable'
+  roleIds: string[]
+  tenantAppId: string | null
 }
 
 export interface IAclRecordShare {
-  id: string;
-  principal_type: "user" | "team" | "role" | "tenant" | "public";
-  principal_id: string;
-  permissions: number;
-  expires_at: string | null;
-  created_by: string | null;
-  created_on: string | null;
+  id: string
+  principal_type: 'user' | 'team' | 'role' | 'tenant' | 'public'
+  principal_id: string
+  permissions: number
+  expires_at: string | null
+  created_by: string | null
+  created_on: string | null
 }
 
 export interface IAclEffectiveUserAccess {
-  id: string;
-  user_id: string;
-  permissions: number;
-  source_principal_type: "user" | "team" | "role" | "tenant" | "public";
-  source_principal_id: string;
+  id: string
+  user_id: string
+  permissions: number
+  source_principal_type: 'user' | 'team' | 'role' | 'tenant' | 'public'
+  source_principal_id: string
 }
 ```

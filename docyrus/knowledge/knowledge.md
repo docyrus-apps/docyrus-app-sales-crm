@@ -10,8 +10,8 @@ Search this knowledge graph before coding, keep it updated when behavior changes
 
 Use `// @docyrus: \[\[knowledge#Section Name\]\]` or `# @docyrus: \[\[knowledge#Section Name\]\]` near the code or tests that implement a documented behavior.
 
-
 <!-- docyrus-knowledge:auto:begin -->
+
 ## Generated Map
 
 This generated section summarizes the starter knowledge files created from the current repository structure.

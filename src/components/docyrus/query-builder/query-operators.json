@@ -1,0 +1,887 @@
+[
+  {
+    "operator": "ends with",
+    "group": "ALPHA",
+    "no_value_field": false
+  },
+  {
+    "operator": "<>",
+    "group": "ALPHA",
+    "no_value_field": false
+  },
+  {
+    "operator": "like",
+    "group": "ALPHA",
+    "no_value_field": false
+  },
+  {
+    "operator": "starts with",
+    "group": "ALPHA",
+    "no_value_field": false
+  },
+  {
+    "operator": "empty",
+    "group": "ALPHA",
+    "no_value_field": true
+  },
+  {
+    "operator": "not empty",
+    "group": "ALPHA",
+    "no_value_field": true
+  },
+  {
+    "operator": "=",
+    "group": "ALPHA",
+    "no_value_field": false
+  },
+  {
+    "operator": "not like",
+    "group": "ALPHA",
+    "no_value_field": false
+  },
+  {
+    "operator": "=",
+    "group": "APPROVAL",
+    "no_value_field": false
+  },
+  {
+    "operator": "<>",
+    "group": "APPROVAL",
+    "no_value_field": false
+  },
+  {
+    "operator": "false",
+    "group": "BOOL",
+    "no_value_field": true
+  },
+  {
+    "operator": "true",
+    "group": "BOOL",
+    "no_value_field": true
+  },
+  {
+    "operator": "empty",
+    "group": "CODE",
+    "no_value_field": true
+  },
+  {
+    "operator": "not empty",
+    "group": "CODE",
+    "no_value_field": true
+  },
+  {
+    "operator": "is_other_field",
+    "group": "COMMON",
+    "no_value_field": false
+  },
+  {
+    "operator": "is_not_other_field",
+    "group": "COMMON",
+    "no_value_field": false
+  },
+  {
+    "operator": "=",
+    "group": "DATE",
+    "no_value_field": false
+  },
+  {
+    "operator": "<>",
+    "group": "DATE",
+    "no_value_field": false
+  },
+  {
+    "operator": ">",
+    "group": "DATE",
+    "no_value_field": false
+  },
+  {
+    "operator": "<",
+    "group": "DATE",
+    "no_value_field": false
+  },
+  {
+    "operator": "last_7_days",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "last_15_days",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "last_30_days",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "last_60_days",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "last_90_days",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "last_120_days",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "next_7_days",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "next_15_days",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "next_30_days",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "next_60_days",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "next_90_days",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "next_120_days",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "yesterday",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "last_week",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "this_week",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "next_week",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "last_month",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "this_month",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "next_month",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "after_today",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "next_year",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "this_year",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "last_year",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "first_quarter",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "second_quarter",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "third_quarter",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "today",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "before_today",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "fourth_quarter",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "empty",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "last_6_months",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "x_days_ago",
+    "group": "DATE",
+    "no_value_field": false
+  },
+  {
+    "operator": "before_last_x_days",
+    "group": "DATE",
+    "no_value_field": false
+  },
+  {
+    "operator": "in_last_x_days",
+    "group": "DATE",
+    "no_value_field": false
+  },
+  {
+    "operator": "last_3_months",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "weekday_is",
+    "group": "DATE",
+    "no_value_field": false
+  },
+  {
+    "operator": "monthday_is",
+    "group": "DATE",
+    "no_value_field": false
+  },
+  {
+    "operator": "x_days_later",
+    "group": "DATE",
+    "no_value_field": false
+  },
+  {
+    "operator": "after_last_x_days",
+    "group": "DATE",
+    "no_value_field": false
+  },
+  {
+    "operator": "in_next_x_days",
+    "group": "DATE",
+    "no_value_field": false
+  },
+  {
+    "operator": "tomorrow",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "not empty",
+    "group": "DATE",
+    "no_value_field": true
+  },
+  {
+    "operator": "between",
+    "group": "DATE",
+    "no_value_field": false
+  },
+  {
+    "operator": "weekdays",
+    "group": "DATE",
+    "no_value_field": false
+  },
+  {
+    "operator": "=",
+    "group": "DATETIME",
+    "no_value_field": false
+  },
+  {
+    "operator": "<>",
+    "group": "DATETIME",
+    "no_value_field": false
+  },
+  {
+    "operator": ">",
+    "group": "DATETIME",
+    "no_value_field": false
+  },
+  {
+    "operator": "<",
+    "group": "DATETIME",
+    "no_value_field": false
+  },
+  {
+    "operator": "last_7_days",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "last_15_days",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "last_30_days",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "last_60_days",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "last_90_days",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "last_120_days",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "next_7_days",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "next_15_days",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "next_30_days",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "next_60_days",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "next_90_days",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "next_120_days",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "yesterday",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "today",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "tomorrow",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "last_week",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "this_week",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "next_week",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "last_month",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "this_month",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "next_month",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "before_today",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "after_today",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "next_year",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "this_year",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "last_year",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "first_quarter",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "second_quarter",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "third_quarter",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "fourth_quarter",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "last_6_months",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "x_days_ago",
+    "group": "DATETIME",
+    "no_value_field": false
+  },
+  {
+    "operator": "before_last_x_days",
+    "group": "DATETIME",
+    "no_value_field": false
+  },
+  {
+    "operator": "in_last_x_days",
+    "group": "DATETIME",
+    "no_value_field": false
+  },
+  {
+    "operator": "last_3_months",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "weekday_is",
+    "group": "DATETIME",
+    "no_value_field": false
+  },
+  {
+    "operator": "monthday_is",
+    "group": "DATETIME",
+    "no_value_field": false
+  },
+  {
+    "operator": "time_is",
+    "group": "DATETIME",
+    "no_value_field": false
+  },
+  {
+    "operator": "time_greater",
+    "group": "DATETIME",
+    "no_value_field": false
+  },
+  {
+    "operator": "time_greater_or_equals",
+    "group": "DATETIME",
+    "no_value_field": false
+  },
+  {
+    "operator": "time_lower",
+    "group": "DATETIME",
+    "no_value_field": false
+  },
+  {
+    "operator": "time_lower_or_equals",
+    "group": "DATETIME",
+    "no_value_field": false
+  },
+  {
+    "operator": "x_days_later",
+    "group": "DATETIME",
+    "no_value_field": false
+  },
+  {
+    "operator": "after_last_x_days",
+    "group": "DATETIME",
+    "no_value_field": false
+  },
+  {
+    "operator": "in_next_x_days",
+    "group": "DATETIME",
+    "no_value_field": false
+  },
+  {
+    "operator": "empty",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "not empty",
+    "group": "DATETIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "between",
+    "group": "DATETIME",
+    "no_value_field": false
+  },
+  {
+    "operator": "empty",
+    "group": "FILE",
+    "no_value_field": true
+  },
+  {
+    "operator": "not empty",
+    "group": "FILE",
+    "no_value_field": true
+  },
+  {
+    "operator": "not like",
+    "group": "FOLLOWER",
+    "no_value_field": false
+  },
+  {
+    "operator": "contains_active_user",
+    "group": "FOLLOWER",
+    "no_value_field": true
+  },
+  {
+    "operator": "not_contains_active_user",
+    "group": "FOLLOWER",
+    "no_value_field": true
+  },
+  {
+    "operator": "empty",
+    "group": "FOLLOWER",
+    "no_value_field": true
+  },
+  {
+    "operator": "not empty",
+    "group": "FOLLOWER",
+    "no_value_field": true
+  },
+  {
+    "operator": "contains",
+    "group": "FOLLOWER",
+    "no_value_field": false
+  },
+  {
+    "operator": "contains_member_of_active_user_team",
+    "group": "FOLLOWER",
+    "no_value_field": true
+  },
+  {
+    "operator": "json_key_is",
+    "group": "JSON",
+    "no_value_field": false
+  },
+  {
+    "operator": "json_key_is_not",
+    "group": "JSON",
+    "no_value_field": false
+  },
+  {
+    "operator": "json_key_is_empty",
+    "group": "JSON",
+    "no_value_field": false
+  },
+  {
+    "operator": "json_key_is_not_empty",
+    "group": "JSON",
+    "no_value_field": false
+  },
+  {
+    "operator": "empty",
+    "group": "JSON",
+    "no_value_field": true
+  },
+  {
+    "operator": "not empty",
+    "group": "JSON",
+    "no_value_field": true
+  },
+  {
+    "operator": "=",
+    "group": "LIST",
+    "no_value_field": false
+  },
+  {
+    "operator": "<>",
+    "group": "LIST",
+    "no_value_field": false
+  },
+  {
+    "operator": "empty",
+    "group": "LIST",
+    "no_value_field": true
+  },
+  {
+    "operator": "not empty",
+    "group": "LIST",
+    "no_value_field": true
+  },
+  {
+    "operator": "contains any",
+    "group": "MULTISELECT",
+    "no_value_field": false
+  },
+  {
+    "operator": "empty",
+    "group": "MULTISELECT",
+    "no_value_field": true
+  },
+  {
+    "operator": "not empty",
+    "group": "MULTISELECT",
+    "no_value_field": true
+  },
+  {
+    "operator": "contains all",
+    "group": "MULTISELECT",
+    "no_value_field": false
+  },
+  {
+    "operator": "not contains",
+    "group": "MULTISELECT",
+    "no_value_field": false
+  },
+  {
+    "operator": "=",
+    "group": "NUMERIC",
+    "no_value_field": false
+  },
+  {
+    "operator": "!=",
+    "group": "NUMERIC",
+    "no_value_field": false
+  },
+  {
+    "operator": "<",
+    "group": "NUMERIC",
+    "no_value_field": false
+  },
+  {
+    "operator": "<=",
+    "group": "NUMERIC",
+    "no_value_field": false
+  },
+  {
+    "operator": ">",
+    "group": "NUMERIC",
+    "no_value_field": false
+  },
+  {
+    "operator": ">=",
+    "group": "NUMERIC",
+    "no_value_field": false
+  },
+  {
+    "operator": "not empty",
+    "group": "NUMERIC",
+    "no_value_field": true
+  },
+  {
+    "operator": "empty",
+    "group": "NUMERIC",
+    "no_value_field": true
+  },
+  {
+    "operator": "between",
+    "group": "NUMERIC",
+    "no_value_field": false
+  },
+  {
+    "operator": "=",
+    "group": "OWNER",
+    "no_value_field": false
+  },
+  {
+    "operator": "<>",
+    "group": "OWNER",
+    "no_value_field": false
+  },
+  {
+    "operator": "in_role",
+    "group": "OWNER",
+    "no_value_field": false
+  },
+  {
+    "operator": "in_active_user_scope",
+    "group": "OWNER",
+    "no_value_field": false
+  },
+  {
+    "operator": "not_active_user",
+    "group": "OWNER",
+    "no_value_field": true
+  },
+  {
+    "operator": "not_in_role",
+    "group": "OWNER",
+    "no_value_field": false
+  },
+  {
+    "operator": "not_in_active_user_scope",
+    "group": "OWNER",
+    "no_value_field": true
+  },
+  {
+    "operator": "active_user",
+    "group": "OWNER",
+    "no_value_field": true
+  },
+  {
+    "operator": "not_in_sub_unit",
+    "group": "OWNER",
+    "no_value_field": false
+  },
+  {
+    "operator": "in_sub_unit",
+    "group": "OWNER",
+    "no_value_field": false
+  },
+  {
+    "operator": "in_team",
+    "group": "OWNER",
+    "no_value_field": false
+  },
+  {
+    "operator": "empty",
+    "group": "OWNER",
+    "no_value_field": true
+  },
+  {
+    "operator": "not_in_unit",
+    "group": "OWNER",
+    "no_value_field": false
+  },
+  {
+    "operator": "not empty",
+    "group": "OWNER",
+    "no_value_field": true
+  },
+  {
+    "operator": "not_in_team",
+    "group": "OWNER",
+    "no_value_field": false
+  },
+  {
+    "operator": "in_active_user_team",
+    "group": "OWNER",
+    "no_value_field": false
+  },
+  {
+    "operator": "not_in_active_user_team",
+    "group": "OWNER",
+    "no_value_field": false
+  },
+  {
+    "operator": "in_unit",
+    "group": "OWNER",
+    "no_value_field": false
+  },
+  {
+    "operator": "=",
+    "group": "RELATION",
+    "no_value_field": false
+  },
+  {
+    "operator": "<>",
+    "group": "RELATION",
+    "no_value_field": false
+  },
+  {
+    "operator": "empty",
+    "group": "RELATION",
+    "no_value_field": true
+  },
+  {
+    "operator": "not empty",
+    "group": "RELATION",
+    "no_value_field": true
+  },
+  {
+    "operator": "=",
+    "group": "TIME",
+    "no_value_field": false
+  },
+  {
+    "operator": "<>",
+    "group": "TIME",
+    "no_value_field": false
+  },
+  {
+    "operator": ">",
+    "group": "TIME",
+    "no_value_field": false
+  },
+  {
+    "operator": "<",
+    "group": "TIME",
+    "no_value_field": false
+  },
+  {
+    "operator": "empty",
+    "group": "TIME",
+    "no_value_field": true
+  },
+  {
+    "operator": "not empty",
+    "group": "TIME",
+    "no_value_field": true
+  }
+]

@@ -176,9 +176,11 @@ const reportsRoute = createRoute({
   component: Reports,
 })
 
+const oauthRedirectPath = resolveOauthRedirectPath()
+
 const authCallbackRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/auth/callback',
+  path: oauthRedirectPath,
   component: () => (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
@@ -235,6 +237,14 @@ const oauthScopes = (
   .split(' ')
   .filter(Boolean)
 
+function resolveOauthRedirectPath() {
+  const redirectPath = (
+    import.meta.env.VITE_OAUTH2_REDIRECT_PATH || '/auth/callback'
+  ).trim()
+
+  return redirectPath.startsWith('/') ? redirectPath : `/${redirectPath}`
+}
+
 function isEmbeddedInIframe() {
   try {
     return window.self !== window.top
@@ -280,6 +290,7 @@ function resolveAllowedHostOrigins(): Array<string> {
 }
 
 const allowedHostOrigins = resolveAllowedHostOrigins()
+const oauthRedirectUri = `${window.location.origin}${oauthRedirectPath}`
 const forceMode =
   isEmbeddedInIframe() &&
   new URLSearchParams(window.location.search).get('embedded') === 'true'
@@ -294,16 +305,20 @@ if (rootElement && !rootElement.innerHTML) {
       <DocyrusAuthProvider
         apiUrl={import.meta.env.VITE_API_BASE_URL}
         clientId={import.meta.env.VITE_OAUTH2_CLIENT_ID}
-        redirectUri={`${window.location.origin}${import.meta.env.VITE_OAUTH2_REDIRECT_URI}`}
+        redirectUri={oauthRedirectUri}
         scopes={oauthScopes}
-        callbackPath="/auth/callback"
+        callbackPath={oauthRedirectPath}
         allowedHostOrigins={
           allowedHostOrigins.length > 0 ? allowedHostOrigins : undefined
         }
         forceMode={forceMode}
       >
         <TanStackQueryProvider.Provider>
-          <DocyrusDevtools queryClient={TanStackQueryProvider.queryClient}>
+          {/* @docyrus: [[architecture#Root Runtime Tooling]] */}
+          <DocyrusDevtools
+            queryClient={TanStackQueryProvider.queryClient}
+            openApiSpecPath="/openapi.json"
+          >
             <DocyrusDevtoolsClientRegistration />
             <I18nextProvider i18n={i18n}>
               <I18nDirectionProvider>

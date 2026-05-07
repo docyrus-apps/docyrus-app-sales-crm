@@ -1,41 +1,41 @@
-'use client';
+'use client'
 
-import { type ReactNode } from 'react';
+import { type ReactNode } from 'react'
 
-import { format } from 'date-fns';
+import { format } from 'date-fns'
 
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
-} from '@/components/ui/dialog';
-import { cn } from '@/lib/utils';
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { cn } from '@/lib/utils'
 
-import { type IEvent } from '../interfaces';
-import { useCalendar } from '../contexts/calendar-context';
-import { formatTime } from '../helpers';
-import { dayCellVariants } from '../views/month-view/day-cell';
-import { EventBullet } from '../views/month-view/event-bullet';
-import { EventDetailsDialog } from './event-details-dialog';
+import { type IEvent } from '../interfaces'
+import { useCalendar } from '../contexts/calendar-context'
+import { formatTime } from '../helpers'
+import { dayCellVariants } from '../views/month-view/day-cell'
+import { EventBullet } from '../views/month-view/event-bullet'
+import { EventDetailsDialog } from './event-details-dialog'
 
 interface EventListDialogProps {
-  date: Date;
-  events: Array<IEvent>;
-  maxVisibleEvents?: number;
-  children?: ReactNode;
+  date: Date
+  events: Array<IEvent>
+  maxVisibleEvents?: number
+  children?: ReactNode
 }
 
 export function EventListDialog({
   date,
   events,
   maxVisibleEvents = 3,
-  children
+  children,
 }: EventListDialogProps) {
-  const cellEvents = events;
-  const hiddenEventsCount = Math.max(cellEvents.length - maxVisibleEvents, 0);
-  const { badgeVariant, use24HourFormat } = useCalendar();
+  const cellEvents = events
+  const hiddenEventsCount = Math.max(cellEvents.length - maxVisibleEvents, 0)
+  const { badgeVariant, use24HourFormat } = useCalendar()
 
   const defaultTrigger = (
     <span className="cursor-pointer">
@@ -45,7 +45,7 @@ export function EventListDialog({
         <span className="mx-1">more...</span>
       </span>
     </span>
-  );
+  )
 
   return (
     <Dialog>
@@ -54,7 +54,10 @@ export function EventListDialog({
         <DialogHeader>
           <DialogTitle className="my-2">
             <div className="flex items-center gap-2">
-              <EventBullet color={cellEvents[0]?.color ?? 'blue'} className="" />
+              <EventBullet
+                color={cellEvents[0]?.color ?? 'blue'}
+                className=""
+              />
               <p className="text-sm font-medium">
                 Events on {format(date, 'EEEE, MMMM d, yyyy')}
               </p>
@@ -63,16 +66,17 @@ export function EventListDialog({
         </DialogHeader>
         <div className="max-h-[60vh] overflow-y-auto space-y-2">
           {cellEvents.length > 0 ? (
-            cellEvents.map(event => (
+            cellEvents.map((event) => (
               <EventDetailsDialog event={event} key={event.id}>
                 <div
                   className={cn(
                     'flex items-center gap-2 p-2 border rounded-md hover:bg-muted cursor-pointer',
                     {
                       [dayCellVariants({ color: event.color })]:
-                        badgeVariant === 'colored'
-                    }
-                  )}>
+                        badgeVariant === 'colored',
+                    },
+                  )}
+                >
                   <EventBullet color={event.color} />
                   <div className="flex justify-between items-center w-full">
                     <p className="text-sm font-medium">{event.title}</p>
@@ -91,5 +95,5 @@ export function EventListDialog({
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

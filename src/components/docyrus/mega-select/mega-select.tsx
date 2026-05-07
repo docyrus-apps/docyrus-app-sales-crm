@@ -1,23 +1,28 @@
-'use client';
+'use client'
 
 import {
-  forwardRef, useCallback, type HTMLAttributes, type KeyboardEvent, type ReactElement, type RefObject
-} from 'react';
+  forwardRef,
+  useCallback,
+  type HTMLAttributes,
+  type KeyboardEvent,
+  type ReactElement,
+  type RefObject,
+} from 'react'
 
-import { X } from 'lucide-react';
-import { cva, type VariantProps } from 'class-variance-authority';
+import { X } from 'lucide-react'
+import { cva, type VariantProps } from 'class-variance-authority'
 
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
-import { tUi, type UiI18nLocale } from '@/lib/ui-i18n';
+import { tUi, type UiI18nLocale } from '@/lib/ui-i18n'
 
-import { type MegaSelectCategory, type MegaSelectItem } from './types';
-import { MegaSelectProvider } from './mega-select-context';
-import { MegaSelectSearch } from './mega-select-search';
-import { MegaSelectCategories } from './mega-select-categories';
-import { MegaSelectGrid } from './mega-select-grid';
-import { MegaSelectDetail } from './mega-select-detail';
+import { type MegaSelectCategory, type MegaSelectItem } from './types'
+import { MegaSelectProvider } from './mega-select-context'
+import { MegaSelectSearch } from './mega-select-search'
+import { MegaSelectCategories } from './mega-select-categories'
+import { MegaSelectGrid } from './mega-select-grid'
+import { MegaSelectDetail } from './mega-select-detail'
 
 const megaSelectVariants = cva(
   'relative flex overflow-hidden rounded-xl border bg-background',
@@ -27,63 +32,67 @@ const megaSelectVariants = cva(
         thin: 'w-90',
         default: 'w-140',
         large: 'w-195',
-        full: 'w-full'
+        full: 'w-full',
       },
       variant: {
         default: 'shadow-sm',
         elevated: 'shadow-lg',
-        flat: 'border-transparent shadow-none'
-      }
+        flat: 'border-transparent shadow-none',
+      },
     },
     defaultVariants: {
       size: 'default',
-      variant: 'default'
-    }
-  }
-);
+      variant: 'default',
+    },
+  },
+)
 
-export type MegaSelectSize = 'thin' | 'default' | 'large' | 'full';
-export type MegaSelectVariant = 'default' | 'elevated' | 'flat';
+export type MegaSelectSize = 'thin' | 'default' | 'large' | 'full'
+export type MegaSelectVariant = 'default' | 'elevated' | 'flat'
 
 export interface MegaSelectProps<T = unknown>
-  extends Omit<HTMLAttributes<HTMLDivElement>, 'onSelect' | 'defaultValue'>,
-  VariantProps<typeof megaSelectVariants> {
+  extends
+    Omit<HTMLAttributes<HTMLDivElement>, 'onSelect' | 'defaultValue'>,
+    VariantProps<typeof megaSelectVariants> {
   /** Array of selectable items. */
-  items: MegaSelectItem<T>[];
+  items: MegaSelectItem<T>[]
   /** Optional categories for filtering. */
-  categories?: MegaSelectCategory[];
+  categories?: MegaSelectCategory[]
   /** Controlled selected value. */
-  value?: string | null;
+  value?: string | null
   /** Default selected value (uncontrolled). */
-  defaultValue?: string;
+  defaultValue?: string
   /** Number of grid columns. */
-  columns?: 1 | 2 | 3 | 4 | 'auto';
+  columns?: 1 | 2 | 3 | 4 | 'auto'
   /** Max height of the component. */
-  height?: string;
+  height?: string
   /** Disable all interactions. */
-  disabled?: boolean;
+  disabled?: boolean
   /** Show loading skeleton. */
-  loading?: boolean;
+  loading?: boolean
   /** Auto-open detail panel when clicking items with content. */
-  forceOpenDetail?: boolean;
+  forceOpenDetail?: boolean
   /** Only allow selecting this specific item. */
-  restrictedValue?: string;
+  restrictedValue?: string
   /** Default accent color for items without a color. */
-  defaultColor?: string;
+  defaultColor?: string
   /** Default icon for items without an icon. */
-  defaultIcon?: string;
+  defaultIcon?: string
   /** Locale for i18n. */
-  locale?: UiI18nLocale;
+  locale?: UiI18nLocale
   /** Show close button. */
-  closable?: boolean;
+  closable?: boolean
   /** Show search input. */
-  searchable?: boolean;
+  searchable?: boolean
   /** Called when user confirms selection (e.g. "Choose" button). */
-  onChoose?: (value: string, item: MegaSelectItem<T>) => void;
+  onChoose?: (value: string, item: MegaSelectItem<T>) => void
   /** Called when selection changes. */
-  onSelectionChange?: (value: string | null, item: MegaSelectItem<T> | null) => void;
+  onSelectionChange?: (
+    value: string | null,
+    item: MegaSelectItem<T> | null,
+  ) => void
   /** Called when close button is clicked. */
-  onClose?: () => void;
+  onClose?: () => void
 }
 
 const MegaSelect = forwardRef<HTMLDivElement, MegaSelectProps>(
@@ -112,17 +121,17 @@ const MegaSelect = forwardRef<HTMLDivElement, MegaSelectProps>(
       onClose,
       ...props
     },
-    ref
+    ref,
   ) => {
     const handleKeyDown = useCallback(
       (e: KeyboardEvent<HTMLDivElement>) => {
         if (e.key === 'Escape' && onClose) {
-          e.preventDefault();
-          onClose();
+          e.preventDefault()
+          onClose()
         }
       },
-      [onClose]
-    );
+      [onClose],
+    )
 
     return (
       <MegaSelectProvider
@@ -140,7 +149,8 @@ const MegaSelect = forwardRef<HTMLDivElement, MegaSelectProps>(
         searchable={searchable}
         onChoose={onChoose}
         onSelectionChange={onSelectionChange}
-        onClose={onClose}>
+        onClose={onClose}
+      >
         <div
           ref={ref}
           role="group"
@@ -148,7 +158,8 @@ const MegaSelect = forwardRef<HTMLDivElement, MegaSelectProps>(
           style={{ maxHeight: height }}
           className={cn(megaSelectVariants({ size, variant }), className)}
           onKeyDown={handleKeyDown}
-          {...props}>
+          {...props}
+        >
           {/* Main Panel */}
           <div className="flex min-w-0 flex-1 flex-col">
             {/* Close Button */}
@@ -158,7 +169,8 @@ const MegaSelect = forwardRef<HTMLDivElement, MegaSelectProps>(
                   variant="ghost"
                   size="sm"
                   className="h-7 w-7 p-0"
-                  onClick={onClose}>
+                  onClick={onClose}
+                >
                   <X className="size-4" />
                   <span className="sr-only">{tUi(locale, 'close')}</span>
                 </Button>
@@ -167,19 +179,23 @@ const MegaSelect = forwardRef<HTMLDivElement, MegaSelectProps>(
 
             <MegaSelectSearch />
             <MegaSelectCategories />
-            <MegaSelectGrid columns={columns} height="100%" className="flex-1" />
+            <MegaSelectGrid
+              columns={columns}
+              height="100%"
+              className="flex-1"
+            />
           </div>
 
           {/* Detail Panel */}
           <MegaSelectDetail />
         </div>
       </MegaSelectProvider>
-    );
-  }
+    )
+  },
 ) as <T = unknown>(
-  props: MegaSelectProps<T> & { ref?: RefObject<HTMLDivElement> }
-) => ReactElement | null;
+  props: MegaSelectProps<T> & { ref?: RefObject<HTMLDivElement> },
+) => ReactElement | null
 
-(MegaSelect as { displayName?: string }).displayName = 'MegaSelect';
+;(MegaSelect as { displayName?: string }).displayName = 'MegaSelect'
 
-export { MegaSelect, megaSelectVariants };
+export { MegaSelect, megaSelectVariants }

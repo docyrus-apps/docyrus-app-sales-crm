@@ -18,6 +18,7 @@
 ## Overview
 
 `@docyrus/signin` provides "Sign in with Docyrus" for React apps. Auto-detects environment:
+
 - **Standalone**: OAuth2 Authorization Code + PKCE via page redirect
 - **Iframe**: Receives tokens via `window.postMessage` from `*.docyrus.app` hosts
 
@@ -40,7 +41,7 @@ Wrap application root:
 ```tsx
 import { DocyrusAuthProvider } from '@docyrus/signin'
 
-<DocyrusAuthProvider
+;<DocyrusAuthProvider
   apiUrl="https://alpha-api.docyrus.com"
   clientId="your-oauth2-client-id"
   redirectUri="http://localhost:3000/auth/callback"
@@ -53,16 +54,16 @@ import { DocyrusAuthProvider } from '@docyrus/signin'
 
 ### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `apiUrl` | `string` | `https://alpha-api.docyrus.com` | API base URL |
-| `clientId` | `string` | Built-in default | OAuth2 client ID |
-| `redirectUri` | `string` | `origin + callbackPath` | OAuth2 redirect URI |
-| `scopes` | `string[]` | `['offline_access', 'Read.All', ...]` | OAuth2 scopes |
-| `callbackPath` | `string` | `/auth/callback` | Path to detect OAuth callback |
-| `forceMode` | `'standalone' \| 'iframe'` | Auto-detected | Force a specific auth mode |
-| `storageKeyPrefix` | `string` | `docyrus_oauth2_` | localStorage key prefix |
-| `allowedHostOrigins` | `string[]` | `undefined` | Extra trusted iframe origins |
+| Prop                 | Type                       | Default                               | Description                   |
+| -------------------- | -------------------------- | ------------------------------------- | ----------------------------- |
+| `apiUrl`             | `string`                   | `https://alpha-api.docyrus.com`       | API base URL                  |
+| `clientId`           | `string`                   | Built-in default                      | OAuth2 client ID              |
+| `redirectUri`        | `string`                   | `origin + callbackPath`               | OAuth2 redirect URI           |
+| `scopes`             | `string[]`                 | `['offline_access', 'Read.All', ...]` | OAuth2 scopes                 |
+| `callbackPath`       | `string`                   | `/auth/callback`                      | Path to detect OAuth callback |
+| `forceMode`          | `'standalone' \| 'iframe'` | Auto-detected                         | Force a specific auth mode    |
+| `storageKeyPrefix`   | `string`                   | `docyrus_oauth2_`                     | localStorage key prefix       |
+| `allowedHostOrigins` | `string[]`                 | `undefined`                           | Extra trusted iframe origins  |
 
 ---
 
@@ -76,17 +77,17 @@ Full authentication context:
 import { useDocyrusAuth } from '@docyrus/signin'
 
 const {
-  status,        // 'loading' | 'authenticated' | 'unauthenticated'
-  mode,          // 'standalone' | 'iframe'
-  client,        // RestApiClient | null — configured API client with tokens
-  tokens,        // { accessToken, refreshToken, ... } | null
-  user,          // DocyrusUser | null — auto-fetched from /v1/users/me
-  signIn,        // () => void — redirects to Docyrus login page
-  signOut,       // () => void — logout and clear tokens
-  hasRole,       // (role: string | string[]) => boolean — check role by slug or uid
+  status, // 'loading' | 'authenticated' | 'unauthenticated'
+  mode, // 'standalone' | 'iframe'
+  client, // RestApiClient | null — configured API client with tokens
+  tokens, // { accessToken, refreshToken, ... } | null
+  user, // DocyrusUser | null — auto-fetched from /v1/users/me
+  signIn, // () => void — redirects to Docyrus login page
+  signOut, // () => void — logout and clear tokens
+  hasRole, // (role: string | string[]) => boolean — check role by slug or uid
   hasPermission, // (operation: string, dataSourceId?: string) => boolean — check ACL permission
-  refreshUser,   // () => Promise<void> — re-fetch user from API
-  error,         // Error | null
+  refreshUser, // () => Promise<void> — re-fetch user from API
+  error, // Error | null
 } = useDocyrusAuth()
 ```
 
@@ -101,7 +102,10 @@ const client = useDocyrusClient() // RestApiClient | null
 
 if (client) {
   const user = await client.get('/v1/users/me')
-  const items = await client.get('/v1/apps/base/data-sources/project/items', queryPayload)
+  const items = await client.get(
+    '/v1/apps/base/data-sources/project/items',
+    queryPayload,
+  )
 }
 ```
 
@@ -116,9 +120,9 @@ The provider auto-fetches the current user from `/v1/users/me` after authenticat
 ```typescript
 const { hasRole } = useDocyrusAuth()
 
-hasRole(null)                      // true — no role requirement
-hasRole('super_admin')             // checks slug or uid match
-hasRole(['editor', 'reviewer'])    // true if user has any of these roles
+hasRole(null) // true — no role requirement
+hasRole('super_admin') // checks slug or uid match
+hasRole(['editor', 'reviewer']) // true if user has any of these roles
 ```
 
 Checks both `primaryRole` and all additional `roles` from the user object.
@@ -128,12 +132,13 @@ Checks both `primaryRole` and all additional `roles` from the user object.
 ```typescript
 const { hasPermission } = useDocyrusAuth()
 
-hasPermission('view', dataSourceId)    // can view this data source?
-hasPermission('edit', dataSourceId)    // can edit?
-hasPermission('delete', dataSourceId)  // can delete?
+hasPermission('view', dataSourceId) // can view this data source?
+hasPermission('edit', dataSourceId) // can edit?
+hasPermission('delete', dataSourceId) // can delete?
 ```
 
 **Permission resolution order:**
+
 1. `super_admin` role → always granted
 2. `global_editor` role → granted for: view, create, edit, delete, create_bulk, export, import, print
 3. `global_viewer` role → granted only for: view
@@ -232,7 +237,9 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { DocyrusAuthProvider } from '@docyrus/signin'
 
-const scopes = (import.meta.env.VITE_OAUTH2_SCOPES || '').split(' ').filter(Boolean)
+const scopes = (import.meta.env.VITE_OAUTH2_SCOPES || '')
+  .split(' ')
+  .filter(Boolean)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -265,7 +272,9 @@ function App() {
   return (
     <div>
       <p>Authenticated!</p>
-      <button onClick={() => client!.get('/v1/users/me').then(console.log)}>My Profile</button>
+      <button onClick={() => client!.get('/v1/users/me').then(console.log)}>
+        My Profile
+      </button>
       <button onClick={signOut}>Sign Out</button>
     </div>
   )
@@ -292,7 +301,18 @@ const data = await client!.get('/v1/custom-endpoint')
 Core classes and permission functions exported for advanced scenarios:
 
 ```typescript
-import { AuthManager, StandaloneOAuth2Auth, IframeAuth, detectAuthMode } from '@docyrus/signin'
+import {
+  AuthManager,
+  StandaloneOAuth2Auth,
+  IframeAuth,
+  detectAuthMode,
+} from '@docyrus/signin'
 import { hasRole, hasPermission, getAllRoles } from '@docyrus/signin/core'
-import type { DocyrusUser, DocyrusRole, DocyrusAclRule, AclOperation, PermissionConfig } from '@docyrus/signin/core'
+import type {
+  DocyrusUser,
+  DocyrusRole,
+  DocyrusAclRule,
+  AclOperation,
+  PermissionConfig,
+} from '@docyrus/signin/core'
 ```

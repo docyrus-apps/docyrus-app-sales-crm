@@ -1,24 +1,48 @@
 // @ts-nocheck
+import * as React from 'react'
+
+import type { TFileElement } from 'platejs'
+import type { TSuggestionData } from 'platejs'
 import type { SlateElementProps } from 'platejs/static'
 
+import { FileUp } from 'lucide-react'
 import { SlateElement } from 'platejs/static'
 
-export function FileElementStatic(props: SlateElementProps) {
-  const { element } = props
-  const { name, url } = element as any
+import { cn } from '@/lib/utils'
+
+export function FileElementStatic(props: SlateElementProps<TFileElement>) {
+  const { name, url } = props.element
+  const suggestionData = (
+    props.element as TFileElement & {
+      suggestion?: TSuggestionData
+    }
+  ).suggestion
+  const isRemoveSuggestion = suggestionData?.type === 'remove'
 
   return (
-    <SlateElement {...props} className="py-2.5">
-      <div className="flex items-center gap-2 rounded-sm border p-3">
-        <a
-          className="font-medium text-primary underline underline-offset-4"
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
+    <SlateElement className="my-px rounded-sm" {...props}>
+      <a
+        className={cn(
+          'group relative m-0 flex cursor-pointer items-center rounded px-0.5 py-[3px] hover:bg-muted',
+          isRemoveSuggestion && 'bg-red-100 text-red-700 hover:bg-red-200/80',
+        )}
+        contentEditable={false}
+        download={name}
+        href={url}
+        rel="noopener noreferrer"
+        role="button"
+        target="_blank"
+      >
+        <div
+          className={cn(
+            'flex items-center gap-1 p-1',
+            isRemoveSuggestion && 'line-through decoration-current',
+          )}
         >
-          {name || url || 'File'}
-        </a>
-      </div>
+          <FileUp className="size-5" />
+          <div>{name}</div>
+        </div>
+      </a>
       {props.children}
     </SlateElement>
   )

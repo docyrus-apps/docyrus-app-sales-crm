@@ -1,7 +1,7 @@
-'use client';
+'use client'
 
-import { ListKit } from '@/components/editor/plugins/list-kit';
+import { ListKit } from '@/components/editor/plugins/list-kit'
 
-import { MentionEditorKit } from '@/lib/editor-mention';
+import { MentionEditorKit } from '@/lib/editor-mention'
 
-export const LogActivityEditorKit = [...MentionEditorKit, ...ListKit];
+export const LogActivityEditorKit = [...MentionEditorKit, ...ListKit]

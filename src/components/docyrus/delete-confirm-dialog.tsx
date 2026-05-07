@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import {
   AlertDialog,
@@ -7,20 +7,20 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
 
-import { tUi, type UiI18nLocale } from '@/lib/ui-i18n';
+import { tUi, type UiI18nLocale } from '@/lib/ui-i18n'
 
 interface DeleteConfirmDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  objectName: string;
-  count: number;
-  onConfirm: () => void | Promise<void>;
-  isPending?: boolean;
-  locale?: UiI18nLocale;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  objectName: string
+  count: number
+  onConfirm: () => void | Promise<void>
+  isPending?: boolean
+  locale?: UiI18nLocale
 }
 
 export function DeleteConfirmDialog({
@@ -30,9 +30,9 @@ export function DeleteConfirmDialog({
   count,
   onConfirm,
   isPending,
-  locale = 'en'
+  locale = 'en',
 }: DeleteConfirmDialogProps) {
-  const pluralSuffix = count === 1 ? '' : 's';
+  const pluralSuffix = count === 1 ? '' : 's'
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -48,15 +48,18 @@ export function DeleteConfirmDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>{tUi(locale, 'cancel')}</AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>
+            {tUi(locale, 'cancel')}
+          </AlertDialogCancel>
           <Button
             variant="destructive"
             disabled={isPending}
-            onClick={onConfirm}>
+            onClick={onConfirm}
+          >
             {isPending ? tUi(locale, 'deleting') : tUi(locale, 'delete')}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
+  )
 }

@@ -1,160 +1,272 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Package, Plus, Trash2 } from 'lucide-react'
+import { useDocyrusClient } from '@docyrus/signin'
+import {
+  Copy,
+  MoreHorizontal,
+  Package,
+  Pencil,
+  Plus,
+  Trash2,
+  Upload,
+} from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
-import type { RowChange } from '@/components/docyrus/data-grid'
+
+import type { BaseCrmProductEntity } from '@/collections/base_crm-product.collection'
+import { useBaseCrmProductCollection } from '@/collections/base_crm-product.collection'
+import { Button as MotionButton } from '@/components/animate-ui/components/buttons/button'
+import { ProductFormDialog } from '@/components/products/product-form-dialog'
 import {
   DataGrid,
   DataGridSkeleton,
   DataGridSkeletonGrid,
-  getDataGridSelectColumn,
-  useDataGrid,
+  getDataGridActionsColumn,
+  type RowChange,
 } from '@/components/docyrus/data-grid'
-import { DataGridStandardToolbar } from '@/components/docyrus/data-grid-standard-toolbar'
 import { RecordDeleteConfirmDialog } from '@/components/docyrus/record-delete-confirm-dialog'
-import { getDataGridRowActionsColumn } from '@/components/docyrus/data-grid-row-actions-column'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
-import { Button } from '@/components/animate-ui/components/buttons/button'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
-  useDeleteProduct,
-  useProducts,
-  useUpdateProduct,
-} from '@/hooks/use-products'
-import { ProductFormDialog } from '@/components/products/product-form-dialog'
-import { Card, CardContent } from '@/components/ui/card'
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { ViewSwitcher, type ViewType } from '@/components/view-switcher'
+import { useUpdateProduct } from '@/hooks/use-products'
+import { useDocyrusDataGrid } from '@/hooks/use-docyrus-data-grid'
+import { useDocyrusDataImportWizard } from '@/hooks/use-docyrus-data-import-wizard'
 import {
   buildDuplicatePayload,
   saveGridChanges,
 } from '@/lib/data-grid-record-utils'
+import { useDateFormat } from '@/lib/use-date-format'
+
+const APP_SLUG = 'base_crm'
+const DATA_SOURCE_SLUG = 'product'
+
+type ProductFormMode = 'create' | 'edit'
+
+type ProductFormRecord = BaseCrmProductEntity | Record<string, unknown>
+
+interface ProductDialogState {
+  mode: ProductFormMode
+  product: ProductFormRecord | null
+}
+
+const PRODUCT_GRID_COLUMN_OVERRIDES: Record<
+  string,
+  Partial<ColumnDef<BaseCrmProductEntity>>
+> = {
+  product_code: { size: 180 },
+  category: { size: 180 },
+  Unit: { size: 130 },
+  unit_price: { size: 140 },
+  tax: { size: 110 },
+}
+
+const PRODUCT_GRID_VISIBLE_FIELDS = new Set(
+  Object.keys(PRODUCT_GRID_COLUMN_OVERRIDES),
+)
 
 export function Products() {
+  const client = useDocyrusClient()
+
+  if (!client) return null
+
+  return <ProductsPageInner client={client} />
+}
+
+function ProductsPageInner({
+  client,
+}: {
+  client: NonNullable<ReturnType<typeof useDocyrusClient>>
+}) {
   const { t } = useTranslation()
-  const { data: products, isLoading } = useProducts()
-  const deleteProduct = useDeleteProduct()
+  const collection = useBaseCrmProductCollection()
   const updateProduct = useUpdateProduct()
-  const [isFormOpen, setIsFormOpen] = useState(false)
-  const [formMode, setFormMode] = useState<'create' | 'edit'>('create')
-  const [activeProduct, setActiveProduct] = useState<any>(null)
-  const [deleteTargets, setDeleteTargets] = useState<Array<any>>([])
+  const { formatDate, formatDateTime } = useDateFormat()
 
-  const onOpenCreate = () => {
-    setFormMode('create')
-    setActiveProduct(null)
-    setIsFormOpen(true)
-  }
+  const [dialog, setDialog] = useState<ProductDialogState | null>(null)
+  const [pendingDelete, setPendingDelete] =
+    useState<BaseCrmProductEntity | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [viewType, setViewType] = useState<ViewType>('list')
 
-  const onOpenEdit = (product: any) => {
-    setFormMode('edit')
-    setActiveProduct(product)
-    setIsFormOpen(true)
-  }
+  const onOpenCreate = useCallback(() => {
+    setDialog({ mode: 'create', product: null })
+  }, [])
 
-  const onDuplicate = (product: any) => {
-    setFormMode('create')
-    setActiveProduct(buildDuplicatePayload(product))
-    setIsFormOpen(true)
-  }
+  const onOpenEdit = useCallback((product: BaseCrmProductEntity) => {
+    setDialog({ mode: 'edit', product })
+  }, [])
 
-  const onDeleteRequest = (rows: Array<any>) => {
-    if (rows.length === 0) return
+  const onDuplicate = useCallback((product: BaseCrmProductEntity) => {
+    setDialog({
+      mode: 'create',
+      product: buildDuplicatePayload(product as Record<string, unknown>),
+    })
+  }, [])
 
-    setDeleteTargets(rows)
-  }
+  const onCloseDialog = useCallback(() => {
+    setDialog(null)
+  }, [])
 
-  const onDeleteConfirm = async () => {
-    const ids = deleteTargets
-      .map((row) => row?.id)
-      .filter(Boolean) as Array<string>
+  const onDelete = useCallback((product: BaseCrmProductEntity) => {
+    if (!product.id) return
 
-    await Promise.all(ids.map((id) => deleteProduct.mutateAsync(id)))
-    setDeleteTargets([])
-  }
+    setPendingDelete(product)
+  }, [])
 
-  const onChangesSave = async (
-    changes: Array<RowChange>,
-    gridData: Array<any>,
-  ) => {
-    await saveGridChanges(changes, gridData, (id, data) =>
-      updateProduct.mutateAsync({ productId: id, data }),
-    )
-  }
-
-  const columns = useMemo<Array<ColumnDef<any>>>(() => {
-    const baseColumns: Array<ColumnDef<any>> = [
-      {
-        accessorKey: 'product_code',
-        header: t('products.columns.productCode'),
-        meta: { cell: { variant: 'short-text' } },
-        enableSorting: true,
-        size: 140,
-      },
-      {
-        accessorKey: 'id',
-        header: t('products.columns.name'),
-        meta: { cell: { variant: 'short-text' } },
-        enableSorting: true,
-        size: 180,
-      },
-      {
-        id: 'category',
-        accessorFn: (row) =>
-          typeof row.category === 'object'
-            ? (row.category?.name ?? '')
-            : (row.category ?? ''),
-        header: t('products.columns.category'),
-        meta: { cell: { variant: 'short-text' } },
-        enableSorting: true,
-        size: 150,
-      },
-      {
-        id: 'Unit',
-        accessorFn: (row) =>
-          typeof row.Unit === 'object'
-            ? (row.Unit?.name ?? '')
-            : (row.Unit ?? ''),
-        header: t('products.columns.unit'),
-        meta: { cell: { variant: 'short-text' } },
-        enableSorting: true,
-        size: 100,
-      },
-      {
-        accessorKey: 'unit_price',
-        header: t('products.columns.unitPrice'),
-        meta: { cell: { variant: 'currency' } },
-        enableSorting: true,
-        size: 130,
-      },
-      {
-        accessorKey: 'tax',
-        header: t('products.columns.tax'),
-        meta: { cell: { variant: 'percent' } },
-        enableSorting: true,
-        size: 100,
-      },
-    ]
-
-    return [
-      getDataGridSelectColumn<any>(),
-      getDataGridRowActionsColumn<any>({
-        onView: onOpenEdit,
-        onEdit: onOpenEdit,
-        onDuplicate,
-        onDelete: (row) => onDeleteRequest([row]),
+  const actionsColumn = useMemo<ColumnDef<BaseCrmProductEntity>>(
+    () =>
+      getDataGridActionsColumn<BaseCrmProductEntity>({
+        actionCount: 2,
+        cell: ({ row }) => (
+          <div className="flex items-center gap-0.5 px-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-7"
+              onClick={() => onOpenEdit(row.original)}
+            >
+              <Pencil className="size-4" />
+              <span className="sr-only">
+                {t('products.editProduct', 'Edit product')}
+              </span>
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-7"
+                >
+                  <MoreHorizontal className="size-4" />
+                  <span className="sr-only">
+                    {t('common.actions', 'Actions')}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onOpenEdit(row.original)}>
+                  <Pencil className="size-4" />
+                  {t('common.edit', 'Edit')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onDuplicate(row.original)}>
+                  <Copy className="size-4" />
+                  {t('common.duplicate', 'Duplicate')}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => onDelete(row.original)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="size-4" />
+                  {t('common.delete', 'Delete')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ),
       }),
-      ...baseColumns,
-    ]
-  }, [t])
+    [onDelete, onDuplicate, onOpenEdit, t],
+  )
 
-  const { table, ...dataGridProps } = useDataGrid({
-    data: products || [],
-    columns,
-    getRowId: (row: any) => row.id,
+  const onChangesSave = useCallback(
+    async (
+      changes: Array<RowChange>,
+      gridData: Array<BaseCrmProductEntity>,
+    ) => {
+      await saveGridChanges(changes, gridData, (id, data) =>
+        updateProduct.mutateAsync({ productId: id, data }),
+      )
+    },
+    [updateProduct],
+  )
+
+  const openWizardRef = useRef<() => void>(() => {})
+
+  const importToolbarButton = useMemo(
+    () => (
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="gap-1.5"
+        onClick={() => openWizardRef.current()}
+      >
+        <Upload className="size-4" />
+        {t('common.import', 'Import')}
+      </Button>
+    ),
+    [t],
+  )
+
+  const {
+    table,
+    gridProps,
+    toolbar,
+    items: products,
+    reload,
+    dataSource,
+    isLoading,
+    error,
+  } = useDocyrusDataGrid<BaseCrmProductEntity>({
+    client,
+    appSlug: APP_SLUG,
+    dataSourceSlug: DATA_SOURCE_SLUG,
+    collection,
+    actionsColumn,
+    formatDate,
+    formatDateTime,
     readOnly: false,
-    enableGrouping: true,
-    enableChangeTracking: true,
-    onChangesSave,
+    trackChanges: true,
+    onSaveChanges: onChangesSave,
+    bulkActions: ['delete'],
+    enableServerExportMenu: true,
+    searchPlaceholder: t('common.search', 'Search...'),
+    toolbarEndContent: importToolbarButton,
+    getRowLabel: (row) => row.product_code || row.id || t('products.title'),
+    mapColumn: (field, defaultColumn) => {
+      if (!PRODUCT_GRID_VISIBLE_FIELDS.has(field.slug)) return null
+
+      return {
+        ...defaultColumn,
+        ...PRODUCT_GRID_COLUMN_OVERRIDES[field.slug],
+      }
+    },
   })
+
+  const { openWizard, wizard } = useDocyrusDataImportWizard({
+    client,
+    appSlug: APP_SLUG,
+    dataSourceSlug: DATA_SOURCE_SLUG,
+    fields: dataSource?.fields,
+    onImported: reload,
+  })
+
+  openWizardRef.current = openWizard
+
+  const onConfirmDelete = useCallback(async () => {
+    if (!pendingDelete?.id) return
+
+    setIsDeleting(true)
+
+    try {
+      await collection.delete(pendingDelete.id)
+      setPendingDelete(null)
+      reload()
+    } finally {
+      setIsDeleting(false)
+    }
+  }, [collection, pendingDelete, reload])
 
   return (
     <>
@@ -162,79 +274,145 @@ export function Products() {
         title={t('products.title')}
         icon={<Package className="h-4 w-4 text-lime-600" />}
         actions={
-          <Button size="sm" onClick={onOpenCreate}>
-            <Plus className="mr-2 h-4 w-4" />
-            {t('products.newProduct')}
-          </Button>
+          <>
+            <ViewSwitcher
+              value={viewType}
+              onValueChange={setViewType}
+              options={['card', 'list']}
+            />
+            <MotionButton size="sm" onClick={onOpenCreate}>
+              <Plus className="mr-2 h-4 w-4" />
+              {t('products.newProduct')}
+            </MotionButton>
+          </>
         }
       />
       <PageContainer>
-        <ProductFormDialog
-          open={isFormOpen}
-          onOpenChange={(open) => {
-            setIsFormOpen(open)
-            if (!open) {
-              setActiveProduct(null)
-              setFormMode('create')
-            }
-          }}
-          mode={formMode}
-          product={activeProduct ?? undefined}
-        />
+        {dialog && (
+          <ProductFormDialog
+            open
+            onOpenChange={(open) => {
+              if (!open) onCloseDialog()
+            }}
+            mode={dialog.mode}
+            product={dialog.product ?? undefined}
+            onSubmitSuccess={reload}
+          />
+        )}
 
-        {isLoading && (
+        {isLoading && viewType === 'card' && (
+          <div className="space-y-4">
+            <div className="h-32 w-full animate-pulse rounded-md bg-muted" />
+            <div className="h-32 w-full animate-pulse rounded-md bg-muted" />
+            <div className="h-32 w-full animate-pulse rounded-md bg-muted" />
+          </div>
+        )}
+
+        {isLoading && viewType === 'list' && (
           <DataGridSkeleton>
             <DataGridSkeletonGrid />
           </DataGridSkeleton>
         )}
 
-        {!isLoading && products && products.length === 0 && (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <Package className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-lg font-medium">{t('products.emptyTitle')}</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                {t('products.emptyDescription')}
-              </p>
-              <Button className="mt-4" onClick={onOpenCreate}>
-                <Plus className="mr-2 h-4 w-4" />
-                {t('products.createProduct')}
-              </Button>
+        {error && (
+          <Card className="border-destructive">
+            <CardHeader>
+              <CardTitle className="text-destructive">
+                {t('products.errorLoading', 'Unable to load products')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm">{error.message}</p>
             </CardContent>
           </Card>
         )}
 
-        {!isLoading && products && products.length > 0 && (
-          <>
-            <DataGridStandardToolbar
-              table={table}
-              searchPlaceholder={t('common.search', 'Search...')}
-            />
-            <DataGrid
-              table={table}
-              {...dataGridProps}
-              height={600}
-              actions={[
-                {
-                  label: t('common.delete'),
-                  icon: <Trash2 className="size-4" />,
-                  variant: 'destructive',
-                  onAction: onDeleteRequest,
-                },
-              ]}
-            />
-          </>
+        {!isLoading && !error && products.length === 0 && (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Package className="mb-4 h-12 w-12 text-muted-foreground" />
+              <p className="text-lg font-medium">{t('products.emptyTitle')}</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {t('products.emptyDescription')}
+              </p>
+              <MotionButton className="mt-4" onClick={onOpenCreate}>
+                <Plus className="mr-2 h-4 w-4" />
+                {t('products.createProduct')}
+              </MotionButton>
+            </CardContent>
+          </Card>
+        )}
+
+        {!isLoading && !error && products.length > 0 && viewType === 'card' && (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {products.map((product) => (
+              <Card
+                key={product.id}
+                className="cursor-pointer transition-all hover:shadow-md"
+                onClick={() => onOpenEdit(product)}
+              >
+                <CardHeader>
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                      <Package className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1">
+                      <CardTitle className="text-base">
+                        {product.product_code || t('products.title')}
+                      </CardTitle>
+                      {product.category && (
+                        <Badge variant="secondary" className="mt-1">
+                          {typeof product.category === 'object'
+                            ? product.category.name
+                            : product.category}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {product.Unit && (
+                    <p className="text-xs text-muted-foreground">
+                      {t('products.columns.unit')}:{' '}
+                      {typeof product.Unit === 'object'
+                        ? product.Unit.name
+                        : String(product.Unit)}
+                    </p>
+                  )}
+                  {typeof product.unit_price === 'number' && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {t('products.columns.unitPrice')}: {product.unit_price}
+                    </p>
+                  )}
+                  {typeof product.tax === 'number' && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {t('products.columns.tax')}: %{product.tax}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {!isLoading && !error && products.length > 0 && viewType === 'list' && (
+          <div className="space-y-4">
+            {toolbar}
+            <DataGrid table={table} {...gridProps} height={600} />
+          </div>
         )}
 
         <RecordDeleteConfirmDialog
-          open={deleteTargets.length > 0}
+          open={pendingDelete !== null}
           onOpenChange={(open) => {
-            if (!open) setDeleteTargets([])
+            if (!open && !isDeleting) setPendingDelete(null)
           }}
-          recordCount={deleteTargets.length}
-          onConfirm={onDeleteConfirm}
-          isPending={deleteProduct.isPending}
+          recordCount={pendingDelete ? 1 : 0}
+          onConfirm={onConfirmDelete}
+          isPending={isDeleting}
         />
+
+        {wizard}
       </PageContainer>
     </>
   )

@@ -1,25 +1,25 @@
-'use client';
+'use client'
 
-import { type ComponentProps, type ReactNode } from 'react';
+import { type ComponentProps, type ReactNode } from 'react'
 
 import {
   Columns3Icon,
   Rows3Icon,
   ChevronDownIcon,
-  ChevronRightIcon
-} from 'lucide-react';
+  ChevronRightIcon,
+} from 'lucide-react'
 
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
-import { type PivotGridController } from './types';
+import { type PivotGridController } from './types'
 
-import { PivotGridExportMenu } from './pivot-grid-export-menu';
+import { PivotGridExportMenu } from './pivot-grid-export-menu'
 
 interface PivotGridToolbarProps<TData> extends ComponentProps<'div'> {
-  controller: PivotGridController<TData>;
-  startContent?: ReactNode;
-  endContent?: ReactNode;
+  controller: PivotGridController<TData>
+  startContent?: ReactNode
+  endContent?: ReactNode
 }
 
 export function PivotGridToolbar<TData>({
@@ -34,32 +34,24 @@ export function PivotGridToolbar<TData>({
       data-slot="pivot-grid-toolbar"
       className={cn(
         'flex flex-wrap items-center gap-2 border-b px-3 py-2',
-        className
+        className,
       )}
-      {...props}>
+      {...props}
+    >
       {startContent ? (
         <div className="flex flex-wrap items-center gap-2">{startContent}</div>
       ) : null}
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={controller.expandAllRows}>
+      <Button variant="outline" size="sm" onClick={controller.expandAllRows}>
         <Rows3Icon className="size-4" />
         <ChevronDownIcon className="size-3.5" />
         Expand rows
       </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={controller.collapseAllRows}>
+      <Button variant="outline" size="sm" onClick={controller.collapseAllRows}>
         <Rows3Icon className="size-4" />
         <ChevronRightIcon className="size-3.5" />
         Collapse rows
       </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={controller.expandAllColumns}>
+      <Button variant="outline" size="sm" onClick={controller.expandAllColumns}>
         <Columns3Icon className="size-4" />
         <ChevronDownIcon className="size-3.5" />
         Expand columns
@@ -67,7 +59,8 @@ export function PivotGridToolbar<TData>({
       <Button
         variant="outline"
         size="sm"
-        onClick={controller.collapseAllColumns}>
+        onClick={controller.collapseAllColumns}
+      >
         <Columns3Icon className="size-4" />
         <ChevronRightIcon className="size-3.5" />
         Collapse columns
@@ -79,5 +72,5 @@ export function PivotGridToolbar<TData>({
         </div>
       ) : null}
     </div>
-  );
+  )
 }

@@ -1,41 +1,53 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
+import { useState } from 'react'
 
-import { CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
+import { CalendarIcon } from 'lucide-react'
 
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
+import { Field, FieldError } from '@/components/ui/field'
+import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger
-} from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { cn } from '@/lib/utils'
 
-import { type DocyrusFormFieldProps } from './types';
+import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useDateFormat } from '@/lib/use-date-format'
+
+import { FormFieldLabel } from './form-field-label'
+import { toLocalDateString } from './lib/utils'
+import { type DocyrusFormFieldProps } from './types'
 
 export function DateFormField({
   field: fieldConfig,
   form,
   disabled,
-  className
+  required,
+  className,
 }: DocyrusFormFieldProps) {
-  const [open, setOpen] = useState(false);
+  const { t } = useUiTranslation()
+  const { formatDate } = useDateFormat()
+
+  const [open, setOpen] = useState(false)
 
   return (
     <form.Field
       name={fieldConfig.slug}
       children={(field: any) => {
-        const isInvalid
-          = field.state.meta.isTouched && !field.state.meta.isValid;
-        const dateValue = field.state.value ? new Date(field.state.value) : undefined;
+        const isInvalid =
+          field.state.meta.isTouched && !field.state.meta.isValid
+        const dateValue = field.state.value
+          ? new Date(field.state.value)
+          : undefined
 
         return (
           <Field data-invalid={isInvalid} className={className}>
-            <FieldLabel htmlFor={field.name}>{fieldConfig.name}</FieldLabel>
+            <FormFieldLabel htmlFor={field.name} required={required}>
+              {fieldConfig.name}
+            </FormFieldLabel>
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
                 <Button
@@ -46,10 +58,13 @@ export function DateFormField({
                   disabled={disabled || fieldConfig.readOnly === true}
                   className={cn(
                     'w-full justify-start text-left font-normal',
-                    !dateValue && 'text-muted-foreground'
-                  )}>
+                    !dateValue && 'text-muted-foreground',
+                  )}
+                >
                   <CalendarIcon className="mr-2 size-4" />
-                  {dateValue ? format(dateValue, 'PPP') : 'Pick a date'}
+                  {dateValue
+                    ? formatDate(dateValue)
+                    : t('ui.formField.datePickPlaceholder', 'Pick a date')}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -57,14 +72,16 @@ export function DateFormField({
                   mode="single"
                   selected={dateValue}
                   onSelect={(date) => {
-                    field.handleChange(date ? date.toISOString() : null);
-                    setOpen(false);
-                  }} />
+                    field.handleChange(date ? toLocalDateString(date) : null)
+                    setOpen(false)
+                  }}
+                />
               </PopoverContent>
             </Popover>
             {isInvalid && <FieldError errors={field.state.meta.errors} />}
           </Field>
-        );
-      }} />
-  );
+        )
+      }}
+    />
+  )
 }

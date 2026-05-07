@@ -23,6 +23,7 @@ interface ContactFormDialogProps {
   onOpenChange: (open: boolean) => void
   contact?: any
   mode: 'create' | 'edit'
+  onSubmitSuccess?: () => void | Promise<void>
 }
 
 export function ContactFormDialog({
@@ -30,6 +31,7 @@ export function ContactFormDialog({
   onOpenChange,
   contact,
   mode,
+  onSubmitSuccess,
 }: ContactFormDialogProps) {
   const { t } = useTranslation()
   const createContact = useCreateContact()
@@ -68,6 +70,8 @@ export function ContactFormDialog({
           data: cleanedData,
         })
       }
+
+      await onSubmitSuccess?.()
       onOpenChange(false)
     },
   })

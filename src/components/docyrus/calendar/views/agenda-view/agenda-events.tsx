@@ -1,31 +1,31 @@
-'use client';
+'use client'
 
-import { type FC } from 'react';
+import { type FC } from 'react'
 
-import { format, parseISO } from 'date-fns';
+import { format, parseISO } from 'date-fns'
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
-  CommandList
-} from '@/components/ui/command';
-import { cn } from '@/lib/utils';
+  CommandList,
+} from '@/components/ui/command'
+import { cn } from '@/lib/utils'
 
-import { useCalendar } from '../../contexts/calendar-context';
-import { EventDetailsDialog } from '../../dialogs/event-details-dialog';
+import { useCalendar } from '../../contexts/calendar-context'
+import { EventDetailsDialog } from '../../dialogs/event-details-dialog'
 import {
   formatTime,
   getBgColor,
   getColorClass,
   getEventsForMonth,
   getFirstLetters,
-  toCapitalize
-} from '../../helpers';
-import { EventBullet } from '../month-view/event-bullet';
+  toCapitalize,
+} from '../../helpers'
+import { EventBullet } from '../month-view/event-bullet'
 
 export const AgendaEvents: FC = () => {
   const {
@@ -33,30 +33,32 @@ export const AgendaEvents: FC = () => {
     use24HourFormat,
     badgeVariant,
     agendaModeGroupBy,
-    selectedDate
-  } = useCalendar();
+    selectedDate,
+  } = useCalendar()
 
-  const monthEvents = getEventsForMonth(events, selectedDate);
+  const monthEvents = getEventsForMonth(events, selectedDate)
 
-  const agendaEvents: Record<string, Array<(typeof monthEvents)[number]>> = {};
+  const agendaEvents: Record<string, Array<(typeof monthEvents)[number]>> = {}
 
   for (const event of monthEvents) {
-    const key
-      = agendaModeGroupBy === 'date' ? format(parseISO(event.startDate), 'yyyy-MM-dd') : event.color;
+    const key =
+      agendaModeGroupBy === 'date'
+        ? format(parseISO(event.startDate), 'yyyy-MM-dd')
+        : event.color
     const group = agendaEvents[key] as
       | Array<(typeof monthEvents)[number]>
-      | undefined;
+      | undefined
 
     if (group) {
-      group.push(event);
+      group.push(event)
     } else {
-      agendaEvents[key] = [event];
+      agendaEvents[key] = [event]
     }
   }
 
   const groupedAndSortedEvents = Object.entries(agendaEvents).sort(
-    (a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime()
-  );
+    (a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime(),
+  )
 
   return (
     <Command className="py-4 h-[80vh] bg-transparent">
@@ -67,8 +69,13 @@ export const AgendaEvents: FC = () => {
         {groupedAndSortedEvents.map(([date, groupedEvents]) => (
           <CommandGroup
             key={date}
-            heading={agendaModeGroupBy === 'date' ? format(parseISO(date), 'EEEE, MMMM d, yyyy') : toCapitalize(groupedEvents[0]?.color ?? '')}>
-            {groupedEvents.map(event => (
+            heading={
+              agendaModeGroupBy === 'date'
+                ? format(parseISO(date), 'EEEE, MMMM d, yyyy')
+                : toCapitalize(groupedEvents[0]?.color ?? '')
+            }
+          >
+            {groupedEvents.map((event) => (
               <CommandItem
                 key={event.id}
                 className={cn(
@@ -77,9 +84,10 @@ export const AgendaEvents: FC = () => {
                     [getColorClass(event.color)]: badgeVariant === 'colored',
                     'hover:bg-zinc-200 dark:hover:bg-gray-900':
                       badgeVariant === 'dot',
-                    'hover:opacity-60': badgeVariant === 'colored'
-                  }
-                )}>
+                    'hover:opacity-60': badgeVariant === 'colored',
+                  },
+                )}
+              >
                 <EventDetailsDialog event={event}>
                   <div className="w-full flex items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
@@ -97,8 +105,9 @@ export const AgendaEvents: FC = () => {
                         <p
                           className={cn({
                             'font-medium': badgeVariant === 'dot',
-                            'text-foreground': badgeVariant === 'dot'
-                          })}>
+                            'text-foreground': badgeVariant === 'dot',
+                          })}
+                        >
                           {event.title}
                         </p>
                         <p className="text-muted-foreground text-sm line-clamp-1 text-ellipsis md:text-clip w-1/3">
@@ -138,5 +147,5 @@ export const AgendaEvents: FC = () => {
         <CommandEmpty>No results found.</CommandEmpty>
       </CommandList>
     </Command>
-  );
-};
+  )
+}

@@ -1,39 +1,35 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
+import { useState } from 'react'
 
-import {
-  DownloadIcon,
-  FileSpreadsheetIcon,
-  FileTextIcon
-} from 'lucide-react';
+import { DownloadIcon, FileSpreadsheetIcon, FileTextIcon } from 'lucide-react'
 
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
 
-import { type PivotGridController } from './types';
+import { type PivotGridController } from './types'
 
 interface PivotGridExportMenuProps<TData> {
-  controller: PivotGridController<TData>;
+  controller: PivotGridController<TData>
 }
 
 export function PivotGridExportMenu<TData>({
-  controller
+  controller,
 }: PivotGridExportMenuProps<TData>) {
-  const [isExporting, setIsExporting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false)
 
   async function runExport(task: () => Promise<void>) {
-    setIsExporting(true);
+    setIsExporting(true)
 
     try {
-      await task();
+      await task()
     } finally {
-      setIsExporting(false);
+      setIsExporting(false)
     }
   }
 
@@ -50,7 +46,9 @@ export function PivotGridExportMenu<TData>({
           <FileTextIcon className="size-4" />
           Export CSV
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => void runExport(controller.exportExcel)}>
+        <DropdownMenuItem
+          onSelect={() => void runExport(controller.exportExcel)}
+        >
           <FileSpreadsheetIcon className="size-4" />
           Export Excel
         </DropdownMenuItem>
@@ -60,5 +58,5 @@ export function PivotGridExportMenu<TData>({
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }

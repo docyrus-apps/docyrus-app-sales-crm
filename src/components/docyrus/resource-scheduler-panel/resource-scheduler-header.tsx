@@ -1,30 +1,30 @@
-'use client';
+'use client'
 
-import { format } from 'date-fns';
-import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { format } from 'date-fns'
+import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
+  SelectValue,
+} from '@/components/ui/select'
 
-import { tUi, type UiI18nLocale } from '@/lib/ui-i18n';
+import { tUi, type UiI18nLocale } from '@/lib/ui-i18n'
 
-import { useResourceSchedulerContext } from './resource-scheduler-context';
+import { useResourceSchedulerContext } from './resource-scheduler-context'
 
 interface ResourceSchedulerHeaderProps {
-  showResourceCount?: boolean;
-  resourceCount: number;
+  showResourceCount?: boolean
+  resourceCount: number
 }
 
 export function ResourceSchedulerHeader({
   showResourceCount,
-  resourceCount
+  resourceCount,
 }: ResourceSchedulerHeaderProps) {
   const {
     viewStart,
@@ -34,18 +34,15 @@ export function ResourceSchedulerHeader({
     onNavigate,
     onGoToToday,
     onPresetChange,
-    locale
-  } = useResourceSchedulerContext();
+    locale,
+  } = useResourceSchedulerContext()
 
-  const dateLabel = `${format(viewStart, 'MMM d, yyyy')} — ${format(viewEnd, 'MMM d, yyyy')}`;
+  const dateLabel = `${format(viewStart, 'MMM d, yyyy')} — ${format(viewEnd, 'MMM d, yyyy')}`
 
   return (
     <div className="flex items-center justify-between gap-3 border-b px-4 py-2">
       <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onGoToToday}>
+        <Button variant="outline" size="sm" onClick={onGoToToday}>
           <CalendarDays className="mr-1.5 size-3.5" />
           {tUi(locale as UiI18nLocale, 'schedulerToday')}
         </Button>
@@ -54,14 +51,16 @@ export function ResourceSchedulerHeader({
             variant="ghost"
             size="icon"
             className="size-7"
-            onClick={() => onNavigate('prev')}>
+            onClick={() => onNavigate('prev')}
+          >
             <ChevronLeft className="size-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
             className="size-7"
-            onClick={() => onNavigate('next')}>
+            onClick={() => onNavigate('next')}
+          >
             <ChevronRight className="size-4" />
           </Button>
         </div>
@@ -77,7 +76,7 @@ export function ResourceSchedulerHeader({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {presets.map(preset => (
+          {presets.map((preset) => (
             <SelectItem key={preset.id} value={preset.id}>
               {preset.name}
             </SelectItem>
@@ -85,5 +84,5 @@ export function ResourceSchedulerHeader({
         </SelectContent>
       </Select>
     </div>
-  );
+  )
 }

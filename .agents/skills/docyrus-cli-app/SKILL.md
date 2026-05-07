@@ -9,30 +9,30 @@ Guide for using the `docyrus` CLI to interact with the Docyrus platform from the
 
 ## Command Overview
 
-| Command | Description |
-|---------|-------------|
-| `docyrus` | Show active environment, current auth context, and help summary |
-| `docyrus env list` / `env use` | Manage named environments |
-| `docyrus auth login` | Authenticate via OAuth2 device flow or manual tokens |
-| `docyrus auth logout` | Logout the active account for the current environment |
-| `docyrus auth who` | Show the active user and tenant |
-| `docyrus auth accounts list` / `use` | Manage saved user accounts |
-| `docyrus auth tenants list` / `use` | Manage saved tenants for a user |
-| `docyrus apps list` | List apps from `/v1/apps` |
-| `docyrus ds get` | Get data source metadata |
-| `docyrus ds list` | Query records with filters, sorting, pagination |
-| `docyrus ds create` / `update` / `delete` | Mutate records, including bulk create/update |
-| `docyrus studio ...` | CRUD for dev app data sources, fields, and enums |
-| `docyrus discover api` | Download tenant OpenAPI spec |
-| `docyrus discover namespaces` / `path` / `endpoint` / `entity` / `search` | Explore the downloaded tenant OpenAPI spec |
-| `docyrus connect list-connectors` | List integration connectors with optional keyword search |
-| `docyrus connect get-connector <slug>` | Get connector details including data sources and actions |
-| `docyrus connect get-action <slug> <actionKey>` | Get action details with input/output JSON schemas |
-| `docyrus connect list-connections <slug>` | Get tenant and user connections for a connector |
-| `docyrus connect curl <slug> <endpoint>` | Send HTTP request through a connector's provider auth |
-| `docyrus connect run-action <appSlug> <actionKey>` | Run a connector or app action |
-| `docyrus curl` | Send arbitrary API requests |
-| `docyrus tui` | Launch the OpenTUI terminal UI (requires Bun) |
+| Command                                                                   | Description                                                     |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `docyrus`                                                                 | Show active environment, current auth context, and help summary |
+| `docyrus env list` / `env use`                                            | Manage named environments                                       |
+| `docyrus auth login`                                                      | Authenticate via OAuth2 device flow or manual tokens            |
+| `docyrus auth logout`                                                     | Logout the active account for the current environment           |
+| `docyrus auth who`                                                        | Show the active user and tenant                                 |
+| `docyrus auth accounts list` / `use`                                      | Manage saved user accounts                                      |
+| `docyrus auth tenants list` / `use`                                       | Manage saved tenants for a user                                 |
+| `docyrus apps list`                                                       | List apps from `/v1/apps`                                       |
+| `docyrus ds get`                                                          | Get data source metadata                                        |
+| `docyrus ds list`                                                         | Query records with filters, sorting, pagination                 |
+| `docyrus ds create` / `update` / `delete`                                 | Mutate records, including bulk create/update                    |
+| `docyrus studio ...`                                                      | CRUD for dev app data sources, fields, and enums                |
+| `docyrus discover api`                                                    | Download tenant OpenAPI spec                                    |
+| `docyrus discover namespaces` / `path` / `endpoint` / `entity` / `search` | Explore the downloaded tenant OpenAPI spec                      |
+| `docyrus connect list-connectors`                                         | List integration connectors with optional keyword search        |
+| `docyrus connect get-connector <slug>`                                    | Get connector details including data sources and actions        |
+| `docyrus connect get-action <slug> <actionKey>`                           | Get action details with input/output JSON schemas               |
+| `docyrus connect list-connections <slug>`                                 | Get tenant and user connections for a connector                 |
+| `docyrus connect curl <slug> <endpoint>`                                  | Send HTTP request through a connector's provider auth           |
+| `docyrus connect run-action <appSlug> <actionKey>`                        | Run a connector or app action                                   |
+| `docyrus curl`                                                            | Send arbitrary API requests                                     |
+| `docyrus tui`                                                             | Launch the OpenTUI terminal UI (requires Bun)                   |
 
 **See [references/cli-manifest.md](references/cli-manifest.md) for complete command reference with flags and arguments.**
 

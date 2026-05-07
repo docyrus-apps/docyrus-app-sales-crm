@@ -30,6 +30,7 @@ interface ProductFormDialogProps {
   onOpenChange: (open: boolean) => void
   product?: any
   mode: 'create' | 'edit'
+  onSubmitSuccess?: () => void | Promise<void>
 }
 
 export function ProductFormDialog({
@@ -37,6 +38,7 @@ export function ProductFormDialog({
   onOpenChange,
   product,
   mode,
+  onSubmitSuccess,
 }: ProductFormDialogProps) {
   const { t } = useTranslation()
   const createProduct = useCreateProduct()
@@ -47,7 +49,10 @@ export function ProductFormDialog({
   const form = useForm<ProductFormData>({
     defaultValues: {
       product_code: product?.product_code || '',
-      Unit: product?.Unit || '',
+      Unit:
+        typeof product?.Unit === 'object'
+          ? product.Unit.id
+          : product?.Unit || '',
       unit_price: product?.unit_price || undefined,
       category:
         typeof product?.category === 'object'
@@ -76,6 +81,8 @@ export function ProductFormDialog({
           data: cleanedData,
         })
       }
+
+      await onSubmitSuccess?.()
       onOpenChange(false)
     },
   })

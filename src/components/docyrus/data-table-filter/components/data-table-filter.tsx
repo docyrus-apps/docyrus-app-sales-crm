@@ -1,25 +1,25 @@
-'use client';
+'use client'
 
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile'
 
-import { type Locale } from '../lib/i18n';
+import { type Locale } from '../lib/i18n'
 
-import { ActiveFilters, ActiveFiltersMobileContainer } from './active-filters';
-import { FilterActions } from './filter-actions';
-import { FilterSelector } from './filter-selector';
+import { ActiveFilters, ActiveFiltersMobileContainer } from './active-filters'
+import { FilterActions } from './filter-actions'
+import { FilterSelector } from './filter-selector'
 import {
   type Column,
   type DataTableFilterActions,
   type FilterStrategy,
-  type FiltersState
-} from '../core/types';
+  type FiltersState,
+} from '../core/types'
 
 interface DataTableFilterProps<TData> {
-  columns: Array<Column<TData>>;
-  filters: FiltersState;
-  actions: DataTableFilterActions;
-  strategy: FilterStrategy;
-  locale?: Locale;
+  columns: Array<Column<TData>>
+  filters: FiltersState
+  actions: DataTableFilterActions
+  strategy: FilterStrategy
+  locale?: Locale
 }
 
 export function DataTableFilter<TData>({
@@ -27,9 +27,9 @@ export function DataTableFilter<TData>({
   filters,
   actions,
   strategy,
-  locale = 'en'
+  locale = 'en',
 }: DataTableFilterProps<TData>) {
-  const isMobile = useIsMobile();
+  const isMobile = useIsMobile()
 
   if (isMobile) {
     return (
@@ -40,11 +40,13 @@ export function DataTableFilter<TData>({
             filters={filters}
             actions={actions}
             strategy={strategy}
-            locale={locale} />
+            locale={locale}
+          />
           <FilterActions
             hasFilters={filters.length > 0}
             actions={actions}
-            locale={locale} />
+            locale={locale}
+          />
         </div>
         <ActiveFiltersMobileContainer>
           <ActiveFilters
@@ -52,10 +54,11 @@ export function DataTableFilter<TData>({
             filters={filters}
             actions={actions}
             strategy={strategy}
-            locale={locale} />
+            locale={locale}
+          />
         </ActiveFiltersMobileContainer>
       </div>
-    );
+    )
   }
 
   return (
@@ -66,18 +69,21 @@ export function DataTableFilter<TData>({
           filters={filters}
           actions={actions}
           strategy={strategy}
-          locale={locale} />
+          locale={locale}
+        />
         <ActiveFilters
           columns={columns}
           filters={filters}
           actions={actions}
           strategy={strategy}
-          locale={locale} />
+          locale={locale}
+        />
       </div>
       <FilterActions
         hasFilters={filters.length > 0}
         actions={actions}
-        locale={locale} />
+        locale={locale}
+      />
     </div>
-  );
+  )
 }

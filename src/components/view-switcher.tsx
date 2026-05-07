@@ -26,10 +26,23 @@ const viewOptions: Array<ViewOption> = [
 interface ViewSwitcherProps {
   value: ViewType
   onValueChange: (value: ViewType) => void
+  options?: Array<ViewType>
 }
 
-export function ViewSwitcher({ value, onValueChange }: ViewSwitcherProps) {
-  const current = viewOptions.find((o) => o.value === value) ?? viewOptions[0]
+export function ViewSwitcher({
+  value,
+  onValueChange,
+  options,
+}: ViewSwitcherProps) {
+  const visibleOptions =
+    options && options.length > 0
+      ? viewOptions.filter((option) => options.includes(option.value))
+      : viewOptions
+
+  const current =
+    visibleOptions.find((option) => option.value === value) ?? visibleOptions[0]
+
+  if (!current) return null
 
   return (
     <DropdownMenu>
@@ -45,7 +58,7 @@ export function ViewSwitcher({ value, onValueChange }: ViewSwitcherProps) {
           value={value}
           onValueChange={(v) => onValueChange(v as ViewType)}
         >
-          {viewOptions.map((option) => (
+          {visibleOptions.map((option) => (
             <DropdownMenuRadioItem
               key={option.value}
               value={option.value}

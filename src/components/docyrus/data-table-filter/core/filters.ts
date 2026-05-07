@@ -8,65 +8,73 @@ import {
   type Nullable,
   type TAccessorFn,
   type TOrderFn,
-  type TTransformOptionFn
-} from './types';
+  type TTransformOptionFn,
+} from './types'
 
-import { isAnyOf, uniq } from '../lib/array';
-import { isColumnOptionArray } from '../lib/helpers';
-import { memo } from '../lib/memo';
+import { isAnyOf, uniq } from '../lib/array'
+import { isColumnOptionArray } from '../lib/helpers'
+import { memo } from '../lib/memo'
 
 class ColumnConfigBuilder<
   TData,
   TType extends ColumnDataType = any,
   TVal = unknown,
-  TId extends string = string> {
-  private config: Partial<ColumnConfig<TData, TType, TVal, TId>>;
+  TId extends string = string,
+> {
+  private config: Partial<ColumnConfig<TData, TType, TVal, TId>>
+
   constructor(type: TType) {
-    this.config = { type } as Partial<ColumnConfig<TData, TType, TVal, TId>>;
+    this.config = { type } as Partial<ColumnConfig<TData, TType, TVal, TId>>
   }
+
   private clone(): ColumnConfigBuilder<TData, TType, TVal, TId> {
     const newInstance = new ColumnConfigBuilder<TData, TType, TVal, TId>(
-      this.config.type as TType
-    );
+      this.config.type as TType,
+    )
 
-    newInstance.config = { ...this.config };
+    newInstance.config = { ...this.config }
 
-    return newInstance;
+    return newInstance
   }
+
   id<TNewId extends string>(
-    value: TNewId
+    value: TNewId,
   ): ColumnConfigBuilder<TData, TType, TVal, TNewId> {
-    const newInstance = this.clone() as any; // We'll refine this
+    const newInstance = this.clone() as any // We'll refine this
 
-    newInstance.config.id = value;
+    newInstance.config.id = value
 
-    return newInstance as ColumnConfigBuilder<TData, TType, TVal, TNewId>;
+    return newInstance as ColumnConfigBuilder<TData, TType, TVal, TNewId>
   }
+
   accessor<TNewVal>(
-    accessor: TAccessorFn<TData, TNewVal>
+    accessor: TAccessorFn<TData, TNewVal>,
   ): ColumnConfigBuilder<TData, TType, TNewVal, TId> {
-    const newInstance = this.clone() as any;
+    const newInstance = this.clone() as any
 
-    newInstance.config.accessor = accessor;
+    newInstance.config.accessor = accessor
 
-    return newInstance as ColumnConfigBuilder<TData, TType, TNewVal, TId>;
+    return newInstance as ColumnConfigBuilder<TData, TType, TNewVal, TId>
   }
+
   displayName(value: string): ColumnConfigBuilder<TData, TType, TVal, TId> {
-    const newInstance = this.clone();
+    const newInstance = this.clone()
 
-    newInstance.config.displayName = value;
+    newInstance.config.displayName = value
 
-    return newInstance;
+    return newInstance
   }
+
   icon(value: any): ColumnConfigBuilder<TData, TType, TVal, TId> {
-    const newInstance = this.clone();
+    const newInstance = this.clone()
 
-    newInstance.config.icon = value;
+    newInstance.config.icon = value
 
-    return newInstance;
+    return newInstance
   }
+
   min(
-    value: number
+    value: number,
   ): ColumnConfigBuilder<
     TData,
     TType extends 'number' ? TType : never,
@@ -74,16 +82,17 @@ class ColumnConfigBuilder<
     TId
   > {
     if (this.config.type !== 'number') {
-      throw new Error('min() is only applicable to number columns');
+      throw new Error('min() is only applicable to number columns')
     }
-    const newInstance = this.clone() as any;
+    const newInstance = this.clone() as any
 
-    newInstance.config.min = value;
+    newInstance.config.min = value
 
-    return newInstance;
+    return newInstance
   }
+
   max(
-    value: number
+    value: number,
   ): ColumnConfigBuilder<
     TData,
     TType extends 'number' ? TType : never,
@@ -91,16 +100,17 @@ class ColumnConfigBuilder<
     TId
   > {
     if (this.config.type !== 'number') {
-      throw new Error('max() is only applicable to number columns');
+      throw new Error('max() is only applicable to number columns')
     }
-    const newInstance = this.clone() as any;
+    const newInstance = this.clone() as any
 
-    newInstance.config.max = value;
+    newInstance.config.max = value
 
-    return newInstance;
+    return newInstance
   }
+
   options(
-    value: Array<ColumnOption>
+    value: Array<ColumnOption>,
   ): ColumnConfigBuilder<
     TData,
     TType extends 'option' | 'multiOption' ? TType : never,
@@ -109,17 +119,18 @@ class ColumnConfigBuilder<
   > {
     if (!isAnyOf(this.config.type, ['option', 'multiOption'])) {
       throw new Error(
-        'options() is only applicable to option or multiOption columns'
-      );
+        'options() is only applicable to option or multiOption columns',
+      )
     }
-    const newInstance = this.clone() as any;
+    const newInstance = this.clone() as any
 
-    newInstance.config.options = value;
+    newInstance.config.options = value
 
-    return newInstance;
+    return newInstance
   }
+
   transformOptionFn(
-    fn: TTransformOptionFn<TVal>
+    fn: TTransformOptionFn<TVal>,
   ): ColumnConfigBuilder<
     TData,
     TType extends 'option' | 'multiOption' ? TType : never,
@@ -128,17 +139,18 @@ class ColumnConfigBuilder<
   > {
     if (!isAnyOf(this.config.type, ['option', 'multiOption'])) {
       throw new Error(
-        'transformOptionFn() is only applicable to option or multiOption columns'
-      );
+        'transformOptionFn() is only applicable to option or multiOption columns',
+      )
     }
-    const newInstance = this.clone() as any;
+    const newInstance = this.clone() as any
 
-    newInstance.config.transformOptionFn = fn;
+    newInstance.config.transformOptionFn = fn
 
-    return newInstance;
+    return newInstance
   }
+
   orderFn(
-    fn: TOrderFn<TVal>
+    fn: TOrderFn<TVal>,
   ): ColumnConfigBuilder<
     TData,
     TType extends 'option' | 'multiOption' ? TType : never,
@@ -147,250 +159,281 @@ class ColumnConfigBuilder<
   > {
     if (!isAnyOf(this.config.type, ['option', 'multiOption'])) {
       throw new Error(
-        'orderFn() is only applicable to option or multiOption columns'
-      );
+        'orderFn() is only applicable to option or multiOption columns',
+      )
     }
-    const newInstance = this.clone() as any;
+    const newInstance = this.clone() as any
 
-    newInstance.config.orderFn = fn;
+    newInstance.config.orderFn = fn
 
-    return newInstance;
+    return newInstance
   }
-  build(): ColumnConfig<TData, TType, TVal, TId> {
-    if (!this.config.id) throw new Error('id is required');
-    if (!this.config.accessor) throw new Error('accessor is required');
-    if (!this.config.displayName) throw new Error('displayName is required');
-    if (!this.config.icon) throw new Error('icon is required');
 
-    return this.config as ColumnConfig<TData, TType, TVal, TId>;
+  build(): ColumnConfig<TData, TType, TVal, TId> {
+    if (!this.config.id) throw new Error('id is required')
+    if (!this.config.accessor) throw new Error('accessor is required')
+    if (!this.config.displayName) throw new Error('displayName is required')
+    if (!this.config.icon) throw new Error('icon is required')
+
+    return this.config as ColumnConfig<TData, TType, TVal, TId>
   }
 }
 
 interface FluentColumnConfigHelper<TData> {
-  text: () => ColumnConfigBuilder<TData, 'text', string>;
-  number: () => ColumnConfigBuilder<TData, 'number', number>;
-  date: () => ColumnConfigBuilder<TData, 'date', Date>;
-  option: () => ColumnConfigBuilder<TData, 'option', string>;
-  multiOption: () => ColumnConfigBuilder<TData, 'multiOption', Array<string>>;
+  text: () => ColumnConfigBuilder<TData, 'text', string>
+  number: () => ColumnConfigBuilder<TData, 'number', number>
+  date: () => ColumnConfigBuilder<TData, 'date', Date>
+  option: () => ColumnConfigBuilder<TData, 'option', string>
+  multiOption: () => ColumnConfigBuilder<TData, 'multiOption', Array<string>>
 }
 
 export function createColumnConfigHelper<
-  TData
+  TData,
 >(): FluentColumnConfigHelper<TData> {
   return {
     text: () => new ColumnConfigBuilder<TData, 'text', string>('text'),
     number: () => new ColumnConfigBuilder<TData, 'number', number>('number'),
     date: () => new ColumnConfigBuilder<TData, 'date', Date>('date'),
     option: () => new ColumnConfigBuilder<TData, 'option', string>('option'),
-    multiOption: () => new ColumnConfigBuilder<TData, 'multiOption', Array<string>>(
-      'multiOption'
-    )
-  };
+    multiOption: () =>
+      new ColumnConfigBuilder<TData, 'multiOption', Array<string>>(
+        'multiOption',
+      ),
+  }
 }
 
 export function getColumnOptions<TData, TType extends ColumnDataType, TVal>(
   column: ColumnConfig<TData, TType, TVal>,
   data: Array<TData>,
-  strategy: FilterStrategy
+  strategy: FilterStrategy,
 ): Array<ColumnOption> {
   if (!isAnyOf(column.type, ['option', 'multiOption'])) {
     console.warn(
-      'Column options can only be retrieved for option and multiOption columns'
-    );
+      'Column options can only be retrieved for option and multiOption columns',
+    )
 
-    return [];
+    return []
   }
 
   if (strategy === 'server' && !column.options) {
-    throw new Error('column options are required for server-side filtering');
+    throw new Error('column options are required for server-side filtering')
   }
 
   if (column.options) {
-    return column.options;
+    return column.options
+  }
+
+  /*
+   * Async-options columns load their option list on demand from the server,
+   * so deriving options from `data` would fail (the data is the parent
+   * table's rows, not the relation's items). Skip the throw and let the
+   * async controller render an empty list until a search lands.
+   */
+  if (column.asyncOptions) {
+    return []
   }
 
   const filtered = data
     .flatMap(column.accessor)
-    .filter((v): v is NonNullable<TVal> => v !== undefined && v !== null);
+    .filter((v): v is NonNullable<TVal> => v !== undefined && v !== null)
 
-  let models = uniq(filtered);
-  const { orderFn, transformOptionFn } = column;
+  let models = uniq(filtered)
+  const { orderFn, transformOptionFn } = column
 
   if (orderFn) {
-    models = models.sort((m1, m2) => orderFn(
-      m1 as ElementType<NonNullable<TVal>>,
-      m2 as ElementType<NonNullable<TVal>>
-    ));
+    models = models.sort((m1, m2) =>
+      orderFn(
+        m1 as ElementType<NonNullable<TVal>>,
+        m2 as ElementType<NonNullable<TVal>>,
+      ),
+    )
   }
 
   if (transformOptionFn) {
     const memoizedTransform = memo(
       () => [models],
-      deps => (deps[0] ?? []).map(m => transformOptionFn(m as ElementType<NonNullable<TVal>>)),
-      { key: `transform-${column.id}` }
-    );
+      (deps) =>
+        (deps[0] ?? []).map((m) =>
+          transformOptionFn(m as ElementType<NonNullable<TVal>>),
+        ),
+      { key: `transform-${column.id}` },
+    )
 
-    return memoizedTransform();
+    return memoizedTransform()
   }
 
-  if (isColumnOptionArray(models)) return models;
+  if (isColumnOptionArray(models)) return models
 
   throw new Error(
-    `[data-table-filter] [${column.id}] Either provide static options, a transformOptionFn, or ensure the column data conforms to ColumnOption type`
-  );
+    `[data-table-filter] [${column.id}] Either provide static options, a transformOptionFn, or ensure the column data conforms to ColumnOption type`,
+  )
 }
 
 export function getColumnValues<TData, TType extends ColumnDataType, TVal>(
   column: ColumnConfig<TData, TType, TVal>,
-  data: Array<TData>
+  data: Array<TData>,
 ) {
   const memoizedAccessor = memo(
     () => [data],
-    deps => (deps[0] ?? [])
-      .flatMap(column.accessor)
-      .filter(
-        (v): v is NonNullable<TVal> => v !== undefined && v !== null
-      ) as Array<ElementType<NonNullable<TVal>>>,
-    { key: `accessor-${column.id}` }
-  );
+    (deps) =>
+      (deps[0] ?? [])
+        .flatMap(column.accessor)
+        .filter(
+          (v): v is NonNullable<TVal> => v !== undefined && v !== null,
+        ) as Array<ElementType<NonNullable<TVal>>>,
+    { key: `accessor-${column.id}` },
+  )
 
-  const raw = memoizedAccessor();
+  const raw = memoizedAccessor()
 
   if (!isAnyOf(column.type, ['option', 'multiOption'])) {
-    return raw;
+    return raw
   }
 
   if (column.options) {
     return raw
-      .map(v => column.options?.find(o => o.value === v)?.value)
-      .filter(v => v !== undefined && v !== null);
+      .map((v) => column.options?.find((o) => o.value === v)?.value)
+      .filter((v) => v !== undefined && v !== null)
   }
 
-  const { transformOptionFn } = column;
+  /*
+   * Async-options columns load their option list on demand, so the parent
+   * table's row data is unrelated to the relation's items. Skip the
+   * conformance check and return raw values — the async controller pulls
+   * labels from the server when the user opens the filter.
+   */
+  if (column.asyncOptions) {
+    return raw
+  }
+
+  const { transformOptionFn } = column
 
   if (transformOptionFn) {
     const memoizedTransform = memo(
       () => [raw],
-      deps => (deps[0] ?? []).map(
-        v => transformOptionFn(v) as ElementType<NonNullable<TVal>>
-      ),
-      { key: `transform-values-${column.id}` }
-    );
+      (deps) =>
+        (deps[0] ?? []).map(
+          (v) => transformOptionFn(v) as ElementType<NonNullable<TVal>>,
+        ),
+      { key: `transform-values-${column.id}` },
+    )
 
-    return memoizedTransform();
+    return memoizedTransform()
   }
 
   if (isColumnOptionArray(raw)) {
-    return raw;
+    return raw
   }
 
   throw new Error(
-    `[data-table-filter] [${column.id}] Either provide static options, a transformOptionFn, or ensure the column data conforms to ColumnOption type`
-  );
+    `[data-table-filter] [${column.id}] Either provide static options, a transformOptionFn, or ensure the column data conforms to ColumnOption type`,
+  )
 }
 
 export function getFacetedUniqueValues<
   TData,
   TType extends ColumnDataType,
-  TVal
+  TVal,
 >(
   column: ColumnConfig<TData, TType, TVal>,
   values: Array<string> | Array<ColumnOption>,
-  strategy: FilterStrategy
+  strategy: FilterStrategy,
 ): Map<string, number> | undefined {
   if (!isAnyOf(column.type, ['option', 'multiOption'])) {
     console.warn(
-      'Faceted unique values can only be retrieved for option and multiOption columns'
-    );
+      'Faceted unique values can only be retrieved for option and multiOption columns',
+    )
 
-    return new Map<string, number>();
+    return new Map<string, number>()
   }
 
   if (strategy === 'server') {
-    return column.facetedOptions;
+    return column.facetedOptions
   }
 
-  const acc = new Map<string, number>();
+  const acc = new Map<string, number>()
 
   if (isColumnOptionArray(values)) {
     for (const option of values) {
-      const curr = acc.get(option.value) ?? 0;
+      const curr = acc.get(option.value) ?? 0
 
-      acc.set(option.value, curr + 1);
+      acc.set(option.value, curr + 1)
     }
   } else {
     for (const option of values) {
-      const curr = acc.get(option) ?? 0;
+      const curr = acc.get(option) ?? 0
 
-      acc.set(option, curr + 1);
+      acc.set(option, curr + 1)
     }
   }
 
-  return acc;
+  return acc
 }
 
 export function getFacetedMinMaxValues<
   TData,
   TType extends ColumnDataType,
-  TVal
+  TVal,
 >(
   column: ColumnConfig<TData, TType, TVal>,
   data: Array<TData>,
-  strategy: FilterStrategy
+  strategy: FilterStrategy,
 ): [number, number] | undefined {
-  if (column.type !== 'number') return undefined; // Only applicable to number columns
+  if (column.type !== 'number') return undefined // Only applicable to number columns
 
   if (typeof column.min === 'number' && typeof column.max === 'number') {
-    return [column.min, column.max];
+    return [column.min, column.max]
   }
 
   if (strategy === 'server') {
-    return undefined;
+    return undefined
   }
 
   const values = data
-    .flatMap(row => column.accessor(row) as Nullable<number>)
-    .filter((v): v is number => typeof v === 'number' && !Number.isNaN(v));
+    .flatMap((row) => column.accessor(row) as Nullable<number>)
+    .filter((v): v is number => typeof v === 'number' && !Number.isNaN(v))
 
   if (values.length === 0) {
-    return [0, 0]; // Fallback to config or reasonable defaults
+    return [0, 0] // Fallback to config or reasonable defaults
   }
 
-  const min = Math.min(...values);
-  const max = Math.max(...values);
+  const min = Math.min(...values)
+  const max = Math.max(...values)
 
-  return [min, max];
+  return [min, max]
 }
 
 export function createColumns<TData>(
   data: Array<TData>,
   columnConfigs: ReadonlyArray<ColumnConfig<TData, any, any, any>>,
-  strategy: FilterStrategy
+  strategy: FilterStrategy,
 ): Array<Column<TData>> {
   return columnConfigs.map((columnConfig) => {
     const getOptions: () => Array<ColumnOption> = memo(
       () => [data, strategy, columnConfig.options],
-      ([data, strategy]) => getColumnOptions(columnConfig, data as any, strategy as any),
-      { key: `options-${columnConfig.id}` }
-    );
+      ([data, strategy]) =>
+        getColumnOptions(columnConfig, data as any, strategy as any),
+      { key: `options-${columnConfig.id}` },
+    )
 
     const getValues: () => Array<ElementType<NonNullable<any>>> = memo(
       () => [data, strategy],
       () => (strategy === 'client' ? getColumnValues(columnConfig, data) : []),
-      { key: `values-${columnConfig.id}` }
-    );
+      { key: `values-${columnConfig.id}` },
+    )
 
     const getUniqueValues: () => Map<string, number> | undefined = memo(
       () => [getValues(), strategy],
-      ([values, strategy]) => getFacetedUniqueValues(columnConfig, values as any, strategy as any),
-      { key: `faceted-${columnConfig.id}` }
-    );
+      ([values, strategy]) =>
+        getFacetedUniqueValues(columnConfig, values as any, strategy as any),
+      { key: `faceted-${columnConfig.id}` },
+    )
 
     const getMinMaxValues: () => [number, number] | undefined = memo(
       () => [data, strategy],
       () => getFacetedMinMaxValues(columnConfig, data, strategy),
-      { key: `minmax-${columnConfig.id}` }
-    );
+      { key: `minmax-${columnConfig.id}` },
+    )
 
     const column: Column<TData> = {
       ...columnConfig,
@@ -405,65 +448,73 @@ export function createColumns<TData>(
       _prefetchedOptionsCache: null, // Initialize private cache
       _prefetchedValuesCache: null,
       _prefetchedFacetedUniqueValuesCache: null,
-      _prefetchedFacetedMinMaxValuesCache: null
-    };
+      _prefetchedFacetedMinMaxValuesCache: null,
+    }
 
     if (strategy === 'client') {
       column.prefetchOptions = async (): Promise<void> => {
         if (!column._prefetchedOptionsCache) {
-          await new Promise(resolve => setTimeout(() => {
-            const options = getOptions();
+          await new Promise((resolve) =>
+            setTimeout(() => {
+              const options = getOptions()
 
-            column._prefetchedOptionsCache = options;
-            resolve(undefined);
-          }, 0));
+              column._prefetchedOptionsCache = options
+              resolve(undefined)
+            }, 0),
+          )
         }
-      };
+      }
 
       column.prefetchValues = async (): Promise<void> => {
         if (!column._prefetchedValuesCache) {
-          await new Promise(resolve => setTimeout(() => {
-            const values = getValues();
+          await new Promise((resolve) =>
+            setTimeout(() => {
+              const values = getValues()
 
-            column._prefetchedValuesCache = values;
-            resolve(undefined);
-          }, 0));
+              column._prefetchedValuesCache = values
+              resolve(undefined)
+            }, 0),
+          )
         }
-      };
+      }
 
       column.prefetchFacetedUniqueValues = async (): Promise<void> => {
         if (!column._prefetchedFacetedUniqueValuesCache) {
-          await new Promise(resolve => setTimeout(() => {
-            const facetedMap = getUniqueValues();
+          await new Promise((resolve) =>
+            setTimeout(() => {
+              const facetedMap = getUniqueValues()
 
-            column._prefetchedFacetedUniqueValuesCache = facetedMap ?? null;
-            /*
-             * console.log(
-             *   `Prefetched faceted unique values for ${columnConfig.id}`,
-             * )
-             */
-            resolve(undefined);
-          }, 0));
+              column._prefetchedFacetedUniqueValuesCache = facetedMap ?? null
+              /*
+               * console.log(
+               *   `Prefetched faceted unique values for ${columnConfig.id}`,
+               * )
+               */
+              resolve(undefined)
+            }, 0),
+          )
         }
-      };
+      }
 
       column.prefetchFacetedMinMaxValues = async (): Promise<void> => {
         if (!column._prefetchedFacetedMinMaxValuesCache) {
-          await new Promise(resolve => setTimeout(() => {
-            const value = getMinMaxValues();
+          await new Promise((resolve) =>
+            setTimeout(() => {
+              const value = getMinMaxValues()
 
-            column._prefetchedFacetedMinMaxValuesCache = value ?? null;
-            /*
-             * console.log(
-             *   `Prefetched faceted min/max values for ${columnConfig.id}`,
-             * )
-             */
-            resolve(undefined);
-          }, 0));
+              column._prefetchedFacetedMinMaxValuesCache = value ?? null
+              /*
+               * console.log(
+               *   `Prefetched faceted min/max values for ${columnConfig.id}`,
+               * )
+               */
+              resolve(undefined)
+            }, 0),
+          )
         }
-      };
+      }
     }
 
-    return column;
-  });
+    return column
+  })
 }

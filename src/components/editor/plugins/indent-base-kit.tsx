@@ -11,7 +11,6 @@ export const BaseIndentKit = [
         KEYS.blockquote,
         KEYS.codeBlock,
         KEYS.toggle,
-        KEYS.img,
       ],
     },
     options: {

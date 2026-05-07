@@ -1,21 +1,21 @@
-'use client';
+'use client'
 
-import { type HTMLAttributes } from 'react';
+import { type HTMLAttributes } from 'react'
 
-import { type VariantProps } from 'class-variance-authority';
+import { type VariantProps } from 'class-variance-authority'
 
-import { cva } from 'class-variance-authority';
-import { differenceInMinutes, parseISO } from 'date-fns';
+import { cva } from 'class-variance-authority'
+import { differenceInMinutes, parseISO } from 'date-fns'
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'
 
-import { type IEvent } from '../../interfaces';
+import { type IEvent } from '../../interfaces'
 
-import { useCalendar } from '../../contexts/calendar-context';
-import { EventDetailsDialog } from '../../dialogs/event-details-dialog';
-import { DraggableEvent } from '../../dnd/draggable-event';
-import { ResizableEvent } from '../../dnd/resizable-event';
-import { formatTime } from '../../helpers';
+import { useCalendar } from '../../contexts/calendar-context'
+import { EventDetailsDialog } from '../../dialogs/event-details-dialog'
+import { DraggableEvent } from '../../dnd/draggable-event'
+import { ResizableEvent } from '../../dnd/resizable-event'
+import { formatTime } from '../../helpers'
 
 const calendarWeekEventCardVariants = cva(
   'flex select-none flex-col gap-0.5 truncate whitespace-nowrap rounded-md border px-2 py-1.5 text-xs focus-visible:outline-offset-2',
@@ -44,38 +44,38 @@ const calendarWeekEventCardVariants = cva(
         'purple-dot':
           'border-border bg-card text-foreground hover:bg-accent [&_svg]:fill-purple-600 dark:[&_svg]:fill-purple-500',
         'yellow-dot':
-          'border-border bg-card text-foreground hover:bg-accent [&_svg]:fill-yellow-600 dark:[&_svg]:fill-yellow-500'
-      }
+          'border-border bg-card text-foreground hover:bg-accent [&_svg]:fill-yellow-600 dark:[&_svg]:fill-yellow-500',
+      },
     },
     defaultVariants: {
-      color: 'blue-dot'
-    }
-  }
-);
+      color: 'blue-dot',
+    },
+  },
+)
 
 interface IProps
   extends
-  HTMLAttributes<HTMLDivElement>,
-  Omit<VariantProps<typeof calendarWeekEventCardVariants>, 'color'> {
-  event: IEvent;
+    HTMLAttributes<HTMLDivElement>,
+    Omit<VariantProps<typeof calendarWeekEventCardVariants>, 'color'> {
+  event: IEvent
 }
 
 export function EventBlock({ event, className }: IProps) {
-  const { badgeVariant, use24HourFormat } = useCalendar();
+  const { badgeVariant, use24HourFormat } = useCalendar()
 
-  const start = parseISO(event.startDate);
-  const end = parseISO(event.endDate);
-  const durationInMinutes = differenceInMinutes(end, start);
-  const heightInPixels = (durationInMinutes / 60) * 96 - 8;
+  const start = parseISO(event.startDate)
+  const end = parseISO(event.endDate)
+  const durationInMinutes = differenceInMinutes(end, start)
+  const heightInPixels = (durationInMinutes / 60) * 96 - 8
 
   const color = (
     badgeVariant === 'dot' ? `${event.color}-dot` : event.color
-  ) as VariantProps<typeof calendarWeekEventCardVariants>['color'];
+  ) as VariantProps<typeof calendarWeekEventCardVariants>['color']
 
   const calendarWeekEventCardClasses = cn(
     calendarWeekEventCardVariants({ color, className }),
-    durationInMinutes < 35 && 'py-0 justify-center'
-  );
+    durationInMinutes < 35 && 'py-0 justify-center',
+  )
 
   return (
     <ResizableEvent event={event}>
@@ -84,7 +84,8 @@ export function EventBlock({ event, className }: IProps) {
           <button
             type="button"
             className={calendarWeekEventCardClasses}
-            style={{ height: `${heightInPixels}px` }}>
+            style={{ height: `${heightInPixels}px` }}
+          >
             <div className="flex items-center gap-1.5 truncate">
               {badgeVariant === 'dot' && (
                 <svg
@@ -93,7 +94,8 @@ export function EventBlock({ event, className }: IProps) {
                   viewBox="0 0 8 8"
                   xmlns="http://www.w3.org/2000/svg"
                   className="shrink-0"
-                  aria-hidden="true">
+                  aria-hidden="true"
+                >
                   <circle cx="4" cy="4" r="4" />
                 </svg>
               )}
@@ -111,5 +113,5 @@ export function EventBlock({ event, className }: IProps) {
         </EventDetailsDialog>
       </DraggableEvent>
     </ResizableEvent>
-  );
+  )
 }

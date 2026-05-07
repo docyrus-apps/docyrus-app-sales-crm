@@ -1,40 +1,49 @@
-'use client';
+'use client'
 
-import { Separator } from '@/components/ui/separator';
+import { Separator } from '@/components/ui/separator'
 
-import { tUi } from '@/lib/ui-i18n';
-import { formatMoney } from '@/components/docyrus/form-fields/lib/utils';
+import { tUi } from '@/lib/ui-i18n'
+import { formatMoney } from '@/components/docyrus/form-fields/lib/utils'
 
-import { usePricingEngine } from './contexts/pricing-context';
+import { usePricingEngine } from './contexts/pricing-context'
 
 export function PricingTotalsSection() {
-  const {
-    totals, currency, config, locale
-  } = usePricingEngine();
+  const { totals, currency, config, locale } = usePricingEngine()
 
   const rows: Array<{
-    label: string; value: number; bold?: boolean; negative?: boolean;
-  }> = [{ label: tUi(locale, 'pepSubtotal'), value: totals.subtotal }];
+    label: string
+    value: number
+    bold?: boolean
+    negative?: boolean
+  }> = [{ label: tUi(locale, 'pepSubtotal'), value: totals.subtotal }]
 
   if (totals.totalDiscount > 0) {
-    rows.push({ label: tUi(locale, 'pepDiscount'), value: totals.totalDiscount, negative: true });
+    rows.push({
+      label: tUi(locale, 'pepDiscount'),
+      value: totals.totalDiscount,
+      negative: true,
+    })
   }
 
-  rows.push({ label: tUi(locale, 'pepNetTotal'), value: totals.netTotal });
+  rows.push({ label: tUi(locale, 'pepNetTotal'), value: totals.netTotal })
 
   if (config.enableVat && totals.vatTotal > 0) {
-    rows.push({ label: tUi(locale, 'pepVatTotal'), value: totals.vatTotal });
+    rows.push({ label: tUi(locale, 'pepVatTotal'), value: totals.vatTotal })
   }
 
   if (config.enableAdjustment && totals.adjustment !== 0) {
     rows.push({
       label: tUi(locale, 'pepAdjustment'),
       value: totals.adjustment,
-      negative: totals.adjustment < 0
-    });
+      negative: totals.adjustment < 0,
+    })
   }
 
-  rows.push({ label: tUi(locale, 'pepGrandTotal'), value: totals.grandTotal, bold: true });
+  rows.push({
+    label: tUi(locale, 'pepGrandTotal'),
+    value: totals.grandTotal,
+    bold: true,
+  })
 
   return (
     <>
@@ -46,9 +55,12 @@ export function PricingTotalsSection() {
               key={i}
               className={`flex items-center justify-between text-sm ${
                 row.bold ? 'border-t pt-2 text-base font-semibold' : ''
-              }`}>
+              }`}
+            >
               <span className="text-muted-foreground">{row.label}</span>
-              <span className={`tabular-nums ${row.negative ? 'text-destructive' : ''}`}>
+              <span
+                className={`tabular-nums ${row.negative ? 'text-destructive' : ''}`}
+              >
                 {row.negative && row.value > 0 ? '-' : ''}
                 {formatMoney(Math.abs(row.value), currency.code)}
               </span>
@@ -57,5 +69,5 @@ export function PricingTotalsSection() {
         </div>
       </div>
     </>
-  );
+  )
 }

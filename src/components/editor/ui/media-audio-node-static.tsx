@@ -1,17 +1,21 @@
 // @ts-nocheck
+import * as React from 'react'
+
+import type { TAudioElement } from 'platejs'
 import type { SlateElementProps } from 'platejs/static'
 
 import { SlateElement } from 'platejs/static'
 
-export function AudioElementStatic(props: SlateElementProps) {
-  const { element } = props
-  const { url } = element as any
+import { cn } from '@/lib/utils'
 
+export function AudioElementStatic(props: SlateElementProps<TAudioElement>) {
   return (
-    <SlateElement {...props} className="py-2.5">
-      <div className="flex justify-center">
-        <audio className="w-full" src={url} controls />
-      </div>
+    <SlateElement {...props} className="mb-1">
+      <figure className="group relative cursor-default">
+        <div className={cn('h-16 rounded-sm')}>
+          <audio className="size-full" src={props.element.url} controls />
+        </div>
+      </figure>
       {props.children}
     </SlateElement>
   )

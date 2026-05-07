@@ -66,7 +66,7 @@ Configure these in your `.env` file:
 ```bash
 VITE_API_BASE_URL=https://localhost:3366        # Docyrus API base URL
 VITE_OAUTH2_CLIENT_ID=your-client-id            # OAuth2 client ID
-VITE_OAUTH2_REDIRECT_URI=http://localhost:3000/auth/callback  # Callback URL
+VITE_OAUTH2_REDIRECT_PATH=/auth/callback        # Callback path appended to the current origin
 VITE_OAUTH2_SCOPES=openid profile offline_access Users.Read DS.ReadWrite.All
 ```
 

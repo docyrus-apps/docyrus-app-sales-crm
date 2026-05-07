@@ -12,10 +12,15 @@ Integrate with the Docyrus API using `@docyrus/api-client` (REST client) and `@d
 ### React Apps — Use @docyrus/signin
 
 ```tsx
-import { DocyrusAuthProvider, useDocyrusAuth, useDocyrusClient, SignInButton } from '@docyrus/signin'
+import {
+  DocyrusAuthProvider,
+  useDocyrusAuth,
+  useDocyrusClient,
+  SignInButton,
+} from '@docyrus/signin'
 
 // 1. Wrap root
-<DocyrusAuthProvider
+;<DocyrusAuthProvider
   apiUrl={import.meta.env.VITE_API_BASE_URL}
   clientId={import.meta.env.VITE_OAUTH2_CLIENT_ID}
   redirectUri={import.meta.env.VITE_OAUTH2_REDIRECT_URI}
@@ -28,7 +33,7 @@ import { DocyrusAuthProvider, useDocyrusAuth, useDocyrusClient, SignInButton } f
 // 2. Use hooks
 function App() {
   const { status, signOut } = useDocyrusAuth()
-  const client = useDocyrusClient()  // RestApiClient | null
+  const client = useDocyrusClient() // RestApiClient | null
 
   if (status === 'loading') return <Spinner />
   if (status === 'unauthenticated') return <SignInButton />
@@ -41,7 +46,12 @@ function App() {
 ### Non-React / Server — Use OAuth2Client Directly
 
 ```typescript
-import { RestApiClient, OAuth2Client, OAuth2TokenManagerAdapter, BrowserOAuth2TokenStorage } from '@docyrus/api-client'
+import {
+  RestApiClient,
+  OAuth2Client,
+  OAuth2TokenManagerAdapter,
+  BrowserOAuth2TokenStorage,
+} from '@docyrus/api-client'
 
 const tokenStorage = new BrowserOAuth2TokenStorage(localStorage)
 const oauth2 = new OAuth2Client({
@@ -53,7 +63,9 @@ const oauth2 = new OAuth2Client({
 })
 
 // Auth Code flow
-const { url } = await oauth2.getAuthorizationUrl({ scope: 'openid offline_access Users.Read' })
+const { url } = await oauth2.getAuthorizationUrl({
+  scope: 'openid offline_access Users.Read',
+})
 window.location.href = url
 // After redirect:
 const tokens = await oauth2.handleCallback(window.location.href)
@@ -70,6 +82,7 @@ const client = new RestApiClient({
 ## API Endpoints
 
 ### Data Source Items (Dynamic per tenant)
+
 ```
 GET    /v1/apps/{appSlug}/data-sources/{slug}/items          — List with query payload
 GET    /v1/apps/{appSlug}/data-sources/{slug}/items/{id}     — Get one
@@ -82,6 +95,7 @@ DELETE /v1/apps/{appSlug}/data-sources/{slug}/items          — Delete many (bo
 Endpoints exist only if the data source is defined in the tenant. Check the tenant's OpenAPI spec at `GET /v1/api/openapi.json`.
 
 ### System Endpoints (Always Available)
+
 ```
 GET    /v1/users          — List users
 POST   /v1/users          — Create user
@@ -90,6 +104,7 @@ PATCH  /v1/users/me       — Update current user
 ```
 
 ### Connector Discovery & External Request Endpoints
+
 ```
 GET    /v1/connectors?q=&limit=&offset=                                    — List connectors with keyword search
 GET    /v1/connectors/{dataProviderSlug}                                    — Get connector detail (dataSources + actions)
@@ -101,6 +116,7 @@ PUT    /v1/connectors/{dataProviderSlug}                                    — 
 Scopes: `Read.All`, `ReadWrite.All`, or `Connectors.Read.All`. The `PUT` endpoint requires `ReadWrite.All`.
 
 **PUT request body** for sending requests through a connector:
+
 ```json
 {
   "endpoint": "relative/path/or/absolute-url",
@@ -116,6 +132,7 @@ Scopes: `Read.All`, `ReadWrite.All`, or `Connectors.Read.All`. The `PUT` endpoin
 The connector resolves auth credentials (OAuth tokens, base URL) from the provider configuration and stored connections. Custom `headers.Authorization` overrides the stored token.
 
 ### Action Run Endpoints
+
 ```
 GET    /v1/apps/base/actions                                               — List base actions
 GET    /v1/apps/{appSlug}/actions/{actionSlug}                             — Get action metadata
@@ -125,6 +142,7 @@ POST   /v1/apps/{appSlug}/actions/{actionSlug}/run                         — R
 Action run accepts arbitrary JSON body as input. Optional headers: `x-connection-id`, `x-connection-account-id`.
 
 ### ACL / Role Management Endpoints
+
 ```
 GET    /v1/users/acl?dataSourceId={uuid}&recordId={uuid}   — Read record ACL rows
 POST   /v1/users/acl/share                                 — Upsert record shares
@@ -166,9 +184,12 @@ const items = await client.get('/v1/apps/base/data-sources/project/items', {
 })
 
 // Get single item
-const item = await client.get('/v1/apps/base/data-sources/project/items/uuid-here', {
-  columns: 'name, description, status',
-})
+const item = await client.get(
+  '/v1/apps/base/data-sources/project/items/uuid-here',
+  {
+    columns: 'name, description, status',
+  },
+)
 
 // Create
 const newItem = await client.post('/v1/apps/base/data-sources/project/items', {
@@ -189,21 +210,22 @@ await client.delete('/v1/apps/base/data-sources/project/items/uuid-here')
 
 The GET items endpoint accepts a powerful query payload:
 
-| Feature | Purpose |
-|---------|---------|
-| `columns` | Select fields, expand relations `field(subfields)`, alias `alias:field`, spread `...field()` |
-| `filters` | Nested AND/OR groups with 50+ operators (comparison, date shortcuts, user-related) |
-| `filterKeyword` | Full-text search across all searchable fields |
-| `orderBy` | Sort by fields with direction, including related fields |
-| `limit`/`offset` | Pagination (default limit: 100) |
-| `fullCount` | Return total matching count alongside results |
-| `calculations` | Aggregations: count, sum, avg, min, max with grouping |
-| `formulas` | Computed virtual columns (simple functions, block AST, correlated subqueries) |
-| `childQueries` | Fetch related child records as nested JSON arrays |
-| `pivot` | Cross-tab matrix queries with date range series |
-| `expand` | Return full objects for relation/user/enum fields instead of IDs |
+| Feature          | Purpose                                                                                      |
+| ---------------- | -------------------------------------------------------------------------------------------- |
+| `columns`        | Select fields, expand relations `field(subfields)`, alias `alias:field`, spread `...field()` |
+| `filters`        | Nested AND/OR groups with 50+ operators (comparison, date shortcuts, user-related)           |
+| `filterKeyword`  | Full-text search across all searchable fields                                                |
+| `orderBy`        | Sort by fields with direction, including related fields                                      |
+| `limit`/`offset` | Pagination (default limit: 100)                                                              |
+| `fullCount`      | Return total matching count alongside results                                                |
+| `calculations`   | Aggregations: count, sum, avg, min, max with grouping                                        |
+| `formulas`       | Computed virtual columns (simple functions, block AST, correlated subqueries)                |
+| `childQueries`   | Fetch related child records as nested JSON arrays                                            |
+| `pivot`          | Cross-tab matrix queries with date range series                                              |
+| `expand`         | Return full objects for relation/user/enum fields instead of IDs                             |
 
 **For full query and formula references, read**:
+
 - `references/data-source-query-guide.md`
 - `references/formula-design-guide-llm.md`
 

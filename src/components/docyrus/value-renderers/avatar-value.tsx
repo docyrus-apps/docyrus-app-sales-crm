@@ -1,31 +1,36 @@
-'use client';
+'use client'
 
-import { type AvatarFieldValue } from '@/lib/avatar-utils';
+import {
+  type AvatarFieldValue,
+  extractAvatarValue,
+  normalizeAvatarValue,
+} from '@/lib/avatar-utils'
 
-import { AvatarThumbnail } from '@/components/docyrus/avatar-thumbnail';
-import { extractAvatarValue, normalizeAvatarValue } from '@/lib/avatar-utils';
-import { cn } from '@/lib/utils';
+import { AvatarThumbnail } from '@/components/docyrus/avatar-thumbnail'
+import { cn } from '@/lib/utils'
 
-import { type DocyrusValueProps } from './types';
+import { type DocyrusValueProps } from './types'
 
 function parseValue(value: unknown): AvatarFieldValue {
   if (!value || typeof value !== 'object') {
     return normalizeAvatarValue({
-      icon: typeof value === 'string' ? value : null
-    });
+      icon: typeof value === 'string' ? value : null,
+    })
   }
 
-  return normalizeAvatarValue(value as Partial<AvatarFieldValue>);
+  return normalizeAvatarValue(value as Partial<AvatarFieldValue>)
 }
 
 export function AvatarValue({
   field,
   value,
   record,
-  className
+  className,
 }: DocyrusValueProps) {
-  const avatar
-    = record && typeof record === 'object' ? extractAvatarValue(record, field.avatarMapping) : parseValue(value);
+  const avatar =
+    record && typeof record === 'object'
+      ? extractAvatarValue(record, field.avatarMapping)
+      : parseValue(value)
 
   return (
     <span className={cn('inline-flex items-center', className)}>
@@ -33,7 +38,8 @@ export function AvatarValue({
         size={7}
         icon={avatar.icon}
         color={avatar.color}
-        image={avatar.image} />
+        image={avatar.image}
+      />
     </span>
-  );
+  )
 }

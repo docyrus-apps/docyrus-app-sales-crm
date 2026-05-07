@@ -1,30 +1,65 @@
 // @ts-nocheck
-'use client';
+'use client'
 
-import type { ExtendConfig, Path } from 'platejs';
+import type {
+  ExtendConfig,
+  TElement,
+  TInlineSuggestionData,
+  TSuggestionData,
+  TSuggestionText,
+} from 'platejs'
 
+import { KEYS, TextApi, TrailingBlockPlugin } from 'platejs'
 import {
   type BaseSuggestionConfig,
   BaseSuggestionPlugin,
-} from '@platejs/suggestion';
-import { isSlateEditor, isSlateString } from 'platejs';
-import { toTPlatePlugin } from 'platejs/react';
+} from '@platejs/suggestion'
+import { toTPlatePlugin } from 'platejs/react'
 
 import {
   SuggestionLeaf,
   SuggestionLineBreak,
-} from '@/components/editor/ui/suggestion-node';
-
-import { discussionPlugin } from './discussion-kit';
+  VoidRemoveSuggestionOverlay,
+} from '@/components/editor/ui/suggestion-node'
+import {
+  discussionPlugin,
+  getDiscussionBlockClickTarget,
+  getDiscussionClickTarget,
+} from './discussion-kit'
 
 export type SuggestionConfig = ExtendConfig<
   BaseSuggestionConfig,
   {
-    activeId: string | null;
-    hoverId: string | null;
-    uniquePathMap: Map<string, Path>;
+    activeId: string | null
+    hoverId: string | null
   }
->;
+>
+
+const INLINE_SUGGESTION_TARGET_PLUGINS = [
+  KEYS.date,
+  KEYS.inlineEquation,
+  KEYS.link,
+  KEYS.mention,
+]
+
+function getInlineSuggestionData(editor: any, element: TElement) {
+  const suggestionApi = editor.getApi(BaseSuggestionPlugin).suggestion
+  const data = suggestionApi.suggestionData(element) as
+    | TSuggestionData
+    | TInlineSuggestionData
+    | undefined
+
+  if (data) return data
+  if (typeof suggestionApi.dataList !== 'function') return
+
+  for (const child of element.children) {
+    if (!TextApi.isText(child)) continue
+
+    const childData = suggestionApi.dataList(child as TSuggestionText).at(-1)
+
+    if (childData) return childData
+  }
+}
 
 export const suggestionPlugin = toTPlatePlugin<SuggestionConfig>(
   BaseSuggestionPlugin,
@@ -33,58 +68,72 @@ export const suggestionPlugin = toTPlatePlugin<SuggestionConfig>(
       activeId: null,
       currentUserId: editor.getOption(discussionPlugin, 'currentUserId'),
       hoverId: null,
-      uniquePathMap: new Map(),
     },
-  })
+  }),
 ).configure({
   handlers: {
     onClick: ({ api, event, setOption, type }) => {
-      let leaf = event.target as HTMLElement;
-      let isSet = false;
+      const markTarget = getDiscussionClickTarget({
+        selector: `.slate-${type}`,
+        target: event.target,
+      })
+      const blockTarget = markTarget
+        ? null
+        : getDiscussionBlockClickTarget({
+            target: event.target,
+          })
 
-      const isBlockLeaf = leaf.dataset.blockSuggestion === 'true';
-
-      const unsetActiveSuggestion = () => {
-        setOption('activeId', null);
-        isSet = true;
-      };
-
-      if (!isSlateString(leaf) && !isBlockLeaf) {
-        unsetActiveSuggestion();
+      if (!markTarget && !blockTarget) {
+        setOption('activeId', null)
+        return
       }
 
-      while (leaf.parentElement && !isSlateEditor(leaf.parentElement)) {
-        const isBlockSuggestion = leaf.dataset.blockSuggestion === 'true';
+      const suggestionEntry = api.suggestion?.node({
+        isText: !blockTarget,
+      })
 
-        if (leaf.classList.contains(`slate-${type}`) || isBlockSuggestion) {
-          const suggestionEntry = api.suggestion!.node({
-            isText: !isBlockSuggestion,
-          });
-
-          if (!suggestionEntry) {
-            unsetActiveSuggestion();
-
-            break;
-          }
-
-          const id = api.suggestion!.nodeId(suggestionEntry[0]);
-          setOption('activeId', id ?? null);
-
-          isSet = true;
-
-          break;
-        }
-
-        leaf = leaf.parentElement;
-      }
-
-      if (!isSet) unsetActiveSuggestion();
+      setOption(
+        'activeId',
+        suggestionEntry
+          ? (api.suggestion?.nodeId(suggestionEntry[0]) ?? null)
+          : null,
+      )
     },
+  },
+  inject: {
+    isElement: true,
+    nodeProps: {
+      nodeKey: '',
+      styleKey: 'cssText',
+      transformProps: ({ editor, element, props }) => {
+        if (!element) return props
+
+        const suggestionData = getInlineSuggestionData(editor, element)
+
+        if (!suggestionData) return props
+
+        return {
+          ...props,
+          'data-inline-suggestion': suggestionData.type,
+        }
+      },
+      transformStyle: () => ({}) as CSSStyleDeclaration,
+    },
+    targetPlugins: INLINE_SUGGESTION_TARGET_PLUGINS,
   },
   render: {
     belowNodes: SuggestionLineBreak as any,
+    belowRootNodes: VoidRemoveSuggestionOverlay as any,
     node: SuggestionLeaf,
   },
-});
+})
 
-export const SuggestionKit = [suggestionPlugin];
+const trailingBlockPlugin = TrailingBlockPlugin.configure({
+  options: {
+    insert: (editor, { insert }) => {
+      editor.getApi(suggestionPlugin).suggestion.withoutSuggestions(insert)
+    },
+  },
+})
+
+export const SuggestionKit = [suggestionPlugin, trailingBlockPlugin]

@@ -1,9 +1,9 @@
-import { type ComponentProps } from 'react';
+import { type ComponentProps } from 'react'
 
-import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
 
-type DivProps = ComponentProps<'div'>;
+type DivProps = ComponentProps<'div'>
 
 function DataGridSkeleton({ className, ...props }: DivProps) {
   return (
@@ -11,15 +11,16 @@ function DataGridSkeleton({ className, ...props }: DivProps) {
       data-slot="grid-skeleton"
       className={cn(
         'flex h-[calc(100dvh-(--spacing(16)))] w-full flex-col gap-4 has-[>[data-slot=grid-skeleton-toolbar]]:h-[calc(100dvh-(--spacing(20)))]',
-        className
+        className,
       )}
-      {...props} />
-  );
+      {...props}
+    />
+  )
 }
 
 interface DataGridSkeletonToolbarProps extends DivProps {
-  align?: 'start' | 'center' | 'end';
-  actionCount?: number;
+  align?: 'start' | 'center' | 'end'
+  actionCount?: number
 }
 
 function DataGridSkeletonToolbar({
@@ -36,16 +37,17 @@ function DataGridSkeletonToolbar({
         {
           'justify-start': align === 'start',
           'justify-center': align === 'center',
-          'justify-end': align === 'end'
+          'justify-end': align === 'end',
         },
-        className
+        className,
       )}
-      {...props}>
+      {...props}
+    >
       {Array.from({ length: actionCount }).map((_, i) => (
         <Skeleton key={`action-${i}`} className="h-7 w-20 shrink-0" />
       ))}
     </div>
-  );
+  )
 }
 
 function DataGridSkeletonGrid({ className, ...props }: DivProps) {
@@ -53,8 +55,9 @@ function DataGridSkeletonGrid({ className, ...props }: DivProps) {
     <Skeleton
       data-slot="grid-skeleton-grid"
       className={cn('flex-1', className)}
-      {...props} />
-  );
+      {...props}
+    />
+  )
 }
 
-export { DataGridSkeleton, DataGridSkeletonGrid, DataGridSkeletonToolbar };
+export { DataGridSkeleton, DataGridSkeletonGrid, DataGridSkeletonToolbar }

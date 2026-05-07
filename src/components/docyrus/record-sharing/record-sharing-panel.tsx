@@ -1,8 +1,6 @@
-'use client';
+'use client'
 
-import {
-  useCallback, useEffect, useMemo, useRef, useState
-} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
   BuildingIcon,
@@ -12,19 +10,15 @@ import {
   PlusIcon,
   ShieldCheckIcon,
   UsersIcon,
-  XIcon
-} from 'lucide-react';
+  XIcon,
+} from 'lucide-react'
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage
-} from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 
 import {
   Command,
@@ -32,49 +26,66 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
-  CommandList
-} from '@/components/ui/command';
+  CommandList,
+} from '@/components/ui/command'
 
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
+  SelectValue,
+} from '@/components/ui/select'
 
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
 
-import { tUi, type UiI18nLocale } from '@/lib/ui-i18n';
+import { tUi, type UiI18nLocale } from '@/lib/ui-i18n'
 
-import { RecordSharingItem } from './record-sharing-item';
+import { RecordSharingItem } from './record-sharing-item'
 
 import {
   type PermissionPresetOption,
   type RecordSharingPanelProps,
   type SharingResourceType,
   type SharingSearchResult,
-  SharingPermissionPreset
-} from './types';
+  SharingPermissionPreset,
+} from './types'
 
 const TYPE_ICON_MAP: Record<string, typeof UsersIcon> = {
   team: UsersIcon,
   role: ShieldCheckIcon,
   tenant: BuildingIcon,
-  public: GlobeIcon
-};
+  public: GlobeIcon,
+}
 
-function getDefaultPermissionPresets(locale: UiI18nLocale | undefined): PermissionPresetOption[] {
+function getDefaultPermissionPresets(
+  locale: UiI18nLocale | undefined,
+): PermissionPresetOption[] {
   return [
-    { label: tUi(locale, 'rsCanView'), value: SharingPermissionPreset.CAN_VIEW },
-    { label: tUi(locale, 'rsCanComment'), value: SharingPermissionPreset.CAN_COMMENT },
-    { label: tUi(locale, 'rsCanEdit'), value: SharingPermissionPreset.CAN_EDIT },
-    { label: tUi(locale, 'rsCanShare'), value: SharingPermissionPreset.CAN_SHARE },
-    { label: tUi(locale, 'rsFullAccess'), value: SharingPermissionPreset.FULL_ACCESS }
-  ];
+    {
+      label: tUi(locale, 'rsCanView'),
+      value: SharingPermissionPreset.CAN_VIEW,
+    },
+    {
+      label: tUi(locale, 'rsCanComment'),
+      value: SharingPermissionPreset.CAN_COMMENT,
+    },
+    {
+      label: tUi(locale, 'rsCanEdit'),
+      value: SharingPermissionPreset.CAN_EDIT,
+    },
+    {
+      label: tUi(locale, 'rsCanShare'),
+      value: SharingPermissionPreset.CAN_SHARE,
+    },
+    {
+      label: tUi(locale, 'rsFullAccess'),
+      value: SharingPermissionPreset.FULL_ACCESS,
+    },
+  ]
 }
 
 export function RecordSharingPanel({
@@ -94,35 +105,37 @@ export function RecordSharingPanel({
   title,
   maxHeight = 320,
   locale,
-  className
+  className,
 }: RecordSharingPanelProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<SharingSearchResult[]>([]);
-  const [selectedEntities, setSelectedEntities] = useState<SharingSearchResult[]>([]);
-  const [addPermission, setAddPermission] = useState(defaultPermission);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<SharingSearchResult[]>([])
+  const [selectedEntities, setSelectedEntities] = useState<
+    SharingSearchResult[]
+  >([])
+  const [addPermission, setAddPermission] = useState(defaultPermission)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const presets = useMemo(
     () => permissionPresets ?? getDefaultPermissionPresets(locale),
-    [permissionPresets, locale]
-  );
+    [permissionPresets, locale],
+  )
 
   const sharedEntityIds = useMemo(
-    () => new Set(sharedEntities.map(e => e.id)),
-    [sharedEntities]
-  );
+    () => new Set(sharedEntities.map((e) => e.id)),
+    [sharedEntities],
+  )
 
   const selectedEntityIds = useMemo(
-    () => new Set(selectedEntities.map(e => e.id)),
-    [selectedEntities]
-  );
+    () => new Set(selectedEntities.map((e) => e.id)),
+    [selectedEntities],
+  )
 
   const filteredResults = useMemo(
-    () => searchResults.filter(r => !sharedEntityIds.has(r.id)),
-    [searchResults, sharedEntityIds]
-  );
+    () => searchResults.filter((r) => !sharedEntityIds.has(r.id)),
+    [searchResults, sharedEntityIds],
+  )
 
   const sortedEntities = useMemo(() => {
     const typeOrder: Record<SharingResourceType, number> = {
@@ -130,75 +143,81 @@ export function RecordSharingPanel({
       tenant: 1,
       role: 2,
       team: 3,
-      user: 4
-    };
-
-    return [...sharedEntities].sort((a, b) => (typeOrder[a.type] ?? 5) - (typeOrder[b.type] ?? 5));
-  }, [sharedEntities]);
-
-  const handleSearchChange = useCallback((value: string) => {
-    setSearchQuery(value);
-
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
+      user: 4,
     }
 
-    if (!value.trim()) {
-      setSearchResults([]);
-      setIsSearchOpen(false);
+    return [...sharedEntities].sort(
+      (a, b) => (typeOrder[a.type] ?? 5) - (typeOrder[b.type] ?? 5),
+    )
+  }, [sharedEntities])
 
-      return;
-    }
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      setSearchQuery(value)
 
-    setIsSearchOpen(true);
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current)
+      }
 
-    debounceRef.current = setTimeout(async () => {
-      const results = await onSearch(value);
+      if (!value.trim()) {
+        setSearchResults([])
+        setIsSearchOpen(false)
 
-      setSearchResults(results);
-    }, 300);
-  }, [onSearch]);
+        return
+      }
+
+      setIsSearchOpen(true)
+
+      debounceRef.current = setTimeout(async () => {
+        const results = await onSearch(value)
+
+        setSearchResults(results)
+      }, 300)
+    },
+    [onSearch],
+  )
 
   useEffect(() => {
     return () => {
       if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
+        clearTimeout(debounceRef.current)
       }
-    };
-  }, []);
+    }
+  }, [])
 
   const toggleSelection = useCallback((result: SharingSearchResult) => {
     setSelectedEntities((prev) => {
-      const exists = prev.some(e => e.id === result.id);
+      const exists = prev.some((e) => e.id === result.id)
 
-      return exists ? prev.filter(e => e.id !== result.id) : [...prev, result];
-    });
-  }, []);
+      return exists ? prev.filter((e) => e.id !== result.id) : [...prev, result]
+    })
+  }, [])
 
   const removeFromSelection = useCallback((id: string) => {
-    setSelectedEntities(prev => prev.filter(e => e.id !== id));
-  }, []);
+    setSelectedEntities((prev) => prev.filter((e) => e.id !== id))
+  }, [])
 
   const handleAdd = useCallback(async () => {
-    if (selectedEntities.length === 0) return;
+    if (selectedEntities.length === 0) return
 
     await onAdd(
-      selectedEntities.map(e => ({
+      selectedEntities.map((e) => ({
         id: e.id,
         type: e.type,
-        permission: addPermission
-      }))
-    );
+        permission: addPermission,
+      })),
+    )
 
-    setSelectedEntities([]);
-    setSearchQuery('');
-    setSearchResults([]);
-    setIsSearchOpen(false);
-  }, [selectedEntities, addPermission, onAdd]);
+    setSelectedEntities([])
+    setSearchQuery('')
+    setSearchResults([])
+    setIsSearchOpen(false)
+  }, [selectedEntities, addPermission, onAdd])
 
-  const panelTitle = title ?? tUi(locale, 'rsShareWith');
+  const panelTitle = title ?? tUi(locale, 'rsShareWith')
 
-  const maxHeightStyle = typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight;
+  const maxHeightStyle =
+    typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight
 
   return (
     <div className={cn('flex flex-col gap-3', className)}>
@@ -216,13 +235,14 @@ export function RecordSharingPanel({
       <div className="space-y-2">
         {selectedEntities.length > 0 && (
           <div className="flex flex-wrap gap-1">
-            {selectedEntities.map(entity => (
+            {selectedEntities.map((entity) => (
               <Badge key={entity.id} variant="secondary" className="gap-1 pr-1">
                 {entity.name}
                 <button
                   type="button"
                   onClick={() => removeFromSelection(entity.id)}
-                  className="rounded-full hover:bg-muted-foreground/20 p-0.5">
+                  className="rounded-full hover:bg-muted-foreground/20 p-0.5"
+                >
                   <XIcon className="size-3" />
                 </button>
               </Badge>
@@ -232,11 +252,15 @@ export function RecordSharingPanel({
 
         <div className="flex gap-2">
           <div className="flex-1">
-            <Command shouldFilter={false} className="rounded-lg border border-input">
+            <Command
+              shouldFilter={false}
+              className="rounded-lg border border-input"
+            >
               <CommandInput
                 placeholder={tUi(locale, 'rsSearchPeoplePlaceholder')}
                 value={searchQuery}
-                onValueChange={handleSearchChange} />
+                onValueChange={handleSearchChange}
+              />
               {isSearchOpen && (
                 <CommandList className="max-h-48">
                   {isSearching ? (
@@ -249,31 +273,40 @@ export function RecordSharingPanel({
                       {filteredResults.length > 0 && (
                         <CommandGroup>
                           {filteredResults.map((result) => {
-                            const isSelected = selectedEntityIds.has(result.id);
-                            const TypeIcon = TYPE_ICON_MAP[result.type];
+                            const isSelected = selectedEntityIds.has(result.id)
+                            const TypeIcon = TYPE_ICON_MAP[result.type]
 
                             return (
                               <CommandItem
                                 key={result.id}
                                 value={result.id}
-                                onSelect={() => toggleSelection(result)}>
+                                onSelect={() => toggleSelection(result)}
+                              >
                                 <div className="flex items-center gap-2 flex-1 min-w-0">
                                   {result.type === 'user' ? (
                                     <Avatar size="sm">
                                       {result.avatarUrl && (
-                                        <AvatarImage src={result.avatarUrl} alt={result.name} />
+                                        <AvatarImage
+                                          src={result.avatarUrl}
+                                          alt={result.name}
+                                        />
                                       )}
                                       <AvatarFallback>
-                                        {result.initials ?? result.name.charAt(0).toUpperCase()}
+                                        {result.initials ??
+                                          result.name.charAt(0).toUpperCase()}
                                       </AvatarFallback>
                                     </Avatar>
                                   ) : (
                                     <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-muted">
-                                      {TypeIcon && <TypeIcon className="size-3.5 text-muted-foreground" />}
+                                      {TypeIcon && (
+                                        <TypeIcon className="size-3.5 text-muted-foreground" />
+                                      )}
                                     </div>
                                   )}
                                   <div className="flex flex-col min-w-0">
-                                    <span className="text-sm truncate">{result.name}</span>
+                                    <span className="text-sm truncate">
+                                      {result.name}
+                                    </span>
                                     {result.description && (
                                       <span className="text-xs text-muted-foreground truncate">
                                         {result.description}
@@ -285,7 +318,7 @@ export function RecordSharingPanel({
                                   <CheckIcon className="size-4 text-primary shrink-0" />
                                 )}
                               </CommandItem>
-                            );
+                            )
                           })}
                         </CommandGroup>
                       )}
@@ -301,12 +334,13 @@ export function RecordSharingPanel({
           <div className="flex items-center justify-between gap-2">
             <Select
               value={String(addPermission)}
-              onValueChange={v => setAddPermission(Number(v))}>
+              onValueChange={(v) => setAddPermission(Number(v))}
+            >
               <SelectTrigger size="sm" className="h-7 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent position="popper" align="start">
-                {presets.map(preset => (
+                {presets.map((preset) => (
                   <SelectItem key={preset.value} value={String(preset.value)}>
                     {preset.label}
                   </SelectItem>
@@ -318,8 +352,13 @@ export function RecordSharingPanel({
               size="sm"
               onClick={handleAdd}
               disabled={isAddPending}
-              className="h-7 text-xs gap-1.5">
-              {isAddPending ? <Loader2Icon className="size-3.5 animate-spin" /> : <PlusIcon className="size-3.5" />}
+              className="h-7 text-xs gap-1.5"
+            >
+              {isAddPending ? (
+                <Loader2Icon className="size-3.5 animate-spin" />
+              ) : (
+                <PlusIcon className="size-3.5" />
+              )}
               {isAddPending ? tUi(locale, 'rsAdding') : tUi(locale, 'rsAdd')}
             </Button>
           </div>
@@ -352,22 +391,25 @@ export function RecordSharingPanel({
       ) : (
         <ScrollArea style={{ maxHeight: maxHeightStyle }}>
           <div className="flex flex-col gap-1.5">
-            {sortedEntities.map(entity => (
+            {sortedEntities.map((entity) => (
               <RecordSharingItem
                 key={entity.id}
                 entity={entity}
                 permissionPresets={presets}
                 onPermissionChange={onPermissionChange}
                 onRemove={onRemove}
-                isPermissionChangePending={pendingPermissionChanges?.[entity.id]}
+                isPermissionChangePending={
+                  pendingPermissionChanges?.[entity.id]
+                }
                 isRemovePending={pendingRemovals?.[entity.id]}
-                locale={locale} />
+                locale={locale}
+              />
             ))}
           </div>
         </ScrollArea>
       )}
     </div>
-  );
+  )
 }
 
-RecordSharingPanel.displayName = 'RecordSharingPanel';
+RecordSharingPanel.displayName = 'RecordSharingPanel'

@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import {
   createContext,
@@ -6,65 +6,71 @@ import {
   useContext,
   useMemo,
   useState,
-  type ReactNode
-} from 'react';
+  type ReactNode,
+} from 'react'
 
-import { type UiI18nLocale } from '@/lib/ui-i18n';
+import { type UiI18nLocale } from '@/lib/ui-i18n'
 
-import { type MegaSelectCategory, type MegaSelectItem } from './types';
+import { type MegaSelectCategory, type MegaSelectItem } from './types'
 
 export interface MegaSelectContextValue<T = unknown> {
-  items: MegaSelectItem<T>[];
-  filteredItems: MegaSelectItem<T>[];
-  categories: MegaSelectCategory[];
-  selectedId: string | null;
-  setSelectedId: (id: string | null) => void;
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  activeCategory: string | null;
-  setActiveCategory: (categoryId: string | null) => void;
-  detailItem: MegaSelectItem<T> | null;
-  setDetailItem: (item: MegaSelectItem<T> | null) => void;
-  disabled: boolean;
-  loading: boolean;
-  forceOpenDetail: boolean;
-  restrictedValue: string | undefined;
-  defaultColor: string | undefined;
-  defaultIcon: string | undefined;
-  locale: UiI18nLocale;
-  searchable: boolean;
-  onChoose?: (value: string, item: MegaSelectItem<T>) => void;
-  onSelectionChange?: (value: string | null, item: MegaSelectItem<T> | null) => void;
-  onClose?: () => void;
+  items: MegaSelectItem<T>[]
+  filteredItems: MegaSelectItem<T>[]
+  categories: MegaSelectCategory[]
+  selectedId: string | null
+  setSelectedId: (id: string | null) => void
+  searchQuery: string
+  setSearchQuery: (query: string) => void
+  activeCategory: string | null
+  setActiveCategory: (categoryId: string | null) => void
+  detailItem: MegaSelectItem<T> | null
+  setDetailItem: (item: MegaSelectItem<T> | null) => void
+  disabled: boolean
+  loading: boolean
+  forceOpenDetail: boolean
+  restrictedValue: string | undefined
+  defaultColor: string | undefined
+  defaultIcon: string | undefined
+  locale: UiI18nLocale
+  searchable: boolean
+  onChoose?: (value: string, item: MegaSelectItem<T>) => void
+  onSelectionChange?: (
+    value: string | null,
+    item: MegaSelectItem<T> | null,
+  ) => void
+  onClose?: () => void
 }
 
-const MegaSelectContext = createContext<MegaSelectContextValue | null>(null);
+const MegaSelectContext = createContext<MegaSelectContextValue | null>(null)
 
 export function useMegaSelect<T = unknown>() {
-  const ctx = useContext(MegaSelectContext) as MegaSelectContextValue<T> | null;
+  const ctx = useContext(MegaSelectContext) as MegaSelectContextValue<T> | null
 
-  if (!ctx) throw new Error('useMegaSelect must be used within <MegaSelect>');
+  if (!ctx) throw new Error('useMegaSelect must be used within <MegaSelect>')
 
-  return ctx;
+  return ctx
 }
 
 export interface MegaSelectProviderProps<T = unknown> {
-  children: ReactNode;
-  items: MegaSelectItem<T>[];
-  categories?: MegaSelectCategory[];
-  value?: string | null;
-  defaultValue?: string;
-  disabled?: boolean;
-  loading?: boolean;
-  forceOpenDetail?: boolean;
-  restrictedValue?: string;
-  defaultColor?: string;
-  defaultIcon?: string;
-  locale?: UiI18nLocale;
-  searchable?: boolean;
-  onChoose?: (value: string, item: MegaSelectItem<T>) => void;
-  onSelectionChange?: (value: string | null, item: MegaSelectItem<T> | null) => void;
-  onClose?: () => void;
+  children: ReactNode
+  items: MegaSelectItem<T>[]
+  categories?: MegaSelectCategory[]
+  value?: string | null
+  defaultValue?: string
+  disabled?: boolean
+  loading?: boolean
+  forceOpenDetail?: boolean
+  restrictedValue?: string
+  defaultColor?: string
+  defaultIcon?: string
+  locale?: UiI18nLocale
+  searchable?: boolean
+  onChoose?: (value: string, item: MegaSelectItem<T>) => void
+  onSelectionChange?: (
+    value: string | null,
+    item: MegaSelectItem<T> | null,
+  ) => void
+  onClose?: () => void
 }
 
 export function MegaSelectProvider<T = unknown>({
@@ -83,44 +89,47 @@ export function MegaSelectProvider<T = unknown>({
   searchable = true,
   onChoose,
   onSelectionChange,
-  onClose
+  onClose,
 }: MegaSelectProviderProps<T>) {
-  const isControlled = value !== undefined;
-  const [internalSelectedId, setInternalSelectedId] = useState<string | null>(defaultValue ?? null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [detailItem, setDetailItem] = useState<MegaSelectItem<T> | null>(null);
+  const isControlled = value !== undefined
+  const [internalSelectedId, setInternalSelectedId] = useState<string | null>(
+    defaultValue ?? null,
+  )
+  const [searchQuery, setSearchQuery] = useState('')
+  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [detailItem, setDetailItem] = useState<MegaSelectItem<T> | null>(null)
 
-  const selectedId = isControlled ? (value ?? null) : internalSelectedId;
+  const selectedId = isControlled ? (value ?? null) : internalSelectedId
 
   const setSelectedId = useCallback(
     (id: string | null) => {
-      if (!isControlled) setInternalSelectedId(id);
-      const item = id ? items.find(i => i.id === id) ?? null : null;
+      if (!isControlled) setInternalSelectedId(id)
+      const item = id ? (items.find((i) => i.id === id) ?? null) : null
 
-      onSelectionChange?.(id, item);
+      onSelectionChange?.(id, item)
     },
-    [isControlled, items, onSelectionChange]
-  );
+    [isControlled, items, onSelectionChange],
+  )
 
   const filteredItems = useMemo(() => {
-    let result = items;
+    let result = items
 
     if (activeCategory) {
-      result = result.filter(item => item.categoryId === activeCategory);
+      result = result.filter((item) => item.categoryId === activeCategory)
     }
 
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
+      const q = searchQuery.toLowerCase().trim()
 
       result = result.filter(
-        item => item.label.toLowerCase().includes(q)
-          || (item.description?.toLowerCase().includes(q) ?? false)
-      );
+        (item) =>
+          item.label.toLowerCase().includes(q) ||
+          (item.description?.toLowerCase().includes(q) ?? false),
+      )
     }
 
-    return result;
-  }, [items, activeCategory, searchQuery]);
+    return result
+  }, [items, activeCategory, searchQuery])
 
   const ctx = useMemo<MegaSelectContextValue<T>>(
     () => ({
@@ -145,7 +154,7 @@ export function MegaSelectProvider<T = unknown>({
       searchable,
       onChoose,
       onSelectionChange,
-      onClose
+      onClose,
     }),
     [
       items,
@@ -166,13 +175,13 @@ export function MegaSelectProvider<T = unknown>({
       searchable,
       onChoose,
       onSelectionChange,
-      onClose
-    ]
-  );
+      onClose,
+    ],
+  )
 
   return (
     <MegaSelectContext value={ctx as MegaSelectContextValue}>
       {children}
     </MegaSelectContext>
-  );
+  )
 }

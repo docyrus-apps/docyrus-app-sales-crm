@@ -54,6 +54,7 @@ interface TaskFormSheetProps {
   onOpenChange: (open: boolean) => void
   task?: any
   mode: 'create' | 'edit'
+  onSubmitSuccess?: () => void | Promise<void>
 }
 
 export function TaskFormSheet({
@@ -61,6 +62,7 @@ export function TaskFormSheet({
   onOpenChange,
   task,
   mode,
+  onSubmitSuccess,
 }: TaskFormSheetProps) {
   const { t } = useTranslation()
   const createTask = useCreateTask()
@@ -82,12 +84,16 @@ export function TaskFormSheet({
       description: task?.description || '',
       start_date: task?.start_date || undefined,
       end_date: task?.end_date || undefined,
-      status: task?.status || '',
+      status:
+        typeof task?.status === 'object' ? task.status.id : task?.status || '',
       organization:
         typeof task?.organization === 'object'
           ? task.organization.id
           : task?.organization || '',
-      record_owner: task?.record_owner || '',
+      record_owner:
+        typeof task?.record_owner === 'object'
+          ? task.record_owner.id
+          : task?.record_owner || '',
       parent:
         typeof task?.parent === 'object' ? task.parent.id : task?.parent || '',
       section:
@@ -98,7 +104,11 @@ export function TaskFormSheet({
         typeof task?.project === 'object'
           ? task.project.id
           : task?.project || '',
-      followers: task?.followers || [],
+      followers: Array.isArray(task?.followers)
+        ? task.followers.map((follower: any) =>
+            typeof follower === 'object' ? follower.id : follower,
+          )
+        : [],
     },
     validatorAdapter: zodValidator(),
     validators: {
@@ -118,6 +128,8 @@ export function TaskFormSheet({
       } else if (task?.id) {
         await updateTask.mutateAsync({ taskId: task.id, data: cleanedData })
       }
+
+      await onSubmitSuccess?.()
       onOpenChange(false)
     },
   })

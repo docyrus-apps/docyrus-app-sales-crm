@@ -34,10 +34,15 @@ const client = new RestApiClient({
 
 ```typescript
 // GET with query params
-const users = await client.get<User[]>('/v1/users', { params: { page: 1, limit: 10 } })
+const users = await client.get<User[]>('/v1/users', {
+  params: { page: 1, limit: 10 },
+})
 
 // POST with body
-const newUser = await client.post<User>('/v1/users', { name: 'John', email: 'john@example.com' })
+const newUser = await client.post<User>('/v1/users', {
+  name: 'John',
+  email: 'john@example.com',
+})
 
 // PATCH (partial update)
 const updated = await client.patch<User>('/v1/users/123', { name: 'Jane' })
@@ -55,7 +60,10 @@ await client.delete('/v1/items', { recordIds: ['id1', 'id2'] })
 ### Typed Responses
 
 ```typescript
-interface ApiResponse<T> { data: T; meta: { page: number; total: number } }
+interface ApiResponse<T> {
+  data: T
+  meta: { page: number; total: number }
+}
 const response = await client.get<ApiResponse<User[]>>('/v1/users')
 const users: User[] = response.data.data
 ```
@@ -66,14 +74,14 @@ const users: User[] = response.data.data
 
 ```typescript
 interface ApiClientConfig {
-  baseURL?: string                      // Base URL for all requests
-  tokenManager?: TokenManager           // Token manager instance
-  headers?: Record<string, string>      // Default headers
-  timeout?: number                      // Request timeout in ms
-  fetch?: typeof fetch                  // Custom fetch implementation
-  FormData?: typeof FormData            // Custom FormData
+  baseURL?: string // Base URL for all requests
+  tokenManager?: TokenManager // Token manager instance
+  headers?: Record<string, string> // Default headers
+  timeout?: number // Request timeout in ms
+  fetch?: typeof fetch // Custom fetch implementation
+  FormData?: typeof FormData // Custom FormData
   AbortController?: typeof AbortController
-  storage?: Storage                     // Browser storage for persistence
+  storage?: Storage // Browser storage for persistence
 }
 ```
 
@@ -82,28 +90,38 @@ interface ApiClientConfig {
 ## Token Management
 
 ### MemoryTokenManager (default)
+
 ```typescript
 import { MemoryTokenManager } from '@docyrus/api-client'
 const tokenManager = new MemoryTokenManager()
 ```
 
 ### StorageTokenManager (persistent)
+
 ```typescript
 import { StorageTokenManager } from '@docyrus/api-client'
 const tokenManager = new StorageTokenManager(localStorage, 'auth_token')
 ```
 
 ### AsyncTokenManager (custom)
+
 ```typescript
 import { AsyncTokenManager } from '@docyrus/api-client'
 const tokenManager = new AsyncTokenManager({
-  async getToken() { return await secureStorage.get('token') },
-  async setToken(token) { await secureStorage.set('token', token) },
-  async clearToken() { await secureStorage.remove('token') },
+  async getToken() {
+    return await secureStorage.get('token')
+  },
+  async setToken(token) {
+    await secureStorage.set('token', token)
+  },
+  async clearToken() {
+    await secureStorage.remove('token')
+  },
 })
 ```
 
 ### Set Token Directly
+
 ```typescript
 await client.setAccessToken('your-auth-token')
 ```
@@ -115,21 +133,23 @@ await client.setAccessToken('your-auth-token')
 Full OAuth2 support with PKCE, Device Code, and Client Credentials flows.
 
 ### Setup
+
 ```typescript
 import { OAuth2Client, BrowserOAuth2TokenStorage } from '@docyrus/api-client'
 
 const oauth2 = new OAuth2Client({
   baseURL: 'https://api.docyrus.com',
   clientId: 'your-client-id',
-  clientSecret: 'your-client-secret',    // optional for public clients
+  clientSecret: 'your-client-secret', // optional for public clients
   redirectUri: 'http://localhost:3000/callback',
   defaultScopes: ['openid', 'offline_access'],
-  usePKCE: true,                          // default: true
+  usePKCE: true, // default: true
   tokenStorage: new BrowserOAuth2TokenStorage(localStorage),
 })
 ```
 
 ### Authorization Code Flow (PKCE)
+
 ```typescript
 // Step 1: Generate auth URL
 const { url, state, codeVerifier } = await oauth2.getAuthorizationUrl({
@@ -145,6 +165,7 @@ const tokens = await oauth2.handleCallback(window.location.href)
 ```
 
 ### Client Credentials Flow (server-to-server)
+
 ```typescript
 const tokens = await oauth2.getClientCredentialsToken({
   scope: 'Read.All',
@@ -153,22 +174,31 @@ const tokens = await oauth2.getClientCredentialsToken({
 ```
 
 ### Device Code Flow (CLI/headless)
+
 ```typescript
-const deviceAuth = await oauth2.startDeviceAuthorization('openid offline_access')
+const deviceAuth = await oauth2.startDeviceAuthorization(
+  'openid offline_access',
+)
 console.log(`Go to: ${deviceAuth.verification_uri}`)
 console.log(`Enter code: ${deviceAuth.user_code}`)
 
 const tokens = await oauth2.pollDeviceAuthorization(
-  deviceAuth.device_code, deviceAuth.interval, deviceAuth.expires_in,
-  { onExpired: () => console.log('Code expired'), signal: abortController.signal },
+  deviceAuth.device_code,
+  deviceAuth.interval,
+  deviceAuth.expires_in,
+  {
+    onExpired: () => console.log('Code expired'),
+    signal: abortController.signal,
+  },
 )
 ```
 
 ### Token Operations
+
 ```typescript
 const tokens = await oauth2.getTokens()
 const isExpired = await oauth2.isTokenExpired()
-const accessToken = await oauth2.getValidAccessToken()  // auto-refreshes
+const accessToken = await oauth2.getValidAccessToken() // auto-refreshes
 const newTokens = await oauth2.refreshAccessToken()
 await oauth2.revokeToken(tokens.refreshToken)
 const tokenInfo = await oauth2.introspectToken(tokens.accessToken)
@@ -176,29 +206,50 @@ await oauth2.logout()
 ```
 
 ### Integrate OAuth2 with RestApiClient
+
 ```typescript
-import { RestApiClient, OAuth2Client, OAuth2TokenManagerAdapter, BrowserOAuth2TokenStorage } from '@docyrus/api-client'
+import {
+  RestApiClient,
+  OAuth2Client,
+  OAuth2TokenManagerAdapter,
+  BrowserOAuth2TokenStorage,
+} from '@docyrus/api-client'
 
 const tokenStorage = new BrowserOAuth2TokenStorage(localStorage)
-const oauth2 = new OAuth2Client({ baseURL: 'https://api.docyrus.com', clientId: 'id', tokenStorage })
+const oauth2 = new OAuth2Client({
+  baseURL: 'https://api.docyrus.com',
+  clientId: 'id',
+  tokenStorage,
+})
 
 const tokenManager = new OAuth2TokenManagerAdapter(tokenStorage, async () => {
   const tokens = await oauth2.refreshAccessToken()
   return tokens.accessToken
 })
 
-const apiClient = new RestApiClient({ baseURL: 'https://api.docyrus.com', tokenManager })
+const apiClient = new RestApiClient({
+  baseURL: 'https://api.docyrus.com',
+  tokenManager,
+})
 ```
 
 ### Rate Limit Check
+
 ```typescript
 const rateLimit = await oauth2.checkRateLimit()
 // { remaining, limit, reset }
 ```
 
 ### PKCE Utilities
+
 ```typescript
-import { generatePKCEChallenge, generateCodeVerifier, generateCodeChallenge, generateState, generateNonce } from '@docyrus/api-client'
+import {
+  generatePKCEChallenge,
+  generateCodeVerifier,
+  generateCodeChallenge,
+  generateState,
+  generateNonce,
+} from '@docyrus/api-client'
 
 const pkce = await generatePKCEChallenge()
 // { codeVerifier, codeChallenge, codeChallengeMethod: 'S256' }
@@ -212,7 +263,10 @@ const pkce = await generatePKCEChallenge()
 client.use({
   // Transform outgoing requests
   async request(config) {
-    config.headers = { ...config.headers, 'X-Request-Time': new Date().toISOString() }
+    config.headers = {
+      ...config.headers,
+      'X-Request-Time': new Date().toISOString(),
+    }
     return config
   },
   // Transform incoming responses
@@ -222,17 +276,24 @@ client.use({
   },
   // Handle errors globally
   async error(error, request, response) {
-    if (error.status === 401) { await refreshToken() }
+    if (error.status === 401) {
+      await refreshToken()
+    }
     return { error, request, response }
   },
 })
 ```
 
 ### Common Interceptor: Unwrap Response Data
+
 ```typescript
 client.use({
   response: (response) => {
-    if (response.data?.data && typeof response.data === 'object' && !Array.isArray(response.data)) {
+    if (
+      response.data?.data &&
+      typeof response.data === 'object' &&
+      !Array.isArray(response.data)
+    ) {
       response.data = response.data.data
     }
     return response
@@ -246,26 +307,39 @@ client.use({
 
 ```typescript
 import {
-  ApiError, NetworkError, TimeoutError,
-  AuthenticationError,   // 401
-  AuthorizationError,    // 403
-  NotFoundError,         // 404
-  RateLimitError,        // 429 — has error.retryAfter
+  ApiError,
+  NetworkError,
+  TimeoutError,
+  AuthenticationError, // 401
+  AuthorizationError, // 403
+  NotFoundError, // 404
+  RateLimitError, // 429 — has error.retryAfter
   ValidationError,
   // OAuth2-specific
-  OAuth2Error, InvalidGrantError, InvalidClientError,
-  AccessDeniedError, ExpiredTokenError, AuthorizationPendingError,
+  OAuth2Error,
+  InvalidGrantError,
+  InvalidClientError,
+  AccessDeniedError,
+  ExpiredTokenError,
+  AuthorizationPendingError,
 } from '@docyrus/api-client'
 
 try {
   await client.get('/resource')
 } catch (error) {
-  if (error instanceof AuthenticationError) { /* re-login */ }
-  else if (error instanceof AuthorizationError) { /* forbidden */ }
-  else if (error instanceof NotFoundError) { /* 404 */ }
-  else if (error instanceof RateLimitError) { /* retry after error.retryAfter */ }
-  else if (error instanceof NetworkError) { /* offline */ }
-  else if (error instanceof TimeoutError) { /* timed out */ }
+  if (error instanceof AuthenticationError) {
+    /* re-login */
+  } else if (error instanceof AuthorizationError) {
+    /* forbidden */
+  } else if (error instanceof NotFoundError) {
+    /* 404 */
+  } else if (error instanceof RateLimitError) {
+    /* retry after error.retryAfter */
+  } else if (error instanceof NetworkError) {
+    /* offline */
+  } else if (error instanceof TimeoutError) {
+    /* timed out */
+  }
 }
 ```
 
@@ -274,16 +348,24 @@ try {
 ## Streaming
 
 ### Server-Sent Events (SSE)
+
 ```typescript
 const eventSource = client.sse('/events', {
-  onMessage(data) { console.log('Received:', data) },
-  onError(error) { console.error(error) },
-  onComplete() { console.log('Stream completed') },
+  onMessage(data) {
+    console.log('Received:', data)
+  },
+  onError(error) {
+    console.error(error)
+  },
+  onComplete() {
+    console.log('Stream completed')
+  },
 })
 eventSource.close()
 ```
 
 ### Chunked Streaming
+
 ```typescript
 for await (const chunk of client.stream('/stream', {
   method: 'POST',
@@ -298,6 +380,7 @@ for await (const chunk of client.stream('/stream', {
 ## File Operations
 
 ### Upload
+
 ```typescript
 const formData = new FormData()
 formData.append('file', fileInput.files[0])
@@ -306,8 +389,11 @@ await client.post('/upload', formData)
 ```
 
 ### Download
+
 ```typescript
-const response = await client.get('/download/file.pdf', { responseType: 'blob' })
+const response = await client.get('/download/file.pdf', {
+  responseType: 'blob',
+})
 const url = URL.createObjectURL(response.data)
 const link = document.createElement('a')
 link.href = url
@@ -316,15 +402,21 @@ link.click()
 ```
 
 ### HTML to PDF
+
 ```typescript
 await client.html2pdf({
   html: '<html><body>Content</body></html>',
   // or: url: 'https://example.com',
-  options: { format: 'A4', margin: { top: 10, bottom: 10, left: 10, right: 10 }, landscape: false },
+  options: {
+    format: 'A4',
+    margin: { top: 10, bottom: 10, left: 10, right: 10 },
+    landscape: false,
+  },
 })
 ```
 
 ### Custom Query/Report
+
 ```typescript
 const results = await client.runCustomQuery(customQueryId, options)
 // PUT reports/runCustomQuery/:customQueryId
@@ -335,7 +427,14 @@ const results = await client.runCustomQuery(customQueryId, options)
 ## Utilities
 
 ```typescript
-import { buildUrl, isAbortError, parseContentDisposition, createAbortSignal, jsonToQueryString, withRetry } from '@docyrus/api-client'
+import {
+  buildUrl,
+  isAbortError,
+  parseContentDisposition,
+  createAbortSignal,
+  jsonToQueryString,
+  withRetry,
+} from '@docyrus/api-client'
 
 const url = buildUrl('/api/users', { page: 1, limit: 10 })
 // '/api/users?page=1&limit=10'
@@ -343,7 +442,8 @@ const url = buildUrl('/api/users', { page: 1, limit: 10 })
 const signal = createAbortSignal(5000) // 5s timeout
 
 const response = await withRetry(() => client.get('/flaky'), {
-  retries: 3, retryDelay: 1000,
+  retries: 3,
+  retryDelay: 1000,
   retryCondition: (error) => error.status >= 500,
 })
 ```

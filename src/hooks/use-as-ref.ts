@@ -1,9 +1,10 @@
-import * as React from 'react'
+// @ts-nocheck
+import { useRef } from 'react'
 
 import { useIsomorphicLayoutEffect } from '@/hooks/use-isomorphic-layout-effect'
 
 function useAsRef<T>(props: T) {
-  const ref = React.useRef<T>(props)
+  const ref = useRef<T>(props)
 
   useIsomorphicLayoutEffect(() => {
     ref.current = props

@@ -1,33 +1,41 @@
-import { type RefObject, useEffect } from 'react';
+import { type RefObject, useEffect } from 'react'
 
-type EventType = 'mousedown' | 'mouseup' | 'touchstart' | 'touchend' | 'focusin' | 'focusout';
+type EventType =
+  | 'mousedown'
+  | 'mouseup'
+  | 'touchstart'
+  | 'touchend'
+  | 'focusin'
+  | 'focusout'
 
 export function useClickOutside<T extends HTMLElement = HTMLElement>(
   ref: RefObject<T | null> | RefObject<T | null>[],
   handler: (event: Event) => void,
-  eventType: EventType = 'mousedown'
+  eventType: EventType = 'mousedown',
 ): void {
   useEffect(() => {
     function callback(event: Event) {
-      const target = event.target as Node;
+      const target = event.target as Node
 
       if (!target?.isConnected) {
-        return;
+        return
       }
 
-      const isOutside = Array.isArray(ref) ? ref
-        .filter(item => Boolean(item.current))
-        .every(item => item.current && !item.current.contains(target)) : ref.current && !ref.current.contains(target);
+      const isOutside = Array.isArray(ref)
+        ? ref
+            .filter((item) => Boolean(item.current))
+            .every((item) => item.current && !item.current.contains(target))
+        : ref.current && !ref.current.contains(target)
 
       if (isOutside) {
-        handler(event);
+        handler(event)
       }
     }
 
-    window.addEventListener(eventType, callback);
+    window.addEventListener(eventType, callback)
 
     return () => {
-      window.removeEventListener(eventType, callback);
-    };
-  }, [ref, handler, eventType]);
+      window.removeEventListener(eventType, callback)
+    }
+  }, [ref, handler, eventType])
 }

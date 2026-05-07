@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-export { TeamChatChannel } from './team-chat-channel';
+export { TeamChatChannel } from './team-chat-channel'
 export type {
   ChatUser,
   ChatPost,
@@ -13,6 +13,6 @@ export type {
   CreatePostPayload,
   TeamChatChannelProps,
   MentionUser,
-  PresetEmoji
-} from './types';
-export { PRESET_EMOJIS } from './types';
+  PresetEmoji,
+} from './types'
+export { PRESET_EMOJIS } from './types'

@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-export { ResourceSchedulerPanel } from './resource-scheduler-panel';
+export { ResourceSchedulerPanel } from './resource-scheduler-panel'
 export type {
   ResourceSchedulerPanelProps,
   SchedulerEvent,
@@ -9,7 +9,7 @@ export type {
   TimelinePresetConfig,
   TimeUnit,
   TimelineColumn,
-  TimelineGroupHeader
-} from './types';
-export { SCHEDULER_PRESETS, getPresetById } from './lib/presets';
-export { eventBarVariants } from './resource-scheduler-event-bar';
+  TimelineGroupHeader,
+} from './types'
+export { SCHEDULER_PRESETS, getPresetById } from './lib/presets'
+export { eventBarVariants } from './resource-scheduler-event-bar'

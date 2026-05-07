@@ -1,197 +1,153 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { Columns3, List, Plus, Trash2, UserRoundSearch } from 'lucide-react'
-import type {
-  RowChange,
-  SavedDataGridView,
-} from '@/components/docyrus/data-grid'
-import { PageContainer } from '@/components/layout/page-container'
-import { PageHeader } from '@/components/layout/page-header'
-import { Button } from '@/components/animate-ui/components/buttons/button'
+import { useDocyrusClient } from '@docyrus/signin'
+import {
+  Columns3,
+  Copy,
+  Eye,
+  List,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Trash2,
+  Upload,
+  UserRoundSearch,
+} from 'lucide-react'
+import type { ColumnDef } from '@tanstack/react-table'
+
+import type { BaseCrmLeadsEntity } from '@/collections/base_crm-leads.collection'
+import { useBaseCrmLeadsCollection } from '@/collections/base_crm-leads.collection'
+import { Button as MotionButton } from '@/components/animate-ui/components/buttons/button'
 import {
   Tabs,
   TabsList,
   TabsTrigger,
 } from '@/components/animate-ui/components/radix/tabs'
-import { SearchInput } from '@/components/docyrus/search-input'
-import { DataGridToolbar } from '@/components/docyrus/data-grid/data-grid-toolbar'
-import { DataGridViewSelect } from '@/components/docyrus/data-grid-view-select'
-import type { ICollectionListParams } from '@/collections/types'
-import {
-  parseConfigDataViews,
-  useConfigDataViews,
-} from '@/hooks/use-config-data-views'
-import {
-  mapEnumEntitiesToCellOptions,
-  useEnumEntities,
-} from '@/hooks/use-enums'
-import { useDeleteLead, useLeads, useUpdateLead } from '@/hooks/use-leads'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { LeadFormDialog } from '@/components/leads/lead-form-dialog'
-import { RecordDeleteConfirmDialog } from '@/components/docyrus/record-delete-confirm-dialog'
-import { getDataGridRowActionsColumn } from '@/components/docyrus/data-grid-row-actions-column'
 import {
   DataGrid,
   DataGridSkeleton,
   DataGridSkeletonGrid,
-  applyViewToTable,
-  captureViewSnapshot,
-  getDataGridSelectColumn,
-  useDataGrid,
+  getDataGridActionsColumn,
+  type RowChange,
 } from '@/components/docyrus/data-grid'
-import { getLeadsColumns } from '@/components/leads/leads-columns'
-import { LeadsKanbanView } from '@/components/leads/leads-kanban-view'
+import { RecordDeleteConfirmDialog } from '@/components/docyrus/record-delete-confirm-dialog'
+import { LeadFormDialog } from '@/components/leads/lead-form-dialog'
+import { PageContainer } from '@/components/layout/page-container'
+import { PageHeader } from '@/components/layout/page-header'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  mapEnumEntitiesToCellOptions,
+  useEnumEntities,
+} from '@/hooks/use-enums'
+import { useDeleteLead, useUpdateLead } from '@/hooks/use-leads'
+import { useDocyrusDataGrid } from '@/hooks/use-docyrus-data-grid'
+import { useDocyrusKanban } from '@/hooks/use-docyrus-kanban'
+import { useDocyrusDataImportWizard } from '@/hooks/use-docyrus-data-import-wizard'
 import {
   buildDuplicatePayload,
   saveGridChanges,
 } from '@/lib/data-grid-record-utils'
+import { useDateFormat } from '@/lib/use-date-format'
 
 type LeadsView = 'board' | 'list'
 
-const LEADS_APP_ID = '019c4b95-bd68-768f-b0d9-b5f9ad0a91d7'
-const LEADS_DATA_SOURCE_ID = '019c48d0-5c6f-77aa-ba5a-3a3065c46036'
+type LeadFormMode = 'create' | 'edit'
 
-const LEAD_STATUS_LABEL_BY_ID = {
-  '019c48d0-68ac-7b9e-bfc6-c3828e37e886': 'New Leads',
-  '019c48d0-6907-7a10-9f4f-f1cfb1d3f94c': 'Converted',
-  '019c48d0-68e4-7f1f-bdcf-54b210ec43d1': 'Disqualified',
-} as const
+type LeadFormRecord = BaseCrmLeadsEntity | Record<string, unknown>
 
-const PINNED_START_COLUMN_IDS = ['select', 'actions'] as const
-const PINNED_START_COLUMN_ID_SET = new Set<string>(PINNED_START_COLUMN_IDS)
-
-function ensurePinnedStartColumns(view: SavedDataGridView): SavedDataGridView {
-  return {
-    ...view,
-    columnOrder: [
-      ...PINNED_START_COLUMN_IDS,
-      ...view.columnOrder.filter(
-        (columnId) => !PINNED_START_COLUMN_ID_SET.has(columnId),
-      ),
-    ],
-    columnPinning: {
-      left: [
-        ...PINNED_START_COLUMN_IDS,
-        ...(view.columnPinning.left ?? []).filter(
-          (columnId) => !PINNED_START_COLUMN_ID_SET.has(columnId),
-        ),
-      ],
-      right: (view.columnPinning.right ?? []).filter(
-        (columnId) => !PINNED_START_COLUMN_ID_SET.has(columnId),
-      ),
-    },
-  }
+interface LeadDialogState {
+  mode: LeadFormMode
+  lead: LeadFormRecord | null
 }
 
+const APP_SLUG = 'base_crm'
+const DATA_SOURCE_SLUG = 'leads'
+
+const LEAD_GRID_COLUMN_OVERRIDES: Record<
+  string,
+  Partial<ColumnDef<BaseCrmLeadsEntity>>
+> = {
+  title: { size: 240 },
+  company_name: { size: 200 },
+  lead_status: { size: 150 },
+  lead_source: { size: 160 },
+  email: { size: 220 },
+  phone: { size: 170 },
+  created_on: { size: 180 },
+}
+
+const LEAD_GRID_VISIBLE_FIELDS = new Set(
+  Object.keys(LEAD_GRID_COLUMN_OVERRIDES),
+)
+
 export function Leads() {
+  const client = useDocyrusClient()
+
+  if (!client) return null
+
+  return <LeadsPageInner client={client} />
+}
+
+function LeadsPageInner({
+  client,
+}: {
+  client: NonNullable<ReturnType<typeof useDocyrusClient>>
+}) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [viewType, setViewType] = useState<LeadsView>('board')
-  const {
-    data: leads,
-    isLoading,
-    error,
-  } = useLeads(undefined, {
-    enabled: viewType === 'list',
-  })
-  const { data: configDataViews } = useConfigDataViews(
-    LEADS_APP_ID,
-    LEADS_DATA_SOURCE_ID,
-  )
+  const collection = useBaseCrmLeadsCollection()
   const deleteLead = useDeleteLead()
   const updateLead = useUpdateLead()
-  const [isFormOpen, setIsFormOpen] = useState(false)
-  const [formMode, setFormMode] = useState<'create' | 'edit'>('create')
-  const [activeLead, setActiveLead] = useState<any>(null)
-  const [deleteTargets, setDeleteTargets] = useState<Array<any>>([])
-  const [searchKeyword, setSearchKeyword] = useState('')
-  const [activeViewId, setActiveViewId] = useState('')
-  const {
-    data: leadStatuses = [],
-    isLoading: isLeadStatusesLoading,
-    error: leadStatusesError,
-  } = useEnumEntities('lead_status', {
-    appSlug: 'base_crm',
-    dataSourceSlug: 'leads',
-  })
-  const { data: leadSources = [] } = useEnumEntities('lead_source', {
-    appSlug: 'base_crm',
-    dataSourceSlug: 'leads',
+  const { formatDate, formatDateTime } = useDateFormat()
+
+  const [viewType, setViewType] = useState<LeadsView>('board')
+  const [dialog, setDialog] = useState<LeadDialogState | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<BaseCrmLeadsEntity | null>(
+    null,
+  )
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const { data: leadStatuses = [] } = useEnumEntities('lead_status', {
+    appSlug: APP_SLUG,
+    dataSourceSlug: DATA_SOURCE_SLUG,
   })
 
-  const finalLeadStatusIds = useMemo(
-    () =>
-      leadStatuses
-        .filter((status) => status.isFinalOption)
-        .map((status) => status.id),
+  const leadStatusOptions = useMemo(
+    () => mapEnumEntitiesToCellOptions(leadStatuses),
     [leadStatuses],
   )
-  const leadBoardParams = useMemo<ICollectionListParams | undefined>(() => {
-    const params: ICollectionListParams = {
-      columns: [
-        'id',
-        'title',
-        'phone',
-        'email',
-        'website',
-        'lead_source',
-        'lead_status',
-        'lead_type',
-        'company_name(id,name,company_logo)',
-        'countries(id,name)',
-        'record_owner',
-        'created_on',
-      ],
-      orderBy: 'created_on DESC',
-    }
-
-    if (finalLeadStatusIds.length === 0) return params
-
-    return {
-      ...params,
-      filters: {
-        combinator: 'and',
-        rules: [
-          {
-            field: 'lead_status',
-            operator: 'not in',
-            value: finalLeadStatusIds,
-          },
-        ],
-      },
-    }
-  }, [finalLeadStatusIds])
-  const {
-    data: boardLeads,
-    isLoading: isBoardLoading,
-    error: boardError,
-  } = useLeads(leadBoardParams, {
-    enabled:
-      viewType === 'board' && !isLeadStatusesLoading && !leadStatusesError,
-  })
 
   const onOpenCreate = useCallback(() => {
-    setFormMode('create')
-    setActiveLead(null)
-    setIsFormOpen(true)
+    setDialog({ mode: 'create', lead: null })
   }, [])
 
-  const onOpenEdit = useCallback((lead: any) => {
-    setFormMode('edit')
-    setActiveLead(lead)
-    setIsFormOpen(true)
+  const onOpenEdit = useCallback((lead: BaseCrmLeadsEntity) => {
+    setDialog({ mode: 'edit', lead })
   }, [])
 
-  const onDuplicate = useCallback((lead: any) => {
-    setFormMode('create')
-    setActiveLead(buildDuplicatePayload(lead))
-    setIsFormOpen(true)
+  const onDuplicate = useCallback((lead: BaseCrmLeadsEntity) => {
+    setDialog({
+      mode: 'create',
+      lead: buildDuplicatePayload(lead as Record<string, unknown>),
+    })
+  }, [])
+
+  const onCloseDialog = useCallback(() => {
+    setDialog(null)
   }, [])
 
   const onView = useCallback(
-    (lead: any) => {
-      if (!lead?.id) return
+    (lead: BaseCrmLeadsEntity) => {
+      if (!lead.id) return
 
       void navigate({
         to: '/leads/$leadId',
@@ -202,57 +158,71 @@ export function Leads() {
     [navigate],
   )
 
-  const onDeleteRequest = useCallback((rows: Array<any>) => {
-    if (rows.length === 0) return
+  const onDelete = useCallback((lead: BaseCrmLeadsEntity) => {
+    if (!lead.id) return
 
-    setDeleteTargets(rows)
+    setPendingDelete(lead)
   }, [])
 
-  const onDeleteConfirm = useCallback(async () => {
-    const ids = deleteTargets
-      .map((row) => row?.id)
-      .filter(Boolean) as Array<string>
-
-    await Promise.all(ids.map((id) => deleteLead.mutateAsync(id)))
-    setDeleteTargets([])
-  }, [deleteLead, deleteTargets])
-
-  const onDeleteDialogOpenChange = useCallback((open: boolean) => {
-    if (!open) setDeleteTargets([])
-  }, [])
-
-  const leadStatusOptions = useMemo(
-    () => mapEnumEntitiesToCellOptions(leadStatuses),
-    [leadStatuses],
-  )
-  const leadSourceOptions = useMemo(
-    () => mapEnumEntitiesToCellOptions(leadSources),
-    [leadSources],
-  )
-  const baseColumns = useMemo(
+  const actionsColumn = useMemo<ColumnDef<BaseCrmLeadsEntity>>(
     () =>
-      getLeadsColumns({
-        leadStatusOptions,
-        leadSourceOptions,
+      getDataGridActionsColumn<BaseCrmLeadsEntity>({
+        actionCount: 2,
+        cell: ({ row }) => (
+          <div className="flex items-center gap-0.5 px-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-7"
+              onClick={() => onView(row.original)}
+            >
+              <Eye className="size-4" />
+              <span className="sr-only">
+                {t('leads.viewLead', 'View lead')}
+              </span>
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-7"
+                >
+                  <MoreHorizontal className="size-4" />
+                  <span className="sr-only">
+                    {t('common.actions', 'Actions')}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onOpenEdit(row.original)}>
+                  <Pencil className="size-4" />
+                  {t('common.edit', 'Edit')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onDuplicate(row.original)}>
+                  <Copy className="size-4" />
+                  {t('common.duplicate', 'Duplicate')}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => onDelete(row.original)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="size-4" />
+                  {t('common.delete', 'Delete')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ),
       }),
-    [leadSourceOptions, leadStatusOptions],
-  )
-  const columns = useMemo(
-    () => [
-      getDataGridSelectColumn<any>(),
-      getDataGridRowActionsColumn<any>({
-        onView,
-        onEdit: onOpenEdit,
-        onDuplicate,
-        onDelete: (row) => onDeleteRequest([row]),
-      }),
-      ...baseColumns,
-    ],
-    [baseColumns, onDeleteRequest, onDuplicate, onOpenEdit, onView],
+    [onDelete, onDuplicate, onOpenEdit, onView, t],
   )
 
   const onChangesSave = useCallback(
-    async (changes: Array<RowChange>, gridData: Array<any>) => {
+    async (changes: Array<RowChange>, gridData: Array<BaseCrmLeadsEntity>) => {
       await saveGridChanges(changes, gridData, (id, data) =>
         updateLead.mutateAsync({ leadId: id, data }),
       )
@@ -260,75 +230,177 @@ export function Leads() {
     [updateLead],
   )
 
-  const { table, ...dataGridProps } = useDataGrid({
-    data: leads || [],
-    columns,
-    getRowId: (row: any) => row.id,
+  const openWizardRef = useRef<() => void>(() => {})
+  const reloadBoardRef = useRef<() => void>(() => {})
+
+  const importToolbarButton = useMemo(
+    () => (
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="gap-1.5"
+        onClick={() => openWizardRef.current()}
+      >
+        <Upload className="size-4" />
+        {t('common.import', 'Import')}
+      </Button>
+    ),
+    [t],
+  )
+
+  const {
+    table,
+    gridProps,
+    toolbar,
+    items: listLeads,
+    reload: reloadList,
+    dataSource: listDataSource,
+    isLoading: isListLoading,
+    error: listError,
+  } = useDocyrusDataGrid<BaseCrmLeadsEntity>({
+    client,
+    appSlug: APP_SLUG,
+    dataSourceSlug: DATA_SOURCE_SLUG,
+    collection,
+    actionsColumn,
+    formatDate,
+    formatDateTime,
     readOnly: false,
-    enableGrouping: true,
-    enableChangeTracking: true,
-    onChangesSave,
+    trackChanges: true,
+    onSaveChanges: onChangesSave,
+    bulkActions: ['delete'],
+    enableItemsQuery: viewType === 'list',
+    enableServerExportMenu: true,
+    searchPlaceholder: t('common.search', 'Search...'),
+    toolbarEndContent: importToolbarButton,
+    getRowLabel: (row) => row.title || row.id || t('leads.title'),
+    mapColumn: (field, defaultColumn) => {
+      if (!LEAD_GRID_VISIBLE_FIELDS.has(field.slug)) return null
+
+      if (field.slug === 'lead_status') {
+        return {
+          ...defaultColumn,
+          ...LEAD_GRID_COLUMN_OVERRIDES[field.slug],
+          meta: {
+            ...defaultColumn.meta,
+            cell: {
+              ...(defaultColumn.meta?.cell ?? {}),
+              options: leadStatusOptions,
+            },
+          },
+        }
+      }
+
+      return {
+        ...defaultColumn,
+        ...LEAD_GRID_COLUMN_OVERRIDES[field.slug],
+      }
+    },
   })
 
-  const [fallbackView] = useState<SavedDataGridView>(() => ({
-    id: 'default-view',
-    name: 'All',
-    ...captureViewSnapshot(table),
-  }))
+  const {
+    toolbar: boardToolbar,
+    board,
+    reload: reloadBoard,
+    dataSource: boardDataSource,
+    isLoading: isBoardLoading,
+    error: boardError,
+  } = useDocyrusKanban<BaseCrmLeadsEntity>({
+    client,
+    appSlug: APP_SLUG,
+    dataSourceSlug: DATA_SOURCE_SLUG,
+    collection: {
+      list: (params) => collection.list(params),
+    },
+    groupByFieldSlug: 'lead_status',
+    titleColumn: 'title',
+    descriptionColumn: 'email',
+    avatarColumn: 'lead_source',
+    userColumn: 'record_owner',
+    cardContent: ({ row }) => {
+      const companyName =
+        typeof row.company_name === 'object'
+          ? row.company_name?.name
+          : row.company_name
+      const countryName =
+        typeof row.countries === 'object' ? row.countries?.name : row.countries
+      const websiteOrPhone = row.website || row.phone
 
-  const gridViews = useMemo(() => {
-    if (!configDataViews || configDataViews.length === 0) {
-      return [ensurePinnedStartColumns(fallbackView)]
+      return (
+        <div className="space-y-2">
+          {companyName ? (
+            <p className="text-xs font-medium text-foreground">{companyName}</p>
+          ) : null}
+          {websiteOrPhone ? (
+            <p className="text-xs text-muted-foreground">{websiteOrPhone}</p>
+          ) : null}
+          {countryName ? (
+            <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+              {countryName}
+            </p>
+          ) : null}
+        </div>
+      )
+    },
+    onCardOpen: onView,
+    onCardEdit: onOpenEdit,
+    onCardClick: onView,
+    onCardDelete: async (row) => {
+      if (!row.id) return
+
+      await deleteLead.mutateAsync(row.id)
+      reloadList()
+      reloadBoardRef.current()
+    },
+    onItemMoveCommit: async ({ row, payload }) => {
+      if (!row.id) return
+
+      await updateLead.mutateAsync({ leadId: row.id, data: payload })
+      reloadList()
+      reloadBoardRef.current()
+    },
+    enableItemsQuery: viewType === 'board',
+    listParams: {
+      columns:
+        'id, title, phone, email, website, lead_source, lead_status, lead_type, company_name(id,name,company_logo), countries(id,name), record_owner, created_on, last_modified_on, created_by, last_modified_by',
+      orderBy: 'created_on DESC',
+      limit: 200,
+    },
+    searchPlaceholder: t('common.search', 'Search...'),
+    toolbarEndContent: importToolbarButton,
+  })
+
+  reloadBoardRef.current = reloadBoard
+
+  const reload = useCallback(() => {
+    reloadList()
+    reloadBoard()
+  }, [reloadBoard, reloadList])
+
+  const { openWizard, wizard } = useDocyrusDataImportWizard({
+    client,
+    appSlug: APP_SLUG,
+    dataSourceSlug: DATA_SOURCE_SLUG,
+    fields: listDataSource?.fields ?? boardDataSource?.fields,
+    onImported: reload,
+  })
+
+  openWizardRef.current = openWizard
+
+  const onConfirmDelete = useCallback(async () => {
+    if (!pendingDelete?.id) return
+
+    setIsDeleting(true)
+
+    try {
+      await deleteLead.mutateAsync(pendingDelete.id)
+      setPendingDelete(null)
+      reload()
+    } finally {
+      setIsDeleting(false)
     }
-
-    return parseConfigDataViews(configDataViews, {
-      statusLabelById: LEAD_STATUS_LABEL_BY_ID,
-    }).map(ensurePinnedStartColumns)
-  }, [configDataViews, fallbackView])
-
-  useEffect(() => {
-    const activeExists = gridViews.some((view) => view.id === activeViewId)
-
-    if (activeExists) return
-
-    const nextDefault =
-      gridViews.find((view) => view.name === 'All') ?? gridViews[0]
-
-    if (!nextDefault) return
-
-    setActiveViewId(nextDefault.id)
-  }, [activeViewId, gridViews])
-
-  useEffect(() => {
-    const activeView = gridViews.find((view) => view.id === activeViewId)
-
-    if (!activeView) return
-
-    applyViewToTable(table, activeView)
-  }, [activeViewId, gridViews, table])
-
-  const onSearch = useCallback(
-    (value: string) => {
-      const nextValue = value.trim()
-      table.setGlobalFilter(nextValue.length > 0 ? nextValue : undefined)
-    },
-    [table],
-  )
-  const onLeadStatusChange = useCallback(
-    (lead: any, statusId: string) => {
-      if (!lead?.id) return Promise.resolve()
-
-      return updateLead.mutateAsync({
-        leadId: lead.id,
-        data: { lead_status: statusId },
-      })
-    },
-    [updateLead],
-  )
-  const activeError =
-    viewType === 'board' ? (leadStatusesError ?? boardError) : error
-  const isBoardPending =
-    viewType === 'board' && (isLeadStatusesLoading || isBoardLoading)
+  }, [deleteLead, pendingDelete, reload])
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -354,10 +426,10 @@ export function Leads() {
           </Tabs>
         }
         actions={
-          <Button size="sm" onClick={onOpenCreate}>
+          <MotionButton size="sm" onClick={onOpenCreate}>
             <Plus className="mr-2 h-4 w-4" />
             {t('leads.newLead')}
-          </Button>
+          </MotionButton>
         }
       />
       <PageContainer
@@ -367,27 +439,25 @@ export function Leads() {
             : ''
         }
       >
-        <LeadFormDialog
-          open={isFormOpen}
-          onOpenChange={(open) => {
-            setIsFormOpen(open)
+        {dialog && (
+          <LeadFormDialog
+            open
+            onOpenChange={(open) => {
+              if (!open) onCloseDialog()
+            }}
+            lead={dialog.lead ?? undefined}
+            mode={dialog.mode}
+            onSubmitSuccess={reload}
+          />
+        )}
 
-            if (!open) {
-              setActiveLead(null)
-              setFormMode('create')
-            }
-          }}
-          lead={activeLead ?? undefined}
-          mode={formMode}
-        />
-
-        {isLoading && viewType === 'list' && (
+        {isListLoading && viewType === 'list' && (
           <DataGridSkeleton>
             <DataGridSkeletonGrid />
           </DataGridSkeleton>
         )}
 
-        {isBoardPending && (
+        {isBoardLoading && viewType === 'board' && (
           <div className="flex gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <div
@@ -398,7 +468,7 @@ export function Leads() {
           </div>
         )}
 
-        {activeError && (
+        {viewType === 'list' && listError && (
           <Card className="border-destructive">
             <CardHeader>
               <CardTitle className="text-destructive">
@@ -406,83 +476,69 @@ export function Leads() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm">{activeError.message}</p>
+              <p className="text-sm">{listError.message}</p>
             </CardContent>
           </Card>
         )}
 
-        {viewType === 'list' && leads && leads.length === 0 && (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-lg font-medium">{t('leads.emptyTitle')}</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                {t('leads.emptyDescription')}
-              </p>
-              <Button className="mt-4" onClick={() => setIsFormOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                {t('leads.createLead')}
-              </Button>
+        {viewType === 'board' && boardError && (
+          <Card className="border-destructive">
+            <CardHeader>
+              <CardTitle className="text-destructive">
+                {t('leads.errorLoading')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm">{boardError.message}</p>
             </CardContent>
           </Card>
         )}
 
-        {leads && leads.length > 0 && viewType === 'list' && (
-          <>
-            <DataGridToolbar
-              table={table}
-              enableView={false}
-              enableDisplayMode
-              enableGroup
-              startContent={
-                <>
-                  <DataGridViewSelect
-                    table={table}
-                    variant="horizontal-tabs"
-                    views={gridViews}
-                    activeViewId={activeViewId}
-                    onViewChange={(view) => setActiveViewId(view.id)}
-                  />
-                  <SearchInput
-                    value={searchKeyword}
-                    onValueChange={setSearchKeyword}
-                    onSearch={onSearch}
-                    placeholder={t('common.search', 'Search...')}
-                    size="sm"
-                    className="w-56 min-w-40"
-                  />
-                </>
-              }
-            />
-            <DataGrid
-              table={table}
-              {...dataGridProps}
-              height={600}
-              actions={[
-                {
-                  label: t('common.delete'),
-                  icon: <Trash2 className="size-4" />,
-                  variant: 'destructive',
-                  onAction: onDeleteRequest,
-                },
-              ]}
-            />
-          </>
-        )}
+        {viewType === 'list' &&
+          !isListLoading &&
+          !listError &&
+          listLeads.length === 0 && (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <p className="text-lg font-medium">{t('leads.emptyTitle')}</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {t('leads.emptyDescription')}
+                </p>
+                <MotionButton className="mt-4" onClick={onOpenCreate}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  {t('leads.createLead')}
+                </MotionButton>
+              </CardContent>
+            </Card>
+          )}
+
+        {viewType === 'list' &&
+          !isListLoading &&
+          !listError &&
+          listLeads.length > 0 && (
+            <div className="space-y-4">
+              {toolbar}
+              <DataGrid table={table} {...gridProps} height={600} />
+            </div>
+          )}
 
         <RecordDeleteConfirmDialog
-          open={deleteTargets.length > 0}
-          onOpenChange={onDeleteDialogOpenChange}
-          recordCount={deleteTargets.length}
-          onConfirm={onDeleteConfirm}
-          isPending={deleteLead.isPending}
+          open={pendingDelete !== null}
+          onOpenChange={(open) => {
+            if (!open && !isDeleting) setPendingDelete(null)
+          }}
+          recordCount={pendingDelete ? 1 : 0}
+          onConfirm={onConfirmDelete}
+          isPending={isDeleting}
         />
 
-        {viewType === 'board' && leadStatuses.length > 0 && !activeError && (
-          <LeadsKanbanView
-            leads={boardLeads ?? []}
-            statuses={leadStatuses}
-            onStatusChange={onLeadStatusChange}
-          />
+        {wizard}
+
+        {viewType === 'board' && !isBoardLoading && !boardError && (
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="mb-4 shrink-0">{boardToolbar}</div>
+            <div className="min-h-0 flex-1 overflow-hidden">{board}</div>
+          </div>
         )}
       </PageContainer>
     </div>

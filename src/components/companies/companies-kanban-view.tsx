@@ -67,6 +67,7 @@ export function CompaniesKanbanView({ companies }: CompaniesKanbanViewProps) {
                 <Link
                   to="/companies/$companyId"
                   params={{ companyId: company.id }}
+                  search={{ tab: 'overview' }}
                 >
                   <Card className="cursor-pointer hover:shadow-md transition-shadow">
                     <CardHeader className="pb-2">

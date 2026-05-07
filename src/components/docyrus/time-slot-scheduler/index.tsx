@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-export { TimeSlotScheduler } from './time-slot-scheduler';
+export { TimeSlotScheduler } from './time-slot-scheduler'
 export type {
   DaySlots,
   DisabledReason,
@@ -13,5 +13,5 @@ export type {
   TimeSlotSchedulerMode,
   TimeSlotSchedulerProps,
   TimezoneOption,
-  UnavailableRange
-} from './types';
+  UnavailableRange,
+} from './types'

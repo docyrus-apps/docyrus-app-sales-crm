@@ -1,27 +1,20 @@
 // @ts-nocheck
 'use client'
 
-import * as React from 'react'
+import { useCallback, useSyncExternalStore } from 'react'
+
+const getIsTouchDevice = () =>
+  typeof window !== 'undefined' &&
+  ('ontouchstart' in window || navigator.maxTouchPoints > 0)
+
+const getServerSnapshot = () => false
 
 export function useIsTouchDevice() {
-  const [isTouchDevice, setIsTouchDevice] = React.useState(false)
+  const subscribe = useCallback((onStoreChange: () => void) => {
+    window.addEventListener('resize', onStoreChange)
 
-  React.useEffect(() => {
-    function onResize() {
-      setIsTouchDevice(
-        'ontouchstart' in window ||
-          navigator.maxTouchPoints > 0 ||
-          navigator.maxTouchPoints > 0,
-      )
-    }
-
-    window.addEventListener('resize', onResize)
-    onResize()
-
-    return () => {
-      window.removeEventListener('resize', onResize)
-    }
+    return () => window.removeEventListener('resize', onStoreChange)
   }, [])
 
-  return isTouchDevice
+  return useSyncExternalStore(subscribe, getIsTouchDevice, getServerSnapshot)
 }

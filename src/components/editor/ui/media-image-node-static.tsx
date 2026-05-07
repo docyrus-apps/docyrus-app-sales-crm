@@ -1,36 +1,46 @@
 // @ts-nocheck
+import * as React from 'react'
+
+import type { TCaptionProps, TImageElement, TResizableProps } from 'platejs'
 import type { SlateElementProps } from 'platejs/static'
 
+import { NodeApi } from 'platejs'
 import { SlateElement } from 'platejs/static'
 
 import { cn } from '@/lib/utils'
 
-export function ImageElementStatic(props: SlateElementProps) {
-  const { element } = props
-  const { align = 'center', caption, url, width } = element as any
+export function ImageElementStatic(
+  props: SlateElementProps<TImageElement & TCaptionProps & TResizableProps>,
+) {
+  const { align = 'center', caption, url, width } = props.element
 
   return (
     <SlateElement {...props} className="py-2.5">
-      <div
-        className={cn(
-          'flex',
-          align === 'center' && 'justify-center',
-          align === 'right' && 'justify-end',
-        )}
-      >
-        <figure className="group relative m-0 inline-block" style={{ width }}>
-          <img
-            className="w-full rounded-sm object-cover"
-            src={url}
-            alt={(caption as any)?.[0]?.text || ''}
-          />
+      <figure className="group relative m-0 inline-block" style={{ width }}>
+        <div
+          className="relative min-w-[92px] max-w-full"
+          style={{ textAlign: align }}
+        >
+          <div>
+            <img
+              className={cn(
+                'w-full max-w-full cursor-default object-cover px-0',
+                'rounded-sm',
+              )}
+              alt={(props.attributes as any).alt}
+              src={url}
+            />
+          </div>
           {caption && (
-            <figcaption className="mt-2 text-center text-muted-foreground text-sm">
-              {(caption as any)?.[0]?.text}
+            <figcaption
+              className="mx-auto mt-2 h-[24px] max-w-full"
+              style={{ textAlign: 'center' }}
+            >
+              {NodeApi.string(caption[0])}
             </figcaption>
           )}
-        </figure>
-      </div>
+        </div>
+      </figure>
       {props.children}
     </SlateElement>
   )

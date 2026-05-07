@@ -4,7 +4,15 @@ Relation and enum fields can resolve to `null`. UI code must guard for both obje
 
 ## Root Runtime Tooling
 
-The React root mounts Docyrus auth, TanStack Query, and the shared app shell without the Agentation overlay. Register auth-managed API clients inside the auth provider tree, and keep optional developer aids out of `src/App.tsx`.
+The React root mounts Docyrus auth, TanStack Query, Docyrus Devtools, and the shared app shell without the Agentation overlay.
+
+Keep `DocyrusDevtools` inside the auth/query provider tree, register auth-managed clients through `DocyrusDevtoolsClientRegistration`, pass the shared query client, and use `/openapi.json` as the local spec path when available. Keep optional developer aids out of `src/App.tsx`.
+
+The OAuth callback is configured as a path (`VITE_OAUTH2_REDIRECT_PATH`) and the runtime redirect URI is always built from `window.location.origin` plus that path; keep the TanStack callback route and `DocyrusAuthProvider.callbackPath` aligned with the same value.
+
+## Editor Dependency Alignment
+
+The editor currently builds cleanly on PlateJS 53.x. Upgrade `platejs` and the `@platejs/*` packages together to avoid missing-export mismatches between core and plugin packages.
 
 <!-- docyrus-knowledge:auto:begin -->
 

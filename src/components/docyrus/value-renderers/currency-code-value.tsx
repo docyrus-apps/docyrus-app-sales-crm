@@ -1,23 +1,23 @@
-'use client';
+'use client'
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'
 
-import { type DocyrusValueProps } from './types';
+import { type DocyrusValueProps } from './types'
 
-import { getCurrencySymbol } from './utils';
+import { getCurrencySymbol } from './utils'
 
 export function CurrencyCodeValue({ value, className }: DocyrusValueProps) {
   if (value == null || value === '') {
-    return <span className="text-muted-foreground">—</span>;
+    return <span className="text-muted-foreground">—</span>
   }
 
-  const code = String(value);
-  const symbol = getCurrencySymbol(code);
+  const code = String(value)
+  const symbol = getCurrencySymbol(code)
 
   return (
     <span className={cn('truncate text-sm', className)}>
       {code}
       {symbol !== code && ` (${symbol})`}
     </span>
-  );
+  )
 }

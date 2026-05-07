@@ -1,168 +1,326 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CheckSquare, Plus, Trash2 } from 'lucide-react'
+import { useDocyrusClient } from '@docyrus/signin'
+import {
+  Copy,
+  Eye,
+  MoreHorizontal,
+  Plus,
+  Trash2,
+  Upload,
+  CheckSquare,
+  Pencil,
+} from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
-import type { RowChange } from '@/components/docyrus/data-grid'
+
+import type { BaseTaskEntity } from '@/collections/base-task.collection'
+import { useBaseTaskCollection } from '@/collections/base-task.collection'
+import { Button as MotionButton } from '@/components/animate-ui/components/buttons/button'
 import {
   DataGrid,
   DataGridSkeleton,
   DataGridSkeletonGrid,
-  getDataGridSelectColumn,
-  useDataGrid,
+  getDataGridActionsColumn,
+  type CellUserOption,
+  type RowChange,
 } from '@/components/docyrus/data-grid'
-import { DataGridStandardToolbar } from '@/components/docyrus/data-grid-standard-toolbar'
 import { RecordDeleteConfirmDialog } from '@/components/docyrus/record-delete-confirm-dialog'
-import { getDataGridRowActionsColumn } from '@/components/docyrus/data-grid-row-actions-column'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
-import { Button } from '@/components/animate-ui/components/buttons/button'
-import { useDeleteTask, useTasks, useUpdateTask } from '@/hooks/use-tasks'
 import { TaskFormSheet } from '@/components/tasks/task-form-sheet'
-import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { useDocyrusDataGrid } from '@/hooks/use-docyrus-data-grid'
+import { useDocyrusDataImportWizard } from '@/hooks/use-docyrus-data-import-wizard'
+import { useDeleteTask, useUpdateTask } from '@/hooks/use-tasks'
+import { useUsers } from '@/hooks/use-users'
 import {
   buildDuplicatePayload,
   saveGridChanges,
 } from '@/lib/data-grid-record-utils'
+import { useDateFormat } from '@/lib/use-date-format'
+
+const APP_SLUG = 'base'
+const DATA_SOURCE_SLUG = 'task'
+
+type TaskFormMode = 'create' | 'edit'
+
+type TaskFormRecord = BaseTaskEntity | Record<string, unknown>
+
+interface TaskDialogState {
+  mode: TaskFormMode
+  task: TaskFormRecord | null
+}
 
 export function Tasks() {
+  const client = useDocyrusClient()
+
+  if (!client) return null
+
+  return <TasksPageInner client={client} />
+}
+
+function TasksPageInner({
+  client,
+}: {
+  client: NonNullable<ReturnType<typeof useDocyrusClient>>
+}) {
   const { t } = useTranslation()
-  const { data: tasks, isLoading } = useTasks()
+  const collection = useBaseTaskCollection()
   const deleteTask = useDeleteTask()
   const updateTask = useUpdateTask()
-  const [isFormOpen, setIsFormOpen] = useState(false)
-  const [formMode, setFormMode] = useState<'create' | 'edit'>('create')
-  const [activeTask, setActiveTask] = useState<any>(null)
-  const [deleteTargets, setDeleteTargets] = useState<Array<any>>([])
+  const { data: users = [] } = useUsers()
+  const { formatDate, formatDateTime } = useDateFormat()
 
-  const onOpenCreate = () => {
-    setFormMode('create')
-    setActiveTask(null)
-    setIsFormOpen(true)
-  }
+  const [dialog, setDialog] = useState<TaskDialogState | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<BaseTaskEntity | null>(
+    null,
+  )
+  const [isDeleting, setIsDeleting] = useState(false)
 
-  const onOpenEdit = (task: any) => {
-    setFormMode('edit')
-    setActiveTask(task)
-    setIsFormOpen(true)
-  }
+  const taskUserOptions = useMemo<Array<CellUserOption>>(
+    () =>
+      users
+        .map((user) => {
+          const value = user.id || user.email
+          if (!value) return null
 
-  const onDuplicate = (task: any) => {
-    setFormMode('create')
-    setActiveTask(buildDuplicatePayload(task))
-    setIsFormOpen(true)
-  }
+          const label =
+            [user.firstname, user.lastname].filter(Boolean).join(' ').trim() ||
+            user.name ||
+            user.email
 
-  const onDeleteRequest = (rows: Array<any>) => {
-    if (rows.length === 0) return
+          if (!label) return null
 
-    setDeleteTargets(rows)
-  }
+          const initials =
+            [user.firstname, user.lastname]
+              .map((part) => part?.charAt(0) || '')
+              .join('')
+              .slice(0, 2)
+              .toUpperCase() || label.slice(0, 2).toUpperCase()
 
-  const onDeleteConfirm = async () => {
-    const ids = deleteTargets
-      .map((row) => row?.id)
-      .filter(Boolean) as Array<string>
+          return {
+            value,
+            label,
+            initials,
+          }
+        })
+        .filter((option): option is CellUserOption => option !== null),
+    [users],
+  )
 
-    await Promise.all(ids.map((id) => deleteTask.mutateAsync(id)))
-    setDeleteTargets([])
-  }
+  const onOpenCreate = useCallback(() => {
+    setDialog({ mode: 'create', task: null })
+  }, [])
 
-  const onChangesSave = async (
-    changes: Array<RowChange>,
-    gridData: Array<any>,
-  ) => {
-    await saveGridChanges(changes, gridData, (id, data) =>
-      updateTask.mutateAsync({ taskId: id, data }),
-    )
-  }
+  const onOpenEdit = useCallback((task: BaseTaskEntity) => {
+    setDialog({ mode: 'edit', task })
+  }, [])
 
-  const columns = useMemo<Array<ColumnDef<any>>>(() => {
-    const baseColumns: Array<ColumnDef<any>> = [
-      {
-        accessorKey: 'subject',
+  const onDuplicate = useCallback((task: BaseTaskEntity) => {
+    setDialog({
+      mode: 'create',
+      task: buildDuplicatePayload(task as Record<string, unknown>),
+    })
+  }, [])
+
+  const onCloseDialog = useCallback(() => {
+    setDialog(null)
+  }, [])
+
+  const onDelete = useCallback((task: BaseTaskEntity) => {
+    if (!task.id) return
+
+    setPendingDelete(task)
+  }, [])
+
+  const actionsColumn = useMemo<ColumnDef<BaseTaskEntity>>(
+    () =>
+      getDataGridActionsColumn<BaseTaskEntity>({
+        actionCount: 2,
+        cell: ({ row }) => (
+          <div className="flex items-center gap-0.5 px-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-7"
+              onClick={() => onOpenEdit(row.original)}
+            >
+              <Eye className="size-4" />
+              <span className="sr-only">
+                {t('tasks.viewTask', 'View task')}
+              </span>
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-7"
+                >
+                  <MoreHorizontal className="size-4" />
+                  <span className="sr-only">
+                    {t('common.actions', 'Actions')}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onOpenEdit(row.original)}>
+                  <Pencil className="size-4" />
+                  {t('common.edit', 'Edit')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onDuplicate(row.original)}>
+                  <Copy className="size-4" />
+                  {t('common.duplicate', 'Duplicate')}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => onDelete(row.original)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="size-4" />
+                  {t('common.delete', 'Delete')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ),
+      }),
+    [onDelete, onDuplicate, onOpenEdit, t],
+  )
+
+  const onChangesSave = useCallback(
+    async (changes: Array<RowChange>, gridData: Array<BaseTaskEntity>) => {
+      await saveGridChanges(changes, gridData, (id, data) =>
+        updateTask.mutateAsync({ taskId: id, data }),
+      )
+    },
+    [updateTask],
+  )
+
+  const openWizardRef = useRef<() => void>(() => {})
+
+  const importToolbarButton = useMemo(
+    () => (
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="gap-1.5"
+        onClick={() => openWizardRef.current()}
+      >
+        <Upload className="size-4" />
+        {t('common.import', 'Import')}
+      </Button>
+    ),
+    [t],
+  )
+
+  const columnOverrides = useMemo<
+    Record<string, Partial<ColumnDef<BaseTaskEntity>>>
+  >(
+    () => ({
+      subject: {
         header: t('tasks.columns.subject'),
-        meta: { cell: { variant: 'short-text' } },
-        enableSorting: true,
         size: 250,
       },
-      {
-        id: 'status',
-        accessorFn: (row) =>
-          typeof row.status === 'object'
-            ? (row.status?.name ?? '')
-            : (row.status ?? ''),
+      status: {
         header: t('tasks.columns.status'),
-        meta: { cell: { variant: 'short-text' } },
-        enableSorting: true,
-        size: 130,
+        size: 140,
       },
-      {
-        accessorKey: 'start_date',
+      start_date: {
         header: t('tasks.columns.startDate'),
-        meta: { cell: { variant: 'date' } },
-        enableSorting: true,
-        size: 130,
+        size: 140,
       },
-      {
-        accessorKey: 'end_date',
+      end_date: {
         header: t('tasks.columns.dueDate'),
-        meta: { cell: { variant: 'date' } },
-        enableSorting: true,
-        size: 130,
+        size: 140,
       },
-      {
-        id: 'organization',
-        accessorFn: (row) =>
-          typeof row.organization === 'object'
-            ? (row.organization?.name ?? '')
-            : (row.organization ?? ''),
+      organization: {
         header: t('tasks.columns.organization'),
-        meta: { cell: { variant: 'short-text' } },
-        enableSorting: true,
-        size: 180,
+        size: 190,
       },
-      {
-        id: 'record_owner',
-        accessorFn: (row) => {
-          const owner = row.record_owner
-          if (!owner) return ''
-          if (typeof owner === 'object') {
-            return (
-              [owner.firstname, owner.lastname].filter(Boolean).join(' ') ||
-              owner.email ||
-              ''
-            )
-          }
-          return String(owner)
-        },
+      record_owner: {
         header: t('tasks.columns.owner'),
-        meta: { cell: { variant: 'short-text' } },
-        enableSorting: true,
-        size: 160,
+        size: 170,
       },
-    ]
+    }),
+    [t],
+  )
 
-    return [
-      getDataGridSelectColumn<any>(),
-      getDataGridRowActionsColumn<any>({
-        onView: onOpenEdit,
-        onEdit: onOpenEdit,
-        onDuplicate,
-        onDelete: (row) => onDeleteRequest([row]),
-      }),
-      ...baseColumns,
-    ]
-  }, [t])
+  const visibleFields = useMemo(
+    () => new Set(Object.keys(columnOverrides)),
+    [columnOverrides],
+  )
 
-  const { table, ...dataGridProps } = useDataGrid({
-    data: tasks || [],
-    columns,
-    getRowId: (row: any) => row.id,
+  const {
+    table,
+    gridProps,
+    toolbar,
+    items: tasks,
+    reload,
+    dataSource,
+    isLoading,
+    error,
+  } = useDocyrusDataGrid<BaseTaskEntity>({
+    client,
+    appSlug: APP_SLUG,
+    dataSourceSlug: DATA_SOURCE_SLUG,
+    collection,
+    actionsColumn,
+    users: taskUserOptions,
+    formatDate,
+    formatDateTime,
     readOnly: false,
-    enableGrouping: true,
-    enableChangeTracking: true,
-    onChangesSave,
+    trackChanges: true,
+    onSaveChanges: onChangesSave,
+    bulkActions: ['delete'],
+    enableServerExportMenu: true,
+    searchPlaceholder: t('common.search', 'Search...'),
+    toolbarEndContent: importToolbarButton,
+    getRowLabel: (row) => row.subject || row.id || t('tasks.title'),
+    mapColumn: (field, defaultColumn) => {
+      if (!visibleFields.has(field.slug)) return null
+
+      return {
+        ...defaultColumn,
+        ...columnOverrides[field.slug],
+      }
+    },
   })
+
+  const { openWizard, wizard } = useDocyrusDataImportWizard({
+    client,
+    appSlug: APP_SLUG,
+    dataSourceSlug: DATA_SOURCE_SLUG,
+    fields: dataSource?.fields,
+    onImported: reload,
+  })
+
+  openWizardRef.current = openWizard
+
+  const onConfirmDelete = useCallback(async () => {
+    if (!pendingDelete?.id) return
+
+    setIsDeleting(true)
+
+    try {
+      await deleteTask.mutateAsync(pendingDelete.id)
+      setPendingDelete(null)
+      reload()
+    } finally {
+      setIsDeleting(false)
+    }
+  }, [deleteTask, pendingDelete, reload])
 
   return (
     <>
@@ -170,25 +328,24 @@ export function Tasks() {
         title={t('tasks.title')}
         icon={<CheckSquare className="h-4 w-4 text-emerald-500" />}
         actions={
-          <Button size="sm" onClick={onOpenCreate}>
+          <MotionButton size="sm" onClick={onOpenCreate}>
             <Plus className="mr-2 h-4 w-4" />
             {t('tasks.newTask')}
-          </Button>
+          </MotionButton>
         }
       />
       <PageContainer>
-        <TaskFormSheet
-          open={isFormOpen}
-          onOpenChange={(open) => {
-            setIsFormOpen(open)
-            if (!open) {
-              setActiveTask(null)
-              setFormMode('create')
-            }
-          }}
-          mode={formMode}
-          task={activeTask ?? undefined}
-        />
+        {dialog && (
+          <TaskFormSheet
+            open
+            onOpenChange={(open) => {
+              if (!open) onCloseDialog()
+            }}
+            mode={dialog.mode}
+            task={dialog.task ?? undefined}
+            onSubmitSuccess={reload}
+          />
+        )}
 
         {isLoading && (
           <DataGridSkeleton>
@@ -196,53 +353,53 @@ export function Tasks() {
           </DataGridSkeleton>
         )}
 
-        {!isLoading && tasks && tasks.length === 0 && (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <CheckSquare className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-lg font-medium">{t('tasks.emptyTitle')}</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                {t('tasks.emptyDescription')}
-              </p>
-              <Button className="mt-4" onClick={onOpenCreate}>
-                <Plus className="mr-2 h-4 w-4" />
-                {t('tasks.createTask')}
-              </Button>
+        {error && (
+          <Card className="border-destructive">
+            <CardHeader>
+              <CardTitle className="text-destructive">
+                {t('tasks.errorLoading', 'Unable to load tasks')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm">{error.message}</p>
             </CardContent>
           </Card>
         )}
 
-        {!isLoading && tasks && tasks.length > 0 && (
-          <>
-            <DataGridStandardToolbar
-              table={table}
-              searchPlaceholder={t('common.search', 'Search...')}
-            />
-            <DataGrid
-              table={table}
-              {...dataGridProps}
-              height={600}
-              actions={[
-                {
-                  label: t('common.delete'),
-                  icon: <Trash2 className="size-4" />,
-                  variant: 'destructive',
-                  onAction: onDeleteRequest,
-                },
-              ]}
-            />
-          </>
+        {!isLoading && !error && tasks.length === 0 && (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <CheckSquare className="mb-4 h-12 w-12 text-muted-foreground" />
+              <p className="text-lg font-medium">{t('tasks.emptyTitle')}</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {t('tasks.emptyDescription')}
+              </p>
+              <MotionButton className="mt-4" onClick={onOpenCreate}>
+                <Plus className="mr-2 h-4 w-4" />
+                {t('tasks.createTask')}
+              </MotionButton>
+            </CardContent>
+          </Card>
+        )}
+
+        {!isLoading && !error && tasks.length > 0 && (
+          <div className="space-y-4">
+            {toolbar}
+            <DataGrid table={table} {...gridProps} height={600} />
+          </div>
         )}
 
         <RecordDeleteConfirmDialog
-          open={deleteTargets.length > 0}
+          open={pendingDelete !== null}
           onOpenChange={(open) => {
-            if (!open) setDeleteTargets([])
+            if (!open && !isDeleting) setPendingDelete(null)
           }}
-          recordCount={deleteTargets.length}
-          onConfirm={onDeleteConfirm}
-          isPending={deleteTask.isPending}
+          recordCount={pendingDelete ? 1 : 0}
+          onConfirm={onConfirmDelete}
+          isPending={isDeleting}
         />
+
+        {wizard}
       </PageContainer>
     </>
   )

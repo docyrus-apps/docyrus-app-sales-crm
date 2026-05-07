@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-export { AwesomeStats } from './awesome-stats';
+export { AwesomeStats } from './awesome-stats'
 export type {
   AwesomeStatComparison,
   AwesomeStatComparisonPeriod,
@@ -10,5 +10,5 @@ export type {
   AwesomeStatsAwesomeCardProps,
   AwesomeStatsLayout,
   AwesomeStatsProps,
-  AwesomeStatValueFormat
-} from './types';
+  AwesomeStatValueFormat,
+} from './types'

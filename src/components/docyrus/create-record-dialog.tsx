@@ -1,178 +1,190 @@
-'use client';
+'use client'
 
 import {
-  useCallback, useEffect, useMemo, useRef, useState,
-  type KeyboardEvent, type ReactNode
-} from 'react';
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react'
 
 import {
-  CheckIcon, ChevronDownIcon, ChevronsUpDownIcon,
-  PlusIcon, SparklesIcon, XIcon
-} from 'lucide-react';
-import { Popover as PopoverPrimitive } from 'radix-ui';
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronsUpDownIcon,
+  PlusIcon,
+  SparklesIcon,
+  XIcon,
+} from 'lucide-react'
+import { Popover as PopoverPrimitive } from 'radix-ui'
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'
 import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
-  CommandList
-} from '@/components/ui/command';
+  CommandList,
+} from '@/components/ui/command'
 import {
   Dialog,
   DialogClose,
   DialogContent,
   DialogDescription,
   DialogTitle,
-  DialogTrigger
-} from '@/components/ui/dialog';
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger
-} from '@/components/ui/popover';
-import { Switch } from '@/components/ui/switch';
-import { cn } from '@/lib/utils';
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { Switch } from '@/components/ui/switch'
+import { cn } from '@/lib/utils'
 
-import { tUi, type UiI18nLocale } from '@/lib/ui-i18n';
+import { tUi, type UiI18nLocale } from '@/lib/ui-i18n'
 
 interface MentionOption {
-  id: string;
-  label: string;
-  description?: string;
-  icon?: ReactNode;
+  id: string
+  label: string
+  description?: string
+  icon?: ReactNode
 }
 
 interface MentionTriggerConfig {
-  trigger: string;
-  options: MentionOption[];
-  searchPlaceholder?: string;
-  emptyText?: string;
+  trigger: string
+  options: MentionOption[]
+  searchPlaceholder?: string
+  emptyText?: string
 }
 
 interface MentionSelection {
-  trigger: string;
-  option: MentionOption;
-  field: 'subject' | 'description';
+  trigger: string
+  option: MentionOption
+  field: 'subject' | 'description'
 }
 
 interface SelectorOption {
-  id: string;
-  label: string;
-  icon?: ReactNode;
-  color?: string;
+  id: string
+  label: string
+  icon?: ReactNode
+  color?: string
 }
 
 interface SelectorFieldConfig {
-  key: string;
-  label: string;
-  placeholder?: string;
-  icon?: ReactNode;
-  options: SelectorOption[];
-  value?: string | null;
-  defaultValue?: string;
-  searchPlaceholder?: string;
-  emptyText?: string;
-  onChange?: (value: string | null) => void;
-  clearsFields?: string[];
+  key: string
+  label: string
+  placeholder?: string
+  icon?: ReactNode
+  options: SelectorOption[]
+  value?: string | null
+  defaultValue?: string
+  searchPlaceholder?: string
+  emptyText?: string
+  onChange?: (value: string | null) => void
+  clearsFields?: string[]
 }
 
 interface FooterToggleConfig {
-  key: string;
-  label: string;
-  defaultChecked?: boolean;
+  key: string
+  label: string
+  defaultChecked?: boolean
 }
 
 interface AiAction {
-  id: string;
-  label: string;
-  icon?: ReactNode;
-  disabled?: boolean;
-  onAction: (ctx: { subject: string; description: string }) => void | Promise<void>;
+  id: string
+  label: string
+  icon?: ReactNode
+  disabled?: boolean
+  onAction: (ctx: {
+    subject: string
+    description: string
+  }) => void | Promise<void>
 }
 
 interface CreateRecordFormData {
-  subject: string;
-  description: string;
-  fields: Record<string, string | null>;
-  toggles: Record<string, boolean>;
-  mentions: MentionSelection[];
+  subject: string
+  description: string
+  fields: Record<string, string | null>
+  toggles: Record<string, boolean>
+  mentions: MentionSelection[]
 }
 
 interface CreateRecordDialogProps {
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  children?: ReactNode;
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  children?: ReactNode
 
-  headerIcon?: ReactNode;
-  headerLabel?: string;
-  headerFields?: SelectorFieldConfig[];
+  headerIcon?: ReactNode
+  headerLabel?: string
+  headerFields?: SelectorFieldConfig[]
 
-  subjectPlaceholder?: string;
-  descriptionPlaceholder?: string;
-  descriptionExpanded?: boolean;
+  subjectPlaceholder?: string
+  descriptionPlaceholder?: string
+  descriptionExpanded?: boolean
 
-  footerFields?: SelectorFieldConfig[];
-  footerToggles?: FooterToggleConfig[];
+  footerFields?: SelectorFieldConfig[]
+  footerToggles?: FooterToggleConfig[]
 
-  mentionTriggers?: MentionTriggerConfig[];
-  onMentionSelect?: (selection: MentionSelection) => void;
+  mentionTriggers?: MentionTriggerConfig[]
+  onMentionSelect?: (selection: MentionSelection) => void
 
-  aiActions?: AiAction[];
+  aiActions?: AiAction[]
 
-  enableCreateMore?: boolean;
-  createMoreResetKeys?: string[];
+  enableCreateMore?: boolean
+  createMoreResetKeys?: string[]
 
-  onSubmit: (data: CreateRecordFormData) => void | Promise<void>;
-  isPending?: boolean;
+  onSubmit: (data: CreateRecordFormData) => void | Promise<void>
+  isPending?: boolean
 
-  locale?: UiI18nLocale;
-  saveLabel?: string;
-  cancelLabel?: string;
-  createMoreLabel?: string;
-  addDescriptionLabel?: string;
-  dialogTitle?: string;
+  locale?: UiI18nLocale
+  saveLabel?: string
+  cancelLabel?: string
+  createMoreLabel?: string
+  addDescriptionLabel?: string
+  dialogTitle?: string
 
-  className?: string;
+  className?: string
 }
 
 interface TriggerState {
-  trigger: string;
-  field: 'subject' | 'description';
-  startIndex: number;
-  search: string;
-  highlightIndex: number;
+  trigger: string
+  field: 'subject' | 'description'
+  startIndex: number
+  search: string
+  highlightIndex: number
 }
 
 function detectTrigger(
   text: string,
   cursorPos: number,
-  triggers: string[]
+  triggers: string[],
 ): { trigger: string; startIndex: number; search: string } | null {
-  const before = text.slice(0, cursorPos);
+  const before = text.slice(0, cursorPos)
 
   for (const char of triggers) {
-    const idx = before.lastIndexOf(char);
+    const idx = before.lastIndexOf(char)
 
-    if (idx === -1) continue;
-    if (idx > 0 && before[idx - 1] !== ' ') continue;
+    if (idx === -1) continue
+    if (idx > 0 && before[idx - 1] !== ' ') continue
 
-    const search = before.slice(idx + char.length);
+    const search = before.slice(idx + char.length)
 
-    if (search.includes(' ')) continue;
+    if (search.includes(' ')) continue
 
-    return { trigger: char, startIndex: idx, search };
+    return { trigger: char, startIndex: idx, search }
   }
 
-  return null;
+  return null
 }
 
 function MentionList({
@@ -180,32 +192,32 @@ function MentionList({
   highlightIndex,
   onSelect,
   onHighlight,
-  emptyText
+  emptyText,
 }: {
-  items: MentionOption[];
-  highlightIndex: number;
-  onSelect: (item: MentionOption) => void;
-  onHighlight: (index: number) => void;
-  emptyText: string;
+  items: MentionOption[]
+  highlightIndex: number
+  onSelect: (item: MentionOption) => void
+  onHighlight: (index: number) => void
+  emptyText: string
 }) {
-  const listRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const list = listRef.current;
+    const list = listRef.current
 
-    if (!list) return;
+    if (!list) return
 
-    const highlighted = list.children[highlightIndex] as HTMLElement | undefined;
+    const highlighted = list.children[highlightIndex] as HTMLElement | undefined
 
-    highlighted?.scrollIntoView({ block: 'nearest' });
-  }, [highlightIndex]);
+    highlighted?.scrollIntoView({ block: 'nearest' })
+  }, [highlightIndex])
 
   if (items.length === 0) {
     return (
       <div className="py-4 text-center text-sm text-muted-foreground">
         {emptyText}
       </div>
-    );
+    )
   }
 
   return (
@@ -218,11 +230,14 @@ function MentionList({
           aria-selected={i === highlightIndex}
           className={cn(
             'flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none',
-            i === highlightIndex ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'
+            i === highlightIndex
+              ? 'bg-accent text-accent-foreground'
+              : 'hover:bg-accent/50',
           )}
-          onMouseDown={e => e.preventDefault()}
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => onSelect(item)}
-          onMouseEnter={() => onHighlight(i)}>
+          onMouseEnter={() => onHighlight(i)}
+        >
           {item.icon}
           <span className="truncate">{item.label}</span>
           {item.description && (
@@ -233,7 +248,7 @@ function MentionList({
         </button>
       ))}
     </div>
-  );
+  )
 }
 
 function HeaderSelector({
@@ -243,15 +258,15 @@ function HeaderSelector({
   popoverOpen,
   onPopoverOpenChange,
   onSelect,
-  locale
+  locale,
 }: {
-  field: SelectorFieldConfig;
-  selectedLabel: string | null;
-  color?: string;
-  popoverOpen: boolean;
-  onPopoverOpenChange: (open: boolean) => void;
-  onSelect: (id: string) => void;
-  locale?: UiI18nLocale;
+  field: SelectorFieldConfig
+  selectedLabel: string | null
+  color?: string
+  popoverOpen: boolean
+  onPopoverOpenChange: (open: boolean) => void
+  onSelect: (id: string) => void
+  locale?: UiI18nLocale
 }) {
   return (
     <Popover open={popoverOpen} onOpenChange={onPopoverOpenChange}>
@@ -261,23 +276,32 @@ function HeaderSelector({
             type="button"
             className={cn(
               'inline-flex max-w-48 items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium',
-              color ? undefined : 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100'
-            )}
-            style={color ? {
-              borderColor: `${color}33`,
-              backgroundColor: `${color}11`,
               color
-            } : undefined}>
+                ? undefined
+                : 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100',
+            )}
+            style={
+              color
+                ? {
+                    borderColor: `${color}33`,
+                    backgroundColor: `${color}11`,
+                    color,
+                  }
+                : undefined
+            }
+          >
             <span
               className="size-2 shrink-0 rounded-sm"
-              style={{ backgroundColor: color ?? 'rgb(59,130,246)' }} />
+              style={{ backgroundColor: color ?? 'rgb(59,130,246)' }}
+            />
             <span className="truncate">{selectedLabel}</span>
             <ChevronsUpDownIcon className="size-3 shrink-0 opacity-50" />
           </button>
         ) : (
           <button
             type="button"
-            className="text-sm text-muted-foreground hover:text-foreground">
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
             {field.placeholder ?? field.label}
           </button>
         )}
@@ -285,22 +309,27 @@ function HeaderSelector({
       <PopoverContent className="w-60 p-0" align="start">
         <Command>
           <CommandInput
-            placeholder={field.searchPlaceholder ?? tUi(locale, 'searchPlaceholder')} />
+            placeholder={
+              field.searchPlaceholder ?? tUi(locale, 'searchPlaceholder')
+            }
+          />
           <CommandList>
             <CommandEmpty>
               {field.emptyText ?? tUi(locale, 'crdNoResults')}
             </CommandEmpty>
             <CommandGroup>
-              {field.options.map(opt => (
+              {field.options.map((opt) => (
                 <CommandItem
                   key={opt.id}
                   value={opt.label}
-                  onSelect={() => onSelect(opt.id)}>
+                  onSelect={() => onSelect(opt.id)}
+                >
                   <CheckIcon
                     className={cn(
                       'mr-2 size-4',
-                      field.value === opt.id ? 'opacity-100' : 'opacity-0'
-                    )} />
+                      field.value === opt.id ? 'opacity-100' : 'opacity-0',
+                    )}
+                  />
                   {opt.icon}
                   {opt.label}
                 </CommandItem>
@@ -310,7 +339,7 @@ function HeaderSelector({
         </Command>
       </PopoverContent>
     </Popover>
-  );
+  )
 }
 
 function FooterSelector({
@@ -319,14 +348,14 @@ function FooterSelector({
   popoverOpen,
   onPopoverOpenChange,
   onSelect,
-  locale
+  locale,
 }: {
-  field: SelectorFieldConfig;
-  selectedLabel: string | null;
-  popoverOpen: boolean;
-  onPopoverOpenChange: (open: boolean) => void;
-  onSelect: (id: string) => void;
-  locale?: UiI18nLocale;
+  field: SelectorFieldConfig
+  selectedLabel: string | null
+  popoverOpen: boolean
+  onPopoverOpenChange: (open: boolean) => void
+  onSelect: (id: string) => void
+  locale?: UiI18nLocale
 }) {
   return (
     <Popover open={popoverOpen} onOpenChange={onPopoverOpenChange}>
@@ -336,8 +365,9 @@ function FooterSelector({
           size="sm"
           className={cn(
             'gap-1.5 text-muted-foreground',
-            field.value && 'text-blue-600'
-          )}>
+            field.value && 'text-blue-600',
+          )}
+        >
           {field.icon}
           <span className="truncate">
             {selectedLabel ?? field.placeholder ?? field.label}
@@ -347,22 +377,27 @@ function FooterSelector({
       <PopoverContent className="w-60 p-0" align="start">
         <Command>
           <CommandInput
-            placeholder={field.searchPlaceholder ?? tUi(locale, 'searchPlaceholder')} />
+            placeholder={
+              field.searchPlaceholder ?? tUi(locale, 'searchPlaceholder')
+            }
+          />
           <CommandList>
             <CommandEmpty>
               {field.emptyText ?? tUi(locale, 'crdNoResults')}
             </CommandEmpty>
             <CommandGroup>
-              {field.options.map(opt => (
+              {field.options.map((opt) => (
                 <CommandItem
                   key={opt.id}
                   value={opt.label}
-                  onSelect={() => onSelect(opt.id)}>
+                  onSelect={() => onSelect(opt.id)}
+                >
                   <CheckIcon
                     className={cn(
                       'mr-2 size-4',
-                      field.value === opt.id ? 'opacity-100' : 'opacity-0'
-                    )} />
+                      field.value === opt.id ? 'opacity-100' : 'opacity-0',
+                    )}
+                  />
                   {opt.icon}
                   {opt.label}
                 </CommandItem>
@@ -372,7 +407,7 @@ function FooterSelector({
         </Command>
       </PopoverContent>
     </Popover>
-  );
+  )
 }
 
 export function CreateRecordDialog({
@@ -409,259 +444,263 @@ export function CreateRecordDialog({
   addDescriptionLabel,
   dialogTitle,
 
-  className
+  className,
 }: CreateRecordDialogProps) {
-
-  const [internalOpen, setInternalOpen] = useState(false);
-  const isControlled = controlledOpen !== undefined;
-  const open = isControlled ? controlledOpen : internalOpen;
+  const [internalOpen, setInternalOpen] = useState(false)
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : internalOpen
 
   const setOpen = useCallback(
     (v: boolean) => {
-      if (!isControlled) setInternalOpen(v);
-      controlledOnOpenChange?.(v);
+      if (!isControlled) setInternalOpen(v)
+      controlledOnOpenChange?.(v)
     },
-    [isControlled, controlledOnOpenChange]
-  );
+    [isControlled, controlledOnOpenChange],
+  )
 
-  const [subject, setSubject] = useState('');
-  const [description, setDescription] = useState('');
-  const [showDescription, setShowDescription] = useState(descriptionExpanded);
-  const [createMore, setCreateMore] = useState(false);
+  const [subject, setSubject] = useState('')
+  const [description, setDescription] = useState('')
+  const [showDescription, setShowDescription] = useState(descriptionExpanded)
+  const [createMore, setCreateMore] = useState(false)
 
-  const [fieldValues, setFieldValues] = useState<Record<string, string | null>>({});
-  const [toggleValues, setToggleValues] = useState<Record<string, boolean>>({});
+  const [fieldValues, setFieldValues] = useState<Record<string, string | null>>(
+    {},
+  )
+  const [toggleValues, setToggleValues] = useState<Record<string, boolean>>({})
 
-  const [popoverStates, setPopoverStates] = useState<Record<string, boolean>>({});
+  const [popoverStates, setPopoverStates] = useState<Record<string, boolean>>(
+    {},
+  )
 
-  const [trigger, setTrigger] = useState<TriggerState | null>(null);
-  const [mentions, setMentions] = useState<MentionSelection[]>([]);
+  const [trigger, setTrigger] = useState<TriggerState | null>(null)
+  const [mentions, setMentions] = useState<MentionSelection[]>([])
 
-  const subjectRef = useRef<HTMLInputElement>(null);
-  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const subjectRef = useRef<HTMLInputElement>(null)
+  const descriptionRef = useRef<HTMLTextAreaElement>(null)
 
-  const labels = useMemo(() => ({
-    save: saveLabel ?? tUi(locale, 'crdSave'),
-    cancel: cancelLabel ?? tUi(locale, 'crdCancel'),
-    createMore: createMoreLabel ?? tUi(locale, 'crdCreateMore'),
-    addDescription: addDescriptionLabel ?? tUi(locale, 'crdAddDescription'),
-    subjectPlaceholder: subjectPlaceholder ?? tUi(locale, 'crdSubjectPlaceholder'),
-    descriptionPlaceholder: descriptionPlaceholder ?? tUi(locale, 'crdDescriptionPlaceholder'),
-    dialogTitle: dialogTitle ?? tUi(locale, 'crdDialogTitle'),
-    noResults: tUi(locale, 'crdNoResults')
-  }), [
-    locale,
-    saveLabel,
-    cancelLabel,
-    createMoreLabel,
-    addDescriptionLabel,
-    subjectPlaceholder,
-    descriptionPlaceholder,
-    dialogTitle
-  ]);
+  const labels = useMemo(
+    () => ({
+      save: saveLabel ?? tUi(locale, 'crdSave'),
+      cancel: cancelLabel ?? tUi(locale, 'crdCancel'),
+      createMore: createMoreLabel ?? tUi(locale, 'crdCreateMore'),
+      addDescription: addDescriptionLabel ?? tUi(locale, 'crdAddDescription'),
+      subjectPlaceholder:
+        subjectPlaceholder ?? tUi(locale, 'crdSubjectPlaceholder'),
+      descriptionPlaceholder:
+        descriptionPlaceholder ?? tUi(locale, 'crdDescriptionPlaceholder'),
+      dialogTitle: dialogTitle ?? tUi(locale, 'crdDialogTitle'),
+      noResults: tUi(locale, 'crdNoResults'),
+    }),
+    [
+      locale,
+      saveLabel,
+      cancelLabel,
+      createMoreLabel,
+      addDescriptionLabel,
+      subjectPlaceholder,
+      descriptionPlaceholder,
+      dialogTitle,
+    ],
+  )
 
   const triggerChars = useMemo(
-    () => mentionTriggers.map(t => t.trigger),
-    [mentionTriggers]
-  );
+    () => mentionTriggers.map((t) => t.trigger),
+    [mentionTriggers],
+  )
 
   useEffect(() => {
     if (open) {
-      setSubject('');
-      setDescription('');
-      setShowDescription(descriptionExpanded);
-      setCreateMore(false);
-      setTrigger(null);
-      setMentions([]);
-      setPopoverStates({});
+      setSubject('')
+      setDescription('')
+      setShowDescription(descriptionExpanded)
+      setCreateMore(false)
+      setTrigger(null)
+      setMentions([])
+      setPopoverStates({})
 
-      const initialFields: Record<string, string | null> = {};
+      const initialFields: Record<string, string | null> = {}
 
       for (const f of [...headerFields, ...footerFields]) {
-        initialFields[f.key] = f.defaultValue ?? null;
+        initialFields[f.key] = f.defaultValue ?? null
       }
 
-      setFieldValues(initialFields);
+      setFieldValues(initialFields)
 
-      const initialToggles: Record<string, boolean> = {};
+      const initialToggles: Record<string, boolean> = {}
 
       for (const t of footerToggles) {
-        initialToggles[t.key] = t.defaultChecked ?? false;
+        initialToggles[t.key] = t.defaultChecked ?? false
       }
 
-      setToggleValues(initialToggles);
+      setToggleValues(initialToggles)
 
-      requestAnimationFrame(() => subjectRef.current?.focus());
+      requestAnimationFrame(() => subjectRef.current?.focus())
     }
-  }, [
-    open,
-    descriptionExpanded,
-    headerFields,
-    footerFields,
-    footerToggles
-  ]);
+  }, [open, descriptionExpanded, headerFields, footerFields, footerToggles])
 
   const setFieldValue = useCallback(
     (key: string, value: string | null) => {
       setFieldValues((prev) => {
-        const next = { ...prev, [key]: value };
+        const next = { ...prev, [key]: value }
 
-        const allFields = [...headerFields, ...footerFields];
-        const field = allFields.find(f => f.key === key);
+        const allFields = [...headerFields, ...footerFields]
+        const field = allFields.find((f) => f.key === key)
 
         if (field?.clearsFields) {
           for (const clearKey of field.clearsFields) {
-            next[clearKey] = null;
+            next[clearKey] = null
           }
         }
 
-        return next;
-      });
+        return next
+      })
     },
-    [headerFields, footerFields]
-  );
+    [headerFields, footerFields],
+  )
 
-  const setPopoverOpen = useCallback(
-    (key: string, isOpen: boolean) => {
-      setPopoverStates(prev => ({ ...prev, [key]: isOpen }));
-    },
-    []
-  );
+  const setPopoverOpen = useCallback((key: string, isOpen: boolean) => {
+    setPopoverStates((prev) => ({ ...prev, [key]: isOpen }))
+  }, [])
 
   const resolvedFieldLabels = useMemo(() => {
-    const result: Record<string, string | null> = {};
-    const allFields = [...headerFields, ...footerFields];
+    const result: Record<string, string | null> = {}
+    const allFields = [...headerFields, ...footerFields]
 
     for (const f of allFields) {
-      const selectedId = fieldValues[f.key];
+      const selectedId = fieldValues[f.key]
 
       if (!selectedId) {
-        result[f.key] = null;
-        continue;
+        result[f.key] = null
+        continue
       }
 
-      const opt = f.options.find(o => o.id === selectedId);
+      const opt = f.options.find((o) => o.id === selectedId)
 
-      result[f.key] = opt?.label ?? null;
+      result[f.key] = opt?.label ?? null
     }
 
-    return result;
-  }, [headerFields, footerFields, fieldValues]);
+    return result
+  }, [headerFields, footerFields, fieldValues])
 
   const mentionItems = useMemo<MentionOption[]>(() => {
-    if (!trigger) return [];
+    if (!trigger) return []
 
-    const config = mentionTriggers.find(t => t.trigger === trigger.trigger);
+    const config = mentionTriggers.find((t) => t.trigger === trigger.trigger)
 
-    if (!config) return [];
+    if (!config) return []
 
-    const search = trigger.search.toLowerCase();
+    const search = trigger.search.toLowerCase()
 
     return config.options
-      .filter(o => o.label.toLowerCase().includes(search))
-      .slice(0, 8);
-  }, [trigger, mentionTriggers]);
+      .filter((o) => o.label.toLowerCase().includes(search))
+      .slice(0, 8)
+  }, [trigger, mentionTriggers])
 
   const activeMentionConfig = useMemo(
-    () => trigger ? mentionTriggers.find(t => t.trigger === trigger.trigger) : null,
-    [trigger, mentionTriggers]
-  );
+    () =>
+      trigger
+        ? mentionTriggers.find((t) => t.trigger === trigger.trigger)
+        : null,
+    [trigger, mentionTriggers],
+  )
 
   const selectMentionItem = useCallback(
     (item: MentionOption) => {
-      if (!trigger) return;
+      if (!trigger) return
 
-      const { field, startIndex, search } = trigger;
+      const { field, startIndex, search } = trigger
 
       const removeTrigger = (prev: string) => {
-        const before = prev.slice(0, startIndex);
-        const after = prev.slice(startIndex + trigger.trigger.length + search.length);
+        const before = prev.slice(0, startIndex)
+        const after = prev.slice(
+          startIndex + trigger.trigger.length + search.length,
+        )
 
-        return before + after;
-      };
+        return before + after
+      }
 
-      if (field === 'subject') setSubject(removeTrigger);
-      else setDescription(removeTrigger);
+      if (field === 'subject') setSubject(removeTrigger)
+      else setDescription(removeTrigger)
 
       const selection: MentionSelection = {
         trigger: trigger.trigger,
         option: item,
-        field
-      };
+        field,
+      }
 
-      setMentions(prev => [...prev, selection]);
-      onMentionSelect?.(selection);
+      setMentions((prev) => [...prev, selection])
+      onMentionSelect?.(selection)
 
-      setTrigger(null);
+      setTrigger(null)
 
       requestAnimationFrame(() => {
-        if (field === 'subject') subjectRef.current?.focus();
-        else descriptionRef.current?.focus();
-      });
+        if (field === 'subject') subjectRef.current?.focus()
+        else descriptionRef.current?.focus()
+      })
     },
-    [trigger, onMentionSelect]
-  );
+    [trigger, onMentionSelect],
+  )
 
   const handleInputChange = useCallback(
     (value: string, cursorPos: number, field: 'subject' | 'description') => {
-      if (field === 'subject') setSubject(value);
-      else setDescription(value);
+      if (field === 'subject') setSubject(value)
+      else setDescription(value)
 
-      if (triggerChars.length === 0) return;
+      if (triggerChars.length === 0) return
 
-      const detected = detectTrigger(value, cursorPos, triggerChars);
+      const detected = detectTrigger(value, cursorPos, triggerChars)
 
       if (detected) {
         setTrigger({
           ...detected,
           field,
-          highlightIndex: 0
-        });
+          highlightIndex: 0,
+        })
       } else {
-        setTrigger(null);
+        setTrigger(null)
       }
     },
-    [triggerChars]
-  );
+    [triggerChars],
+  )
 
   const handleSave = useCallback(async () => {
-    if (!subject.trim() || isPending) return;
+    if (!subject.trim() || isPending) return
 
     const data: CreateRecordFormData = {
       subject: subject.trim(),
       description: description.trim(),
       fields: { ...fieldValues },
       toggles: { ...toggleValues },
-      mentions: [...mentions]
-    };
+      mentions: [...mentions],
+    }
 
-    await onSubmit(data);
+    await onSubmit(data)
 
     if (createMore) {
-      if (createMoreResetKeys.includes('subject')) setSubject('');
+      if (createMoreResetKeys.includes('subject')) setSubject('')
 
       if (createMoreResetKeys.includes('description')) {
-        setDescription('');
-        setShowDescription(descriptionExpanded);
+        setDescription('')
+        setShowDescription(descriptionExpanded)
       }
 
       setFieldValues((prev) => {
-        const next = { ...prev };
+        const next = { ...prev }
 
         for (const key of createMoreResetKeys) {
           if (key !== 'subject' && key !== 'description' && key in next) {
-            next[key] = null;
+            next[key] = null
           }
         }
 
-        return next;
-      });
+        return next
+      })
 
-      setMentions([]);
-      setTrigger(null);
-      requestAnimationFrame(() => subjectRef.current?.focus());
+      setMentions([])
+      setTrigger(null)
+      requestAnimationFrame(() => subjectRef.current?.focus())
     } else {
-      setOpen(false);
+      setOpen(false)
     }
   }, [
     subject,
@@ -674,88 +713,95 @@ export function CreateRecordDialog({
     createMoreResetKeys,
     descriptionExpanded,
     isPending,
-    setOpen
-  ]);
+    setOpen,
+  ])
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent, field: 'subject' | 'description') => {
       if (trigger && trigger.field === field) {
         if (e.key === 'ArrowDown') {
-          e.preventDefault();
-          setTrigger(prev => prev ? { ...prev, highlightIndex: Math.min(prev.highlightIndex + 1, mentionItems.length - 1) } : null);
+          e.preventDefault()
+          setTrigger((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  highlightIndex: Math.min(
+                    prev.highlightIndex + 1,
+                    mentionItems.length - 1,
+                  ),
+                }
+              : null,
+          )
 
-          return;
+          return
         }
 
         if (e.key === 'ArrowUp') {
-          e.preventDefault();
-          setTrigger(prev => prev ? { ...prev, highlightIndex: Math.max(prev.highlightIndex - 1, 0) } : null);
+          e.preventDefault()
+          setTrigger((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  highlightIndex: Math.max(prev.highlightIndex - 1, 0),
+                }
+              : null,
+          )
 
-          return;
+          return
         }
 
         if (e.key === 'Enter' && mentionItems.length > 0) {
-          e.preventDefault();
-          const item = mentionItems[trigger.highlightIndex];
+          e.preventDefault()
+          const item = mentionItems[trigger.highlightIndex]
 
-          if (item) selectMentionItem(item);
+          if (item) selectMentionItem(item)
 
-          return;
+          return
         }
 
         if (e.key === 'Escape') {
-          e.preventDefault();
-          e.stopPropagation();
-          setTrigger(null);
+          e.preventDefault()
+          e.stopPropagation()
+          setTrigger(null)
 
-          return;
+          return
         }
       }
 
       if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        handleSave();
+        e.preventDefault()
+        handleSave()
       }
     },
-    [
-      trigger,
-      mentionItems,
-      selectMentionItem,
-      handleSave
-    ]
-  );
+    [trigger, mentionItems, selectMentionItem, handleSave],
+  )
 
   const handleHeaderFieldSelect = useCallback(
     (fieldKey: string, id: string) => {
-      setFieldValue(fieldKey, id);
-      setPopoverOpen(fieldKey, false);
+      setFieldValue(fieldKey, id)
+      setPopoverOpen(fieldKey, false)
 
-      const field = headerFields.find(f => f.key === fieldKey);
+      const field = headerFields.find((f) => f.key === fieldKey)
 
-      field?.onChange?.(id);
+      field?.onChange?.(id)
     },
-    [headerFields, setFieldValue, setPopoverOpen]
-  );
+    [headerFields, setFieldValue, setPopoverOpen],
+  )
 
   const handleFooterFieldSelect = useCallback(
     (fieldKey: string, id: string) => {
-      const currentValue = fieldValues[fieldKey];
-      const newValue = currentValue === id ? null : id;
+      const currentValue = fieldValues[fieldKey]
+      const newValue = currentValue === id ? null : id
 
-      setFieldValue(fieldKey, newValue);
-      setPopoverOpen(fieldKey, false);
+      setFieldValue(fieldKey, newValue)
+      setPopoverOpen(fieldKey, false)
 
-      const field = footerFields.find(f => f.key === fieldKey);
+      const field = footerFields.find((f) => f.key === fieldKey)
 
-      field?.onChange?.(newValue);
+      field?.onChange?.(newValue)
     },
-    [
-      fieldValues,
-      footerFields,
-      setFieldValue,
-      setPopoverOpen
-    ]
-  );
+    [fieldValues, footerFields, setFieldValue, setPopoverOpen],
+  )
 
   const renderMentionPopover = useCallback(
     () => (
@@ -764,14 +810,20 @@ export function CreateRecordDialog({
         className="bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-60 origin-(--radix-popover-content-transform-origin) rounded-md border p-1 shadow-md outline-hidden"
         align="start"
         sideOffset={8}
-        onOpenAutoFocus={e => e.preventDefault()}
-        onCloseAutoFocus={e => e.preventDefault()}>
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        onCloseAutoFocus={(e) => e.preventDefault()}
+      >
         <MentionList
           items={mentionItems}
           highlightIndex={trigger?.highlightIndex ?? 0}
           onSelect={selectMentionItem}
-          onHighlight={idx => setTrigger(prev => (prev ? { ...prev, highlightIndex: idx } : null))}
-          emptyText={activeMentionConfig?.emptyText ?? labels.noResults} />
+          onHighlight={(idx) =>
+            setTrigger((prev) =>
+              prev ? { ...prev, highlightIndex: idx } : null,
+            )
+          }
+          emptyText={activeMentionConfig?.emptyText ?? labels.noResults}
+        />
       </PopoverPrimitive.Content>
     ),
     [
@@ -779,9 +831,9 @@ export function CreateRecordDialog({
       trigger?.highlightIndex,
       selectMentionItem,
       activeMentionConfig,
-      labels.noResults
-    ]
-  );
+      labels.noResults,
+    ],
+  )
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -791,17 +843,18 @@ export function CreateRecordDialog({
         className={cn('sm:max-w-3xl gap-0 p-0', className)}
         onEscapeKeyDown={(e) => {
           if (trigger) {
-            e.preventDefault();
-            setTrigger(null);
+            e.preventDefault()
+            setTrigger(null)
           }
         }}
         onPointerDownOutside={(e) => {
-          const target = e.target as HTMLElement;
+          const target = e.target as HTMLElement
 
           if (target.closest('[data-slot="popover-content"]')) {
-            e.preventDefault();
+            e.preventDefault()
           }
-        }}>
+        }}
+      >
         <DialogTitle className="sr-only">{labels.dialogTitle}</DialogTitle>
         <DialogDescription className="sr-only">
           {labels.dialogTitle}
@@ -823,8 +876,8 @@ export function CreateRecordDialog({
 
           {headerFields.map((field, i) => {
             const selectedOpt = field.options.find(
-              o => o.id === (fieldValues[field.key] ?? field.value)
-            );
+              (o) => o.id === (fieldValues[field.key] ?? field.value),
+            )
 
             return (
               <span key={field.key} className="contents">
@@ -832,15 +885,21 @@ export function CreateRecordDialog({
                   <span className="text-sm text-muted-foreground">/</span>
                 )}
                 <HeaderSelector
-                  field={{ ...field, value: fieldValues[field.key] ?? field.value ?? null }}
+                  field={{
+                    ...field,
+                    value: fieldValues[field.key] ?? field.value ?? null,
+                  }}
                   selectedLabel={resolvedFieldLabels[field.key] ?? null}
                   color={selectedOpt?.color}
                   popoverOpen={popoverStates[field.key] ?? false}
-                  onPopoverOpenChange={isOpen => setPopoverOpen(field.key, isOpen)}
-                  onSelect={id => handleHeaderFieldSelect(field.key, id)}
-                  locale={locale} />
+                  onPopoverOpenChange={(isOpen) =>
+                    setPopoverOpen(field.key, isOpen)
+                  }
+                  onSelect={(id) => handleHeaderFieldSelect(field.key, id)}
+                  locale={locale}
+                />
               </span>
-            );
+            )
           })}
 
           <DialogClose className="ml-auto rounded-sm opacity-70 transition-opacity hover:opacity-100">
@@ -856,7 +915,9 @@ export function CreateRecordDialog({
           {/* Subject input + AI Actions */}
           <div className="flex items-start gap-2">
             <div className="relative flex-1">
-              <PopoverPrimitive.Root open={!!trigger && trigger.field === 'subject'}>
+              <PopoverPrimitive.Root
+                open={!!trigger && trigger.field === 'subject'}
+              >
                 <PopoverPrimitive.Anchor asChild>
                   <input
                     ref={subjectRef}
@@ -868,10 +929,11 @@ export function CreateRecordDialog({
                       handleInputChange(
                         e.target.value,
                         e.target.selectionStart ?? 0,
-                        'subject'
-                      );
+                        'subject',
+                      )
                     }}
-                    onKeyDown={e => handleKeyDown(e, 'subject')} />
+                    onKeyDown={(e) => handleKeyDown(e, 'subject')}
+                  />
                 </PopoverPrimitive.Anchor>
                 {renderMentionPopover()}
               </PopoverPrimitive.Root>
@@ -883,18 +945,20 @@ export function CreateRecordDialog({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="shrink-0 gap-1.5 border-blue-200 text-blue-600 hover:bg-blue-50">
+                    className="shrink-0 gap-1.5 border-blue-200 text-blue-600 hover:bg-blue-50"
+                  >
                     <SparklesIcon className="size-3.5" />
                     AI
                     <ChevronDownIcon className="size-3" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  {aiActions.map(action => (
+                  {aiActions.map((action) => (
                     <DropdownMenuItem
                       key={action.id}
                       disabled={action.disabled}
-                      onClick={() => action.onAction({ subject, description })}>
+                      onClick={() => action.onAction({ subject, description })}
+                    >
                       {action.icon}
                       {action.label}
                     </DropdownMenuItem>
@@ -908,7 +972,9 @@ export function CreateRecordDialog({
           <div className="mt-3">
             {showDescription ? (
               <div className="border-t pt-3">
-                <PopoverPrimitive.Root open={!!trigger && trigger.field === 'description'}>
+                <PopoverPrimitive.Root
+                  open={!!trigger && trigger.field === 'description'}
+                >
                   <PopoverPrimitive.Anchor asChild>
                     <textarea
                       ref={descriptionRef}
@@ -919,10 +985,11 @@ export function CreateRecordDialog({
                         handleInputChange(
                           e.target.value,
                           e.target.selectionStart ?? 0,
-                          'description'
-                        );
+                          'description',
+                        )
                       }}
-                      onKeyDown={e => handleKeyDown(e, 'description')} />
+                      onKeyDown={(e) => handleKeyDown(e, 'description')}
+                    />
                   </PopoverPrimitive.Anchor>
                   {renderMentionPopover()}
                 </PopoverPrimitive.Root>
@@ -932,9 +999,10 @@ export function CreateRecordDialog({
                 type="button"
                 className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700"
                 onClick={() => {
-                  setShowDescription(true);
-                  requestAnimationFrame(() => descriptionRef.current?.focus());
-                }}>
+                  setShowDescription(true)
+                  requestAnimationFrame(() => descriptionRef.current?.focus())
+                }}
+              >
                 <PlusIcon className="size-3.5" />
                 {labels.addDescription}
               </button>
@@ -946,25 +1014,38 @@ export function CreateRecordDialog({
         <div className="flex flex-col gap-2 border-t px-4 py-2.5 sm:flex-row sm:items-center sm:gap-1">
           {/* Metadata selectors + toggles row */}
           <div className="flex items-center gap-1">
-            {footerFields.map(field => (
+            {footerFields.map((field) => (
               <FooterSelector
                 key={field.key}
-                field={{ ...field, value: fieldValues[field.key] ?? field.value ?? null }}
+                field={{
+                  ...field,
+                  value: fieldValues[field.key] ?? field.value ?? null,
+                }}
                 selectedLabel={resolvedFieldLabels[field.key] ?? null}
                 popoverOpen={popoverStates[field.key] ?? false}
-                onPopoverOpenChange={isOpen => setPopoverOpen(field.key, isOpen)}
-                onSelect={id => handleFooterFieldSelect(field.key, id)}
-                locale={locale} />
+                onPopoverOpenChange={(isOpen) =>
+                  setPopoverOpen(field.key, isOpen)
+                }
+                onSelect={(id) => handleFooterFieldSelect(field.key, id)}
+                locale={locale}
+              />
             ))}
 
-            {footerToggles.map(toggle => (
+            {footerToggles.map((toggle) => (
               <label
                 key={toggle.key}
-                className="flex cursor-pointer items-center gap-1.5 text-sm text-muted-foreground">
+                className="flex cursor-pointer items-center gap-1.5 text-sm text-muted-foreground"
+              >
                 <Switch
                   checked={toggleValues[toggle.key] ?? false}
-                  onCheckedChange={checked => setToggleValues(prev => ({ ...prev, [toggle.key]: checked }))}
-                  className="scale-75" />
+                  onCheckedChange={(checked) =>
+                    setToggleValues((prev) => ({
+                      ...prev,
+                      [toggle.key]: checked,
+                    }))
+                  }
+                  className="scale-75"
+                />
                 {toggle.label}
               </label>
             ))}
@@ -977,7 +1058,8 @@ export function CreateRecordDialog({
                 <Switch
                   checked={createMore}
                   onCheckedChange={setCreateMore}
-                  className="scale-75" />
+                  className="scale-75"
+                />
                 {labels.createMore}
               </label>
             )}
@@ -986,7 +1068,8 @@ export function CreateRecordDialog({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setOpen(false)}>
+                onClick={() => setOpen(false)}
+              >
                 {labels.cancel}
                 <kbd className="ml-1.5 pointer-events-none hidden rounded border bg-muted px-1 text-[10px] text-muted-foreground sm:inline-block">
                   ESC
@@ -997,7 +1080,8 @@ export function CreateRecordDialog({
                 size="sm"
                 onClick={handleSave}
                 disabled={isPending || !subject.trim()}
-                className="bg-blue-600 hover:bg-blue-700">
+                className="bg-blue-600 hover:bg-blue-700"
+              >
                 {labels.save}
                 <kbd className="ml-1.5 pointer-events-none hidden rounded border border-white/20 bg-white/10 px-1 text-[10px] sm:inline-block">
                   ⌘↵
@@ -1008,7 +1092,7 @@ export function CreateRecordDialog({
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
 export type {
@@ -1020,5 +1104,5 @@ export type {
   MentionTriggerConfig,
   MentionOption,
   MentionSelection,
-  AiAction
-};
+  AiAction,
+}

@@ -1,4 +1,21 @@
+## Companies & Contacts Workspace
+
+The companies and contacts routes now use the Docyrus data-grid runtime for list views with saved views, Docyrus-backed search/filtering, inline change saving, and toolbar import/export actions. Alternate layouts remain where implemented.
+
+## Products & Sales Orders
+
+The products and sales orders routes now follow the shared Docyrus grid pattern with saved views, card/list browsing, inline change saving, and toolbar import/export actions so catalog workflows behave consistently with the CRM workspaces.
+
+## Leads & Deals Pipeline
+
+The leads and deals routes now use the shared Docyrus grid runtime for list tabs and the Docyrus kanban hook for board tabs, with saved views, inline updates, and toolbar import/export actions.
+
+## Tasks, Activities & Calendar
+
+The tasks route now uses the shared Docyrus grid runtime with saved views, inline updates, and toolbar import/export actions so task management behaves consistently with the other CRM workspaces.
+
 <!-- docyrus-knowledge:auto:begin -->
+
 # Features
 
 This file groups the user-facing surface area that the repo currently exposes so future knowledge updates can attach behavior changes to stable feature buckets.
@@ -40,13 +57,13 @@ This section highlights the files that appear to integrate with Docyrus APIs or 
 
 Features tracked in the project plan.
 
-- Runtime, Auth & Developer Tooling
-- Executive Dashboard
-- Leads & Deals Pipeline
-- Companies & Contacts Workspace
-- Tasks, Activities & Calendar
-- Products & Sales Orders
-- Inbox, Email & Notes
-- Reports & Analytics
+- **Runtime, Auth & Developer Tooling** — The shared app shell, Docyrus authentication, query runtime, command infrastructure, and developer tooling at the root of the SPA.
+- **Executive Dashboard** — Home screen metrics and operational summaries for deals, leads, tasks, and recent pipeline activity.
+- **Leads & Deals Pipeline** — Pipeline views, detail flows, conversion paths, and related revenue records for opportunity management.
+- **Companies & Contacts Workspace** — Company and contact directories with relationship-aware detail pages and cross-linked CRM context.
+- **Tasks, Activities & Calendar** — Execution workflows for follow-ups, meetings, and time-based coordination across the sales team.
+- **Products & Sales Orders** — Catalog management and order-building workflows that connect products, pricing, and customer orders.
+- **Inbox, Email & Notes** — Communication views and lightweight note-taking that keep account context and follow-up history visible.
+- **Reports & Analytics** — Pipeline, lead, productivity, and order analytics used by managers and reps to track sales performance.
 
 <!-- docyrus-project-plan:features:end -->

@@ -1,32 +1,42 @@
 // @ts-nocheck
-import type {
-  TTableCellElement,
-  TTableElement,
-  TTableRowElement,
-} from 'platejs'
+import * as React from 'react'
+
+import type { TTableCellElement, TTableElement } from 'platejs'
 import type { SlateElementProps } from 'platejs/static'
 
+import { BaseTablePlugin } from '@platejs/table'
 import { SlateElement } from 'platejs/static'
 
 import { cn } from '@/lib/utils'
 
-export function TableElementStatic(props: SlateElementProps<TTableElement>) {
+export function TableElementStatic({
+  children,
+  ...props
+}: SlateElementProps<TTableElement>) {
+  const { disableMarginLeft } = props.editor.getOptions(BaseTablePlugin)
+  const marginLeft = disableMarginLeft ? 0 : props.element.marginLeft
+
   return (
-    <SlateElement {...props} className="overflow-x-auto py-5">
-      <div className="relative w-fit">
-        <table className="mr-0 ml-px table h-px table-fixed border-collapse">
-          <tbody className="min-w-full">{props.children}</tbody>
+    <SlateElement
+      {...props}
+      className="overflow-x-auto py-5"
+      style={{ paddingLeft: marginLeft }}
+    >
+      <div className="group/table relative w-fit">
+        <table
+          className="mr-0 ml-px table h-px table-fixed border-collapse"
+          style={{ borderCollapse: 'collapse', width: '100%' }}
+        >
+          <tbody className="min-w-full">{children}</tbody>
         </table>
       </div>
     </SlateElement>
   )
 }
 
-export function TableRowElementStatic(
-  props: SlateElementProps<TTableRowElement>,
-) {
+export function TableRowElementStatic(props: SlateElementProps) {
   return (
-    <SlateElement {...props} as="tr">
+    <SlateElement {...props} as="tr" className="h-full">
       {props.children}
     </SlateElement>
   )
@@ -38,37 +48,47 @@ export function TableCellElementStatic({
 }: SlateElementProps<TTableCellElement> & {
   isHeader?: boolean
 }) {
-  const { element } = props
+  const { editor, element } = props
+  const { api } = editor.getPlugin(BaseTablePlugin)
+
+  const { minHeight, width } = api.table.getCellSize({ element })
+  const borders = api.table.getCellBorders({ element })
 
   return (
     <SlateElement
       {...props}
       as={isHeader ? 'th' : 'td'}
       className={cn(
-        'h-full overflow-visible border-none p-0',
+        'h-full overflow-visible border-none bg-background p-0',
         element.background ? 'bg-(--cellBackground)' : 'bg-background',
-        isHeader && 'text-left *:m-0',
+        isHeader && 'text-left font-normal *:m-0',
         'before:size-full',
         "before:absolute before:box-border before:select-none before:content-['']",
-        'before:border-b before:border-b-border',
-        'before:border-r before:border-r-border',
-        'before:border-l before:border-l-border',
-        'before:border-t before:border-t-border',
+        borders &&
+          cn(
+            borders.bottom?.size && 'before:border-b before:border-b-border',
+            borders.right?.size && 'before:border-r before:border-r-border',
+            borders.left?.size && 'before:border-l before:border-l-border',
+            borders.top?.size && 'before:border-t before:border-t-border',
+          ),
       )}
       style={
         {
           '--cellBackground': element.background,
-          maxWidth: (element as any).width || 240,
-          minWidth: (element as any).width || 120,
+          maxWidth: width || 240,
+          minWidth: width || 120,
         } as React.CSSProperties
       }
       attributes={{
         ...props.attributes,
-        colSpan: (element as any).colSpan,
-        rowSpan: (element as any).rowSpan,
+        colSpan: api.table.getColSpan(element),
+        rowSpan: api.table.getRowSpan(element),
       }}
     >
-      <div className="relative z-20 box-border h-full px-3 py-2">
+      <div
+        className="relative z-20 box-border h-full px-4 py-2"
+        style={{ minHeight }}
+      >
         {props.children}
       </div>
     </SlateElement>
@@ -76,7 +96,7 @@ export function TableCellElementStatic({
 }
 
 export function TableCellHeaderElementStatic(
-  props: React.ComponentProps<typeof TableCellElementStatic>,
+  props: SlateElementProps<TTableCellElement>,
 ) {
   return <TableCellElementStatic {...props} isHeader />
 }

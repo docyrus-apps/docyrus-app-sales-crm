@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { BaseTocPlugin } from '@platejs/toc';
+import { BaseTocPlugin } from '@platejs/toc'
 
-import { TocElementStatic } from '@/components/editor/ui/toc-node-static';
+import { TocElementStatic } from '@/components/editor/ui/toc-node-static'
 
-export const BaseTocKit = [BaseTocPlugin.withComponent(TocElementStatic)];
+export const BaseTocKit = [BaseTocPlugin.withComponent(TocElementStatic)]

@@ -1,61 +1,76 @@
 // @ts-nocheck
-import type { TListElement } from 'platejs'
-import type { SlateElementProps } from 'platejs/static'
+import * as React from 'react'
+
+import type { RenderStaticNodeWrapper, TListElement } from 'platejs'
+import type { SlateRenderElementProps } from 'platejs/static'
 
 import { isOrderedList } from '@platejs/list'
+import { CheckIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 
 const config: Record<
   string,
   {
-    Li: React.FC<SlateElementProps>
-    Marker: React.FC<SlateElementProps>
+    Li: React.FC<SlateRenderElementProps>
+    Marker: React.FC<SlateRenderElementProps>
   }
 > = {
   todo: {
-    Li: TodoLi,
-    Marker: TodoMarker,
+    Li: TodoLiStatic,
+    Marker: TodoMarkerStatic,
   },
 }
 
-export const BlockListStatic = (props: any) => {
+export const BlockListStatic: RenderStaticNodeWrapper = (props) => {
   if (!props.element.listStyleType) return
 
-  return (props: any) => <List {...props} />
+  return (props) => <List {...props} />
 }
 
-function List(props: SlateElementProps) {
-  const { listStart, listStyleType } = props.element as TListElement
+function List(props: SlateRenderElementProps) {
+  const { indent, listStart, listStyleType } = props.element as TListElement & {
+    indent?: number
+  }
   const { Li, Marker } = config[listStyleType] ?? {}
-  const ListTag = isOrderedList(props.element) ? 'ol' : 'ul'
+  const List = isOrderedList(props.element) ? 'ol' : 'ul'
+
+  const marginLeft = indent ? `${indent * 24}px` : undefined
 
   return (
-    <ListTag
+    <List
       className="relative m-0 p-0"
-      style={{ listStyleType }}
+      style={{ listStyleType, marginLeft }}
       start={listStart}
     >
       {Marker && <Marker {...props} />}
       {Li ? <Li {...props} /> : <li>{props.children}</li>}
-    </ListTag>
+    </List>
   )
 }
 
-function TodoMarker(props: SlateElementProps) {
+function TodoMarkerStatic(props: SlateRenderElementProps) {
+  const checked = props.element.checked as boolean
+
   return (
     <div contentEditable={false}>
-      <input
-        type="checkbox"
-        className={cn('-left-6 absolute top-1 pointer-events-none')}
-        checked={props.element.checked as boolean}
-        readOnly
-      />
+      <button
+        className={cn(
+          'peer -left-6 pointer-events-none absolute top-1 size-4 shrink-0 rounded-sm border border-primary bg-background ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground',
+          props.className,
+        )}
+        data-state={checked ? 'checked' : 'unchecked'}
+        type="button"
+      >
+        <div className={cn('flex items-center justify-center text-current')}>
+          {checked && <CheckIcon className="size-4" />}
+        </div>
+      </button>
     </div>
   )
 }
 
-function TodoLi(props: SlateElementProps) {
+function TodoLiStatic(props: SlateRenderElementProps) {
   return (
     <li
       className={cn(

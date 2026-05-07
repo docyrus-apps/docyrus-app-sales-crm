@@ -1,91 +1,92 @@
-'use client';
+'use client'
 
-import {
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useState
-} from 'react';
+import { type ReactNode, useCallback, useEffect, useState } from 'react'
 
-import { SearchIcon } from 'lucide-react';
+import { SearchIcon } from 'lucide-react'
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger
-} from '@/components/ui/popover';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { DocyrusIcon } from '@/components/docyrus/docyrus-icon';
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 
-import { useTeamChatContext } from './team-chat-context';
-import { type EntitySearchResult, type LinkedEntity } from './types';
+import { useTeamChatContext } from './team-chat-context'
+import { type EntitySearchResult, type LinkedEntity } from './types'
 
 interface EntityMentionInputProps {
-  onSelect: (entity: LinkedEntity) => void;
-  children: ReactNode;
+  onSelect: (entity: LinkedEntity) => void
+  children: ReactNode
 }
 
-export function EntityMentionInput({ onSelect, children }: EntityMentionInputProps) {
-  const { dataSources, onSearchEntity } = useTeamChatContext();
-  const [open, setOpen] = useState(false);
-  const [selectedDataSourceId, setSelectedDataSourceId] = useState<string | null>(null);
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Array<EntitySearchResult>>([]);
-  const [isSearching, setIsSearching] = useState(false);
+export function EntityMentionInput({
+  onSelect,
+  children,
+}: EntityMentionInputProps) {
+  const { dataSources, onSearchEntity } = useTeamChatContext()
+  const [open, setOpen] = useState(false)
+  const [selectedDataSourceId, setSelectedDataSourceId] = useState<
+    string | null
+  >(null)
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<Array<EntitySearchResult>>([])
+  const [isSearching, setIsSearching] = useState(false)
 
   useEffect(() => {
     if (!selectedDataSourceId || !query.trim() || !onSearchEntity) {
-      setResults([]);
+      setResults([])
 
-      return;
+      return
     }
 
-    setIsSearching(true);
+    setIsSearching(true)
     const timer = setTimeout(async () => {
-      const searchResults = await onSearchEntity(selectedDataSourceId, query);
+      const searchResults = await onSearchEntity(selectedDataSourceId, query)
 
-      setResults(searchResults);
-      setIsSearching(false);
-    }, 300);
+      setResults(searchResults)
+      setIsSearching(false)
+    }, 300)
 
-    return () => clearTimeout(timer);
-  }, [selectedDataSourceId, query, onSearchEntity]);
+    return () => clearTimeout(timer)
+  }, [selectedDataSourceId, query, onSearchEntity])
 
-  const handleSelectEntity = useCallback((result: EntitySearchResult) => {
-    if (!selectedDataSourceId || !dataSources) return;
-    const ds = dataSources.find(d => d.id === selectedDataSourceId);
+  const handleSelectEntity = useCallback(
+    (result: EntitySearchResult) => {
+      if (!selectedDataSourceId || !dataSources) return
+      const ds = dataSources.find((d) => d.id === selectedDataSourceId)
 
-    if (!ds) return;
+      if (!ds) return
 
-    onSelect({
-      id: `${selectedDataSourceId}-${result.record_id}`,
-      data_source_id: selectedDataSourceId,
-      data_source_name: ds.name,
-      record_id: result.record_id,
-      display_value: result.display_value,
-      icon: result.icon ?? ds.icon
-    });
-    setOpen(false);
-    setSelectedDataSourceId(null);
-    setQuery('');
-    setResults([]);
-  }, [selectedDataSourceId, dataSources, onSelect]);
+      onSelect({
+        id: `${selectedDataSourceId}-${result.record_id}`,
+        data_source_id: selectedDataSourceId,
+        data_source_name: ds.name,
+        record_id: result.record_id,
+        display_value: result.display_value,
+        icon: result.icon ?? ds.icon,
+      })
+      setOpen(false)
+      setSelectedDataSourceId(null)
+      setQuery('')
+      setResults([])
+    },
+    [selectedDataSourceId, dataSources, onSelect],
+  )
 
   const handleBack = useCallback(() => {
-    setSelectedDataSourceId(null);
-    setQuery('');
-    setResults([]);
-  }, []);
+    setSelectedDataSourceId(null)
+    setQuery('')
+    setResults([])
+  }, [])
 
-  if (!dataSources || dataSources.length === 0 || !onSearchEntity) return null;
+  if (!dataSources || dataSources.length === 0 || !onSearchEntity) return null
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        {children}
-      </PopoverTrigger>
+      <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent className="w-64 p-0" align="start">
         {!selectedDataSourceId ? (
           <div className="p-2">
@@ -93,13 +94,14 @@ export function EntityMentionInput({ onSelect, children }: EntityMentionInputPro
               Select data source
             </p>
             <ScrollArea className="max-h-48">
-              {dataSources.map(ds => (
+              {dataSources.map((ds) => (
                 <Button
                   key={ds.id}
                   variant="ghost"
                   size="sm"
                   className="w-full justify-start gap-2"
-                  onClick={() => setSelectedDataSourceId(ds.id)}>
+                  onClick={() => setSelectedDataSourceId(ds.id)}
+                >
                   {ds.icon && (
                     <DocyrusIcon icon={ds.icon} className="size-4 shrink-0" />
                   )}
@@ -115,11 +117,12 @@ export function EntityMentionInput({ onSelect, children }: EntityMentionInputPro
                 variant="ghost"
                 size="sm"
                 className="h-6 px-1 text-xs"
-                onClick={handleBack}>
+                onClick={handleBack}
+              >
                 &larr;
               </Button>
               <span className="text-xs font-medium text-muted-foreground">
-                {dataSources.find(d => d.id === selectedDataSourceId)?.name}
+                {dataSources.find((d) => d.id === selectedDataSourceId)?.name}
               </span>
             </div>
             <div className="relative mb-2">
@@ -127,8 +130,9 @@ export function EntityMentionInput({ onSelect, children }: EntityMentionInputPro
               <Input
                 placeholder="Search entity..."
                 value={query}
-                onChange={e => setQuery(e.target.value)}
-                className="h-8 pl-7 text-sm" />
+                onChange={(e) => setQuery(e.target.value)}
+                className="h-8 pl-7 text-sm"
+              />
             </div>
             <ScrollArea className="max-h-48">
               {isSearching ? (
@@ -140,15 +144,19 @@ export function EntityMentionInput({ onSelect, children }: EntityMentionInputPro
                   No results
                 </p>
               ) : (
-                results.map(result => (
+                results.map((result) => (
                   <Button
                     key={result.record_id}
                     variant="ghost"
                     size="sm"
                     className="w-full justify-start gap-2 text-sm"
-                    onClick={() => handleSelectEntity(result)}>
+                    onClick={() => handleSelectEntity(result)}
+                  >
                     {result.icon && (
-                      <DocyrusIcon icon={result.icon} className="size-3.5 shrink-0" />
+                      <DocyrusIcon
+                        icon={result.icon}
+                        className="size-3.5 shrink-0"
+                      />
                     )}
                     <span className="truncate">{result.display_value}</span>
                   </Button>
@@ -159,5 +167,5 @@ export function EntityMentionInput({ onSelect, children }: EntityMentionInputPro
         )}
       </PopoverContent>
     </Popover>
-  );
+  )
 }

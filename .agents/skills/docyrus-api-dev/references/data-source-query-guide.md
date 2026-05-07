@@ -55,52 +55,52 @@ The full `ZodSelectQueryPayload` type:
 ```typescript
 interface ISelectQueryParams {
   // --- Identity ---
-  dataSourceId?: string | null;
-  dataSourceFullSlug?: string | null;
-  connectionId?: string | null;
-  connectionAccountId?: string | null;
-  parentRecord?: Record<string, any> | null;
+  dataSourceId?: string | null
+  dataSourceFullSlug?: string | null
+  connectionId?: string | null
+  connectionAccountId?: string | null
+  parentRecord?: Record<string, any> | null
 
   // --- Filtering ---
-  filters?: IQueryFilterGroup | null;
-  filterKeyword?: string | null;
+  filters?: IQueryFilterGroup | null
+  filterKeyword?: string | null
 
   // --- Column Selection ---
-  columns?: string | null;
-  distinctColumns?: string[] | null;
+  columns?: string | null
+  distinctColumns?: string[] | null
 
   // --- Computed Columns ---
-  formulas?: Record<string, ISelectQueryFormula> | null;
+  formulas?: Record<string, ISelectQueryFormula> | null
 
   // --- Aggregation ---
-  calculations?: ISelectQueryCalculationRule[] | null;
-  groupSummaries?: boolean;
+  calculations?: ISelectQueryCalculationRule[] | null
+  groupSummaries?: boolean
 
   // --- Sorting ---
-  orderBy?: string | ISelectQueryOrderBy | ISelectQueryOrderBy[];
+  orderBy?: string | ISelectQueryOrderBy | ISelectQueryOrderBy[]
 
   // --- Pagination ---
-  limit?: number;   // default: 100
-  offset?: number;  // default: 0
+  limit?: number // default: 100
+  offset?: number // default: 0
 
   // --- Expansion ---
-  expandTypes?: ("user" | "enum" | "relation")[] | null;
-  expand?: string[] | null;
+  expandTypes?: ('user' | 'enum' | 'relation')[] | null
+  expand?: string[] | null
 
   // --- Misc ---
-  queryMode?: "OLTP" | "OLAP" | "EXPORT";
-  fullCount?: boolean;
-  cursorDateStart?: string | null;
-  cursorDateEnd?: string | null;
+  queryMode?: 'OLTP' | 'OLAP' | 'EXPORT'
+  fullCount?: boolean
+  cursorDateStart?: string | null
+  cursorDateEnd?: string | null
 
   // --- Advanced ---
-  childQueries?: ISelectQueryChildQueryParams[] | null;
+  childQueries?: ISelectQueryChildQueryParams[] | null
   pivot?: {
-    matrix: ISelectPivotMatrixQuery[];
-    hideEmptyRows?: boolean;
-    orderBy?: string | ISelectQueryOrderBy | ISelectQueryOrderBy[];
-    limit?: number;
-  } | null;
+    matrix: ISelectPivotMatrixQuery[]
+    hideEmptyRows?: boolean
+    orderBy?: string | ISelectQueryOrderBy | ISelectQueryOrderBy[]
+    limit?: number
+  } | null
 }
 ```
 
@@ -110,13 +110,13 @@ interface ISelectQueryParams {
 
 These parameters identify which data source to query.
 
-| Parameter | Type | Description |
-|---|---|---|
-| `dataSourceId` | `string \| null` | UUID of the data source |
-| `dataSourceFullSlug` | `string \| null` | Full slug in `appSlug_slug` format (e.g. `crm_account`) |
-| `connectionId` | `string \| null` | Connection ID for external data sources |
-| `connectionAccountId` | `string \| null` | Account ID for the connection |
-| `parentRecord` | `object \| null` | Parent record context for relation/formula resolution |
+| Parameter             | Type             | Description                                             |
+| --------------------- | ---------------- | ------------------------------------------------------- |
+| `dataSourceId`        | `string \| null` | UUID of the data source                                 |
+| `dataSourceFullSlug`  | `string \| null` | Full slug in `appSlug_slug` format (e.g. `crm_account`) |
+| `connectionId`        | `string \| null` | Connection ID for external data sources                 |
+| `connectionAccountId` | `string \| null` | Account ID for the connection                           |
+| `parentRecord`        | `object \| null` | Parent record context for relation/formula resolution   |
 
 > **Note:** You need either `dataSourceId` or `dataSourceFullSlug` to identify the target data source.
 
@@ -231,16 +231,16 @@ Use the `@` symbol with special date formulas to format date intervals. These ar
 
 **Format:** `<formula>@<date_or_datetime_field>`
 
-| Formula | Description | Example |
-| ------- | ----------- | ------- |
-| `hours_of_today` | Groups by hour for today | `hours_of_today@created_on` |
-| `days_of_week` | Groups by day for the current week | `days_of_week@created_on` |
-| `days_of_month` | Groups by day for the current month | `days_of_month@created_on` |
-| `weeks_of_month` | Groups by week number for the current month | `weeks_of_month@created_on` |
-| `weeks_of_quarter` | Groups by week number for the current quarter | `weeks_of_quarter@created_on` |
-| `months_of_quarter` | Groups by month for the current quarter | `months_of_quarter@created_on` |
-| `months_of_year` | Groups by month for the current year (YYYY-MM) | `months_of_year@created_on` |
-| `quarters_of_year` | Groups by quarter for the current year (YYYY-Q) | `quarters_of_year@created_on` |
+| Formula             | Description                                     | Example                        |
+| ------------------- | ----------------------------------------------- | ------------------------------ |
+| `hours_of_today`    | Groups by hour for today                        | `hours_of_today@created_on`    |
+| `days_of_week`      | Groups by day for the current week              | `days_of_week@created_on`      |
+| `days_of_month`     | Groups by day for the current month             | `days_of_month@created_on`     |
+| `weeks_of_month`    | Groups by week number for the current month     | `weeks_of_month@created_on`    |
+| `weeks_of_quarter`  | Groups by week number for the current quarter   | `weeks_of_quarter@created_on`  |
+| `months_of_quarter` | Groups by month for the current quarter         | `months_of_quarter@created_on` |
+| `months_of_year`    | Groups by month for the current year (YYYY-MM)  | `months_of_year@created_on`    |
+| `quarters_of_year`  | Groups by quarter for the current year (YYYY-Q) | `quarters_of_year@created_on`  |
 
 ### Column Syntax with `to_char` Function
 
@@ -266,35 +266,35 @@ Filters use a recursive group structure with combinators (`and` / `or`) and rule
 
 ```typescript
 interface IQueryFilterGroup {
-  rules: (IQueryFilterRule | IQueryFilterGroup)[];
-  combinator?: "and" | "or";  // default: "and"
-  not?: boolean;               // negate the entire group
+  rules: (IQueryFilterRule | IQueryFilterGroup)[]
+  combinator?: 'and' | 'or' // default: "and"
+  not?: boolean // negate the entire group
 }
 
 interface IQueryFilterRule {
-  field?: string;
-  operator: IFilterOperator;
-  value?: any;
-  filterType?: QueryFilterType | null;
+  field?: string
+  operator: IFilterOperator
+  value?: any
+  filterType?: QueryFilterType | null
 }
 ```
 
 ### Filter Types (for value casting)
 
-| FilterType | Use For |
-|---|---|
-| `NUMERIC` | Number fields |
-| `ALPHA` | Text/string fields |
-| `BOOL` | Boolean fields |
-| `DATE` | Date fields |
-| `TIME` | Time fields |
-| `DATETIME` | DateTime fields |
+| FilterType    | Use For             |
+| ------------- | ------------------- |
+| `NUMERIC`     | Number fields       |
+| `ALPHA`       | Text/string fields  |
+| `BOOL`        | Boolean fields      |
+| `DATE`        | Date fields         |
+| `TIME`        | Time fields         |
+| `DATETIME`    | DateTime fields     |
 | `MULTISELECT` | Multi-select fields |
-| `LIST` | List fields |
-| `RELATION` | Relation fields |
-| `OWNER` | Owner/user fields |
-| `FOLLOWER` | Follower fields |
-| `APPROVAL` | Approval fields |
+| `LIST`        | List fields         |
+| `RELATION`    | Relation fields     |
+| `OWNER`       | Owner/user fields   |
+| `FOLLOWER`    | Follower fields     |
+| `APPROVAL`    | Approval fields     |
 
 ### Example: Basic AND Filter
 
@@ -580,13 +580,13 @@ Use calculations to group and aggregate data.
 
 ```typescript
 interface ISelectQueryCalculationRule {
-  func: string;        // "count" | "sum" | "avg" | "min" | "max" | "jsonb_agg" | "json_agg" | "array_agg"
-  field: string;       // field/column to aggregate
-  name?: string;       // alias for the result column
-  isDistinct?: boolean; // aggregate unique values only (default: false)
-  minValue?: number;   // aggregate values greater than this
-  maxValue?: number;   // aggregate values less than this
-  numberType?: "bigint" | "int" | "decimal"; // result number type
+  func: string // "count" | "sum" | "avg" | "min" | "max" | "jsonb_agg" | "json_agg" | "array_agg"
+  field: string // field/column to aggregate
+  name?: string // alias for the result column
+  isDistinct?: boolean // aggregate unique values only (default: false)
+  minValue?: number // aggregate values greater than this
+  maxValue?: number // aggregate values less than this
+  numberType?: 'bigint' | 'int' | 'decimal' // result number type
 }
 ```
 
@@ -723,8 +723,8 @@ AST-based formula that compiles to an inline SQL expression. Uses a block tree w
 
 ```typescript
 interface IQueryBlockInlineFormulaSchema {
-  alias?: string;
-  inputs: IQueryFormulaBlock[];  // exactly 1 root block
+  alias?: string
+  inputs: IQueryFormulaBlock[] // exactly 1 root block
 }
 ```
 
@@ -735,14 +735,16 @@ interface IQueryBlockInlineFormulaSchema {
   "columns": "id, name, basic_formula",
   "formulas": {
     "basic_formula": {
-      "inputs": [{
-        "kind": "math",
-        "op": "/",
-        "inputs": [
-          { "kind": "column", "name": "balance" },
-          { "kind": "literal", "literal": 100 }
-        ]
-      }]
+      "inputs": [
+        {
+          "kind": "math",
+          "op": "/",
+          "inputs": [
+            { "kind": "column", "name": "balance" },
+            { "kind": "literal", "literal": 100 }
+          ]
+        }
+      ]
     }
   }
 }
@@ -756,11 +758,11 @@ Compiles to a correlated subquery against a child data source.
 
 ```typescript
 interface IQueryBlockSubqueryFormulaSchema {
-  alias?: string;
-  inputs: IQueryFormulaBlock[];
-  from: string;                           // child table full slug
-  with: string | Record<string, string>;  // join condition(s)
-  filters?: IQueryFilterGroup;
+  alias?: string
+  inputs: IQueryFormulaBlock[]
+  from: string // child table full slug
+  with: string | Record<string, string> // join condition(s)
+  filters?: IQueryFilterGroup
 }
 ```
 
@@ -773,11 +775,13 @@ interface IQueryBlockSubqueryFormulaSchema {
     "children_count": {
       "from": "app_child_table",
       "with": "parent_field",
-      "inputs": [{
-        "kind": "aggregate",
-        "name": "count",
-        "inputs": []
-      }]
+      "inputs": [
+        {
+          "kind": "aggregate",
+          "name": "count",
+          "inputs": []
+        }
+      ]
     }
   }
 }
@@ -794,15 +798,15 @@ interface IQueryBlockSubqueryFormulaSchema {
       "from": "app_child_table",
       "with": "parent_id",
       "filters": {
-        "rules": [
-          { "field": "status", "operator": "=", "value": "active" }
-        ]
+        "rules": [{ "field": "status", "operator": "=", "value": "active" }]
       },
-      "inputs": [{
-        "kind": "aggregate",
-        "name": "count",
-        "inputs": []
-      }]
+      "inputs": [
+        {
+          "kind": "aggregate",
+          "name": "count",
+          "inputs": []
+        }
+      ]
     }
   }
 }
@@ -819,11 +823,13 @@ interface IQueryBlockSubqueryFormulaSchema {
         "child_field1": "parent_field1",
         "child_field2": "parent_field2"
       },
-      "inputs": [{
-        "kind": "aggregate",
-        "name": "sum",
-        "inputs": [{ "kind": "column", "name": "amount" }]
-      }]
+      "inputs": [
+        {
+          "kind": "aggregate",
+          "name": "sum",
+          "inputs": [{ "kind": "column", "name": "amount" }]
+        }
+      ]
     }
   }
 }
@@ -839,12 +845,14 @@ Block subquery formulas can also be wrapped under an `expression` key:
     "children_count": {
       "from": "app_child_table",
       "with": "parent_field",
-      "inputs": [{
-        "kind": "aggregate",
-        "name": "count",
-        "distinct": true,
-        "inputs": [{ "kind": "column", "name": "id" }]
-      }]
+      "inputs": [
+        {
+          "kind": "aggregate",
+          "name": "count",
+          "distinct": true,
+          "inputs": [{ "kind": "column", "name": "id" }]
+        }
+      ]
     }
   }
 }
@@ -953,15 +961,17 @@ Requires at least 2 operands. For 3+: `((a op b) op c)`.
 ```json
 {
   "kind": "case",
-  "cases": [{
-    "when": {
-      "kind": "compare",
-      "op": ">",
-      "left": { "kind": "column", "name": "price" },
-      "right": { "kind": "literal", "literal": 100 }
-    },
-    "then": { "kind": "literal", "literal": "expensive" }
-  }],
+  "cases": [
+    {
+      "when": {
+        "kind": "compare",
+        "op": ">",
+        "left": { "kind": "column", "name": "price" },
+        "right": { "kind": "literal", "literal": 100 }
+      },
+      "then": { "kind": "literal", "literal": "expensive" }
+    }
+  ],
   "else": { "kind": "literal", "literal": "cheap" }
 }
 ```
@@ -991,12 +1001,14 @@ Operators: `=`, `!=`, `<>`, `>`, `<`, `>=`, `<=`, `like`, `ilike`, `in`, `not in
   "op": "and",
   "inputs": [
     {
-      "kind": "compare", "op": ">",
+      "kind": "compare",
+      "op": ">",
       "left": { "kind": "column", "name": "price" },
       "right": { "kind": "literal", "literal": 100 }
     },
     {
-      "kind": "compare", "op": "ilike",
+      "kind": "compare",
+      "op": "ilike",
       "left": { "kind": "column", "name": "name" },
       "right": { "kind": "literal", "literal": "%pro%" }
     }
@@ -1037,25 +1049,29 @@ Any block can include a `tz` property:
   "formulas": {
     "rounded_total": {
       "alias": "rounded_total",
-      "inputs": [{
-        "kind": "function",
-        "name": "round",
-        "inputs": [
-          {
-            "kind": "aggregate",
-            "name": "sum",
-            "inputs": [{
-              "kind": "math",
-              "op": "*",
+      "inputs": [
+        {
+          "kind": "function",
+          "name": "round",
+          "inputs": [
+            {
+              "kind": "aggregate",
+              "name": "sum",
               "inputs": [
-                { "kind": "column", "name": "quantity" },
-                { "kind": "column", "name": "unit_price" }
+                {
+                  "kind": "math",
+                  "op": "*",
+                  "inputs": [
+                    { "kind": "column", "name": "quantity" },
+                    { "kind": "column", "name": "unit_price" }
+                  ]
+                }
               ]
-            }]
-          },
-          { "kind": "literal", "literal": 2 }
-        ]
-      }]
+            },
+            { "kind": "literal", "literal": 2 }
+          ]
+        }
+      ]
     }
   }
 }
@@ -1069,29 +1085,35 @@ Any block can include a `tz` property:
 {
   "formulas": {
     "category": {
-      "inputs": [{
-        "kind": "case",
-        "cases": [{
-          "when": {
-            "kind": "boolean",
-            "op": "and",
-            "inputs": [
-              {
-                "kind": "compare", "op": ">",
-                "left": { "kind": "column", "name": "price" },
-                "right": { "kind": "literal", "literal": 100 }
+      "inputs": [
+        {
+          "kind": "case",
+          "cases": [
+            {
+              "when": {
+                "kind": "boolean",
+                "op": "and",
+                "inputs": [
+                  {
+                    "kind": "compare",
+                    "op": ">",
+                    "left": { "kind": "column", "name": "price" },
+                    "right": { "kind": "literal", "literal": 100 }
+                  },
+                  {
+                    "kind": "compare",
+                    "op": "ilike",
+                    "left": { "kind": "column", "name": "name" },
+                    "right": { "kind": "literal", "literal": "%pro%" }
+                  }
+                ]
               },
-              {
-                "kind": "compare", "op": "ilike",
-                "left": { "kind": "column", "name": "name" },
-                "right": { "kind": "literal", "literal": "%pro%" }
-              }
-            ]
-          },
-          "then": { "kind": "literal", "literal": "premium" }
-        }],
-        "else": { "kind": "literal", "literal": "standard" }
-      }]
+              "then": { "kind": "literal", "literal": "premium" }
+            }
+          ],
+          "else": { "kind": "literal", "literal": "standard" }
+        }
+      ]
     }
   }
 }
@@ -1103,14 +1125,16 @@ Any block can include a `tz` property:
 {
   "formulas": {
     "safe_desc": {
-      "inputs": [{
-        "kind": "function",
-        "name": "coalesce",
-        "inputs": [
-          { "kind": "column", "name": "description" },
-          { "kind": "literal", "literal": "No description" }
-        ]
-      }]
+      "inputs": [
+        {
+          "kind": "function",
+          "name": "coalesce",
+          "inputs": [
+            { "kind": "column", "name": "description" },
+            { "kind": "literal", "literal": "No description" }
+          ]
+        }
+      ]
     }
   }
 }
@@ -1122,14 +1146,16 @@ Any block can include a `tz` property:
 {
   "formulas": {
     "local_time": {
-      "inputs": [{
-        "kind": "function",
-        "name": "to_char",
-        "inputs": [
-          { "kind": "function", "name": "now", "tz": "UTC" },
-          { "kind": "literal", "literal": "YYYY-MM-DD HH24:MI:SS" }
-        ]
-      }]
+      "inputs": [
+        {
+          "kind": "function",
+          "name": "to_char",
+          "inputs": [
+            { "kind": "function", "name": "now", "tz": "UTC" },
+            { "kind": "literal", "literal": "YYYY-MM-DD HH24:MI:SS" }
+          ]
+        }
+      ]
     }
   }
 }
@@ -1149,24 +1175,24 @@ Use `pivot` to perform advanced cross-tab grouping queries with aggregations. Ea
 
 ```typescript
 interface IPivot {
-  matrix: ISelectPivotMatrixQuery[];
-  hideEmptyRows?: boolean;
-  orderBy?: string | ISelectQueryOrderBy | ISelectQueryOrderBy[];
-  limit?: number;
+  matrix: ISelectPivotMatrixQuery[]
+  hideEmptyRows?: boolean
+  orderBy?: string | ISelectQueryOrderBy | ISelectQueryOrderBy[]
+  limit?: number
 }
 
 interface ISelectPivotMatrixQuery {
-  using: string;      // field in main query to join the CTE on
-  columns: string;    // columns to select (supports alias, spread, functions)
-  spread?: boolean;   // spread jsonb columns as separate columns
-  filters?: IQueryFilterGroup;
-  limit?: number;
+  using: string // field in main query to join the CTE on
+  columns: string // columns to select (supports alias, spread, functions)
+  spread?: boolean // spread jsonb columns as separate columns
+  filters?: IQueryFilterGroup
+  limit?: number
   dateRange?: {
-    interval: "day" | "week" | "month" | "year" | "hour" | "minute" | "second";
-    increment?: number;   // number of intervals to increment (default: 1)
-    min: string;          // minimum datetime value (ISO format)
-    max: string;          // maximum datetime value (ISO format)
-  };
+    interval: 'day' | 'week' | 'month' | 'year' | 'hour' | 'minute' | 'second'
+    increment?: number // number of intervals to increment (default: 1)
+    min: string // minimum datetime value (ISO format)
+    max: string // maximum datetime value (ISO format)
+  }
 }
 ```
 
@@ -1270,23 +1296,23 @@ interface ISelectPivotMatrixQuery {
 
 ### Date Range Intervals
 
-| Interval | Description |
-|---|---|
-| `day` | Generate one row per day |
-| `week` | Generate one row per week |
-| `month` | Generate one row per month |
-| `year` | Generate one row per year |
-| `hour` | Generate one row per hour |
+| Interval | Description                 |
+| -------- | --------------------------- |
+| `day`    | Generate one row per day    |
+| `week`   | Generate one row per week   |
+| `month`  | Generate one row per month  |
+| `year`   | Generate one row per year   |
+| `hour`   | Generate one row per hour   |
 | `minute` | Generate one row per minute |
 | `second` | Generate one row per second |
 
 ### Pivot Options
 
-| Option | Type | Description |
-|---|---|---|
-| `hideEmptyRows` | `boolean` | Don't include rows where no matching data exists |
-| `orderBy` | `string \| object \| array` | Sort the pivot results |
-| `limit` | `number` | Maximum number of pivot result rows (default: 1000) |
+| Option          | Type                        | Description                                         |
+| --------------- | --------------------------- | --------------------------------------------------- |
+| `hideEmptyRows` | `boolean`                   | Don't include rows where no matching data exists    |
+| `orderBy`       | `string \| object \| array` | Sort the pivot results                              |
+| `limit`         | `number`                    | Maximum number of pivot result rows (default: 1000) |
 
 ---
 
@@ -1300,14 +1326,14 @@ Use `childQueries` to fetch related records from a child data source as a nested
 
 ```typescript
 interface ISelectQueryChildQueryParams {
-  alias: string;                    // alias for the child query
-  from: string;                    // child data source slug in "appSlug_slug" format
-  using: string;                   // field in the child DS that references the parent record
-  columns?: string | null;         // comma-separated columns to select from child
-  filters?: IQueryFilterGroup;     // optional filters on child records
-  calculations?: ISelectQueryCalculationRule[]; // optional aggregations
-  orderBy?: string | ISelectQueryOrderBy | ISelectQueryOrderBy[];
-  limit?: number;                  // max child records per parent (default: 100)
+  alias: string // alias for the child query
+  from: string // child data source slug in "appSlug_slug" format
+  using: string // field in the child DS that references the parent record
+  columns?: string | null // comma-separated columns to select from child
+  filters?: IQueryFilterGroup // optional filters on child records
+  calculations?: ISelectQueryCalculationRule[] // optional aggregations
+  orderBy?: string | ISelectQueryOrderBy | ISelectQueryOrderBy[]
+  limit?: number // max child records per parent (default: 100)
 }
 ```
 
@@ -1339,10 +1365,7 @@ interface ISelectQueryChildQueryParams {
   {
     "id": "uuid",
     "name": "Client Name",
-    "matters": [
-      { "name": "Matter 1" },
-      { "name": "Matter 2" }
-    ]
+    "matters": [{ "name": "Matter 1" }, { "name": "Matter 2" }]
   }
 ]
 ```
@@ -1368,9 +1391,7 @@ interface ISelectQueryChildQueryParams {
       "orderBy": "order_date DESC",
       "limit": 5,
       "filters": {
-        "rules": [
-          { "field": "order_date", "operator": "last_30_days" }
-        ]
+        "rules": [{ "field": "order_date", "operator": "last_30_days" }]
       }
     }
   ]
@@ -1431,11 +1452,11 @@ List of specific field slugs to expand. Expanded fields return their full object
 **Parameter:** `queryMode` — `"OLTP" | "OLAP" | "EXPORT"`
 **Default:** `"OLTP"`
 
-| Mode | Description |
-|---|---|
-| `OLTP` | Standard transactional queries. Default. Lower limits for interactive use. |
-| `OLAP` | Analytical queries. Allows larger result sets. |
-| `EXPORT` | Export mode. Highest limits for bulk data extraction. |
+| Mode     | Description                                                                |
+| -------- | -------------------------------------------------------------------------- |
+| `OLTP`   | Standard transactional queries. Default. Lower limits for interactive use. |
+| `OLAP`   | Analytical queries. Allows larger result sets.                             |
+| `EXPORT` | Export mode. Highest limits for bulk data extraction.                      |
 
 ---
 
@@ -1487,10 +1508,10 @@ When `true`, returns the total count of records matching the filters using a win
 
 ## Cursor-Based Sync
 
-| Parameter | Type | Description |
-|---|---|---|
+| Parameter         | Type             | Description                             |
+| ----------------- | ---------------- | --------------------------------------- |
 | `cursorDateStart` | `string \| null` | ISO datetime cursor start for data sync |
-| `cursorDateEnd` | `string \| null` | ISO datetime cursor end for data sync |
+| `cursorDateEnd`   | `string \| null` | ISO datetime cursor end for data sync   |
 
 Used for incremental data synchronization, fetching only records modified within the cursor window.
 
@@ -1507,136 +1528,136 @@ Used for incremental data synchronization, fetching only records modified within
 
 ### Basic Comparison
 
-| Operator | Description | Value Type |
-|---|---|---|
-| `=` | Equals | any |
-| `!=` | Not equals | any |
-| `<>` | Not equals (alias) | any |
-| `>` | Greater than | number/date |
-| `<` | Less than | number/date |
-| `>=` | Greater than or equal | number/date |
-| `<=` | Less than or equal | number/date |
-| `between` | Between two values | `[min, max]` |
+| Operator  | Description           | Value Type   |
+| --------- | --------------------- | ------------ |
+| `=`       | Equals                | any          |
+| `!=`      | Not equals            | any          |
+| `<>`      | Not equals (alias)    | any          |
+| `>`       | Greater than          | number/date  |
+| `<`       | Less than             | number/date  |
+| `>=`      | Greater than or equal | number/date  |
+| `<=`      | Less than or equal    | number/date  |
+| `between` | Between two values    | `[min, max]` |
 
 ### Text Search
 
-| Operator | Description | Value Type |
-|---|---|---|
-| `like` | Pattern match (case-sensitive) | string with `%` wildcards |
-| `not like` | Negated pattern match | string with `%` wildcards |
-| `starts with` | Starts with value | string |
-| `ends with` | Ends with value | string |
+| Operator      | Description                    | Value Type                |
+| ------------- | ------------------------------ | ------------------------- |
+| `like`        | Pattern match (case-sensitive) | string with `%` wildcards |
+| `not like`    | Negated pattern match          | string with `%` wildcards |
+| `starts with` | Starts with value              | string                    |
+| `ends with`   | Ends with value                | string                    |
 
 ### Collection
 
-| Operator | Description | Value Type |
-|---|---|---|
-| `in` | Value is in list | array |
-| `not in` | Value is not in list | array |
-| `not_in` | Alias for `not in` | array |
-| `exists` | Record exists | — |
-| `contains any` | Contains any of the values | array |
-| `contains all` | Contains all of the values | array |
-| `not contains` | Does not contain | any |
+| Operator       | Description                | Value Type |
+| -------------- | -------------------------- | ---------- |
+| `in`           | Value is in list           | array      |
+| `not in`       | Value is not in list       | array      |
+| `not_in`       | Alias for `not in`         | array      |
+| `exists`       | Record exists              | —          |
+| `contains any` | Contains any of the values | array      |
+| `contains all` | Contains all of the values | array      |
+| `not contains` | Does not contain           | any        |
 
 ### Null/Empty Checks
 
-| Operator | Description | Value Type |
-|---|---|---|
-| `is` | Is value | any |
-| `is not` | Is not value | any |
-| `empty` | Field is empty/null | — |
-| `not empty` | Field is not empty/null | — |
-| `null` | Field is null | — |
-| `not null` | Field is not null | — |
+| Operator    | Description             | Value Type |
+| ----------- | ----------------------- | ---------- |
+| `is`        | Is value                | any        |
+| `is not`    | Is not value            | any        |
+| `empty`     | Field is empty/null     | —          |
+| `not empty` | Field is not empty/null | —          |
+| `null`      | Field is null           | —          |
+| `not null`  | Field is not null       | —          |
 
 ### Boolean
 
-| Operator | Description | Value Type |
-|---|---|---|
-| `true` | Field is true | — |
-| `false` | Field is false | — |
+| Operator | Description    | Value Type |
+| -------- | -------------- | ---------- |
+| `true`   | Field is true  | —          |
+| `false`  | Field is false | —          |
 
 ### User-Related
 
-| Operator | Description |
-|---|---|
-| `active_user` | Field equals the current logged-in user |
-| `not_active_user` | Field does not equal the current user |
-| `in_active_user_scope` | Field is within active user's scope |
-| `not_in_active_user_scope` | Field is outside active user's scope |
-| `in_role` | User has specified role |
-| `not_in_role` | User does not have specified role |
-| `in_team` | User is in specified team |
-| `not_in_team` | User is not in specified team |
-| `in_active_user_team` | User is in active user's team |
-| `not_in_active_user_team` | User is not in active user's team |
-| `in_unit` | User is in specified org unit |
-| `not_in_unit` | User is not in specified org unit |
-| `in_sub_unit` | User is in sub-unit |
-| `not_in_sub_unit` | User is not in sub-unit |
+| Operator                   | Description                             |
+| -------------------------- | --------------------------------------- |
+| `active_user`              | Field equals the current logged-in user |
+| `not_active_user`          | Field does not equal the current user   |
+| `in_active_user_scope`     | Field is within active user's scope     |
+| `not_in_active_user_scope` | Field is outside active user's scope    |
+| `in_role`                  | User has specified role                 |
+| `not_in_role`              | User does not have specified role       |
+| `in_team`                  | User is in specified team               |
+| `not_in_team`              | User is not in specified team           |
+| `in_active_user_team`      | User is in active user's team           |
+| `not_in_active_user_team`  | User is not in active user's team       |
+| `in_unit`                  | User is in specified org unit           |
+| `not_in_unit`              | User is not in specified org unit       |
+| `in_sub_unit`              | User is in sub-unit                     |
+| `not_in_sub_unit`          | User is not in sub-unit                 |
 
 ### Record Sharing
 
-| Operator | Description |
-|---|---|
+| Operator       | Description                          |
+| -------------- | ------------------------------------ |
 | `shared_to_me` | Record is shared to the current user |
 
 ### Follower-Related
 
-| Operator | Description |
-|---|---|
-| `contains_active_user` | Followers contain the active user |
-| `not_contains_active_user` | Followers do not contain the active user |
+| Operator                              | Description                                      |
+| ------------------------------------- | ------------------------------------------------ |
+| `contains_active_user`                | Followers contain the active user                |
+| `not_contains_active_user`            | Followers do not contain the active user         |
 | `contains_member_of_active_user_team` | Followers contain a member of active user's team |
 
 ### Date Shortcuts
 
-| Operator | Description |
-|---|---|
-| `today` | Is today |
-| `tomorrow` | Is tomorrow |
-| `yesterday` | Is yesterday |
-| `last_7_days` | Within last 7 days |
-| `last_15_days` | Within last 15 days |
-| `last_30_days` | Within last 30 days |
-| `last_60_days` | Within last 60 days |
-| `last_90_days` | Within last 90 days |
-| `last_120_days` | Within last 120 days |
-| `next_7_days` | Within next 7 days |
-| `next_15_days` | Within next 15 days |
-| `next_30_days` | Within next 30 days |
-| `next_60_days` | Within next 60 days |
-| `next_90_days` | Within next 90 days |
-| `next_120_days` | Within next 120 days |
-| `last_week` | During last week |
-| `this_week` | During this week |
-| `next_week` | During next week |
-| `last_month` | During last month |
-| `this_month` | During this month |
-| `next_month` | During next month |
-| `before_today` | Before today |
-| `after_today` | After today |
-| `last_year` | During last year |
-| `this_year` | During this year |
-| `next_year` | During next year |
-| `first_quarter` | During Q1 of current year |
+| Operator         | Description               |
+| ---------------- | ------------------------- |
+| `today`          | Is today                  |
+| `tomorrow`       | Is tomorrow               |
+| `yesterday`      | Is yesterday              |
+| `last_7_days`    | Within last 7 days        |
+| `last_15_days`   | Within last 15 days       |
+| `last_30_days`   | Within last 30 days       |
+| `last_60_days`   | Within last 60 days       |
+| `last_90_days`   | Within last 90 days       |
+| `last_120_days`  | Within last 120 days      |
+| `next_7_days`    | Within next 7 days        |
+| `next_15_days`   | Within next 15 days       |
+| `next_30_days`   | Within next 30 days       |
+| `next_60_days`   | Within next 60 days       |
+| `next_90_days`   | Within next 90 days       |
+| `next_120_days`  | Within next 120 days      |
+| `last_week`      | During last week          |
+| `this_week`      | During this week          |
+| `next_week`      | During next week          |
+| `last_month`     | During last month         |
+| `this_month`     | During this month         |
+| `next_month`     | During next month         |
+| `before_today`   | Before today              |
+| `after_today`    | After today               |
+| `last_year`      | During last year          |
+| `this_year`      | During this year          |
+| `next_year`      | During next year          |
+| `first_quarter`  | During Q1 of current year |
 | `second_quarter` | During Q2 of current year |
-| `third_quarter` | During Q3 of current year |
+| `third_quarter`  | During Q3 of current year |
 | `fourth_quarter` | During Q4 of current year |
-| `last_3_months` | Within last 3 months |
-| `last_6_months` | Within last 6 months |
+| `last_3_months`  | Within last 3 months      |
+| `last_6_months`  | Within last 6 months      |
 
 ### Dynamic Date Operators (require value)
 
-| Operator | Value | Description |
-|---|---|---|
-| `x_days_ago` | number | Exactly X days ago |
-| `x_days_later` | number | Exactly X days later |
+| Operator             | Value  | Description            |
+| -------------------- | ------ | ---------------------- |
+| `x_days_ago`         | number | Exactly X days ago     |
+| `x_days_later`       | number | Exactly X days later   |
 | `before_last_x_days` | number | Before the last X days |
-| `in_last_x_days` | number | Within the last X days |
-| `after_last_x_days` | number | After the last X days |
-| `in_next_x_days` | number | Within the next X days |
+| `in_last_x_days`     | number | Within the last X days |
+| `after_last_x_days`  | number | After the last X days  |
+| `in_next_x_days`     | number | Within the next X days |
 
 ---
 
@@ -1644,14 +1665,14 @@ Used for incremental data synchronization, fetching only records modified within
 
 ### Postgres Functions
 
-| Category | Functions |
-|---|---|
-| **String** | `length`, `lower`, `upper`, `substr`, `replace`, `concat`, `trim`, `ltrim`, `rtrim`, `btrim`, `split_part`, `initcap`, `reverse`, `strpos`, `lpad`, `rpad` |
-| **Number** | `abs`, `ceil`, `floor`, `round`, `sqrt`, `power`, `mod`, `gcd`, `lcm`, `exp`, `ln`, `log`, `log10`, `log1p`, `pi`, `sign`, `width_bucket`, `trunc`, `greatest`, `least` |
-| **Date/Time** | `now`, `age`, `clock_timestamp`, `date_part`, `date_trunc`, `extract`, `isfinite`, `justify_days`, `justify_hours`, `make_date`, `make_time`, `make_timestamp`, `make_timestamptz`, `timeofday`, `to_timestamp`, `to_char`, `to_date`, `to_time` |
-| **Utility** | `coalesce` |
-| **JSON/JSONB** | `jsonb_array_length`, `jsonb_extract_path`, `jsonb_extract_path_text`, `jsonb_object_keys`, `jsonb_build_object`, `json_build_object`, `jsonb_agg`, `json_agg`, `array_agg`, `array_to_json`, `row_to_json` |
-| **Internal** | `noselect`, `anyvalue` |
+| Category       | Functions                                                                                                                                                                                                                                        |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **String**     | `length`, `lower`, `upper`, `substr`, `replace`, `concat`, `trim`, `ltrim`, `rtrim`, `btrim`, `split_part`, `initcap`, `reverse`, `strpos`, `lpad`, `rpad`                                                                                       |
+| **Number**     | `abs`, `ceil`, `floor`, `round`, `sqrt`, `power`, `mod`, `gcd`, `lcm`, `exp`, `ln`, `log`, `log10`, `log1p`, `pi`, `sign`, `width_bucket`, `trunc`, `greatest`, `least`                                                                          |
+| **Date/Time**  | `now`, `age`, `clock_timestamp`, `date_part`, `date_trunc`, `extract`, `isfinite`, `justify_days`, `justify_hours`, `make_date`, `make_time`, `make_timestamp`, `make_timestamptz`, `timeofday`, `to_timestamp`, `to_char`, `to_date`, `to_time` |
+| **Utility**    | `coalesce`                                                                                                                                                                                                                                       |
+| **JSON/JSONB** | `jsonb_array_length`, `jsonb_extract_path`, `jsonb_extract_path_text`, `jsonb_object_keys`, `jsonb_build_object`, `json_build_object`, `jsonb_agg`, `json_agg`, `array_agg`, `array_to_json`, `row_to_json`                                      |
+| **Internal**   | `noselect`, `anyvalue`                                                                                                                                                                                                                           |
 
 ### Postgres Literals (used as raw SQL)
 
@@ -1663,15 +1684,15 @@ Used for incremental data synchronization, fetching only records modified within
 
 Supported aggregate functions:
 
-| Aggregate | Description |
-|---|---|
-| `count` | Count of rows/values |
-| `sum` | Sum of values |
-| `avg` | Average of values |
-| `min` | Minimum value |
-| `max` | Maximum value |
-| `jsonb_agg` | Aggregate values as JSONB array |
-| `json_agg` | Aggregate values as JSON array |
+| Aggregate   | Description                          |
+| ----------- | ------------------------------------ |
+| `count`     | Count of rows/values                 |
+| `sum`       | Sum of values                        |
+| `avg`       | Average of values                    |
+| `min`       | Minimum value                        |
+| `max`       | Maximum value                        |
+| `jsonb_agg` | Aggregate values as JSONB array      |
+| `json_agg`  | Aggregate values as JSON array       |
 | `array_agg` | Aggregate values as PostgreSQL array |
 
 ---
@@ -1780,9 +1801,7 @@ Monthly sales report grouped by category:
       "orderBy": "order_date DESC",
       "limit": 10,
       "filters": {
-        "rules": [
-          { "field": "order_date", "operator": "last_90_days" }
-        ]
+        "rules": [{ "field": "order_date", "operator": "last_90_days" }]
       }
     },
     {
@@ -1793,16 +1812,12 @@ Monthly sales report grouped by category:
       "orderBy": "created_on DESC",
       "limit": 5,
       "filters": {
-        "rules": [
-          { "field": "status", "operator": "!=", "value": "closed" }
-        ]
+        "rules": [{ "field": "status", "operator": "!=", "value": "closed" }]
       }
     }
   ],
   "filters": {
-    "rules": [
-      { "field": "status", "operator": "=", "value": "active" }
-    ]
+    "rules": [{ "field": "status", "operator": "=", "value": "active" }]
   },
   "limit": 25
 }
@@ -1818,28 +1833,30 @@ Fetch accounts with an inline profit margin formula and a subquery counting acti
   "columns": "id, name, profit_margin, active_deals",
   "formulas": {
     "profit_margin": {
-      "inputs": [{
-        "kind": "math",
-        "op": "*",
-        "inputs": [
-          {
-            "kind": "math",
-            "op": "/",
-            "inputs": [
-              {
-                "kind": "math",
-                "op": "-",
-                "inputs": [
-                  { "kind": "column", "name": "revenue" },
-                  { "kind": "column", "name": "cost" }
-                ]
-              },
-              { "kind": "column", "name": "revenue", "cast": "decimal" }
-            ]
-          },
-          { "kind": "literal", "literal": 100 }
-        ]
-      }]
+      "inputs": [
+        {
+          "kind": "math",
+          "op": "*",
+          "inputs": [
+            {
+              "kind": "math",
+              "op": "/",
+              "inputs": [
+                {
+                  "kind": "math",
+                  "op": "-",
+                  "inputs": [
+                    { "kind": "column", "name": "revenue" },
+                    { "kind": "column", "name": "cost" }
+                  ]
+                },
+                { "kind": "column", "name": "revenue", "cast": "decimal" }
+              ]
+            },
+            { "kind": "literal", "literal": 100 }
+          ]
+        }
+      ]
     },
     "active_deals": {
       "from": "crm_deal",
@@ -1850,11 +1867,13 @@ Fetch accounts with an inline profit margin formula and a subquery counting acti
           { "field": "stage", "operator": "!=", "value": "won" }
         ]
       },
-      "inputs": [{
-        "kind": "aggregate",
-        "name": "count",
-        "inputs": []
-      }]
+      "inputs": [
+        {
+          "kind": "aggregate",
+          "name": "count",
+          "inputs": []
+        }
+      ]
     }
   },
   "orderBy": "profit_margin DESC",
@@ -1887,21 +1906,15 @@ Daily hourly breakdown of support tickets per agent for today:
         "columns": "agent:name",
         "spread": true,
         "filters": {
-          "rules": [
-            { "field": "is_active", "operator": "true" }
-          ]
+          "rules": [{ "field": "is_active", "operator": "true" }]
         }
       }
     ],
     "hideEmptyRows": false
   },
-  "calculations": [
-    { "field": "id", "func": "count", "name": "ticket_count" }
-  ],
+  "calculations": [{ "field": "id", "func": "count", "name": "ticket_count" }],
   "filters": {
-    "rules": [
-      { "field": "created_on", "operator": "today" }
-    ]
+    "rules": [{ "field": "created_on", "operator": "today" }]
   }
 }
 ```
@@ -1959,36 +1972,41 @@ Daily hourly breakdown of support tickets per agent for today:
   "columns": "id, name, amount, deal_tier",
   "formulas": {
     "deal_tier": {
-      "inputs": [{
-        "kind": "case",
-        "cases": [
-          {
-            "when": {
-              "kind": "compare", "op": ">=",
-              "left": { "kind": "column", "name": "amount" },
-              "right": { "kind": "literal", "literal": 100000 }
+      "inputs": [
+        {
+          "kind": "case",
+          "cases": [
+            {
+              "when": {
+                "kind": "compare",
+                "op": ">=",
+                "left": { "kind": "column", "name": "amount" },
+                "right": { "kind": "literal", "literal": 100000 }
+              },
+              "then": { "kind": "literal", "literal": "Enterprise" }
             },
-            "then": { "kind": "literal", "literal": "Enterprise" }
-          },
-          {
-            "when": {
-              "kind": "compare", "op": ">=",
-              "left": { "kind": "column", "name": "amount" },
-              "right": { "kind": "literal", "literal": 25000 }
+            {
+              "when": {
+                "kind": "compare",
+                "op": ">=",
+                "left": { "kind": "column", "name": "amount" },
+                "right": { "kind": "literal", "literal": 25000 }
+              },
+              "then": { "kind": "literal", "literal": "Mid-Market" }
             },
-            "then": { "kind": "literal", "literal": "Mid-Market" }
-          },
-          {
-            "when": {
-              "kind": "compare", "op": ">=",
-              "left": { "kind": "column", "name": "amount" },
-              "right": { "kind": "literal", "literal": 5000 }
-            },
-            "then": { "kind": "literal", "literal": "SMB" }
-          }
-        ],
-        "else": { "kind": "literal", "literal": "Micro" }
-      }]
+            {
+              "when": {
+                "kind": "compare",
+                "op": ">=",
+                "left": { "kind": "column", "name": "amount" },
+                "right": { "kind": "literal", "literal": 5000 }
+              },
+              "then": { "kind": "literal", "literal": "SMB" }
+            }
+          ],
+          "else": { "kind": "literal", "literal": "Micro" }
+        }
+      ]
     }
   }
 }
@@ -2002,24 +2020,28 @@ Daily hourly breakdown of support tickets per agent for today:
   "columns": "id, subject, formatted_date, formatted_time",
   "formulas": {
     "formatted_date": {
-      "inputs": [{
-        "kind": "function",
-        "name": "to_char",
-        "inputs": [
-          { "kind": "column", "name": "created_on" },
-          { "kind": "literal", "literal": "DD Mon YYYY" }
-        ]
-      }]
+      "inputs": [
+        {
+          "kind": "function",
+          "name": "to_char",
+          "inputs": [
+            { "kind": "column", "name": "created_on" },
+            { "kind": "literal", "literal": "DD Mon YYYY" }
+          ]
+        }
+      ]
     },
     "formatted_time": {
-      "inputs": [{
-        "kind": "function",
-        "name": "to_char",
-        "inputs": [
-          { "kind": "column", "name": "created_on" },
-          { "kind": "literal", "literal": "HH24:MI" }
-        ]
-      }]
+      "inputs": [
+        {
+          "kind": "function",
+          "name": "to_char",
+          "inputs": [
+            { "kind": "column", "name": "created_on" },
+            { "kind": "literal", "literal": "HH24:MI" }
+          ]
+        }
+      ]
     }
   },
   "orderBy": "created_on DESC",

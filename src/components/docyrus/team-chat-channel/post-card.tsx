@@ -1,40 +1,40 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
+import { useState } from 'react'
 
-import {
-  MoreHorizontalIcon,
-  PencilIcon,
-  TrashIcon
-} from 'lucide-react';
+import { MoreHorizontalIcon, PencilIcon, TrashIcon } from 'lucide-react'
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
-import { type ChatPost, type ChatUser } from './types';
-import { PostContent } from './post-content';
-import { PostAttachments } from './post-attachments';
-import { PostLinkPreview } from './post-link-preview';
-import { PostEntityLink } from './post-entity-link';
-import { PostReactions } from './post-reactions';
-import { PostActions } from './post-actions';
-import { formatRelativeTime, getUserDisplayName, getUserInitials } from './lib/post-utils';
+import { type ChatPost, type ChatUser } from './types'
+import { PostContent } from './post-content'
+import { PostAttachments } from './post-attachments'
+import { PostLinkPreview } from './post-link-preview'
+import { PostEntityLink } from './post-entity-link'
+import { PostReactions } from './post-reactions'
+import { PostActions } from './post-actions'
+import {
+  formatRelativeTime,
+  getUserDisplayName,
+  getUserInitials,
+} from './lib/post-utils'
 
 interface PostCardProps {
-  post: ChatPost;
-  user: ChatUser | undefined;
-  isOwn: boolean;
-  onEdit: () => void;
-  onDelete: () => void;
-  onReply: () => void;
-  isReply?: boolean;
+  post: ChatPost
+  user: ChatUser | undefined
+  isOwn: boolean
+  onEdit: () => void
+  onDelete: () => void
+  onReply: () => void
+  isReply?: boolean
 }
 
 export function PostCard({
@@ -44,21 +44,22 @@ export function PostCard({
   onEdit,
   onDelete,
   onReply,
-  isReply = false
+  isReply = false,
 }: PostCardProps) {
-  const [hovering, setHovering] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [hovering, setHovering] = useState(false)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
 
-  const isEdited = post.last_modified_on !== post.created_on;
-  const initials = getUserInitials(user);
-  const displayName = getUserDisplayName(user);
-  const attachments = post.attachments ?? [];
+  const isEdited = post.last_modified_on !== post.created_on
+  const initials = getUserInitials(user)
+  const displayName = getUserDisplayName(user)
+  const attachments = post.attachments ?? []
 
   return (
     <div
       className="group relative rounded-lg border bg-card p-3 transition-colors hover:bg-accent/30"
       onMouseEnter={() => setHovering(true)}
-      onMouseLeave={() => setHovering(false)}>
+      onMouseLeave={() => setHovering(false)}
+    >
       {/* Header */}
       <div className="flex items-center gap-2">
         <Avatar className={isReply ? 'size-6' : 'size-8'}>
@@ -72,7 +73,9 @@ export function PostCard({
             {formatRelativeTime(post.created_on)}
           </span>
           {isEdited && (
-            <span className="shrink-0 text-xs text-muted-foreground">(edited)</span>
+            <span className="shrink-0 text-xs text-muted-foreground">
+              (edited)
+            </span>
           )}
         </div>
 
@@ -81,11 +84,13 @@ export function PostCard({
           <DropdownMenu
             open={dropdownOpen}
             onOpenChange={setDropdownOpen}
-            modal={false}>
+            modal={false}
+          >
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="size-7 p-0 text-muted-foreground">
+                className="size-7 p-0 text-muted-foreground"
+              >
                 <MoreHorizontalIcon className="size-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -133,5 +138,5 @@ export function PostCard({
         )}
       </div>
     </div>
-  );
+  )
 }

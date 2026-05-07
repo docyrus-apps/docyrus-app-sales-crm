@@ -1,34 +1,34 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
+import { useState } from 'react'
 
-import {
-  MoreHorizontalIcon,
-  ReplyIcon,
-  TrashIcon
-} from 'lucide-react';
+import { MoreHorizontalIcon, ReplyIcon, TrashIcon } from 'lucide-react'
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
-import { type ChatUser, type ContactActivity } from './types';
-import { getActivityTypeConfig } from './activity-type-config';
-import { ActivityMetadata } from './activity-metadata';
-import { formatRelativeTime, getUserDisplayName, getUserInitials } from './lib/activity-utils';
+import { type ChatUser, type ContactActivity } from './types'
+import { getActivityTypeConfig } from './activity-type-config'
+import { ActivityMetadata } from './activity-metadata'
+import {
+  formatRelativeTime,
+  getUserDisplayName,
+  getUserInitials,
+} from './lib/activity-utils'
 
 interface ActivityCardProps {
-  activity: ContactActivity;
-  user: ChatUser | undefined;
-  isOwn: boolean;
-  onDelete: () => void;
-  onReply: () => void;
+  activity: ContactActivity
+  user: ChatUser | undefined
+  isOwn: boolean
+  onDelete: () => void
+  onReply: () => void
 }
 
 export function ActivityCard({
@@ -36,16 +36,16 @@ export function ActivityCard({
   user,
   isOwn,
   onDelete,
-  onReply
+  onReply,
 }: ActivityCardProps) {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [showFullDescription, setShowFullDescription] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [showFullDescription, setShowFullDescription] = useState(false)
 
-  const config = getActivityTypeConfig(activity.type);
-  const initials = getUserInitials(user);
-  const displayName = getUserDisplayName(user);
-  const hasLongDescription = (activity.description?.length ?? 0) > 140;
-  const isComment = activity.type === 'comment';
+  const config = getActivityTypeConfig(activity.type)
+  const initials = getUserInitials(user)
+  const displayName = getUserDisplayName(user)
+  const hasLongDescription = (activity.description?.length ?? 0) > 140
+  const isComment = activity.type === 'comment'
 
   return (
     <div className="group/card relative">
@@ -57,7 +57,9 @@ export function ActivityCard({
         <div className="flex min-w-0 flex-1 items-center gap-1.5">
           <span className="text-sm font-medium">{displayName}</span>
           <span className="truncate text-sm text-muted-foreground">
-            {isComment ? `${activity.metadata.record_name ? `Mentioned you in a comment in ` : 'Commented'}` : activity.subject}
+            {isComment
+              ? `${activity.metadata.record_name ? `Mentioned you in a comment in ` : 'Commented'}`
+              : activity.subject}
           </span>
           {isComment && typeof activity.metadata.record_name === 'string' && (
             <span className="truncate text-sm font-semibold">
@@ -75,18 +77,21 @@ export function ActivityCard({
             variant="ghost"
             size="sm"
             className="size-6 p-0 text-muted-foreground"
-            onClick={onReply}>
+            onClick={onReply}
+          >
             <ReplyIcon className="size-3.5" />
           </Button>
           {isOwn && (
             <DropdownMenu
               open={dropdownOpen}
               onOpenChange={setDropdownOpen}
-              modal={false}>
+              modal={false}
+            >
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="size-6 p-0 text-muted-foreground">
+                  className="size-6 p-0 text-muted-foreground"
+                >
                   <MoreHorizontalIcon className="size-3.5" />
                 </Button>
               </DropdownMenuTrigger>
@@ -104,9 +109,13 @@ export function ActivityCard({
       </div>
 
       {/* Content block — card area with left border */}
-      {(activity.description || activity.type === 'meeting' || activity.type === 'comment') && (
+      {(activity.description ||
+        activity.type === 'meeting' ||
+        activity.type === 'comment') && (
         <div className="ml-8 mt-1.5">
-          <div className={`rounded-md border-l-2 bg-muted/30 px-3 py-2 ${config.colorClass.replace('text-', 'border-')}`}>
+          <div
+            className={`rounded-md border-l-2 bg-muted/30 px-3 py-2 ${config.colorClass.replace('text-', 'border-')}`}
+          >
             {/* Meeting: title + metadata */}
             {activity.type === 'meeting' && (
               <>
@@ -119,25 +128,32 @@ export function ActivityCard({
 
             {/* Comment: quoted body */}
             {isComment && activity.description && (
-              <p className="text-sm text-foreground/80">{activity.description}</p>
+              <p className="text-sm text-foreground/80">
+                {activity.description}
+              </p>
             )}
 
             {/* Others: description only */}
-            {!isComment && activity.type !== 'meeting' && activity.description && (
-              <>
-                <p className="text-sm text-muted-foreground">
-                  {showFullDescription || !hasLongDescription ? activity.description : `${activity.description.slice(0, 140)}\u2026`}
-                </p>
-                {hasLongDescription && (
-                  <button
-                    type="button"
-                    className="mt-0.5 text-xs text-primary hover:underline"
-                    onClick={() => setShowFullDescription(v => !v)}>
-                    {showFullDescription ? 'Show less' : 'Show more'}
-                  </button>
-                )}
-              </>
-            )}
+            {!isComment &&
+              activity.type !== 'meeting' &&
+              activity.description && (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    {showFullDescription || !hasLongDescription
+                      ? activity.description
+                      : `${activity.description.slice(0, 140)}\u2026`}
+                  </p>
+                  {hasLongDescription && (
+                    <button
+                      type="button"
+                      className="mt-0.5 text-xs text-primary hover:underline"
+                      onClick={() => setShowFullDescription((v) => !v)}
+                    >
+                      {showFullDescription ? 'Show less' : 'Show more'}
+                    </button>
+                  )}
+                </>
+              )}
           </div>
         </div>
       )}
@@ -149,5 +165,5 @@ export function ActivityCard({
         </div>
       )}
     </div>
-  );
+  )
 }

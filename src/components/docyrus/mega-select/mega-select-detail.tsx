@@ -1,21 +1,21 @@
-'use client';
+'use client'
 
-import { forwardRef, useCallback, type HTMLAttributes } from 'react';
+import { forwardRef, useCallback, type HTMLAttributes } from 'react'
 
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeft, Check } from 'lucide-react'
 
-import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
-import { DocyrusIcon } from '@/components/docyrus/docyrus-icon';
+import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 
-import { tUi } from '@/lib/ui-i18n';
+import { tUi } from '@/lib/ui-i18n'
 
-import { useMegaSelect } from './mega-select-context';
+import { useMegaSelect } from './mega-select-context'
 
-export type MegaSelectDetailProps = HTMLAttributes<HTMLDivElement>;
+export type MegaSelectDetailProps = HTMLAttributes<HTMLDivElement>
 
 const MegaSelectDetail = forwardRef<HTMLDivElement, MegaSelectDetailProps>(
   ({ className, ...props }, ref) => {
@@ -27,43 +27,47 @@ const MegaSelectDetail = forwardRef<HTMLDivElement, MegaSelectDetailProps>(
       defaultColor,
       defaultIcon,
       locale,
-      onChoose
-    } = useMegaSelect();
+      onChoose,
+    } = useMegaSelect()
 
     const handleBack = useCallback(() => {
-      setDetailItem(null);
-    }, [setDetailItem]);
+      setDetailItem(null)
+    }, [setDetailItem])
 
     const handleChoose = useCallback(() => {
-      if (!detailItem || disabled) return;
-      onChoose?.(detailItem.id, detailItem);
-    }, [detailItem, disabled, onChoose]);
+      if (!detailItem || disabled) return
+      onChoose?.(detailItem.id, detailItem)
+    }, [detailItem, disabled, onChoose])
 
-    if (!detailItem) return null;
+    if (!detailItem) return null
 
-    const iconId = detailItem.icon ?? defaultIcon;
-    const color = detailItem.color ?? defaultColor;
-    const isSelected = selectedId === detailItem.id;
+    const iconId = detailItem.icon ?? defaultIcon
+    const color = detailItem.color ?? defaultColor
+    const isSelected = selectedId === detailItem.id
 
     return (
       <div
         ref={ref}
         className={cn(
           'flex w-80 shrink-0 flex-col border-l bg-background',
-          className
+          className,
         )}
-        {...props}>
+        {...props}
+      >
         {/* Header */}
         <div className="flex items-center gap-2 border-b px-4 py-3">
           <Button
             variant="ghost"
             size="sm"
             className="h-7 w-7 p-0"
-            onClick={handleBack}>
+            onClick={handleBack}
+          >
             <ArrowLeft className="size-4" />
             <span className="sr-only">{tUi(locale, 'mgsBack')}</span>
           </Button>
-          <span className="truncate text-sm font-medium">{detailItem.label}</span>
+          <span className="truncate text-sm font-medium">
+            {detailItem.label}
+          </span>
         </div>
 
         {/* Content */}
@@ -74,14 +78,19 @@ const MegaSelectDetail = forwardRef<HTMLDivElement, MegaSelectDetailProps>(
               {detailItem.image ? (
                 <Avatar className="size-16">
                   <AvatarImage src={detailItem.image} alt={detailItem.label} />
-                  <AvatarFallback className="text-lg">{detailItem.label.charAt(0).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback className="text-lg">
+                    {detailItem.label.charAt(0).toUpperCase()}
+                  </AvatarFallback>
                 </Avatar>
               ) : iconId ? (
                 <div
                   className={cn(
                     'flex size-16 items-center justify-center rounded-xl',
-                    color ? `bg-${color}-100 text-${color}-600 dark:bg-${color}-950 dark:text-${color}-400` : 'bg-muted text-muted-foreground'
-                  )}>
+                    color
+                      ? `bg-${color}-100 text-${color}-600 dark:bg-${color}-950 dark:text-${color}-400`
+                      : 'bg-muted text-muted-foreground',
+                  )}
+                >
                   <DocyrusIcon icon={iconId} size="xl" />
                 </div>
               ) : null}
@@ -89,9 +98,13 @@ const MegaSelectDetail = forwardRef<HTMLDivElement, MegaSelectDetailProps>(
 
             {/* Title + Description */}
             <div className="text-center">
-              <h3 className="text-base font-semibold text-foreground">{detailItem.label}</h3>
+              <h3 className="text-base font-semibold text-foreground">
+                {detailItem.label}
+              </h3>
               {detailItem.description ? (
-                <p className="mt-1 text-sm text-muted-foreground">{detailItem.description}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {detailItem.description}
+                </p>
               ) : null}
             </div>
 
@@ -106,19 +119,16 @@ const MegaSelectDetail = forwardRef<HTMLDivElement, MegaSelectDetailProps>(
 
         {/* Footer Actions */}
         <div className="border-t p-3">
-          <Button
-            className="w-full"
-            disabled={disabled}
-            onClick={handleChoose}>
+          <Button className="w-full" disabled={disabled} onClick={handleChoose}>
             {isSelected ? <Check className="mr-2 size-4" /> : null}
             {tUi(locale, 'mgsChoose')}
           </Button>
         </div>
       </div>
-    );
-  }
-);
+    )
+  },
+)
 
-MegaSelectDetail.displayName = 'MegaSelectDetail';
+MegaSelectDetail.displayName = 'MegaSelectDetail'
 
-export { MegaSelectDetail };
+export { MegaSelectDetail }

@@ -1,3 +1,3 @@
-'use client';
+'use client'
 
-export { MentionEditorKit as PostEditorKit } from '@/lib/editor-mention';
+export { MentionEditorKit as PostEditorKit } from '@/lib/editor-mention'

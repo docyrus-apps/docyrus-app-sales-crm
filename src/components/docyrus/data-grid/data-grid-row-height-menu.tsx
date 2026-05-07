@@ -1,52 +1,62 @@
-'use client';
+'use client'
 
-import { useMemo, type ComponentProps } from 'react';
+import { useMemo, type ComponentProps } from 'react'
 
-import { type Table } from '@tanstack/react-table';
+import { type Table } from '@tanstack/react-table'
 
+import { useUiTranslation } from '@/lib/use-ui-translation'
 import {
   AlignVerticalSpaceAroundIcon,
   ChevronsDownUpIcon,
   EqualIcon,
-  MinusIcon
-} from 'lucide-react';
+  MinusIcon,
+} from 'lucide-react'
 
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
+  SelectValue,
+} from '@/components/ui/select'
 
-const rowHeights = [
+const rowHeights: ReadonlyArray<{
+  labelKey: string
+  labelFallback: string
+  value: 'short' | 'medium' | 'tall' | 'extra-tall'
+  icon: typeof MinusIcon
+}> = [
   {
-    label: 'Short',
+    labelKey: 'ui.dataGrid.rowHeightShort',
+    labelFallback: 'Short',
     value: 'short' as const,
-    icon: MinusIcon
+    icon: MinusIcon,
   },
   {
-    label: 'Medium',
+    labelKey: 'ui.dataGrid.rowHeightMedium',
+    labelFallback: 'Medium',
     value: 'medium' as const,
-    icon: EqualIcon
+    icon: EqualIcon,
   },
   {
-    label: 'Tall',
+    labelKey: 'ui.dataGrid.rowHeightTall',
+    labelFallback: 'Tall',
     value: 'tall' as const,
-    icon: AlignVerticalSpaceAroundIcon
+    icon: AlignVerticalSpaceAroundIcon,
   },
   {
-    label: 'Extra Tall',
+    labelKey: 'ui.dataGrid.rowHeightExtraTall',
+    labelFallback: 'Extra Tall',
     value: 'extra-tall' as const,
-    icon: ChevronsDownUpIcon
-  }
-] as const;
+    icon: ChevronsDownUpIcon,
+  },
+]
 
 interface DataGridRowHeightMenuProps<TData> extends ComponentProps<
   typeof SelectContent
 > {
-  table: Table<TData>;
-  disabled?: boolean;
+  table: Table<TData>
+  disabled?: boolean
 }
 
 export function DataGridRowHeightMenu<TData>({
@@ -54,44 +64,48 @@ export function DataGridRowHeightMenu<TData>({
   disabled,
   ...props
 }: DataGridRowHeightMenuProps<TData>) {
-  const rowHeight = table.options.meta?.rowHeight;
-  const onRowHeightChange = table.options.meta?.onRowHeightChange;
+  const { t } = useUiTranslation()
+  const rowHeight = table.options.meta?.rowHeight
+  const onRowHeightChange = table.options.meta?.onRowHeightChange
 
   const selectedRowHeight = useMemo(() => {
     return (
-      rowHeights.find(opt => opt.value === rowHeight) ?? {
-        label: 'Short',
+      rowHeights.find((opt) => opt.value === rowHeight) ?? {
+        labelKey: 'ui.dataGrid.rowHeightShort',
+        labelFallback: 'Short',
         value: 'short' as const,
-        icon: MinusIcon
+        icon: MinusIcon,
       }
-    );
-  }, [rowHeight]);
+    )
+  }, [rowHeight])
 
   return (
     <Select
       value={rowHeight}
       onValueChange={onRowHeightChange}
-      disabled={disabled}>
+      disabled={disabled}
+    >
       <SelectTrigger
         size="sm"
         className="size-8 justify-center px-0 bg-background [&>svg]:hidden"
-        aria-label="Row height">
-        <SelectValue placeholder="Row height">
+        aria-label={t('ui.dataGrid.rowHeight', 'Row height')}
+      >
+        <SelectValue placeholder={t('ui.dataGrid.rowHeight', 'Row height')}>
           <selectedRowHeight.icon className="size-4" />
         </SelectValue>
       </SelectTrigger>
       <SelectContent {...props}>
         {rowHeights.map((option) => {
-          const OptionIcon = option.icon;
+          const OptionIcon = option.icon
 
           return (
             <SelectItem key={option.value} value={option.value}>
               <OptionIcon className="size-4" />
-              {option.label}
+              {t(option.labelKey, option.labelFallback)}
             </SelectItem>
-          );
+          )
         })}
       </SelectContent>
     </Select>
-  );
+  )
 }

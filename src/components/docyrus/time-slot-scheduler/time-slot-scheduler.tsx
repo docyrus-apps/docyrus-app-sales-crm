@@ -1,8 +1,8 @@
-'use client';
+'use client'
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react'
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'
 
 import {
   generateDaySlotsForSelectedDay,
@@ -11,21 +11,21 @@ import {
   getMonthDateRangeLabel,
   getWeekDateRangeLabel,
   navigateMonth,
-  navigateWeek
-} from './lib/time-slot-utils';
-import { TimeSlotSchedulerColumnsView } from './time-slot-scheduler-columns-view';
+  navigateWeek,
+} from './lib/time-slot-utils'
+import { TimeSlotSchedulerColumnsView } from './time-slot-scheduler-columns-view'
 import {
   type TimeSlotSchedulerContextValue,
-  TimeSlotSchedulerProvider
-} from './time-slot-scheduler-context';
-import { TimeSlotSchedulerHeader } from './time-slot-scheduler-header';
-import { TimeSlotSchedulerMonthView } from './time-slot-scheduler-month-view';
-import { TimeSlotSchedulerSidebar } from './time-slot-scheduler-sidebar';
+  TimeSlotSchedulerProvider,
+} from './time-slot-scheduler-context'
+import { TimeSlotSchedulerHeader } from './time-slot-scheduler-header'
+import { TimeSlotSchedulerMonthView } from './time-slot-scheduler-month-view'
+import { TimeSlotSchedulerSidebar } from './time-slot-scheduler-sidebar'
 import {
   type SlotSelectPayload,
   type TimeSlotSchedulerMode,
-  type TimeSlotSchedulerProps
-} from './types';
+  type TimeSlotSchedulerProps,
+} from './types'
 
 function TimeSlotScheduler({
   startTime = '09:00',
@@ -53,22 +53,27 @@ function TimeSlotScheduler({
   defaultSelectedSlot = null,
   onSelect,
   className,
-  locale = 'en'
+  locale = 'en',
 }: TimeSlotSchedulerProps) {
-  const [internalMode, setInternalMode] = useState<TimeSlotSchedulerMode>(defaultMode);
-  const mode = controlledMode ?? internalMode;
+  const [internalMode, setInternalMode] =
+    useState<TimeSlotSchedulerMode>(defaultMode)
+  const mode = controlledMode ?? internalMode
 
-  const [currentDate, setCurrentDate] = useState(() => defaultDate ?? new Date());
+  const [currentDate, setCurrentDate] = useState(
+    () => defaultDate ?? new Date(),
+  )
 
-  const [internalSelectedSlot, setInternalSelectedSlot] = useState<SlotSelectPayload | null>(
-    defaultSelectedSlot
-  );
-  const selectedSlot = controlledSelectedSlot !== undefined ? controlledSelectedSlot : internalSelectedSlot;
+  const [internalSelectedSlot, setInternalSelectedSlot] =
+    useState<SlotSelectPayload | null>(defaultSelectedSlot)
+  const selectedSlot =
+    controlledSelectedSlot !== undefined
+      ? controlledSelectedSlot
+      : internalSelectedSlot
 
-  const [internalTimezone, setInternalTimezone] = useState(defaultTimezone);
-  const timezone = controlledTimezone ?? internalTimezone;
+  const [internalTimezone, setInternalTimezone] = useState(defaultTimezone)
+  const timezone = controlledTimezone ?? internalTimezone
 
-  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null)
 
   const slotConfig = useMemo(
     () => ({
@@ -81,7 +86,7 @@ function TimeSlotScheduler({
       minDate,
       maxDate,
       showSaturday,
-      showSunday
+      showSunday,
     }),
     [
       startTime,
@@ -93,77 +98,89 @@ function TimeSlotScheduler({
       minDate,
       maxDate,
       showSaturday,
-      showSunday
-    ]
-  );
+      showSunday,
+    ],
+  )
 
   const days = useMemo(
-    () => (mode === 'columns' ? generateWeekSlots(currentDate, slotConfig) : []),
-    [mode, currentDate, slotConfig]
-  );
+    () =>
+      mode === 'columns' ? generateWeekSlots(currentDate, slotConfig) : [],
+    [mode, currentDate, slotConfig],
+  )
 
   const monthDayMeta = useMemo(
-    () => (mode === 'month' ? generateMonthDayMeta(currentDate, slotConfig) : []),
-    [mode, currentDate, slotConfig]
-  );
+    () =>
+      mode === 'month' ? generateMonthDayMeta(currentDate, slotConfig) : [],
+    [mode, currentDate, slotConfig],
+  )
 
   const selectedDaySlots = useMemo(
-    () => (selectedDay && mode === 'month' ? generateDaySlotsForSelectedDay(selectedDay, slotConfig) : null),
-    [selectedDay, mode, slotConfig]
-  );
+    () =>
+      selectedDay && mode === 'month'
+        ? generateDaySlotsForSelectedDay(selectedDay, slotConfig)
+        : null,
+    [selectedDay, mode, slotConfig],
+  )
 
   const dateRangeLabel = useMemo(
-    () => (mode === 'columns' ? getWeekDateRangeLabel(currentDate) : getMonthDateRangeLabel(currentDate)),
-    [mode, currentDate]
-  );
+    () =>
+      mode === 'columns'
+        ? getWeekDateRangeLabel(currentDate)
+        : getMonthDateRangeLabel(currentDate),
+    [mode, currentDate],
+  )
 
   const handleNavigate = useCallback(
     (direction: 'prev' | 'next') => {
-      setCurrentDate(prev => mode === 'columns' ? navigateWeek(prev, direction) : navigateMonth(prev, direction));
-      setSelectedDay(null);
+      setCurrentDate((prev) =>
+        mode === 'columns'
+          ? navigateWeek(prev, direction)
+          : navigateMonth(prev, direction),
+      )
+      setSelectedDay(null)
     },
-    [mode]
-  );
+    [mode],
+  )
 
   const handleGoToToday = useCallback(() => {
-    setCurrentDate(new Date());
-    setSelectedDay(null);
-  }, []);
+    setCurrentDate(new Date())
+    setSelectedDay(null)
+  }, [])
 
   const handleModeChange = useCallback(
     (newMode: TimeSlotSchedulerMode) => {
       if (controlledMode === undefined) {
-        setInternalMode(newMode);
+        setInternalMode(newMode)
       }
-      onModeChange?.(newMode);
-      setSelectedDay(null);
+      onModeChange?.(newMode)
+      setSelectedDay(null)
     },
-    [controlledMode, onModeChange]
-  );
+    [controlledMode, onModeChange],
+  )
 
   const handleSelectSlot = useCallback(
     (payload: SlotSelectPayload) => {
       if (controlledSelectedSlot === undefined) {
-        setInternalSelectedSlot(payload);
+        setInternalSelectedSlot(payload)
       }
-      onSelect?.(payload);
+      onSelect?.(payload)
     },
-    [controlledSelectedSlot, onSelect]
-  );
+    [controlledSelectedSlot, onSelect],
+  )
 
   const handleTimezoneChange = useCallback(
     (tz: string) => {
       if (controlledTimezone === undefined) {
-        setInternalTimezone(tz);
+        setInternalTimezone(tz)
       }
-      onTimezoneChange?.(tz);
+      onTimezoneChange?.(tz)
     },
-    [controlledTimezone, onTimezoneChange]
-  );
+    [controlledTimezone, onTimezoneChange],
+  )
 
   const handleSelectDay = useCallback((date: Date) => {
-    setSelectedDay(date);
-  }, []);
+    setSelectedDay(date)
+  }, [])
 
   const contextValue = useMemo<TimeSlotSchedulerContextValue>(
     () => ({
@@ -187,7 +204,7 @@ function TimeSlotScheduler({
       event,
       showReservationDetail,
       slotCapacity,
-      locale
+      locale,
     }),
     [
       days,
@@ -210,22 +227,31 @@ function TimeSlotScheduler({
       event,
       showReservationDetail,
       slotCapacity,
-      locale
-    ]
-  );
+      locale,
+    ],
+  )
 
   return (
     <TimeSlotSchedulerProvider value={contextValue}>
-      <div className={cn('flex flex-col overflow-hidden rounded-lg border bg-background lg:flex-row', className)}>
+      <div
+        className={cn(
+          'flex flex-col overflow-hidden rounded-lg border bg-background lg:flex-row',
+          className,
+        )}
+      >
         <TimeSlotSchedulerSidebar />
         <div className="flex min-w-0 flex-1 flex-col">
           <TimeSlotSchedulerHeader />
-          {mode === 'columns' ? <TimeSlotSchedulerColumnsView /> : <TimeSlotSchedulerMonthView />}
+          {mode === 'columns' ? (
+            <TimeSlotSchedulerColumnsView />
+          ) : (
+            <TimeSlotSchedulerMonthView />
+          )}
         </div>
       </div>
     </TimeSlotSchedulerProvider>
-  );
+  )
 }
 
-export { TimeSlotScheduler };
-export type { TimeSlotSchedulerProps };
+export { TimeSlotScheduler }
+export type { TimeSlotSchedulerProps }

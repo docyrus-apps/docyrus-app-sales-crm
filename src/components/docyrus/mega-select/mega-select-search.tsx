@@ -1,25 +1,26 @@
-'use client';
+'use client'
 
-import { forwardRef, useCallback, type HTMLAttributes } from 'react';
+import { forwardRef, useCallback, type HTMLAttributes } from 'react'
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'
 
-import { SearchInput } from '@/components/docyrus/search-input';
+import { SearchInput } from '@/components/docyrus/search-input'
 
-import { useMegaSelect } from './mega-select-context';
+import { useMegaSelect } from './mega-select-context'
 
-export type MegaSelectSearchProps = Omit<HTMLAttributes<HTMLDivElement>, 'onChange'>;
+export type MegaSelectSearchProps = Omit<
+  HTMLAttributes<HTMLDivElement>,
+  'onChange'
+>
 
 const MegaSelectSearch = forwardRef<HTMLDivElement, MegaSelectSearchProps>(
   ({ className, ...props }, ref) => {
-    const {
-      searchQuery, setSearchQuery, disabled, locale, searchable
-    } = useMegaSelect();
+    const { searchQuery, setSearchQuery, disabled, locale, searchable } =
+      useMegaSelect()
 
-    const handleSearch = useCallback(() => {
-    }, []);
+    const handleSearch = useCallback(() => {}, [])
 
-    if (!searchable) return null;
+    if (!searchable) return null
 
     return (
       <div ref={ref} className={cn('px-4 pt-4', className)} {...props}>
@@ -31,12 +32,13 @@ const MegaSelectSearch = forwardRef<HTMLDivElement, MegaSelectSearchProps>(
           debounceMs={200}
           disabled={disabled}
           locale={locale}
-          size="default" />
+          size="default"
+        />
       </div>
-    );
-  }
-);
+    )
+  },
+)
 
-MegaSelectSearch.displayName = 'MegaSelectSearch';
+MegaSelectSearch.displayName = 'MegaSelectSearch'
 
-export { MegaSelectSearch };
+export { MegaSelectSearch }

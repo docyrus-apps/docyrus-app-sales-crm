@@ -1,72 +1,71 @@
-import jsonata from 'jsonata';
+import jsonata from 'jsonata'
 
-import { resolveColorHex } from '@/lib/tailwind-colors';
+import { resolveColorHex } from '@/lib/tailwind-colors'
 
 import {
   type PivotGridCellColorRule,
   type PivotGridColorScope,
-  type PivotGridRenderedCell
-} from '../types';
+  type PivotGridRenderedCell,
+} from '../types'
 
 interface CompiledRule {
-  scope?: PivotGridColorScope;
-  expression: jsonata.Expression;
-  color: string;
+  scope?: PivotGridColorScope
+  expression: jsonata.Expression
+  color: string
 }
 
 function getCellScope<TData>(
-  cell: PivotGridRenderedCell<TData>
+  cell: PivotGridRenderedCell<TData>,
 ): PivotGridColorScope {
   if (cell.isGrandTotal) {
-    return 'grand-total';
+    return 'grand-total'
   }
 
   if (cell.isTotal) {
-    return 'total';
+    return 'total'
   }
 
   if (cell.isSubtotal) {
-    return 'subtotal';
+    return 'subtotal'
   }
 
-  return 'leaf';
+  return 'leaf'
 }
 
 export function compilePivotGridCellColorRules(
-  rules: Array<PivotGridCellColorRule>
+  rules: Array<PivotGridCellColorRule>,
 ): Array<CompiledRule> {
-  const compiledRules: Array<CompiledRule> = [];
+  const compiledRules: Array<CompiledRule> = []
 
   for (const rule of rules) {
     try {
       compiledRules.push({
         scope: rule.scope,
         expression: jsonata(rule.formula),
-        color: resolveColorHex(rule.color)
-      });
-    } catch {
-    }
+        color: resolveColorHex(rule.color),
+      })
+    } catch {}
   }
 
-  return compiledRules;
+  return compiledRules
 }
 
 export async function evaluatePivotGridCellColorRules<TData>(
   compiledRules: Array<CompiledRule>,
-  cells: Array<PivotGridRenderedCell<TData>>
+  cells: Array<PivotGridRenderedCell<TData>>,
 ): Promise<Map<string, string>> {
-  const colorMap = new Map<string, string>();
+  const colorMap = new Map<string, string>()
 
   if (compiledRules.length === 0) {
-    return colorMap;
+    return colorMap
   }
 
   for (const cell of cells) {
-    const cellScope = getCellScope(cell);
+    const cellScope = getCellScope(cell)
 
     for (const rule of compiledRules) {
       if (rule.scope && rule.scope !== cellScope) {
-        continue;
+        continue
       }
 
       try {
@@ -80,17 +79,16 @@ export async function evaluatePivotGridCellColorRules<TData>(
           isSubtotal: cell.isSubtotal,
           isTotal: cell.isTotal,
           isGrandTotal: cell.isGrandTotal,
-          rawRowCount: cell.rawRowCount
-        });
+          rawRowCount: cell.rawRowCount,
+        })
 
         if (result) {
-          colorMap.set(cell.id, rule.color);
-          break;
+          colorMap.set(cell.id, rule.color)
+          break
         }
-      } catch {
-      }
+      } catch {}
     }
   }
 
-  return colorMap;
+  return colorMap
 }

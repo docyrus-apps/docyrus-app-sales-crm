@@ -9,10 +9,10 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Feature ID: `feature-runtime-auth-v1`
 - Version: 1
 - Feature Group: `feature-runtime-auth`
-- Status: `planned`
+- Status: `in_progress`
 - Slug: `runtime-auth-developer-tooling`
 - Summary: The shared app shell, Docyrus authentication, query runtime, command infrastructure, and developer tooling at the root of the SPA.
-- Tasks: 6
+- Tasks: 7
 
 #### Stabilize root runtime, auth boot, and shared provider wiring
 
@@ -72,7 +72,7 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Phase: `phase-foundation`
 - Type: `work`
 - Assignee: `agent`
-- Status: `planned`
+- Status: `in_progress`
 - Summary: Resolve current repo-level build and TypeScript blockers so future CRM feature work can be verified reliably.
 - Acceptance Criteria:
 - `pnpm build` succeeds consistently.
@@ -91,6 +91,19 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Open blockers are visible in the project plan.
 - Release validation steps are identified for code and product behavior.
 - The app can be assessed against a clear v0.1 go or no-go checklist.
+
+#### Fix OAuth redirect path configuration
+
+- Task ID: `task-oauth-redirect-path`
+- Phase: `phase-foundation`
+- Type: `bug-fix`
+- Assignee: `agent`
+- Status: `done`
+- Summary: Use the configured OAuth callback path with the current browser origin so sign-in requests match authorized redirect URIs.
+- Acceptance Criteria:
+- OAuth redirect URI is built from window.location.origin and VITE_OAUTH2_REDIRECT_PATH.
+- The callback route remains aligned with the configured redirect path.
+- Build verification passes after the auth configuration change.
 
 ### Executive Dashboard
 
@@ -120,7 +133,7 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Feature ID: `feature-deals-leads-v1`
 - Version: 1
 - Feature Group: `feature-deals-leads`
-- Status: `planned`
+- Status: `in_progress`
 - Slug: `leads-deals-pipeline`
 - Summary: Pipeline views, detail flows, conversion paths, and related revenue records for opportunity management.
 - Tasks: 2
@@ -131,7 +144,7 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Phase: `phase-crm-core`
 - Type: `new-implementation`
 - Assignee: `agent`
-- Status: `planned`
+- Status: `in_progress`
 - Summary: Bring deals list, kanban, detail panels, pricing, and related records into a cohesive opportunity-management workflow.
 - Acceptance Criteria:
 - Deals can be reviewed in both summary and detail contexts.
@@ -144,7 +157,7 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Phase: `phase-crm-core`
 - Type: `new-implementation`
 - Assignee: `agent`
-- Status: `planned`
+- Status: `in_progress`
 - Summary: Tighten lead list, kanban, detail, and conversion flows so reps can move qualified leads into active deals without losing context.
 - Acceptance Criteria:
 - Lead status and source data render consistently across list, board, and detail pages.
@@ -156,7 +169,7 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Feature ID: `feature-accounts-contacts-v1`
 - Version: 1
 - Feature Group: `feature-accounts-contacts`
-- Status: `planned`
+- Status: `in_progress`
 - Slug: `companies-contacts-workspace`
 - Summary: Company and contact directories with relationship-aware detail pages and cross-linked CRM context.
 - Tasks: 1
@@ -167,7 +180,7 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Phase: `phase-crm-core`
 - Type: `new-implementation`
 - Assignee: `agent`
-- Status: `planned`
+- Status: `in_progress`
 - Summary: Refine company and contact directories plus detail screens to improve relationship visibility across deals, leads, and communications.
 - Acceptance Criteria:
 - Company and contact detail pages show linked CRM records clearly.
@@ -190,7 +203,7 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Phase: `phase-sales-ops`
 - Type: `new-implementation`
 - Assignee: `agent`
-- Status: `planned`
+- Status: `done`
 - Summary: Improve task lists, quick-create flows, activity handling, and status updates for real day-to-day follow-up work.
 - Acceptance Criteria:
 - Task creation and editing flows are reliable from both global and contextual entry points.
@@ -215,7 +228,7 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Feature ID: `feature-catalog-orders-v1`
 - Version: 1
 - Feature Group: `feature-catalog-orders`
-- Status: `planned`
+- Status: `in_progress`
 - Slug: `products-sales-orders`
 - Summary: Catalog management and order-building workflows that connect products, pricing, and customer orders.
 - Tasks: 1
@@ -226,7 +239,7 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Phase: `phase-sales-ops`
 - Type: `new-implementation`
 - Assignee: `agent`
-- Status: `planned`
+- Status: `in_progress`
 - Summary: Tighten catalog forms, line-item pricing, and sales order detail views so quote-to-order handoff feels operationally complete.
 - Acceptance Criteria:
 - Products can be managed with correct category, unit, price, and tax metadata.
@@ -284,8 +297,8 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 ### Foundation Hardening
 
 - Phase ID: `phase-foundation`
-- Status: `planned`
-- Tasks: 3
+- Status: `in_progress`
+- Tasks: 4
 
 #### Stabilize root runtime, auth boot, and shared provider wiring
 
@@ -319,17 +332,30 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Feature: `feature-runtime-auth-v1`
 - Type: `work`
 - Assignee: `agent`
-- Status: `planned`
+- Status: `in_progress`
 - Summary: Resolve current repo-level build and TypeScript blockers so future CRM feature work can be verified reliably.
 - Acceptance Criteria:
 - `pnpm build` succeeds consistently.
 - TypeScript verification path is documented or repaired.
 - Known toolchain warnings blocking routine validation are captured in the plan.
 
+#### Fix OAuth redirect path configuration
+
+- Task ID: `task-oauth-redirect-path`
+- Feature: `feature-runtime-auth-v1`
+- Type: `bug-fix`
+- Assignee: `agent`
+- Status: `done`
+- Summary: Use the configured OAuth callback path with the current browser origin so sign-in requests match authorized redirect URIs.
+- Acceptance Criteria:
+- OAuth redirect URI is built from window.location.origin and VITE_OAUTH2_REDIRECT_PATH.
+- The callback route remains aligned with the configured redirect path.
+- Build verification passes after the auth configuration change.
+
 ### CRM Core Workflows
 
 - Phase ID: `phase-crm-core`
-- Status: `planned`
+- Status: `in_progress`
 - Tasks: 4
 
 #### Productionize dashboard metrics and summary cards
@@ -351,7 +377,7 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Feature: `feature-deals-leads-v1`
 - Type: `new-implementation`
 - Assignee: `agent`
-- Status: `planned`
+- Status: `in_progress`
 - Summary: Bring deals list, kanban, detail panels, pricing, and related records into a cohesive opportunity-management workflow.
 - Acceptance Criteria:
 - Deals can be reviewed in both summary and detail contexts.
@@ -364,7 +390,7 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Feature: `feature-deals-leads-v1`
 - Type: `new-implementation`
 - Assignee: `agent`
-- Status: `planned`
+- Status: `in_progress`
 - Summary: Tighten lead list, kanban, detail, and conversion flows so reps can move qualified leads into active deals without losing context.
 - Acceptance Criteria:
 - Lead status and source data render consistently across list, board, and detail pages.
@@ -377,7 +403,7 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Feature: `feature-accounts-contacts-v1`
 - Type: `new-implementation`
 - Assignee: `agent`
-- Status: `planned`
+- Status: `in_progress`
 - Summary: Refine company and contact directories plus detail screens to improve relationship visibility across deals, leads, and communications.
 - Acceptance Criteria:
 - Company and contact detail pages show linked CRM records clearly.
@@ -387,7 +413,7 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 ### Sales Operations
 
 - Phase ID: `phase-sales-ops`
-- Status: `planned`
+- Status: `in_progress`
 - Tasks: 3
 
 #### Strengthen task and activity management flows
@@ -396,7 +422,7 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Feature: `feature-sales-execution-v1`
 - Type: `new-implementation`
 - Assignee: `agent`
-- Status: `planned`
+- Status: `done`
 - Summary: Improve task lists, quick-create flows, activity handling, and status updates for real day-to-day follow-up work.
 - Acceptance Criteria:
 - Task creation and editing flows are reliable from both global and contextual entry points.
@@ -422,7 +448,7 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Feature: `feature-catalog-orders-v1`
 - Type: `new-implementation`
 - Assignee: `agent`
-- Status: `planned`
+- Status: `in_progress`
 - Summary: Tighten catalog forms, line-item pricing, and sales order detail views so quote-to-order handoff feels operationally complete.
 - Acceptance Criteria:
 - Products can be managed with correct category, unit, price, and tax metadata.
