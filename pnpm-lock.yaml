@@ -1,5 +1,11 @@
 lockfileVersion: '9.0'
 
+# pnpm-workspace.yaml
+allowBuilds:
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
+
 settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
