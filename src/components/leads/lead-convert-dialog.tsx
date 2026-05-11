@@ -1,17 +1,38 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Loader2 } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { useDocyrusClient } from '@docyrus/signin'
+import {
+  AlertCircle,
+  ArrowRight,
+  Building2,
+  CheckCircle2,
+  Circle,
+  CircleDashed,
+  Info,
+  Loader2,
+  Sparkles,
+  UserRound,
+  XCircle,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/animate-ui/components/buttons/button'
+import { AwesomeDialog } from '@/components/docyrus/awesome-dialog/awesome-dialog'
+import { AwesomeDialogBody } from '@/components/docyrus/awesome-dialog/awesome-dialog-body'
+import { AwesomeDialogFooter } from '@/components/docyrus/awesome-dialog/awesome-dialog-footer'
+import { AwesomeDialogHeader } from '@/components/docyrus/awesome-dialog/awesome-dialog-header'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,8 +43,41 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { useCreateDeal } from '@/hooks/use-deals'
-import { useUpdateLead } from '@/hooks/use-leads'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
+  FieldMappingRow,
+  type FieldKind,
+  type SelectOption,
+} from '@/components/leads/field-mapping-row'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { Plus } from 'lucide-react'
+import { createDataSourceClient } from '@docyrus/app-utils'
+import { useEnumEntities } from '@/hooks/use-enums'
+import {
+  getRelationId,
+  getRelationName,
+  isLeadConvertedRecord,
+  normalizeConversionKey,
+} from '@/lib/lead-conversion'
+import { cn } from '@/lib/utils'
+
+type ConversionMode = 'company_contact_deal' | 'contact_deal' | 'deal_only'
+type StepState = 'pending' | 'running' | 'done' | 'failed' | 'skipped'
+type DetailTone = 'success' | 'info' | 'warn' | 'error' | 'neutral'
+type StepDetail = { tone: DetailTone; label: string }
+type EntityCandidate = Record<string, any> & { id?: string; name?: string }
+type FieldMeta = { slug?: string }
+type DataSourceMeta = { fields?: Array<FieldMeta> }
+type CurrentUserResponse = { id?: string }
 
 interface LeadConvertDialogProps {
   open: boolean
@@ -31,151 +85,2032 @@ interface LeadConvertDialogProps {
   lead: any
 }
 
+const MODE_LABELS: Record<ConversionMode, string> = {
+  company_contact_deal: 'Şirket + kişi + fırsat',
+  contact_deal: 'Kişi + fırsat',
+  deal_only: 'Sadece fırsat',
+}
+
+const TARGET_LABEL: Record<'company' | 'contact' | 'deal', string> = {
+  company: 'Şirket',
+  contact: 'Kişi',
+  deal: 'Fırsat',
+}
+
+const STEP_LABELS: Record<string, string> = {
+  precheck: 'Kontroller',
+  organization: 'Şirket',
+  contact: 'Kişi',
+  deal: 'Fırsat',
+  activity: 'Aktiviteler',
+  lead: 'Lead kaydı',
+}
+
+function normalize(value?: string | null) {
+  return value?.trim().toLowerCase() ?? ''
+}
+
+function sanitizeKeyword(value?: string | null) {
+  if (!value) return ''
+  return value
+    .replace(/https?:\/\//gi, '')
+    .replace(/[:&|!*()<>'"\\\/]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function normalizePhone(value?: string | null) {
+  return value?.replace(/\D/g, '') ?? ''
+}
+
+function normalizeDomain(value?: string | null) {
+  const trimmed = value?.trim()
+  if (!trimmed) return ''
+
+  try {
+    const url = new URL(
+      trimmed.startsWith('http') ? trimmed : `https://${trimmed}`,
+    )
+    return url.hostname.replace(/^www\./, '').toLowerCase()
+  } catch {
+    return (
+      trimmed
+        .replace(/^https?:\/\//, '')
+        .replace(/^www\./, '')
+        .split('/')[0]
+        ?.toLowerCase() ?? ''
+    )
+  }
+}
+
+function optionByName(
+  options: Array<{ id: string; name: string }>,
+  name?: string,
+): string | undefined {
+  if (!name) return undefined
+  const normalized = normalizeConversionKey(name)
+  return options.find(
+    (option) => normalizeConversionKey(option.name) === normalized,
+  )?.id
+}
+
+function mapLeadTypeToCustomerType(
+  options: Array<{ id: string; name: string }>,
+  leadTypeName?: string,
+): string | undefined {
+  const normalized = normalize(leadTypeName)
+  if (normalized.includes('existing'))
+    return optionByName(options, 'Existing Business')
+  if (normalized.includes('new')) return optionByName(options, 'New Business')
+
+  return undefined
+}
+
+function getErrorMessage(error: unknown) {
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String((error as { message?: string }).message)
+  }
+
+  return 'İşlem tamamlanamadı'
+}
+
+function getOptionValue(
+  options: Array<{ id: string; name: string }>,
+  fallback: string,
+): string {
+  return optionByName(options, fallback) ?? fallback
+}
+
+function getFieldSlugs(dataSource?: DataSourceMeta | null) {
+  return new Set(
+    (dataSource?.fields ?? []).map((field) => field.slug).filter(Boolean),
+  )
+}
+
+function hasAllFields(slugs: Set<string | undefined>, fields: Array<string>) {
+  return fields.every((field) => slugs.has(field))
+}
+
+function pickDefined(payload: Record<string, unknown>) {
+  return Object.fromEntries(
+    Object.entries(payload).filter(([, value]) => value !== undefined),
+  )
+}
+
+function unwrapItems(response: unknown): Array<EntityCandidate> {
+  if (Array.isArray(response)) return response as Array<EntityCandidate>
+  if (response && typeof response === 'object' && 'data' in response) {
+    const data = (response as { data?: unknown }).data
+    return Array.isArray(data) ? (data as Array<EntityCandidate>) : []
+  }
+
+  return []
+}
+
+function renderDetailIcon(tone: DetailTone) {
+  if (tone === 'success')
+    return <CheckCircle2 className="mt-0.5 size-3.5 text-emerald-600" />
+  if (tone === 'warn')
+    return <Sparkles className="mt-0.5 size-3.5 text-amber-600" />
+  if (tone === 'error')
+    return <XCircle className="mt-0.5 size-3.5 text-destructive" />
+  if (tone === 'info')
+    return <Info className="mt-0.5 size-3.5 text-sky-600" />
+  return <CircleDashed className="mt-0.5 size-3.5 text-muted-foreground" />
+}
+
+function getStepIcon(state: StepState) {
+  if (state === 'done')
+    return <CheckCircle2 className="size-4 text-emerald-600" />
+  if (state === 'running')
+    return <Loader2 className="size-4 animate-spin text-sky-600" />
+  if (state === 'failed')
+    return <AlertCircle className="size-4 text-destructive" />
+  if (state === 'skipped')
+    return <CircleDashed className="size-4 text-muted-foreground" />
+
+  return <Circle className="size-4 text-muted-foreground" />
+}
+
 export function LeadConvertDialog({
   open,
   onOpenChange,
   lead,
 }: LeadConvertDialogProps) {
+  const client = useDocyrusClient()
+  const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const createDeal = useCreateDeal()
-  const updateLead = useUpdateLead()
-  const [showConfirmation, setShowConfirmation] = useState(false)
-  const [isConverting, setIsConverting] = useState(false)
+  const [isWorking, setIsWorking] = useState(false)
+  const [duplicatesChecked, setDuplicatesChecked] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [companyCandidates, setCompanyCandidates] = useState<
+    Array<EntityCandidate>
+  >([])
+  const [contactCandidates, setContactCandidates] = useState<
+    Array<EntityCandidate>
+  >([])
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(
+    getRelationId(lead?.converted_organization) ?? null,
+  )
+  const [selectedContactId, setSelectedContactId] = useState<string | null>(
+    getRelationId(lead?.converted_contact) ?? null,
+  )
+  const [exactCompanyId, setExactCompanyId] = useState<string | null>(null)
+  const [exactContactId, setExactContactId] = useState<string | null>(null)
+  const [dealCandidates, setDealCandidates] = useState<Array<EntityCandidate>>(
+    [],
+  )
+  const [pendingChanges, setPendingChanges] = useState<Array<{
+    tab: 'company' | 'contact' | 'deal'
+    label: string
+    sourceText: string
+    targetText: string
+  }> | null>(null)
+  const [changesConfirmed, setChangesConfirmed] = useState(false)
+  const [mode, setMode] = useState<ConversionMode>(() => {
+    const savedMode = getRelationName(lead?.conversion_mode)
+    if (savedMode === 'contact_deal' || savedMode === 'deal_only') {
+      return savedMode
+    }
 
-  const handleConvert = async () => {
-    if (!lead) return
+    return lead?.company_name_text || lead?.website
+      ? 'company_contact_deal'
+      : 'contact_deal'
+  })
+  const [steps, setSteps] = useState<Record<string, StepState>>({
+    precheck: 'pending',
+    organization: 'pending',
+    contact: 'pending',
+    deal: 'pending',
+    activity: 'pending',
+    lead: 'pending',
+  })
+  const [stepDetails, setStepDetails] = useState<
+    Record<string, Array<StepDetail>>
+  >({
+    precheck: [],
+    organization: [],
+    contact: [],
+    deal: [],
+    activity: [],
+    lead: [],
+  })
+  const [form, setForm] = useState(() => ({
+    companyName: lead?.company_name_text || '',
+    companyWebsite: lead?.website || '',
+    companyEmail: lead?.company_email || '',
+    companyPhone: lead?.company_phone || '',
+    companyAddress: lead?.address || '',
+    companyCity: lead?.city || '',
+    companyIndustry: '',
+    companySize: '',
+    companyCountry: getRelationId(lead?.countries) || '',
+    contactName: lead?.name || '',
+    contactEmail: lead?.email || '',
+    contactPhone: lead?.phone || '',
+    contactJobTitle: lead?.contact_job_title || '',
+    dealName:
+      [lead?.company_name_text, lead?.name].filter(Boolean).join(' - ') ||
+      lead?.name ||
+      'Yeni fırsat',
+    dealValue: lead?.deal_value ? String(lead.deal_value) : '',
+    expectedClosingDate: lead?.expected_closing_date || '',
+    notes: lead?.contact_message || '',
+    dealStageId: '',
+    dealLeadSourceId: '',
+    dealCustomerTypeId: '',
+    dealCountry: getRelationId(lead?.countries) || '',
+    dealOwner: getRelationId(lead?.record_owner) || '',
+  }))
+  const [extraFields, setExtraFields] = useState<{
+    company: Array<{ slug: string; label: string; kind: FieldKind; value: string }>
+    contact: Array<{ slug: string; label: string; kind: FieldKind; value: string }>
+    deal: Array<{ slug: string; label: string; kind: FieldKind; value: string }>
+  }>({ company: [], contact: [], deal: [] })
+  const [targetFields, setTargetFields] = useState<{
+    company: Array<{ slug: string; name: string; type: string }>
+    contact: Array<{ slug: string; name: string; type: string }>
+    deal: Array<{ slug: string; name: string; type: string }>
+  }>({ company: [], contact: [], deal: [] })
+  const [activeTab, setActiveTab] = useState<'company' | 'contact' | 'deal'>(
+    'deal',
+  )
 
-    setIsConverting(true)
-    try {
-      // Map lead data to deal data
-      const dealData = {
-        organization:
-          typeof lead.company_name === 'object'
-            ? lead.company_name.id
-            : lead.company_name || '',
-        stage: 'prospecting', // Default stage for new deals
-        lead_source: lead.lead_source || '',
-        country: lead.country || '',
-        // Initialize with empty/default values
-        deal_value: 0,
-        expected_revenue: 0,
-        close_probability: 10,
-        hot_prospect: false,
-      }
+  const { data: stageOptions = [] } = useEnumEntities('stage', {
+    appSlug: 'base_crm',
+    dataSourceSlug: 'deal',
+  })
+  const { data: dealLeadSourceOptions = [] } = useEnumEntities('lead_source', {
+    appSlug: 'base_crm',
+    dataSourceSlug: 'deal',
+  })
+  const { data: customerTypeOptions = [] } = useEnumEntities('customer_type', {
+    appSlug: 'base_crm',
+    dataSourceSlug: 'deal',
+  })
+  const { data: leadStatusOptions = [] } = useEnumEntities('lead_status', {
+    appSlug: 'base_crm',
+    dataSourceSlug: 'leads',
+  })
+  const { data: conversionStateOptions = [] } = useEnumEntities(
+    'conversion_state',
+    {
+      appSlug: 'base_crm',
+      dataSourceSlug: 'leads',
+    },
+  )
+  const { data: conversionModeOptions = [] } = useEnumEntities(
+    'conversion_mode',
+    {
+      appSlug: 'base_crm',
+      dataSourceSlug: 'leads',
+    },
+  )
+  const { data: orgIndustryOptions = [] } = useEnumEntities('industry', {
+    appSlug: 'base',
+    dataSourceSlug: 'organization',
+  })
+  const { data: orgTypeOptions = [] } = useEnumEntities('type', {
+    appSlug: 'base',
+    dataSourceSlug: 'organization',
+  })
+  const { data: orgCompanySizeOptions = [] } = useEnumEntities(
+    'company_size',
+    { appSlug: 'base', dataSourceSlug: 'organization' },
+  )
 
-      // Create the deal
-      const newDeal = await createDeal.mutateAsync(dealData)
+  const newStageId = useMemo(
+    () => optionByName(stageOptions, 'New'),
+    [stageOptions],
+  )
+  const convertedLeadStatusId = useMemo(
+    () => optionByName(leadStatusOptions, 'Converted'),
+    [leadStatusOptions],
+  )
+  const mappedDealLeadSourceId = useMemo(
+    () =>
+      optionByName(dealLeadSourceOptions, getRelationName(lead?.lead_source)),
+    [dealLeadSourceOptions, lead?.lead_source],
+  )
+  const mappedCustomerTypeId = useMemo(
+    () =>
+      mapLeadTypeToCustomerType(
+        customerTypeOptions,
+        getRelationName(lead?.lead_type),
+      ),
+    [customerTypeOptions, lead?.lead_type],
+  )
 
-      // Update lead status to "Converted"
-      await updateLead.mutateAsync({
-        leadId: lead.id,
-        data: {
-          lead_status: 'converted',
+  const conversionStateValue = (state: string) =>
+    getOptionValue(conversionStateOptions, state)
+  const conversionModeValue = (selectedMode: ConversionMode) =>
+    getOptionValue(conversionModeOptions, selectedMode)
+
+  useEffect(() => {
+    if (mode === 'deal_only') {
+      setActiveTab('deal')
+    } else if (mode === 'contact_deal') {
+      setActiveTab('contact')
+    } else {
+      setActiveTab('company')
+    }
+  }, [mode])
+
+  useEffect(() => {
+    if (!open || !client) return
+    const dataSources = createDataSourceClient(client)
+    let cancelled = false
+    const load = async () => {
+      const [org, contact, deal] = await Promise.all([
+        dataSources
+          .getBySlug('base', 'organization', { expand: 'fields' })
+          .catch(() => null),
+        dataSources
+          .getBySlug('base', 'contact', { expand: 'fields' })
+          .catch(() => null),
+        dataSources
+          .getBySlug('base_crm', 'deal', { expand: 'fields' })
+          .catch(() => null),
+      ])
+      if (cancelled) return
+      const mapFields = (
+        ds: { fields?: Array<{ slug?: string; name?: string; type?: string }> } | null,
+      ) =>
+        (ds?.fields ?? [])
+          .filter(
+            (f): f is { slug: string; name: string; type: string } =>
+              Boolean(f?.slug && f?.name && f?.type),
+          )
+          .map((f) => ({ slug: f.slug, name: f.name, type: f.type }))
+      setTargetFields({
+        company: mapFields(org),
+        contact: mapFields(contact),
+        deal: mapFields(deal),
+      })
+    }
+    void load()
+    return () => {
+      cancelled = true
+    }
+  }, [open, client])
+
+  const progress =
+    (Object.values(steps).filter((state) => ['done', 'skipped'].includes(state))
+      .length /
+      Object.keys(steps).length) *
+    100
+
+  const isAlreadyCompleted = isLeadConvertedRecord(lead)
+  const hasPartialState = Boolean(
+    !isAlreadyCompleted &&
+    (lead?.converted_organization ||
+      lead?.converted_contact ||
+      normalizeConversionKey(getRelationName(lead?.conversion_state)) ===
+        normalizeConversionKey('partial') ||
+      normalizeConversionKey(getRelationName(lead?.conversion_state)) ===
+        normalizeConversionKey('failed')),
+  )
+
+  const setStep = (key: string, state: StepState) => {
+    setSteps((current) => ({ ...current, [key]: state }))
+  }
+
+  const setStepDetail = (key: string, details: Array<StepDetail>) => {
+    setStepDetails((current) => ({ ...current, [key]: details }))
+  }
+
+  const addStepDetail = (key: string, detail: StepDetail) => {
+    setStepDetails((current) => ({
+      ...current,
+      [key]: [...(current[key] ?? []), detail],
+    }))
+  }
+
+  const detail = (tone: DetailTone, label: string): StepDetail => ({
+    tone,
+    label,
+  })
+
+  const updateForm = (key: keyof typeof form, value: string) => {
+    setForm((current) => ({ ...current, [key]: value }))
+    setDuplicatesChecked(false)
+  }
+
+  const updateLead = async (data: Record<string, unknown>) => {
+    if (!client || !lead?.id) throw new Error('Lead bulunamadı')
+    await client.patch(
+      `/v1/apps/base_crm/data-sources/leads/items/${lead.id}`,
+      pickDefined(data),
+    )
+  }
+
+  const migrateLinkedWork = async ({
+    organizationId,
+    contactId,
+    dealId,
+  }: {
+    organizationId?: string
+    contactId?: string
+    dealId?: string
+  }) => {
+    if (!client || !lead?.id) return false
+
+    const dataSources = createDataSourceClient(client)
+    const [taskDataSource, eventDataSource] = await Promise.all([
+      dataSources
+        .getBySlug('base', 'task', { expand: 'fields' })
+        .catch(() => null),
+      dataSources
+        .getBySlug('base', 'event', { expand: 'fields' })
+        .catch(() => null),
+    ])
+
+    const updates: Array<Promise<unknown>> = []
+    const taskFields = getFieldSlugs(taskDataSource)
+    const eventFields = getFieldSlugs(eventDataSource)
+
+    if (hasAllFields(taskFields, ['lead'])) {
+      const response = await client.get(
+        '/v1/apps/base/data-sources/task/items',
+        {
+          columns: 'id',
+          filters: {
+            rules: [{ field: 'lead', operator: '=', value: lead.id }],
+          },
+          limit: 200,
         },
+      )
+      const taskPatch = pickDefined({
+        organization: taskFields.has('organization')
+          ? organizationId
+          : undefined,
+        contact: taskFields.has('contact') ? contactId : undefined,
+        deal: taskFields.has('deal') ? dealId : undefined,
       })
 
-      toast.success('Lead converted to deal successfully')
-      onOpenChange(false)
-
-      // Navigate to the new deal
-      if (newDeal?.id) {
-        navigate({ to: `/deals/${newDeal.id}` })
+      if (Object.keys(taskPatch).length > 0) {
+        for (const item of unwrapItems(response)) {
+          if (!item.id) continue
+          updates.push(
+            client.patch(
+              `/v1/apps/base/data-sources/task/items/${item.id}`,
+              taskPatch,
+            ),
+          )
+        }
       }
-    } catch (error: any) {
-      toast.error(error?.message || 'Failed to convert lead')
+    }
+
+    if (hasAllFields(eventFields, ['lead'])) {
+      const response = await client.get(
+        '/v1/apps/base/data-sources/event/items',
+        {
+          columns: 'id',
+          filters: {
+            rules: [{ field: 'lead', operator: '=', value: lead.id }],
+          },
+          limit: 200,
+        },
+      )
+      const eventPatch = pickDefined({
+        organization: eventFields.has('organization')
+          ? organizationId
+          : undefined,
+        contact: eventFields.has('contact') ? contactId : undefined,
+        deal: eventFields.has('deal') ? dealId : undefined,
+      })
+
+      if (Object.keys(eventPatch).length > 0) {
+        for (const item of unwrapItems(response)) {
+          if (!item.id) continue
+          updates.push(
+            client.patch(
+              `/v1/apps/base/data-sources/event/items/${item.id}`,
+              eventPatch,
+            ),
+          )
+        }
+      }
+    }
+
+    if (updates.length === 0) return false
+
+    await Promise.all(updates)
+    return true
+  }
+
+  const findDuplicates = async () => {
+    if (!client) return
+    setIsWorking(true)
+    setErrorMessage(null)
+    setStep('precheck', 'running')
+
+    try {
+      if (!form.dealName.trim()) {
+        throw new Error('Fırsat adı gerekli')
+      }
+
+      if (mode === 'company_contact_deal' && !form.companyName.trim()) {
+        throw new Error('Şirket adı gerekli')
+      }
+
+      if (mode !== 'deal_only' && !form.contactName.trim()) {
+        throw new Error('Kişi adı gerekli')
+      }
+
+      const companyKeyword =
+        sanitizeKeyword(form.companyName) ||
+        normalizeDomain(form.companyWebsite)
+      const contactKeyword =
+        sanitizeKeyword(form.contactName) ||
+        sanitizeKeyword(form.contactEmail) ||
+        sanitizeKeyword(form.contactPhone)
+      const [companies, contacts, deals] = await Promise.all([
+        mode === 'company_contact_deal' && companyKeyword
+          ? client.get('/v1/apps/base/data-sources/organization/items', {
+              columns: 'id,name,email,phone,website,country(id,name)',
+              filterKeyword: companyKeyword,
+              limit: 8,
+            })
+          : Promise.resolve([]),
+        mode !== 'deal_only' && contactKeyword
+          ? client.get('/v1/apps/base/data-sources/contact/items', {
+              columns: 'id,name,email,mobile,organization(id,name)',
+              filterKeyword: contactKeyword,
+              limit: 8,
+            })
+          : Promise.resolve([]),
+        lead?.id
+          ? client.get('/v1/apps/base_crm/data-sources/deal/items', {
+              columns:
+                'id,name,stage(id,name),organization(id,name),source_lead(id,name)',
+              filters: {
+                rules: [{ field: 'source_lead', operator: '=', value: lead.id }],
+              },
+              limit: 8,
+            })
+          : Promise.resolve([]),
+      ])
+
+      const companyMatches = unwrapItems(companies)
+      const contactMatches = unwrapItems(contacts)
+      const dealMatches = unwrapItems(deals)
+      const companyDomain = normalizeDomain(form.companyWebsite)
+      const companyName = normalize(form.companyName)
+      const companyPhone = normalizePhone(form.companyPhone)
+      const contactEmail = normalize(form.contactEmail)
+      const contactPhone = normalizePhone(form.contactPhone)
+      const exactCompany = companyMatches.find((candidate) => {
+        const candidateDomain = normalizeDomain(String(candidate.website ?? ''))
+        const candidatePhone = normalizePhone(String(candidate.phone ?? ''))
+        const candidateName = normalize(String(candidate.name ?? ''))
+
+        return (
+          (companyDomain && candidateDomain === companyDomain) ||
+          (companyName && candidateName === companyName) ||
+          (companyPhone && candidatePhone === companyPhone)
+        )
+      })
+      const exactContact = contactMatches.find((candidate) => {
+        const candidateEmail = normalize(String(candidate.email ?? ''))
+        const candidatePhone = normalizePhone(String(candidate.mobile ?? ''))
+
+        return (
+          (contactEmail && candidateEmail === contactEmail) ||
+          (contactPhone && candidatePhone === contactPhone)
+        )
+      })
+
+      setCompanyCandidates(companyMatches)
+      setContactCandidates(contactMatches)
+      setDealCandidates(dealMatches)
+      setExactCompanyId(exactCompany?.id ?? null)
+      setExactContactId(exactContact?.id ?? null)
+
+      if (exactCompany?.id) setSelectedCompanyId(exactCompany.id)
+      if (exactContact?.id) setSelectedContactId(exactContact.id)
+
+      const precheckDetails: Array<StepDetail> = []
+      precheckDetails.push(detail('success', `Fırsat adı: ${form.dealName}`))
+      if (mode === 'company_contact_deal') {
+        precheckDetails.push(
+          detail('success', `Şirket adı: ${form.companyName}`),
+        )
+      }
+      if (mode !== 'deal_only') {
+        precheckDetails.push(detail('success', `Kişi adı: ${form.contactName}`))
+      }
+      if (mode === 'company_contact_deal') {
+        if (companyMatches.length > 0) {
+          precheckDetails.push(
+            detail(
+              exactCompany ? 'warn' : 'info',
+              exactCompany
+                ? `${companyMatches.length} benzer şirket bulundu — eşleşen: ${exactCompany.name}`
+                : `${companyMatches.length} benzer şirket önerildi`,
+            ),
+          )
+        } else {
+          precheckDetails.push(
+            detail('success', 'Şirket çakışması yok — yeni kayıt açılacak'),
+          )
+        }
+      }
+      if (mode !== 'deal_only') {
+        if (contactMatches.length > 0) {
+          precheckDetails.push(
+            detail(
+              exactContact ? 'warn' : 'info',
+              exactContact
+                ? `${contactMatches.length} benzer kişi bulundu — eşleşen: ${exactContact.name}`
+                : `${contactMatches.length} benzer kişi önerildi`,
+            ),
+          )
+        } else {
+          precheckDetails.push(
+            detail('success', 'Kişi çakışması yok — yeni kayıt açılacak'),
+          )
+        }
+      }
+      if (dealMatches.length > 0) {
+        const first = dealMatches[0]
+        precheckDetails.push(
+          detail(
+            'warn',
+            `Bu lead'den önce ${dealMatches.length} fırsat oluşturulmuş — ör: ${first?.name ?? 'isimsiz'}`,
+          ),
+        )
+      } else {
+        precheckDetails.push(
+          detail('success', 'Bu lead için fırsat çakışması yok'),
+        )
+      }
+      setStepDetail('precheck', precheckDetails)
+
+      setDuplicatesChecked(true)
+      setStep('precheck', 'done')
+    } catch (error) {
+      setStep('precheck', 'failed')
+      setStepDetail('precheck', [
+        detail('error', `Hata: ${getErrorMessage(error)}`),
+      ])
+      setErrorMessage(getErrorMessage(error))
     } finally {
-      setIsConverting(false)
+      setIsWorking(false)
     }
   }
 
-  const handleConfirm = () => {
-    setShowConfirmation(true)
-    onOpenChange(false)
+  const focusMissingField = (
+    tab: 'company' | 'contact' | 'deal',
+    fieldKey: string,
+  ) => {
+    setActiveTab(tab)
+    requestAnimationFrame(() => {
+      const node = document.querySelector(`[data-field-key="${fieldKey}"]`)
+      if (node instanceof HTMLElement) {
+        node.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        node.classList.add('ring-2', 'ring-destructive/70')
+        window.setTimeout(() => {
+          node.classList.remove('ring-2', 'ring-destructive/70')
+        }, 1800)
+      }
+    })
+  }
+
+  type MissingField = {
+    tab: 'company' | 'contact' | 'deal'
+    fieldKey: string
+    label: string
+  }
+
+  const findMissingField = (): MissingField | null => {
+    const checkRow = (
+      tab: 'company' | 'contact' | 'deal',
+      slug: string,
+      label: string,
+      value: string,
+    ): MissingField | null => {
+      if (value.trim()) return null
+      return { tab, fieldKey: `${tab}:${slug}`, label }
+    }
+
+    if (mode === 'company_contact_deal') {
+      const companyChecks: Array<MissingField | null> = [
+        checkRow('company', 'name', 'Şirket adı', form.companyName),
+        checkRow('company', 'email', 'Şirket e-postası', form.companyEmail),
+        checkRow('company', 'phone', 'Şirket telefonu', form.companyPhone),
+        checkRow('company', 'website', 'Website', form.companyWebsite),
+        checkRow('company', 'address', 'Adres', form.companyAddress),
+        checkRow('company', 'city', 'Şehir', form.companyCity),
+        checkRow(
+          'company',
+          'industry',
+          'Sektör',
+          effectiveCompanyIndustryId,
+        ),
+        ...(companySizeSelectOptions.length > 0
+          ? [
+              checkRow(
+                'company',
+                'company_size',
+                'Şirket büyüklüğü',
+                effectiveCompanySizeId,
+              ),
+            ]
+          : []),
+        ...extraFields.company.map((f) =>
+          checkRow('company', f.slug, f.label, f.value),
+        ),
+      ]
+      const firstCompany = companyChecks.find((c): c is MissingField => c !== null)
+      if (firstCompany) return firstCompany
+    }
+
+    if (mode !== 'deal_only') {
+      const contactChecks: Array<MissingField | null> = [
+        checkRow('contact', 'name', 'Kişi adı', form.contactName),
+        checkRow(
+          'contact',
+          'job_title',
+          'İş ünvanı',
+          form.contactJobTitle,
+        ),
+        checkRow('contact', 'email', 'E-posta', form.contactEmail),
+        checkRow('contact', 'mobile', 'Telefon', form.contactPhone),
+        ...extraFields.contact.map((f) =>
+          checkRow('contact', f.slug, f.label, f.value),
+        ),
+      ]
+      const firstContact = contactChecks.find((c): c is MissingField => c !== null)
+      if (firstContact) return firstContact
+    }
+
+    const dealChecks: Array<MissingField | null> = [
+      checkRow('deal', 'name', 'Fırsat adı', form.dealName),
+      checkRow('deal', 'deal_value', 'Tahmini değer', form.dealValue),
+      checkRow(
+        'deal',
+        'expected_closing_date',
+        'Hedef kapanış',
+        form.expectedClosingDate,
+      ),
+      checkRow('deal', 'description', 'Açıklama / Not', form.notes),
+      checkRow('deal', 'stage', 'Aşama', effectiveStageId),
+      checkRow(
+        'deal',
+        'lead_source',
+        'Lead kaynağı',
+        effectiveLeadSourceId,
+      ),
+      checkRow(
+        'deal',
+        'customer_type',
+        'Müşteri tipi',
+        effectiveCustomerTypeId,
+      ),
+      ...extraFields.deal.map((f) =>
+        checkRow('deal', f.slug, f.label, f.value),
+      ),
+    ]
+    const firstDeal = dealChecks.find((c): c is MissingField => c !== null)
+    if (firstDeal) return firstDeal
+
+    return null
+  }
+
+  const lookupOptionLabel = (
+    options: Array<SelectOption>,
+    id: string,
+  ): string => options.find((o) => o.value === id)?.label ?? ''
+
+  const findChangedFromLead = () => {
+    const changes: Array<{
+      tab: 'company' | 'contact' | 'deal'
+      label: string
+      sourceText: string
+      targetText: string
+    }> = []
+    const push = (
+      tab: 'company' | 'contact' | 'deal',
+      label: string,
+      sourceText: string,
+      targetText: string,
+    ) => {
+      const src = (sourceText || '').trim()
+      const tgt = (targetText || '').trim()
+      if (src && src !== tgt) {
+        changes.push({ tab, label, sourceText: src, targetText: tgt })
+      }
+    }
+
+    if (mode === 'company_contact_deal') {
+      push('company', 'Şirket adı', lead?.company_name_text || '', form.companyName)
+      push('company', 'Şirket e-postası', lead?.company_email || '', form.companyEmail)
+      push('company', 'Şirket telefonu', lead?.company_phone || '', form.companyPhone)
+      push('company', 'Website', lead?.website || '', form.companyWebsite)
+      push('company', 'Adres', lead?.address || '', form.companyAddress)
+      push('company', 'Şehir', lead?.city || '', form.companyCity)
+      push(
+        'company',
+        'Sektör',
+        leadCompanyIndustryName,
+        lookupOptionLabel(industrySelectOptions, effectiveCompanyIndustryId),
+      )
+      if (companySizeSelectOptions.length > 0) {
+        push(
+          'company',
+          'Şirket büyüklüğü',
+          leadCompanySizeName,
+          lookupOptionLabel(
+            companySizeSelectOptions,
+            effectiveCompanySizeId,
+          ),
+        )
+      }
+    }
+    if (mode !== 'deal_only') {
+      push('contact', 'Kişi adı', lead?.name || '', form.contactName)
+      push(
+        'contact',
+        'İş ünvanı',
+        lead?.contact_job_title || '',
+        form.contactJobTitle,
+      )
+      push('contact', 'E-posta', lead?.email || '', form.contactEmail)
+      push('contact', 'Telefon', lead?.phone || '', form.contactPhone)
+    }
+    push(
+      'deal',
+      'Tahmini değer',
+      lead?.deal_value ? String(lead.deal_value) : '',
+      form.dealValue,
+    )
+    push(
+      'deal',
+      'Hedef kapanış',
+      lead?.expected_closing_date || '',
+      form.expectedClosingDate,
+    )
+    push(
+      'deal',
+      'Açıklama / Not',
+      lead?.contact_message || '',
+      form.notes,
+    )
+    push(
+      'deal',
+      'Lead kaynağı',
+      leadSourceName,
+      lookupOptionLabel(leadSourceSelectOptions, effectiveLeadSourceId),
+    )
+    push(
+      'deal',
+      'Müşteri tipi',
+      leadTypeName,
+      lookupOptionLabel(customerTypeSelectOptions, effectiveCustomerTypeId),
+    )
+    return changes
+  }
+
+  const runConversion = async () => {
+    if (!client || !lead?.id) return
+
+    if (!duplicatesChecked) {
+      await findDuplicates()
+      return
+    }
+
+    const missing = findMissingField()
+    if (missing) {
+      const message = `"${missing.label}" alanı boş — dönüşüm öncesi doldurmalısın`
+      setErrorMessage(message)
+      toast.error(message)
+      focusMissingField(missing.tab, missing.fieldKey)
+      return
+    }
+
+    if (!changesConfirmed) {
+      const changes = findChangedFromLead()
+      if (changes.length > 0) {
+        setPendingChanges(changes)
+        return
+      }
+    }
+
+    setIsWorking(true)
+    setErrorMessage(null)
+
+    let organizationId =
+      getRelationId(lead.converted_organization) ??
+      selectedCompanyId ??
+      undefined
+    let contactId =
+      getRelationId(lead.converted_contact) ?? selectedContactId ?? undefined
+    let dealId = getRelationId(lead.converted_deal)
+    let activeStep = 'lead'
+    const runStep = (step: string, state: StepState) => {
+      activeStep = step
+      setStep(step, state)
+    }
+
+    try {
+      runStep('precheck', 'running')
+      const me = await client
+        .get<CurrentUserResponse>('/v1/users/me')
+        .catch(() => null)
+      await updateLead({
+        conversion_state: conversionStateValue('in_progress'),
+        conversion_mode: conversionModeValue(mode),
+        conversion_error_message: undefined,
+      })
+      addStepDetail(
+        'precheck',
+        detail('info', `Dönüşüm modu: ${MODE_LABELS[mode]}`),
+      )
+      addStepDetail('precheck', detail('info', 'Lead durumu: in_progress'))
+      setStep('precheck', 'done')
+
+      if (mode === 'company_contact_deal') {
+        runStep('organization', 'running')
+        const isReusedOrg = Boolean(organizationId)
+        if (!organizationId) {
+          const orgExtras = Object.fromEntries(
+            extraFields.company
+              .filter((field) => field.value !== '')
+              .map((field) => [field.slug, field.value]),
+          )
+          const organization = await client.post(
+            '/v1/apps/base/data-sources/organization/items',
+            {
+              name: form.companyName || form.contactName,
+              email: form.companyEmail || undefined,
+              phone: form.companyPhone || undefined,
+              website: form.companyWebsite || undefined,
+              address: form.companyAddress || undefined,
+              city: form.companyCity || undefined,
+              industry: effectiveCompanyIndustryId || undefined,
+              company_size: effectiveCompanySizeId || undefined,
+              country: getRelationId(lead.countries),
+              source_lead: lead.id,
+              ...orgExtras,
+            },
+          )
+          organizationId = organization?.id
+        }
+        await updateLead({ converted_organization: organizationId })
+        setStepDetail('organization', [
+          detail(
+            'success',
+            isReusedOrg
+              ? `Mevcut şirket kullanıldı: ${form.companyName}`
+              : `Yeni şirket oluşturuldu: ${form.companyName}`,
+          ),
+          ...(organizationId
+            ? [detail('neutral', `ID: ${organizationId}`)]
+            : []),
+        ])
+        setStep('organization', 'done')
+      } else {
+        setStepDetail('organization', [
+          detail('neutral', 'Bu modda atlandı'),
+        ])
+        setStep('organization', 'skipped')
+      }
+
+      if (mode !== 'deal_only') {
+        runStep('contact', 'running')
+        const isReusedContact = Boolean(contactId)
+        if (!contactId) {
+          const contactExtras = Object.fromEntries(
+            extraFields.contact
+              .filter((field) => field.value !== '')
+              .map((field) => [field.slug, field.value]),
+          )
+          const contact = await client.post(
+            '/v1/apps/base/data-sources/contact/items',
+            {
+              name: form.contactName,
+              email: form.contactEmail || undefined,
+              mobile: form.contactPhone || undefined,
+              job_title: form.contactJobTitle || undefined,
+              organization: organizationId,
+              source_lead: lead.id,
+              ...contactExtras,
+            },
+          )
+          contactId = contact?.id
+        }
+        await updateLead({ converted_contact: contactId })
+        setStepDetail('contact', [
+          detail(
+            'success',
+            isReusedContact
+              ? `Mevcut kişi kullanıldı: ${form.contactName}`
+              : `Yeni kişi oluşturuldu: ${form.contactName}`,
+          ),
+          ...(contactId ? [detail('neutral', `ID: ${contactId}`)] : []),
+        ])
+        setStep('contact', 'done')
+      } else {
+        setStepDetail('contact', [detail('neutral', 'Bu modda atlandı')])
+        setStep('contact', 'skipped')
+      }
+
+      runStep('deal', 'running')
+      const isReusedDeal = Boolean(dealId)
+      if (!dealId) {
+        const dealExtras = Object.fromEntries(
+          extraFields.deal
+            .filter((field) => field.value !== '')
+            .map((field) => [field.slug, field.value]),
+        )
+        const deal = await client.post(
+          '/v1/apps/base_crm/data-sources/deal/items',
+          {
+            name: form.dealName,
+            organization: organizationId,
+            contact_person: contactId,
+            stage: effectiveStageId || undefined,
+            lead_source: effectiveLeadSourceId || undefined,
+            customer_type: effectiveCustomerTypeId || undefined,
+            country: getRelationId(lead.countries),
+            record_owner: getRelationId(lead.record_owner),
+            deal_value: form.dealValue ? Number(form.dealValue) : undefined,
+            expected_closing_date: form.expectedClosingDate || undefined,
+            description: form.notes || undefined,
+            source_lead: lead.id,
+            ...dealExtras,
+          },
+        )
+        dealId = deal?.id
+      }
+      await updateLead({ converted_deal: dealId })
+      const dealDetails: Array<StepDetail> = [
+        detail(
+          'success',
+          isReusedDeal
+            ? `Mevcut fırsat kullanıldı: ${form.dealName}`
+            : `Yeni fırsat oluşturuldu: ${form.dealName}`,
+        ),
+        detail('info', 'Aşama: New'),
+      ]
+      if (mappedDealLeadSourceId)
+        dealDetails.push(detail('info', 'Lead kaynağı eşlendi'))
+      if (mappedCustomerTypeId)
+        dealDetails.push(detail('info', 'Müşteri tipi eşlendi'))
+      if (form.dealValue)
+        dealDetails.push(detail('info', `Tahmini değer: ${form.dealValue}`))
+      setStepDetail('deal', dealDetails)
+      setStep('deal', 'done')
+
+      runStep('activity', 'running')
+      const linkedWorkUpdated = await migrateLinkedWork({
+        organizationId,
+        contactId,
+        dealId,
+      })
+      setStepDetail(
+        'activity',
+        linkedWorkUpdated
+          ? [
+              detail(
+                'success',
+                'Bağlı görev/etkinlikler yeni kayıtlara taşındı',
+              ),
+            ]
+          : [detail('neutral', 'Taşınacak görev veya etkinlik bulunamadı')],
+      )
+      setStep('activity', linkedWorkUpdated ? 'done' : 'skipped')
+
+      runStep('lead', 'running')
+      await updateLead({
+        lead_status: convertedLeadStatusId,
+        converted_deal: dealId,
+        converted_contact: contactId,
+        converted_organization: organizationId,
+        converted_on: new Date().toISOString(),
+        converted_by: me?.id,
+        conversion_state: conversionStateValue('completed'),
+        conversion_mode: conversionModeValue(mode),
+        conversion_error_message: undefined,
+      })
+      setStepDetail('lead', [
+        detail('success', 'Statü: Converted'),
+        detail('info', `Tamamlandı: ${new Date().toLocaleString('tr-TR')}`),
+      ])
+      setStep('lead', 'done')
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['leads'] }),
+        queryClient.invalidateQueries({ queryKey: ['deals'] }),
+        queryClient.invalidateQueries({ queryKey: ['contacts'] }),
+        queryClient.invalidateQueries({ queryKey: ['companies'] }),
+        queryClient.invalidateQueries({ queryKey: ['tasks'] }),
+        queryClient.invalidateQueries({ queryKey: ['events'] }),
+      ])
+
+      toast.success('Lead fırsata dönüştürüldü')
+      onOpenChange(false)
+      if (dealId) {
+        void navigate({ to: '/deals/$dealId', params: { dealId } })
+      }
+    } catch (error) {
+      const message = getErrorMessage(error)
+      const partial = Boolean(organizationId || contactId || dealId)
+      setErrorMessage(message)
+      setStep(activeStep, 'failed')
+      setStepDetail(activeStep, [detail('error', `Hata: ${message}`)])
+      await updateLead({
+        converted_organization: organizationId,
+        converted_contact: contactId,
+        converted_deal: dealId,
+        conversion_state: conversionStateValue(partial ? 'partial' : 'failed'),
+        conversion_error_message: message,
+      }).catch(() => undefined)
+      toast.error(message)
+    } finally {
+      setIsWorking(false)
+    }
+  }
+
+  const formDisabled = isWorking || isAlreadyCompleted
+
+  const toEnumSelectOptions = (
+    opts: Array<{ id?: string; name?: string }>,
+  ): Array<SelectOption> =>
+    opts
+      .filter((o): o is { id: string; name: string } =>
+        Boolean(o.id && o.name),
+      )
+      .map((o) => ({ value: o.id, label: o.name }))
+
+  const stageSelectOptions = useMemo(
+    () => toEnumSelectOptions(stageOptions),
+    [stageOptions],
+  )
+  const leadSourceSelectOptions = useMemo(
+    () => toEnumSelectOptions(dealLeadSourceOptions),
+    [dealLeadSourceOptions],
+  )
+  const customerTypeSelectOptions = useMemo(
+    () => toEnumSelectOptions(customerTypeOptions),
+    [customerTypeOptions],
+  )
+  const industrySelectOptions = useMemo(
+    () => toEnumSelectOptions(orgIndustryOptions),
+    [orgIndustryOptions],
+  )
+  const companySizeSelectOptions = useMemo(
+    () => toEnumSelectOptions(orgCompanySizeOptions),
+    [orgCompanySizeOptions],
+  )
+
+  const leadCompanyIndustryName = getRelationName(lead?.company_industry) ?? ''
+  const leadCompanySizeName = getRelationName(lead?.company_size) ?? ''
+  const leadSourceName = getRelationName(lead?.lead_source) ?? ''
+  const leadTypeName = getRelationName(lead?.lead_type) ?? ''
+
+  const mappedCompanyIndustryId = useMemo(
+    () => optionByName(orgIndustryOptions, leadCompanyIndustryName),
+    [orgIndustryOptions, leadCompanyIndustryName],
+  )
+  const mappedCompanySizeId = useMemo(
+    () => optionByName(orgCompanySizeOptions, leadCompanySizeName),
+    [orgCompanySizeOptions, leadCompanySizeName],
+  )
+
+  const effectiveStageId = form.dealStageId || newStageId || ''
+  const effectiveLeadSourceId =
+    form.dealLeadSourceId || mappedDealLeadSourceId || ''
+  const effectiveCustomerTypeId =
+    form.dealCustomerTypeId || mappedCustomerTypeId || ''
+  const effectiveCompanyIndustryId =
+    form.companyIndustry || mappedCompanyIndustryId || ''
+  const effectiveCompanySizeId =
+    form.companySize || mappedCompanySizeId || ''
+
+  const setExtraValue = (
+    target: 'company' | 'contact' | 'deal',
+    slug: string,
+    value: string,
+  ) => {
+    setExtraFields((current) => ({
+      ...current,
+      [target]: current[target].map((field) =>
+        field.slug === slug ? { ...field, value } : field,
+      ),
+    }))
+  }
+
+  const removeExtraField = (
+    target: 'company' | 'contact' | 'deal',
+    slug: string,
+  ) => {
+    setExtraFields((current) => ({
+      ...current,
+      [target]: current[target].filter((field) => field.slug !== slug),
+    }))
+  }
+
+  const KNOWN_FIELDS: Record<'company' | 'contact' | 'deal', Array<string>> = {
+    company: [
+      'name',
+      'email',
+      'phone',
+      'website',
+      'address',
+      'city',
+      'industry',
+      'company_size',
+      'country',
+      'source_lead',
+      'record_owner',
+    ],
+    contact: [
+      'name',
+      'job_title',
+      'email',
+      'mobile',
+      'organization',
+      'source_lead',
+      'record_owner',
+    ],
+    deal: [
+      'name',
+      'deal_value',
+      'expected_revenue',
+      'close_probability',
+      'expected_closing_date',
+      'description',
+      'stage',
+      'lead_source',
+      'customer_type',
+      'country',
+      'record_owner',
+      'organization',
+      'contact_person',
+      'source_lead',
+    ],
+  }
+
+  const SYSTEM_HIDDEN_FIELDS = new Set([
+    'id',
+    'autonumber_id',
+    'created_by',
+    'created_on',
+    'last_modified_by',
+    'last_modified_on',
+    'followers',
+    'status',
+  ])
+
+  const inferKindFromType = (type: string): FieldKind => {
+    if (type === 'field-money' || type === 'field-number') return 'number'
+    if (type === 'field-date' || type === 'field-dateTime') return 'date'
+    if (type === 'field-textarea') return 'textarea'
+    if (type === 'field-email') return 'email'
+    if (type === 'field-phone') return 'phone'
+    if (type === 'field-url') return 'url'
+    return 'text'
+  }
+
+  const availableExtraFields = (target: 'company' | 'contact' | 'deal') => {
+    const known = new Set(KNOWN_FIELDS[target])
+    const alreadyAdded = new Set(
+      extraFields[target].map((field) => field.slug),
+    )
+    return targetFields[target].filter(
+      (field) =>
+        !known.has(field.slug) &&
+        !SYSTEM_HIDDEN_FIELDS.has(field.slug) &&
+        !alreadyAdded.has(field.slug),
+    )
+  }
+
+  const addExtraField = (
+    target: 'company' | 'contact' | 'deal',
+    field: { slug: string; name: string; type: string },
+  ) => {
+    setExtraFields((current) => ({
+      ...current,
+      [target]: [
+        ...current[target],
+        {
+          slug: field.slug,
+          label: field.name,
+          kind: inferKindFromType(field.type),
+          value: '',
+        },
+      ],
+    }))
+    requestAnimationFrame(() => {
+      const node = document.querySelector(
+        `[data-field-key="${target}:${field.slug}"]`,
+      )
+      if (node instanceof HTMLElement) {
+        node.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        node.classList.add('ring-2', 'ring-primary/60')
+        window.setTimeout(() => {
+          node.classList.remove('ring-2', 'ring-primary/60')
+        }, 1400)
+      }
+    })
+  }
+
+  const renderAddFieldPopover = (target: 'company' | 'contact' | 'deal') => {
+    const targetLabel = TARGET_LABEL[target]
+    const options = availableExtraFields(target)
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={formDisabled || options.length === 0}
+            className="h-8"
+          >
+            <Plus className="mr-1 size-3.5" />
+            {targetLabel} alanı ekle
+            {options.length > 0 ? (
+              <Badge variant="secondary" className="ml-1.5 h-4 px-1 text-[10px]">
+                {options.length}
+              </Badge>
+            ) : null}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-64 p-0">
+          <div className="max-h-64 overflow-y-auto p-1">
+            {options.length === 0 ? (
+              <p className="px-2 py-3 text-xs text-muted-foreground">
+                Eklenebilir alan yok.
+              </p>
+            ) : (
+              options.map((option) => (
+                <button
+                  key={option.slug}
+                  type="button"
+                  onClick={() => addExtraField(target, option)}
+                  className="flex w-full items-center justify-between rounded px-2 py-1.5 text-left text-xs hover:bg-accent"
+                >
+                  <span className="truncate">{option.name}</span>
+                  <span className="ml-2 text-[10px] text-muted-foreground">
+                    {option.type.replace('field-', '')}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+        </PopoverContent>
+      </Popover>
+    )
+  }
+
+  const renderDuplicateMatches = (target: 'company' | 'contact') => {
+    const candidates =
+      target === 'company' ? companyCandidates : contactCandidates
+    if (candidates.length === 0) return null
+    const selectedId =
+      target === 'company' ? selectedCompanyId : selectedContactId
+    const setSelected =
+      target === 'company' ? setSelectedCompanyId : setSelectedContactId
+
+    return (
+      <div className="space-y-2 rounded-md border border-dashed bg-muted/30 p-3">
+        <p className="text-xs font-medium">
+          {target === 'company' ? 'Benzer şirketler' : 'Benzer kişiler'}
+        </p>
+        {candidates.map((candidate) => (
+          <button
+            key={candidate.id}
+            type="button"
+            disabled={isWorking}
+            onClick={() => setSelected(candidate.id ?? null)}
+            className={cn(
+              'w-full rounded-md border bg-background px-3 py-2 text-left text-xs',
+              selectedId === candidate.id &&
+                'border-primary ring-1 ring-primary',
+            )}
+          >
+            <span className="font-medium">{candidate.name}</span>
+            <span className="ml-2 text-muted-foreground">
+              {target === 'company'
+                ? candidate.website || candidate.email || candidate.phone
+                : candidate.email || candidate.mobile}
+            </span>
+          </button>
+        ))}
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={isWorking}
+          onClick={() => setSelected(null)}
+        >
+          {target === 'company' ? 'Yeni şirket oluştur' : 'Yeni kişi oluştur'}
+        </Button>
+      </div>
+    )
+  }
+
+  const renderMappingTabs = () => {
+    const tabsToShow: Array<'company' | 'contact' | 'deal'> = []
+    if (mode === 'company_contact_deal') tabsToShow.push('company')
+    if (mode !== 'deal_only') tabsToShow.push('contact')
+    tabsToShow.push('deal')
+
+    return (
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) =>
+          setActiveTab(value as 'company' | 'contact' | 'deal')
+        }
+        className="w-full"
+      >
+        <TabsList className="w-full justify-start">
+          {tabsToShow.map((tab) => (
+            <TabsTrigger key={tab} value={tab} className="flex-1">
+              {TARGET_LABEL[tab]}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        {tabsToShow.includes('company') && (
+          <TabsContent value="company" className="space-y-3">
+            <div className="flex items-center justify-end">
+              {renderAddFieldPopover('company')}
+            </div>
+            <FieldMappingRow
+              fieldKey="company:name"
+              label="Şirket adı"
+              sourceLabel="Lead: company_name_text"
+              targetLabel="Organization: name"
+              sourceValue={lead?.company_name_text ?? ''}
+              value={form.companyName}
+              onChange={(v) => updateForm('companyName', v)}
+              disabled={formDisabled}
+              highlight
+              required
+            />
+            <FieldMappingRow
+              label="Şirket e-postası"
+              sourceLabel="Lead: company_email"
+              targetLabel="Organization: email"
+              sourceValue={lead?.company_email ?? ''}
+              value={form.companyEmail}
+              kind="email"
+              onChange={(v) => updateForm('companyEmail', v)}
+              disabled={formDisabled}
+            />
+            <FieldMappingRow
+              label="Şirket telefonu"
+              sourceLabel="Lead: company_phone"
+              targetLabel="Organization: phone"
+              sourceValue={lead?.company_phone ?? ''}
+              value={form.companyPhone}
+              kind="phone"
+              onChange={(v) => updateForm('companyPhone', v)}
+              disabled={formDisabled}
+            />
+            <FieldMappingRow
+              label="Website"
+              sourceLabel="Lead: website"
+              targetLabel="Organization: website"
+              sourceValue={lead?.website ?? ''}
+              value={form.companyWebsite}
+              kind="url"
+              onChange={(v) => updateForm('companyWebsite', v)}
+              disabled={formDisabled}
+            />
+            <FieldMappingRow
+              label="Adres"
+              sourceLabel="Lead: address"
+              targetLabel="Organization: address"
+              sourceValue={lead?.address ?? ''}
+              value={form.companyAddress}
+              kind="textarea"
+              onChange={(v) => updateForm('companyAddress', v)}
+              disabled={formDisabled}
+            />
+            <FieldMappingRow
+              label="Şehir"
+              sourceLabel="Lead: city"
+              targetLabel="Organization: city"
+              sourceValue={lead?.city ?? ''}
+              value={form.companyCity}
+              onChange={(v) => updateForm('companyCity', v)}
+              disabled={formDisabled}
+            />
+            <FieldMappingRow
+              fieldKey="company:industry"
+              label="Sektör"
+              sourceLabel="Lead: company_industry"
+              targetLabel="Organization: industry"
+              sourceValue={leadCompanyIndustryName}
+              value={effectiveCompanyIndustryId}
+              kind="select"
+              options={industrySelectOptions}
+              placeholder="Sektör seçin..."
+              onChange={(v) => updateForm('companyIndustry', v)}
+              disabled={formDisabled}
+            />
+            {companySizeSelectOptions.length > 0 ? (
+              <FieldMappingRow
+                fieldKey="company:company_size"
+                label="Şirket büyüklüğü"
+                sourceLabel="Lead: company_size"
+                targetLabel="Organization: company_size"
+                sourceValue={leadCompanySizeName}
+                value={effectiveCompanySizeId}
+                kind="select"
+                options={companySizeSelectOptions}
+                placeholder="Boyut seçin..."
+                onChange={(v) => updateForm('companySize', v)}
+                disabled={formDisabled}
+              />
+            ) : null}
+            {extraFields.company.map((extra) => (
+              <FieldMappingRow
+                key={extra.slug}
+                fieldKey={`company:${extra.slug}`}
+                label={extra.label}
+                sourceLabel="Dialog-only"
+                targetLabel={`Organization: ${extra.slug}`}
+                sourceValue=""
+                value={extra.value}
+                kind={extra.kind}
+                onChange={(v) => setExtraValue('company', extra.slug, v)}
+                onRemove={() => removeExtraField('company', extra.slug)}
+                disabled={formDisabled}
+              />
+            ))}
+            {renderDuplicateMatches('company')}
+          </TabsContent>
+        )}
+
+        {tabsToShow.includes('contact') && (
+          <TabsContent value="contact" className="space-y-3">
+            <div className="flex items-center justify-end">
+              {renderAddFieldPopover('contact')}
+            </div>
+            <FieldMappingRow
+              fieldKey="contact:name"
+              label="Kişi adı"
+              sourceLabel="Lead: name"
+              targetLabel="Contact: name"
+              sourceValue={lead?.name ?? ''}
+              value={form.contactName}
+              onChange={(v) => updateForm('contactName', v)}
+              disabled={formDisabled}
+              highlight
+              required
+            />
+            <FieldMappingRow
+              label="İş ünvanı"
+              sourceLabel="Lead: contact_job_title"
+              targetLabel="Contact: job_title"
+              sourceValue={lead?.contact_job_title ?? ''}
+              value={form.contactJobTitle}
+              onChange={(v) => updateForm('contactJobTitle', v)}
+              disabled={formDisabled}
+            />
+            <FieldMappingRow
+              label="E-posta"
+              sourceLabel="Lead: email"
+              targetLabel="Contact: email"
+              sourceValue={lead?.email ?? ''}
+              value={form.contactEmail}
+              kind="email"
+              onChange={(v) => updateForm('contactEmail', v)}
+              disabled={formDisabled}
+            />
+            <FieldMappingRow
+              label="Telefon"
+              sourceLabel="Lead: phone"
+              targetLabel="Contact: mobile"
+              sourceValue={lead?.phone ?? ''}
+              value={form.contactPhone}
+              kind="phone"
+              onChange={(v) => updateForm('contactPhone', v)}
+              disabled={formDisabled}
+            />
+            {extraFields.contact.map((extra) => (
+              <FieldMappingRow
+                key={extra.slug}
+                fieldKey={`contact:${extra.slug}`}
+                label={extra.label}
+                sourceLabel="Dialog-only"
+                targetLabel={`Contact: ${extra.slug}`}
+                sourceValue=""
+                value={extra.value}
+                kind={extra.kind}
+                onChange={(v) => setExtraValue('contact', extra.slug, v)}
+                onRemove={() => removeExtraField('contact', extra.slug)}
+                disabled={formDisabled}
+              />
+            ))}
+            {renderDuplicateMatches('contact')}
+          </TabsContent>
+        )}
+
+        <TabsContent value="deal" className="space-y-3">
+          <div className="flex items-center justify-end">
+            {renderAddFieldPopover('deal')}
+          </div>
+          <FieldMappingRow
+            fieldKey="deal:name"
+            label="Fırsat adı"
+            sourceLabel="Otomatik (şirket + kişi)"
+            targetLabel="Deal: name"
+            sourceValue={
+              [lead?.company_name_text, lead?.name]
+                .filter(Boolean)
+                .join(' - ') || ''
+            }
+            value={form.dealName}
+            onChange={(v) => updateForm('dealName', v)}
+            disabled={formDisabled}
+            highlight
+            required
+          />
+          <FieldMappingRow
+            label="Tahmini değer"
+            sourceLabel="Lead: deal_value"
+            targetLabel="Deal: deal_value"
+            sourceValue={lead?.deal_value ? String(lead.deal_value) : ''}
+            value={form.dealValue}
+            kind="money"
+            onChange={(v) => updateForm('dealValue', v)}
+            disabled={formDisabled}
+          />
+          <FieldMappingRow
+            label="Hedef kapanış"
+            sourceLabel="Lead: expected_closing_date"
+            targetLabel="Deal: expected_closing_date"
+            sourceValue={lead?.expected_closing_date ?? ''}
+            value={form.expectedClosingDate}
+            kind="date"
+            onChange={(v) => updateForm('expectedClosingDate', v)}
+            disabled={formDisabled}
+          />
+          <FieldMappingRow
+            label="Açıklama / Not"
+            sourceLabel="Lead: contact_message"
+            targetLabel="Deal: description"
+            sourceValue={lead?.contact_message ?? ''}
+            value={form.notes}
+            kind="textarea"
+            onChange={(v) => updateForm('notes', v)}
+            disabled={formDisabled}
+          />
+          <FieldMappingRow
+            label="Aşama"
+            sourceLabel="Sabit: New"
+            targetLabel="Deal: stage"
+            sourceValue="New"
+            value={effectiveStageId}
+            kind="select"
+            options={stageSelectOptions}
+            placeholder="Aşama seçin..."
+            onChange={(v) => updateForm('dealStageId', v)}
+            disabled={formDisabled}
+          />
+          <FieldMappingRow
+            label="Lead kaynağı"
+            sourceLabel="Lead: lead_source"
+            targetLabel="Deal: lead_source"
+            sourceValue={leadSourceName}
+            value={effectiveLeadSourceId}
+            kind="select"
+            options={leadSourceSelectOptions}
+            placeholder="Kaynak seçin..."
+            onChange={(v) => updateForm('dealLeadSourceId', v)}
+            disabled={formDisabled}
+          />
+          <FieldMappingRow
+            label="Müşteri tipi"
+            sourceLabel="Lead: lead_type"
+            targetLabel="Deal: customer_type"
+            sourceValue={leadTypeName}
+            value={effectiveCustomerTypeId}
+            kind="select"
+            options={customerTypeSelectOptions}
+            placeholder="Tip seçin..."
+            onChange={(v) => updateForm('dealCustomerTypeId', v)}
+            disabled={formDisabled}
+          />
+          {extraFields.deal.map((extra) => (
+            <FieldMappingRow
+              key={extra.slug}
+              fieldKey={`deal:${extra.slug}`}
+              label={extra.label}
+              sourceLabel="Dialog-only"
+              targetLabel={`Deal: ${extra.slug}`}
+              sourceValue=""
+              value={extra.value}
+              kind={extra.kind}
+              onChange={(v) => setExtraValue('deal', extra.slug, v)}
+              onRemove={() => removeExtraField('deal', extra.slug)}
+              disabled={formDisabled}
+            />
+          ))}
+          {dealCandidates.length > 0 ? (
+            <div className="space-y-2 rounded-md border border-amber-300/60 bg-amber-50/60 p-3 dark:bg-amber-950/20">
+              <p className="flex items-center gap-1.5 text-xs font-medium text-amber-800 dark:text-amber-200">
+                <Sparkles className="size-3.5" />
+                Bu lead için önceki fırsatlar
+              </p>
+              {dealCandidates.map((candidate) => (
+                <div
+                  key={candidate.id}
+                  className="rounded-md border bg-background px-3 py-2 text-xs"
+                >
+                  <p className="font-medium">{candidate.name}</p>
+                  <p className="text-muted-foreground">
+                    {typeof candidate.stage === 'object'
+                      ? candidate.stage?.name
+                      : null}
+                    {candidate.organization &&
+                    typeof candidate.organization === 'object'
+                      ? ` · ${candidate.organization.name}`
+                      : ''}
+                  </p>
+                </div>
+              ))}
+              <p className="text-[11px] text-muted-foreground">
+                Yine de devam edersen yeni bir fırsat oluşturulur.
+              </p>
+            </div>
+          ) : null}
+        </TabsContent>
+      </Tabs>
+    )
   }
 
   return (
-    <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Convert Lead to Deal</DialogTitle>
-            <DialogDescription>
-              This will create a new deal based on this lead's information and
-              mark the lead as converted.
-            </DialogDescription>
-          </DialogHeader>
+    <AwesomeDialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (isWorking) return
+        onOpenChange(nextOpen)
+      }}
+      container="modal"
+      size="xl"
+    >
+      <AwesomeDialogHeader
+        title="Lead dönüştür"
+        description="Kişi, şirket ve fırsat kayıtlarını kontrollü şekilde oluşturun."
+      />
 
-          <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4">
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium">Lead Information</h4>
-              <div className="space-y-1 text-sm text-muted-foreground">
-                <p>
-                  <span className="font-medium">Title:</span> {lead?.title}
-                </p>
-                {lead?.company_name && (
-                  <p>
-                    <span className="font-medium">Company:</span>{' '}
-                    {typeof lead.company_name === 'object'
-                      ? lead.company_name.name
-                      : lead.company_name}
-                  </p>
-                )}
-                {lead?.lead_source && (
-                  <p>
-                    <span className="font-medium">Source:</span>{' '}
-                    {lead.lead_source}
-                  </p>
-                )}
-              </div>
+      <AwesomeDialogBody>
+        <div className="space-y-5">
+          {isAlreadyCompleted && (
+            <Alert>
+              <CheckCircle2 />
+              <AlertTitle>Bu lead daha önce dönüştürülmüş</AlertTitle>
+              <AlertDescription>
+                Oluşan fırsatı veya bağlı kayıtları açabilirsiniz; lead artık
+                yalnızca referans amaçlı görüntülenir.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {hasPartialState && (
+            <Alert variant="destructive">
+              <AlertCircle />
+              <AlertTitle>Önceki dönüşüm tamamlanmamış</AlertTitle>
+              <AlertDescription>
+                Oluşmuş kayıtlar korunur. Dönüşüme kaldığı yerden devam
+                edebilirsiniz.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {errorMessage && (
+            <Alert variant="destructive">
+              <AlertCircle />
+              <AlertTitle>İşlem tamamlanamadı</AlertTitle>
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
+          )}
+
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border bg-card px-3 py-2">
+            <div className="flex items-center gap-2 text-xs">
+              <span className="font-medium text-foreground">Dönüşüm tipi</span>
+              <Select
+                value={mode}
+                disabled={isWorking || isAlreadyCompleted}
+                onValueChange={(value) => {
+                  setMode(value as ConversionMode)
+                  setDuplicatesChecked(false)
+                }}
+              >
+                <SelectTrigger className="h-7 w-[200px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(MODE_LABELS).map(([value, label]) => (
+                    <SelectItem key={value} value={value} className="text-xs">
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-
-            <div className="rounded-md bg-muted p-4">
-              <p className="text-sm">
-                A new deal will be created in the{' '}
-                <span className="font-medium">Prospecting</span> stage. You can
-                update the deal details after conversion.
-              </p>
+            <div className="flex items-center gap-2 text-[11px]">
+              <span className="text-muted-foreground">Oluşacak:</span>
+              {mode === 'company_contact_deal' ? (
+                <Badge variant="secondary" className="gap-1">
+                  <Building2 className="size-3 text-sky-600" />
+                  Şirket
+                </Badge>
+              ) : null}
+              {mode !== 'deal_only' ? (
+                <Badge variant="secondary" className="gap-1">
+                  <UserRound className="size-3 text-emerald-600" />
+                  Kişi
+                </Badge>
+              ) : null}
+              <Badge variant="secondary" className="gap-1">
+                <CheckCircle2 className="size-3 text-violet-600" />
+                Fırsat
+              </Badge>
             </div>
           </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="button" onClick={handleConfirm}>
-              Convert to Deal
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>İlerleme</span>
+              <span>{Math.round(progress)}%</span>
+            </div>
+            <Progress value={progress} />
+            <TooltipProvider delayDuration={200}>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-6">
+                {Object.entries(STEP_LABELS).map(([key, label]) => {
+                  const state = steps[key] ?? 'pending'
+                  const details = stepDetails[key] ?? []
+                  const hasDetails = details.length > 0
 
-      <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+                  return (
+                    <Tooltip key={key}>
+                      <TooltipTrigger asChild>
+                        <div
+                          className={cn(
+                            'flex min-w-0 items-center gap-2 rounded-md border px-2 py-2 text-xs',
+                            hasDetails && 'cursor-help',
+                          )}
+                        >
+                          {getStepIcon(state)}
+                          <span className="truncate">{label}</span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="bottom"
+                        sideOffset={6}
+                        className="min-w-[220px] max-w-sm border border-border bg-popover p-3 text-popover-foreground shadow-lg [&_svg]:shrink-0"
+                      >
+                        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          {label}
+                        </p>
+                        {hasDetails ? (
+                          <ul className="space-y-1.5">
+                            {details.map((d, index) => (
+                              <li
+                                key={index}
+                                className="flex items-start gap-1.5 text-xs leading-snug"
+                              >
+                                {renderDetailIcon(d.tone)}
+                                <span className="text-foreground/90">
+                                  {d.label}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            {state === 'pending' ? (
+                              <>
+                                <Circle className="size-3" />
+                                <span>Henüz başlamadı</span>
+                              </>
+                            ) : state === 'running' ? (
+                              <>
+                                <Loader2 className="size-3 animate-spin text-sky-600" />
+                                <span>İşleniyor…</span>
+                              </>
+                            ) : (
+                              <>
+                                <Info className="size-3" />
+                                <span>Detay yok</span>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
+                  )
+                })}
+              </div>
+            </TooltipProvider>
+          </div>
+
+          {renderMappingTabs()}
+        </div>
+      </AwesomeDialogBody>
+
+      <AwesomeDialogFooter>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isWorking}
+          onClick={() => onOpenChange(false)}
+        >
+          Kapat
+        </Button>
+        {isAlreadyCompleted && getRelationId(lead?.converted_deal) ? (
+          <Button
+            type="button"
+            onClick={() => {
+              const dealId = getRelationId(lead.converted_deal)
+              if (!dealId) return
+              void navigate({ to: '/deals/$dealId', params: { dealId } })
+            }}
+          >
+            Fırsatı aç
+          </Button>
+        ) : (
+          <Button type="button" disabled={isWorking} onClick={runConversion}>
+            {isWorking && <Loader2 className="mr-2 size-4 animate-spin" />}
+            {duplicatesChecked ? 'Dönüştür' : 'Kontrol et'}
+          </Button>
+        )}
+      </AwesomeDialogFooter>
+
+      <AlertDialog
+        open={pendingChanges !== null}
+        onOpenChange={(next) => {
+          if (!next) setPendingChanges(null)
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>Lead bilgilerinden farklı değerler</AlertDialogTitle>
             <AlertDialogDescription>
-              This action will convert the lead to a deal and mark it as
-              converted. This action can be reversed by editing the lead status
-              later.
+              Aşağıdaki alanlarda lead'deki değerleri değiştirmişsin. Convert
+              ettiğinde lead'in mevcut bilgisi yerine senin yazdığın değer
+              hedef kayda yazılacak.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="max-h-72 space-y-2 overflow-y-auto">
+            {(pendingChanges ?? []).map((change, index) => (
+              <div
+                key={index}
+                className="rounded-md border bg-card p-3 text-xs"
+              >
+                <p className="mb-1 flex items-center gap-1.5">
+                  <Badge variant="outline" className="text-[10px]">
+                    {TARGET_LABEL[change.tab]}
+                  </Badge>
+                  <span className="font-medium">{change.label}</span>
+                </p>
+                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                  <div className="rounded border border-dashed bg-muted/40 px-2 py-1 text-muted-foreground">
+                    <p className="text-[10px] uppercase tracking-wide">
+                      Lead'de
+                    </p>
+                    <p className="truncate text-foreground/80">
+                      {change.sourceText || '—'}
+                    </p>
+                  </div>
+                  <ArrowRight className="size-3.5 text-muted-foreground" />
+                  <div className="rounded border bg-primary/[0.04] px-2 py-1">
+                    <p className="text-[10px] uppercase tracking-wide text-primary">
+                      Yazılacak
+                    </p>
+                    <p className="truncate font-medium">
+                      {change.targetText || '—'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isConverting}>
-              Cancel
+            <AlertDialogCancel onClick={() => setPendingChanges(null)}>
+              Geri dön, düzenleyeyim
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleConvert} disabled={isConverting}>
-              {isConverting && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Confirm Conversion
+            <AlertDialogAction
+              onClick={() => {
+                setPendingChanges(null)
+                setChangesConfirmed(true)
+                void runConversion()
+              }}
+            >
+              Bu değerlerle devam et
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </AwesomeDialog>
   )
 }

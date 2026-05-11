@@ -87,6 +87,63 @@ export interface BaseCrmLeadsEntity {
 
   /** Company Name */
   company_name?: { id: string; name: string } | string
+
+  /** Company Name */
+  company_name_text?: string
+
+  /** Contact Job Title */
+  contact_job_title?: string
+
+  /** Company Email */
+  company_email?: string
+
+  /** Company Phone */
+  company_phone?: string
+
+  /** Company Industry */
+  company_industry?: { id: string; name: string } | string
+
+  /** Company Size */
+  company_size?: { id: string; name: string } | string
+
+  /** Deal Name */
+  deal_name?: string
+
+  /** Deal Value */
+  deal_value?: number
+
+  /** Expected Revenue */
+  expected_revenue?: number
+
+  /** Close Probability */
+  close_probability?: number
+
+  /** Expected Closing Date */
+  expected_closing_date?: string
+
+  /** Converted Organization */
+  converted_organization?: { id: string; name: string } | string
+
+  /** Converted Contact */
+  converted_contact?: { id: string; name: string } | string
+
+  /** Converted Deal */
+  converted_deal?: { id: string; name: string } | string
+
+  /** Converted On */
+  converted_on?: string
+
+  /** Converted By */
+  converted_by?: { id: string; firstname?: string; lastname?: string } | string
+
+  /** Conversion State */
+  conversion_state?: { id: string; name: string } | string
+
+  /** Conversion Mode */
+  conversion_mode?: { id: string; name: string } | string
+
+  /** Conversion Error Message */
+  conversion_error_message?: string
 }
 
 export function useBaseCrmLeadsCollection() {

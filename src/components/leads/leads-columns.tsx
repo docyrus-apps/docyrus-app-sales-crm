@@ -42,15 +42,15 @@ export function getLeadsColumns(
 
   return [
     {
-      accessorKey: 'title',
-      header: 'Title',
+      accessorKey: 'name',
+      header: 'Contact Name',
       meta: { cell: { variant: 'short-text' } },
       enableSorting: true,
       size: 220,
     },
     {
-      id: 'company_name',
-      accessorFn: (row) => row.company_name ?? '',
+      id: 'company_name_text',
+      accessorFn: (row) => row.company_name_text ?? '',
       header: 'Company',
       meta: {
         cell: {

@@ -81,6 +81,9 @@ export interface BaseCrmDealsEntity {
 
   /** Contact Person */
   contact_person?: { id: string; name: string } | string
+
+  /** Source Lead */
+  source_lead?: { id: string; name: string } | string
 }
 
 export function useBaseCrmDealsCollection() {

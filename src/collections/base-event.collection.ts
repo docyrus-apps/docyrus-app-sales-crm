@@ -39,6 +39,18 @@ export interface BaseEventEntity {
 
   /** Event Notes */
   event_notes?: Record<string, any>
+
+  /** Lead */
+  lead?: { id: string; name: string } | string
+
+  /** Contact */
+  contact?: { id: string; name: string } | string
+
+  /** Organization */
+  organization?: { id: string; name: string } | string
+
+  /** Deal */
+  deal?: { id: string; name: string } | string
 }
 
 export function useBaseEventCollection() {

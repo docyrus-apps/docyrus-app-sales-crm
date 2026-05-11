@@ -10,6 +10,7 @@ import {
   MoreHorizontal,
   Pencil,
   Plus,
+  RefreshCw,
   Trash2,
   Upload,
   UserRoundSearch,
@@ -33,6 +34,7 @@ import {
 } from '@/components/docyrus/data-grid'
 import { RecordDeleteConfirmDialog } from '@/components/docyrus/record-delete-confirm-dialog'
 import { LeadFormDialog } from '@/components/leads/lead-form-dialog'
+import { LeadConvertDialog } from '@/components/leads/lead-convert-dialog'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
@@ -56,6 +58,7 @@ import {
   buildDuplicatePayload,
   saveGridChanges,
 } from '@/lib/data-grid-record-utils'
+import { isLeadConvertedRecord } from '@/lib/lead-conversion'
 import { useDateFormat } from '@/lib/use-date-format'
 
 type LeadsView = 'board' | 'list'
@@ -69,6 +72,10 @@ interface LeadDialogState {
   lead: LeadFormRecord | null
 }
 
+function isLeadConverted(lead: BaseCrmLeadsEntity | Record<string, unknown>) {
+  return isLeadConvertedRecord(lead)
+}
+
 const APP_SLUG = 'base_crm'
 const DATA_SOURCE_SLUG = 'leads'
 
@@ -77,7 +84,7 @@ const LEAD_GRID_COLUMN_OVERRIDES: Record<
   Partial<ColumnDef<BaseCrmLeadsEntity>>
 > = {
   title: { size: 240 },
-  company_name: { size: 200 },
+  company_name_text: { size: 200 },
   lead_status: { size: 150 },
   lead_source: { size: 160 },
   email: { size: 220 },
@@ -112,6 +119,9 @@ function LeadsPageInner({
   const [viewType, setViewType] = useState<LeadsView>('board')
   const [dialog, setDialog] = useState<LeadDialogState | null>(null)
   const [pendingDelete, setPendingDelete] = useState<BaseCrmLeadsEntity | null>(
+    null,
+  )
+  const [convertLead, setConvertLead] = useState<BaseCrmLeadsEntity | null>(
     null,
   )
   const [isDeleting, setIsDeleting] = useState(false)
@@ -197,10 +207,20 @@ function LeadsPageInner({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onOpenEdit(row.original)}>
-                  <Pencil className="size-4" />
-                  {t('common.edit', 'Edit')}
-                </DropdownMenuItem>
+                {!isLeadConverted(row.original) && (
+                  <DropdownMenuItem onClick={() => onOpenEdit(row.original)}>
+                    <Pencil className="size-4" />
+                    {t('common.edit', 'Edit')}
+                  </DropdownMenuItem>
+                )}
+                {!isLeadConverted(row.original) && (
+                  <DropdownMenuItem
+                    onClick={() => setConvertLead(row.original)}
+                  >
+                    <RefreshCw className="size-4" />
+                    {t('leads.convert.convertButton')}
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => onDuplicate(row.original)}>
                   <Copy className="size-4" />
                   {t('common.duplicate', 'Duplicate')}
@@ -314,15 +334,12 @@ function LeadsPageInner({
       list: (params) => collection.list(params),
     },
     groupByFieldSlug: 'lead_status',
-    titleColumn: 'title',
+    titleColumn: 'name',
     descriptionColumn: 'email',
     avatarColumn: 'lead_source',
     userColumn: 'record_owner',
     cardContent: ({ row }) => {
-      const companyName =
-        typeof row.company_name === 'object'
-          ? row.company_name?.name
-          : row.company_name
+      const companyName = row.company_name_text
       const countryName =
         typeof row.countries === 'object' ? row.countries?.name : row.countries
       const websiteOrPhone = row.website || row.phone
@@ -363,7 +380,7 @@ function LeadsPageInner({
     enableItemsQuery: viewType === 'board',
     listParams: {
       columns:
-        'id, title, phone, email, website, lead_source, lead_status, lead_type, company_name(id,name,company_logo), countries(id,name), record_owner, created_on, last_modified_on, created_by, last_modified_by',
+        'id, name, phone, email, website, company_name_text, company_email, company_phone, company_industry, company_size, lead_source, lead_status, lead_type, countries(id,name), record_owner, deal_value, expected_closing_date, converted_deal(id,name), converted_organization(id,name), converted_contact(id,name), conversion_state, converted_on, created_on, last_modified_on, created_by, last_modified_by',
       orderBy: 'created_on DESC',
       limit: 200,
     },
@@ -448,6 +465,19 @@ function LeadsPageInner({
             lead={dialog.lead ?? undefined}
             mode={dialog.mode}
             onSubmitSuccess={reload}
+          />
+        )}
+
+        {convertLead && (
+          <LeadConvertDialog
+            open
+            onOpenChange={(open) => {
+              if (!open) {
+                setConvertLead(null)
+                reload()
+              }
+            }}
+            lead={convertLead}
           />
         )}
 

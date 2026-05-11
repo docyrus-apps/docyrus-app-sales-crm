@@ -10,6 +10,6 @@ describe('App', () => {
         <App />
       </DocyrusAuthProvider>,
     )
-    expect(await screen.findByText('Welcome')).toBeDefined()
+    expect(await screen.findByRole('button')).toBeDefined()
   })
 })

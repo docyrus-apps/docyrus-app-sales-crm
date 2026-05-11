@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { useForm } from '@tanstack/react-form'
+import { useQuery } from '@tanstack/react-query'
 import { zodValidator } from '@tanstack/zod-form-adapter'
 import { useTranslation } from 'react-i18next'
 import { Loader2 } from 'lucide-react'
+import { useBaseCountryCollection } from '@/collections'
 import type { LeadFormData } from '@/schemas/lead-schema'
 import { Button } from '@/components/animate-ui/components/buttons/button'
 import { AwesomeDialog } from '@/components/docyrus/awesome-dialog/awesome-dialog'
@@ -24,9 +26,9 @@ import { Combobox } from '@/components/ui/combobox-simple'
 import { PhoneInput } from '@/components/ui/phone-input'
 import { leadFormSchema } from '@/schemas/lead-schema'
 import { useCreateLead, useUpdateLead } from '@/hooks/use-leads'
-import { useCompanies } from '@/hooks/use-companies'
 import { useUsers } from '@/hooks/use-users'
 import { useEnumOptions } from '@/hooks/use-enums'
+import { isLeadConvertedRecord } from '@/lib/lead-conversion'
 
 interface LeadFormDialogProps {
   open: boolean
@@ -34,6 +36,18 @@ interface LeadFormDialogProps {
   lead?: any
   mode: 'create' | 'edit'
   onSubmitSuccess?: () => void | Promise<void>
+}
+
+function getRelationId(value: unknown) {
+  if (value && typeof value === 'object' && 'id' in value) {
+    return String((value as { id?: string }).id ?? '')
+  }
+
+  return typeof value === 'string' ? value : ''
+}
+
+function numericDefault(value: unknown) {
+  return typeof value === 'number' ? value : undefined
 }
 
 export function LeadFormDialog({
@@ -46,62 +60,80 @@ export function LeadFormDialog({
   const { t } = useTranslation()
   const createLead = useCreateLead()
   const updateLead = useUpdateLead()
-  const { data: companies = [] } = useCompanies()
+  const countriesCollection = useBaseCountryCollection()
   const { data: users = [] } = useUsers()
-  const { options: leadStatusOptions = [] } = useEnumOptions('lead_status')
-  const { options: leadSourceOptions = [] } = useEnumOptions('lead_source')
-  const { options: leadTypeOptions = [] } = useEnumOptions('lead_type')
-  const { options: countryOptions = [] } = useEnumOptions('country')
+  const { options: leadStatusOptions = [] } = useEnumOptions('lead_status', {
+    appSlug: 'base_crm',
+    dataSourceSlug: 'leads',
+  })
+  const { options: leadSourceOptions = [] } = useEnumOptions('lead_source', {
+    appSlug: 'base_crm',
+    dataSourceSlug: 'leads',
+  })
+  const { options: leadTypeOptions = [] } = useEnumOptions('lead_type', {
+    appSlug: 'base_crm',
+    dataSourceSlug: 'leads',
+  })
+  const { options: companyIndustryOptions = [] } = useEnumOptions(
+    'company_industry',
+    {
+      appSlug: 'base_crm',
+      dataSourceSlug: 'leads',
+    },
+  )
+  const { options: companySizeOptions = [] } = useEnumOptions('company_size', {
+    appSlug: 'base_crm',
+    dataSourceSlug: 'leads',
+  })
+  const { options: lostReasonOptions = [] } = useEnumOptions('lost_reason', {
+    appSlug: 'base_crm',
+    dataSourceSlug: 'leads',
+  })
+  const { data: countries = [] } = useQuery({
+    queryKey: ['base-country-options'],
+    queryFn: () =>
+      countriesCollection.list({
+        columns: ['id', 'name'],
+        orderBy: 'name ASC',
+        limit: 300,
+      }),
+  })
+
+  const isConverted = isLeadConvertedRecord(lead)
 
   const form = useForm<LeadFormData>({
     defaultValues: {
-      title: lead?.title || '',
-      company_name:
-        lead?.company_name && typeof lead.company_name === 'object'
-          ? lead.company_name.id
-          : lead?.company_name || '',
+      name: lead?.name || '',
+      contact_job_title: lead?.contact_job_title || '',
       email: lead?.email || '',
       phone: lead?.phone || '',
+      company_name_text: lead?.company_name_text || '',
+      company_email: lead?.company_email || '',
+      company_phone: lead?.company_phone || '',
       website: lead?.website || '',
       address: lead?.address || '',
-      city:
-        lead?.city && typeof lead.city === 'object'
-          ? lead.city.id
-          : lead?.city || '',
-      state:
-        lead?.state && typeof lead.state === 'object'
-          ? lead.state.id
-          : lead?.state || '',
-      lead_source:
-        lead?.lead_source && typeof lead.lead_source === 'object'
-          ? lead.lead_source.id
-          : lead?.lead_source || '',
-      lead_status:
-        lead?.lead_status && typeof lead.lead_status === 'object'
-          ? lead.lead_status.id
-          : lead?.lead_status || '',
-      lead_type:
-        lead?.lead_type && typeof lead.lead_type === 'object'
-          ? lead.lead_type.id
-          : lead?.lead_type || '',
-      country:
-        lead?.country && typeof lead.country === 'object'
-          ? lead.country.id
-          : lead?.country || '',
-      record_owner:
-        lead?.record_owner && typeof lead.record_owner === 'object'
-          ? lead.record_owner.id
-          : lead?.record_owner || '',
+      city: lead?.city || '',
+      state: lead?.state || '',
+      company_industry: getRelationId(lead?.company_industry),
+      company_size: getRelationId(lead?.company_size),
+      lead_source: getRelationId(lead?.lead_source),
+      lead_status: getRelationId(lead?.lead_status),
+      lead_type: getRelationId(lead?.lead_type),
+      country: getRelationId(lead?.countries),
+      record_owner: getRelationId(lead?.record_owner),
       contact_message: lead?.contact_message || '',
+      lost_reason: getRelationId(lead?.lost_reason),
+      deal_value: numericDefault(lead?.deal_value),
+      expected_closing_date: lead?.expected_closing_date || undefined,
     },
     validatorAdapter: zodValidator(),
     validators: {
       onChange: leadFormSchema,
     },
     onSubmit: async ({ value }) => {
-      // Clean up empty strings (convert to undefined for UUID fields)
+      const { country, ...rest } = value
       const cleanedData = Object.fromEntries(
-        Object.entries(value).map(([key, val]) => [
+        Object.entries({ ...rest, countries: country }).map(([key, val]) => [
           key,
           val === '' ? undefined : val,
         ]),
@@ -118,17 +150,23 @@ export function LeadFormDialog({
     },
   })
 
-  const companyOptions = companies.map((company: any) => ({
-    label: company.name,
-    value: company.id,
-  }))
-
   const userOptions = users.map((user: any) => ({
     label: `${user.firstname} ${user.lastname}`,
     value: user.id,
   }))
+  const countryOptions = countries.map((country) => ({
+    label: country.name,
+    value: country.id ?? '',
+  }))
 
   const isSubmitting = createLead.isPending || updateLead.isPending
+  const isDisqualifiedStatus = (statusValue: string | undefined) => {
+    const selectedLeadStatus = leadStatusOptions.find(
+      (option: any) => option.value === statusValue,
+    )?.label
+
+    return selectedLeadStatus?.trim().toLowerCase() === 'disqualified'
+  }
 
   return (
     <AwesomeDialog
@@ -144,9 +182,14 @@ export function LeadFormDialog({
             : t('leads.form.editTitle')
         }
         description={
-          mode === 'create'
-            ? t('leads.form.createDescription')
-            : t('leads.form.editDescription')
+          isConverted
+            ? t('leads.convert.readOnlyDescription', {
+                defaultValue:
+                  'This lead has already been converted and can no longer be edited.',
+              })
+            : mode === 'create'
+              ? t('leads.form.createDescription')
+              : t('leads.form.editDescription')
         }
       />
 
@@ -154,410 +197,549 @@ export function LeadFormDialog({
         onSubmit={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          form.handleSubmit()
+          if (!isConverted) form.handleSubmit()
         }}
         className="flex flex-col flex-1 overflow-hidden"
       >
         <AwesomeDialogBody>
-          <div className="grid grid-cols-2 gap-4">
-            {/* Title Field */}
-            <form.Field name="title">
-              {(field) => (
-                <Field className="col-span-2">
-                  <Label htmlFor={field.name}>
-                    {t('leads.form.titleLabel')}{' '}
-                    <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id={field.name}
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder={t('leads.form.titlePlaceholder')}
-                  />
-                  {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
-                    </p>
-                  )}
-                </Field>
-              )}
-            </form.Field>
-
-            {/* Company Field */}
-            <form.Field name="company_name">
-              {(field) => (
-                <Field>
-                  <Label htmlFor={field.name}>
-                    {t('leads.form.companyLabel')}
-                  </Label>
-                  <Combobox
-                    options={companyOptions}
-                    value={field.state.value}
-                    onValueChange={(value) => field.handleChange(value)}
-                    placeholder={t('leads.form.companyPlaceholder')}
-                    emptyText={t('leads.form.companyEmpty')}
-                  />
-                  {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
-                    </p>
-                  )}
-                </Field>
-              )}
-            </form.Field>
-
-            {/* Lead Status Field */}
-            <form.Field name="lead_status">
-              {(field) => (
-                <Field>
-                  <Label htmlFor={field.name}>
-                    {t('leads.form.leadStatusLabel')}
-                  </Label>
-                  <Select
-                    value={field.state.value}
-                    onValueChange={field.handleChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t('leads.form.leadStatusPlaceholder')}
+          <div className="space-y-6">
+            <section className="space-y-3">
+              <h3 className="text-sm font-semibold">
+                {t('leads.form.contactSection', {
+                  defaultValue: 'Contact information',
+                })}
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <form.Field name="name">
+                  {(field) => (
+                    <Field className="col-span-2">
+                      <Label htmlFor={field.name}>
+                        {t('leads.form.contactNameLabel', {
+                          defaultValue: 'Contact name',
+                        })}{' '}
+                        <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id={field.name}
+                        value={field.state.value}
+                        disabled={isConverted}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder={t('leads.form.contactNamePlaceholder', {
+                          defaultValue: 'Enter contact name...',
+                        })}
                       />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {leadStatusOptions.map((option: any) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
-                    </p>
+                    </Field>
                   )}
-                </Field>
-              )}
-            </form.Field>
+                </form.Field>
 
-            {/* Email Field */}
-            <form.Field name="email">
-              {(field) => (
-                <Field>
-                  <Label htmlFor={field.name}>
-                    {t('leads.form.emailLabel')}
-                  </Label>
-                  <Input
-                    id={field.name}
-                    type="email"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder={t('leads.form.emailPlaceholder')}
-                  />
-                  {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
-                    </p>
-                  )}
-                </Field>
-              )}
-            </form.Field>
-
-            {/* Phone Field */}
-            <form.Field name="phone">
-              {(field) => (
-                <Field>
-                  <Label htmlFor={field.name}>
-                    {t('leads.form.phoneLabel')}
-                  </Label>
-                  <PhoneInput
-                    value={field.state.value}
-                    onValueChange={field.handleChange}
-                    placeholder={t('leads.form.phonePlaceholder')}
-                  />
-                  {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
-                    </p>
-                  )}
-                </Field>
-              )}
-            </form.Field>
-
-            {/* Website Field */}
-            <form.Field name="website">
-              {(field) => (
-                <Field className="col-span-2">
-                  <Label htmlFor={field.name}>
-                    {t('leads.form.websiteLabel')}
-                  </Label>
-                  <Input
-                    id={field.name}
-                    type="url"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder={t('leads.form.websitePlaceholder')}
-                  />
-                  {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
-                    </p>
-                  )}
-                </Field>
-              )}
-            </form.Field>
-
-            {/* Lead Source Field */}
-            <form.Field name="lead_source">
-              {(field) => (
-                <Field>
-                  <Label htmlFor={field.name}>
-                    {t('leads.form.leadSourceLabel')}
-                  </Label>
-                  <Select
-                    value={field.state.value}
-                    onValueChange={field.handleChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t('leads.form.leadSourcePlaceholder')}
+                <form.Field name="contact_job_title">
+                  {(field) => (
+                    <Field>
+                      <Label htmlFor={field.name}>
+                        {t('leads.form.jobTitleLabel', {
+                          defaultValue: 'Job title',
+                        })}
+                      </Label>
+                      <Input
+                        id={field.name}
+                        value={field.state.value}
+                        disabled={isConverted}
+                        onChange={(e) => field.handleChange(e.target.value)}
                       />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {leadSourceOptions.map((option: any) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
-                    </p>
+                    </Field>
                   )}
-                </Field>
-              )}
-            </form.Field>
+                </form.Field>
 
-            {/* Lead Type Field */}
-            <form.Field name="lead_type">
-              {(field) => (
-                <Field>
-                  <Label htmlFor={field.name}>
-                    {t('leads.form.leadTypeLabel')}
-                  </Label>
-                  <Select
-                    value={field.state.value}
-                    onValueChange={field.handleChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t('leads.form.leadTypePlaceholder')}
+                <form.Field name="email">
+                  {(field) => (
+                    <Field>
+                      <Label htmlFor={field.name}>
+                        {t('leads.form.emailLabel')}
+                      </Label>
+                      <Input
+                        id={field.name}
+                        type="email"
+                        value={field.state.value}
+                        disabled={isConverted}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder={t('leads.form.emailPlaceholder')}
                       />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {leadTypeOptions.map((option: any) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
-                    </p>
+                    </Field>
                   )}
-                </Field>
-              )}
-            </form.Field>
+                </form.Field>
 
-            {/* Address Field */}
-            <form.Field name="address">
-              {(field) => (
-                <Field className="col-span-2">
-                  <Label htmlFor={field.name}>
-                    {t('leads.form.addressLabel')}
-                  </Label>
-                  <Input
-                    id={field.name}
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder={t('leads.form.addressPlaceholder')}
-                  />
-                  {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
-                    </p>
-                  )}
-                </Field>
-              )}
-            </form.Field>
-
-            {/* City Field */}
-            <form.Field name="city">
-              {(field) => (
-                <Field>
-                  <Label htmlFor={field.name}>
-                    {t('leads.form.cityLabel')}
-                  </Label>
-                  <Input
-                    id={field.name}
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder={t('leads.form.cityPlaceholder')}
-                  />
-                  {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
-                    </p>
-                  )}
-                </Field>
-              )}
-            </form.Field>
-
-            {/* State Field */}
-            <form.Field name="state">
-              {(field) => (
-                <Field>
-                  <Label htmlFor={field.name}>
-                    {t('leads.form.stateLabel')}
-                  </Label>
-                  <Input
-                    id={field.name}
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder={t('leads.form.statePlaceholder')}
-                  />
-                  {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
-                    </p>
-                  )}
-                </Field>
-              )}
-            </form.Field>
-
-            {/* Country Field */}
-            <form.Field name="country">
-              {(field) => (
-                <Field>
-                  <Label htmlFor={field.name}>
-                    {t('leads.form.countryLabel')}
-                  </Label>
-                  <Select
-                    value={field.state.value}
-                    onValueChange={field.handleChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t('leads.form.countryPlaceholder')}
+                <form.Field name="phone">
+                  {(field) => (
+                    <Field>
+                      <Label htmlFor={field.name}>
+                        {t('leads.form.phoneLabel')}
+                      </Label>
+                      <PhoneInput
+                        value={field.state.value}
+                        disabled={isConverted}
+                        onValueChange={field.handleChange}
+                        placeholder={t('leads.form.phonePlaceholder')}
                       />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {countryOptions.map((option: any) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
-                    </p>
+                    </Field>
                   )}
-                </Field>
-              )}
-            </form.Field>
+                </form.Field>
+              </div>
+            </section>
 
-            {/* Record Owner Field */}
-            <form.Field name="record_owner">
-              {(field) => (
-                <Field className="col-span-2">
-                  <Label htmlFor={field.name}>
-                    {t('leads.form.recordOwnerLabel')}
-                  </Label>
-                  <Combobox
-                    options={userOptions}
-                    value={field.state.value}
-                    onValueChange={(value) => field.handleChange(value)}
-                    placeholder={t('leads.form.recordOwnerPlaceholder')}
-                    emptyText={t('leads.form.recordOwnerEmpty')}
-                  />
-                  {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
-                    </p>
+            <section className="space-y-3">
+              <h3 className="text-sm font-semibold">
+                {t('leads.form.companySection', {
+                  defaultValue: 'Company information',
+                })}
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <form.Field name="company_name_text">
+                  {(field) => (
+                    <Field className="col-span-2">
+                      <Label htmlFor={field.name}>
+                        {t('leads.form.companyLabel')}
+                      </Label>
+                      <Input
+                        id={field.name}
+                        value={field.state.value}
+                        disabled={isConverted}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder={t('leads.form.companyPlaceholder', {
+                          defaultValue: 'Enter company name...',
+                        })}
+                      />
+                    </Field>
                   )}
-                </Field>
-              )}
-            </form.Field>
+                </form.Field>
 
-            {/* Contact Message Field */}
-            <form.Field name="contact_message">
-              {(field) => (
-                <Field className="col-span-2">
-                  <Label htmlFor={field.name}>
-                    {t('leads.form.messageLabel')}
-                  </Label>
-                  <Textarea
-                    id={field.name}
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder={t('leads.form.messagePlaceholder')}
-                    rows={4}
-                  />
-                  {field.state.meta.errors?.[0] && (
-                    <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
-                    </p>
+                <form.Field name="company_email">
+                  {(field) => (
+                    <Field>
+                      <Label htmlFor={field.name}>
+                        {t('leads.form.companyEmailLabel', {
+                          defaultValue: 'Company email',
+                        })}
+                      </Label>
+                      <Input
+                        id={field.name}
+                        type="email"
+                        value={field.state.value}
+                        disabled={isConverted}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                      />
+                    </Field>
                   )}
-                </Field>
-              )}
-            </form.Field>
+                </form.Field>
+
+                <form.Field name="company_phone">
+                  {(field) => (
+                    <Field>
+                      <Label htmlFor={field.name}>
+                        {t('leads.form.companyPhoneLabel', {
+                          defaultValue: 'Company phone',
+                        })}
+                      </Label>
+                      <PhoneInput
+                        value={field.state.value}
+                        disabled={isConverted}
+                        onValueChange={field.handleChange}
+                      />
+                    </Field>
+                  )}
+                </form.Field>
+
+                <form.Field name="website">
+                  {(field) => (
+                    <Field className="col-span-2">
+                      <Label htmlFor={field.name}>
+                        {t('leads.form.websiteLabel')}
+                      </Label>
+                      <Input
+                        id={field.name}
+                        type="url"
+                        value={field.state.value}
+                        disabled={isConverted}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder={t('leads.form.websitePlaceholder')}
+                      />
+                    </Field>
+                  )}
+                </form.Field>
+
+                <form.Field name="address">
+                  {(field) => (
+                    <Field className="col-span-2">
+                      <Label htmlFor={field.name}>
+                        {t('leads.form.addressLabel')}
+                      </Label>
+                      <Input
+                        id={field.name}
+                        value={field.state.value}
+                        disabled={isConverted}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder={t('leads.form.addressPlaceholder')}
+                      />
+                    </Field>
+                  )}
+                </form.Field>
+
+                <form.Field name="city">
+                  {(field) => (
+                    <Field>
+                      <Label htmlFor={field.name}>
+                        {t('leads.form.cityLabel')}
+                      </Label>
+                      <Input
+                        id={field.name}
+                        value={field.state.value}
+                        disabled={isConverted}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder={t('leads.form.cityPlaceholder')}
+                      />
+                    </Field>
+                  )}
+                </form.Field>
+
+                <form.Field name="state">
+                  {(field) => (
+                    <Field>
+                      <Label htmlFor={field.name}>
+                        {t('leads.form.stateLabel')}
+                      </Label>
+                      <Input
+                        id={field.name}
+                        value={field.state.value}
+                        disabled={isConverted}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder={t('leads.form.statePlaceholder')}
+                      />
+                    </Field>
+                  )}
+                </form.Field>
+
+                <form.Field name="company_industry">
+                  {(field) => (
+                    <Field>
+                      <Label htmlFor={field.name}>
+                        {t('leads.form.companyIndustryLabel', {
+                          defaultValue: 'Company industry',
+                        })}
+                      </Label>
+                      <Select
+                        value={field.state.value}
+                        disabled={isConverted}
+                        onValueChange={field.handleChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={t(
+                              'leads.form.companyIndustryPlaceholder',
+                              {
+                                defaultValue: 'Select industry...',
+                              },
+                            )}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {companyIndustryOptions.map((option: any) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  )}
+                </form.Field>
+
+                <form.Field name="company_size">
+                  {(field) => (
+                    <Field>
+                      <Label htmlFor={field.name}>
+                        {t('leads.form.companySizeLabel', {
+                          defaultValue: 'Company size',
+                        })}
+                      </Label>
+                      <Select
+                        value={field.state.value}
+                        disabled={isConverted}
+                        onValueChange={field.handleChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={t(
+                              'leads.form.companySizePlaceholder',
+                              {
+                                defaultValue: 'Select size...',
+                              },
+                            )}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {companySizeOptions.map((option: any) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  )}
+                </form.Field>
+
+                <form.Field name="country">
+                  {(field) => (
+                    <Field>
+                      <Label htmlFor={field.name}>
+                        {t('leads.form.countryLabel')}
+                      </Label>
+                      <Select
+                        value={field.state.value}
+                        disabled={isConverted}
+                        onValueChange={field.handleChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={t('leads.form.countryPlaceholder')}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {countryOptions.map((option: any) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  )}
+                </form.Field>
+              </div>
+            </section>
+
+            <section className="space-y-3">
+              <h3 className="text-sm font-semibold">
+                {t('leads.form.qualificationSection', {
+                  defaultValue: 'Qualification',
+                })}
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <form.Field name="lead_status">
+                  {(field) => (
+                    <Field>
+                      <Label htmlFor={field.name}>
+                        {t('leads.form.leadStatusLabel')}
+                      </Label>
+                      <Select
+                        value={field.state.value}
+                        disabled={isConverted}
+                        onValueChange={field.handleChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={t('leads.form.leadStatusPlaceholder')}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {leadStatusOptions.map((option: any) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  )}
+                </form.Field>
+
+                <form.Field name="lead_source">
+                  {(field) => (
+                    <Field>
+                      <Label htmlFor={field.name}>
+                        {t('leads.form.leadSourceLabel')}
+                      </Label>
+                      <Select
+                        value={field.state.value}
+                        disabled={isConverted}
+                        onValueChange={field.handleChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={t('leads.form.leadSourcePlaceholder')}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {leadSourceOptions.map((option: any) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  )}
+                </form.Field>
+
+                <form.Field name="lead_type">
+                  {(field) => (
+                    <Field>
+                      <Label htmlFor={field.name}>
+                        {t('leads.form.leadTypeLabel')}
+                      </Label>
+                      <Select
+                        value={field.state.value}
+                        disabled={isConverted}
+                        onValueChange={field.handleChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={t('leads.form.leadTypePlaceholder')}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {leadTypeOptions.map((option: any) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  )}
+                </form.Field>
+
+                <form.Field name="record_owner">
+                  {(field) => (
+                    <Field>
+                      <Label htmlFor={field.name}>
+                        {t('leads.form.recordOwnerLabel')}
+                      </Label>
+                      <Combobox
+                        options={userOptions}
+                        value={field.state.value}
+                        disabled={isConverted}
+                        onValueChange={(value) => field.handleChange(value)}
+                        placeholder={t('leads.form.recordOwnerPlaceholder')}
+                        emptyText={t('leads.form.recordOwnerEmpty')}
+                      />
+                    </Field>
+                  )}
+                </form.Field>
+
+                <form.Field name="deal_value">
+                  {(field) => (
+                    <Field>
+                      <Label htmlFor={field.name}>
+                        {t('leads.form.estimatedValueLabel', {
+                          defaultValue: 'Estimated value',
+                        })}
+                      </Label>
+                      <Input
+                        id={field.name}
+                        type="number"
+                        value={field.state.value ?? ''}
+                        disabled={isConverted}
+                        onChange={(e) =>
+                          field.handleChange(
+                            e.target.value ? Number(e.target.value) : undefined,
+                          )
+                        }
+                      />
+                    </Field>
+                  )}
+                </form.Field>
+
+                <form.Field name="expected_closing_date">
+                  {(field) => (
+                    <Field>
+                      <Label htmlFor={field.name}>
+                        {t('leads.form.targetCloseDateLabel', {
+                          defaultValue: 'Target close date',
+                        })}
+                      </Label>
+                      <Input
+                        id={field.name}
+                        type="date"
+                        value={field.state.value ?? ''}
+                        disabled={isConverted}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                      />
+                    </Field>
+                  )}
+                </form.Field>
+
+                <form.Subscribe
+                  selector={(state) => state.values.lead_status}
+                >
+                  {(leadStatus) =>
+                    isDisqualifiedStatus(leadStatus) ? (
+                      <form.Field name="lost_reason">
+                        {(field) => (
+                          <Field className="col-span-2">
+                            <Label htmlFor={field.name}>
+                              {t('leads.form.lostReasonLabel', {
+                                defaultValue: 'Lost reason',
+                              })}
+                            </Label>
+                            <Select
+                              value={field.state.value}
+                              disabled={isConverted}
+                              onValueChange={field.handleChange}
+                            >
+                              <SelectTrigger>
+                                <SelectValue
+                                  placeholder={t(
+                                    'leads.form.lostReasonPlaceholder',
+                                    {
+                                      defaultValue: 'Select lost reason...',
+                                    },
+                                  )}
+                                />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {lostReasonOptions.map((option: any) => (
+                                  <SelectItem
+                                    key={option.value}
+                                    value={option.value}
+                                  >
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </Field>
+                        )}
+                      </form.Field>
+                    ) : null
+                  }
+                </form.Subscribe>
+
+                <form.Field name="contact_message">
+                  {(field) => (
+                    <Field className="col-span-2">
+                      <Label htmlFor={field.name}>
+                        {t('leads.form.qualificationNotesLabel', {
+                          defaultValue: 'Qualification notes',
+                        })}
+                      </Label>
+                      <Textarea
+                        id={field.name}
+                        value={field.state.value}
+                        disabled={isConverted}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder={t(
+                          'leads.form.qualificationNotesPlaceholder',
+                          {
+                            defaultValue: 'Add qualification notes...',
+                          },
+                        )}
+                        rows={4}
+                      />
+                    </Field>
+                  )}
+                </form.Field>
+              </div>
+            </section>
           </div>
         </AwesomeDialogBody>
 
@@ -570,12 +752,16 @@ export function LeadFormDialog({
           >
             {t('common.cancel')}
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {mode === 'create'
-              ? t('leads.form.createButton')
-              : t('leads.form.updateButton')}
-          </Button>
+          {!isConverted && (
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {mode === 'create'
+                ? t('leads.form.createButton')
+                : t('leads.form.updateButton')}
+            </Button>
+          )}
         </AwesomeDialogFooter>
       </form>
     </AwesomeDialog>

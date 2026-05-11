@@ -20,3 +20,6 @@ count.txt
 .docyrus/
 .pi/
 .env.swp
+.playwright-mcp/
+docyrus/agent/sessions/
+docyrus/agent/session-config/

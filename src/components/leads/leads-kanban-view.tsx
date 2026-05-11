@@ -147,7 +147,7 @@ function getInitials(value: string) {
 }
 
 function getLeadCompany(lead: BaseCrmLeadsEntity) {
-  return lead.company_name as
+  return lead.company_name_text as
     | {
         id?: string
         name?: string
@@ -333,13 +333,13 @@ export function LeadsKanbanView({
                                 />
                                 <AvatarFallback className="rounded-2xl bg-muted text-sm font-semibold text-foreground">
                                   {getInitials(
-                                    companyName || lead.title || 'Lead',
+                                    companyName || lead.name || 'Lead',
                                   )}
                                 </AvatarFallback>
                               </Avatar>
                               <div className="min-w-0 space-y-1">
                                 <CardTitle className="truncate text-sm font-semibold tracking-tight">
-                                  {lead.title ||
+                                  {lead.name ||
                                     `Lead #${lead.id?.slice(0, 8) ?? ''}`}
                                 </CardTitle>
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">

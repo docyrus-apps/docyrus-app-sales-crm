@@ -7,6 +7,68 @@ interface UseLeadsOptions {
   enabled?: boolean
 }
 
+export const LEAD_LIST_COLUMNS = [
+  'id',
+  'name',
+  'phone',
+  'email',
+  'website',
+  'company_name_text',
+  'company_email',
+  'company_phone',
+  'company_industry',
+  'company_size',
+  'lead_source',
+  'lead_status',
+  'lead_type',
+  'countries(id,name)',
+  'record_owner',
+  'deal_value',
+  'expected_closing_date',
+  'converted_organization(id,name)',
+  'converted_contact(id,name)',
+  'converted_deal(id,name)',
+  'converted_on',
+  'conversion_state',
+  'conversion_mode',
+  'created_on',
+]
+
+export const LEAD_DETAIL_COLUMNS = [
+  'id',
+  'name',
+  'phone',
+  'email',
+  'website',
+  'address',
+  'city',
+  'state',
+  'lead_source',
+  'lead_status',
+  'lead_type',
+  'contact_message',
+  'contact_job_title',
+  'company_name_text',
+  'company_email',
+  'company_phone',
+  'company_industry',
+  'company_size',
+  'lost_reason',
+  'deal_value',
+  'expected_closing_date',
+  'countries(id,name)',
+  'record_owner',
+  'converted_organization(id,name)',
+  'converted_contact(id,name)',
+  'converted_deal(id,name)',
+  'converted_on',
+  'converted_by(firstname,lastname)',
+  'conversion_state',
+  'conversion_mode',
+  'conversion_error_message',
+  'created_on',
+]
+
 /**
  * Hook to list leads with optional filters
  */
@@ -21,20 +83,7 @@ export function useLeads(
     queryFn: async () => {
       const response = await leadsCollection.list({
         ...params,
-        columns: params?.columns || [
-          'id',
-          'title',
-          'phone',
-          'email',
-          'website',
-          'lead_source',
-          'lead_status',
-          'lead_type',
-          'company_name(id,name)',
-          'countries(id,name)',
-          'record_owner',
-          'created_on',
-        ],
+        columns: params?.columns || LEAD_LIST_COLUMNS,
         orderBy: params?.orderBy || 'created_on DESC',
       })
       return response
@@ -56,26 +105,7 @@ export function useLead(leadId: string | undefined) {
         throw new Error('Lead ID is required')
       }
       const response = await leadsCollection.get(leadId, {
-        columns: [
-          'id',
-          'title',
-          'phone',
-          'email',
-          'website',
-          'address',
-          'city',
-          'state',
-          'town',
-          'lead_source',
-          'lead_status',
-          'lead_type',
-          'contact_message',
-          'lost_reason',
-          'company_name(id,name,phone,email,website)',
-          'countries(id,name)',
-          'record_owner',
-          'created_on',
-        ],
+        columns: LEAD_DETAIL_COLUMNS,
       })
       return response
     },

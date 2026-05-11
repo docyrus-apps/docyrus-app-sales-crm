@@ -80,13 +80,10 @@ export function CommandPalette({
     leads
       ?.filter((lead: any) => {
         if (!search) return false
-        const title = lead.title || ''
-        const company =
-          lead.company_name && typeof lead.company_name === 'object'
-            ? lead.company_name.name || ''
-            : lead.company_name || ''
+        const name = lead.name || ''
+        const company = lead.company_name_text || ''
         return (
-          title.toLowerCase().includes(search.toLowerCase()) ||
+          name.toLowerCase().includes(search.toLowerCase()) ||
           company.toLowerCase().includes(search.toLowerCase())
         )
       })
@@ -312,7 +309,7 @@ export function CommandPalette({
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span>
-                          {lead.title || `Lead #${lead.id.slice(0, 8)}`}
+                          {lead.name || `Lead #${lead.id.slice(0, 8)}`}
                         </span>
                         {lead.lead_status && (
                           <Badge variant="secondary" className="text-xs">

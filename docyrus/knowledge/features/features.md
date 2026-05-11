@@ -10,6 +10,8 @@ The products and sales orders routes now follow the shared Docyrus grid pattern 
 
 The leads and deals routes now use the shared Docyrus grid runtime for list tabs and the Docyrus kanban hook for board tabs, with saved views, inline updates, and toolbar import/export actions.
 
+Lead conversion follows the pure lead model: leads keep pre-conversion company, contact, and qualification fields; conversion creates or reuses company/contact records, creates the deal, writes converted record links and conversion state, resumes partial conversions, and keeps converted leads read-only in edit/detail flows.
+
 ## Tasks, Activities & Calendar
 
 The tasks route now uses the shared Docyrus grid runtime with saved views, inline updates, and toolbar import/export actions so task management behaves consistently with the other CRM workspaces.
@@ -53,6 +55,7 @@ This section highlights the files that appear to integrate with Docyrus APIs or 
 <!-- docyrus-knowledge:auto:end -->
 
 <!-- docyrus-project-plan:features:begin -->
+
 ## Planned Features
 
 Features tracked in the project plan.

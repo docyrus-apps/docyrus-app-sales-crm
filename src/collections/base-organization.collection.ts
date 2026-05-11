@@ -63,6 +63,9 @@ export interface BaseOrganizationEntity {
 
   /** Type */
   type?: { id: string; name: string } | any
+
+  /** Source Lead */
+  source_lead?: { id: string; name: string } | string
 }
 
 export function useBaseOrganizationCollection() {

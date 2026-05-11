@@ -135,7 +135,6 @@ export function AIMenu() {
 
   useHotkeys('esc', () => {
     api.aiChat.stop()
-
     ;(chat as any)._abortFakeStream()
   })
 
@@ -646,7 +645,6 @@ export function AILoadingBar() {
 
   useHotkeys('esc', () => {
     api.aiChat.stop()
-
     ;(chat as any)._abortFakeStream()
   })
 

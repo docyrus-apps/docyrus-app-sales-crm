@@ -68,7 +68,7 @@ function getValidDate(value: unknown): Date | null {
 
 function getLeadLabel(lead: any, t: (key: string) => string) {
   return (
-    lead.title?.trim() ||
+    lead.name?.trim() ||
     `${t('dashboard.untitledLead')} #${lead.id.slice(0, 6)}`
   )
 }
@@ -612,11 +612,8 @@ export function Dashboard() {
                             {getLeadLabel(lead, t)}
                           </p>
                           <p className="mt-1 truncate text-xs text-muted-foreground">
-                            {lead.company_name &&
-                            typeof lead.company_name === 'object' &&
-                            lead.company_name.name
-                              ? lead.company_name.name
-                              : getSourceLabel(lead.lead_source, t)}
+                            {lead.company_name_text ||
+                              getSourceLabel(lead.lead_source, t)}
                           </p>
                         </div>
                         <div className="text-right">

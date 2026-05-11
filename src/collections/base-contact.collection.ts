@@ -36,6 +36,9 @@ export interface BaseContactEntity {
 
   /** Organization */
   organization?: { id: string; name: string } | string
+
+  /** Source Lead */
+  source_lead?: { id: string; name: string } | string
 }
 
 export function useBaseContactCollection() {

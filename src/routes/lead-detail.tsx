@@ -9,6 +9,7 @@ import {
   Pencil,
   Activity,
   ClipboardList,
+  RefreshCw,
 } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
 import { Button } from '@/components/animate-ui/components/buttons/button'
@@ -24,9 +25,11 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useLead } from '@/hooks/use-leads'
 import { LeadFormDialog } from '@/components/leads/lead-form-dialog'
+import { LeadConvertDialog } from '@/components/leads/lead-convert-dialog'
 import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
 import { ContactActivityPanel } from '@/components/docyrus/contact-activity-panel'
+import { getRelationId, isLeadConvertedRecord } from '@/lib/lead-conversion'
 import {
   EditableRecordDetail,
   EditableRecordDetailField,
@@ -55,6 +58,7 @@ export function LeadDetail() {
   const navigate = useNavigate({ from: '/leads/$leadId' })
   const { data: lead, isLoading, error } = useLead(leadId)
   const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isConvertOpen, setIsConvertOpen] = useState(false)
 
   const handleTabChange = (value: string) => {
     void navigate({ search: { tab: value }, replace: true })
@@ -62,20 +66,40 @@ export function LeadDetail() {
 
   const fields = useMemo<Array<RecordDetailField>>(
     () => [
-      { field: makeField('title', t('leads.titleLabel')), readOnly: true },
+      {
+        field: makeField(
+          'name',
+          t('leads.form.contactNameLabel', { defaultValue: 'Contact Name' }),
+        ),
+        readOnly: true,
+      },
       {
         field: makeField('lead_status', t('leads.status')),
         readOnly: true,
       },
       {
-        field: makeField('email', t('leads.email'), 'field-email'),
+        field: makeField(
+          'email',
+          t('leads.form.emailLabel', { defaultValue: 'Contact Email' }),
+          'field-email',
+        ),
         readOnly: true,
       },
       {
-        field: makeField('phone', t('leads.phone'), 'field-phone'),
+        field: makeField(
+          'phone',
+          t('leads.form.phoneLabel', { defaultValue: 'Contact Phone' }),
+          'field-phone',
+        ),
         readOnly: true,
       },
-      { field: makeField('website', t('leads.website')), readOnly: true },
+      {
+        field: makeField(
+          'contact_job_title',
+          t('leads.form.jobTitleLabel', { defaultValue: 'Contact Job Title' }),
+        ),
+        readOnly: true,
+      },
       {
         field: makeField('lead_source', t('leads.source')),
         readOnly: true,
@@ -85,22 +109,78 @@ export function LeadDetail() {
         readOnly: true,
       },
       {
-        field: makeField('company_name', t('leads.company')),
-        readOnly: true,
-      },
-      { field: makeField('address', t('leads.address')), readOnly: true },
-      {
-        field: makeField('city', t('leads.city', { defaultValue: 'City' })),
-        readOnly: true,
-      },
-      {
-        field: makeField('state', t('leads.state', { defaultValue: 'State' })),
+        field: makeField(
+          'company_name_text',
+          t('leads.form.companyLabel', { defaultValue: 'Company Name' }),
+        ),
         readOnly: true,
       },
       {
         field: makeField(
-          'country',
-          t('leads.country', { defaultValue: 'Country' }),
+          'website',
+          t('leads.form.websiteLabel', { defaultValue: 'Company Website' }),
+          'field-url',
+        ),
+        readOnly: true,
+      },
+      {
+        field: makeField(
+          'company_email',
+          t('leads.form.companyEmailLabel', { defaultValue: 'Company Email' }),
+          'field-email',
+        ),
+        readOnly: true,
+      },
+      {
+        field: makeField(
+          'company_phone',
+          t('leads.form.companyPhoneLabel', { defaultValue: 'Company Phone' }),
+          'field-phone',
+        ),
+        readOnly: true,
+      },
+      {
+        field: makeField(
+          'company_industry',
+          t('leads.form.companyIndustryLabel', {
+            defaultValue: 'Company Industry',
+          }),
+        ),
+        readOnly: true,
+      },
+      {
+        field: makeField(
+          'company_size',
+          t('leads.form.companySizeLabel', { defaultValue: 'Company Size' }),
+        ),
+        readOnly: true,
+      },
+      {
+        field: makeField(
+          'address',
+          t('leads.form.addressLabel', { defaultValue: 'Company Address' }),
+          'field-textarea',
+        ),
+        readOnly: true,
+      },
+      {
+        field: makeField(
+          'city',
+          t('leads.form.cityLabel', { defaultValue: 'Company City' }),
+        ),
+        readOnly: true,
+      },
+      {
+        field: makeField(
+          'state',
+          t('leads.form.stateLabel', { defaultValue: 'Company State' }),
+        ),
+        readOnly: true,
+      },
+      {
+        field: makeField(
+          'countries',
+          t('leads.form.countryLabel', { defaultValue: 'Company Country' }),
         ),
         readOnly: true,
       },
@@ -114,7 +194,9 @@ export function LeadDetail() {
       {
         field: makeField(
           'contact_message',
-          t('leads.message'),
+          t('leads.form.qualificationNotesLabel', {
+            defaultValue: 'Qualification Notes',
+          }),
           'field-textarea',
         ),
         readOnly: true,
@@ -126,18 +208,23 @@ export function LeadDetail() {
   const record = useMemo(() => {
     if (!lead) return {}
     return {
-      title: lead.title ?? '',
+      name: lead.name ?? '',
       lead_status: extractName(lead.lead_status) ?? '',
       email: lead.email ?? '',
       phone: lead.phone ?? '',
       website: lead.website ?? '',
       lead_source: extractName(lead.lead_source) ?? '',
       lead_type: extractName(lead.lead_type) ?? '',
-      company_name: extractName(lead.company_name) ?? '',
+      company_name_text: lead.company_name_text ?? '',
+      company_email: lead.company_email ?? '',
+      company_phone: lead.company_phone ?? '',
+      company_industry: extractName(lead.company_industry) ?? '',
+      company_size: extractName(lead.company_size) ?? '',
+      contact_job_title: lead.contact_job_title ?? '',
       address: lead.address ?? '',
       city: extractName(lead.city) ?? '',
       state: extractName(lead.state) ?? '',
-      country: extractName(lead.countries) ?? '',
+      countries: extractName(lead.countries) ?? '',
       record_owner: extractName(lead.record_owner) ?? '',
       contact_message: lead.contact_message ?? '',
     }
@@ -179,6 +266,8 @@ export function LeadDetail() {
     lead.lead_status && typeof lead.lead_status === 'object'
       ? lead.lead_status.name
       : lead.lead_status
+  const isConverted = isLeadConvertedRecord(lead)
+  const convertedDealId = getRelationId(lead.converted_deal)
 
   return (
     <PageContainer>
@@ -192,16 +281,41 @@ export function LeadDetail() {
           </Link>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-semibold">
-              {lead.title ||
+              {lead.name ||
                 t('leads.untitledLead', { defaultValue: 'Untitled Lead' })}
             </h1>
             {statusName && <Badge variant="secondary">{statusName}</Badge>}
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setIsEditOpen(true)}>
-          <Pencil className="mr-2 h-3.5 w-3.5" />
-          {t('common.editAll', { defaultValue: 'Edit All' })}
-        </Button>
+        <div className="flex items-center gap-2">
+          {!isConverted && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setIsConvertOpen(true)}
+            >
+              <RefreshCw className="mr-2 h-3.5 w-3.5" />
+              {t('leads.convert.convertButton')}
+            </Button>
+          )}
+          {!isConverted && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsEditOpen(true)}
+            >
+              <Pencil className="mr-2 h-3.5 w-3.5" />
+              {t('common.editAll', { defaultValue: 'Edit All' })}
+            </Button>
+          )}
+          {isConverted && convertedDealId && (
+            <Link to="/deals/$dealId" params={{ dealId: convertedDealId }}>
+              <Button variant="outline" size="sm">
+                {t('deals.viewDeal', { defaultValue: 'View deal' })}
+              </Button>
+            </Link>
+          )}
+        </div>
       </div>
 
       <Tabs
@@ -241,11 +355,16 @@ export function LeadDetail() {
                     <EditableRecordDetailField slug="website" />
                     <EditableRecordDetailField slug="lead_source" />
                     <EditableRecordDetailField slug="lead_type" />
-                    <EditableRecordDetailField slug="company_name" />
+                    <EditableRecordDetailField slug="company_name_text" />
+                    <EditableRecordDetailField slug="contact_job_title" />
+                    <EditableRecordDetailField slug="company_email" />
+                    <EditableRecordDetailField slug="company_phone" />
+                    <EditableRecordDetailField slug="company_industry" />
+                    <EditableRecordDetailField slug="company_size" />
                     <EditableRecordDetailField slug="address" />
                     <EditableRecordDetailField slug="city" />
                     <EditableRecordDetailField slug="state" />
-                    <EditableRecordDetailField slug="country" />
+                    <EditableRecordDetailField slug="countries" />
                     <EditableRecordDetailField slug="record_owner" />
                   </div>
                   {record.contact_message && (
@@ -261,7 +380,7 @@ export function LeadDetail() {
           <TabsContent value="activity" className="mt-4">
             <ContactActivityPanel
               activities={[]}
-              contactName={lead.title}
+              contactName={lead.name}
               isLoading={false}
             />
           </TabsContent>
@@ -289,6 +408,11 @@ export function LeadDetail() {
         onOpenChange={setIsEditOpen}
         lead={lead}
         mode="edit"
+      />
+      <LeadConvertDialog
+        open={isConvertOpen}
+        onOpenChange={setIsConvertOpen}
+        lead={lead}
       />
     </PageContainer>
   )

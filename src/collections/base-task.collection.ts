@@ -55,6 +55,12 @@ export interface BaseTaskEntity {
   /** Deal */
   deal?: Record<string, any> | string
 
+  /** Lead */
+  lead?: { id: string; name: string } | string
+
+  /** Contact */
+  contact?: { id: string; name: string } | string
+
   /** Parent Task */
   parent?: { id: string; name: string } | string
 

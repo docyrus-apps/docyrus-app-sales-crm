@@ -459,6 +459,7 @@ interface PhoneInputProps extends React.ComponentProps<'div'> {
   required?: boolean
   invalid?: boolean
   showFlag?: boolean
+  children?: React.ReactNode
 }
 
 function PhoneInput(props: PhoneInputProps) {
@@ -481,6 +482,7 @@ function PhoneInput(props: PhoneInputProps) {
     className,
     id,
     ref,
+    children,
     ...rootProps
   } = props
 
@@ -603,6 +605,13 @@ function PhoneInput(props: PhoneInputProps) {
 
   const RootPrimitive = asChild ? SlotPrimitive.Slot : 'div'
 
+  const content = children ?? (
+    <>
+      <PhoneInputCountrySelect />
+      <PhoneInputField />
+    </>
+  )
+
   return (
     <StoreContext.Provider value={store}>
       <PhoneInputContext.Provider value={contextValue}>
@@ -619,7 +628,9 @@ function PhoneInput(props: PhoneInputProps) {
             'relative flex h-10 w-full items-center rounded-md border border-input bg-background transition-colors has-[[data-slot=input-group-control]:focus-visible]:border-ring has-[[data-slot][aria-invalid=true]]:border-destructive has-[[data-slot=input-group-control]:focus-visible]:ring-[3px] has-[[data-slot=input-group-control]:focus-visible]:ring-ring/50 has-[[data-slot][aria-invalid=true]]:ring-[3px] has-[[data-slot][aria-invalid=true]]:ring-destructive/20 data-disabled:cursor-not-allowed data-disabled:opacity-50 dark:bg-input/30 dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40',
             className,
           )}
-        />
+        >
+          {content}
+        </RootPrimitive>
         {isFormControl && (
           <VisuallyHiddenInput
             type="hidden"

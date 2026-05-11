@@ -99,14 +99,20 @@ export function CompanyDetail() {
       ? {
           columns: [
             'id',
-            'title',
+            'name',
             'email',
             'phone',
             'lead_status',
             'lead_source',
           ],
           filters: {
-            rules: [{ field: 'company_name', operator: '=', value: companyId }],
+            rules: [
+              {
+                field: 'converted_organization',
+                operator: '=',
+                value: companyId,
+              },
+            ],
           },
           orderBy: 'created_on desc',
         }
@@ -426,7 +432,7 @@ export function CompanyDetail() {
                         <div className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50">
                           <div className="min-w-0 flex-1">
                             <div className="font-medium">
-                              {lead.title || t('leads.untitledLead')}
+                              {lead.name || t('leads.untitledLead')}
                             </div>
                             {lead.lead_status && (
                               <div className="text-sm text-muted-foreground">
