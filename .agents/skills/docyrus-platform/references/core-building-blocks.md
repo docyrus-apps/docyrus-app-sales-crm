@@ -17,22 +17,22 @@ Data sources are the fundamental building block. Each data source represents a s
 
 Every data source is composed of fields. 45+ field types cover all data modeling needs:
 
-| Category | Field Types |
-|---|---|
-| **Text** | text, textarea, email, phone, URL, color, icon, display |
-| **Rich content** | document editor, HTML editor, email editor, code editor |
-| **Numeric** | number, money, currency, duration, rating, autonumber, identity |
-| **Date & time** | date, dateTime, time, dateRange |
-| **Boolean** | checkbox, switch |
-| **Selection** | select, multiSelect, tagSelect, status, radioGroup |
-| **Users** | userSelect, userMultiSelect |
-| **Relations** | relation (lookup to another data source), list (virtual related records) |
-| **Nested data** | inlineData (nested JSON arrays), inlineForm (nested objects) |
-| **Files** | file, image, fileStorageFolder |
-| **Computed** | formula (JSONata expressions), display (read-only computed) |
-| **Workflow** | approvalStatus, taskList, todo |
-| **Advanced** | json, queryBuilder, dynamic, schema, schemaRepeater, locationSelect |
-| **System** | systemEnum, systemBuffer, systemVector, systemTextArray, systemUuidArray |
+| Category         | Field Types                                                              |
+| ---------------- | ------------------------------------------------------------------------ |
+| **Text**         | text, textarea, email, phone, URL, color, icon, display                  |
+| **Rich content** | document editor, HTML editor, email editor, code editor                  |
+| **Numeric**      | number, money, currency, duration, rating, autonumber, identity          |
+| **Date & time**  | date, dateTime, time, dateRange                                          |
+| **Boolean**      | checkbox, switch                                                         |
+| **Selection**    | select, multiSelect, tagSelect, status, radioGroup                       |
+| **Users**        | userSelect, userMultiSelect                                              |
+| **Relations**    | relation (lookup to another data source), list (virtual related records) |
+| **Nested data**  | inlineData (nested JSON arrays), inlineForm (nested objects)             |
+| **Files**        | file, image, fileStorageFolder                                           |
+| **Computed**     | formula (JSONata expressions), display (read-only computed)              |
+| **Workflow**     | approvalStatus, taskList, todo                                           |
+| **Advanced**     | json, queryBuilder, dynamic, schema, schemaRepeater, locationSelect      |
+| **System**       | systemEnum, systemBuffer, systemVector, systemTextArray, systemUuidArray |
 
 ## Enumerations
 
