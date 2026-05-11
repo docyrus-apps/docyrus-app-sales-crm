@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { useDocyrusClient } from '@docyrus/signin'
+import { useTranslation } from 'react-i18next'
 import {
   AlertCircle,
   ArrowRight,
@@ -85,25 +86,35 @@ interface LeadConvertDialogProps {
   lead: any
 }
 
-const MODE_LABELS: Record<ConversionMode, string> = {
-  company_contact_deal: 'Şirket + kişi + fırsat',
-  contact_deal: 'Kişi + fırsat',
-  deal_only: 'Sadece fırsat',
+function useModeLabels(
+  t: (key: string) => string,
+): Record<ConversionMode, string> {
+  return {
+    company_contact_deal: t('leads.convert.mode.company_contact_deal'),
+    contact_deal: t('leads.convert.mode.contact_deal'),
+    deal_only: t('leads.convert.mode.deal_only'),
+  }
 }
 
-const TARGET_LABEL: Record<'company' | 'contact' | 'deal', string> = {
-  company: 'Şirket',
-  contact: 'Kişi',
-  deal: 'Fırsat',
+function useTargetLabels(
+  t: (key: string) => string,
+): Record<'company' | 'contact' | 'deal', string> {
+  return {
+    company: t('leads.convert.target.company'),
+    contact: t('leads.convert.target.contact'),
+    deal: t('leads.convert.target.deal'),
+  }
 }
 
-const STEP_LABELS: Record<string, string> = {
-  precheck: 'Kontroller',
-  organization: 'Şirket',
-  contact: 'Kişi',
-  deal: 'Fırsat',
-  activity: 'Aktiviteler',
-  lead: 'Lead kaydı',
+function useStepLabels(t: (key: string) => string): Record<string, string> {
+  return {
+    precheck: t('leads.convert.step.precheck'),
+    organization: t('leads.convert.step.organization'),
+    contact: t('leads.convert.step.contact'),
+    deal: t('leads.convert.step.deal'),
+    activity: t('leads.convert.step.activity'),
+    lead: t('leads.convert.step.lead'),
+  }
 }
 
 function normalize(value?: string | null) {
@@ -166,12 +177,12 @@ function mapLeadTypeToCustomerType(
   return undefined
 }
 
-function getErrorMessage(error: unknown) {
+function getErrorMessage(error: unknown, t: (key: string) => string) {
   if (error && typeof error === 'object' && 'message' in error) {
     return String((error as { message?: string }).message)
   }
 
-  return 'İşlem tamamlanamadı'
+  return t('leads.convert.alert.errorTitle')
 }
 
 function getOptionValue(
@@ -214,8 +225,7 @@ function renderDetailIcon(tone: DetailTone) {
     return <Sparkles className="mt-0.5 size-3.5 text-amber-600" />
   if (tone === 'error')
     return <XCircle className="mt-0.5 size-3.5 text-destructive" />
-  if (tone === 'info')
-    return <Info className="mt-0.5 size-3.5 text-sky-600" />
+  if (tone === 'info') return <Info className="mt-0.5 size-3.5 text-sky-600" />
   return <CircleDashed className="mt-0.5 size-3.5 text-muted-foreground" />
 }
 
@@ -237,9 +247,13 @@ export function LeadConvertDialog({
   onOpenChange,
   lead,
 }: LeadConvertDialogProps) {
+  const { t } = useTranslation()
   const client = useDocyrusClient()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const MODE_LABELS = useModeLabels((key) => t(key))
+  const TARGET_LABEL = useTargetLabels((key) => t(key))
+  const STEP_LABELS = useStepLabels((key) => t(key))
   const [isWorking, setIsWorking] = useState(false)
   const [duplicatesChecked, setDuplicatesChecked] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -278,7 +292,7 @@ export function LeadConvertDialog({
       ? 'company_contact_deal'
       : 'contact_deal'
   })
-  const initialStepStateRef = useRef(() => {
+  const initialStepState = useMemo(() => {
     const hasOrg = Boolean(getRelationId(lead?.converted_organization))
     const hasContact = Boolean(getRelationId(lead?.converted_contact))
     const hasDeal = Boolean(getRelationId(lead?.converted_deal))
@@ -312,27 +326,33 @@ export function LeadConvertDialog({
         ? [
             {
               tone: 'success',
-              label: `Mevcut: ${getRelationName(lead?.converted_organization) ?? '—'}`,
+              label: t('leads.convert.result.existing', {
+                name: getRelationName(lead?.converted_organization) ?? '—',
+              }),
             },
-            { tone: 'info', label: 'Bu adım atlanacak' },
+            { tone: 'info', label: t('leads.convert.result.willSkip') },
           ]
         : [],
       contact: hasContact
         ? [
             {
               tone: 'success',
-              label: `Mevcut: ${getRelationName(lead?.converted_contact) ?? '—'}`,
+              label: t('leads.convert.result.existing', {
+                name: getRelationName(lead?.converted_contact) ?? '—',
+              }),
             },
-            { tone: 'info', label: 'Bu adım atlanacak' },
+            { tone: 'info', label: t('leads.convert.result.willSkip') },
           ]
         : [],
       deal: hasDeal
         ? [
             {
               tone: 'success',
-              label: `Mevcut: ${getRelationName(lead?.converted_deal) ?? '—'}`,
+              label: t('leads.convert.result.existing', {
+                name: getRelationName(lead?.converted_deal) ?? '—',
+              }),
             },
-            { tone: 'info', label: 'Bu adım atlanacak' },
+            { tone: 'info', label: t('leads.convert.result.willSkip') },
           ]
         : [],
       activity: [],
@@ -350,21 +370,26 @@ export function LeadConvertDialog({
       )
       if (failedKey && errorMessage) {
         details[failedKey] = [
-          { tone: 'error', label: `Önceki hata: ${errorMessage}` },
-          { tone: 'info', label: 'Dönüştür dediğinde yeniden denenecek' },
+          {
+            tone: 'error',
+            label: t('leads.convert.result.previousError', {
+              message: errorMessage,
+            }),
+          },
+          { tone: 'info', label: t('leads.convert.result.willRetry') },
         ]
       }
     }
 
     return { steps, details }
-  })
+  }, [lead, t])
 
   const [steps, setSteps] = useState<Record<string, StepState>>(
-    () => initialStepStateRef.current().steps,
+    () => initialStepState.steps,
   )
   const [stepDetails, setStepDetails] = useState<
     Record<string, Array<StepDetail>>
-  >(() => initialStepStateRef.current().details)
+  >(() => initialStepState.details)
   const [form, setForm] = useState(() => ({
     companyName: lead?.company_name_text || '',
     companyWebsite: lead?.website || '',
@@ -382,7 +407,7 @@ export function LeadConvertDialog({
     dealName:
       [lead?.company_name_text, lead?.name].filter(Boolean).join(' - ') ||
       lead?.name ||
-      'Yeni fırsat',
+      t('leads.convert.dealDefaultName'),
     dealValue: lead?.deal_value ? String(lead.deal_value) : '',
     notes: lead?.contact_message || '',
     dealStageId: '',
@@ -392,8 +417,18 @@ export function LeadConvertDialog({
     dealOwner: getRelationId(lead?.record_owner) || '',
   }))
   const [extraFields, setExtraFields] = useState<{
-    company: Array<{ slug: string; label: string; kind: FieldKind; value: string }>
-    contact: Array<{ slug: string; label: string; kind: FieldKind; value: string }>
+    company: Array<{
+      slug: string
+      label: string
+      kind: FieldKind
+      value: string
+    }>
+    contact: Array<{
+      slug: string
+      label: string
+      kind: FieldKind
+      value: string
+    }>
     deal: Array<{ slug: string; label: string; kind: FieldKind; value: string }>
   }>({ company: [], contact: [], deal: [] })
   const [targetFields, setTargetFields] = useState<{
@@ -443,10 +478,10 @@ export function LeadConvertDialog({
     appSlug: 'base',
     dataSourceSlug: 'organization',
   })
-  const { data: orgCompanySizeOptions = [] } = useEnumEntities(
-    'company_size',
-    { appSlug: 'base', dataSourceSlug: 'organization' },
-  )
+  const { data: orgCompanySizeOptions = [] } = useEnumEntities('company_size', {
+    appSlug: 'base',
+    dataSourceSlug: 'organization',
+  })
 
   const newStageId = useMemo(
     () => optionByName(stageOptions, 'New'),
@@ -503,12 +538,13 @@ export function LeadConvertDialog({
       ])
       if (cancelled) return
       const mapFields = (
-        ds: { fields?: Array<{ slug?: string; name?: string; type?: string }> } | null,
+        ds: {
+          fields?: Array<{ slug?: string; name?: string; type?: string }>
+        } | null,
       ) =>
         (ds?.fields ?? [])
-          .filter(
-            (f): f is { slug: string; name: string; type: string } =>
-              Boolean(f?.slug && f?.name && f?.type),
+          .filter((f): f is { slug: string; name: string; type: string } =>
+            Boolean(f?.slug && f?.name && f?.type),
           )
           .map((f) => ({ slug: f.slug, name: f.name, type: f.type }))
       setTargetFields({
@@ -532,8 +568,8 @@ export function LeadConvertDialog({
   const isAlreadyCompleted = isLeadConvertedRecord(lead)
   const hasAnyCreated = Boolean(
     lead?.converted_organization ||
-      lead?.converted_contact ||
-      lead?.converted_deal,
+    lead?.converted_contact ||
+    lead?.converted_deal,
   )
   const conversionStateName = normalizeConversionKey(
     getRelationName(lead?.conversion_state),
@@ -581,7 +617,7 @@ export function LeadConvertDialog({
   }
 
   const updateLead = async (data: Record<string, unknown>) => {
-    if (!client || !lead?.id) throw new Error('Lead bulunamadı')
+    if (!client || !lead?.id) throw new Error(t('leads.failedToLoad'))
     await client.patch(
       `/v1/apps/base_crm/data-sources/leads/items/${lead.id}`,
       pickDefined(data),
@@ -691,15 +727,15 @@ export function LeadConvertDialog({
 
     try {
       if (!form.dealName.trim()) {
-        throw new Error('Fırsat adı gerekli')
+        throw new Error(t('leads.convert.validation.dealNameRequired'))
       }
 
       if (mode === 'company_contact_deal' && !form.companyName.trim()) {
-        throw new Error('Şirket adı gerekli')
+        throw new Error(t('leads.convert.validation.companyNameRequired'))
       }
 
       if (mode !== 'deal_only' && !form.contactName.trim()) {
-        throw new Error('Kişi adı gerekli')
+        throw new Error(t('leads.convert.validation.contactNameRequired'))
       }
 
       const companyKeyword =
@@ -729,7 +765,9 @@ export function LeadConvertDialog({
               columns:
                 'id,name,stage(id,name),organization(id,name),source_lead(id,name)',
               filters: {
-                rules: [{ field: 'source_lead', operator: '=', value: lead.id }],
+                rules: [
+                  { field: 'source_lead', operator: '=', value: lead.id },
+                ],
               },
               limit: 8,
             })
@@ -775,14 +813,27 @@ export function LeadConvertDialog({
       if (exactContact?.id) setSelectedContactId(exactContact.id)
 
       const precheckDetails: Array<StepDetail> = []
-      precheckDetails.push(detail('success', `Fırsat adı: ${form.dealName}`))
+      precheckDetails.push(
+        detail(
+          'success',
+          t('leads.convert.check.dealName', { value: form.dealName }),
+        ),
+      )
       if (mode === 'company_contact_deal') {
         precheckDetails.push(
-          detail('success', `Şirket adı: ${form.companyName}`),
+          detail(
+            'success',
+            t('leads.convert.check.companyName', { value: form.companyName }),
+          ),
         )
       }
       if (mode !== 'deal_only') {
-        precheckDetails.push(detail('success', `Kişi adı: ${form.contactName}`))
+        precheckDetails.push(
+          detail(
+            'success',
+            t('leads.convert.check.contactName', { value: form.contactName }),
+          ),
+        )
       }
       if (mode === 'company_contact_deal') {
         if (companyMatches.length > 0) {
@@ -790,13 +841,18 @@ export function LeadConvertDialog({
             detail(
               exactCompany ? 'warn' : 'info',
               exactCompany
-                ? `${companyMatches.length} benzer şirket bulundu — eşleşen: ${exactCompany.name}`
-                : `${companyMatches.length} benzer şirket önerildi`,
+                ? t('leads.convert.check.similarCompaniesFound', {
+                    count: companyMatches.length,
+                    name: exactCompany.name,
+                  })
+                : t('leads.convert.check.similarCompaniesSuggested', {
+                    count: companyMatches.length,
+                  }),
             ),
           )
         } else {
           precheckDetails.push(
-            detail('success', 'Şirket çakışması yok — yeni kayıt açılacak'),
+            detail('success', t('leads.convert.check.noCompanyConflict')),
           )
         }
       }
@@ -806,13 +862,18 @@ export function LeadConvertDialog({
             detail(
               exactContact ? 'warn' : 'info',
               exactContact
-                ? `${contactMatches.length} benzer kişi bulundu — eşleşen: ${exactContact.name}`
-                : `${contactMatches.length} benzer kişi önerildi`,
+                ? t('leads.convert.check.similarContactsFound', {
+                    count: contactMatches.length,
+                    name: exactContact.name,
+                  })
+                : t('leads.convert.check.similarContactsSuggested', {
+                    count: contactMatches.length,
+                  }),
             ),
           )
         } else {
           precheckDetails.push(
-            detail('success', 'Kişi çakışması yok — yeni kayıt açılacak'),
+            detail('success', t('leads.convert.check.noContactConflict')),
           )
         }
       }
@@ -821,12 +882,15 @@ export function LeadConvertDialog({
         precheckDetails.push(
           detail(
             'warn',
-            `Bu lead'den önce ${dealMatches.length} fırsat oluşturulmuş — ör: ${first?.name ?? 'isimsiz'}`,
+            t('leads.convert.check.previousDeals', {
+              count: dealMatches.length,
+              name: first?.name ?? t('common.unknown'),
+            }),
           ),
         )
       } else {
         precheckDetails.push(
-          detail('success', 'Bu lead için fırsat çakışması yok'),
+          detail('success', t('leads.convert.check.noDealConflict')),
         )
       }
       setStepDetail('precheck', precheckDetails)
@@ -835,10 +899,9 @@ export function LeadConvertDialog({
       setStep('precheck', 'done')
     } catch (error) {
       setStep('precheck', 'failed')
-      setStepDetail('precheck', [
-        detail('error', `Hata: ${getErrorMessage(error)}`),
-      ])
-      setErrorMessage(getErrorMessage(error))
+      const errMsg = getErrorMessage(error, t)
+      setStepDetail('precheck', [detail('error', `Hata: ${errMsg}`)])
+      setErrorMessage(errMsg)
     } finally {
       setIsWorking(false)
     }
@@ -880,16 +943,46 @@ export function LeadConvertDialog({
 
     if (mode === 'company_contact_deal') {
       const companyChecks: Array<MissingField | null> = [
-        checkRow('company', 'name', 'Şirket adı', form.companyName),
-        checkRow('company', 'email', 'Şirket e-postası', form.companyEmail),
-        checkRow('company', 'phone', 'Şirket telefonu', form.companyPhone),
-        checkRow('company', 'website', 'Website', form.companyWebsite),
-        checkRow('company', 'address', 'Adres', form.companyAddress),
-        checkRow('company', 'city', 'Şehir', form.companyCity),
+        checkRow(
+          'company',
+          'name',
+          t('leads.convert.field.companyName'),
+          form.companyName,
+        ),
+        checkRow(
+          'company',
+          'email',
+          t('leads.convert.field.companyEmail'),
+          form.companyEmail,
+        ),
+        checkRow(
+          'company',
+          'phone',
+          t('leads.convert.field.companyPhone'),
+          form.companyPhone,
+        ),
+        checkRow(
+          'company',
+          'website',
+          t('leads.convert.field.website'),
+          form.companyWebsite,
+        ),
+        checkRow(
+          'company',
+          'address',
+          t('leads.convert.field.address'),
+          form.companyAddress,
+        ),
+        checkRow(
+          'company',
+          'city',
+          t('leads.convert.field.city'),
+          form.companyCity,
+        ),
         checkRow(
           'company',
           'industry',
-          'Sektör',
+          t('leads.convert.field.industry'),
           effectiveCompanyIndustryId,
         ),
         ...(companySizeSelectOptions.length > 0
@@ -897,7 +990,7 @@ export function LeadConvertDialog({
               checkRow(
                 'company',
                 'company_size',
-                'Şirket büyüklüğü',
+                t('leads.convert.field.companySize'),
                 effectiveCompanySizeId,
               ),
             ]
@@ -906,44 +999,83 @@ export function LeadConvertDialog({
           checkRow('company', f.slug, f.label, f.value),
         ),
       ]
-      const firstCompany = companyChecks.find((c): c is MissingField => c !== null)
+      const firstCompany = companyChecks.find(
+        (c): c is MissingField => c !== null,
+      )
       if (firstCompany) return firstCompany
     }
 
     if (mode !== 'deal_only') {
       const contactChecks: Array<MissingField | null> = [
-        checkRow('contact', 'name', 'Kişi adı', form.contactName),
+        checkRow(
+          'contact',
+          'name',
+          t('leads.convert.field.contactName'),
+          form.contactName,
+        ),
         checkRow(
           'contact',
           'job_title',
-          'İş ünvanı',
+          t('leads.convert.field.jobTitle'),
           form.contactJobTitle,
         ),
-        checkRow('contact', 'email', 'E-posta', form.contactEmail),
-        checkRow('contact', 'mobile', 'Telefon', form.contactPhone),
+        checkRow(
+          'contact',
+          'email',
+          t('leads.convert.field.email'),
+          form.contactEmail,
+        ),
+        checkRow(
+          'contact',
+          'mobile',
+          t('leads.convert.field.phone'),
+          form.contactPhone,
+        ),
         ...extraFields.contact.map((f) =>
           checkRow('contact', f.slug, f.label, f.value),
         ),
       ]
-      const firstContact = contactChecks.find((c): c is MissingField => c !== null)
+      const firstContact = contactChecks.find(
+        (c): c is MissingField => c !== null,
+      )
       if (firstContact) return firstContact
     }
 
     const dealChecks: Array<MissingField | null> = [
-      checkRow('deal', 'name', 'Fırsat adı', form.dealName),
-      checkRow('deal', 'deal_value', 'Tahmini değer', form.dealValue),
-      checkRow('deal', 'description', 'Açıklama / Not', form.notes),
-      checkRow('deal', 'stage', 'Aşama', effectiveStageId),
+      checkRow(
+        'deal',
+        'name',
+        t('leads.convert.field.dealName'),
+        form.dealName,
+      ),
+      checkRow(
+        'deal',
+        'deal_value',
+        t('leads.convert.field.estimatedValue'),
+        form.dealValue,
+      ),
+      checkRow(
+        'deal',
+        'description',
+        t('leads.convert.field.description'),
+        form.notes,
+      ),
+      checkRow(
+        'deal',
+        'stage',
+        t('leads.convert.field.stage'),
+        effectiveStageId,
+      ),
       checkRow(
         'deal',
         'lead_source',
-        'Lead kaynağı',
+        t('leads.convert.field.leadSource'),
         effectiveLeadSourceId,
       ),
       checkRow(
         'deal',
         'customer_type',
-        'Müşteri tipi',
+        t('leads.convert.field.customerType'),
         effectiveCustomerTypeId,
       ),
       ...extraFields.deal.map((f) =>
@@ -982,62 +1114,104 @@ export function LeadConvertDialog({
     }
 
     if (mode === 'company_contact_deal') {
-      push('company', 'Şirket adı', lead?.company_name_text || '', form.companyName)
-      push('company', 'Şirket e-postası', lead?.company_email || '', form.companyEmail)
-      push('company', 'Şirket telefonu', lead?.company_phone || '', form.companyPhone)
-      push('company', 'Website', lead?.website || '', form.companyWebsite)
-      push('company', 'Adres', lead?.address || '', form.companyAddress)
-      push('company', 'Şehir', lead?.city || '', form.companyCity)
       push(
         'company',
-        'Sektör',
+        t('leads.convert.field.companyName'),
+        lead?.company_name_text || '',
+        form.companyName,
+      )
+      push(
+        'company',
+        t('leads.convert.field.companyEmail'),
+        lead?.company_email || '',
+        form.companyEmail,
+      )
+      push(
+        'company',
+        t('leads.convert.field.companyPhone'),
+        lead?.company_phone || '',
+        form.companyPhone,
+      )
+      push(
+        'company',
+        t('leads.convert.field.website'),
+        lead?.website || '',
+        form.companyWebsite,
+      )
+      push(
+        'company',
+        t('leads.convert.field.address'),
+        lead?.address || '',
+        form.companyAddress,
+      )
+      push(
+        'company',
+        t('leads.convert.field.city'),
+        lead?.city || '',
+        form.companyCity,
+      )
+      push(
+        'company',
+        t('leads.convert.field.industry'),
         leadCompanyIndustryName,
         lookupOptionLabel(industrySelectOptions, effectiveCompanyIndustryId),
       )
       if (companySizeSelectOptions.length > 0) {
         push(
           'company',
-          'Şirket büyüklüğü',
+          t('leads.convert.field.companySize'),
           leadCompanySizeName,
-          lookupOptionLabel(
-            companySizeSelectOptions,
-            effectiveCompanySizeId,
-          ),
+          lookupOptionLabel(companySizeSelectOptions, effectiveCompanySizeId),
         )
       }
     }
     if (mode !== 'deal_only') {
-      push('contact', 'Kişi adı', lead?.name || '', form.contactName)
       push(
         'contact',
-        'İş ünvanı',
+        t('leads.convert.field.contactName'),
+        lead?.name || '',
+        form.contactName,
+      )
+      push(
+        'contact',
+        t('leads.convert.field.jobTitle'),
         lead?.contact_job_title || '',
         form.contactJobTitle,
       )
-      push('contact', 'E-posta', lead?.email || '', form.contactEmail)
-      push('contact', 'Telefon', lead?.phone || '', form.contactPhone)
+      push(
+        'contact',
+        t('leads.convert.field.email'),
+        lead?.email || '',
+        form.contactEmail,
+      )
+      push(
+        'contact',
+        t('leads.convert.field.phone'),
+        lead?.phone || '',
+        form.contactPhone,
+      )
     }
     push(
       'deal',
-      'Tahmini değer',
+      t('leads.convert.field.estimatedValue'),
       lead?.deal_value ? String(lead.deal_value) : '',
       form.dealValue,
     )
     push(
       'deal',
-      'Açıklama / Not',
+      t('leads.convert.field.description'),
       lead?.contact_message || '',
       form.notes,
     )
     push(
       'deal',
-      'Lead kaynağı',
+      t('leads.convert.field.leadSource'),
       leadSourceName,
       lookupOptionLabel(leadSourceSelectOptions, effectiveLeadSourceId),
     )
     push(
       'deal',
-      'Müşteri tipi',
+      t('leads.convert.field.customerType'),
       leadTypeName,
       lookupOptionLabel(customerTypeSelectOptions, effectiveCustomerTypeId),
     )
@@ -1054,7 +1228,9 @@ export function LeadConvertDialog({
 
     const missing = findMissingField()
     if (missing) {
-      const message = `"${missing.label}" alanı boş — dönüşüm öncesi doldurmalısın`
+      const message = t('leads.convert.validation.missingField', {
+        label: missing.label,
+      })
       setErrorMessage(message)
       toast.error(message)
       focusMissingField(missing.tab, missing.fieldKey)
@@ -1104,9 +1280,12 @@ export function LeadConvertDialog({
       })
       addStepDetail(
         'precheck',
-        detail('info', `Dönüşüm modu: ${MODE_LABELS[mode]}`),
+        detail(
+          'info',
+          t('leads.convert.conversionMode', { mode: MODE_LABELS[mode] }),
+        ),
       )
-      addStepDetail('precheck', detail('info', 'Lead durumu: in_progress'))
+      addStepDetail('precheck', detail('info', t('leads.convert.leadStatus')))
       setStep('precheck', 'done')
 
       if (mode === 'company_contact_deal') {
@@ -1141,8 +1320,12 @@ export function LeadConvertDialog({
           detail(
             'success',
             isReusedOrg
-              ? `Mevcut şirket kullanıldı: ${form.companyName}`
-              : `Yeni şirket oluşturuldu: ${form.companyName}`,
+              ? t('leads.convert.result.reusedOrganization', {
+                  name: form.companyName,
+                })
+              : t('leads.convert.result.newOrganization', {
+                  name: form.companyName,
+                }),
           ),
           ...(organizationId
             ? [detail('neutral', `ID: ${organizationId}`)]
@@ -1151,7 +1334,7 @@ export function LeadConvertDialog({
         setStep('organization', 'done')
       } else {
         setStepDetail('organization', [
-          detail('neutral', 'Bu modda atlandı'),
+          detail('neutral', t('leads.convert.result.skipped')),
         ])
         setStep('organization', 'skipped')
       }
@@ -1184,14 +1367,20 @@ export function LeadConvertDialog({
           detail(
             'success',
             isReusedContact
-              ? `Mevcut kişi kullanıldı: ${form.contactName}`
-              : `Yeni kişi oluşturuldu: ${form.contactName}`,
+              ? t('leads.convert.result.reusedContact', {
+                  name: form.contactName,
+                })
+              : t('leads.convert.result.newContact', {
+                  name: form.contactName,
+                }),
           ),
           ...(contactId ? [detail('neutral', `ID: ${contactId}`)] : []),
         ])
         setStep('contact', 'done')
       } else {
-        setStepDetail('contact', [detail('neutral', 'Bu modda atlandı')])
+        setStepDetail('contact', [
+          detail('neutral', t('leads.convert.result.skipped')),
+        ])
         setStep('contact', 'skipped')
       }
 
@@ -1227,17 +1416,26 @@ export function LeadConvertDialog({
         detail(
           'success',
           isReusedDeal
-            ? `Mevcut fırsat kullanıldı: ${form.dealName}`
-            : `Yeni fırsat oluşturuldu: ${form.dealName}`,
+            ? t('leads.convert.result.reusedDeal', { name: form.dealName })
+            : t('leads.convert.result.newDeal', { name: form.dealName }),
         ),
-        detail('info', 'Aşama: New'),
+        detail('info', t('leads.convert.result.stage')),
       ]
       if (mappedDealLeadSourceId)
-        dealDetails.push(detail('info', 'Lead kaynağı eşlendi'))
+        dealDetails.push(
+          detail('info', t('leads.convert.result.leadSourceMapped')),
+        )
       if (mappedCustomerTypeId)
-        dealDetails.push(detail('info', 'Müşteri tipi eşlendi'))
+        dealDetails.push(
+          detail('info', t('leads.convert.result.customerTypeMapped')),
+        )
       if (form.dealValue)
-        dealDetails.push(detail('info', `Tahmini değer: ${form.dealValue}`))
+        dealDetails.push(
+          detail(
+            'info',
+            t('leads.convert.result.estimatedValue', { value: form.dealValue }),
+          ),
+        )
       setStepDetail('deal', dealDetails)
       setStep('deal', 'done')
 
@@ -1250,13 +1448,8 @@ export function LeadConvertDialog({
       setStepDetail(
         'activity',
         linkedWorkUpdated
-          ? [
-              detail(
-                'success',
-                'Bağlı görev/etkinlikler yeni kayıtlara taşındı',
-              ),
-            ]
-          : [detail('neutral', 'Taşınacak görev veya etkinlik bulunamadı')],
+          ? [detail('success', t('leads.convert.result.linkedWorkMoved'))]
+          : [detail('neutral', t('leads.convert.result.noLinkedWork'))],
       )
       setStep('activity', linkedWorkUpdated ? 'done' : 'skipped')
 
@@ -1273,8 +1466,13 @@ export function LeadConvertDialog({
         conversion_error_message: null,
       })
       setStepDetail('lead', [
-        detail('success', 'Statü: Converted'),
-        detail('info', `Tamamlandı: ${new Date().toLocaleString('tr-TR')}`),
+        detail('success', t('leads.convert.result.leadStatusConverted')),
+        detail(
+          'info',
+          t('leads.convert.result.completedAt', {
+            date: new Date().toLocaleString(),
+          }),
+        ),
       ])
       setStep('lead', 'done')
 
@@ -1287,13 +1485,13 @@ export function LeadConvertDialog({
         queryClient.invalidateQueries({ queryKey: ['events'] }),
       ])
 
-      toast.success('Lead fırsata dönüştürüldü')
+      toast.success(t('leads.convert.successMessage'))
       onOpenChange(false)
       if (dealId) {
         void navigate({ to: '/deals/$dealId', params: { dealId } })
       }
     } catch (error) {
-      const message = getErrorMessage(error)
+      const message = getErrorMessage(error, t)
       const partial = Boolean(organizationId || contactId || dealId)
       setErrorMessage(message)
       setStep(activeStep, 'failed')
@@ -1317,9 +1515,7 @@ export function LeadConvertDialog({
     opts: Array<{ id?: string; name?: string }>,
   ): Array<SelectOption> =>
     opts
-      .filter((o): o is { id: string; name: string } =>
-        Boolean(o.id && o.name),
-      )
+      .filter((o): o is { id: string; name: string } => Boolean(o.id && o.name))
       .map((o) => ({ value: o.id, label: o.name }))
 
   const stageSelectOptions = useMemo(
@@ -1364,8 +1560,7 @@ export function LeadConvertDialog({
     form.dealCustomerTypeId || mappedCustomerTypeId || ''
   const effectiveCompanyIndustryId =
     form.companyIndustry || mappedCompanyIndustryId || ''
-  const effectiveCompanySizeId =
-    form.companySize || mappedCompanySizeId || ''
+  const effectiveCompanySizeId = form.companySize || mappedCompanySizeId || ''
 
   const setExtraValue = (
     target: 'company' | 'contact' | 'deal',
@@ -1451,9 +1646,7 @@ export function LeadConvertDialog({
 
   const availableExtraFields = (target: 'company' | 'contact' | 'deal') => {
     const known = new Set(KNOWN_FIELDS[target])
-    const alreadyAdded = new Set(
-      extraFields[target].map((field) => field.slug),
-    )
+    const alreadyAdded = new Set(extraFields[target].map((field) => field.slug))
     return targetFields[target].filter(
       (field) =>
         !known.has(field.slug) &&
@@ -1506,9 +1699,12 @@ export function LeadConvertDialog({
             className="h-8"
           >
             <Plus className="mr-1 size-3.5" />
-            {targetLabel} alanı ekle
+            {t('leads.convert.addField', { target: targetLabel })}
             {options.length > 0 ? (
-              <Badge variant="secondary" className="ml-1.5 h-4 px-1 text-[10px]">
+              <Badge
+                variant="secondary"
+                className="ml-1.5 h-4 px-1 text-[10px]"
+              >
                 {options.length}
               </Badge>
             ) : null}
@@ -1518,7 +1714,7 @@ export function LeadConvertDialog({
           <div className="max-h-64 overflow-y-auto p-1">
             {options.length === 0 ? (
               <p className="px-2 py-3 text-xs text-muted-foreground">
-                Eklenebilir alan yok.
+                {t('leads.convert.noFieldsAvailable')}
               </p>
             ) : (
               options.map((option) => (
@@ -1553,7 +1749,9 @@ export function LeadConvertDialog({
     return (
       <div className="space-y-2 rounded-md border border-dashed bg-muted/30 p-3">
         <p className="text-xs font-medium">
-          {target === 'company' ? 'Benzer şirketler' : 'Benzer kişiler'}
+          {target === 'company'
+            ? t('leads.convert.duplicateMatches.companies')
+            : t('leads.convert.duplicateMatches.contacts')}
         </p>
         {candidates.map((candidate) => (
           <button
@@ -1582,7 +1780,9 @@ export function LeadConvertDialog({
           disabled={isWorking}
           onClick={() => setSelected(null)}
         >
-          {target === 'company' ? 'Yeni şirket oluştur' : 'Yeni kişi oluştur'}
+          {target === 'company'
+            ? t('leads.convert.duplicateMatches.newCompany')
+            : t('leads.convert.duplicateMatches.newContact')}
         </Button>
       </div>
     )
@@ -1617,9 +1817,13 @@ export function LeadConvertDialog({
             </div>
             <FieldMappingRow
               fieldKey="company:name"
-              label="Şirket adı"
-              sourceLabel="Lead: company_name_text"
-              targetLabel="Organization: name"
+              label={t('leads.convert.field.companyName')}
+              sourceLabel={t('leads.convert.sourceLabel.lead', {
+                field: 'company_name_text',
+              })}
+              targetLabel={t('leads.convert.targetLabel.organization', {
+                field: 'name',
+              })}
               sourceValue={lead?.company_name_text ?? ''}
               value={form.companyName}
               onChange={(v) => updateForm('companyName', v)}
@@ -1628,9 +1832,13 @@ export function LeadConvertDialog({
               required
             />
             <FieldMappingRow
-              label="Şirket e-postası"
-              sourceLabel="Lead: company_email"
-              targetLabel="Organization: email"
+              label={t('leads.convert.field.companyEmail')}
+              sourceLabel={t('leads.convert.sourceLabel.lead', {
+                field: 'company_email',
+              })}
+              targetLabel={t('leads.convert.targetLabel.organization', {
+                field: 'email',
+              })}
               sourceValue={lead?.company_email ?? ''}
               value={form.companyEmail}
               kind="email"
@@ -1638,9 +1846,13 @@ export function LeadConvertDialog({
               disabled={formDisabled}
             />
             <FieldMappingRow
-              label="Şirket telefonu"
-              sourceLabel="Lead: company_phone"
-              targetLabel="Organization: phone"
+              label={t('leads.convert.field.companyPhone')}
+              sourceLabel={t('leads.convert.sourceLabel.lead', {
+                field: 'company_phone',
+              })}
+              targetLabel={t('leads.convert.targetLabel.organization', {
+                field: 'phone',
+              })}
               sourceValue={lead?.company_phone ?? ''}
               value={form.companyPhone}
               kind="phone"
@@ -1648,9 +1860,13 @@ export function LeadConvertDialog({
               disabled={formDisabled}
             />
             <FieldMappingRow
-              label="Website"
-              sourceLabel="Lead: website"
-              targetLabel="Organization: website"
+              label={t('leads.convert.field.website')}
+              sourceLabel={t('leads.convert.sourceLabel.lead', {
+                field: 'website',
+              })}
+              targetLabel={t('leads.convert.targetLabel.organization', {
+                field: 'website',
+              })}
               sourceValue={lead?.website ?? ''}
               value={form.companyWebsite}
               kind="url"
@@ -1658,9 +1874,13 @@ export function LeadConvertDialog({
               disabled={formDisabled}
             />
             <FieldMappingRow
-              label="Adres"
-              sourceLabel="Lead: address"
-              targetLabel="Organization: address"
+              label={t('leads.convert.field.address')}
+              sourceLabel={t('leads.convert.sourceLabel.lead', {
+                field: 'address',
+              })}
+              targetLabel={t('leads.convert.targetLabel.organization', {
+                field: 'address',
+              })}
               sourceValue={lead?.address ?? ''}
               value={form.companyAddress}
               kind="textarea"
@@ -1668,9 +1888,13 @@ export function LeadConvertDialog({
               disabled={formDisabled}
             />
             <FieldMappingRow
-              label="Şehir"
-              sourceLabel="Lead: city"
-              targetLabel="Organization: city"
+              label={t('leads.convert.field.city')}
+              sourceLabel={t('leads.convert.sourceLabel.lead', {
+                field: 'city',
+              })}
+              targetLabel={t('leads.convert.targetLabel.organization', {
+                field: 'city',
+              })}
               sourceValue={lead?.city ?? ''}
               value={form.companyCity}
               onChange={(v) => updateForm('companyCity', v)}
@@ -1678,28 +1902,36 @@ export function LeadConvertDialog({
             />
             <FieldMappingRow
               fieldKey="company:industry"
-              label="Sektör"
-              sourceLabel="Lead: company_industry"
-              targetLabel="Organization: industry"
+              label={t('leads.convert.field.industry')}
+              sourceLabel={t('leads.convert.sourceLabel.lead', {
+                field: 'company_industry',
+              })}
+              targetLabel={t('leads.convert.targetLabel.organization', {
+                field: 'industry',
+              })}
               sourceValue={leadCompanyIndustryName}
               value={effectiveCompanyIndustryId}
               kind="select"
               options={industrySelectOptions}
-              placeholder="Sektör seçin..."
+              placeholder={t('leads.convert.placeholder.selectIndustry')}
               onChange={(v) => updateForm('companyIndustry', v)}
               disabled={formDisabled}
             />
             {companySizeSelectOptions.length > 0 ? (
               <FieldMappingRow
                 fieldKey="company:company_size"
-                label="Şirket büyüklüğü"
-                sourceLabel="Lead: company_size"
-                targetLabel="Organization: company_size"
+                label={t('leads.convert.field.companySize')}
+                sourceLabel={t('leads.convert.sourceLabel.lead', {
+                  field: 'company_size',
+                })}
+                targetLabel={t('leads.convert.targetLabel.organization', {
+                  field: 'company_size',
+                })}
                 sourceValue={leadCompanySizeName}
                 value={effectiveCompanySizeId}
                 kind="select"
                 options={companySizeSelectOptions}
-                placeholder="Boyut seçin..."
+                placeholder={t('leads.convert.placeholder.selectSize')}
                 onChange={(v) => updateForm('companySize', v)}
                 disabled={formDisabled}
               />
@@ -1709,8 +1941,10 @@ export function LeadConvertDialog({
                 key={extra.slug}
                 fieldKey={`company:${extra.slug}`}
                 label={extra.label}
-                sourceLabel="Dialog-only"
-                targetLabel={`Organization: ${extra.slug}`}
+                sourceLabel={t('leads.convert.sourceLabel.dialogOnly')}
+                targetLabel={t('leads.convert.targetLabel.organization', {
+                  field: extra.slug,
+                })}
                 sourceValue=""
                 value={extra.value}
                 kind={extra.kind}
@@ -1730,9 +1964,13 @@ export function LeadConvertDialog({
             </div>
             <FieldMappingRow
               fieldKey="contact:name"
-              label="Kişi adı"
-              sourceLabel="Lead: name"
-              targetLabel="Contact: name"
+              label={t('leads.convert.field.contactName')}
+              sourceLabel={t('leads.convert.sourceLabel.lead', {
+                field: 'name',
+              })}
+              targetLabel={t('leads.convert.targetLabel.contact', {
+                field: 'name',
+              })}
               sourceValue={lead?.name ?? ''}
               value={form.contactName}
               onChange={(v) => updateForm('contactName', v)}
@@ -1741,18 +1979,26 @@ export function LeadConvertDialog({
               required
             />
             <FieldMappingRow
-              label="İş ünvanı"
-              sourceLabel="Lead: contact_job_title"
-              targetLabel="Contact: job_title"
+              label={t('leads.convert.field.jobTitle')}
+              sourceLabel={t('leads.convert.sourceLabel.lead', {
+                field: 'contact_job_title',
+              })}
+              targetLabel={t('leads.convert.targetLabel.contact', {
+                field: 'job_title',
+              })}
               sourceValue={lead?.contact_job_title ?? ''}
               value={form.contactJobTitle}
               onChange={(v) => updateForm('contactJobTitle', v)}
               disabled={formDisabled}
             />
             <FieldMappingRow
-              label="E-posta"
-              sourceLabel="Lead: email"
-              targetLabel="Contact: email"
+              label={t('leads.convert.field.email')}
+              sourceLabel={t('leads.convert.sourceLabel.lead', {
+                field: 'email',
+              })}
+              targetLabel={t('leads.convert.targetLabel.contact', {
+                field: 'email',
+              })}
               sourceValue={lead?.email ?? ''}
               value={form.contactEmail}
               kind="email"
@@ -1760,9 +2006,13 @@ export function LeadConvertDialog({
               disabled={formDisabled}
             />
             <FieldMappingRow
-              label="Telefon"
-              sourceLabel="Lead: phone"
-              targetLabel="Contact: mobile"
+              label={t('leads.convert.field.phone')}
+              sourceLabel={t('leads.convert.sourceLabel.lead', {
+                field: 'phone',
+              })}
+              targetLabel={t('leads.convert.targetLabel.contact', {
+                field: 'mobile',
+              })}
               sourceValue={lead?.phone ?? ''}
               value={form.contactPhone}
               kind="phone"
@@ -1774,8 +2024,10 @@ export function LeadConvertDialog({
                 key={extra.slug}
                 fieldKey={`contact:${extra.slug}`}
                 label={extra.label}
-                sourceLabel="Dialog-only"
-                targetLabel={`Contact: ${extra.slug}`}
+                sourceLabel={t('leads.convert.sourceLabel.dialogOnly')}
+                targetLabel={t('leads.convert.targetLabel.contact', {
+                  field: extra.slug,
+                })}
                 sourceValue=""
                 value={extra.value}
                 kind={extra.kind}
@@ -1794,9 +2046,9 @@ export function LeadConvertDialog({
           </div>
           <FieldMappingRow
             fieldKey="deal:name"
-            label="Fırsat adı"
-            sourceLabel="Otomatik (şirket + kişi)"
-            targetLabel="Deal: name"
+            label={t('leads.convert.field.dealName')}
+            sourceLabel={t('leads.convert.sourceLabel.auto')}
+            targetLabel={t('leads.convert.targetLabel.deal', { field: 'name' })}
             sourceValue={
               [lead?.company_name_text, lead?.name]
                 .filter(Boolean)
@@ -1809,9 +2061,13 @@ export function LeadConvertDialog({
             required
           />
           <FieldMappingRow
-            label="Tahmini değer"
-            sourceLabel="Lead: deal_value"
-            targetLabel="Deal: deal_value"
+            label={t('leads.convert.field.estimatedValue')}
+            sourceLabel={t('leads.convert.sourceLabel.lead', {
+              field: 'deal_value',
+            })}
+            targetLabel={t('leads.convert.targetLabel.deal', {
+              field: 'deal_value',
+            })}
             sourceValue={lead?.deal_value ? String(lead.deal_value) : ''}
             value={form.dealValue}
             kind="money"
@@ -1819,9 +2075,13 @@ export function LeadConvertDialog({
             disabled={formDisabled}
           />
           <FieldMappingRow
-            label="Açıklama / Not"
-            sourceLabel="Lead: contact_message"
-            targetLabel="Deal: description"
+            label={t('leads.convert.field.description')}
+            sourceLabel={t('leads.convert.sourceLabel.lead', {
+              field: 'contact_message',
+            })}
+            targetLabel={t('leads.convert.targetLabel.deal', {
+              field: 'description',
+            })}
             sourceValue={lead?.contact_message ?? ''}
             value={form.notes}
             kind="textarea"
@@ -1829,38 +2089,48 @@ export function LeadConvertDialog({
             disabled={formDisabled}
           />
           <FieldMappingRow
-            label="Aşama"
-            sourceLabel="Sabit: New"
-            targetLabel="Deal: stage"
+            label={t('leads.convert.field.stage')}
+            sourceLabel={t('leads.convert.sourceLabel.fixed', { value: 'New' })}
+            targetLabel={t('leads.convert.targetLabel.deal', {
+              field: 'stage',
+            })}
             sourceValue="New"
             value={effectiveStageId}
             kind="select"
             options={stageSelectOptions}
-            placeholder="Aşama seçin..."
+            placeholder={t('leads.convert.placeholder.selectStage')}
             onChange={(v) => updateForm('dealStageId', v)}
             disabled={formDisabled}
           />
           <FieldMappingRow
-            label="Lead kaynağı"
-            sourceLabel="Lead: lead_source"
-            targetLabel="Deal: lead_source"
+            label={t('leads.convert.field.leadSource')}
+            sourceLabel={t('leads.convert.sourceLabel.lead', {
+              field: 'lead_source',
+            })}
+            targetLabel={t('leads.convert.targetLabel.deal', {
+              field: 'lead_source',
+            })}
             sourceValue={leadSourceName}
             value={effectiveLeadSourceId}
             kind="select"
             options={leadSourceSelectOptions}
-            placeholder="Kaynak seçin..."
+            placeholder={t('leads.convert.placeholder.selectSource')}
             onChange={(v) => updateForm('dealLeadSourceId', v)}
             disabled={formDisabled}
           />
           <FieldMappingRow
-            label="Müşteri tipi"
-            sourceLabel="Lead: lead_type"
-            targetLabel="Deal: customer_type"
+            label={t('leads.convert.field.customerType')}
+            sourceLabel={t('leads.convert.sourceLabel.lead', {
+              field: 'lead_type',
+            })}
+            targetLabel={t('leads.convert.targetLabel.deal', {
+              field: 'customer_type',
+            })}
             sourceValue={leadTypeName}
             value={effectiveCustomerTypeId}
             kind="select"
             options={customerTypeSelectOptions}
-            placeholder="Tip seçin..."
+            placeholder={t('leads.convert.placeholder.selectType')}
             onChange={(v) => updateForm('dealCustomerTypeId', v)}
             disabled={formDisabled}
           />
@@ -1869,8 +2139,10 @@ export function LeadConvertDialog({
               key={extra.slug}
               fieldKey={`deal:${extra.slug}`}
               label={extra.label}
-              sourceLabel="Dialog-only"
-              targetLabel={`Deal: ${extra.slug}`}
+              sourceLabel={t('leads.convert.sourceLabel.dialogOnly')}
+              targetLabel={t('leads.convert.targetLabel.deal', {
+                field: extra.slug,
+              })}
               sourceValue=""
               value={extra.value}
               kind={extra.kind}
@@ -1883,7 +2155,7 @@ export function LeadConvertDialog({
             <div className="space-y-2 rounded-md border border-amber-300/60 bg-amber-50/60 p-3 dark:bg-amber-950/20">
               <p className="flex items-center gap-1.5 text-xs font-medium text-amber-800 dark:text-amber-200">
                 <Sparkles className="size-3.5" />
-                Bu lead için önceki fırsatlar
+                {t('leads.convert.previousDealsTitle')}
               </p>
               {dealCandidates.map((candidate) => (
                 <div
@@ -1903,7 +2175,7 @@ export function LeadConvertDialog({
                 </div>
               ))}
               <p className="text-[11px] text-muted-foreground">
-                Yine de devam edersen yeni bir fırsat oluşturulur.
+                {t('leads.convert.newDealWillBeCreated')}
               </p>
             </div>
           ) : null}
@@ -1923,8 +2195,8 @@ export function LeadConvertDialog({
       size="xl"
     >
       <AwesomeDialogHeader
-        title="Lead dönüştür"
-        description="Kişi, şirket ve fırsat kayıtlarını kontrollü şekilde oluşturun."
+        title={t('leads.convert.title')}
+        description={t('leads.convert.description')}
       />
 
       <AwesomeDialogBody>
@@ -1932,10 +2204,11 @@ export function LeadConvertDialog({
           {isAlreadyCompleted && (
             <Alert>
               <CheckCircle2 />
-              <AlertTitle>Bu lead daha önce dönüştürülmüş</AlertTitle>
+              <AlertTitle>
+                {t('leads.convert.alert.alreadyConvertedTitle')}
+              </AlertTitle>
               <AlertDescription>
-                Oluşan fırsatı veya bağlı kayıtları açabilirsiniz; lead artık
-                yalnızca referans amaçlı görüntülenir.
+                {t('leads.convert.alert.alreadyConvertedDescription')}
               </AlertDescription>
             </Alert>
           )}
@@ -1943,15 +2216,15 @@ export function LeadConvertDialog({
           {hasPartialState && (
             <Alert>
               <AlertCircle />
-              <AlertTitle>Önceki dönüşüm yarım kaldı</AlertTitle>
+              <AlertTitle>{t('leads.convert.alert.partialTitle')}</AlertTitle>
               <AlertDescription>
-                Oluşmuş kayıtlar korunur. Hangi adımların tamamlandığını
-                aşağıdaki ilerleme çubuğundan görebilirsin — Dönüştür
-                dediğinde kalan adımlar çalıştırılır.
+                {t('leads.convert.alert.partialDescription')}
                 {typeof lead?.conversion_error_message === 'string' &&
                 lead.conversion_error_message ? (
                   <span className="mt-1 block text-xs">
-                    Son hata: {lead.conversion_error_message}
+                    {t('leads.convert.result.previousError', {
+                      message: lead.conversion_error_message,
+                    })}
                   </span>
                 ) : null}
               </AlertDescription>
@@ -1961,14 +2234,15 @@ export function LeadConvertDialog({
           {hasFailedAttempt && (
             <Alert>
               <AlertCircle />
-              <AlertTitle>Önceki deneme başarısız oldu</AlertTitle>
+              <AlertTitle>{t('leads.convert.alert.failedTitle')}</AlertTitle>
               <AlertDescription>
-                Hiçbir kayıt oluşturulamadığı için temiz bir başlangıç
-                yapacaksın.
+                {t('leads.convert.alert.failedDescription')}
                 {typeof lead?.conversion_error_message === 'string' &&
                 lead.conversion_error_message ? (
                   <span className="mt-1 block text-xs">
-                    Önceki hata: {lead.conversion_error_message}
+                    {t('leads.convert.result.previousError', {
+                      message: lead.conversion_error_message,
+                    })}
                   </span>
                 ) : null}
               </AlertDescription>
@@ -1978,14 +2252,16 @@ export function LeadConvertDialog({
           {errorMessage && (
             <Alert variant="destructive">
               <AlertCircle />
-              <AlertTitle>İşlem tamamlanamadı</AlertTitle>
+              <AlertTitle>{t('leads.convert.alert.errorTitle')}</AlertTitle>
               <AlertDescription>{errorMessage}</AlertDescription>
             </Alert>
           )}
 
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border bg-card px-3 py-2">
             <div className="flex items-center gap-2 text-xs">
-              <span className="font-medium text-foreground">Dönüşüm tipi</span>
+              <span className="font-medium text-foreground">
+                {t('leads.convert.modeLabel')}
+              </span>
               <Select
                 value={mode}
                 disabled={isWorking || isAlreadyCompleted}
@@ -2007,29 +2283,31 @@ export function LeadConvertDialog({
               </Select>
             </div>
             <div className="flex items-center gap-2 text-[11px]">
-              <span className="text-muted-foreground">Oluşacak:</span>
+              <span className="text-muted-foreground">
+                {t('common.create')}:
+              </span>
               {mode === 'company_contact_deal' ? (
                 <Badge variant="secondary" className="gap-1">
                   <Building2 className="size-3 text-sky-600" />
-                  Şirket
+                  {TARGET_LABEL.company}
                 </Badge>
               ) : null}
               {mode !== 'deal_only' ? (
                 <Badge variant="secondary" className="gap-1">
                   <UserRound className="size-3 text-emerald-600" />
-                  Kişi
+                  {TARGET_LABEL.contact}
                 </Badge>
               ) : null}
               <Badge variant="secondary" className="gap-1">
                 <CheckCircle2 className="size-3 text-violet-600" />
-                Fırsat
+                {TARGET_LABEL.deal}
               </Badge>
             </div>
           </div>
 
           <div ref={progressSectionRef} className="space-y-2">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>İlerleme</span>
+              <span>{t('leads.convert.progress')}</span>
               <span>{Math.round(progress)}%</span>
             </div>
             <Progress
@@ -2083,17 +2361,23 @@ export function LeadConvertDialog({
                             {state === 'pending' ? (
                               <>
                                 <Circle className="size-3" />
-                                <span>Henüz başlamadı</span>
+                                <span>
+                                  {t('leads.convert.state.notStarted')}
+                                </span>
                               </>
                             ) : state === 'running' ? (
                               <>
                                 <Loader2 className="size-3 animate-spin text-sky-600" />
-                                <span>İşleniyor…</span>
+                                <span>
+                                  {t('leads.convert.state.processing')}
+                                </span>
                               </>
                             ) : (
                               <>
                                 <Info className="size-3" />
-                                <span>Detay yok</span>
+                                <span>
+                                  {t('leads.convert.state.noDetails')}
+                                </span>
                               </>
                             )}
                           </div>
@@ -2117,7 +2401,7 @@ export function LeadConvertDialog({
           disabled={isWorking}
           onClick={() => onOpenChange(false)}
         >
-          Kapat
+          {t('leads.convert.footer.close')}
         </Button>
         {isAlreadyCompleted && getRelationId(lead?.converted_deal) ? (
           <Button
@@ -2128,12 +2412,14 @@ export function LeadConvertDialog({
               void navigate({ to: '/deals/$dealId', params: { dealId } })
             }}
           >
-            Fırsatı aç
+            {t('leads.convert.footer.openDeal')}
           </Button>
         ) : (
           <Button type="button" disabled={isWorking} onClick={runConversion}>
             {isWorking && <Loader2 className="mr-2 size-4 animate-spin" />}
-            {duplicatesChecked ? 'Dönüştür' : 'Kontrol et'}
+            {duplicatesChecked
+              ? t('leads.convert.footer.convert')
+              : t('leads.convert.footer.check')}
           </Button>
         )}
       </AwesomeDialogFooter>
@@ -2146,11 +2432,11 @@ export function LeadConvertDialog({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Lead bilgilerinden farklı değerler</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t('leads.convert.changeConfirm.title')}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Aşağıdaki alanlarda lead'deki değerleri değiştirmişsin. Convert
-              ettiğinde lead'in mevcut bilgisi yerine senin yazdığın değer
-              hedef kayda yazılacak.
+              {t('leads.convert.changeConfirm.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="max-h-72 space-y-2 overflow-y-auto">
@@ -2168,7 +2454,7 @@ export function LeadConvertDialog({
                 <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
                   <div className="rounded border border-dashed bg-muted/40 px-2 py-1 text-muted-foreground">
                     <p className="text-[10px] uppercase tracking-wide">
-                      Lead'de
+                      {t('leads.convert.changeConfirm.sourceLabel')}
                     </p>
                     <p className="truncate text-foreground/80">
                       {change.sourceText || '—'}
@@ -2177,7 +2463,7 @@ export function LeadConvertDialog({
                   <ArrowRight className="size-3.5 text-muted-foreground" />
                   <div className="rounded border bg-primary/[0.04] px-2 py-1">
                     <p className="text-[10px] uppercase tracking-wide text-primary">
-                      Yazılacak
+                      {t('leads.convert.changeConfirm.targetLabel')}
                     </p>
                     <p className="truncate font-medium">
                       {change.targetText || '—'}
@@ -2189,7 +2475,7 @@ export function LeadConvertDialog({
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setPendingChanges(null)}>
-              Geri dön, düzenleyeyim
+              {t('leads.convert.changeConfirm.cancelButton')}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
@@ -2198,7 +2484,7 @@ export function LeadConvertDialog({
                 void runConversion({ skipChangeCheck: true })
               }}
             >
-              Bu değerlerle devam et
+              {t('leads.convert.changeConfirm.confirmButton')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

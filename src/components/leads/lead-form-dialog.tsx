@@ -648,9 +648,7 @@ export function LeadFormDialog({
                   )}
                 </form.Field>
 
-                <form.Subscribe
-                  selector={(state) => state.values.lead_status}
-                >
+                <form.Subscribe selector={(state) => state.values.lead_status}>
                   {(leadStatus) =>
                     isDisqualifiedStatus(leadStatus) ? (
                       <form.Field name="lost_reason">

@@ -227,6 +227,7 @@
     "expectedClosingDate": "Expected Closing Date",
     "backToDeals": "Back to Deals",
     "backToPipeline": "Back to Pipeline",
+    "viewDeal": "View deal",
     "failedToLoad": "Failed to load deal details",
     "tabs": {
       "overview": "Overview",
@@ -374,21 +375,152 @@
       "updateButton": "Update Lead"
     },
     "convert": {
-      "title": "Convert Lead to Deal",
-      "description": "This will create a new deal based on this lead's information and mark the lead as converted.",
-      "leadInformation": "Lead Information",
-      "titleField": "Title:",
-      "companyField": "Company:",
-      "sourceField": "Source:",
-      "prospectingNote": "A new deal will be created in the",
-      "prospectingStage": "Prospecting",
-      "prospectingAfterNote": "stage. You can update the deal details after conversion.",
+      "title": "Convert Lead",
+      "description": "Create company, contact and deal records in a controlled way.",
       "convertButton": "Convert to Deal",
-      "confirmTitle": "Are you sure?",
-      "confirmDescription": "This action will convert the lead to a deal and mark it as converted. This action can be reversed by editing the lead status later.",
-      "confirmButton": "Confirm Conversion",
+      "resumeButton": "Resume Conversion",
+      "readOnlyDescription": "This lead has already been converted and can no longer be edited.",
+      "modeLabel": "Conversion type",
+      "mode": {
+        "company_contact_deal": "Company + Contact + Deal",
+        "contact_deal": "Contact + Deal",
+        "deal_only": "Deal only"
+      },
+      "target": {
+        "company": "Company",
+        "contact": "Contact",
+        "deal": "Deal"
+      },
+      "step": {
+        "precheck": "Checks",
+        "organization": "Company",
+        "contact": "Contact",
+        "deal": "Deal",
+        "activity": "Activities",
+        "lead": "Lead record"
+      },
+      "state": {
+        "notStarted": "Not started",
+        "processing": "Processing…",
+        "noDetails": "No details"
+      },
+      "alert": {
+        "alreadyConvertedTitle": "This lead has already been converted",
+        "alreadyConvertedDescription": "You can open the created deal or related records; the lead is now for reference only.",
+        "partialTitle": "Previous conversion was incomplete",
+        "partialDescription": "Existing records are preserved. You can see which steps were completed in the progress bar below — remaining steps will run when you click Convert.",
+        "failedTitle": "Previous attempt failed",
+        "failedDescription": "No records were created, so you will start fresh.",
+        "errorTitle": "Operation could not be completed"
+      },
+      "validation": {
+        "dealNameRequired": "Deal name is required",
+        "companyNameRequired": "Company name is required",
+        "contactNameRequired": "Contact name is required",
+        "missingField": "The \"{{label}}\" field is empty — it must be filled before conversion"
+      },
+      "check": {
+        "dealName": "Deal name: {{value}}",
+        "companyName": "Company name: {{value}}",
+        "contactName": "Contact name: {{value}}",
+        "similarCompaniesFound": "{{count}} similar companies found — matching: {{name}}",
+        "similarCompaniesSuggested": "{{count}} similar companies suggested",
+        "noCompanyConflict": "No company conflict — new record will be created",
+        "similarContactsFound": "{{count}} similar contacts found — matching: {{name}}",
+        "similarContactsSuggested": "{{count}} similar contacts suggested",
+        "noContactConflict": "No contact conflict — new record will be created",
+        "previousDeals": "{{count}} deals previously created from this lead — e.g. {{name}}",
+        "noDealConflict": "No deal conflict for this lead"
+      },
+      "result": {
+        "reusedOrganization": "Existing company used: {{name}}",
+        "newOrganization": "New company created: {{name}}",
+        "reusedContact": "Existing contact used: {{name}}",
+        "newContact": "New contact created: {{name}}",
+        "reusedDeal": "Existing deal used: {{name}}",
+        "newDeal": "New deal created: {{name}}",
+        "stage": "Stage: New",
+        "leadSourceMapped": "Lead source mapped",
+        "customerTypeMapped": "Customer type mapped",
+        "estimatedValue": "Estimated value: {{value}}",
+        "linkedWorkMoved": "Linked tasks/events moved to new records",
+        "noLinkedWork": "No tasks or events to move",
+        "leadStatusConverted": "Status: Converted",
+        "completedAt": "Completed: {{date}}",
+        "skipped": "Skipped in this mode",
+        "previousError": "Previous error: {{message}}",
+        "willRetry": "Will retry when you click Convert",
+        "existing": "Existing: {{name}}",
+        "willSkip": "This step will be skipped"
+      },
+      "conversionMode": "Conversion mode: {{mode}}",
+      "leadStatus": "Lead status: in_progress",
+      "progress": "Progress",
+      "previousDealsTitle": "Previous deals for this lead",
+      "newDealWillBeCreated": "A new deal will still be created if you continue.",
+      "duplicateMatches": {
+        "companies": "Similar companies",
+        "contacts": "Similar contacts",
+        "newCompany": "Create new company",
+        "newContact": "Create new contact"
+      },
+      "changeConfirm": {
+        "title": "Values differ from lead",
+        "description": "You have changed the lead values in the following fields. When converted, your entered values will be written to the target record instead of the existing lead information.",
+        "sourceLabel": "In lead",
+        "targetLabel": "Will be written",
+        "cancelButton": "Go back and edit",
+        "confirmButton": "Continue with these values"
+      },
+      "footer": {
+        "close": "Close",
+        "openDeal": "Open deal",
+        "check": "Check",
+        "convert": "Convert"
+      },
       "successMessage": "Lead converted to deal successfully",
-      "errorMessage": "Failed to convert lead"
+      "errorMessage": "Failed to convert lead",
+      "field": {
+        "companyName": "Company name",
+        "companyEmail": "Company email",
+        "companyPhone": "Company phone",
+        "website": "Website",
+        "address": "Address",
+        "city": "City",
+        "industry": "Industry",
+        "companySize": "Company size",
+        "contactName": "Contact name",
+        "jobTitle": "Job title",
+        "email": "Email",
+        "phone": "Phone",
+        "dealName": "Deal name",
+        "estimatedValue": "Estimated value",
+        "description": "Description / Notes",
+        "stage": "Stage",
+        "leadSource": "Lead source",
+        "customerType": "Customer type"
+      },
+      "placeholder": {
+        "selectIndustry": "Select industry...",
+        "selectSize": "Select size...",
+        "selectStage": "Select stage...",
+        "selectSource": "Select source...",
+        "selectType": "Select type..."
+      },
+      "sourceLabel": {
+        "lead": "Lead: {{field}}",
+        "auto": "Auto (company + contact)",
+        "fixed": "Fixed: {{value}}",
+        "dialogOnly": "Dialog-only"
+      },
+      "targetLabel": {
+        "organization": "Organization: {{field}}",
+        "contact": "Contact: {{field}}",
+        "deal": "Deal: {{field}}"
+      },
+      "addField": "Add {{target}} field",
+      "noFieldsAvailable": "No fields available to add.",
+      "dealDefaultName": "New deal"
     }
   },
   "companies": {

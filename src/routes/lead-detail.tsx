@@ -272,8 +272,8 @@ export function LeadDetail() {
     !isConverted &&
     Boolean(
       getRelationId(lead.converted_organization) ||
-        getRelationId(lead.converted_contact) ||
-        getRelationId(lead.converted_deal),
+      getRelationId(lead.converted_contact) ||
+      getRelationId(lead.converted_deal),
     )
 
   return (

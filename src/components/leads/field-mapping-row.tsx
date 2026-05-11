@@ -1,4 +1,5 @@
 import { ArrowRight, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -60,6 +61,7 @@ export function FieldMappingRow({
   required,
   fieldKey,
 }: FieldMappingRowProps) {
+  const { t } = useTranslation()
   const sourceDisplay = sourceValue?.trim() ? sourceValue : '—'
 
   return (
@@ -74,7 +76,10 @@ export function FieldMappingRow({
         <Label className="text-xs font-medium">
           {label}
           {required ? (
-            <span className="ml-0.5 text-destructive" aria-label="zorunlu">
+            <span
+              className="ml-0.5 text-destructive"
+              aria-label={t('common.required')}
+            >
               *
             </span>
           ) : null}
@@ -85,7 +90,7 @@ export function FieldMappingRow({
             onClick={onRemove}
             disabled={disabled}
             className="rounded p-0.5 text-muted-foreground opacity-0 transition hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100 disabled:cursor-not-allowed"
-            aria-label="Alanı kaldır"
+            aria-label={t('common.delete')}
           >
             <X className="size-3.5" />
           </button>
@@ -108,13 +113,9 @@ export function FieldMappingRow({
               rows={3}
             />
           ) : kind === 'select' ? (
-            <Select
-              value={value}
-              disabled={disabled}
-              onValueChange={onChange}
-            >
+            <Select value={value} disabled={disabled} onValueChange={onChange}>
               <SelectTrigger className="h-9">
-                <SelectValue placeholder={placeholder ?? 'Seçin...'} />
+                <SelectValue placeholder={placeholder ?? t('common.select')} />
               </SelectTrigger>
               <SelectContent>
                 {(options ?? []).map((option) => (
@@ -149,7 +150,7 @@ export function FieldMappingRow({
         </div>
       </div>
       <p className="mt-2 text-[10.5px] uppercase tracking-wide text-muted-foreground/80">
-        <span>{sourceLabel ?? 'Yok'}</span>
+        <span>{sourceLabel ?? t('common.na')}</span>
         <span className="mx-1.5">→</span>
         <span>{targetLabel}</span>
       </p>

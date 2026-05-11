@@ -218,6 +218,7 @@
     "expectedClosingDate": "Beklenen Kapanış Tarihi",
     "backToDeals": "Fırsatlara Dön",
     "backToPipeline": "Satış kanalına Dön",
+    "viewDeal": "Fırsatı gör",
     "failedToLoad": "Fırsat detayları yüklenemedi",
     "tabs": {
       "overview": "Genel Bakış",
@@ -365,21 +366,152 @@
       "updateButton": "Potansiyel Müşteriyi Güncelle"
     },
     "convert": {
-      "title": "Potansiyel Müşteriyi Fırsata Dönüştür",
-      "description": "Bu işlem, potansiyel müşteri bilgilerine dayanarak yeni bir fırsat oluşturacak ve potansiyel müşteriyi dönüştürüldü olarak işaretleyecektir.",
-      "leadInformation": "Potansiyel Müşteri Bilgileri",
-      "titleField": "Başlık:",
-      "companyField": "Şirket:",
-      "sourceField": "Kaynak:",
-      "prospectingNote": "Yeni fırsat şu aşamada oluşturulacaktır:",
-      "prospectingStage": "Potansiyel Belirleme",
-      "prospectingAfterNote": ". Dönüşümden sonra fırsat detaylarını güncelleyebilirsiniz.",
+      "title": "Potansiyel Müşteriyi Dönüştür",
+      "description": "Şirket, kişi ve fırsat kayıtlarını kontrollü şekilde oluşturun.",
       "convertButton": "Fırsata Dönüştür",
-      "confirmTitle": "Emin misiniz?",
-      "confirmDescription": "Bu işlem potansiyel müşteriyi bir fırsata dönüştürecek. Daha sonra potansiyel müşteri durumunu düzenleyerek bu işlemi geri alabilirsiniz.",
-      "confirmButton": "Dönüşümü Onayla",
-      "successMessage": "Potansiyel müşteri başarıyla fırsata dönüştürüldü",
-      "errorMessage": "Potansiyel müşteri dönüştürülemedi"
+      "resumeButton": "Dönüşüme Devam Et",
+      "readOnlyDescription": "Bu potansiyel müşteri zaten dönüştürülmüş ve artık düzenlenemez.",
+      "modeLabel": "Dönüşüm tipi",
+      "mode": {
+        "company_contact_deal": "Şirket + Kişi + Fırsat",
+        "contact_deal": "Kişi + Fırsat",
+        "deal_only": "Sadece Fırsat"
+      },
+      "target": {
+        "company": "Şirket",
+        "contact": "Kişi",
+        "deal": "Fırsat"
+      },
+      "step": {
+        "precheck": "Kontroller",
+        "organization": "Şirket",
+        "contact": "Kişi",
+        "deal": "Fırsat",
+        "activity": "Aktiviteler",
+        "lead": "Lead kaydı"
+      },
+      "state": {
+        "notStarted": "Henüz başlamadı",
+        "processing": "İşleniyor…",
+        "noDetails": "Detay yok"
+      },
+      "alert": {
+        "alreadyConvertedTitle": "Bu lead daha önce dönüştürülmüş",
+        "alreadyConvertedDescription": "Oluşan fırsatı veya bağlı kayıtları açabilirsiniz; lead artık yalnızca referans amaçlı görüntülenir.",
+        "partialTitle": "Önceki dönüşüm yarım kaldı",
+        "partialDescription": "Oluşmuş kayıtlar korunur. Hangi adımların tamamlandığını aşağıdaki ilerleme çubuğundan görebilirsiniz — Dönüştür dediğinizde kalan adımlar çalıştırılır.",
+        "failedTitle": "Önceki deneme başarısız oldu",
+        "failedDescription": "Hiçbir kayıt oluşturulamadığı için temiz bir başlangıç yapacaksınız.",
+        "errorTitle": "İşlem tamamlanamadı"
+      },
+      "validation": {
+        "dealNameRequired": "Fırsat adı gerekli",
+        "companyNameRequired": "Şirket adı gerekli",
+        "contactNameRequired": "Kişi adı gerekli",
+        "missingField": "\"{{label}}\" alanı boş — dönüşüm öncesi doldurmalısınız"
+      },
+      "check": {
+        "dealName": "Fırsat adı: {{value}}",
+        "companyName": "Şirket adı: {{value}}",
+        "contactName": "Kişi adı: {{value}}",
+        "similarCompaniesFound": "{{count}} benzer şirket bulundu — eşleşen: {{name}}",
+        "similarCompaniesSuggested": "{{count}} benzer şirket önerildi",
+        "noCompanyConflict": "Şirket çakışması yok — yeni kayıt açılacak",
+        "similarContactsFound": "{{count}} benzer kişi bulundu — eşleşen: {{name}}",
+        "similarContactsSuggested": "{{count}} benzer kişi önerildi",
+        "noContactConflict": "Kişi çakışması yok — yeni kayıt açılacak",
+        "previousDeals": "Bu lead'den önce {{count}} fırsat oluşturulmuş — ör: {{name}}",
+        "noDealConflict": "Bu lead için fırsat çakışması yok"
+      },
+      "result": {
+        "reusedOrganization": "Mevcut şirket kullanıldı: {{name}}",
+        "newOrganization": "Yeni şirket oluşturuldu: {{name}}",
+        "reusedContact": "Mevcut kişi kullanıldı: {{name}}",
+        "newContact": "Yeni kişi oluşturuldu: {{name}}",
+        "reusedDeal": "Mevcut fırsat kullanıldı: {{name}}",
+        "newDeal": "Yeni fırsat oluşturuldu: {{name}}",
+        "stage": "Aşama: New",
+        "leadSourceMapped": "Lead kaynağı eşlendi",
+        "customerTypeMapped": "Müşteri tipi eşlendi",
+        "estimatedValue": "Tahmini değer: {{value}}",
+        "linkedWorkMoved": "Bağlı görev/etkinlikler yeni kayıtlara taşındı",
+        "noLinkedWork": "Taşınacak görev veya etkinlik bulunamadı",
+        "leadStatusConverted": "Statü: Converted",
+        "completedAt": "Tamamlandı: {{date}}",
+        "skipped": "Bu modda atlandı",
+        "previousError": "Önceki hata: {{message}}",
+        "willRetry": "Dönüştür dediğinizde yeniden denenecek",
+        "existing": "Mevcut: {{name}}",
+        "willSkip": "Bu adım atlanacak"
+      },
+      "conversionMode": "Dönüşüm modu: {{mode}}",
+      "leadStatus": "Lead durumu: in_progress",
+      "progress": "İlerleme",
+      "previousDealsTitle": "Bu lead için önceki fırsatlar",
+      "newDealWillBeCreated": "Yine de devam ederseniz yeni bir fırsat oluşturulur.",
+      "duplicateMatches": {
+        "companies": "Benzer şirketler",
+        "contacts": "Benzer kişiler",
+        "newCompany": "Yeni şirket oluştur",
+        "newContact": "Yeni kişi oluştur"
+      },
+      "changeConfirm": {
+        "title": "Lead bilgilerinden farklı değerler",
+        "description": "Aşağıdaki alanlarda lead'deki değerleri değiştirmişsiniz. Convert ettiğinizde lead'in mevcut bilgisi yerine sizin yazdığınız değer hedef kayda yazılacak.",
+        "sourceLabel": "Lead'de",
+        "targetLabel": "Yazılacak",
+        "cancelButton": "Geri dön, düzenleyeyim",
+        "confirmButton": "Bu değerlerle devam et"
+      },
+      "footer": {
+        "close": "Kapat",
+        "openDeal": "Fırsatı aç",
+        "check": "Kontrol et",
+        "convert": "Dönüştür"
+      },
+      "successMessage": "Lead fırsata dönüştürüldü",
+      "errorMessage": "Lead dönüştürülemedi",
+      "field": {
+        "companyName": "Şirket adı",
+        "companyEmail": "Şirket e-postası",
+        "companyPhone": "Şirket telefonu",
+        "website": "Website",
+        "address": "Adres",
+        "city": "Şehir",
+        "industry": "Sektör",
+        "companySize": "Şirket büyüklüğü",
+        "contactName": "Kişi adı",
+        "jobTitle": "İş ünvanı",
+        "email": "E-posta",
+        "phone": "Telefon",
+        "dealName": "Fırsat adı",
+        "estimatedValue": "Tahmini değer",
+        "description": "Açıklama / Not",
+        "stage": "Aşama",
+        "leadSource": "Lead kaynağı",
+        "customerType": "Müşteri tipi"
+      },
+      "placeholder": {
+        "selectIndustry": "Sektör seçin...",
+        "selectSize": "Boyut seçin...",
+        "selectStage": "Aşama seçin...",
+        "selectSource": "Kaynak seçin...",
+        "selectType": "Tip seçin..."
+      },
+      "sourceLabel": {
+        "lead": "Lead: {{field}}",
+        "auto": "Otomatik (şirket + kişi)",
+        "fixed": "Sabit: {{value}}",
+        "dialogOnly": "Dialog-only"
+      },
+      "targetLabel": {
+        "organization": "Organization: {{field}}",
+        "contact": "Contact: {{field}}",
+        "deal": "Deal: {{field}}"
+      },
+      "addField": "{{target}} alanı ekle",
+      "noFieldsAvailable": "Eklenebilir alan yok.",
+      "dealDefaultName": "Yeni fırsat"
     }
   },
   "companies": {
