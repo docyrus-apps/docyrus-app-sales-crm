@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { useDocyrusClient } from '@docyrus/signin'
@@ -267,6 +267,7 @@ export function LeadConvertDialog({
     targetText: string
   }> | null>(null)
   const [changesConfirmed, setChangesConfirmed] = useState(false)
+  const progressSectionRef = useRef<HTMLDivElement | null>(null)
   const [mode, setMode] = useState<ConversionMode>(() => {
     const savedMode = getRelationName(lead?.conversion_mode)
     if (savedMode === 'contact_deal' || savedMode === 'deal_only') {
@@ -277,24 +278,93 @@ export function LeadConvertDialog({
       ? 'company_contact_deal'
       : 'contact_deal'
   })
-  const [steps, setSteps] = useState<Record<string, StepState>>({
-    precheck: 'pending',
-    organization: 'pending',
-    contact: 'pending',
-    deal: 'pending',
-    activity: 'pending',
-    lead: 'pending',
+  const initialStepStateRef = useRef(() => {
+    const hasOrg = Boolean(getRelationId(lead?.converted_organization))
+    const hasContact = Boolean(getRelationId(lead?.converted_contact))
+    const hasDeal = Boolean(getRelationId(lead?.converted_deal))
+    const stateName = getRelationName(lead?.conversion_state)
+    const isCompleted = stateName === 'completed'
+    const isFailedOrPartial = stateName === 'failed' || stateName === 'partial'
+
+    const steps: Record<string, StepState> = {
+      precheck: hasOrg || hasContact || hasDeal ? 'done' : 'pending',
+      organization: hasOrg ? 'done' : 'pending',
+      contact: hasContact ? 'done' : 'pending',
+      deal: hasDeal ? 'done' : 'pending',
+      activity: isCompleted ? 'done' : 'pending',
+      lead: isCompleted ? 'done' : 'pending',
+    }
+
+    const hasAny = hasOrg || hasContact || hasDeal
+    if (isFailedOrPartial && hasAny) {
+      const sequence: Array<keyof typeof steps> = [
+        'precheck',
+        'organization',
+        'contact',
+        'deal',
+      ]
+      const firstPending = sequence.find((key) => steps[key] === 'pending')
+      if (firstPending) steps[firstPending] = 'failed'
+    }
+    const details: Record<string, Array<StepDetail>> = {
+      precheck: [],
+      organization: hasOrg
+        ? [
+            {
+              tone: 'success',
+              label: `Mevcut: ${getRelationName(lead?.converted_organization) ?? '—'}`,
+            },
+            { tone: 'info', label: 'Bu adım atlanacak' },
+          ]
+        : [],
+      contact: hasContact
+        ? [
+            {
+              tone: 'success',
+              label: `Mevcut: ${getRelationName(lead?.converted_contact) ?? '—'}`,
+            },
+            { tone: 'info', label: 'Bu adım atlanacak' },
+          ]
+        : [],
+      deal: hasDeal
+        ? [
+            {
+              tone: 'success',
+              label: `Mevcut: ${getRelationName(lead?.converted_deal) ?? '—'}`,
+            },
+            { tone: 'info', label: 'Bu adım atlanacak' },
+          ]
+        : [],
+      activity: [],
+      lead: [],
+    }
+
+    if (isFailedOrPartial) {
+      const errorMessage =
+        typeof lead?.conversion_error_message === 'string' &&
+        lead.conversion_error_message
+          ? lead.conversion_error_message
+          : null
+      const failedKey = (Object.keys(steps) as Array<keyof typeof steps>).find(
+        (key) => steps[key] === 'failed',
+      )
+      if (failedKey && errorMessage) {
+        details[failedKey] = [
+          { tone: 'error', label: `Önceki hata: ${errorMessage}` },
+          { tone: 'info', label: 'Dönüştür dediğinde yeniden denenecek' },
+        ]
+      }
+    }
+
+    return { steps, details }
   })
+
+  const [steps, setSteps] = useState<Record<string, StepState>>(
+    () => initialStepStateRef.current().steps,
+  )
   const [stepDetails, setStepDetails] = useState<
     Record<string, Array<StepDetail>>
-  >({
-    precheck: [],
-    organization: [],
-    contact: [],
-    deal: [],
-    activity: [],
-    lead: [],
-  })
+  >(() => initialStepStateRef.current().details)
   const [form, setForm] = useState(() => ({
     companyName: lead?.company_name_text || '',
     companyWebsite: lead?.website || '',
@@ -314,7 +384,6 @@ export function LeadConvertDialog({
       lead?.name ||
       'Yeni fırsat',
     dealValue: lead?.deal_value ? String(lead.deal_value) : '',
-    expectedClosingDate: lead?.expected_closing_date || '',
     notes: lead?.contact_message || '',
     dealStageId: '',
     dealLeadSourceId: '',
@@ -461,15 +530,19 @@ export function LeadConvertDialog({
     100
 
   const isAlreadyCompleted = isLeadConvertedRecord(lead)
-  const hasPartialState = Boolean(
-    !isAlreadyCompleted &&
-    (lead?.converted_organization ||
+  const hasAnyCreated = Boolean(
+    lead?.converted_organization ||
       lead?.converted_contact ||
-      normalizeConversionKey(getRelationName(lead?.conversion_state)) ===
-        normalizeConversionKey('partial') ||
-      normalizeConversionKey(getRelationName(lead?.conversion_state)) ===
-        normalizeConversionKey('failed')),
+      lead?.converted_deal,
   )
+  const conversionStateName = normalizeConversionKey(
+    getRelationName(lead?.conversion_state),
+  )
+  const hasPartialState = !isAlreadyCompleted && hasAnyCreated
+  const hasFailedAttempt =
+    !isAlreadyCompleted &&
+    !hasAnyCreated &&
+    conversionStateName === normalizeConversionKey('failed')
 
   const setStep = (key: string, state: StepState) => {
     setSteps((current) => ({ ...current, [key]: state }))
@@ -491,9 +564,20 @@ export function LeadConvertDialog({
     label,
   })
 
+  const SEARCH_RELEVANT_FIELDS = new Set<keyof typeof form>([
+    'companyName',
+    'companyWebsite',
+    'companyPhone',
+    'contactName',
+    'contactEmail',
+    'contactPhone',
+  ])
+
   const updateForm = (key: keyof typeof form, value: string) => {
     setForm((current) => ({ ...current, [key]: value }))
-    setDuplicatesChecked(false)
+    if (SEARCH_RELEVANT_FIELDS.has(key)) {
+      setDuplicatesChecked(false)
+    }
   }
 
   const updateLead = async (data: Record<string, unknown>) => {
@@ -848,12 +932,6 @@ export function LeadConvertDialog({
     const dealChecks: Array<MissingField | null> = [
       checkRow('deal', 'name', 'Fırsat adı', form.dealName),
       checkRow('deal', 'deal_value', 'Tahmini değer', form.dealValue),
-      checkRow(
-        'deal',
-        'expected_closing_date',
-        'Hedef kapanış',
-        form.expectedClosingDate,
-      ),
       checkRow('deal', 'description', 'Açıklama / Not', form.notes),
       checkRow('deal', 'stage', 'Aşama', effectiveStageId),
       checkRow(
@@ -947,12 +1025,6 @@ export function LeadConvertDialog({
     )
     push(
       'deal',
-      'Hedef kapanış',
-      lead?.expected_closing_date || '',
-      form.expectedClosingDate,
-    )
-    push(
-      'deal',
       'Açıklama / Not',
       lead?.contact_message || '',
       form.notes,
@@ -972,7 +1044,7 @@ export function LeadConvertDialog({
     return changes
   }
 
-  const runConversion = async () => {
+  const runConversion = async (options?: { skipChangeCheck?: boolean }) => {
     if (!client || !lead?.id) return
 
     if (!duplicatesChecked) {
@@ -989,13 +1061,20 @@ export function LeadConvertDialog({
       return
     }
 
-    if (!changesConfirmed) {
+    if (!options?.skipChangeCheck && !changesConfirmed) {
       const changes = findChangedFromLead()
       if (changes.length > 0) {
         setPendingChanges(changes)
         return
       }
     }
+
+    progressSectionRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    })
+
+    await new Promise((resolve) => window.setTimeout(resolve, 350))
 
     setIsWorking(true)
     setErrorMessage(null)
@@ -1021,7 +1100,7 @@ export function LeadConvertDialog({
       await updateLead({
         conversion_state: conversionStateValue('in_progress'),
         conversion_mode: conversionModeValue(mode),
-        conversion_error_message: undefined,
+        conversion_error_message: null,
       })
       addStepDetail(
         'precheck',
@@ -1136,7 +1215,6 @@ export function LeadConvertDialog({
             country: getRelationId(lead.countries),
             record_owner: getRelationId(lead.record_owner),
             deal_value: form.dealValue ? Number(form.dealValue) : undefined,
-            expected_closing_date: form.expectedClosingDate || undefined,
             description: form.notes || undefined,
             source_lead: lead.id,
             ...dealExtras,
@@ -1192,7 +1270,7 @@ export function LeadConvertDialog({
         converted_by: me?.id,
         conversion_state: conversionStateValue('completed'),
         conversion_mode: conversionModeValue(mode),
-        conversion_error_message: undefined,
+        conversion_error_message: null,
       })
       setStepDetail('lead', [
         detail('success', 'Statü: Converted'),
@@ -1338,9 +1416,6 @@ export function LeadConvertDialog({
     deal: [
       'name',
       'deal_value',
-      'expected_revenue',
-      'close_probability',
-      'expected_closing_date',
       'description',
       'stage',
       'lead_source',
@@ -1744,16 +1819,6 @@ export function LeadConvertDialog({
             disabled={formDisabled}
           />
           <FieldMappingRow
-            label="Hedef kapanış"
-            sourceLabel="Lead: expected_closing_date"
-            targetLabel="Deal: expected_closing_date"
-            sourceValue={lead?.expected_closing_date ?? ''}
-            value={form.expectedClosingDate}
-            kind="date"
-            onChange={(v) => updateForm('expectedClosingDate', v)}
-            disabled={formDisabled}
-          />
-          <FieldMappingRow
             label="Açıklama / Not"
             sourceLabel="Lead: contact_message"
             targetLabel="Deal: description"
@@ -1876,12 +1941,36 @@ export function LeadConvertDialog({
           )}
 
           {hasPartialState && (
-            <Alert variant="destructive">
+            <Alert>
               <AlertCircle />
-              <AlertTitle>Önceki dönüşüm tamamlanmamış</AlertTitle>
+              <AlertTitle>Önceki dönüşüm yarım kaldı</AlertTitle>
               <AlertDescription>
-                Oluşmuş kayıtlar korunur. Dönüşüme kaldığı yerden devam
-                edebilirsiniz.
+                Oluşmuş kayıtlar korunur. Hangi adımların tamamlandığını
+                aşağıdaki ilerleme çubuğundan görebilirsin — Dönüştür
+                dediğinde kalan adımlar çalıştırılır.
+                {typeof lead?.conversion_error_message === 'string' &&
+                lead.conversion_error_message ? (
+                  <span className="mt-1 block text-xs">
+                    Son hata: {lead.conversion_error_message}
+                  </span>
+                ) : null}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {hasFailedAttempt && (
+            <Alert>
+              <AlertCircle />
+              <AlertTitle>Önceki deneme başarısız oldu</AlertTitle>
+              <AlertDescription>
+                Hiçbir kayıt oluşturulamadığı için temiz bir başlangıç
+                yapacaksın.
+                {typeof lead?.conversion_error_message === 'string' &&
+                lead.conversion_error_message ? (
+                  <span className="mt-1 block text-xs">
+                    Önceki hata: {lead.conversion_error_message}
+                  </span>
+                ) : null}
               </AlertDescription>
             </Alert>
           )}
@@ -1938,12 +2027,15 @@ export function LeadConvertDialog({
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div ref={progressSectionRef} className="space-y-2">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>İlerleme</span>
               <span>{Math.round(progress)}%</span>
             </div>
-            <Progress value={progress} />
+            <Progress
+              value={progress}
+              className="bg-muted/60 [&_[data-slot=progress-indicator]]:bg-gradient-to-r [&_[data-slot=progress-indicator]]:from-sky-400 [&_[data-slot=progress-indicator]]:via-teal-400 [&_[data-slot=progress-indicator]]:to-emerald-500"
+            />
             <TooltipProvider delayDuration={200}>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-6">
                 {Object.entries(STEP_LABELS).map(([key, label]) => {
@@ -2103,7 +2195,7 @@ export function LeadConvertDialog({
               onClick={() => {
                 setPendingChanges(null)
                 setChangesConfirmed(true)
-                void runConversion()
+                void runConversion({ skipChangeCheck: true })
               }}
             >
               Bu değerlerle devam et

@@ -8,9 +8,53 @@ The products and sales orders routes now follow the shared Docyrus grid pattern 
 
 ## Leads & Deals Pipeline
 
-The leads and deals routes now use the shared Docyrus grid runtime for list tabs and the Docyrus kanban hook for board tabs, with saved views, inline updates, and toolbar import/export actions.
+The leads and deals routes use the shared Docyrus grid runtime for list tabs and the Docyrus kanban hook for board tabs, with saved views, inline updates, and toolbar import/export actions.
 
-Lead conversion follows the pure lead model: leads keep pre-conversion company, contact, and qualification fields; conversion creates or reuses company/contact records, creates the deal, writes converted record links and conversion state, resumes partial conversions, and keeps converted leads read-only in edit/detail flows.
+### Lead Datasource (Pure Lead Model)
+
+`base_crm.leads` follows a pure lead model: no contact/organization/deal record exists before convert — the lead carries the pre-conversion raw data itself.
+
+- Contact display name lives in the system `name` field; the legacy `title` field is unused.
+- Company info is raw: `company_name_text`, `company_email`, `company_phone`, `company_industry`, `company_size`, `website`, `address`, `city`. The old `company_name` relation has been removed.
+- Qualification fields: `lead_status`, `lead_source`, `lead_type`, `lead_form`, `lost_reason`, `contact_message`.
+- Only deal-seed field kept: `deal_value` (UI label "Tahmini Değer / Estimated Value"). `expected_revenue`, `close_probability`, `expected_closing_date`, `deal_name` were removed; users add them dialog-only via "+ Alan ekle" during convert.
+- Conversion tracking: `converted_organization`, `converted_contact`, `converted_deal`, `converted_on`, `converted_by`, `conversion_state` (enum: in_progress/completed/partial/failed), `conversion_mode` (enum: company_contact_deal/contact_deal/deal_only), `conversion_error_message`.
+
+### Lead Convert Dialog
+
+The convert dialog at `src/components/leads/lead-convert-dialog.tsx` is a tabbed UX with Company / Contact / Deal tabs shown by mode.
+
+- Each tab renders `FieldMappingRow` (`src/components/leads/field-mapping-row.tsx`) — left chip shows the lead source value (muted), right input/select holds the editable target value pre-filled from source.
+- Required fields render a red asterisk; auto-match looks up lead enum values (industry, company_size, lead_source, lead_type) in target enums by name.
+- "+ Alan ekle" popover at the top of each tab fetches target datasource fields, hides system slugs, and lets users add or remove dialog-only fields that get spread into the create payload.
+- Validation focus and added-field reveal both scroll the row into view and ring-highlight it.
+
+### Convert Flow
+
+`runConversion` runs precheck → organization → contact → deal → activity → lead, gated by three checks before the work starts.
+
+- Gate 1: duplicate search runs against organization, contact, and deal (`source_lead = lead.id`) — keyword is sanitized to strip tsquery-breaking characters.
+- Gate 2: `findMissingField` scans every visible field, switches the offending tab and rings the first empty one.
+- Gate 3: `findChangedFromLead` opens an AlertDialog whenever any target value differs from the lead source; confirming calls `runConversion({ skipChangeCheck: true })` to bypass closure-stale state.
+- Each step writes outputs (`converted_*`) back to the lead immediately so any failure leaves a resumable partial state.
+- Open `base.task` and `base.event` records pointing to the lead get migrated to also reference the new organization, contact, and deal — the lead link is preserved as provenance.
+- The deal payload writes `description` from `lead.contact_message` to keep the original inquiry.
+
+### Failed vs Partial State
+
+A failed attempt and a partial conversion are distinguished by whether any canonical record was actually created.
+
+- Failed (`conversion_state = failed`, all `converted_*` null): short alert, all steps pending, no pre-marked failures — fresh start.
+- Partial (any `converted_*` filled): dialog initialises with completed steps marked done with "Mevcut: <name>" tooltip detail, the next pending step pre-marked failed with the captured error.
+- The lead detail primary action becomes "Dönüşüme devam et" when partial; stays "Convert" otherwise.
+
+### Provenance & Read-only Enforcement
+
+Every record created during convert is tagged with `source_lead = lead.id` (organization, contact, deal).
+
+- `isLeadConvertedRecord` (`src/lib/lead-conversion.ts`) returns true when `converted_deal` is set or `conversion_state = completed`.
+- The lead form, kanban drag, command palette, and detail edit flows derive read-only behavior from this single helper.
+- Step state, tooltip details, the "+ field" popover, the mode selector, and the form all check the same flag.
 
 ## Tasks, Activities & Calendar
 

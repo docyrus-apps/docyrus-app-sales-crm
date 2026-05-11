@@ -26,7 +26,6 @@ export const leadFormSchema = z.object({
   contact_message: z.string().optional(),
   lost_reason: z.string().optional(),
   deal_value: z.number().min(0, 'Estimated value must be positive').optional(),
-  expected_closing_date: z.string().optional(),
 })
 
 export type LeadFormData = z.infer<typeof leadFormSchema>

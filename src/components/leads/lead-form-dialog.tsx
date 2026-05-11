@@ -124,7 +124,6 @@ export function LeadFormDialog({
       contact_message: lead?.contact_message || '',
       lost_reason: getRelationId(lead?.lost_reason),
       deal_value: numericDefault(lead?.deal_value),
-      expected_closing_date: lead?.expected_closing_date || undefined,
     },
     validatorAdapter: zodValidator(),
     validators: {
@@ -644,25 +643,6 @@ export function LeadFormDialog({
                             e.target.value ? Number(e.target.value) : undefined,
                           )
                         }
-                      />
-                    </Field>
-                  )}
-                </form.Field>
-
-                <form.Field name="expected_closing_date">
-                  {(field) => (
-                    <Field>
-                      <Label htmlFor={field.name}>
-                        {t('leads.form.targetCloseDateLabel', {
-                          defaultValue: 'Target close date',
-                        })}
-                      </Label>
-                      <Input
-                        id={field.name}
-                        type="date"
-                        value={field.state.value ?? ''}
-                        disabled={isConverted}
-                        onChange={(e) => field.handleChange(e.target.value)}
                       />
                     </Field>
                   )}

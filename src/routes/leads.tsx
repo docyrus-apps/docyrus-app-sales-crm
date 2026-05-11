@@ -380,7 +380,7 @@ function LeadsPageInner({
     enableItemsQuery: viewType === 'board',
     listParams: {
       columns:
-        'id, name, phone, email, website, company_name_text, company_email, company_phone, company_industry, company_size, lead_source, lead_status, lead_type, countries(id,name), record_owner, deal_value, expected_closing_date, converted_deal(id,name), converted_organization(id,name), converted_contact(id,name), conversion_state, converted_on, created_on, last_modified_on, created_by, last_modified_by',
+        'id, name, phone, email, website, company_name_text, company_email, company_phone, company_industry, company_size, lead_source, lead_status, lead_type, countries(id,name), record_owner, deal_value, converted_deal(id,name), converted_organization(id,name), converted_contact(id,name), conversion_state, converted_on, created_on, last_modified_on, created_by, last_modified_by',
       orderBy: 'created_on DESC',
       limit: 200,
     },

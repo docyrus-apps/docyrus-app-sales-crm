@@ -22,7 +22,7 @@
 For full CLI command reference, see [docyrus-cli-usage.md](docyrus-cli-usage.md).
 
 ## Client Libraries
-
+  
 - REST API client (`@docyrus/api-client`) with OAuth2 support, interceptors, streaming, and file operations
 - React authentication provider (`@docyrus/signin`) with standalone OAuth2 PKCE and iframe postMessage modes, automatic current-user fetch from `/v1/users/me`, and `hasRole` / `hasPermission` / `refreshUser` helpers
 - Framework-agnostic authorization helpers are also available from `@docyrus/signin/core`

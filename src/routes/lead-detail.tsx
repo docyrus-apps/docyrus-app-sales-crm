@@ -268,6 +268,13 @@ export function LeadDetail() {
       : lead.lead_status
   const isConverted = isLeadConvertedRecord(lead)
   const convertedDealId = getRelationId(lead.converted_deal)
+  const hasPartialConvert =
+    !isConverted &&
+    Boolean(
+      getRelationId(lead.converted_organization) ||
+        getRelationId(lead.converted_contact) ||
+        getRelationId(lead.converted_deal),
+    )
 
   return (
     <PageContainer>
@@ -295,7 +302,11 @@ export function LeadDetail() {
               onClick={() => setIsConvertOpen(true)}
             >
               <RefreshCw className="mr-2 h-3.5 w-3.5" />
-              {t('leads.convert.convertButton')}
+              {hasPartialConvert
+                ? t('leads.convert.resumeButton', {
+                    defaultValue: 'Dönüşüme devam et',
+                  })
+                : t('leads.convert.convertButton')}
             </Button>
           )}
           {!isConverted && (

@@ -30,7 +30,7 @@ Every block has optional `tz?: string` (timezone) and `cast?: string` (type cast
 - Advanced DS: `"alias"."slug"`
 - Simple DS custom fields: `"alias".data->>'<field-uuid>'` with auto-cast by field type:
   - number/money/duration(decimal≠false) → `::decimal`, (decimal=false) → `::int`
-  - DB types jsonb/date/time/timestamptz/boolean/int\* → `::<type>`, uuid[] → `::jsonb`
+  - DB types jsonb/date/time/timestamptz/boolean/int* → `::<type>`, uuid[] → `::jsonb`
 - Simple DS static/system fields (in `SIMPLE_STATIC_FIELD_SLUGS`): direct reference. Field not found → error.
 
 ### builtin
@@ -117,19 +117,19 @@ Allowed: int, int2, int4, int8, bigint, real, float, float4, float8, numeric, do
 
 ## Validation Errors
 
-| Condition        | Error                                                        |
-| ---------------- | ------------------------------------------------------------ |
-| Empty inputs     | "Formula must have at least one input block"                 |
-| >1 root input    | "Multiple input blocks not yet supported"                    |
-| Bad function     | `Function "${name}" is not allowed for dialect "${dialect}"` |
-| Bad aggregate    | `Aggregate function "${name}" is not allowed`                |
-| Extract ≠1 input | "EXTRACT requires exactly one input expression"              |
-| Math <2 ops      | "Math operations require at least 2 operands"                |
-| NOT ≠1 op        | "NOT operation requires exactly one operand"                 |
-| AND/OR <2 ops    | "${OP} operation requires at least 2 operands"               |
-| CASE 0 whens     | "CASE expression must have at least one WHEN clause"         |
-| Bad tz           | "Unsupported timezone: ${tz}"                                |
-| Bad builtin      | "Unsupported formula function: ${name}"                      |
+| Condition | Error |
+|---|---|
+| Empty inputs | "Formula must have at least one input block" |
+| >1 root input | "Multiple input blocks not yet supported" |
+| Bad function | `Function "${name}" is not allowed for dialect "${dialect}"` |
+| Bad aggregate | `Aggregate function "${name}" is not allowed` |
+| Extract ≠1 input | "EXTRACT requires exactly one input expression" |
+| Math <2 ops | "Math operations require at least 2 operands" |
+| NOT ≠1 op | "NOT operation requires exactly one operand" |
+| AND/OR <2 ops | "${OP} operation requires at least 2 operands" |
+| CASE 0 whens | "CASE expression must have at least one WHEN clause" |
+| Bad tz | "Unsupported timezone: ${tz}" |
+| Bad builtin | "Unsupported formula function: ${name}" |
 
 ## SelectQueryBuilder Integration
 
@@ -145,516 +145,121 @@ Allowed: int, int2, int4, int8, bigint, real, float, float4, float8, numeric, do
 **Inline math** (balance / 100):
 
 ```json
-{
-  "inputs": [
-    {
-      "kind": "math",
-      "op": "/",
-      "inputs": [
-        { "kind": "column", "name": "balance" },
-        { "kind": "literal", "literal": 100 }
-      ]
-    }
-  ]
-}
+{ "inputs": [{ "kind": "math", "op": "/", "inputs": [{ "kind": "column", "name": "balance" }, { "kind": "literal", "literal": 100 }] }] }
 ```
 
 **Formatted date** (to_char):
 
 ```json
-{
-  "inputs": [
-    {
-      "kind": "function",
-      "name": "to_char",
-      "inputs": [
-        { "kind": "column", "name": "created_on" },
-        { "kind": "literal", "literal": "DD/MM/YYYY" }
-      ]
-    }
-  ]
-}
+{ "inputs": [{ "kind": "function", "name": "to_char", "inputs": [{ "kind": "column", "name": "created_on" }, { "kind": "literal", "literal": "DD/MM/YYYY" }] }] }
 ```
 
 **Subquery count**:
 
 ```json
-{
-  "from": "app_child",
-  "with": "parent_id",
-  "inputs": [{ "kind": "aggregate", "name": "count", "inputs": [] }]
-}
+{ "from": "app_child", "with": "parent_id", "inputs": [{ "kind": "aggregate", "name": "count", "inputs": [] }] }
 ```
 
 **Subquery count with distinct**:
 
 ```json
-{
-  "expression": {
-    "from": "app_child_table",
-    "with": "parent_field",
-    "inputs": [
-      {
-        "kind": "aggregate",
-        "name": "count",
-        "distinct": true,
-        "inputs": [{ "kind": "column", "name": "id" }]
-      }
-    ]
-  }
-}
+{ "expression": { "from": "app_child_table", "with": "parent_field", "inputs": [{ "kind": "aggregate", "name": "count", "distinct": true, "inputs": [{ "kind": "column", "name": "id" }] }] } }
 ```
 
 **Multi-field subquery join**:
 
 ```json
-{
-  "from": "app_child",
-  "with": { "child_field1": "parent_field1", "child_field2": "parent_field2" },
-  "inputs": [
-    {
-      "kind": "aggregate",
-      "name": "sum",
-      "inputs": [{ "kind": "column", "name": "amount" }]
-    }
-  ]
-}
+{ "from": "app_child", "with": { "child_field1": "parent_field1", "child_field2": "parent_field2" }, "inputs": [{ "kind": "aggregate", "name": "sum", "inputs": [{ "kind": "column", "name": "amount" }] }] }
 ```
 
 **CASE with AND**:
 
 ```json
-{
-  "inputs": [
-    {
-      "kind": "case",
-      "cases": [
-        {
-          "when": {
-            "kind": "boolean",
-            "op": "and",
-            "inputs": [
-              {
-                "kind": "compare",
-                "op": ">",
-                "left": { "kind": "column", "name": "price" },
-                "right": { "kind": "literal", "literal": 100 }
-              },
-              {
-                "kind": "compare",
-                "op": "ilike",
-                "left": { "kind": "column", "name": "name" },
-                "right": { "kind": "literal", "literal": "%pro%" }
-              }
-            ]
-          },
-          "then": { "kind": "literal", "literal": "premium" }
-        }
-      ],
-      "else": { "kind": "literal", "literal": "standard" }
-    }
-  ]
-}
+{ "inputs": [{ "kind": "case", "cases": [{ "when": { "kind": "boolean", "op": "and", "inputs": [{ "kind": "compare", "op": ">", "left": { "kind": "column", "name": "price" }, "right": { "kind": "literal", "literal": 100 } }, { "kind": "compare", "op": "ilike", "left": { "kind": "column", "name": "name" }, "right": { "kind": "literal", "literal": "%pro%" } }] }, "then": { "kind": "literal", "literal": "premium" } }], "else": { "kind": "literal", "literal": "standard" } }] }
 ```
 
 **Multi-branch CASE** (tier assignment):
 
 ```json
-{
-  "inputs": [
-    {
-      "kind": "case",
-      "cases": [
-        {
-          "when": {
-            "kind": "compare",
-            "op": ">=",
-            "left": { "kind": "column", "name": "revenue" },
-            "right": { "kind": "literal", "literal": 100000 }
-          },
-          "then": { "kind": "literal", "literal": "enterprise" }
-        },
-        {
-          "when": {
-            "kind": "compare",
-            "op": ">=",
-            "left": { "kind": "column", "name": "revenue" },
-            "right": { "kind": "literal", "literal": 10000 }
-          },
-          "then": { "kind": "literal", "literal": "business" }
-        },
-        {
-          "when": {
-            "kind": "compare",
-            "op": ">=",
-            "left": { "kind": "column", "name": "revenue" },
-            "right": { "kind": "literal", "literal": 1000 }
-          },
-          "then": { "kind": "literal", "literal": "starter" }
-        }
-      ],
-      "else": { "kind": "literal", "literal": "free" }
-    }
-  ]
-}
+{ "inputs": [{ "kind": "case", "cases": [{ "when": { "kind": "compare", "op": ">=", "left": { "kind": "column", "name": "revenue" }, "right": { "kind": "literal", "literal": 100000 } }, "then": { "kind": "literal", "literal": "enterprise" } }, { "when": { "kind": "compare", "op": ">=", "left": { "kind": "column", "name": "revenue" }, "right": { "kind": "literal", "literal": 10000 } }, "then": { "kind": "literal", "literal": "business" } }, { "when": { "kind": "compare", "op": ">=", "left": { "kind": "column", "name": "revenue" }, "right": { "kind": "literal", "literal": 1000 } }, "then": { "kind": "literal", "literal": "starter" } }], "else": { "kind": "literal", "literal": "free" } }] }
 ```
 
 **Nested aggregate**: `round(sum(qty * price), 2)`:
 
 ```json
-{
-  "alias": "total",
-  "inputs": [
-    {
-      "kind": "function",
-      "name": "round",
-      "inputs": [
-        {
-          "kind": "aggregate",
-          "name": "sum",
-          "inputs": [
-            {
-              "kind": "math",
-              "op": "*",
-              "inputs": [
-                { "kind": "column", "name": "qty" },
-                { "kind": "column", "name": "price" }
-              ]
-            }
-          ]
-        },
-        { "kind": "literal", "literal": 2 }
-      ]
-    }
-  ]
-}
+{ "alias": "total", "inputs": [{ "kind": "function", "name": "round", "inputs": [{ "kind": "aggregate", "name": "sum", "inputs": [{ "kind": "math", "op": "*", "inputs": [{ "kind": "column", "name": "qty" }, { "kind": "column", "name": "price" }] }] }, { "kind": "literal", "literal": 2 }] }] }
 ```
 
 **Timezone**: `to_char(now() at time zone 'UTC', 'YYYY-MM-DD')`:
 
 ```json
-{
-  "inputs": [
-    {
-      "kind": "function",
-      "name": "to_char",
-      "inputs": [
-        { "kind": "function", "name": "now", "tz": "UTC" },
-        { "kind": "literal", "literal": "YYYY-MM-DD" }
-      ]
-    }
-  ]
-}
+{ "inputs": [{ "kind": "function", "name": "to_char", "inputs": [{ "kind": "function", "name": "now", "tz": "UTC" }, { "kind": "literal", "literal": "YYYY-MM-DD" }] }] }
 ```
 
 **COALESCE** (null handling):
 
 ```json
-{
-  "inputs": [
-    {
-      "kind": "function",
-      "name": "coalesce",
-      "inputs": [
-        { "kind": "column", "name": "description" },
-        { "kind": "literal", "literal": "No description" }
-      ]
-    }
-  ]
-}
+{ "inputs": [{ "kind": "function", "name": "coalesce", "inputs": [{ "kind": "column", "name": "description" }, { "kind": "literal", "literal": "No description" }] }] }
 ```
 
 **Subquery with filters** (count active children):
 
 ```json
-{
-  "from": "app_child_table",
-  "with": "parent_id",
-  "filters": {
-    "rules": [{ "field": "status", "operator": "=", "value": "active" }]
-  },
-  "inputs": [{ "kind": "aggregate", "name": "count", "inputs": [] }]
-}
+{ "from": "app_child_table", "with": "parent_id", "filters": { "rules": [{ "field": "status", "operator": "=", "value": "active" }] }, "inputs": [{ "kind": "aggregate", "name": "count", "inputs": [] }] }
 ```
 
 **String concatenation with initcap**:
 
 ```json
-{
-  "inputs": [
-    {
-      "kind": "function",
-      "name": "initcap",
-      "inputs": [
-        {
-          "kind": "function",
-          "name": "concat",
-          "inputs": [
-            { "kind": "column", "name": "first_name" },
-            { "kind": "literal", "literal": " " },
-            { "kind": "column", "name": "last_name" }
-          ]
-        }
-      ]
-    }
-  ]
-}
+{ "inputs": [{ "kind": "function", "name": "initcap", "inputs": [{ "kind": "function", "name": "concat", "inputs": [{ "kind": "column", "name": "first_name" }, { "kind": "literal", "literal": " " }, { "kind": "column", "name": "last_name" }] }] }] }
 ```
 
 **Percentage with cast**: `round(completed/total * 100, 2)`:
 
 ```json
-{
-  "inputs": [
-    {
-      "kind": "function",
-      "name": "round",
-      "inputs": [
-        {
-          "kind": "math",
-          "op": "*",
-          "inputs": [
-            {
-              "kind": "math",
-              "op": "/",
-              "inputs": [
-                {
-                  "kind": "column",
-                  "name": "completed_tasks",
-                  "cast": "decimal"
-                },
-                {
-                  "kind": "function",
-                  "name": "greatest",
-                  "inputs": [
-                    {
-                      "kind": "column",
-                      "name": "total_tasks",
-                      "cast": "decimal"
-                    },
-                    { "kind": "literal", "literal": 1 }
-                  ]
-                }
-              ]
-            },
-            { "kind": "literal", "literal": 100 }
-          ]
-        },
-        { "kind": "literal", "literal": 2 }
-      ]
-    }
-  ]
-}
+{ "inputs": [{ "kind": "function", "name": "round", "inputs": [{ "kind": "math", "op": "*", "inputs": [{ "kind": "math", "op": "/", "inputs": [{ "kind": "column", "name": "completed_tasks", "cast": "decimal" }, { "kind": "function", "name": "greatest", "inputs": [{ "kind": "column", "name": "total_tasks", "cast": "decimal" }, { "kind": "literal", "literal": 1 }] }] }, { "kind": "literal", "literal": 100 }] }, { "kind": "literal", "literal": 2 }] }] }
 ```
 
 **Days since created**: `date_part('day', age(now, created_on))::int`:
 
 ```json
-{
-  "inputs": [
-    {
-      "kind": "function",
-      "name": "date_part",
-      "inputs": [
-        { "kind": "literal", "literal": "day" },
-        {
-          "kind": "function",
-          "name": "age",
-          "inputs": [
-            { "kind": "builtin", "name": "now" },
-            { "kind": "column", "name": "created_on" }
-          ]
-        }
-      ],
-      "cast": "int"
-    }
-  ]
-}
+{ "inputs": [{ "kind": "function", "name": "date_part", "inputs": [{ "kind": "literal", "literal": "day" }, { "kind": "function", "name": "age", "inputs": [{ "kind": "builtin", "name": "now" }, { "kind": "column", "name": "created_on" }] }], "cast": "int" }] }
 ```
 
 **Boolean NOT with OR** (is_active = not archived or deleted):
 
 ```json
-{
-  "inputs": [
-    {
-      "kind": "boolean",
-      "op": "not",
-      "inputs": [
-        {
-          "kind": "boolean",
-          "op": "or",
-          "inputs": [
-            {
-              "kind": "compare",
-              "op": "=",
-              "left": { "kind": "column", "name": "is_archived" },
-              "right": { "kind": "literal", "literal": true }
-            },
-            {
-              "kind": "compare",
-              "op": "=",
-              "left": { "kind": "column", "name": "is_deleted" },
-              "right": { "kind": "literal", "literal": true }
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}
+{ "inputs": [{ "kind": "boolean", "op": "not", "inputs": [{ "kind": "boolean", "op": "or", "inputs": [{ "kind": "compare", "op": "=", "left": { "kind": "column", "name": "is_archived" }, "right": { "kind": "literal", "literal": true } }, { "kind": "compare", "op": "=", "left": { "kind": "column", "name": "is_deleted" }, "right": { "kind": "literal", "literal": true } }] }] }] }
 ```
 
 **Subquery sum with filters** (outstanding invoice amount):
 
 ```json
-{
-  "from": "billing_invoice_line",
-  "with": "invoice_id",
-  "filters": {
-    "combinator": "and",
-    "rules": [
-      {
-        "field": "status",
-        "operator": "!=",
-        "value": "paid",
-        "filterType": "ALPHA"
-      },
-      {
-        "field": "amount",
-        "operator": ">",
-        "value": 0,
-        "filterType": "NUMERIC"
-      }
-    ]
-  },
-  "inputs": [
-    {
-      "kind": "function",
-      "name": "coalesce",
-      "inputs": [
-        {
-          "kind": "aggregate",
-          "name": "sum",
-          "inputs": [{ "kind": "column", "name": "amount" }]
-        },
-        { "kind": "literal", "literal": 0 }
-      ]
-    }
-  ]
-}
+{ "from": "billing_invoice_line", "with": "invoice_id", "filters": { "combinator": "and", "rules": [{ "field": "status", "operator": "!=", "value": "paid", "filterType": "ALPHA" }, { "field": "amount", "operator": ">", "value": 0, "filterType": "NUMERIC" }] }, "inputs": [{ "kind": "function", "name": "coalesce", "inputs": [{ "kind": "aggregate", "name": "sum", "inputs": [{ "kind": "column", "name": "amount" }] }, { "kind": "literal", "literal": 0 }] }] }
 ```
 
 **Extract year-month** (concat year + padded month):
 
 ```json
-{
-  "inputs": [
-    {
-      "kind": "function",
-      "name": "concat",
-      "inputs": [
-        {
-          "kind": "extract",
-          "part": "year",
-          "inputs": [{ "kind": "column", "name": "created_on" }],
-          "cast": "text"
-        },
-        { "kind": "literal", "literal": "-" },
-        {
-          "kind": "function",
-          "name": "lpad",
-          "inputs": [
-            {
-              "kind": "extract",
-              "part": "month",
-              "inputs": [{ "kind": "column", "name": "created_on" }],
-              "cast": "text"
-            },
-            { "kind": "literal", "literal": 2 },
-            { "kind": "literal", "literal": "0" }
-          ]
-        }
-      ]
-    }
-  ]
-}
+{ "inputs": [{ "kind": "function", "name": "concat", "inputs": [{ "kind": "extract", "part": "year", "inputs": [{ "kind": "column", "name": "created_on" }], "cast": "text" }, { "kind": "literal", "literal": "-" }, { "kind": "function", "name": "lpad", "inputs": [{ "kind": "extract", "part": "month", "inputs": [{ "kind": "column", "name": "created_on" }], "cast": "text" }, { "kind": "literal", "literal": 2 }, { "kind": "literal", "literal": "0" }] }] }] }
 ```
 
 **JSONB extraction**:
 
 ```json
-{
-  "inputs": [
-    {
-      "kind": "function",
-      "name": "jsonb_extract_path_text",
-      "inputs": [
-        { "kind": "column", "name": "address" },
-        { "kind": "literal", "literal": "country" }
-      ]
-    }
-  ]
-}
+{ "inputs": [{ "kind": "function", "name": "jsonb_extract_path_text", "inputs": [{ "kind": "column", "name": "address" }, { "kind": "literal", "literal": "country" }] }] }
 ```
 
 **Weighted average**: `sum(score * weight) / greatest(sum(weight), 1)`:
 
 ```json
-{
-  "inputs": [
-    {
-      "kind": "math",
-      "op": "/",
-      "inputs": [
-        {
-          "kind": "aggregate",
-          "name": "sum",
-          "inputs": [
-            {
-              "kind": "math",
-              "op": "*",
-              "inputs": [
-                { "kind": "column", "name": "score" },
-                { "kind": "column", "name": "weight" }
-              ]
-            }
-          ]
-        },
-        {
-          "kind": "function",
-          "name": "greatest",
-          "inputs": [
-            {
-              "kind": "aggregate",
-              "name": "sum",
-              "inputs": [{ "kind": "column", "name": "weight" }]
-            },
-            { "kind": "literal", "literal": 1 }
-          ]
-        }
-      ],
-      "cast": "decimal"
-    }
-  ]
-}
+{ "inputs": [{ "kind": "math", "op": "/", "inputs": [{ "kind": "aggregate", "name": "sum", "inputs": [{ "kind": "math", "op": "*", "inputs": [{ "kind": "column", "name": "score" }, { "kind": "column", "name": "weight" }] }] }, { "kind": "function", "name": "greatest", "inputs": [{ "kind": "aggregate", "name": "sum", "inputs": [{ "kind": "column", "name": "weight" }] }, { "kind": "literal", "literal": 1 }] }], "cast": "decimal" }] }
 ```
 
 **Date truncation** (period grouping by month):
 
 ```json
-{
-  "inputs": [
-    {
-      "kind": "function",
-      "name": "date_trunc",
-      "inputs": [
-        { "kind": "literal", "literal": "month" },
-        { "kind": "column", "name": "order_date" }
-      ]
-    }
-  ]
-}
+{ "inputs": [{ "kind": "function", "name": "date_trunc", "inputs": [{ "kind": "literal", "literal": "month" }, { "kind": "column", "name": "order_date" }] }] }
 ```
 
 **Multiple subquery formulas** (project with total + open task counts, using compat wrapper):
@@ -666,39 +271,16 @@ Allowed: int, int2, int4, int8, bigint, real, float, float4, float8, numeric, do
     {
       "key": "total_tasks",
       "expression": {
-        "from": "base_task",
-        "with": "project",
-        "inputs": [
-          {
-            "kind": "aggregate",
-            "name": "count",
-            "inputs": [{ "kind": "column", "name": "id" }]
-          }
-        ]
+        "from": "base_task", "with": "project",
+        "inputs": [{ "kind": "aggregate", "name": "count", "inputs": [{ "kind": "column", "name": "id" }] }]
       }
     },
     {
       "key": "open_tasks",
       "expression": {
-        "from": "base_task",
-        "with": "project",
-        "inputs": [
-          {
-            "kind": "aggregate",
-            "name": "count",
-            "inputs": [{ "kind": "column", "name": "id" }]
-          }
-        ],
-        "filters": {
-          "rules": [
-            {
-              "field": "status",
-              "operator": "not_in",
-              "value": ["<completed_uuid>", "<cancelled_uuid>"]
-            }
-          ],
-          "combinator": "and"
-        }
+        "from": "base_task", "with": "project",
+        "inputs": [{ "kind": "aggregate", "name": "count", "inputs": [{ "kind": "column", "name": "id" }] }],
+        "filters": { "rules": [{ "field": "status", "operator": "not_in", "value": ["<completed_uuid>", "<cancelled_uuid>"] }], "combinator": "and" }
       }
     }
   ]
@@ -713,46 +295,16 @@ Allowed: int, int2, int4, int8, bigint, real, float, float4, float8, numeric, do
 {
   "key": "task_stats",
   "expression": {
-    "from": "base_task",
-    "with": "project",
-    "inputs": [
-      {
-        "kind": "function",
-        "name": "jsonb_build_object",
-        "inputs": [
-          { "kind": "literal", "literal": "total", "cast": "text" },
-          {
-            "kind": "aggregate",
-            "name": "count",
-            "inputs": [{ "kind": "column", "name": "id" }]
-          },
-          { "kind": "literal", "literal": "open", "cast": "text" },
-          {
-            "kind": "aggregate",
-            "name": "count",
-            "inputs": [
-              {
-                "kind": "case",
-                "cases": [
-                  {
-                    "when": {
-                      "kind": "compare",
-                      "op": "not in",
-                      "left": { "kind": "column", "name": "status" },
-                      "right": {
-                        "kind": "literal",
-                        "literal": ["<completed_uuid>", "<cancelled_uuid>"]
-                      }
-                    },
-                    "then": { "kind": "column", "name": "id" }
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    ]
+    "from": "base_task", "with": "project",
+    "inputs": [{
+      "kind": "function", "name": "jsonb_build_object",
+      "inputs": [
+        { "kind": "literal", "literal": "total", "cast": "text" },
+        { "kind": "aggregate", "name": "count", "inputs": [{ "kind": "column", "name": "id" }] },
+        { "kind": "literal", "literal": "open", "cast": "text" },
+        { "kind": "aggregate", "name": "count", "inputs": [{ "kind": "case", "cases": [{ "when": { "kind": "compare", "op": "not in", "left": { "kind": "column", "name": "status" }, "right": { "kind": "literal", "literal": ["<completed_uuid>", "<cancelled_uuid>"] } }, "then": { "kind": "column", "name": "id" } }] }] }
+      ]
+    }]
   }
 }
 ```
