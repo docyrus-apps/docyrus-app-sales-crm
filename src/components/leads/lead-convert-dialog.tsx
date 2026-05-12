@@ -748,8 +748,8 @@ export function LeadConvertDialog({
       form.companyWebsite.trim() ||
       form.companyAddress.trim() ||
       form.companyCity.trim() ||
-      form.companyIndustryId ||
-      form.companySizeId ||
+      form.companyIndustry ||
+      form.companySize ||
       extraFields.company.length,
     )
     const hasContactDraft = Boolean(
