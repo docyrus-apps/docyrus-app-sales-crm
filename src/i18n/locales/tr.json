@@ -468,6 +468,7 @@
         "reuseOption": "Mevcut {{entity}} kullan",
         "reuseHelp": "Yeni kayıt oluşturulmaz, mevcut bağlanır",
         "pickOne": "Hangisi kullanılacak?",
+        "candidateCount": "{{count}} seçenek",
         "exactMatchBadge": "Tam eşleşme",
         "noteCompany": "Mevcut şirket convert sırasında bağlanacak. Yeni kayıt oluşturulmayacak — bilgileri düzenlemek için şirket sayfasına gidebilirsin.",
         "noteContact": "Mevcut kişi convert sırasında bağlanacak. Yeni kayıt oluşturulmayacak — bilgileri düzenlemek için kişi sayfasına gidebilirsin."
@@ -485,6 +486,7 @@
         "description": "Aşağıdaki alanlarda lead'deki değerleri değiştirmişsiniz. Convert ettiğinizde lead'in mevcut bilgisi yerine sizin yazdığınız değer hedef kayda yazılacak.",
         "sourceLabel": "Lead'de",
         "targetLabel": "Yazılacak",
+        "restoreButton": "Geri al",
         "cancelButton": "Geri dön, düzenleyeyim",
         "confirmButton": "Bu değerlerle devam et"
       },
@@ -538,6 +540,7 @@
       },
       "addField": "{{target}} alanı ekle",
       "noFieldsAvailable": "Eklenebilir alan yok.",
+      "restoreFromSource": "Lead'deki değere geri al",
       "dealDefaultName": "Yeni fırsat"
     }
   },

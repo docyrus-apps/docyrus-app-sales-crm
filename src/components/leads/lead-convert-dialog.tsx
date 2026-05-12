@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { useDocyrusClient } from '@docyrus/signin'
@@ -14,6 +14,7 @@ import {
   CircleDashed,
   Info,
   Loader2,
+  Plus,
   Sparkles,
   UserRound,
   XCircle,
@@ -27,13 +28,6 @@ import { AwesomeDialogHeader } from '@/components/docyrus/awesome-dialog/awesome
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   AlertDialog,
@@ -61,7 +55,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { Plus } from 'lucide-react'
 import { createDataSourceClient } from '@docyrus/app-utils'
 import { useEnumEntities } from '@/hooks/use-enums'
 import {
@@ -86,6 +79,13 @@ type PrecheckTargetSummary = {
   status: 'unchecked' | 'clean' | 'matches' | 'exact'
   count: number
   exactName?: string
+}
+type PendingChange = {
+  tab: 'company' | 'contact' | 'deal'
+  label: string
+  sourceText: string
+  targetText: string
+  restore: () => void
 }
 type EntityCandidate = Record<string, any> & { id?: string; name?: string }
 type FieldMeta = { slug?: string }
@@ -294,12 +294,8 @@ export function LeadConvertDialog({
     contact: { status: 'unchecked', count: 0 },
     deal: { status: 'unchecked', count: 0 },
   })
-  const [pendingChanges, setPendingChanges] = useState<Array<{
-    tab: 'company' | 'contact' | 'deal'
-    label: string
-    sourceText: string
-    targetText: string
-  }> | null>(null)
+  const [pendingChanges, setPendingChanges] =
+    useState<Array<PendingChange> | null>(null)
   const [changesConfirmed, setChangesConfirmed] = useState(false)
   const progressSectionRef = useRef<HTMLDivElement | null>(null)
   const [mode, setMode] = useState<ConversionMode>(() => {
@@ -1156,22 +1152,18 @@ export function LeadConvertDialog({
   ): string => options.find((o) => o.value === id)?.label ?? ''
 
   const findChangedFromLead = () => {
-    const changes: Array<{
-      tab: 'company' | 'contact' | 'deal'
-      label: string
-      sourceText: string
-      targetText: string
-    }> = []
+    const changes: Array<PendingChange> = []
     const push = (
       tab: 'company' | 'contact' | 'deal',
       label: string,
       sourceText: string,
       targetText: string,
+      restore: () => void,
     ) => {
       const src = (sourceText || '').trim()
       const tgt = (targetText || '').trim()
       if (src && src !== tgt) {
-        changes.push({ tab, label, sourceText: src, targetText: tgt })
+        changes.push({ tab, label, sourceText: src, targetText: tgt, restore })
       }
     }
 
@@ -1181,42 +1173,49 @@ export function LeadConvertDialog({
         t('leads.convert.field.companyName'),
         lead?.company_name_text || '',
         form.companyName,
+        () => updateForm('companyName', lead?.company_name_text || ''),
       )
       push(
         'company',
         t('leads.convert.field.companyEmail'),
         lead?.company_email || '',
         form.companyEmail,
+        () => updateForm('companyEmail', lead?.company_email || ''),
       )
       push(
         'company',
         t('leads.convert.field.companyPhone'),
         lead?.company_phone || '',
         form.companyPhone,
+        () => updateForm('companyPhone', lead?.company_phone || ''),
       )
       push(
         'company',
         t('leads.convert.field.website'),
         lead?.website || '',
         form.companyWebsite,
+        () => updateForm('companyWebsite', lead?.website || ''),
       )
       push(
         'company',
         t('leads.convert.field.address'),
         lead?.address || '',
         form.companyAddress,
+        () => updateForm('companyAddress', lead?.address || ''),
       )
       push(
         'company',
         t('leads.convert.field.city'),
         lead?.city || '',
         form.companyCity,
+        () => updateForm('companyCity', lead?.city || ''),
       )
       push(
         'company',
         t('leads.convert.field.industry'),
         leadCompanyIndustryName,
         lookupOptionLabel(industrySelectOptions, effectiveCompanyIndustryId),
+        () => updateForm('companyIndustry', mappedCompanyIndustryId || ''),
       )
       if (companySizeSelectOptions.length > 0) {
         push(
@@ -1224,6 +1223,7 @@ export function LeadConvertDialog({
           t('leads.convert.field.companySize'),
           leadCompanySizeName,
           lookupOptionLabel(companySizeSelectOptions, effectiveCompanySizeId),
+          () => updateForm('companySize', mappedCompanySizeId || ''),
         )
       }
     }
@@ -1233,24 +1233,28 @@ export function LeadConvertDialog({
         t('leads.convert.field.contactName'),
         lead?.name || '',
         form.contactName,
+        () => updateForm('contactName', lead?.name || ''),
       )
       push(
         'contact',
         t('leads.convert.field.jobTitle'),
         lead?.contact_job_title || '',
         form.contactJobTitle,
+        () => updateForm('contactJobTitle', lead?.contact_job_title || ''),
       )
       push(
         'contact',
         t('leads.convert.field.email'),
         lead?.email || '',
         form.contactEmail,
+        () => updateForm('contactEmail', lead?.email || ''),
       )
       push(
         'contact',
         t('leads.convert.field.phone'),
         lead?.phone || '',
         form.contactPhone,
+        () => updateForm('contactPhone', lead?.phone || ''),
       )
     }
     push(
@@ -1258,24 +1262,32 @@ export function LeadConvertDialog({
       t('leads.convert.field.estimatedValue'),
       lead?.deal_value ? String(lead.deal_value) : '',
       form.dealValue,
+      () =>
+        updateForm(
+          'dealValue',
+          lead?.deal_value ? String(lead.deal_value) : '',
+        ),
     )
     push(
       'deal',
       t('leads.convert.field.description'),
       lead?.contact_message || '',
       form.notes,
+      () => updateForm('notes', lead?.contact_message || ''),
     )
     push(
       'deal',
       t('leads.convert.field.leadSource'),
       leadSourceName,
       lookupOptionLabel(leadSourceSelectOptions, effectiveLeadSourceId),
+      () => updateForm('dealLeadSourceId', mappedDealLeadSourceId || ''),
     )
     push(
       'deal',
       t('leads.convert.field.customerType'),
       leadTypeName,
       lookupOptionLabel(customerTypeSelectOptions, effectiveCustomerTypeId),
+      () => updateForm('dealCustomerTypeId', mappedCustomerTypeId || ''),
     )
     return changes
   }
@@ -1750,6 +1762,10 @@ export function LeadConvertDialog({
   const effectiveCompanyIndustryId =
     form.companyIndustry || mappedCompanyIndustryId || ''
   const effectiveCompanySizeId = form.companySize || mappedCompanySizeId || ''
+  const sourceDealName =
+    [lead?.company_name_text, lead?.name].filter(Boolean).join(' - ') ||
+    lead?.name ||
+    t('leads.convert.dealDefaultName')
 
   const setExtraValue = (
     target: 'company' | 'contact' | 'deal',
@@ -1877,6 +1893,7 @@ export function LeadConvertDialog({
   const renderAddFieldPopover = (target: 'company' | 'contact' | 'deal') => {
     const targetLabel = TARGET_LABEL[target]
     const options = availableExtraFields(target)
+    const addedCount = extraFields[target].length
     return (
       <Popover>
         <PopoverTrigger asChild>
@@ -1889,12 +1906,12 @@ export function LeadConvertDialog({
           >
             <Plus className="mr-1 size-3.5" />
             {t('leads.convert.addField', { target: targetLabel })}
-            {options.length > 0 ? (
+            {addedCount > 0 ? (
               <Badge
                 variant="secondary"
                 className="ml-1.5 h-4 px-1 text-[10px]"
               >
-                {options.length}
+                +{addedCount}
               </Badge>
             ) : null}
           </Button>
@@ -2019,47 +2036,61 @@ export function LeadConvertDialog({
         </div>
         {isReuse ? (
           <div className="space-y-1.5 border-t border-amber-200 pt-2 dark:border-amber-900/40">
-            <p className="text-[10.5px] uppercase tracking-wide text-muted-foreground">
-              {t('leads.convert.reuse.pickOne', {
-                defaultValue: 'Which one to use?',
-              })}
-            </p>
-            {candidates.map((candidate) => (
-              <button
-                key={candidate.id}
-                type="button"
-                disabled={isWorking}
-                onClick={() => setSelected(candidate.id ?? null)}
-                className={cn(
-                  'flex w-full items-center justify-between gap-2 rounded-md border bg-background px-3 py-2 text-left text-xs transition-colors',
-                  selectedId === candidate.id &&
-                    'border-primary ring-1 ring-primary',
-                )}
-              >
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="truncate font-medium">
-                      {candidate.name}
-                    </span>
-                    {exactId === candidate.id ? (
-                      <Badge variant="secondary" className="h-4 text-[10px]">
-                        {t('leads.convert.reuse.exactMatchBadge', {
-                          defaultValue: 'Exact match',
-                        })}
-                      </Badge>
-                    ) : null}
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[10.5px] uppercase tracking-wide text-muted-foreground">
+                {t('leads.convert.reuse.pickOne', {
+                  defaultValue: 'Which one to use?',
+                })}
+              </p>
+              {candidates.length > 4 ? (
+                <span className="text-[10.5px] text-muted-foreground">
+                  {t('leads.convert.reuse.candidateCount', {
+                    count: candidates.length,
+                    defaultValue: '{{count}} options',
+                  })}
+                </span>
+              ) : null}
+            </div>
+            <div className="max-h-52 space-y-1.5 overflow-y-auto pr-1">
+              {candidates.map((candidate) => (
+                <button
+                  key={candidate.id}
+                  type="button"
+                  disabled={isWorking}
+                  onClick={() => setSelected(candidate.id ?? null)}
+                  className={cn(
+                    'flex w-full items-center justify-between gap-2 rounded-md border bg-background px-3 py-2 text-left text-xs transition-colors',
+                    selectedId === candidate.id &&
+                      'border-primary ring-1 ring-primary',
+                  )}
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="truncate font-medium">
+                        {candidate.name}
+                      </span>
+                      {exactId === candidate.id ? (
+                        <Badge variant="secondary" className="h-4 text-[10px]">
+                          {t('leads.convert.reuse.exactMatchBadge', {
+                            defaultValue: 'Exact match',
+                          })}
+                        </Badge>
+                      ) : null}
+                    </div>
+                    <p className="truncate text-muted-foreground">
+                      {target === 'company'
+                        ? candidate.website ||
+                          candidate.email ||
+                          candidate.phone
+                        : candidate.email || candidate.mobile}
+                    </p>
                   </div>
-                  <p className="truncate text-muted-foreground">
-                    {target === 'company'
-                      ? candidate.website || candidate.email || candidate.phone
-                      : candidate.email || candidate.mobile}
-                  </p>
-                </div>
-                {selectedId === candidate.id ? (
-                  <CheckCircle2 className="size-4 shrink-0 text-primary" />
-                ) : null}
-              </button>
-            ))}
+                  {selectedId === candidate.id ? (
+                    <CheckCircle2 className="size-4 shrink-0 text-primary" />
+                  ) : null}
+                </button>
+              ))}
+            </div>
           </div>
         ) : null}
       </div>
@@ -2069,7 +2100,7 @@ export function LeadConvertDialog({
   const renderPrecheckTooltip = () => {
     const TARGETS: Array<{
       key: 'company' | 'contact' | 'deal'
-      icon: React.ReactNode
+      icon: ReactNode
       label: string
     }> = [
       {
@@ -2205,11 +2236,19 @@ export function LeadConvertDialog({
         className="w-full"
       >
         <TabsList className="w-full justify-start">
-          {tabsToShow.map((tab) => (
-            <TabsTrigger key={tab} value={tab} className="flex-1">
-              {TARGET_LABEL[tab]}
-            </TabsTrigger>
-          ))}
+          {tabsToShow.map((tab) => {
+            const extraCount = extraFields[tab].length
+            return (
+              <TabsTrigger key={tab} value={tab} className="flex-1 gap-1.5">
+                <span>{TARGET_LABEL[tab]}</span>
+                {extraCount > 0 ? (
+                  <Badge variant="secondary" className="h-4 px-1 text-[10px]">
+                    +{extraCount}
+                  </Badge>
+                ) : null}
+              </TabsTrigger>
+            )
+          })}
         </TabsList>
 
         {tabsToShow.includes('company') && (
@@ -2239,6 +2278,9 @@ export function LeadConvertDialog({
                   sourceValue={lead?.company_name_text ?? ''}
                   value={form.companyName}
                   onChange={(v) => updateForm('companyName', v)}
+                  onRestoreSource={() =>
+                    updateForm('companyName', lead?.company_name_text || '')
+                  }
                   disabled={formDisabled}
                   highlight
                   required
@@ -2255,6 +2297,9 @@ export function LeadConvertDialog({
                   value={form.companyEmail}
                   kind="email"
                   onChange={(v) => updateForm('companyEmail', v)}
+                  onRestoreSource={() =>
+                    updateForm('companyEmail', lead?.company_email || '')
+                  }
                   disabled={formDisabled}
                 />
                 <FieldMappingRow
@@ -2269,6 +2314,9 @@ export function LeadConvertDialog({
                   value={form.companyPhone}
                   kind="phone"
                   onChange={(v) => updateForm('companyPhone', v)}
+                  onRestoreSource={() =>
+                    updateForm('companyPhone', lead?.company_phone || '')
+                  }
                   disabled={formDisabled}
                 />
                 <FieldMappingRow
@@ -2283,6 +2331,9 @@ export function LeadConvertDialog({
                   value={form.companyWebsite}
                   kind="url"
                   onChange={(v) => updateForm('companyWebsite', v)}
+                  onRestoreSource={() =>
+                    updateForm('companyWebsite', lead?.website || '')
+                  }
                   disabled={formDisabled}
                 />
                 <FieldMappingRow
@@ -2297,6 +2348,9 @@ export function LeadConvertDialog({
                   value={form.companyAddress}
                   kind="textarea"
                   onChange={(v) => updateForm('companyAddress', v)}
+                  onRestoreSource={() =>
+                    updateForm('companyAddress', lead?.address || '')
+                  }
                   disabled={formDisabled}
                 />
                 <FieldMappingRow
@@ -2310,6 +2364,9 @@ export function LeadConvertDialog({
                   sourceValue={lead?.city ?? ''}
                   value={form.companyCity}
                   onChange={(v) => updateForm('companyCity', v)}
+                  onRestoreSource={() =>
+                    updateForm('companyCity', lead?.city || '')
+                  }
                   disabled={formDisabled}
                 />
                 <FieldMappingRow
@@ -2327,6 +2384,9 @@ export function LeadConvertDialog({
                   options={industrySelectOptions}
                   placeholder={t('leads.convert.placeholder.selectIndustry')}
                   onChange={(v) => updateForm('companyIndustry', v)}
+                  onRestoreSource={() =>
+                    updateForm('companyIndustry', mappedCompanyIndustryId || '')
+                  }
                   disabled={formDisabled}
                 />
                 {companySizeSelectOptions.length > 0 ? (
@@ -2345,6 +2405,9 @@ export function LeadConvertDialog({
                     options={companySizeSelectOptions}
                     placeholder={t('leads.convert.placeholder.selectSize')}
                     onChange={(v) => updateForm('companySize', v)}
+                    onRestoreSource={() =>
+                      updateForm('companySize', mappedCompanySizeId || '')
+                    }
                     disabled={formDisabled}
                   />
                 ) : null}
@@ -2397,6 +2460,9 @@ export function LeadConvertDialog({
                   sourceValue={lead?.name ?? ''}
                   value={form.contactName}
                   onChange={(v) => updateForm('contactName', v)}
+                  onRestoreSource={() =>
+                    updateForm('contactName', lead?.name || '')
+                  }
                   disabled={formDisabled}
                   highlight
                   required
@@ -2412,6 +2478,9 @@ export function LeadConvertDialog({
                   sourceValue={lead?.contact_job_title ?? ''}
                   value={form.contactJobTitle}
                   onChange={(v) => updateForm('contactJobTitle', v)}
+                  onRestoreSource={() =>
+                    updateForm('contactJobTitle', lead?.contact_job_title || '')
+                  }
                   disabled={formDisabled}
                 />
                 <FieldMappingRow
@@ -2426,6 +2495,9 @@ export function LeadConvertDialog({
                   value={form.contactEmail}
                   kind="email"
                   onChange={(v) => updateForm('contactEmail', v)}
+                  onRestoreSource={() =>
+                    updateForm('contactEmail', lead?.email || '')
+                  }
                   disabled={formDisabled}
                 />
                 <FieldMappingRow
@@ -2440,6 +2512,9 @@ export function LeadConvertDialog({
                   value={form.contactPhone}
                   kind="phone"
                   onChange={(v) => updateForm('contactPhone', v)}
+                  onRestoreSource={() =>
+                    updateForm('contactPhone', lead?.phone || '')
+                  }
                   disabled={formDisabled}
                 />
                 {extraFields.contact.map((extra) => (
@@ -2473,7 +2548,7 @@ export function LeadConvertDialog({
                   {t('leads.convert.previousDealsTitle')}
                 </p>
               </div>
-              <div className="space-y-1.5">
+              <div className="max-h-44 space-y-1.5 overflow-y-auto pr-1">
                 {dealCandidates.map((candidate) => (
                   <div
                     key={candidate.id}
@@ -2512,6 +2587,7 @@ export function LeadConvertDialog({
             }
             value={form.dealName}
             onChange={(v) => updateForm('dealName', v)}
+            onRestoreSource={() => updateForm('dealName', sourceDealName)}
             disabled={formDisabled}
             highlight
             required
@@ -2528,6 +2604,12 @@ export function LeadConvertDialog({
             value={form.dealValue}
             kind="money"
             onChange={(v) => updateForm('dealValue', v)}
+            onRestoreSource={() =>
+              updateForm(
+                'dealValue',
+                lead?.deal_value ? String(lead.deal_value) : '',
+              )
+            }
             disabled={formDisabled}
           />
           <FieldMappingRow
@@ -2542,6 +2624,9 @@ export function LeadConvertDialog({
             value={form.notes}
             kind="textarea"
             onChange={(v) => updateForm('notes', v)}
+            onRestoreSource={() =>
+              updateForm('notes', lead?.contact_message || '')
+            }
             disabled={formDisabled}
           />
           <FieldMappingRow
@@ -2556,6 +2641,7 @@ export function LeadConvertDialog({
             options={stageSelectOptions}
             placeholder={t('leads.convert.placeholder.selectStage')}
             onChange={(v) => updateForm('dealStageId', v)}
+            onRestoreSource={() => updateForm('dealStageId', newStageId || '')}
             disabled={formDisabled}
           />
           <FieldMappingRow
@@ -2572,6 +2658,9 @@ export function LeadConvertDialog({
             options={leadSourceSelectOptions}
             placeholder={t('leads.convert.placeholder.selectSource')}
             onChange={(v) => updateForm('dealLeadSourceId', v)}
+            onRestoreSource={() =>
+              updateForm('dealLeadSourceId', mappedDealLeadSourceId || '')
+            }
             disabled={formDisabled}
           />
           <FieldMappingRow
@@ -2588,6 +2677,9 @@ export function LeadConvertDialog({
             options={customerTypeSelectOptions}
             placeholder={t('leads.convert.placeholder.selectType')}
             onChange={(v) => updateForm('dealCustomerTypeId', v)}
+            onRestoreSource={() =>
+              updateForm('dealCustomerTypeId', mappedCustomerTypeId || '')
+            }
             disabled={formDisabled}
           />
           {extraFields.deal.map((extra) => (
@@ -2685,51 +2777,67 @@ export function LeadConvertDialog({
             </Alert>
           )}
 
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border bg-card px-3 py-2">
-            <div className="flex items-center gap-2 text-xs">
-              <span className="font-medium text-foreground">
-                {t('leads.convert.modeLabel')}
-              </span>
-              <Select
-                value={mode}
-                disabled={isWorking || isAlreadyCompleted}
-                onValueChange={(value) => {
-                  setMode(value as ConversionMode)
-                  setDuplicatesChecked(false)
-                }}
-              >
-                <SelectTrigger className="h-7 w-[200px] text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(MODE_LABELS).map(([value, label]) => (
-                    <SelectItem key={value} value={value} className="text-xs">
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center gap-2 text-[11px]">
-              <span className="text-muted-foreground">
-                {t('common.create')}:
-              </span>
-              {mode === 'company_contact_deal' ? (
-                <Badge variant="secondary" className="gap-1">
-                  <Building2 className="size-3 text-sky-600" />
-                  {TARGET_LABEL.company}
-                </Badge>
-              ) : null}
-              {mode !== 'deal_only' ? (
-                <Badge variant="secondary" className="gap-1">
-                  <UserRound className="size-3 text-emerald-600" />
-                  {TARGET_LABEL.contact}
-                </Badge>
-              ) : null}
-              <Badge variant="secondary" className="gap-1">
-                <CheckCircle2 className="size-3 text-violet-600" />
-                {TARGET_LABEL.deal}
-              </Badge>
+          <div className="space-y-2 rounded-md border bg-card px-3 py-2">
+            <p className="text-xs font-medium text-foreground">
+              {t('leads.convert.modeLabel')}
+            </p>
+            <div className="grid gap-2 md:grid-cols-3" role="group">
+              {(
+                [
+                  {
+                    value: 'company_contact_deal',
+                    icons: (
+                      <>
+                        <Building2 className="size-3.5 text-sky-600" />
+                        <UserRound className="size-3.5 text-emerald-600" />
+                        <CheckCircle2 className="size-3.5 text-violet-600" />
+                      </>
+                    ),
+                  },
+                  {
+                    value: 'contact_deal',
+                    icons: (
+                      <>
+                        <UserRound className="size-3.5 text-emerald-600" />
+                        <CheckCircle2 className="size-3.5 text-violet-600" />
+                      </>
+                    ),
+                  },
+                  {
+                    value: 'deal_only',
+                    icons: (
+                      <CheckCircle2 className="size-3.5 text-violet-600" />
+                    ),
+                  },
+                ] as Array<{
+                  value: ConversionMode
+                  icons: ReactNode
+                }>
+              ).map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  disabled={isWorking || isAlreadyCompleted}
+                  aria-pressed={mode === option.value}
+                  onClick={() => {
+                    setMode(option.value)
+                    setDuplicatesChecked(false)
+                  }}
+                  className={cn(
+                    'flex min-h-12 items-center justify-between gap-2 rounded-md border bg-background px-3 py-2 text-left text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-60',
+                    mode === option.value
+                      ? 'border-primary ring-1 ring-primary'
+                      : 'border-border hover:border-primary/40',
+                  )}
+                >
+                  <span className="min-w-0 truncate font-medium">
+                    {MODE_LABELS[option.value]}
+                  </span>
+                  <span className="flex shrink-0 items-center gap-1">
+                    {option.icons}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
 
@@ -2882,6 +2990,25 @@ export function LeadConvertDialog({
                     {TARGET_LABEL[change.tab]}
                   </Badge>
                   <span className="font-medium">{change.label}</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="ml-auto h-6 px-2 text-[10px]"
+                    onClick={() => {
+                      change.restore()
+                      setPendingChanges((current) => {
+                        const nextChanges = (current ?? []).filter(
+                          (_, changeIndex) => changeIndex !== index,
+                        )
+                        return nextChanges.length > 0 ? nextChanges : null
+                      })
+                    }}
+                  >
+                    {t('leads.convert.changeConfirm.restoreButton', {
+                      defaultValue: 'Restore',
+                    })}
+                  </Button>
                 </p>
                 <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
                   <div className="rounded border border-dashed bg-muted/40 px-2 py-1 text-muted-foreground">

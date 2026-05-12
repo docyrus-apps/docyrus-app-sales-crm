@@ -24,10 +24,11 @@ The leads and deals routes use the shared Docyrus grid runtime for list tabs and
 
 The convert dialog at `src/components/leads/lead-convert-dialog.tsx` is a tabbed UX with Company / Contact / Deal tabs shown by mode.
 
-- Each tab renders `FieldMappingRow` (`src/components/leads/field-mapping-row.tsx`) — left chip shows the lead source value (muted), right input/select holds the editable target value pre-filled from source.
+- Each tab renders `FieldMappingRow` (`src/components/leads/field-mapping-row.tsx`) — left chip shows the lead source value (muted), right input/select holds the editable target value pre-filled from source. Source chips can restore their original lead value back into the target input without manually retyping.
 - Required fields render a red asterisk; auto-match looks up lead enum values (industry, company_size, lead_source, lead_type) in target enums by name. If a source enum has no target enum match, conversion is blocked before writes instead of sending the raw source label.
-- Reuse vs Create banner: when duplicate search returns matches on Company or Contact tab, an amber banner appears at the top with "Yeni oluştur / Mevcut kullan" toggle, the candidate list below it, and the editable form fields are hidden under a short note when reuse is selected.
-- "+ Alan ekle" popover at the top of each tab fetches target datasource fields, hides system slugs, and lets users add or remove dialog-only fields that get spread into the create payload.
+- Conversion mode is selected with a segmented control instead of a compact dropdown so company/contact/deal scope is visible before users start editing fields.
+- Reuse vs Create banner: when duplicate search returns matches on Company or Contact tab, an amber banner appears at the top with "Yeni oluştur / Mevcut kullan" toggle, the candidate list below it, and the editable form fields are hidden under a short note when reuse is selected. Candidate lists are height-limited and scroll when many suggestions are returned.
+- "+ Alan ekle" popover at the top of each tab fetches target datasource fields, hides system slugs, and lets users add or remove dialog-only fields that get spread into the create payload. Tab labels and add-field buttons show a `+N` count for fields added to that tab.
 - Validation focus and added-field reveal both scroll the row into view and ring-highlight it.
 - Precheck step icon turns amber (`warn` state) if any duplicate is found; its tooltip renders a structured 3-column summary (Şirket / Kişi / Fırsat) with per-target status (clean / öneri / tam eşleşme), counts, and the example matching name.
 
@@ -37,7 +38,7 @@ The convert dialog at `src/components/leads/lead-convert-dialog.tsx` is a tabbed
 
 - Gate 1: duplicate search runs against organization, contact, and deal (`source_lead = lead.id`) — keyword is sanitized to strip tsquery-breaking characters.
 - Gate 2: `findMissingField` checks only conversion-required values: created company/contact names, deal name/stage, and source enum values that could not be mapped. Hidden reused records and optional fields do not block conversion.
-- Gate 3: `findChangedFromLead` opens an AlertDialog whenever any target value differs from the lead source; confirming calls `runConversion({ skipChangeCheck: true })` to bypass closure-stale state.
+- Gate 3: `findChangedFromLead` opens an AlertDialog whenever any target value differs from the lead source; each row can be restored to the lead value, and confirming calls `runConversion({ skipChangeCheck: true })` to bypass closure-stale state.
 - Before writing, the dialog refetches the latest lead conversion fields. If another session completed the lead, it opens the existing result; if the lead is already `in_progress` with no created target records, it aborts with a concurrent-session message.
 - Before creating organization, contact, or deal, each step checks for an existing target record with `source_lead = lead.id` and reuses it when found. This keeps client-side retries and double-click/race scenarios idempotent without backend locks.
 - Each step writes outputs (`converted_*`) back to the lead immediately so any failure leaves a resumable partial state.

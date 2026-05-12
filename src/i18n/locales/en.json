@@ -477,6 +477,7 @@
         "reuseOption": "Use existing {{entity}}",
         "reuseHelp": "No new record is created — the existing one will be linked",
         "pickOne": "Which one to use?",
+        "candidateCount": "{{count}} options",
         "exactMatchBadge": "Exact match",
         "noteCompany": "The existing company will be linked at convert time. No new record will be created — go to the company page to edit its details.",
         "noteContact": "The existing contact will be linked at convert time. No new record will be created — go to the contact page to edit its details."
@@ -494,6 +495,7 @@
         "description": "You have changed the lead values in the following fields. When converted, your entered values will be written to the target record instead of the existing lead information.",
         "sourceLabel": "In lead",
         "targetLabel": "Will be written",
+        "restoreButton": "Restore",
         "cancelButton": "Go back and edit",
         "confirmButton": "Continue with these values"
       },
@@ -547,6 +549,7 @@
       },
       "addField": "Add {{target}} field",
       "noFieldsAvailable": "No fields available to add.",
+      "restoreFromSource": "Restore from lead",
       "dealDefaultName": "New deal"
     }
   },

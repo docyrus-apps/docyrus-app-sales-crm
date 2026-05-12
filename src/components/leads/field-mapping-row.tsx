@@ -1,4 +1,4 @@
-import { ArrowRight, X } from 'lucide-react'
+import { ArrowRight, RotateCcw, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -39,6 +39,7 @@ export interface FieldMappingRowProps {
   placeholder?: string
   disabled?: boolean
   onChange: (next: string) => void
+  onRestoreSource?: () => void
   onRemove?: () => void
   highlight?: boolean
   required?: boolean
@@ -56,6 +57,7 @@ export function FieldMappingRow({
   placeholder,
   disabled,
   onChange,
+  onRestoreSource,
   onRemove,
   highlight,
   required,
@@ -63,6 +65,9 @@ export function FieldMappingRow({
 }: FieldMappingRowProps) {
   const { t } = useTranslation()
   const sourceDisplay = sourceValue?.trim() ? sourceValue : '—'
+  const canRestoreSource = Boolean(
+    sourceValue?.trim() && onRestoreSource && !disabled,
+  )
 
   return (
     <div
@@ -97,10 +102,25 @@ export function FieldMappingRow({
         ) : null}
       </div>
       <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1.4fr)] items-center gap-2">
-        <div className="flex h-9 min-w-0 items-center rounded-md border border-dashed border-muted-foreground/30 bg-muted/30 px-2.5 text-xs text-muted-foreground">
+        <div className="flex h-9 min-w-0 items-center gap-1 rounded-md border border-dashed border-muted-foreground/30 bg-muted/30 px-2.5 text-xs text-muted-foreground">
           <span className="truncate" title={sourceDisplay}>
             {sourceDisplay}
           </span>
+          {canRestoreSource ? (
+            <button
+              type="button"
+              onClick={onRestoreSource}
+              className="ml-auto rounded p-0.5 text-muted-foreground opacity-0 transition hover:bg-background hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
+              aria-label={t('leads.convert.restoreFromSource', {
+                defaultValue: 'Restore from lead',
+              })}
+              title={t('leads.convert.restoreFromSource', {
+                defaultValue: 'Restore from lead',
+              })}
+            >
+              <RotateCcw className="size-3" />
+            </button>
+          ) : null}
         </div>
         <ArrowRight className="size-3.5 text-muted-foreground" aria-hidden />
         <div className="min-w-0">
