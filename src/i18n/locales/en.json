@@ -417,7 +417,9 @@
         "dealNameRequired": "Deal name is required",
         "companyNameRequired": "Company name is required",
         "contactNameRequired": "Contact name is required",
-        "missingField": "The \"{{label}}\" field is empty — it must be filled before conversion"
+        "missingField": "The \"{{label}}\" field is empty — it must be filled before conversion",
+        "enumOptionMissing": "{{field}} option \"{{value}}\" is missing. Check the enum setup before converting.",
+        "alreadyInProgress": "This lead is already being converted in another session. Refresh the lead before trying again."
       },
       "check": {
         "dealName": "Deal name: {{value}}",
@@ -433,6 +435,7 @@
         "noDealConflict": "No deal conflict for this lead"
       },
       "result": {
+        "alreadyCompleted": "This lead was already converted. Opening the existing result.",
         "reusedOrganization": "Existing company used: {{name}}",
         "newOrganization": "New company created: {{name}}",
         "reusedContact": "Existing contact used: {{name}}",
@@ -444,6 +447,7 @@
         "customerTypeMapped": "Customer type mapped",
         "estimatedValue": "Estimated value: {{value}}",
         "linkedWorkMoved": "Linked tasks/events moved to new records",
+        "linkedWorkWarning": "Some linked tasks/events could not be moved. Review related activity manually.",
         "noLinkedWork": "No tasks or events to move",
         "leadStatusConverted": "Status: Converted",
         "completedAt": "Completed: {{date}}",
@@ -519,7 +523,9 @@
         "description": "Description / Notes",
         "stage": "Stage",
         "leadSource": "Lead source",
-        "customerType": "Customer type"
+        "customerType": "Customer type",
+        "conversionState": "Conversion state",
+        "conversionMode": "Conversion mode"
       },
       "placeholder": {
         "selectIndustry": "Select industry...",

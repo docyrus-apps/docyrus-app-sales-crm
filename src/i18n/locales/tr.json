@@ -408,7 +408,9 @@
         "dealNameRequired": "Fırsat adı gerekli",
         "companyNameRequired": "Şirket adı gerekli",
         "contactNameRequired": "Kişi adı gerekli",
-        "missingField": "\"{{label}}\" alanı boş — dönüşüm öncesi doldurmalısınız"
+        "missingField": "\"{{label}}\" alanı boş — dönüşüm öncesi doldurmalısınız",
+        "enumOptionMissing": "{{field}} için \"{{value}}\" seçeneği bulunamadı. Dönüştürmeden önce enum ayarını kontrol edin.",
+        "alreadyInProgress": "Bu lead başka bir oturumda dönüştürülüyor. Tekrar denemeden önce lead'i yenileyin."
       },
       "check": {
         "dealName": "Fırsat adı: {{value}}",
@@ -424,6 +426,7 @@
         "noDealConflict": "Bu lead için fırsat çakışması yok"
       },
       "result": {
+        "alreadyCompleted": "Bu lead zaten dönüştürülmüş. Mevcut sonuç açılıyor.",
         "reusedOrganization": "Mevcut şirket kullanıldı: {{name}}",
         "newOrganization": "Yeni şirket oluşturuldu: {{name}}",
         "reusedContact": "Mevcut kişi kullanıldı: {{name}}",
@@ -435,6 +438,7 @@
         "customerTypeMapped": "Müşteri tipi eşlendi",
         "estimatedValue": "Tahmini değer: {{value}}",
         "linkedWorkMoved": "Bağlı görev/etkinlikler yeni kayıtlara taşındı",
+        "linkedWorkWarning": "Bazı bağlı görev/etkinlikler taşınamadı. İlgili aktiviteleri manuel kontrol edin.",
         "noLinkedWork": "Taşınacak görev veya etkinlik bulunamadı",
         "leadStatusConverted": "Statü: Converted",
         "completedAt": "Tamamlandı: {{date}}",
@@ -510,7 +514,9 @@
         "description": "Açıklama / Not",
         "stage": "Aşama",
         "leadSource": "Lead kaynağı",
-        "customerType": "Müşteri tipi"
+        "customerType": "Müşteri tipi",
+        "conversionState": "Dönüşüm durumu",
+        "conversionMode": "Dönüşüm modu"
       },
       "placeholder": {
         "selectIndustry": "Sektör seçin...",

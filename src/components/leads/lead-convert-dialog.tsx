@@ -73,15 +73,15 @@ import {
 import { cn } from '@/lib/utils'
 
 type ConversionMode = 'company_contact_deal' | 'contact_deal' | 'deal_only'
-type StepState =
-  | 'pending'
-  | 'running'
-  | 'done'
-  | 'warn'
-  | 'failed'
-  | 'skipped'
+type StepState = 'pending' | 'running' | 'done' | 'warn' | 'failed' | 'skipped'
 type DetailTone = 'success' | 'info' | 'warn' | 'error' | 'neutral'
 type StepDetail = { tone: DetailTone; label: string }
+type LinkedWorkMigrationResult = {
+  attemptedCount: number
+  updatedCount: number
+  failedCount: number
+  warningCount: number
+}
 type PrecheckTargetSummary = {
   status: 'unchecked' | 'clean' | 'matches' | 'exact'
   count: number
@@ -197,13 +197,6 @@ function getErrorMessage(error: unknown, t: (key: string) => string) {
   return t('leads.convert.alert.errorTitle')
 }
 
-function getOptionValue(
-  options: Array<{ id: string; name: string }>,
-  fallback: string,
-): string {
-  return optionByName(options, fallback) ?? fallback
-}
-
 function getFieldSlugs(dataSource?: DataSourceMeta | null) {
   return new Set(
     (dataSource?.fields ?? []).map((field) => field.slug).filter(Boolean),
@@ -228,6 +221,10 @@ function unwrapItems(response: unknown): Array<EntityCandidate> {
   }
 
   return []
+}
+
+function firstItem(response: unknown): EntityCandidate | undefined {
+  return unwrapItems(response)[0]
 }
 
 function renderDetailIcon(tone: DetailTone) {
@@ -510,10 +507,6 @@ export function LeadConvertDialog({
     () => optionByName(stageOptions, 'New'),
     [stageOptions],
   )
-  const convertedLeadStatusId = useMemo(
-    () => optionByName(leadStatusOptions, 'Converted'),
-    [leadStatusOptions],
-  )
   const mappedDealLeadSourceId = useMemo(
     () =>
       optionByName(dealLeadSourceOptions, getRelationName(lead?.lead_source)),
@@ -528,10 +521,40 @@ export function LeadConvertDialog({
     [customerTypeOptions, lead?.lead_type],
   )
 
+  const requireEnumValue = (
+    options: Array<{ id: string; name: string }>,
+    name: string,
+    label: string,
+  ) => {
+    const id = optionByName(options, name)
+    if (!id) {
+      throw new Error(
+        t('leads.convert.validation.enumOptionMissing', {
+          field: label,
+          value: name,
+        }),
+      )
+    }
+
+    return id
+  }
+
   const conversionStateValue = (state: string) =>
-    getOptionValue(conversionStateOptions, state)
+    requireEnumValue(
+      conversionStateOptions,
+      state,
+      t('leads.convert.field.conversionState', {
+        defaultValue: 'Conversion state',
+      }),
+    )
   const conversionModeValue = (selectedMode: ConversionMode) =>
-    getOptionValue(conversionModeOptions, selectedMode)
+    requireEnumValue(
+      conversionModeOptions,
+      selectedMode,
+      t('leads.convert.field.conversionMode', {
+        defaultValue: 'Conversion mode',
+      }),
+    )
 
   useEffect(() => {
     if (mode === 'deal_only') {
@@ -585,8 +608,7 @@ export function LeadConvertDialog({
   const progress =
     (Object.values(steps).filter((state) =>
       ['done', 'warn', 'skipped'].includes(state),
-    )
-      .length /
+    ).length /
       Object.keys(steps).length) *
     100
 
@@ -658,16 +680,24 @@ export function LeadConvertDialog({
     contactId?: string
     dealId?: string
   }) => {
-    if (!client || !lead?.id) return false
+    const result: LinkedWorkMigrationResult = {
+      attemptedCount: 0,
+      updatedCount: 0,
+      failedCount: 0,
+      warningCount: 0,
+    }
+    if (!client || !lead?.id) return result
 
     const dataSources = createDataSourceClient(client)
     const [taskDataSource, eventDataSource] = await Promise.all([
-      dataSources
-        .getBySlug('base', 'task', { expand: 'fields' })
-        .catch(() => null),
-      dataSources
-        .getBySlug('base', 'event', { expand: 'fields' })
-        .catch(() => null),
+      dataSources.getBySlug('base', 'task', { expand: 'fields' }).catch(() => {
+        result.warningCount += 1
+        return null
+      }),
+      dataSources.getBySlug('base', 'event', { expand: 'fields' }).catch(() => {
+        result.warningCount += 1
+        return null
+      }),
     ])
 
     const updates: Array<Promise<unknown>> = []
@@ -675,16 +705,18 @@ export function LeadConvertDialog({
     const eventFields = getFieldSlugs(eventDataSource)
 
     if (hasAllFields(taskFields, ['lead'])) {
-      const response = await client.get(
-        '/v1/apps/base/data-sources/task/items',
-        {
+      const response = await client
+        .get('/v1/apps/base/data-sources/task/items', {
           columns: 'id',
           filters: {
             rules: [{ field: 'lead', operator: '=', value: lead.id }],
           },
           limit: 200,
-        },
-      )
+        })
+        .catch(() => {
+          result.warningCount += 1
+          return []
+        })
       const taskPatch = pickDefined({
         organization: taskFields.has('organization')
           ? organizationId
@@ -696,27 +728,39 @@ export function LeadConvertDialog({
       if (Object.keys(taskPatch).length > 0) {
         for (const item of unwrapItems(response)) {
           if (!item.id) continue
+          result.attemptedCount += 1
           updates.push(
-            client.patch(
-              `/v1/apps/base/data-sources/task/items/${item.id}`,
-              taskPatch,
-            ),
+            client
+              .patch(
+                `/v1/apps/base/data-sources/task/items/${item.id}`,
+                taskPatch,
+              )
+              .then(
+                () => {
+                  result.updatedCount += 1
+                },
+                () => {
+                  result.failedCount += 1
+                },
+              ),
           )
         }
       }
     }
 
     if (hasAllFields(eventFields, ['lead'])) {
-      const response = await client.get(
-        '/v1/apps/base/data-sources/event/items',
-        {
+      const response = await client
+        .get('/v1/apps/base/data-sources/event/items', {
           columns: 'id',
           filters: {
             rules: [{ field: 'lead', operator: '=', value: lead.id }],
           },
           limit: 200,
-        },
-      )
+        })
+        .catch(() => {
+          result.warningCount += 1
+          return []
+        })
       const eventPatch = pickDefined({
         organization: eventFields.has('organization')
           ? organizationId
@@ -728,20 +772,30 @@ export function LeadConvertDialog({
       if (Object.keys(eventPatch).length > 0) {
         for (const item of unwrapItems(response)) {
           if (!item.id) continue
+          result.attemptedCount += 1
           updates.push(
-            client.patch(
-              `/v1/apps/base/data-sources/event/items/${item.id}`,
-              eventPatch,
-            ),
+            client
+              .patch(
+                `/v1/apps/base/data-sources/event/items/${item.id}`,
+                eventPatch,
+              )
+              .then(
+                () => {
+                  result.updatedCount += 1
+                },
+                () => {
+                  result.failedCount += 1
+                },
+              ),
           )
         }
       }
     }
 
-    if (updates.length === 0) return false
+    if (updates.length === 0) return result
 
     await Promise.all(updates)
-    return true
+    return result
   }
 
   const findDuplicates = async () => {
@@ -1004,7 +1058,7 @@ export function LeadConvertDialog({
       return { tab, fieldKey: `${tab}:${slug}`, label }
     }
 
-    if (mode === 'company_contact_deal') {
+    if (mode === 'company_contact_deal' && selectedCompanyId === null) {
       const companyChecks: Array<MissingField | null> = [
         checkRow(
           'company',
@@ -1012,43 +1066,19 @@ export function LeadConvertDialog({
           t('leads.convert.field.companyName'),
           form.companyName,
         ),
-        checkRow(
-          'company',
-          'email',
-          t('leads.convert.field.companyEmail'),
-          form.companyEmail,
-        ),
-        checkRow(
-          'company',
-          'phone',
-          t('leads.convert.field.companyPhone'),
-          form.companyPhone,
-        ),
-        checkRow(
-          'company',
-          'website',
-          t('leads.convert.field.website'),
-          form.companyWebsite,
-        ),
-        checkRow(
-          'company',
-          'address',
-          t('leads.convert.field.address'),
-          form.companyAddress,
-        ),
-        checkRow(
-          'company',
-          'city',
-          t('leads.convert.field.city'),
-          form.companyCity,
-        ),
-        checkRow(
-          'company',
-          'industry',
-          t('leads.convert.field.industry'),
-          effectiveCompanyIndustryId,
-        ),
-        ...(companySizeSelectOptions.length > 0
+        ...(leadCompanyIndustryName && !effectiveCompanyIndustryId
+          ? [
+              checkRow(
+                'company',
+                'industry',
+                t('leads.convert.field.industry'),
+                effectiveCompanyIndustryId,
+              ),
+            ]
+          : []),
+        ...(leadCompanySizeName &&
+        companySizeSelectOptions.length > 0 &&
+        !effectiveCompanySizeId
           ? [
               checkRow(
                 'company',
@@ -1058,9 +1088,6 @@ export function LeadConvertDialog({
               ),
             ]
           : []),
-        ...extraFields.company.map((f) =>
-          checkRow('company', f.slug, f.label, f.value),
-        ),
       ]
       const firstCompany = companyChecks.find(
         (c): c is MissingField => c !== null,
@@ -1068,34 +1095,13 @@ export function LeadConvertDialog({
       if (firstCompany) return firstCompany
     }
 
-    if (mode !== 'deal_only') {
+    if (mode !== 'deal_only' && selectedContactId === null) {
       const contactChecks: Array<MissingField | null> = [
         checkRow(
           'contact',
           'name',
           t('leads.convert.field.contactName'),
           form.contactName,
-        ),
-        checkRow(
-          'contact',
-          'job_title',
-          t('leads.convert.field.jobTitle'),
-          form.contactJobTitle,
-        ),
-        checkRow(
-          'contact',
-          'email',
-          t('leads.convert.field.email'),
-          form.contactEmail,
-        ),
-        checkRow(
-          'contact',
-          'mobile',
-          t('leads.convert.field.phone'),
-          form.contactPhone,
-        ),
-        ...extraFields.contact.map((f) =>
-          checkRow('contact', f.slug, f.label, f.value),
         ),
       ]
       const firstContact = contactChecks.find(
@@ -1113,37 +1119,30 @@ export function LeadConvertDialog({
       ),
       checkRow(
         'deal',
-        'deal_value',
-        t('leads.convert.field.estimatedValue'),
-        form.dealValue,
-      ),
-      checkRow(
-        'deal',
-        'description',
-        t('leads.convert.field.description'),
-        form.notes,
-      ),
-      checkRow(
-        'deal',
         'stage',
         t('leads.convert.field.stage'),
         effectiveStageId,
       ),
-      checkRow(
-        'deal',
-        'lead_source',
-        t('leads.convert.field.leadSource'),
-        effectiveLeadSourceId,
-      ),
-      checkRow(
-        'deal',
-        'customer_type',
-        t('leads.convert.field.customerType'),
-        effectiveCustomerTypeId,
-      ),
-      ...extraFields.deal.map((f) =>
-        checkRow('deal', f.slug, f.label, f.value),
-      ),
+      ...(leadSourceName && !effectiveLeadSourceId
+        ? [
+            checkRow(
+              'deal',
+              'lead_source',
+              t('leads.convert.field.leadSource'),
+              effectiveLeadSourceId,
+            ),
+          ]
+        : []),
+      ...(leadTypeName && !effectiveCustomerTypeId
+        ? [
+            checkRow(
+              'deal',
+              'customer_type',
+              t('leads.convert.field.customerType'),
+              effectiveCustomerTypeId,
+            ),
+          ]
+        : []),
     ]
     const firstDeal = dealChecks.find((c): c is MissingField => c !== null)
     if (firstDeal) return firstDeal
@@ -1176,7 +1175,7 @@ export function LeadConvertDialog({
       }
     }
 
-    if (mode === 'company_contact_deal') {
+    if (mode === 'company_contact_deal' && selectedCompanyId === null) {
       push(
         'company',
         t('leads.convert.field.companyName'),
@@ -1228,7 +1227,7 @@ export function LeadConvertDialog({
         )
       }
     }
-    if (mode !== 'deal_only') {
+    if (mode !== 'deal_only' && selectedContactId === null) {
       push(
         'contact',
         t('leads.convert.field.contactName'),
@@ -1279,6 +1278,43 @@ export function LeadConvertDialog({
       lookupOptionLabel(customerTypeSelectOptions, effectiveCustomerTypeId),
     )
     return changes
+  }
+
+  const fetchLatestLeadConversion = async () => {
+    if (!client || !lead?.id) return null
+
+    return client
+      .get(`/v1/apps/base_crm/data-sources/leads/items/${lead.id}`, {
+        columns: [
+          'id',
+          'converted_organization(id,name)',
+          'converted_contact(id,name)',
+          'converted_deal(id,name)',
+          'conversion_state',
+          'conversion_mode',
+          'conversion_error_message',
+        ],
+      })
+      .catch(() => null)
+  }
+
+  const findExistingRecordFromLead = async (
+    endpoint: string,
+    columns: string,
+  ) => {
+    if (!client || !lead?.id) return undefined
+
+    const response = await client
+      .get(endpoint, {
+        columns,
+        filters: {
+          rules: [{ field: 'source_lead', operator: '=', value: lead.id }],
+        },
+        limit: 1,
+      })
+      .catch(() => [])
+
+    return firstItem(response)
   }
 
   const runConversion = async (options?: { skipChangeCheck?: boolean }) => {
@@ -1332,10 +1368,55 @@ export function LeadConvertDialog({
     }
 
     try {
+      const latestLead = await fetchLatestLeadConversion()
+      const latestDealId = getRelationId(latestLead?.converted_deal)
+      const latestStateName = normalizeConversionKey(
+        getRelationName(latestLead?.conversion_state),
+      )
+
+      if (latestLead && isLeadConvertedRecord(latestLead)) {
+        setStep('lead', 'done')
+        setStepDetail('lead', [
+          detail('info', t('leads.convert.result.alreadyCompleted')),
+        ])
+        toast.info(t('leads.convert.result.alreadyCompleted'))
+        onOpenChange(false)
+        if (latestDealId) {
+          void navigate({
+            to: '/deals/$dealId',
+            params: { dealId: latestDealId },
+          })
+        }
+        return
+      }
+
+      const latestHasAnyCreated = Boolean(
+        getRelationId(latestLead?.converted_organization) ||
+        getRelationId(latestLead?.converted_contact) ||
+        latestDealId,
+      )
+
+      if (
+        latestStateName === normalizeConversionKey('in_progress') &&
+        !latestHasAnyCreated
+      ) {
+        throw new Error(t('leads.convert.validation.alreadyInProgress'))
+      }
+
+      organizationId =
+        getRelationId(latestLead?.converted_organization) ?? organizationId
+      contactId = getRelationId(latestLead?.converted_contact) ?? contactId
+      dealId = latestDealId ?? dealId
+
       runStep('precheck', 'running')
       const me = await client
         .get<CurrentUserResponse>('/v1/users/me')
         .catch(() => null)
+      const convertedLeadStatusValue = requireEnumValue(
+        leadStatusOptions,
+        'Converted',
+        t('leads.status', { defaultValue: 'Lead status' }),
+      )
       await updateLead({
         conversion_state: conversionStateValue('in_progress'),
         conversion_mode: conversionModeValue(mode),
@@ -1353,6 +1434,13 @@ export function LeadConvertDialog({
 
       if (mode === 'company_contact_deal') {
         runStep('organization', 'running')
+        if (!organizationId) {
+          const existingOrganization = await findExistingRecordFromLead(
+            '/v1/apps/base/data-sources/organization/items',
+            'id,name',
+          )
+          organizationId = existingOrganization?.id
+        }
         const isReusedOrg = Boolean(organizationId)
         if (!organizationId) {
           const orgExtras = Object.fromEntries(
@@ -1404,6 +1492,13 @@ export function LeadConvertDialog({
 
       if (mode !== 'deal_only') {
         runStep('contact', 'running')
+        if (!contactId) {
+          const existingContact = await findExistingRecordFromLead(
+            '/v1/apps/base/data-sources/contact/items',
+            'id,name',
+          )
+          contactId = existingContact?.id
+        }
         const isReusedContact = Boolean(contactId)
         if (!contactId) {
           const contactExtras = Object.fromEntries(
@@ -1448,6 +1543,13 @@ export function LeadConvertDialog({
       }
 
       runStep('deal', 'running')
+      if (!dealId) {
+        const existingDeal = await findExistingRecordFromLead(
+          '/v1/apps/base_crm/data-sources/deal/items',
+          'id,name,stage(id,name),organization(id,name),source_lead(id,name)',
+        )
+        dealId = existingDeal?.id
+      }
       const isReusedDeal = Boolean(dealId)
       if (!dealId) {
         const dealExtras = Object.fromEntries(
@@ -1503,22 +1605,46 @@ export function LeadConvertDialog({
       setStep('deal', 'done')
 
       runStep('activity', 'running')
-      const linkedWorkUpdated = await migrateLinkedWork({
+      const linkedWorkMigration = await migrateLinkedWork({
         organizationId,
         contactId,
         dealId,
       })
-      setStepDetail(
+      const linkedWorkHasWarning =
+        linkedWorkMigration.failedCount > 0 ||
+        linkedWorkMigration.warningCount > 0
+      const linkedWorkDetails: Array<StepDetail> = []
+      if (linkedWorkMigration.updatedCount > 0) {
+        linkedWorkDetails.push(
+          detail('success', t('leads.convert.result.linkedWorkMoved')),
+        )
+      }
+      if (linkedWorkHasWarning) {
+        const warning = t('leads.convert.result.linkedWorkWarning', {
+          count:
+            linkedWorkMigration.failedCount + linkedWorkMigration.warningCount,
+        })
+        linkedWorkDetails.push(detail('warn', warning))
+        toast.warning(warning)
+      }
+      if (linkedWorkDetails.length === 0) {
+        linkedWorkDetails.push(
+          detail('neutral', t('leads.convert.result.noLinkedWork')),
+        )
+      }
+      setStepDetail('activity', linkedWorkDetails)
+      setStep(
         'activity',
-        linkedWorkUpdated
-          ? [detail('success', t('leads.convert.result.linkedWorkMoved'))]
-          : [detail('neutral', t('leads.convert.result.noLinkedWork'))],
+        linkedWorkHasWarning
+          ? 'warn'
+          : linkedWorkMigration.updatedCount > 0
+            ? 'done'
+            : 'skipped',
       )
-      setStep('activity', linkedWorkUpdated ? 'done' : 'skipped')
 
       runStep('lead', 'running')
       await updateLead({
-        lead_status: convertedLeadStatusId,
+        lead_status: convertedLeadStatusValue,
         converted_deal: dealId,
         converted_contact: contactId,
         converted_organization: organizationId,
@@ -1916,10 +2042,7 @@ export function LeadConvertDialog({
                       {candidate.name}
                     </span>
                     {exactId === candidate.id ? (
-                      <Badge
-                        variant="secondary"
-                        className="h-4 text-[10px]"
-                      >
+                      <Badge variant="secondary" className="h-4 text-[10px]">
                         {t('leads.convert.reuse.exactMatchBadge', {
                           defaultValue: 'Exact match',
                         })}
@@ -2101,147 +2224,147 @@ export function LeadConvertDialog({
               </div>
             ) : (
               <>
-            <div className="flex items-center justify-end">
-              {renderAddFieldPopover('company')}
-            </div>
-            <FieldMappingRow
-              fieldKey="company:name"
-              label={t('leads.convert.field.companyName')}
-              sourceLabel={t('leads.convert.sourceLabel.lead', {
-                field: 'company_name_text',
-              })}
-              targetLabel={t('leads.convert.targetLabel.organization', {
-                field: 'name',
-              })}
-              sourceValue={lead?.company_name_text ?? ''}
-              value={form.companyName}
-              onChange={(v) => updateForm('companyName', v)}
-              disabled={formDisabled}
-              highlight
-              required
-            />
-            <FieldMappingRow
-              label={t('leads.convert.field.companyEmail')}
-              sourceLabel={t('leads.convert.sourceLabel.lead', {
-                field: 'company_email',
-              })}
-              targetLabel={t('leads.convert.targetLabel.organization', {
-                field: 'email',
-              })}
-              sourceValue={lead?.company_email ?? ''}
-              value={form.companyEmail}
-              kind="email"
-              onChange={(v) => updateForm('companyEmail', v)}
-              disabled={formDisabled}
-            />
-            <FieldMappingRow
-              label={t('leads.convert.field.companyPhone')}
-              sourceLabel={t('leads.convert.sourceLabel.lead', {
-                field: 'company_phone',
-              })}
-              targetLabel={t('leads.convert.targetLabel.organization', {
-                field: 'phone',
-              })}
-              sourceValue={lead?.company_phone ?? ''}
-              value={form.companyPhone}
-              kind="phone"
-              onChange={(v) => updateForm('companyPhone', v)}
-              disabled={formDisabled}
-            />
-            <FieldMappingRow
-              label={t('leads.convert.field.website')}
-              sourceLabel={t('leads.convert.sourceLabel.lead', {
-                field: 'website',
-              })}
-              targetLabel={t('leads.convert.targetLabel.organization', {
-                field: 'website',
-              })}
-              sourceValue={lead?.website ?? ''}
-              value={form.companyWebsite}
-              kind="url"
-              onChange={(v) => updateForm('companyWebsite', v)}
-              disabled={formDisabled}
-            />
-            <FieldMappingRow
-              label={t('leads.convert.field.address')}
-              sourceLabel={t('leads.convert.sourceLabel.lead', {
-                field: 'address',
-              })}
-              targetLabel={t('leads.convert.targetLabel.organization', {
-                field: 'address',
-              })}
-              sourceValue={lead?.address ?? ''}
-              value={form.companyAddress}
-              kind="textarea"
-              onChange={(v) => updateForm('companyAddress', v)}
-              disabled={formDisabled}
-            />
-            <FieldMappingRow
-              label={t('leads.convert.field.city')}
-              sourceLabel={t('leads.convert.sourceLabel.lead', {
-                field: 'city',
-              })}
-              targetLabel={t('leads.convert.targetLabel.organization', {
-                field: 'city',
-              })}
-              sourceValue={lead?.city ?? ''}
-              value={form.companyCity}
-              onChange={(v) => updateForm('companyCity', v)}
-              disabled={formDisabled}
-            />
-            <FieldMappingRow
-              fieldKey="company:industry"
-              label={t('leads.convert.field.industry')}
-              sourceLabel={t('leads.convert.sourceLabel.lead', {
-                field: 'company_industry',
-              })}
-              targetLabel={t('leads.convert.targetLabel.organization', {
-                field: 'industry',
-              })}
-              sourceValue={leadCompanyIndustryName}
-              value={effectiveCompanyIndustryId}
-              kind="select"
-              options={industrySelectOptions}
-              placeholder={t('leads.convert.placeholder.selectIndustry')}
-              onChange={(v) => updateForm('companyIndustry', v)}
-              disabled={formDisabled}
-            />
-            {companySizeSelectOptions.length > 0 ? (
-              <FieldMappingRow
-                fieldKey="company:company_size"
-                label={t('leads.convert.field.companySize')}
-                sourceLabel={t('leads.convert.sourceLabel.lead', {
-                  field: 'company_size',
-                })}
-                targetLabel={t('leads.convert.targetLabel.organization', {
-                  field: 'company_size',
-                })}
-                sourceValue={leadCompanySizeName}
-                value={effectiveCompanySizeId}
-                kind="select"
-                options={companySizeSelectOptions}
-                placeholder={t('leads.convert.placeholder.selectSize')}
-                onChange={(v) => updateForm('companySize', v)}
-                disabled={formDisabled}
-              />
-            ) : null}
-            {extraFields.company.map((extra) => (
-              <FieldMappingRow
-                key={extra.slug}
-                fieldKey={`company:${extra.slug}`}
-                label={extra.label}
-                sourceLabel={t('leads.convert.sourceLabel.dialogOnly')}
-                targetLabel={t('leads.convert.targetLabel.organization', {
-                  field: extra.slug,
-                })}
-                sourceValue=""
-                value={extra.value}
-                kind={extra.kind}
-                onChange={(v) => setExtraValue('company', extra.slug, v)}
-                onRemove={() => removeExtraField('company', extra.slug)}
-                disabled={formDisabled}
-              />
-            ))}
+                <div className="flex items-center justify-end">
+                  {renderAddFieldPopover('company')}
+                </div>
+                <FieldMappingRow
+                  fieldKey="company:name"
+                  label={t('leads.convert.field.companyName')}
+                  sourceLabel={t('leads.convert.sourceLabel.lead', {
+                    field: 'company_name_text',
+                  })}
+                  targetLabel={t('leads.convert.targetLabel.organization', {
+                    field: 'name',
+                  })}
+                  sourceValue={lead?.company_name_text ?? ''}
+                  value={form.companyName}
+                  onChange={(v) => updateForm('companyName', v)}
+                  disabled={formDisabled}
+                  highlight
+                  required
+                />
+                <FieldMappingRow
+                  label={t('leads.convert.field.companyEmail')}
+                  sourceLabel={t('leads.convert.sourceLabel.lead', {
+                    field: 'company_email',
+                  })}
+                  targetLabel={t('leads.convert.targetLabel.organization', {
+                    field: 'email',
+                  })}
+                  sourceValue={lead?.company_email ?? ''}
+                  value={form.companyEmail}
+                  kind="email"
+                  onChange={(v) => updateForm('companyEmail', v)}
+                  disabled={formDisabled}
+                />
+                <FieldMappingRow
+                  label={t('leads.convert.field.companyPhone')}
+                  sourceLabel={t('leads.convert.sourceLabel.lead', {
+                    field: 'company_phone',
+                  })}
+                  targetLabel={t('leads.convert.targetLabel.organization', {
+                    field: 'phone',
+                  })}
+                  sourceValue={lead?.company_phone ?? ''}
+                  value={form.companyPhone}
+                  kind="phone"
+                  onChange={(v) => updateForm('companyPhone', v)}
+                  disabled={formDisabled}
+                />
+                <FieldMappingRow
+                  label={t('leads.convert.field.website')}
+                  sourceLabel={t('leads.convert.sourceLabel.lead', {
+                    field: 'website',
+                  })}
+                  targetLabel={t('leads.convert.targetLabel.organization', {
+                    field: 'website',
+                  })}
+                  sourceValue={lead?.website ?? ''}
+                  value={form.companyWebsite}
+                  kind="url"
+                  onChange={(v) => updateForm('companyWebsite', v)}
+                  disabled={formDisabled}
+                />
+                <FieldMappingRow
+                  label={t('leads.convert.field.address')}
+                  sourceLabel={t('leads.convert.sourceLabel.lead', {
+                    field: 'address',
+                  })}
+                  targetLabel={t('leads.convert.targetLabel.organization', {
+                    field: 'address',
+                  })}
+                  sourceValue={lead?.address ?? ''}
+                  value={form.companyAddress}
+                  kind="textarea"
+                  onChange={(v) => updateForm('companyAddress', v)}
+                  disabled={formDisabled}
+                />
+                <FieldMappingRow
+                  label={t('leads.convert.field.city')}
+                  sourceLabel={t('leads.convert.sourceLabel.lead', {
+                    field: 'city',
+                  })}
+                  targetLabel={t('leads.convert.targetLabel.organization', {
+                    field: 'city',
+                  })}
+                  sourceValue={lead?.city ?? ''}
+                  value={form.companyCity}
+                  onChange={(v) => updateForm('companyCity', v)}
+                  disabled={formDisabled}
+                />
+                <FieldMappingRow
+                  fieldKey="company:industry"
+                  label={t('leads.convert.field.industry')}
+                  sourceLabel={t('leads.convert.sourceLabel.lead', {
+                    field: 'company_industry',
+                  })}
+                  targetLabel={t('leads.convert.targetLabel.organization', {
+                    field: 'industry',
+                  })}
+                  sourceValue={leadCompanyIndustryName}
+                  value={effectiveCompanyIndustryId}
+                  kind="select"
+                  options={industrySelectOptions}
+                  placeholder={t('leads.convert.placeholder.selectIndustry')}
+                  onChange={(v) => updateForm('companyIndustry', v)}
+                  disabled={formDisabled}
+                />
+                {companySizeSelectOptions.length > 0 ? (
+                  <FieldMappingRow
+                    fieldKey="company:company_size"
+                    label={t('leads.convert.field.companySize')}
+                    sourceLabel={t('leads.convert.sourceLabel.lead', {
+                      field: 'company_size',
+                    })}
+                    targetLabel={t('leads.convert.targetLabel.organization', {
+                      field: 'company_size',
+                    })}
+                    sourceValue={leadCompanySizeName}
+                    value={effectiveCompanySizeId}
+                    kind="select"
+                    options={companySizeSelectOptions}
+                    placeholder={t('leads.convert.placeholder.selectSize')}
+                    onChange={(v) => updateForm('companySize', v)}
+                    disabled={formDisabled}
+                  />
+                ) : null}
+                {extraFields.company.map((extra) => (
+                  <FieldMappingRow
+                    key={extra.slug}
+                    fieldKey={`company:${extra.slug}`}
+                    label={extra.label}
+                    sourceLabel={t('leads.convert.sourceLabel.dialogOnly')}
+                    targetLabel={t('leads.convert.targetLabel.organization', {
+                      field: extra.slug,
+                    })}
+                    sourceValue=""
+                    value={extra.value}
+                    kind={extra.kind}
+                    onChange={(v) => setExtraValue('company', extra.slug, v)}
+                    onRemove={() => removeExtraField('company', extra.slug)}
+                    disabled={formDisabled}
+                  />
+                ))}
               </>
             )}
           </TabsContent>
@@ -2259,83 +2382,83 @@ export function LeadConvertDialog({
               </div>
             ) : (
               <>
-            <div className="flex items-center justify-end">
-              {renderAddFieldPopover('contact')}
-            </div>
-            <FieldMappingRow
-              fieldKey="contact:name"
-              label={t('leads.convert.field.contactName')}
-              sourceLabel={t('leads.convert.sourceLabel.lead', {
-                field: 'name',
-              })}
-              targetLabel={t('leads.convert.targetLabel.contact', {
-                field: 'name',
-              })}
-              sourceValue={lead?.name ?? ''}
-              value={form.contactName}
-              onChange={(v) => updateForm('contactName', v)}
-              disabled={formDisabled}
-              highlight
-              required
-            />
-            <FieldMappingRow
-              label={t('leads.convert.field.jobTitle')}
-              sourceLabel={t('leads.convert.sourceLabel.lead', {
-                field: 'contact_job_title',
-              })}
-              targetLabel={t('leads.convert.targetLabel.contact', {
-                field: 'job_title',
-              })}
-              sourceValue={lead?.contact_job_title ?? ''}
-              value={form.contactJobTitle}
-              onChange={(v) => updateForm('contactJobTitle', v)}
-              disabled={formDisabled}
-            />
-            <FieldMappingRow
-              label={t('leads.convert.field.email')}
-              sourceLabel={t('leads.convert.sourceLabel.lead', {
-                field: 'email',
-              })}
-              targetLabel={t('leads.convert.targetLabel.contact', {
-                field: 'email',
-              })}
-              sourceValue={lead?.email ?? ''}
-              value={form.contactEmail}
-              kind="email"
-              onChange={(v) => updateForm('contactEmail', v)}
-              disabled={formDisabled}
-            />
-            <FieldMappingRow
-              label={t('leads.convert.field.phone')}
-              sourceLabel={t('leads.convert.sourceLabel.lead', {
-                field: 'phone',
-              })}
-              targetLabel={t('leads.convert.targetLabel.contact', {
-                field: 'mobile',
-              })}
-              sourceValue={lead?.phone ?? ''}
-              value={form.contactPhone}
-              kind="phone"
-              onChange={(v) => updateForm('contactPhone', v)}
-              disabled={formDisabled}
-            />
-            {extraFields.contact.map((extra) => (
-              <FieldMappingRow
-                key={extra.slug}
-                fieldKey={`contact:${extra.slug}`}
-                label={extra.label}
-                sourceLabel={t('leads.convert.sourceLabel.dialogOnly')}
-                targetLabel={t('leads.convert.targetLabel.contact', {
-                  field: extra.slug,
-                })}
-                sourceValue=""
-                value={extra.value}
-                kind={extra.kind}
-                onChange={(v) => setExtraValue('contact', extra.slug, v)}
-                onRemove={() => removeExtraField('contact', extra.slug)}
-                disabled={formDisabled}
-              />
-            ))}
+                <div className="flex items-center justify-end">
+                  {renderAddFieldPopover('contact')}
+                </div>
+                <FieldMappingRow
+                  fieldKey="contact:name"
+                  label={t('leads.convert.field.contactName')}
+                  sourceLabel={t('leads.convert.sourceLabel.lead', {
+                    field: 'name',
+                  })}
+                  targetLabel={t('leads.convert.targetLabel.contact', {
+                    field: 'name',
+                  })}
+                  sourceValue={lead?.name ?? ''}
+                  value={form.contactName}
+                  onChange={(v) => updateForm('contactName', v)}
+                  disabled={formDisabled}
+                  highlight
+                  required
+                />
+                <FieldMappingRow
+                  label={t('leads.convert.field.jobTitle')}
+                  sourceLabel={t('leads.convert.sourceLabel.lead', {
+                    field: 'contact_job_title',
+                  })}
+                  targetLabel={t('leads.convert.targetLabel.contact', {
+                    field: 'job_title',
+                  })}
+                  sourceValue={lead?.contact_job_title ?? ''}
+                  value={form.contactJobTitle}
+                  onChange={(v) => updateForm('contactJobTitle', v)}
+                  disabled={formDisabled}
+                />
+                <FieldMappingRow
+                  label={t('leads.convert.field.email')}
+                  sourceLabel={t('leads.convert.sourceLabel.lead', {
+                    field: 'email',
+                  })}
+                  targetLabel={t('leads.convert.targetLabel.contact', {
+                    field: 'email',
+                  })}
+                  sourceValue={lead?.email ?? ''}
+                  value={form.contactEmail}
+                  kind="email"
+                  onChange={(v) => updateForm('contactEmail', v)}
+                  disabled={formDisabled}
+                />
+                <FieldMappingRow
+                  label={t('leads.convert.field.phone')}
+                  sourceLabel={t('leads.convert.sourceLabel.lead', {
+                    field: 'phone',
+                  })}
+                  targetLabel={t('leads.convert.targetLabel.contact', {
+                    field: 'mobile',
+                  })}
+                  sourceValue={lead?.phone ?? ''}
+                  value={form.contactPhone}
+                  kind="phone"
+                  onChange={(v) => updateForm('contactPhone', v)}
+                  disabled={formDisabled}
+                />
+                {extraFields.contact.map((extra) => (
+                  <FieldMappingRow
+                    key={extra.slug}
+                    fieldKey={`contact:${extra.slug}`}
+                    label={extra.label}
+                    sourceLabel={t('leads.convert.sourceLabel.dialogOnly')}
+                    targetLabel={t('leads.convert.targetLabel.contact', {
+                      field: extra.slug,
+                    })}
+                    sourceValue=""
+                    value={extra.value}
+                    kind={extra.kind}
+                    onChange={(v) => setExtraValue('contact', extra.slug, v)}
+                    onRemove={() => removeExtraField('contact', extra.slug)}
+                    disabled={formDisabled}
+                  />
+                ))}
               </>
             )}
           </TabsContent>

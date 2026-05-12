@@ -2,6 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useDocyrusClient } from '@docyrus/signin'
+import { toast } from 'sonner'
 import {
   Columns3,
   Copy,
@@ -96,6 +97,20 @@ const LEAD_GRID_VISIBLE_FIELDS = new Set(
   Object.keys(LEAD_GRID_COLUMN_OVERRIDES),
 )
 
+const LEAD_GRID_LIST_COLUMNS = [
+  'id',
+  'title',
+  'company_name_text',
+  'lead_status(id,name)',
+  'lead_source(id,name)',
+  'email',
+  'phone',
+  'created_on',
+  'converted_deal(id,name)',
+  'conversion_state(id,name)',
+  'converted_on',
+].join(', ')
+
 export function Leads() {
   const client = useDocyrusClient()
 
@@ -140,9 +155,17 @@ function LeadsPageInner({
     setDialog({ mode: 'create', lead: null })
   }, [])
 
-  const onOpenEdit = useCallback((lead: BaseCrmLeadsEntity) => {
-    setDialog({ mode: 'edit', lead })
-  }, [])
+  const onOpenEdit = useCallback(
+    (lead: BaseCrmLeadsEntity) => {
+      if (isLeadConverted(lead)) {
+        toast.error(t('leads.convert.readOnlyDescription'))
+        return
+      }
+
+      setDialog({ mode: 'edit', lead })
+    },
+    [t],
+  )
 
   const onDuplicate = useCallback((lead: BaseCrmLeadsEntity) => {
     setDialog({
@@ -168,11 +191,18 @@ function LeadsPageInner({
     [navigate],
   )
 
-  const onDelete = useCallback((lead: BaseCrmLeadsEntity) => {
-    if (!lead.id) return
+  const onDelete = useCallback(
+    (lead: BaseCrmLeadsEntity) => {
+      if (!lead.id) return
+      if (isLeadConverted(lead)) {
+        toast.error(t('leads.convert.readOnlyDescription'))
+        return
+      }
 
-    setPendingDelete(lead)
-  }, [])
+      setPendingDelete(lead)
+    },
+    [t],
+  )
 
   const actionsColumn = useMemo<ColumnDef<BaseCrmLeadsEntity>>(
     () =>
@@ -225,14 +255,18 @@ function LeadsPageInner({
                   <Copy className="size-4" />
                   {t('common.duplicate', 'Duplicate')}
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => onDelete(row.original)}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="size-4" />
-                  {t('common.delete', 'Delete')}
-                </DropdownMenuItem>
+                {!isLeadConverted(row.original) && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => onDelete(row.original)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="size-4" />
+                      {t('common.delete', 'Delete')}
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -241,17 +275,48 @@ function LeadsPageInner({
     [onDelete, onDuplicate, onOpenEdit, onView, t],
   )
 
+  const openWizardRef = useRef<() => void>(() => {})
+  const listLeadsRef = useRef<Array<BaseCrmLeadsEntity>>([])
+  const reloadListRef = useRef<() => void>(() => {})
+  const reloadBoardRef = useRef<() => void>(() => {})
+
   const onChangesSave = useCallback(
     async (changes: Array<RowChange>, gridData: Array<BaseCrmLeadsEntity>) => {
-      await saveGridChanges(changes, gridData, (id, data) =>
+      const allowedChanges = changes.filter((change) => {
+        const currentRow = gridData[change.rowIndex]
+        const originalRow =
+          listLeadsRef.current.find((row) => row.id === change.rowId) ??
+          currentRow
+
+        return (
+          Boolean(currentRow) &&
+          !isLeadConverted(originalRow) &&
+          !isLeadConverted(currentRow)
+        )
+      })
+      const blockedCount = changes.length - allowedChanges.length
+
+      if (blockedCount > 0) {
+        toast.error(t('leads.convert.readOnlyDescription'))
+      }
+
+      if (allowedChanges.length === 0) {
+        reloadListRef.current()
+        reloadBoardRef.current()
+        return
+      }
+
+      await saveGridChanges(allowedChanges, gridData, (id, data) =>
         updateLead.mutateAsync({ leadId: id, data }),
       )
-    },
-    [updateLead],
-  )
 
-  const openWizardRef = useRef<() => void>(() => {})
-  const reloadBoardRef = useRef<() => void>(() => {})
+      if (blockedCount > 0) {
+        reloadListRef.current()
+        reloadBoardRef.current()
+      }
+    },
+    [t, updateLead],
+  )
 
   const importToolbarButton = useMemo(
     () => (
@@ -291,6 +356,9 @@ function LeadsPageInner({
     onSaveChanges: onChangesSave,
     bulkActions: ['delete'],
     enableItemsQuery: viewType === 'list',
+    listParams: {
+      columns: LEAD_GRID_LIST_COLUMNS,
+    },
     enableServerExportMenu: true,
     searchPlaceholder: t('common.search', 'Search...'),
     toolbarEndContent: importToolbarButton,
@@ -363,8 +431,18 @@ function LeadsPageInner({
     onCardOpen: onView,
     onCardEdit: onOpenEdit,
     onCardClick: onView,
+    cardMenuItems: (row, defaults) =>
+      isLeadConverted(row)
+        ? defaults.filter((item) => item.key === 'open')
+        : defaults,
     onCardDelete: async (row) => {
       if (!row.id) return
+      if (isLeadConverted(row)) {
+        toast.error(t('leads.convert.readOnlyDescription'))
+        reloadList()
+        reloadBoardRef.current()
+        return
+      }
 
       await deleteLead.mutateAsync(row.id)
       reloadList()
@@ -372,6 +450,12 @@ function LeadsPageInner({
     },
     onItemMoveCommit: async ({ row, payload }) => {
       if (!row.id) return
+      if (isLeadConverted(row)) {
+        toast.error(t('leads.convert.readOnlyDescription'))
+        reloadList()
+        reloadBoardRef.current()
+        return
+      }
 
       await updateLead.mutateAsync({ leadId: row.id, data: payload })
       reloadList()
@@ -380,7 +464,7 @@ function LeadsPageInner({
     enableItemsQuery: viewType === 'board',
     listParams: {
       columns:
-        'id, name, phone, email, website, company_name_text, company_email, company_phone, company_industry, company_size, lead_source, lead_status, lead_type, countries(id,name), record_owner, deal_value, converted_deal(id,name), converted_organization(id,name), converted_contact(id,name), conversion_state, converted_on, created_on, last_modified_on, created_by, last_modified_by',
+        'id, name, phone, email, website, company_name_text, company_email, company_phone, company_industry, company_size, lead_source(id,name), lead_status(id,name), lead_type(id,name), countries(id,name), record_owner, deal_value, converted_deal(id,name), converted_organization(id,name), converted_contact(id,name), conversion_state(id,name), converted_on, created_on, last_modified_on, created_by, last_modified_by',
       orderBy: 'created_on DESC',
       limit: 200,
     },
@@ -388,6 +472,8 @@ function LeadsPageInner({
     toolbarEndContent: importToolbarButton,
   })
 
+  listLeadsRef.current = listLeads
+  reloadListRef.current = reloadList
   reloadBoardRef.current = reloadBoard
 
   const reload = useCallback(() => {
@@ -407,6 +493,11 @@ function LeadsPageInner({
 
   const onConfirmDelete = useCallback(async () => {
     if (!pendingDelete?.id) return
+    if (isLeadConverted(pendingDelete)) {
+      toast.error(t('leads.convert.readOnlyDescription'))
+      setPendingDelete(null)
+      return
+    }
 
     setIsDeleting(true)
 
@@ -417,7 +508,7 @@ function LeadsPageInner({
     } finally {
       setIsDeleting(false)
     }
-  }, [deleteLead, pendingDelete, reload])
+  }, [deleteLead, pendingDelete, reload, t])
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
