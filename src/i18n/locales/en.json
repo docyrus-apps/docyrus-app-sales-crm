@@ -451,6 +451,7 @@
         "noLinkedWork": "No tasks or events to move",
         "leadStatusConverted": "Status: Converted",
         "completedAt": "Completed: {{date}}",
+        "errorPrefix": "Error: {{message}}",
         "skipped": "Skipped in this mode",
         "previousError": "Previous error: {{message}}",
         "willRetry": "Will retry when you click Convert",
@@ -458,8 +459,17 @@
         "willSkip": "This step will be skipped"
       },
       "conversionMode": "Conversion mode: {{mode}}",
+      "modeSkipWarning": "This mode skips {{targets}}. Hidden values are kept if you switch back.",
       "leadStatus": "Lead status: in_progress",
       "progress": "Progress",
+      "stepState": {
+        "pending": "Not started",
+        "running": "Processing",
+        "done": "Done",
+        "warn": "Needs attention",
+        "failed": "Failed",
+        "skipped": "Skipped"
+      },
       "previousDealsTitle": "Previous deals for this lead",
       "newDealWillBeCreated": "A new deal will still be created if you continue.",
       "duplicateMatches": {
@@ -506,6 +516,11 @@
         "convert": "Convert"
       },
       "successMessage": "Lead converted to deal successfully",
+      "successAction": {
+        "openDeal": "Open deal",
+        "openCompany": "Open company",
+        "openContact": "Open contact"
+      },
       "errorMessage": "Failed to convert lead",
       "field": {
         "companyName": "Company name",
@@ -549,6 +564,7 @@
       },
       "addField": "Add {{target}} field",
       "noFieldsAvailable": "No fields available to add.",
+      "requiredField": "Required",
       "restoreFromSource": "Restore from lead",
       "dealDefaultName": "New deal"
     }

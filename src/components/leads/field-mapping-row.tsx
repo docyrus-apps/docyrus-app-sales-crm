@@ -64,7 +64,8 @@ export function FieldMappingRow({
   fieldKey,
 }: FieldMappingRowProps) {
   const { t } = useTranslation()
-  const sourceDisplay = sourceValue?.trim() ? sourceValue : '—'
+  const hasSourceValue = Boolean(sourceValue?.trim())
+  const sourceDisplay = hasSourceValue ? sourceValue : ''
   const canRestoreSource = Boolean(
     sourceValue?.trim() && onRestoreSource && !disabled,
   )
@@ -74,21 +75,21 @@ export function FieldMappingRow({
       data-field-key={fieldKey}
       className={cn(
         'group rounded-lg border bg-card p-3 transition-colors',
+        required && 'border-primary/25 bg-primary/[0.02]',
         highlight && 'border-primary/40 bg-primary/[0.03]',
       )}
     >
       <div className="mb-2 flex items-center justify-between gap-2">
-        <Label className="text-xs font-medium">
-          {label}
+        <div className="flex min-w-0 items-center gap-1.5">
+          <Label className="truncate text-xs font-medium">{label}</Label>
           {required ? (
-            <span
-              className="ml-0.5 text-destructive"
-              aria-label={t('common.required')}
-            >
-              *
+            <span className="rounded border border-destructive/25 bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive">
+              {t('leads.convert.requiredField', {
+                defaultValue: 'Required',
+              })}
             </span>
           ) : null}
-        </Label>
+        </div>
         {onRemove ? (
           <button
             type="button"
@@ -101,28 +102,42 @@ export function FieldMappingRow({
           </button>
         ) : null}
       </div>
-      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1.4fr)] items-center gap-2">
-        <div className="flex h-9 min-w-0 items-center gap-1 rounded-md border border-dashed border-muted-foreground/30 bg-muted/30 px-2.5 text-xs text-muted-foreground">
-          <span className="truncate" title={sourceDisplay}>
-            {sourceDisplay}
-          </span>
-          {canRestoreSource ? (
-            <button
-              type="button"
-              onClick={onRestoreSource}
-              className="ml-auto rounded p-0.5 text-muted-foreground opacity-0 transition hover:bg-background hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
-              aria-label={t('leads.convert.restoreFromSource', {
-                defaultValue: 'Restore from lead',
-              })}
-              title={t('leads.convert.restoreFromSource', {
-                defaultValue: 'Restore from lead',
-              })}
-            >
-              <RotateCcw className="size-3" />
-            </button>
-          ) : null}
-        </div>
-        <ArrowRight className="size-3.5 text-muted-foreground" aria-hidden />
+      <div
+        className={cn(
+          'grid items-center gap-2',
+          hasSourceValue
+            ? 'grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1.4fr)]'
+            : 'grid-cols-1',
+        )}
+      >
+        {hasSourceValue ? (
+          <>
+            <div className="flex h-9 min-w-0 items-center gap-1 rounded-md border border-dashed border-muted-foreground/30 bg-muted/30 px-2.5 text-xs text-muted-foreground">
+              <span className="truncate" title={sourceDisplay}>
+                {sourceDisplay}
+              </span>
+              {canRestoreSource ? (
+                <button
+                  type="button"
+                  onClick={onRestoreSource}
+                  className="ml-auto rounded p-0.5 text-muted-foreground opacity-0 transition hover:bg-background hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
+                  aria-label={t('leads.convert.restoreFromSource', {
+                    defaultValue: 'Restore from lead',
+                  })}
+                  title={t('leads.convert.restoreFromSource', {
+                    defaultValue: 'Restore from lead',
+                  })}
+                >
+                  <RotateCcw className="size-3" />
+                </button>
+              ) : null}
+            </div>
+            <ArrowRight
+              className="hidden size-3.5 text-muted-foreground sm:block"
+              aria-hidden
+            />
+          </>
+        ) : null}
         <div className="min-w-0">
           {kind === 'textarea' ? (
             <Textarea
@@ -170,8 +185,12 @@ export function FieldMappingRow({
         </div>
       </div>
       <p className="mt-2 text-[10.5px] uppercase tracking-wide text-muted-foreground/80">
-        <span>{sourceLabel ?? t('common.na')}</span>
-        <span className="mx-1.5">→</span>
+        {hasSourceValue ? (
+          <>
+            <span>{sourceLabel ?? t('common.na')}</span>
+            <span className="mx-1.5">→</span>
+          </>
+        ) : null}
         <span>{targetLabel}</span>
       </p>
     </div>

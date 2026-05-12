@@ -1686,7 +1686,51 @@ export function LeadConvertDialog({
         queryClient.invalidateQueries({ queryKey: ['events'] }),
       ])
 
-      toast.success(t('leads.convert.successMessage'))
+      toast.success(t('leads.convert.successMessage'), {
+        description: (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {dealId ? (
+              <button
+                type="button"
+                className="rounded border bg-background px-2 py-1 text-[11px] font-medium text-foreground shadow-sm hover:bg-accent"
+                onClick={() =>
+                  void navigate({ to: '/deals/$dealId', params: { dealId } })
+                }
+              >
+                {t('leads.convert.successAction.openDeal')}
+              </button>
+            ) : null}
+            {organizationId ? (
+              <button
+                type="button"
+                className="rounded border bg-background px-2 py-1 text-[11px] font-medium text-foreground shadow-sm hover:bg-accent"
+                onClick={() =>
+                  void navigate({
+                    to: '/companies/$companyId',
+                    params: { companyId: organizationId },
+                  })
+                }
+              >
+                {t('leads.convert.successAction.openCompany')}
+              </button>
+            ) : null}
+            {contactId ? (
+              <button
+                type="button"
+                className="rounded border bg-background px-2 py-1 text-[11px] font-medium text-foreground shadow-sm hover:bg-accent"
+                onClick={() =>
+                  void navigate({
+                    to: '/contacts/$contactId',
+                    params: { contactId },
+                  })
+                }
+              >
+                {t('leads.convert.successAction.openContact')}
+              </button>
+            ) : null}
+          </div>
+        ),
+      })
       onOpenChange(false)
       if (dealId) {
         void navigate({ to: '/deals/$dealId', params: { dealId } })
@@ -1696,7 +1740,9 @@ export function LeadConvertDialog({
       const partial = Boolean(organizationId || contactId || dealId)
       setErrorMessage(message)
       setStep(activeStep, 'failed')
-      setStepDetail(activeStep, [detail('error', `Hata: ${message}`)])
+      setStepDetail(activeStep, [
+        detail('error', t('leads.convert.result.errorPrefix', { message })),
+      ])
       await updateLead({
         converted_organization: organizationId,
         converted_contact: contactId,
@@ -1711,6 +1757,49 @@ export function LeadConvertDialog({
   }
 
   const formDisabled = isWorking || isAlreadyCompleted
+  const currentProgressStepKey = useMemo(() => {
+    const entries = Object.entries(steps)
+    return (
+      entries.find(([, state]) => state === 'running')?.[0] ??
+      entries.find(([, state]) => state === 'failed')?.[0] ??
+      entries.find(([, state]) => state === 'warn')?.[0]
+    )
+  }, [steps])
+  const skippedModeTargets = useMemo(() => {
+    const skipped: Array<string> = []
+    const hasCompanyDraft = Boolean(
+      form.companyName.trim() ||
+      form.companyEmail.trim() ||
+      form.companyPhone.trim() ||
+      form.companyWebsite.trim() ||
+      form.companyAddress.trim() ||
+      form.companyCity.trim() ||
+      form.companyIndustryId ||
+      form.companySizeId ||
+      extraFields.company.length,
+    )
+    const hasContactDraft = Boolean(
+      form.contactName.trim() ||
+      form.contactEmail.trim() ||
+      form.contactPhone.trim() ||
+      form.contactJobTitle.trim() ||
+      extraFields.contact.length,
+    )
+
+    if (mode !== 'company_contact_deal' && hasCompanyDraft) {
+      skipped.push(TARGET_LABEL.company)
+    }
+    if (mode === 'deal_only' && hasContactDraft) {
+      skipped.push(TARGET_LABEL.contact)
+    }
+    return skipped
+  }, [
+    TARGET_LABEL,
+    extraFields.company.length,
+    extraFields.contact.length,
+    form,
+    mode,
+  ])
 
   const toEnumSelectOptions = (
     opts: Array<{ id?: string; name?: string }>,
@@ -1980,6 +2069,7 @@ export function LeadConvertDialog({
           <button
             type="button"
             disabled={isWorking}
+            aria-pressed={!isReuse}
             onClick={() => setSelected(null)}
             className={cn(
               'flex flex-col items-start gap-1 rounded-md border bg-background p-2.5 text-left transition-colors',
@@ -2006,6 +2096,7 @@ export function LeadConvertDialog({
           <button
             type="button"
             disabled={isWorking}
+            aria-pressed={isReuse}
             onClick={() => {
               const fallback = exactId ?? candidates[0]?.id ?? null
               setSelected(fallback)
@@ -2189,7 +2280,7 @@ export function LeadConvertDialog({
     }
 
     return (
-      <div className="space-y-2">
+      <div className="space-y-2" role="group">
         <ul className="space-y-1">
           <li className="flex items-start gap-1.5 text-xs leading-snug">
             <CheckCircle2 className="mt-0.5 size-3.5 text-emerald-600" />
@@ -2200,12 +2291,16 @@ export function LeadConvertDialog({
             </span>
           </li>
         </ul>
-        <div className="grid grid-cols-3 gap-1.5 border-t pt-2">
+        <div
+          className="grid grid-cols-1 gap-1.5 border-t pt-2 sm:grid-cols-3"
+          role="list"
+        >
           {TARGETS.map((targetMeta) => {
             const summary = precheckSummary[targetMeta.key]
             return (
               <div
                 key={targetMeta.key}
+                role="listitem"
                 className="rounded-md border bg-background/50 p-2"
               >
                 <div className="mb-1 flex items-center gap-1 text-[11px] font-medium">
@@ -2781,7 +2876,11 @@ export function LeadConvertDialog({
             <p className="text-xs font-medium text-foreground">
               {t('leads.convert.modeLabel')}
             </p>
-            <div className="grid gap-2 md:grid-cols-3" role="group">
+            <div
+              className="grid gap-2 md:grid-cols-3"
+              role="group"
+              aria-label={t('leads.convert.modeLabel')}
+            >
               {(
                 [
                   {
@@ -2839,6 +2938,18 @@ export function LeadConvertDialog({
                 </button>
               ))}
             </div>
+            {skippedModeTargets.length > 0 ? (
+              <p className="flex items-start gap-1.5 rounded-md bg-amber-50 px-2 py-1.5 text-[11px] text-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+                <AlertTriangle className="mt-0.5 size-3 shrink-0" />
+                <span>
+                  {t('leads.convert.modeSkipWarning', {
+                    targets: skippedModeTargets.join(', '),
+                    defaultValue:
+                      'This mode skips {{targets}}. Hidden values are kept if you switch back.',
+                  })}
+                </span>
+              </p>
+            ) : null}
           </div>
 
           <div ref={progressSectionRef} className="space-y-2">
@@ -2851,7 +2962,11 @@ export function LeadConvertDialog({
               className="bg-muted/60 [&_[data-slot=progress-indicator]]:bg-gradient-to-r [&_[data-slot=progress-indicator]]:from-sky-400 [&_[data-slot=progress-indicator]]:via-teal-400 [&_[data-slot=progress-indicator]]:to-emerald-500"
             />
             <TooltipProvider delayDuration={200}>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-6">
+              <div
+                className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-6"
+                role="list"
+                aria-label={t('leads.convert.progress')}
+              >
                 {Object.entries(STEP_LABELS).map(([key, label]) => {
                   const state = steps[key] ?? 'pending'
                   const details = stepDetails[key] ?? []
@@ -2861,9 +2976,17 @@ export function LeadConvertDialog({
                     <Tooltip key={key}>
                       <TooltipTrigger asChild>
                         <div
+                          role="listitem"
+                          tabIndex={0}
+                          aria-current={
+                            currentProgressStepKey === key ? 'step' : undefined
+                          }
+                          aria-label={`${label}: ${t(`leads.convert.stepState.${state}`, { defaultValue: state })}`}
                           className={cn(
-                            'flex min-w-0 items-center gap-2 rounded-md border px-2 py-2 text-xs',
+                            'flex min-w-0 items-center gap-2 rounded-md border px-2 py-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                             hasDetails && 'cursor-help',
+                            currentProgressStepKey === key &&
+                              'border-primary/60',
                           )}
                         >
                           {getStepIcon(state)}
@@ -2979,13 +3102,18 @@ export function LeadConvertDialog({
               {t('leads.convert.changeConfirm.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="max-h-72 space-y-2 overflow-y-auto">
+          <div
+            className="max-h-72 space-y-2 overflow-y-auto"
+            role="table"
+            aria-label={t('leads.convert.changeConfirm.title')}
+          >
             {(pendingChanges ?? []).map((change, index) => (
               <div
                 key={index}
+                role="row"
                 className="rounded-md border bg-card p-3 text-xs"
               >
-                <p className="mb-1 flex items-center gap-1.5">
+                <div className="mb-1 flex items-center gap-1.5" role="cell">
                   <Badge variant="outline" className="text-[10px]">
                     {TARGET_LABEL[change.tab]}
                   </Badge>
@@ -3009,9 +3137,12 @@ export function LeadConvertDialog({
                       defaultValue: 'Restore',
                     })}
                   </Button>
-                </p>
-                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                  <div className="rounded border border-dashed bg-muted/40 px-2 py-1 text-muted-foreground">
+                </div>
+                <div className="grid grid-cols-1 items-center gap-2 sm:grid-cols-[1fr_auto_1fr]">
+                  <div
+                    className="rounded border border-dashed bg-muted/40 px-2 py-1 text-muted-foreground"
+                    role="cell"
+                  >
                     <p className="text-[10px] uppercase tracking-wide">
                       {t('leads.convert.changeConfirm.sourceLabel')}
                     </p>
@@ -3019,8 +3150,14 @@ export function LeadConvertDialog({
                       {change.sourceText || '—'}
                     </p>
                   </div>
-                  <ArrowRight className="size-3.5 text-muted-foreground" />
-                  <div className="rounded border bg-primary/[0.04] px-2 py-1">
+                  <ArrowRight
+                    className="hidden size-3.5 text-muted-foreground sm:block"
+                    aria-hidden
+                  />
+                  <div
+                    className="rounded border bg-primary/[0.04] px-2 py-1"
+                    role="cell"
+                  >
                     <p className="text-[10px] uppercase tracking-wide text-primary">
                       {t('leads.convert.changeConfirm.targetLabel')}
                     </p>

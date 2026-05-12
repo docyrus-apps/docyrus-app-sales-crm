@@ -442,6 +442,7 @@
         "noLinkedWork": "Taşınacak görev veya etkinlik bulunamadı",
         "leadStatusConverted": "Statü: Converted",
         "completedAt": "Tamamlandı: {{date}}",
+        "errorPrefix": "Hata: {{message}}",
         "skipped": "Bu modda atlandı",
         "previousError": "Önceki hata: {{message}}",
         "willRetry": "Dönüştür dediğinizde yeniden denenecek",
@@ -449,8 +450,17 @@
         "willSkip": "Bu adım atlanacak"
       },
       "conversionMode": "Dönüşüm modu: {{mode}}",
+      "modeSkipWarning": "Bu mod {{targets}} oluşturmayı atlar. Gizlenen değerler geri dönerseniz korunur.",
       "leadStatus": "Lead durumu: in_progress",
       "progress": "İlerleme",
+      "stepState": {
+        "pending": "Başlamadı",
+        "running": "İşleniyor",
+        "done": "Tamamlandı",
+        "warn": "Dikkat gerekiyor",
+        "failed": "Başarısız",
+        "skipped": "Atlandı"
+      },
       "previousDealsTitle": "Bu lead için önceki fırsatlar",
       "newDealWillBeCreated": "Yine de devam ederseniz yeni bir fırsat oluşturulur.",
       "duplicateMatches": {
@@ -497,6 +507,11 @@
         "convert": "Dönüştür"
       },
       "successMessage": "Lead fırsata dönüştürüldü",
+      "successAction": {
+        "openDeal": "Fırsatı aç",
+        "openCompany": "Şirketi aç",
+        "openContact": "Kişiyi aç"
+      },
       "errorMessage": "Lead dönüştürülemedi",
       "field": {
         "companyName": "Şirket adı",
@@ -540,6 +555,7 @@
       },
       "addField": "{{target}} alanı ekle",
       "noFieldsAvailable": "Eklenebilir alan yok.",
+      "requiredField": "Zorunlu",
       "restoreFromSource": "Lead'deki değere geri al",
       "dealDefaultName": "Yeni fırsat"
     }
