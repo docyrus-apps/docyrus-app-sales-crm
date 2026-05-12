@@ -30,6 +30,18 @@ import {
   optionByName,
 } from '@/components/leads/use-lead-convert-enum-mappings'
 import { useLeadConvertForm } from '@/components/leads/use-lead-convert-form'
+import { useLeadConvertDuplicates } from '@/components/leads/use-lead-convert-duplicates'
+import {
+  getErrorMessage,
+  isAbortLikeError,
+  logLeadConvertEvent,
+  unwrapItems,
+  firstItem,
+  type LeadConvertStepDetail,
+  type LeadConvertDetailTone,
+  type LeadConvertStepState,
+  type LeadConvertPrecheckTargetSummary,
+} from '@/components/leads/lead-convert-utils'
 import {
   getRelationId,
   getRelationName,
@@ -39,20 +51,16 @@ import {
 import { cn } from '@/lib/utils'
 
 type ConversionMode = 'company_contact_deal' | 'contact_deal' | 'deal_only'
-type StepState = 'pending' | 'running' | 'done' | 'warn' | 'failed' | 'skipped'
-type DetailTone = 'success' | 'info' | 'warn' | 'error' | 'neutral'
-type StepDetail = { tone: DetailTone; label: string }
+type StepState = LeadConvertStepState
+type DetailTone = LeadConvertDetailTone
+type StepDetail = LeadConvertStepDetail
 type LinkedWorkMigrationResult = {
   attemptedCount: number
   updatedCount: number
   failedCount: number
   warningCount: number
 }
-type PrecheckTargetSummary = {
-  status: 'unchecked' | 'clean' | 'matches' | 'exact'
-  count: number
-  exactName?: string
-}
+type PrecheckTargetSummary = LeadConvertPrecheckTargetSummary
 type ConvertTarget = 'company' | 'contact' | 'deal'
 type EntityCandidate = Record<string, any> & { id?: string; name?: string }
 type FieldMeta = { slug?: string }
@@ -145,76 +153,6 @@ function useStepLabels(t: (key: string) => string): Record<string, string> {
   }
 }
 
-function normalize(value?: string | null) {
-  return value?.trim().toLowerCase() ?? ''
-}
-
-function sanitizeKeyword(value?: string | null) {
-  if (!value) return ''
-  return value
-    .replace(/https?:\/\//gi, '')
-    .replace(/[:&|!*()<>'"\\\/]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-
-function normalizePhone(value?: string | null) {
-  return value?.replace(/\D/g, '') ?? ''
-}
-
-function normalizeDomain(value?: string | null) {
-  const trimmed = value?.trim()
-  if (!trimmed) return ''
-
-  try {
-    const url = new URL(
-      trimmed.startsWith('http') ? trimmed : `https://${trimmed}`,
-    )
-    return url.hostname.replace(/^www\./, '').toLowerCase()
-  } catch {
-    return (
-      trimmed
-        .replace(/^https?:\/\//, '')
-        .replace(/^www\./, '')
-        .split('/')[0]
-        ?.toLowerCase() ?? ''
-    )
-  }
-}
-
-function getErrorMessage(error: unknown, t: (key: string) => string) {
-  if (error && typeof error === 'object' && 'message' in error) {
-    return String((error as { message?: string }).message)
-  }
-
-  return t('leads.convert.alert.errorTitle')
-}
-
-function isAbortLikeError(error: unknown) {
-  if (!error || typeof error !== 'object') return false
-  const maybeAbort = error as { name?: string; code?: string }
-  return maybeAbort.name === 'AbortError' || maybeAbort.code === 'ABORT_ERROR'
-}
-
-function logLeadConvertEvent(
-  level: 'info' | 'warn' | 'error',
-  event: string,
-  payload: Record<string, unknown>,
-) {
-  const entry = {
-    event,
-    ...payload,
-  }
-
-  if (level === 'error') {
-    console.error('[LeadConvert]', entry)
-  } else if (level === 'warn') {
-    console.warn('[LeadConvert]', entry)
-  } else {
-    console.info('[LeadConvert]', entry)
-  }
-}
-
 function getFieldSlugs(dataSource?: DataSourceMeta | null) {
   return new Set(
     (dataSource?.fields ?? []).map((field) => field.slug).filter(Boolean),
@@ -231,20 +169,6 @@ function pickDefined(payload: Record<string, unknown>) {
   )
 }
 
-function unwrapItems(response: unknown): Array<EntityCandidate> {
-  if (Array.isArray(response)) return response as Array<EntityCandidate>
-  if (response && typeof response === 'object' && 'data' in response) {
-    const data = (response as { data?: unknown }).data
-    return Array.isArray(data) ? (data as Array<EntityCandidate>) : []
-  }
-
-  return []
-}
-
-function firstItem(response: unknown): EntityCandidate | undefined {
-  return unwrapItems(response)[0]
-}
-
 export function LeadConvertDialog({
   open,
   onOpenChange,
@@ -258,42 +182,17 @@ export function LeadConvertDialog({
   const TARGET_LABEL = useTargetLabels((key) => t(key))
   const STEP_LABELS = useStepLabels((key) => t(key))
   const [isWorking, setIsWorking] = useState(false)
-  const [duplicatesChecked, setDuplicatesChecked] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [companyCandidates, setCompanyCandidates] = useState<
-    Array<EntityCandidate>
-  >([])
-  const [contactCandidates, setContactCandidates] = useState<
-    Array<EntityCandidate>
-  >([])
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(
     getRelationId(lead?.converted_organization) ?? null,
   )
   const [selectedContactId, setSelectedContactId] = useState<string | null>(
     getRelationId(lead?.converted_contact) ?? null,
   )
-  const [exactCompanyId, setExactCompanyId] = useState<string | null>(null)
-  const [exactContactId, setExactContactId] = useState<string | null>(null)
-  const [dealCandidates, setDealCandidates] = useState<Array<EntityCandidate>>(
-    [],
-  )
-  const [precheckSummary, setPrecheckSummary] = useState<{
-    company: PrecheckTargetSummary
-    contact: PrecheckTargetSummary
-    deal: PrecheckTargetSummary
-  }>({
-    company: { status: 'unchecked', count: 0 },
-    contact: { status: 'unchecked', count: 0 },
-    deal: { status: 'unchecked', count: 0 },
-  })
   const [pendingChanges, setPendingChanges] =
     useState<Array<LeadConvertPendingChange> | null>(null)
   const [changesConfirmed, setChangesConfirmed] = useState(false)
   const progressSectionRef = useRef<HTMLDivElement | null>(null)
-  const duplicateCheckRef = useRef<{
-    requestId: number
-    controller: AbortController | null
-  }>({ requestId: 0, controller: null })
   const [mode, setMode] = useState<ConversionMode>(() => {
     const savedMode = getRelationName(lead?.conversion_mode)
     if (savedMode === 'contact_deal' || savedMode === 'deal_only') {
@@ -402,6 +301,29 @@ export function LeadConvertDialog({
   const [stepDetails, setStepDetails] = useState<
     Record<string, Array<StepDetail>>
   >(() => initialStepState.details)
+  const {
+    companyCandidates,
+    contactCandidates,
+    dealCandidates,
+    exactCompanyId,
+    exactContactId,
+    precheckSummary,
+    duplicatesChecked,
+    setDuplicatesChecked,
+    findDuplicates,
+  } = useLeadConvertDuplicates({
+    client,
+    lead,
+    t,
+    setIsWorking,
+    setStep: (key, state) =>
+      setSteps((current) => ({ ...current, [key]: state })),
+    setStepDetail: (key, details) =>
+      setStepDetails((current) => ({ ...current, [key]: details })),
+    setErrorMessage,
+    onExactCompanyMatch: setSelectedCompanyId,
+    onExactContactMatch: setSelectedContactId,
+  })
   const { form, updateForm, sourceDealName } = useLeadConvertForm({
     lead,
     t,
@@ -520,15 +442,6 @@ export function LeadConvertDialog({
       setActiveTab('company')
     }
   }, [mode])
-
-  useEffect(
-    () => () => {
-      duplicateCheckRef.current.requestId += 1
-      duplicateCheckRef.current.controller?.abort()
-      duplicateCheckRef.current.controller = null
-    },
-    [],
-  )
 
   useEffect(() => {
     if (!open || !client) return
@@ -744,281 +657,6 @@ export function LeadConvertDialog({
 
     await Promise.all(updates)
     return result
-  }
-
-  const findDuplicates = async () => {
-    if (!client) return
-    duplicateCheckRef.current.controller?.abort()
-    const requestId = duplicateCheckRef.current.requestId + 1
-    const controller = new AbortController()
-    duplicateCheckRef.current = { requestId, controller }
-    setIsWorking(true)
-    setErrorMessage(null)
-    setStep('precheck', 'running')
-
-    try {
-      if (!form.dealName.trim()) {
-        throw new Error(t('leads.convert.validation.dealNameRequired'))
-      }
-
-      if (mode === 'company_contact_deal' && !form.companyName.trim()) {
-        throw new Error(t('leads.convert.validation.companyNameRequired'))
-      }
-
-      if (mode !== 'deal_only' && !form.contactName.trim()) {
-        throw new Error(t('leads.convert.validation.contactNameRequired'))
-      }
-
-      const companyKeyword =
-        sanitizeKeyword(form.companyName) ||
-        normalizeDomain(form.companyWebsite)
-      const contactKeyword =
-        sanitizeKeyword(form.contactName) ||
-        sanitizeKeyword(form.contactEmail) ||
-        sanitizeKeyword(form.contactPhone)
-      const [companies, contacts, deals] = await Promise.all([
-        mode === 'company_contact_deal' && companyKeyword
-          ? client.get(
-              '/v1/apps/base/data-sources/organization/items',
-              {
-                columns: 'id,name,email,phone,website,country(id,name)',
-                filterKeyword: companyKeyword,
-                limit: 8,
-              },
-              { signal: controller.signal },
-            )
-          : Promise.resolve([]),
-        mode !== 'deal_only' && contactKeyword
-          ? client.get(
-              '/v1/apps/base/data-sources/contact/items',
-              {
-                columns: 'id,name,email,mobile,organization(id,name)',
-                filterKeyword: contactKeyword,
-                limit: 8,
-              },
-              { signal: controller.signal },
-            )
-          : Promise.resolve([]),
-        lead?.id
-          ? client.get(
-              '/v1/apps/base_crm/data-sources/deal/items',
-              {
-                columns:
-                  'id,name,stage(id,name),organization(id,name),source_lead(id,name)',
-                filters: {
-                  rules: [
-                    { field: 'source_lead', operator: '=', value: lead.id },
-                  ],
-                },
-                limit: 8,
-              },
-              { signal: controller.signal },
-            )
-          : Promise.resolve([]),
-      ])
-
-      if (
-        controller.signal.aborted ||
-        duplicateCheckRef.current.requestId !== requestId
-      ) {
-        return
-      }
-
-      const companyMatches = unwrapItems(companies)
-      const contactMatches = unwrapItems(contacts)
-      const dealMatches = unwrapItems(deals)
-      const companyDomain = normalizeDomain(form.companyWebsite)
-      const companyName = normalize(form.companyName)
-      const companyPhone = normalizePhone(form.companyPhone)
-      const contactEmail = normalize(form.contactEmail)
-      const contactPhone = normalizePhone(form.contactPhone)
-      const exactCompany = companyMatches.find((candidate) => {
-        const candidateDomain = normalizeDomain(String(candidate.website ?? ''))
-        const candidatePhone = normalizePhone(String(candidate.phone ?? ''))
-        const candidateName = normalize(String(candidate.name ?? ''))
-
-        return (
-          (companyDomain && candidateDomain === companyDomain) ||
-          (companyName && candidateName === companyName) ||
-          (companyPhone && candidatePhone === companyPhone)
-        )
-      })
-      const exactContact = contactMatches.find((candidate) => {
-        const candidateEmail = normalize(String(candidate.email ?? ''))
-        const candidatePhone = normalizePhone(String(candidate.mobile ?? ''))
-
-        return (
-          (contactEmail && candidateEmail === contactEmail) ||
-          (contactPhone && candidatePhone === contactPhone)
-        )
-      })
-
-      setCompanyCandidates(companyMatches)
-      setContactCandidates(contactMatches)
-      setDealCandidates(dealMatches)
-      setExactCompanyId(exactCompany?.id ?? null)
-      setExactContactId(exactContact?.id ?? null)
-
-      if (exactCompany?.id) setSelectedCompanyId(exactCompany.id)
-      if (exactContact?.id) setSelectedContactId(exactContact.id)
-
-      const precheckDetails: Array<StepDetail> = []
-      precheckDetails.push(
-        detail(
-          'success',
-          t('leads.convert.check.dealName', { value: form.dealName }),
-        ),
-      )
-      if (mode === 'company_contact_deal') {
-        precheckDetails.push(
-          detail(
-            'success',
-            t('leads.convert.check.companyName', { value: form.companyName }),
-          ),
-        )
-      }
-      if (mode !== 'deal_only') {
-        precheckDetails.push(
-          detail(
-            'success',
-            t('leads.convert.check.contactName', { value: form.contactName }),
-          ),
-        )
-      }
-      if (mode === 'company_contact_deal') {
-        if (companyMatches.length > 0) {
-          precheckDetails.push(
-            detail(
-              exactCompany ? 'warn' : 'info',
-              exactCompany
-                ? t('leads.convert.check.similarCompaniesFound', {
-                    count: companyMatches.length,
-                    name: exactCompany.name,
-                  })
-                : t('leads.convert.check.similarCompaniesSuggested', {
-                    count: companyMatches.length,
-                  }),
-            ),
-          )
-        } else {
-          precheckDetails.push(
-            detail('success', t('leads.convert.check.noCompanyConflict')),
-          )
-        }
-      }
-      if (mode !== 'deal_only') {
-        if (contactMatches.length > 0) {
-          precheckDetails.push(
-            detail(
-              exactContact ? 'warn' : 'info',
-              exactContact
-                ? t('leads.convert.check.similarContactsFound', {
-                    count: contactMatches.length,
-                    name: exactContact.name,
-                  })
-                : t('leads.convert.check.similarContactsSuggested', {
-                    count: contactMatches.length,
-                  }),
-            ),
-          )
-        } else {
-          precheckDetails.push(
-            detail('success', t('leads.convert.check.noContactConflict')),
-          )
-        }
-      }
-      if (dealMatches.length > 0) {
-        const first = dealMatches[0]
-        precheckDetails.push(
-          detail(
-            'warn',
-            t('leads.convert.check.previousDeals', {
-              count: dealMatches.length,
-              name: first?.name ?? t('common.unknown'),
-            }),
-          ),
-        )
-      } else {
-        precheckDetails.push(
-          detail('success', t('leads.convert.check.noDealConflict')),
-        )
-      }
-      setStepDetail('precheck', precheckDetails)
-
-      setPrecheckSummary({
-        company:
-          mode === 'company_contact_deal'
-            ? {
-                status:
-                  companyMatches.length === 0
-                    ? 'clean'
-                    : exactCompany
-                      ? 'exact'
-                      : 'matches',
-                count: companyMatches.length,
-                exactName: exactCompany?.name,
-              }
-            : { status: 'unchecked', count: 0 },
-        contact:
-          mode !== 'deal_only'
-            ? {
-                status:
-                  contactMatches.length === 0
-                    ? 'clean'
-                    : exactContact
-                      ? 'exact'
-                      : 'matches',
-                count: contactMatches.length,
-                exactName: exactContact?.name,
-              }
-            : { status: 'unchecked', count: 0 },
-        deal: {
-          status: dealMatches.length === 0 ? 'clean' : 'matches',
-          count: dealMatches.length,
-          exactName: dealMatches[0]?.name,
-        },
-      })
-
-      setDuplicatesChecked(true)
-      const hasAnyMatch =
-        companyMatches.length > 0 ||
-        contactMatches.length > 0 ||
-        dealMatches.length > 0
-      logLeadConvertEvent('info', 'precheck_completed', {
-        leadId: lead?.id,
-        mode,
-        companyMatches: companyMatches.length,
-        contactMatches: contactMatches.length,
-        dealMatches: dealMatches.length,
-        exactCompanyId: exactCompany?.id ?? null,
-        exactContactId: exactContact?.id ?? null,
-        hasAnyMatch,
-      })
-      setStep('precheck', hasAnyMatch ? 'warn' : 'done')
-    } catch (error) {
-      if (controller.signal.aborted || isAbortLikeError(error)) {
-        return
-      }
-      setStep('precheck', 'failed')
-      const errMsg = getErrorMessage(error, t)
-      setStepDetail('precheck', [
-        detail(
-          'error',
-          t('leads.convert.result.errorPrefix', { message: errMsg }),
-        ),
-      ])
-      setErrorMessage(errMsg)
-      logLeadConvertEvent('error', 'precheck_failed', {
-        leadId: lead?.id,
-        mode,
-        message: errMsg,
-      })
-    } finally {
-      if (duplicateCheckRef.current.requestId === requestId) {
-        duplicateCheckRef.current.controller = null
-        setIsWorking(false)
-      }
-    }
   }
 
   const focusMissingField = (
@@ -1334,7 +972,7 @@ export function LeadConvertDialog({
     if (!client || !lead?.id) return
 
     if (!duplicatesChecked) {
-      await findDuplicates()
+      await findDuplicates({ form, mode })
       return
     }
 
