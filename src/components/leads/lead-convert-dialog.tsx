@@ -37,7 +37,7 @@ import {
   normalizeConversionKey,
 } from '@/lib/lead-conversion'
 
-type ConversionMode = 'company_contact_deal' | 'contact_deal' | 'deal_only'
+type ConversionMode = 'company_contact_deal' | 'contact_deal'
 type StepState = LeadConvertStepState
 type StepDetail = LeadConvertStepDetail
 type ConvertTarget = 'company' | 'contact' | 'deal'
@@ -103,7 +103,6 @@ function useModeLabels(
   return {
     company_contact_deal: t('leads.convert.mode.company_contact_deal'),
     contact_deal: t('leads.convert.mode.contact_deal'),
-    deal_only: t('leads.convert.mode.deal_only'),
   }
 }
 
@@ -153,7 +152,7 @@ export function LeadConvertDialog({
   const progressSectionRef = useRef<HTMLDivElement | null>(null)
   const [mode, setMode] = useState<ConversionMode>(() => {
     const savedMode = getRelationName(lead?.conversion_mode)
-    if (savedMode === 'contact_deal' || savedMode === 'deal_only') {
+    if (savedMode === 'contact_deal') {
       return savedMode
     }
 
@@ -334,9 +333,7 @@ export function LeadConvertDialog({
   } = useLeadConvertEnumMappings(lead, form)
 
   useEffect(() => {
-    if (mode === 'deal_only') {
-      setActiveTab('deal')
-    } else if (mode === 'contact_deal') {
+    if (mode === 'contact_deal') {
       setActiveTab('contact')
     } else {
       setActiveTab('company')
@@ -382,13 +379,23 @@ export function LeadConvertDialog({
     }
   }, [open, client])
 
-  const progress =
-    (Object.values(steps).filter((state) =>
-      ['done', 'warn', 'skipped'].includes(state),
-    ).length /
-      Object.keys(steps).length) *
-    100
-
+  const visibleProgressStepKeys = useMemo(
+    () => [
+      'precheck',
+      ...(mode === 'company_contact_deal' ? ['organization'] : []),
+      'contact',
+      'deal',
+    ],
+    [mode],
+  )
+  const visibleStepLabels = useMemo(() => {
+    const labels: Record<string, string> = {}
+    const stepLabelsByKey = STEP_LABELS as Record<string, string>
+    for (const key of visibleProgressStepKeys) {
+      labels[key] = stepLabelsByKey[key] ?? key
+    }
+    return labels
+  }, [STEP_LABELS, visibleProgressStepKeys])
   const isAlreadyCompleted = isLeadConvertedRecord(lead)
   const hasAnyCreated = Boolean(
     lead?.converted_organization ||
@@ -490,7 +497,7 @@ export function LeadConvertDialog({
       if (firstCompany) return firstCompany
     }
 
-    if (mode !== 'deal_only' && selectedContactId === null) {
+    if (selectedContactId === null) {
       const contactChecks: Array<MissingField | null> = [
         checkRow(
           'contact',
@@ -626,7 +633,7 @@ export function LeadConvertDialog({
         )
       }
     }
-    if (mode !== 'deal_only' && selectedContactId === null) {
+    if (selectedContactId === null) {
       push(
         'contact',
         t('leads.convert.field.contactName'),
@@ -680,13 +687,6 @@ export function LeadConvertDialog({
       leadSourceName,
       lookupOptionLabel(leadSourceSelectOptions, effectiveLeadSourceId),
       () => updateForm('dealLeadSourceId', mappedDealLeadSourceId || ''),
-    )
-    push(
-      'deal',
-      t('leads.convert.field.customerType'),
-      leadTypeName,
-      lookupOptionLabel(customerTypeSelectOptions, effectiveCustomerTypeId),
-      () => updateForm('dealCustomerTypeId', mappedCustomerTypeId || ''),
     )
     return changes
   }
@@ -752,28 +752,11 @@ export function LeadConvertDialog({
       form.companySize ||
       extraFields.company.length,
     )
-    const hasContactDraft = Boolean(
-      form.contactName.trim() ||
-      form.contactEmail.trim() ||
-      form.contactPhone.trim() ||
-      form.contactJobTitle.trim() ||
-      extraFields.contact.length,
-    )
-
     if (mode !== 'company_contact_deal' && hasCompanyDraft) {
       skipped.push(TARGET_LABEL.company)
     }
-    if (mode === 'deal_only' && hasContactDraft) {
-      skipped.push(TARGET_LABEL.contact)
-    }
     return skipped
-  }, [
-    TARGET_LABEL,
-    extraFields.company.length,
-    extraFields.contact.length,
-    form,
-    mode,
-  ])
+  }, [TARGET_LABEL, extraFields.company.length, form, mode])
 
   const setExtraValue = (
     target: 'company' | 'contact' | 'deal',
@@ -947,10 +930,9 @@ export function LeadConvertDialog({
 
           <div ref={progressSectionRef}>
             <LeadConvertProgress
-              progress={progress}
               steps={steps}
               stepDetails={stepDetails}
-              stepLabels={STEP_LABELS}
+              stepLabels={visibleStepLabels}
               currentStepKey={currentProgressStepKey}
               duplicatesChecked={duplicatesChecked}
               precheckSummary={precheckSummary}
@@ -1037,7 +1019,6 @@ export function LeadConvertDialog({
 
       <LeadConvertChangeConfirmDialog
         changes={pendingChanges}
-        targetLabels={TARGET_LABEL}
         onClose={() => setPendingChanges(null)}
         onRestoreChange={(index) => {
           setPendingChanges((current) => {

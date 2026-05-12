@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   AlertCircle,
@@ -10,7 +11,6 @@ import {
   Sparkles,
   XCircle,
 } from 'lucide-react'
-import { Progress } from '@/components/ui/progress'
 import {
   Tooltip,
   TooltipContent,
@@ -35,7 +35,6 @@ type PrecheckSummary = {
 }
 
 interface LeadConvertProgressProps {
-  progress: number
   steps: Record<string, StepState>
   stepDetails: Record<string, Array<StepDetail>>
   stepLabels: Record<string, string>
@@ -71,7 +70,6 @@ function getStepIcon(state: StepState) {
 }
 
 export function LeadConvertProgress({
-  progress,
   steps,
   stepDetails,
   stepLabels,
@@ -80,27 +78,42 @@ export function LeadConvertProgress({
   precheckSummary,
 }: LeadConvertProgressProps) {
   const { t } = useTranslation()
+  const stepEntries = Object.entries(stepLabels)
+  const completedCount = stepEntries.filter(([key]) =>
+    ['done', 'warn', 'skipped'].includes(steps[key] ?? 'pending'),
+  ).length
+  const connectorProgress =
+    stepEntries.length <= 1
+      ? 0
+      : Math.min(100, (completedCount / (stepEntries.length - 1)) * 100)
+  const stepperStyle = {
+    '--step-count': stepEntries.length,
+    '--connector-progress': `${connectorProgress}%`,
+  } as CSSProperties
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>{t('leads.convert.progress')}</span>
-        <span>{Math.round(progress)}%</span>
-      </div>
-      <Progress
-        value={progress}
-        className="bg-muted/60 [&_[data-slot=progress-indicator]]:bg-gradient-to-r [&_[data-slot=progress-indicator]]:from-sky-400 [&_[data-slot=progress-indicator]]:via-teal-400 [&_[data-slot=progress-indicator]]:to-emerald-500"
-      />
+    <div className="rounded-2xl border border-slate-200 bg-linear-to-br from-card via-card to-muted/20 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-slate-700/80">
       <TooltipProvider delayDuration={200}>
         <div
-          className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-6"
+          className="relative grid grid-cols-1 gap-2 md:grid-cols-[repeat(var(--step-count),minmax(0,1fr))] md:gap-0"
           role="list"
           aria-label={t('leads.convert.progress')}
+          style={stepperStyle}
         >
-          {Object.entries(stepLabels).map(([key, label]) => {
+          <div
+            aria-hidden
+            className="absolute left-[calc(100%/(var(--step-count)*2))] right-[calc(100%/(var(--step-count)*2))] top-4 hidden h-1 rounded-full bg-border/80 shadow-inner md:block"
+          >
+            <div
+              className="h-full rounded-full bg-linear-to-r from-emerald-500 via-teal-500 to-sky-500 transition-[width] duration-500 ease-out"
+              style={{ width: 'var(--connector-progress)' }}
+            />
+          </div>
+          {stepEntries.map(([key, label]) => {
             const state = steps[key] ?? 'pending'
             const details = stepDetails[key] ?? []
             const hasDetails = details.length > 0
+            const isActive = currentStepKey === key
 
             return (
               <Tooltip key={key}>
@@ -111,19 +124,47 @@ export function LeadConvertProgress({
                     aria-current={currentStepKey === key ? 'step' : undefined}
                     aria-label={`${label}: ${t(`leads.convert.stepState.${state}`, { defaultValue: state })}`}
                     className={cn(
-                      'flex min-w-0 items-center gap-2 rounded-md border px-2 py-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                      'relative z-10 flex min-w-0 items-center gap-3 rounded-xl border border-border/60 bg-background/80 px-3 py-2.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:flex-col md:gap-2 md:rounded-none md:border-0 md:bg-transparent md:px-2 md:py-0 md:text-center',
                       hasDetails && 'cursor-help',
-                      currentStepKey === key && 'border-primary/60',
+                      isActive &&
+                        'border-primary/60 bg-primary/[0.05] md:bg-transparent',
                     )}
                   >
-                    {getStepIcon(state)}
-                    <span className="truncate">{label}</span>
+                    <div
+                      className={cn(
+                        'flex size-8 shrink-0 items-center justify-center rounded-full border bg-background shadow-sm ring-4 ring-card',
+                        state === 'done' &&
+                          'border-emerald-400 bg-emerald-50 text-emerald-700',
+                        state === 'warn' &&
+                          'border-amber-300 bg-amber-50 text-amber-700',
+                        state === 'running' &&
+                          'border-sky-400 bg-sky-50 text-sky-700',
+                        state === 'failed' &&
+                          'border-destructive/50 bg-destructive/10',
+                        state === 'pending' &&
+                          'border-slate-300 bg-background text-muted-foreground',
+                        state === 'skipped' &&
+                          'border-border bg-muted text-muted-foreground',
+                      )}
+                    >
+                      {getStepIcon(state)}
+                    </div>
+                    <div className="min-w-0 md:w-full">
+                      <span className="block truncate font-medium text-foreground">
+                        {label}
+                      </span>
+                    </div>
                   </div>
                 </TooltipTrigger>
                 <TooltipContent
                   side="bottom"
                   sideOffset={6}
-                  className="min-w-[260px] max-w-md border border-border bg-popover p-3 text-popover-foreground shadow-lg [&_svg]:shrink-0"
+                  className={cn(
+                    'border border-border bg-popover p-3 text-popover-foreground shadow-lg [&_svg]:shrink-0',
+                    key === 'precheck'
+                      ? 'w-[30rem] max-w-[calc(100vw-2rem)]'
+                      : 'min-w-[260px] max-w-md',
+                  )}
                 >
                   <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                     {label}

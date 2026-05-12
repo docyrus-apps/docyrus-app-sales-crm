@@ -119,31 +119,26 @@ export function LeadConvertPrecheckTooltip({
 
   return (
     <div className="space-y-2" role="group">
-      <ul className="space-y-1">
-        <li className="flex items-start gap-1.5 text-xs leading-snug">
-          <CheckCircle2 className="mt-0.5 size-3.5 text-emerald-600" />
-          <span className="text-foreground/90">
-            {t('leads.convert.precheckStatus.requiredFilled', {
-              defaultValue: 'Required fields filled',
-            })}
-          </span>
-        </li>
-      </ul>
-      <div
-        className="grid grid-cols-1 gap-1.5 border-t pt-2 sm:grid-cols-3"
-        role="list"
-      >
+      <div className="flex items-center gap-1.5 rounded-lg border border-emerald-200/70 bg-emerald-50/70 px-2.5 py-2 text-xs text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-200">
+        <CheckCircle2 className="size-3.5" />
+        <span>
+          {t('leads.convert.precheckStatus.requiredFilled', {
+            defaultValue: 'Required fields filled',
+          })}
+        </span>
+      </div>
+      <div className="grid grid-cols-3 gap-1.5" role="list">
         {targets.map((targetMeta) => {
           const targetSummary = summary[targetMeta.key]
           return (
             <div
               key={targetMeta.key}
               role="listitem"
-              className="rounded-md border bg-background/50 p-2"
+              className="min-w-0 rounded-lg border bg-background/60 p-2"
             >
               <div className="mb-1 flex items-center gap-1 text-[11px] font-medium">
                 {targetMeta.icon}
-                <span>{targetMeta.label}</span>
+                <span className="truncate">{targetMeta.label}</span>
               </div>
               {renderTargetCell(targetSummary)}
             </div>

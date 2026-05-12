@@ -374,8 +374,7 @@
       "modeLabel": "Dönüşüm tipi",
       "mode": {
         "company_contact_deal": "Şirket + Kişi + Fırsat",
-        "contact_deal": "Kişi + Fırsat",
-        "deal_only": "Sadece Fırsat"
+        "contact_deal": "Kişi + Fırsat"
       },
       "target": {
         "company": "Şirket",
@@ -492,8 +491,8 @@
         "exampleMatch": "örn: {{name}}"
       },
       "changeConfirm": {
-        "title": "Lead bilgilerinden farklı değerler",
-        "description": "Aşağıdaki alanlarda lead'deki değerleri değiştirmişsiniz. Convert ettiğinizde lead'in mevcut bilgisi yerine sizin yazdığınız değer hedef kayda yazılacak.",
+        "title": "Güncellenecek alanlar",
+        "description": "Bu alanlar yeni değerleriyle kaydedilecek.",
         "sourceLabel": "Lead'de",
         "targetLabel": "Yazılacak",
         "restoreButton": "Geri al",
@@ -552,6 +551,9 @@
         "organization": "Organization: {{field}}",
         "contact": "Contact: {{field}}",
         "deal": "Deal: {{field}}"
+      },
+      "mappingHeader": {
+        "source": "Lead"
       },
       "addField": "{{target}} alanı ekle",
       "noFieldsAvailable": "Eklenebilir alan yok.",

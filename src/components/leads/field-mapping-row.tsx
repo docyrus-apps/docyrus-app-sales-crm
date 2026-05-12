@@ -48,8 +48,6 @@ export interface FieldMappingRowProps {
 
 export function FieldMappingRow({
   label,
-  sourceLabel,
-  targetLabel,
   sourceValue,
   value,
   kind = 'text',
@@ -74,16 +72,19 @@ export function FieldMappingRow({
     <div
       data-field-key={fieldKey}
       className={cn(
-        'group rounded-lg border bg-card p-3 transition-colors',
-        required && 'border-primary/25 bg-primary/[0.02]',
-        highlight && 'border-primary/40 bg-primary/[0.03]',
+        'group rounded-2xl border border-border/70 bg-linear-to-br from-card via-card to-muted/[0.16] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] transition-colors',
+        required && 'border-rose-200/80 dark:border-rose-900/40',
+        highlight &&
+          'border-primary/35 bg-linear-to-br from-primary/[0.03] via-card to-sky-500/[0.035]',
       )}
     >
-      <div className="mb-2 flex items-center justify-between gap-2">
+      <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-1.5">
-          <Label className="truncate text-xs font-medium">{label}</Label>
+          <Label className="truncate text-xs font-medium text-foreground/90">
+            {label}
+          </Label>
           {required ? (
-            <span className="rounded border border-destructive/25 bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive">
+            <span className="rounded-full border border-rose-200/80 bg-rose-50/80 px-2 py-0.5 text-[10px] font-medium text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/25 dark:text-rose-200">
               {t('leads.convert.requiredField', {
                 defaultValue: 'Required',
               })}
@@ -106,39 +107,44 @@ export function FieldMappingRow({
         className={cn(
           'grid items-center gap-2',
           hasSourceValue
-            ? 'grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1.4fr)]'
+            ? 'grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1.3fr)]'
             : 'grid-cols-1',
         )}
       >
         {hasSourceValue ? (
           <>
-            <div className="flex h-9 min-w-0 items-center gap-1 rounded-md border border-dashed border-muted-foreground/30 bg-muted/30 px-2.5 text-xs text-muted-foreground">
-              <span className="truncate" title={sourceDisplay}>
-                {sourceDisplay}
-              </span>
-              {canRestoreSource ? (
-                <button
-                  type="button"
-                  onClick={onRestoreSource}
-                  className="ml-auto rounded p-0.5 text-muted-foreground opacity-0 transition hover:bg-background hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
-                  aria-label={t('leads.convert.restoreFromSource', {
-                    defaultValue: 'Restore from lead',
-                  })}
-                  title={t('leads.convert.restoreFromSource', {
-                    defaultValue: 'Restore from lead',
-                  })}
+            <div className="min-w-0 rounded-xl border border-sky-200/70 bg-sky-50/75 px-3 py-2 text-xs dark:border-sky-900/50 dark:bg-sky-950/20">
+              <div className="flex min-w-0 items-center gap-1">
+                <span
+                  className="truncate text-foreground/80"
+                  title={sourceDisplay}
                 >
-                  <RotateCcw className="size-3" />
-                </button>
-              ) : null}
+                  {sourceDisplay}
+                </span>
+                {canRestoreSource ? (
+                  <button
+                    type="button"
+                    onClick={onRestoreSource}
+                    className="ml-auto rounded-md p-1 text-muted-foreground opacity-0 transition hover:bg-background/80 hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
+                    aria-label={t('leads.convert.restoreFromSource', {
+                      defaultValue: 'Restore from lead',
+                    })}
+                    title={t('leads.convert.restoreFromSource', {
+                      defaultValue: 'Restore from lead',
+                    })}
+                  >
+                    <RotateCcw className="size-3" />
+                  </button>
+                ) : null}
+              </div>
             </div>
             <ArrowRight
-              className="hidden size-3.5 text-muted-foreground sm:block"
+              className="hidden size-3.5 text-muted-foreground/60 sm:block"
               aria-hidden
             />
           </>
         ) : null}
-        <div className="min-w-0">
+        <div className="min-w-0 rounded-xl border border-emerald-200/70 bg-emerald-50/70 p-2.5 dark:border-emerald-900/50 dark:bg-emerald-950/20">
           {kind === 'textarea' ? (
             <Textarea
               value={value}
@@ -184,15 +190,6 @@ export function FieldMappingRow({
           )}
         </div>
       </div>
-      <p className="mt-2 text-[10.5px] uppercase tracking-wide text-muted-foreground/80">
-        {hasSourceValue ? (
-          <>
-            <span>{sourceLabel ?? t('common.na')}</span>
-            <span className="mx-1.5">→</span>
-          </>
-        ) : null}
-        <span>{targetLabel}</span>
-      </p>
     </div>
   )
 }

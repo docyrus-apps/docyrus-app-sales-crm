@@ -237,26 +237,27 @@ function LeadsPageInner({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {!isLeadConverted(row.original) && (
-                  <DropdownMenuItem onClick={() => onOpenEdit(row.original)}>
-                    <Pencil className="size-4" />
-                    {t('common.edit', 'Edit')}
+                {isLeadConverted(row.original) ? (
+                  <DropdownMenuItem onClick={() => onView(row.original)}>
+                    <Eye className="size-4" />
+                    {t('leads.viewLead', 'View lead')}
                   </DropdownMenuItem>
-                )}
-                {!isLeadConverted(row.original) && (
-                  <DropdownMenuItem
-                    onClick={() => setConvertLead(row.original)}
-                  >
-                    <RefreshCw className="size-4" />
-                    {t('leads.convert.convertButton')}
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem onClick={() => onDuplicate(row.original)}>
-                  <Copy className="size-4" />
-                  {t('common.duplicate', 'Duplicate')}
-                </DropdownMenuItem>
-                {!isLeadConverted(row.original) && (
+                ) : (
                   <>
+                    <DropdownMenuItem onClick={() => onOpenEdit(row.original)}>
+                      <Pencil className="size-4" />
+                      {t('common.edit', 'Edit')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => setConvertLead(row.original)}
+                    >
+                      <RefreshCw className="size-4" />
+                      {t('leads.convert.convertButton')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onDuplicate(row.original)}>
+                      <Copy className="size-4" />
+                      {t('common.duplicate', 'Duplicate')}
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={() => onDelete(row.original)}

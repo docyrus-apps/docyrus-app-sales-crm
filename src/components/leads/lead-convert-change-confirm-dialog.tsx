@@ -11,7 +11,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Badge } from '@/components/ui/badge'
 
 type ConvertTarget = 'company' | 'contact' | 'deal'
 
@@ -25,7 +24,6 @@ export type LeadConvertPendingChange = {
 
 interface LeadConvertChangeConfirmDialogProps {
   changes: Array<LeadConvertPendingChange> | null
-  targetLabels: Record<ConvertTarget, string>
   onClose: () => void
   onRestoreChange: (index: number) => void
   onConfirm: () => void
@@ -33,7 +31,6 @@ interface LeadConvertChangeConfirmDialogProps {
 
 export function LeadConvertChangeConfirmDialog({
   changes,
-  targetLabels,
   onClose,
   onRestoreChange,
   onConfirm,
@@ -47,7 +44,7 @@ export function LeadConvertChangeConfirmDialog({
         if (!next) onClose()
       }}
     >
-      <AlertDialogContent>
+      <AlertDialogContent className="border-border/70 bg-linear-to-br from-background via-background to-muted/30">
         <AlertDialogHeader>
           <AlertDialogTitle>
             {t('leads.convert.changeConfirm.title')}
@@ -58,19 +55,28 @@ export function LeadConvertChangeConfirmDialog({
         </AlertDialogHeader>
         <div
           className="max-h-72 space-y-2 overflow-y-auto"
-          role="table"
+          role="list"
           aria-label={t('leads.convert.changeConfirm.title')}
         >
+          <div className="grid items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground sm:grid-cols-[1fr_auto_1fr]">
+            <div className="rounded-xl border border-sky-200/70 bg-sky-50/70 px-3 py-2 text-sky-800/80 dark:border-sky-900/50 dark:bg-sky-950/20 dark:text-sky-200/80">
+              {t('leads.convert.mappingHeader.source')}
+            </div>
+            <ArrowRight
+              className="hidden size-3.5 text-muted-foreground/50 sm:block"
+              aria-hidden
+            />
+            <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/70 px-3 py-2 text-emerald-800/80 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-200/80">
+              {t('leads.convert.changeConfirm.targetLabel')}
+            </div>
+          </div>
           {(changes ?? []).map((change, index) => (
             <div
               key={index}
-              role="row"
-              className="rounded-md border bg-card p-3 text-xs"
+              role="listitem"
+              className="rounded-2xl border border-border/70 bg-card/85 p-3 text-xs"
             >
-              <div className="mb-1 flex items-center gap-1.5" role="cell">
-                <Badge variant="outline" className="text-[10px]">
-                  {targetLabels[change.tab]}
-                </Badge>
+              <div className="mb-2 flex items-center gap-1.5">
                 <span className="font-medium">{change.label}</span>
                 <Button
                   type="button"
@@ -88,13 +94,7 @@ export function LeadConvertChangeConfirmDialog({
                 </Button>
               </div>
               <div className="grid grid-cols-1 items-center gap-2 sm:grid-cols-[1fr_auto_1fr]">
-                <div
-                  className="rounded border border-dashed bg-muted/40 px-2 py-1 text-muted-foreground"
-                  role="cell"
-                >
-                  <p className="text-[10px] uppercase tracking-wide">
-                    {t('leads.convert.changeConfirm.sourceLabel')}
-                  </p>
+                <div className="rounded-xl border border-sky-200/70 bg-sky-50/75 px-3 py-2 text-muted-foreground dark:border-sky-900/50 dark:bg-sky-950/20">
                   <p className="truncate text-foreground/80">
                     {change.sourceText || '—'}
                   </p>
@@ -103,13 +103,7 @@ export function LeadConvertChangeConfirmDialog({
                   className="hidden size-3.5 text-muted-foreground sm:block"
                   aria-hidden
                 />
-                <div
-                  className="rounded border bg-primary/[0.04] px-2 py-1"
-                  role="cell"
-                >
-                  <p className="text-[10px] uppercase tracking-wide text-primary">
-                    {t('leads.convert.changeConfirm.targetLabel')}
-                  </p>
+                <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/70 px-3 py-2 dark:border-emerald-900/50 dark:bg-emerald-950/20">
                   <p className="truncate font-medium">
                     {change.targetText || '—'}
                   </p>

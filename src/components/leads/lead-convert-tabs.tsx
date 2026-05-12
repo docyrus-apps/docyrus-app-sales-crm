@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AlertTriangle, Plus } from 'lucide-react'
+import { AlertTriangle, ArrowRight, Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/animate-ui/components/buttons/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -15,10 +15,7 @@ import {
 } from '@/components/leads/field-mapping-row'
 import { LeadConvertReuseBanner } from '@/components/leads/lead-convert-reuse-banner'
 
-export type LeadConvertConversionMode =
-  | 'company_contact_deal'
-  | 'contact_deal'
-  | 'deal_only'
+export type LeadConvertConversionMode = 'company_contact_deal' | 'contact_deal'
 export type LeadConvertTarget = 'company' | 'contact' | 'deal'
 export type LeadConvertEntityCandidate = Record<string, any> & {
   id?: string
@@ -175,8 +172,23 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
 
   const tabsToShow: Array<LeadConvertTarget> = []
   if (mode === 'company_contact_deal') tabsToShow.push('company')
-  if (mode !== 'deal_only') tabsToShow.push('contact')
+  tabsToShow.push('contact')
   tabsToShow.push('deal')
+
+  const renderMappingHeader = (target: LeadConvertTarget) => (
+    <div className="grid items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1.3fr)]">
+      <div className="rounded-xl border border-sky-200/70 bg-sky-50/70 px-3 py-2 text-sky-800/80 dark:border-sky-900/50 dark:bg-sky-950/20 dark:text-sky-200/80">
+        {t('leads.convert.mappingHeader.source')}
+      </div>
+      <ArrowRight
+        className="hidden size-3.5 text-muted-foreground/50 sm:block"
+        aria-hidden
+      />
+      <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/70 px-3 py-2 text-emerald-800/80 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-200/80">
+        {targetLabels[target]}
+      </div>
+    </div>
+  )
 
   const renderAddFieldPopover = (target: LeadConvertTarget) => {
     const targetLabel = targetLabels[target]
@@ -190,7 +202,7 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
             variant="outline"
             size="sm"
             disabled={formDisabled || options.length === 0}
-            className="h-8"
+            className="h-8 rounded-xl"
           >
             <Plus className="mr-1 size-3.5" />
             {t('leads.convert.addField', { target: targetLabel })}
@@ -234,16 +246,18 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
   return (
     <Tabs
       value={activeTab}
-      onValueChange={(value) =>
-        onActiveTabChange(value as LeadConvertTarget)
-      }
+      onValueChange={(value) => onActiveTabChange(value as LeadConvertTarget)}
       className="w-full"
     >
-      <TabsList className="w-full justify-start">
+      <TabsList className="w-full justify-start rounded-2xl border border-slate-200 bg-muted/30 p-1 shadow-[0_1px_2px_rgba(15,23,42,0.04),inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-slate-700/80">
         {tabsToShow.map((tab) => {
           const extraCount = extraFields[tab].length
           return (
-            <TabsTrigger key={tab} value={tab} className="flex-1 gap-1.5">
+            <TabsTrigger
+              key={tab}
+              value={tab}
+              className="flex-1 gap-1.5 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm"
+            >
               <span>{targetLabels[tab]}</span>
               {extraCount > 0 ? (
                 <Badge variant="secondary" className="h-4 px-1 text-[10px]">
@@ -277,6 +291,7 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
               <div className="flex items-center justify-end">
                 {renderAddFieldPopover('company')}
               </div>
+              {renderMappingHeader('company')}
               <FieldMappingRow
                 fieldKey="company:name"
                 label={t('leads.convert.field.companyName')}
@@ -466,6 +481,7 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
               <div className="flex items-center justify-end">
                 {renderAddFieldPopover('contact')}
               </div>
+              {renderMappingHeader('contact')}
               <FieldMappingRow
                 fieldKey="contact:name"
                 label={t('leads.convert.field.contactName')}
@@ -593,15 +609,15 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
         <div className="flex items-center justify-end">
           {renderAddFieldPopover('deal')}
         </div>
+        {renderMappingHeader('deal')}
         <FieldMappingRow
           fieldKey="deal:name"
           label={t('leads.convert.field.dealName')}
           sourceLabel={t('leads.convert.sourceLabel.auto')}
           targetLabel={t('leads.convert.targetLabel.deal', { field: 'name' })}
           sourceValue={
-            [lead?.company_name_text, lead?.name]
-              .filter(Boolean)
-              .join(' - ') || ''
+            [lead?.company_name_text, lead?.name].filter(Boolean).join(' - ') ||
+            ''
           }
           value={form.dealName}
           onChange={(v) => updateForm('dealName', v)}

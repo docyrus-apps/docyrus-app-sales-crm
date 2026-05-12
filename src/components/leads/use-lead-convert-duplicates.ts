@@ -123,7 +123,7 @@ export function useLeadConvertDuplicates({
           throw new Error(t('leads.convert.validation.companyNameRequired'))
         }
 
-        if (mode !== 'deal_only' && !form.contactName.trim()) {
+        if (!form.contactName.trim()) {
           throw new Error(t('leads.convert.validation.contactNameRequired'))
         }
 
@@ -146,7 +146,7 @@ export function useLeadConvertDuplicates({
                 { signal: controller.signal },
               )
             : Promise.resolve([]),
-          mode !== 'deal_only' && contactKeyword
+          contactKeyword
             ? client.get(
                 '/v1/apps/base/data-sources/contact/items',
                 {
@@ -237,14 +237,12 @@ export function useLeadConvertDuplicates({
             ),
           )
         }
-        if (mode !== 'deal_only') {
-          precheckDetails.push(
-            makeStepDetail(
-              'success',
-              t('leads.convert.check.contactName', { value: form.contactName }),
-            ),
-          )
-        }
+        precheckDetails.push(
+          makeStepDetail(
+            'success',
+            t('leads.convert.check.contactName', { value: form.contactName }),
+          ),
+        )
         if (mode === 'company_contact_deal') {
           if (companyMatches.length > 0) {
             precheckDetails.push(
@@ -269,29 +267,27 @@ export function useLeadConvertDuplicates({
             )
           }
         }
-        if (mode !== 'deal_only') {
-          if (contactMatches.length > 0) {
-            precheckDetails.push(
-              makeStepDetail(
-                exactContact ? 'warn' : 'info',
-                exactContact
-                  ? t('leads.convert.check.similarContactsFound', {
-                      count: contactMatches.length,
-                      name: exactContact.name,
-                    })
-                  : t('leads.convert.check.similarContactsSuggested', {
-                      count: contactMatches.length,
-                    }),
-              ),
-            )
-          } else {
-            precheckDetails.push(
-              makeStepDetail(
-                'success',
-                t('leads.convert.check.noContactConflict'),
-              ),
-            )
-          }
+        if (contactMatches.length > 0) {
+          precheckDetails.push(
+            makeStepDetail(
+              exactContact ? 'warn' : 'info',
+              exactContact
+                ? t('leads.convert.check.similarContactsFound', {
+                    count: contactMatches.length,
+                    name: exactContact.name,
+                  })
+                : t('leads.convert.check.similarContactsSuggested', {
+                    count: contactMatches.length,
+                  }),
+            ),
+          )
+        } else {
+          precheckDetails.push(
+            makeStepDetail(
+              'success',
+              t('leads.convert.check.noContactConflict'),
+            ),
+          )
         }
         if (dealMatches.length > 0) {
           const first = dealMatches[0]
@@ -306,10 +302,7 @@ export function useLeadConvertDuplicates({
           )
         } else {
           precheckDetails.push(
-            makeStepDetail(
-              'success',
-              t('leads.convert.check.noDealConflict'),
-            ),
+            makeStepDetail('success', t('leads.convert.check.noDealConflict')),
           )
         }
         setStepDetail('precheck', precheckDetails)
@@ -328,19 +321,16 @@ export function useLeadConvertDuplicates({
                   exactName: exactCompany?.name,
                 }
               : { status: 'unchecked', count: 0 },
-          contact:
-            mode !== 'deal_only'
-              ? {
-                  status:
-                    contactMatches.length === 0
-                      ? 'clean'
-                      : exactContact
-                        ? 'exact'
-                        : 'matches',
-                  count: contactMatches.length,
-                  exactName: exactContact?.name,
-                }
-              : { status: 'unchecked', count: 0 },
+          contact: {
+            status:
+              contactMatches.length === 0
+                ? 'clean'
+                : exactContact
+                  ? 'exact'
+                  : 'matches',
+            count: contactMatches.length,
+            exactName: exactContact?.name,
+          },
           deal: {
             status: dealMatches.length === 0 ? 'clean' : 'matches',
             count: dealMatches.length,

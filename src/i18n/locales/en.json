@@ -383,8 +383,7 @@
       "modeLabel": "Conversion type",
       "mode": {
         "company_contact_deal": "Company + Contact + Deal",
-        "contact_deal": "Contact + Deal",
-        "deal_only": "Deal only"
+        "contact_deal": "Contact + Deal"
       },
       "target": {
         "company": "Company",
@@ -501,8 +500,8 @@
         "exampleMatch": "e.g. {{name}}"
       },
       "changeConfirm": {
-        "title": "Values differ from lead",
-        "description": "You have changed the lead values in the following fields. When converted, your entered values will be written to the target record instead of the existing lead information.",
+        "title": "Fields to update",
+        "description": "These fields will be saved with their new values.",
         "sourceLabel": "In lead",
         "targetLabel": "Will be written",
         "restoreButton": "Restore",
@@ -561,6 +560,9 @@
         "organization": "Organization: {{field}}",
         "contact": "Contact: {{field}}",
         "deal": "Deal: {{field}}"
+      },
+      "mappingHeader": {
+        "source": "Lead"
       },
       "addField": "Add {{target}} field",
       "noFieldsAvailable": "No fields available to add.",

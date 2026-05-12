@@ -95,9 +95,7 @@ export interface UseLeadConvertConversionOptions {
   setStep: (key: string, state: LeadConvertStepState) => void
   setStepDetail: (key: string, details: Array<LeadConvertStepDetail>) => void
   addStepDetail: (key: string, detail: LeadConvertStepDetail) => void
-  setPendingChanges: (
-    changes: Array<LeadConvertPendingChange> | null,
-  ) => void
+  setPendingChanges: (changes: Array<LeadConvertPendingChange> | null) => void
 
   findDuplicates: (args: {
     form: LeadConvertForm
@@ -180,6 +178,48 @@ export function useLeadConvertConversion(
       dataSourceSlug: 'leads',
     },
   )
+  const { data: leadFieldLeadSourceOptions = [] } = useEnumEntities(
+    'lead_source',
+    {
+      appSlug: 'base_crm',
+      dataSourceSlug: 'leads',
+    },
+  )
+  const { data: dealFieldLeadSourceOptions = [] } = useEnumEntities(
+    'lead_source',
+    {
+      appSlug: 'base_crm',
+      dataSourceSlug: 'deal',
+    },
+  )
+  const { data: leadCompanyIndustryOptions = [] } = useEnumEntities(
+    'company_industry',
+    {
+      appSlug: 'base_crm',
+      dataSourceSlug: 'leads',
+    },
+  )
+  const { data: organizationIndustryOptions = [] } = useEnumEntities(
+    'industry',
+    {
+      appSlug: 'base',
+      dataSourceSlug: 'organization',
+    },
+  )
+  const { data: leadCompanySizeOptions = [] } = useEnumEntities(
+    'company_size',
+    {
+      appSlug: 'base_crm',
+      dataSourceSlug: 'leads',
+    },
+  )
+  const { data: organizationCompanySizeOptions = [] } = useEnumEntities(
+    'company_size',
+    {
+      appSlug: 'base',
+      dataSourceSlug: 'organization',
+    },
+  )
 
   const requireEnumValue = (
     options: Array<{ id: string; name: string }>,
@@ -224,6 +264,79 @@ export function useLeadConvertConversion(
       pickDefined(data),
     )
   }
+
+  const mapEnumBetweenDataSources = (
+    sourceId: string,
+    sourceOptions: Array<{ id?: string; name?: string }>,
+    targetOptions: Array<{ id?: string; name?: string }>,
+  ) => {
+    const sourceName = sourceOptions.find(
+      (option) => option.id === sourceId,
+    )?.name
+    return sourceName ? optionByName(targetOptions, sourceName) : undefined
+  }
+
+  const buildLeadFieldSyncPatch = () =>
+    pickDefined({
+      name: selectedContactId === null ? form.contactName : undefined,
+      email: selectedContactId === null ? form.contactEmail : undefined,
+      phone: selectedContactId === null ? form.contactPhone : undefined,
+      contact_job_title:
+        selectedContactId === null ? form.contactJobTitle : undefined,
+      company_name_text:
+        mode === 'company_contact_deal' && selectedCompanyId === null
+          ? form.companyName
+          : undefined,
+      company_email:
+        mode === 'company_contact_deal' && selectedCompanyId === null
+          ? form.companyEmail
+          : undefined,
+      company_phone:
+        mode === 'company_contact_deal' && selectedCompanyId === null
+          ? form.companyPhone
+          : undefined,
+      website:
+        mode === 'company_contact_deal' && selectedCompanyId === null
+          ? form.companyWebsite
+          : undefined,
+      address:
+        mode === 'company_contact_deal' && selectedCompanyId === null
+          ? form.companyAddress
+          : undefined,
+      city:
+        mode === 'company_contact_deal' && selectedCompanyId === null
+          ? form.companyCity
+          : undefined,
+      company_industry:
+        mode === 'company_contact_deal' &&
+        selectedCompanyId === null &&
+        form.companyIndustry
+          ? mapEnumBetweenDataSources(
+              form.companyIndustry,
+              organizationIndustryOptions,
+              leadCompanyIndustryOptions,
+            )
+          : undefined,
+      company_size:
+        mode === 'company_contact_deal' &&
+        selectedCompanyId === null &&
+        form.companySize
+          ? mapEnumBetweenDataSources(
+              form.companySize,
+              organizationCompanySizeOptions,
+              leadCompanySizeOptions,
+            )
+          : undefined,
+      lead_source: form.dealLeadSourceId
+        ? mapEnumBetweenDataSources(
+            form.dealLeadSourceId,
+            dealFieldLeadSourceOptions,
+            leadFieldLeadSourceOptions,
+          )
+        : undefined,
+      deal_value: form.dealValue ? Number(form.dealValue) : undefined,
+      contact_message: form.notes,
+    })
 
   const fetchLatestLeadConversion = async () => {
     if (!client || !lead?.id) return null
@@ -467,9 +580,7 @@ export function useLeadConvertConversion(
         key: 'precheck',
         shouldRun: () => true,
         run: async () => {
-          state.me = await client
-            .get('/v1/users/me')
-            .catch(() => null)
+          state.me = await client.get('/v1/users/me').catch(() => null)
           state.convertedLeadStatusValue = requireEnumValue(
             leadStatusOptions,
             'Converted',
@@ -557,7 +668,7 @@ export function useLeadConvertConversion(
       },
       {
         key: 'contact',
-        shouldRun: () => mode !== 'deal_only',
+        shouldRun: () => true,
         onSkip: () => {
           setStepDetail('contact', [
             detail('neutral', t('leads.convert.result.skipped')),
@@ -740,6 +851,7 @@ export function useLeadConvertConversion(
         shouldRun: () => true,
         run: async () => {
           await updateLead({
+            ...buildLeadFieldSyncPatch(),
             lead_status: state.convertedLeadStatusValue,
             converted_deal: state.dealId,
             converted_contact: state.contactId,
@@ -789,8 +901,8 @@ export function useLeadConvertConversion(
 
       const latestHasAnyCreated = Boolean(
         getRelationId(latestLead?.converted_organization) ||
-          getRelationId(latestLead?.converted_contact) ||
-          latestDealId,
+        getRelationId(latestLead?.converted_contact) ||
+        latestDealId,
       )
 
       if (
@@ -801,7 +913,8 @@ export function useLeadConvertConversion(
       }
 
       state.organizationId =
-        getRelationId(latestLead?.converted_organization) ?? state.organizationId
+        getRelationId(latestLead?.converted_organization) ??
+        state.organizationId
       state.contactId =
         getRelationId(latestLead?.converted_contact) ?? state.contactId
       state.dealId = latestDealId ?? state.dealId
@@ -890,7 +1003,10 @@ export function useLeadConvertConversion(
       })
       onClose()
       if (state.dealId) {
-        void navigate({ to: '/deals/$dealId', params: { dealId: state.dealId } })
+        void navigate({
+          to: '/deals/$dealId',
+          params: { dealId: state.dealId },
+        })
       }
     } catch (error) {
       const message = getErrorMessage(error, t)
