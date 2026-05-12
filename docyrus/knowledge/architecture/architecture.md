@@ -36,11 +36,7 @@ Current checkpoint:
 Recommended next order:
 
 1. ~~Extract `LeadConvertTabs` / tab section rendering only.~~ Done — tab rendering and the add-field popover now live in `lead-convert-tabs.tsx`. Form state, handlers, and reuse ids stayed owned by `lead-convert-dialog.tsx` and are passed explicitly as props. Shared types (`LeadConvertForm`, `LeadConvertExtraFieldsState`, `LeadConvertTarget`, `LeadConvertConversionMode`, `LeadConvertEntityCandidate`) are exported from `lead-convert-tabs.tsx` for downstream extractions.
-2. Extract enum mapping into a helper/hook.
-   - Candidate name: `useLeadConvertEnumMappings`.
-   - Inputs: lead enum relation names plus target enum option arrays.
-   - Outputs should preserve current effective ids and validation behavior, especially the guard that blocks conversion when a source enum cannot map to a target enum id.
-   - Do not change payload shapes.
+2. ~~Extract enum mapping into a helper/hook.~~ Done — `use-lead-convert-enum-mappings.ts` owns the deal-stage / lead-source / customer-type / industry / company-size `useEnumEntities` calls and exposes their raw arrays, the derived `SelectOption` lists, the `lead*Name` source labels, the `mapped*Id` fallbacks, and the `effective*Id` values combining form input with the mapped fallback. Pure utilities (`optionByName`, `mapLeadTypeToCustomerType`) are also exported so `requireEnumValue` in the dialog can keep reusing them on the conversion-write path. Conversion-write enums (`conversionStateOptions`, `conversionModeOptions`, `leadStatusOptions`) intentionally stay in the dialog.
 3. Extract form/prefill logic into `useLeadConvertForm`.
    - Preserve current initial values, `sourceDealName`, `updateForm`, and change confirmation comparisons.
    - Be careful with stale closures in `findChangedFromLead` and `runConversion`.
