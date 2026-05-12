@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { useDocyrusClient } from '@docyrus/signin'
@@ -7,17 +7,10 @@ import { useTranslation } from 'react-i18next'
 import {
   AlertCircle,
   AlertTriangle,
-  ArrowRight,
-  Building2,
   CheckCircle2,
-  Circle,
-  CircleDashed,
   Info,
   Loader2,
   Plus,
-  Sparkles,
-  UserRound,
-  XCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/animate-ui/components/buttons/button'
@@ -27,29 +20,19 @@ import { AwesomeDialogFooter } from '@/components/docyrus/awesome-dialog/awesome
 import { AwesomeDialogHeader } from '@/components/docyrus/awesome-dialog/awesome-dialog-header'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import {
   FieldMappingRow,
   type FieldKind,
   type SelectOption,
 } from '@/components/leads/field-mapping-row'
+import { LeadConvertReuseBanner } from '@/components/leads/lead-convert-reuse-banner'
+import { LeadConvertModeSelector } from '@/components/leads/lead-convert-mode-selector'
+import {
+  LeadConvertChangeConfirmDialog,
+  type LeadConvertPendingChange,
+} from '@/components/leads/lead-convert-change-confirm-dialog'
+import { LeadConvertProgress } from '@/components/leads/lead-convert-progress'
 import {
   Popover,
   PopoverContent,
@@ -81,13 +64,6 @@ type PrecheckTargetSummary = {
   exactName?: string
 }
 type ConvertTarget = 'company' | 'contact' | 'deal'
-type PendingChange = {
-  tab: ConvertTarget
-  label: string
-  sourceText: string
-  targetText: string
-  restore: () => void
-}
 type EntityCandidate = Record<string, any> & { id?: string; name?: string }
 type FieldMeta = { slug?: string }
 type DataSourceMeta = { fields?: Array<FieldMeta> }
@@ -302,32 +278,6 @@ function firstItem(response: unknown): EntityCandidate | undefined {
   return unwrapItems(response)[0]
 }
 
-function renderDetailIcon(tone: DetailTone) {
-  if (tone === 'success')
-    return <CheckCircle2 className="mt-0.5 size-3.5 text-emerald-600" />
-  if (tone === 'warn')
-    return <Sparkles className="mt-0.5 size-3.5 text-amber-600" />
-  if (tone === 'error')
-    return <XCircle className="mt-0.5 size-3.5 text-destructive" />
-  if (tone === 'info') return <Info className="mt-0.5 size-3.5 text-sky-600" />
-  return <CircleDashed className="mt-0.5 size-3.5 text-muted-foreground" />
-}
-
-function getStepIcon(state: StepState) {
-  if (state === 'done')
-    return <CheckCircle2 className="size-4 text-emerald-600" />
-  if (state === 'warn')
-    return <AlertTriangle className="size-4 text-amber-500" />
-  if (state === 'running')
-    return <Loader2 className="size-4 animate-spin text-sky-600" />
-  if (state === 'failed')
-    return <AlertCircle className="size-4 text-destructive" />
-  if (state === 'skipped')
-    return <CircleDashed className="size-4 text-muted-foreground" />
-
-  return <Circle className="size-4 text-muted-foreground" />
-}
-
 export function LeadConvertDialog({
   open,
   onOpenChange,
@@ -370,7 +320,7 @@ export function LeadConvertDialog({
     deal: { status: 'unchecked', count: 0 },
   })
   const [pendingChanges, setPendingChanges] =
-    useState<Array<PendingChange> | null>(null)
+    useState<Array<LeadConvertPendingChange> | null>(null)
   const [changesConfirmed, setChangesConfirmed] = useState(false)
   const progressSectionRef = useRef<HTMLDivElement | null>(null)
   const duplicateCheckRef = useRef<{
@@ -1289,7 +1239,7 @@ export function LeadConvertDialog({
   ): string => options.find((o) => o.value === id)?.label ?? ''
 
   const findChangedFromLead = () => {
-    const changes: Array<PendingChange> = []
+    const changes: Array<LeadConvertPendingChange> = []
     const push = (
       tab: 'company' | 'contact' | 'deal',
       label: string,
@@ -2165,290 +2115,6 @@ export function LeadConvertDialog({
     )
   }
 
-  const renderReuseBanner = (target: 'company' | 'contact') => {
-    const candidates =
-      target === 'company' ? companyCandidates : contactCandidates
-    if (candidates.length === 0) return null
-    const selectedId =
-      target === 'company' ? selectedCompanyId : selectedContactId
-    const setSelected =
-      target === 'company' ? setSelectedCompanyId : setSelectedContactId
-    const exactId = target === 'company' ? exactCompanyId : exactContactId
-    const isReuse = selectedId !== null
-    const entity =
-      target === 'company'
-        ? t('leads.convert.reuse.entityCompany', { defaultValue: 'company' })
-        : t('leads.convert.reuse.entityContact', { defaultValue: 'contact' })
-    const targetIcon =
-      target === 'company' ? (
-        <Building2 className="size-3.5 text-sky-600" />
-      ) : (
-        <UserRound className="size-3.5 text-emerald-600" />
-      )
-
-    return (
-      <div className="space-y-3 rounded-lg border-2 border-amber-200 bg-amber-50/50 p-3 dark:border-amber-900/40 dark:bg-amber-950/20">
-        <div className="flex items-center gap-2">
-          <AlertTriangle className="size-4 text-amber-600" />
-          <p className="text-sm font-medium">
-            {t('leads.convert.reuse.headline', {
-              count: candidates.length,
-              entity,
-              defaultValue: '{{count}} existing {{entity}} found',
-            })}
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            disabled={isWorking}
-            aria-pressed={!isReuse}
-            onClick={() => setSelected(null)}
-            className={cn(
-              'flex flex-col items-start gap-1 rounded-md border bg-background p-2.5 text-left transition-colors',
-              !isReuse
-                ? 'border-primary ring-1 ring-primary'
-                : 'border-border hover:border-primary/40',
-            )}
-          >
-            <div className="flex items-center gap-1.5 text-xs font-medium">
-              <Plus className="size-3.5" />
-              <span>
-                {t('leads.convert.reuse.createOption', {
-                  entity,
-                  defaultValue: 'Create new {{entity}}',
-                })}
-              </span>
-            </div>
-            <p className="text-[11px] text-muted-foreground">
-              {t('leads.convert.reuse.createHelp', {
-                defaultValue: 'A new record will be created from the lead data',
-              })}
-            </p>
-          </button>
-          <button
-            type="button"
-            disabled={isWorking}
-            aria-pressed={isReuse}
-            onClick={() => {
-              const fallback = exactId ?? candidates[0]?.id ?? null
-              setSelected(fallback)
-            }}
-            className={cn(
-              'flex flex-col items-start gap-1 rounded-md border bg-background p-2.5 text-left transition-colors',
-              isReuse
-                ? 'border-primary ring-1 ring-primary'
-                : 'border-border hover:border-primary/40',
-            )}
-          >
-            <div className="flex items-center gap-1.5 text-xs font-medium">
-              {targetIcon}
-              <span>
-                {t('leads.convert.reuse.reuseOption', {
-                  entity,
-                  defaultValue: 'Use existing {{entity}}',
-                })}
-              </span>
-            </div>
-            <p className="text-[11px] text-muted-foreground">
-              {t('leads.convert.reuse.reuseHelp', {
-                defaultValue:
-                  'No new record is created — the existing one will be linked',
-              })}
-            </p>
-          </button>
-        </div>
-        {isReuse ? (
-          <div className="space-y-1.5 border-t border-amber-200 pt-2 dark:border-amber-900/40">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-[10.5px] uppercase tracking-wide text-muted-foreground">
-                {t('leads.convert.reuse.pickOne', {
-                  defaultValue: 'Which one to use?',
-                })}
-              </p>
-              {candidates.length > 4 ? (
-                <span className="text-[10.5px] text-muted-foreground">
-                  {t('leads.convert.reuse.candidateCount', {
-                    count: candidates.length,
-                    defaultValue: '{{count}} options',
-                  })}
-                </span>
-              ) : null}
-            </div>
-            <div className="max-h-52 space-y-1.5 overflow-y-auto pr-1">
-              {candidates.map((candidate) => (
-                <button
-                  key={candidate.id}
-                  type="button"
-                  disabled={isWorking}
-                  onClick={() => setSelected(candidate.id ?? null)}
-                  className={cn(
-                    'flex w-full items-center justify-between gap-2 rounded-md border bg-background px-3 py-2 text-left text-xs transition-colors',
-                    selectedId === candidate.id &&
-                      'border-primary ring-1 ring-primary',
-                  )}
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="truncate font-medium">
-                        {candidate.name}
-                      </span>
-                      {exactId === candidate.id ? (
-                        <Badge variant="secondary" className="h-4 text-[10px]">
-                          {t('leads.convert.reuse.exactMatchBadge', {
-                            defaultValue: 'Exact match',
-                          })}
-                        </Badge>
-                      ) : null}
-                    </div>
-                    <p className="truncate text-muted-foreground">
-                      {target === 'company'
-                        ? candidate.website ||
-                          candidate.email ||
-                          candidate.phone
-                        : candidate.email || candidate.mobile}
-                    </p>
-                  </div>
-                  {selectedId === candidate.id ? (
-                    <CheckCircle2 className="size-4 shrink-0 text-primary" />
-                  ) : null}
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : null}
-      </div>
-    )
-  }
-
-  const renderPrecheckTooltip = () => {
-    const TARGETS: Array<{
-      key: 'company' | 'contact' | 'deal'
-      icon: ReactNode
-      label: string
-    }> = [
-      {
-        key: 'company',
-        icon: <Building2 className="size-3.5 text-sky-600" />,
-        label: t('leads.convert.target.company', { defaultValue: 'Company' }),
-      },
-      {
-        key: 'contact',
-        icon: <UserRound className="size-3.5 text-emerald-600" />,
-        label: t('leads.convert.target.contact', { defaultValue: 'Contact' }),
-      },
-      {
-        key: 'deal',
-        icon: <CheckCircle2 className="size-3.5 text-violet-600" />,
-        label: t('leads.convert.target.deal', { defaultValue: 'Deal' }),
-      },
-    ]
-
-    const renderTargetCell = (target: PrecheckTargetSummary) => {
-      if (target.status === 'unchecked') {
-        return (
-          <div className="flex items-center gap-1 text-[10.5px] text-muted-foreground">
-            <CircleDashed className="size-3" />
-            <span>
-              {t('leads.convert.precheckStatus.unchecked', {
-                defaultValue: 'Skipped',
-              })}
-            </span>
-          </div>
-        )
-      }
-      if (target.status === 'clean') {
-        return (
-          <div className="flex items-center gap-1 text-[10.5px] text-emerald-700">
-            <CheckCircle2 className="size-3" />
-            <span>
-              {t('leads.convert.precheckStatus.clean', {
-                defaultValue: 'Clean',
-              })}
-            </span>
-          </div>
-        )
-      }
-      if (target.status === 'exact') {
-        return (
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-1 text-[10.5px] text-amber-700">
-              <AlertTriangle className="size-3" />
-              <span>
-                {t('leads.convert.precheckStatus.exact', {
-                  count: target.count,
-                  defaultValue: '{{count}} match(es)',
-                })}
-              </span>
-            </div>
-            {target.exactName ? (
-              <p className="truncate text-[10.5px] font-medium text-foreground">
-                {target.exactName}
-              </p>
-            ) : null}
-          </div>
-        )
-      }
-      return (
-        <div className="space-y-0.5">
-          <div className="flex items-center gap-1 text-[10.5px] text-sky-700">
-            <Info className="size-3" />
-            <span>
-              {t('leads.convert.precheckStatus.matches', {
-                count: target.count,
-                defaultValue: '{{count}} suggestion(s)',
-              })}
-            </span>
-          </div>
-          {target.exactName ? (
-            <p className="truncate text-[10.5px] text-muted-foreground">
-              {t('leads.convert.precheckStatus.exampleMatch', {
-                name: target.exactName,
-                defaultValue: 'e.g. {{name}}',
-              })}
-            </p>
-          ) : null}
-        </div>
-      )
-    }
-
-    return (
-      <div className="space-y-2" role="group">
-        <ul className="space-y-1">
-          <li className="flex items-start gap-1.5 text-xs leading-snug">
-            <CheckCircle2 className="mt-0.5 size-3.5 text-emerald-600" />
-            <span className="text-foreground/90">
-              {t('leads.convert.precheckStatus.requiredFilled', {
-                defaultValue: 'Required fields filled',
-              })}
-            </span>
-          </li>
-        </ul>
-        <div
-          className="grid grid-cols-1 gap-1.5 border-t pt-2 sm:grid-cols-3"
-          role="list"
-        >
-          {TARGETS.map((targetMeta) => {
-            const summary = precheckSummary[targetMeta.key]
-            return (
-              <div
-                key={targetMeta.key}
-                role="listitem"
-                className="rounded-md border bg-background/50 p-2"
-              >
-                <div className="mb-1 flex items-center gap-1 text-[11px] font-medium">
-                  {targetMeta.icon}
-                  <span>{targetMeta.label}</span>
-                </div>
-                {renderTargetCell(summary)}
-              </div>
-            )
-          })}
-        </div>
-      </div>
-    )
-  }
-
   const renderMappingTabs = () => {
     const tabsToShow: Array<'company' | 'contact' | 'deal'> = []
     if (mode === 'company_contact_deal') tabsToShow.push('company')
@@ -2481,7 +2147,14 @@ export function LeadConvertDialog({
 
         {tabsToShow.includes('company') && (
           <TabsContent value="company" className="space-y-3">
-            {renderReuseBanner('company')}
+            <LeadConvertReuseBanner
+              target="company"
+              candidates={companyCandidates}
+              selectedId={selectedCompanyId}
+              exactId={exactCompanyId}
+              isWorking={isWorking}
+              onSelect={setSelectedCompanyId}
+            />
             {selectedCompanyId !== null ? (
               <div className="rounded-md border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground">
                 {t('leads.convert.reuse.noteCompany', {
@@ -2663,7 +2336,14 @@ export function LeadConvertDialog({
 
         {tabsToShow.includes('contact') && (
           <TabsContent value="contact" className="space-y-3">
-            {renderReuseBanner('contact')}
+            <LeadConvertReuseBanner
+              target="contact"
+              candidates={contactCandidates}
+              selectedId={selectedContactId}
+              exactId={exactContactId}
+              isWorking={isWorking}
+              onSelect={setSelectedContactId}
+            />
             {selectedContactId !== null ? (
               <div className="rounded-md border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground">
                 {t('leads.convert.reuse.noteContact', {
@@ -3005,185 +2685,26 @@ export function LeadConvertDialog({
             </Alert>
           )}
 
-          <div className="space-y-2 rounded-md border bg-card px-3 py-2">
-            <p className="text-xs font-medium text-foreground">
-              {t('leads.convert.modeLabel')}
-            </p>
-            <div
-              className="grid gap-2 md:grid-cols-3"
-              role="group"
-              aria-label={t('leads.convert.modeLabel')}
-            >
-              {(
-                [
-                  {
-                    value: 'company_contact_deal',
-                    icons: (
-                      <>
-                        <Building2 className="size-3.5 text-sky-600" />
-                        <UserRound className="size-3.5 text-emerald-600" />
-                        <CheckCircle2 className="size-3.5 text-violet-600" />
-                      </>
-                    ),
-                  },
-                  {
-                    value: 'contact_deal',
-                    icons: (
-                      <>
-                        <UserRound className="size-3.5 text-emerald-600" />
-                        <CheckCircle2 className="size-3.5 text-violet-600" />
-                      </>
-                    ),
-                  },
-                  {
-                    value: 'deal_only',
-                    icons: (
-                      <CheckCircle2 className="size-3.5 text-violet-600" />
-                    ),
-                  },
-                ] as Array<{
-                  value: ConversionMode
-                  icons: ReactNode
-                }>
-              ).map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  disabled={isWorking || isAlreadyCompleted}
-                  aria-pressed={mode === option.value}
-                  onClick={() => {
-                    setMode(option.value)
-                    setDuplicatesChecked(false)
-                  }}
-                  className={cn(
-                    'flex min-h-12 items-center justify-between gap-2 rounded-md border bg-background px-3 py-2 text-left text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-60',
-                    mode === option.value
-                      ? 'border-primary ring-1 ring-primary'
-                      : 'border-border hover:border-primary/40',
-                  )}
-                >
-                  <span className="min-w-0 truncate font-medium">
-                    {MODE_LABELS[option.value]}
-                  </span>
-                  <span className="flex shrink-0 items-center gap-1">
-                    {option.icons}
-                  </span>
-                </button>
-              ))}
-            </div>
-            {skippedModeTargets.length > 0 ? (
-              <p className="flex items-start gap-1.5 rounded-md bg-amber-50 px-2 py-1.5 text-[11px] text-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
-                <AlertTriangle className="mt-0.5 size-3 shrink-0" />
-                <span>
-                  {t('leads.convert.modeSkipWarning', {
-                    targets: skippedModeTargets.join(', '),
-                    defaultValue:
-                      'This mode skips {{targets}}. Hidden values are kept if you switch back.',
-                  })}
-                </span>
-              </p>
-            ) : null}
-          </div>
+          <LeadConvertModeSelector
+            mode={mode}
+            disabled={isWorking || isAlreadyCompleted}
+            skippedTargets={skippedModeTargets}
+            onModeChange={(nextMode) => {
+              setMode(nextMode)
+              setDuplicatesChecked(false)
+            }}
+          />
 
-          <div ref={progressSectionRef} className="space-y-2">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>{t('leads.convert.progress')}</span>
-              <span>{Math.round(progress)}%</span>
-            </div>
-            <Progress
-              value={progress}
-              className="bg-muted/60 [&_[data-slot=progress-indicator]]:bg-gradient-to-r [&_[data-slot=progress-indicator]]:from-sky-400 [&_[data-slot=progress-indicator]]:via-teal-400 [&_[data-slot=progress-indicator]]:to-emerald-500"
+          <div ref={progressSectionRef}>
+            <LeadConvertProgress
+              progress={progress}
+              steps={steps}
+              stepDetails={stepDetails}
+              stepLabels={STEP_LABELS}
+              currentStepKey={currentProgressStepKey}
+              duplicatesChecked={duplicatesChecked}
+              precheckSummary={precheckSummary}
             />
-            <TooltipProvider delayDuration={200}>
-              <div
-                className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-6"
-                role="list"
-                aria-label={t('leads.convert.progress')}
-              >
-                {Object.entries(STEP_LABELS).map(([key, label]) => {
-                  const state = steps[key] ?? 'pending'
-                  const details = stepDetails[key] ?? []
-                  const hasDetails = details.length > 0
-
-                  return (
-                    <Tooltip key={key}>
-                      <TooltipTrigger asChild>
-                        <div
-                          role="listitem"
-                          tabIndex={0}
-                          aria-current={
-                            currentProgressStepKey === key ? 'step' : undefined
-                          }
-                          aria-label={`${label}: ${t(`leads.convert.stepState.${state}`, { defaultValue: state })}`}
-                          className={cn(
-                            'flex min-w-0 items-center gap-2 rounded-md border px-2 py-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                            hasDetails && 'cursor-help',
-                            currentProgressStepKey === key &&
-                              'border-primary/60',
-                          )}
-                        >
-                          {getStepIcon(state)}
-                          <span className="truncate">{label}</span>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent
-                        side="bottom"
-                        sideOffset={6}
-                        className="min-w-[260px] max-w-md border border-border bg-popover p-3 text-popover-foreground shadow-lg [&_svg]:shrink-0"
-                      >
-                        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                          {label}
-                        </p>
-                        {key === 'precheck' &&
-                        duplicatesChecked &&
-                        (state === 'warn' || state === 'done') ? (
-                          renderPrecheckTooltip()
-                        ) : hasDetails ? (
-                          <ul className="space-y-1.5">
-                            {details.map((d, index) => (
-                              <li
-                                key={index}
-                                className="flex items-start gap-1.5 text-xs leading-snug"
-                              >
-                                {renderDetailIcon(d.tone)}
-                                <span className="text-foreground/90">
-                                  {d.label}
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            {state === 'pending' ? (
-                              <>
-                                <Circle className="size-3" />
-                                <span>
-                                  {t('leads.convert.state.notStarted')}
-                                </span>
-                              </>
-                            ) : state === 'running' ? (
-                              <>
-                                <Loader2 className="size-3 animate-spin text-sky-600" />
-                                <span>
-                                  {t('leads.convert.state.processing')}
-                                </span>
-                              </>
-                            ) : (
-                              <>
-                                <Info className="size-3" />
-                                <span>
-                                  {t('leads.convert.state.noDetails')}
-                                </span>
-                              </>
-                            )}
-                          </div>
-                        )}
-                      </TooltipContent>
-                    </Tooltip>
-                  )
-                })}
-              </div>
-            </TooltipProvider>
           </div>
 
           {renderMappingTabs()}
@@ -3220,104 +2741,24 @@ export function LeadConvertDialog({
         )}
       </AwesomeDialogFooter>
 
-      <AlertDialog
-        open={pendingChanges !== null}
-        onOpenChange={(next) => {
-          if (!next) setPendingChanges(null)
+      <LeadConvertChangeConfirmDialog
+        changes={pendingChanges}
+        targetLabels={TARGET_LABEL}
+        onClose={() => setPendingChanges(null)}
+        onRestoreChange={(index) => {
+          setPendingChanges((current) => {
+            const nextChanges = (current ?? []).filter(
+              (_, changeIndex) => changeIndex !== index,
+            )
+            return nextChanges.length > 0 ? nextChanges : null
+          })
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t('leads.convert.changeConfirm.title')}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('leads.convert.changeConfirm.description')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div
-            className="max-h-72 space-y-2 overflow-y-auto"
-            role="table"
-            aria-label={t('leads.convert.changeConfirm.title')}
-          >
-            {(pendingChanges ?? []).map((change, index) => (
-              <div
-                key={index}
-                role="row"
-                className="rounded-md border bg-card p-3 text-xs"
-              >
-                <div className="mb-1 flex items-center gap-1.5" role="cell">
-                  <Badge variant="outline" className="text-[10px]">
-                    {TARGET_LABEL[change.tab]}
-                  </Badge>
-                  <span className="font-medium">{change.label}</span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="ml-auto h-6 px-2 text-[10px]"
-                    onClick={() => {
-                      change.restore()
-                      setPendingChanges((current) => {
-                        const nextChanges = (current ?? []).filter(
-                          (_, changeIndex) => changeIndex !== index,
-                        )
-                        return nextChanges.length > 0 ? nextChanges : null
-                      })
-                    }}
-                  >
-                    {t('leads.convert.changeConfirm.restoreButton', {
-                      defaultValue: 'Restore',
-                    })}
-                  </Button>
-                </div>
-                <div className="grid grid-cols-1 items-center gap-2 sm:grid-cols-[1fr_auto_1fr]">
-                  <div
-                    className="rounded border border-dashed bg-muted/40 px-2 py-1 text-muted-foreground"
-                    role="cell"
-                  >
-                    <p className="text-[10px] uppercase tracking-wide">
-                      {t('leads.convert.changeConfirm.sourceLabel')}
-                    </p>
-                    <p className="truncate text-foreground/80">
-                      {change.sourceText || '—'}
-                    </p>
-                  </div>
-                  <ArrowRight
-                    className="hidden size-3.5 text-muted-foreground sm:block"
-                    aria-hidden
-                  />
-                  <div
-                    className="rounded border bg-primary/[0.04] px-2 py-1"
-                    role="cell"
-                  >
-                    <p className="text-[10px] uppercase tracking-wide text-primary">
-                      {t('leads.convert.changeConfirm.targetLabel')}
-                    </p>
-                    <p className="truncate font-medium">
-                      {change.targetText || '—'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setPendingChanges(null)}>
-              {t('leads.convert.changeConfirm.cancelButton')}
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                setPendingChanges(null)
-                setChangesConfirmed(true)
-                void runConversion({ skipChangeCheck: true })
-              }}
-            >
-              {t('leads.convert.changeConfirm.confirmButton')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onConfirm={() => {
+          setPendingChanges(null)
+          setChangesConfirmed(true)
+          void runConversion({ skipChangeCheck: true })
+        }}
+      />
     </AwesomeDialog>
   )
 }
