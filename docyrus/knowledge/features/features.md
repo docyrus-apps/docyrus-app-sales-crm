@@ -37,6 +37,7 @@ The convert dialog at `src/components/leads/lead-convert-dialog.tsx` is a tabbed
 `runConversion` runs precheck → organization → contact → deal → activity → lead, gated by three checks before the work starts.
 
 - Gate 1: duplicate search runs against organization, contact, and deal (`source_lead = lead.id`) — keyword is sanitized to strip tsquery-breaking characters.
+- Duplicate/precheck requests use an `AbortController` plus a request id guard, so a newer precheck cancels older network work and stale responses cannot overwrite candidate or step state.
 - Gate 2: `findMissingField` checks only conversion-required values: created company/contact names, deal name/stage, and source enum values that could not be mapped. Hidden reused records and optional fields do not block conversion.
 - Gate 3: `findChangedFromLead` opens an AlertDialog whenever any target value differs from the lead source; each row can be restored to the lead value, and confirming calls `runConversion({ skipChangeCheck: true })` to bypass closure-stale state.
 - Before writing, the dialog refetches the latest lead conversion fields. If another session completed the lead, it opens the existing result; if the lead is already `in_progress` with no created target records, it aborts with a concurrent-session message.
@@ -44,6 +45,7 @@ The convert dialog at `src/components/leads/lead-convert-dialog.tsx` is a tabbed
 - Each step writes outputs (`converted_*`) back to the lead immediately so any failure leaves a resumable partial state.
 - Open `base.task` and `base.event` records pointing to the lead get migrated to also reference the new organization, contact, and deal — the lead link is preserved as provenance. Migration metadata or patch failures mark the activity step as `warn` and show a manual-review warning instead of being presented as "no linked work".
 - The deal payload writes `description` from `lead.contact_message` to keep the original inquiry.
+- Precheck completion, linked-work warnings, conversion success, and conversion failure emit structured `[LeadConvert]` console events with lead id, mode, target ids, and relevant counts to make client-side troubleshooting less opaque.
 
 ### Failed vs Partial State
 

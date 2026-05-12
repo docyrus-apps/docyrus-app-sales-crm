@@ -80,8 +80,9 @@ type PrecheckTargetSummary = {
   count: number
   exactName?: string
 }
+type ConvertTarget = 'company' | 'contact' | 'deal'
 type PendingChange = {
-  tab: 'company' | 'contact' | 'deal'
+  tab: ConvertTarget
   label: string
   sourceText: string
   targetText: string
@@ -91,6 +92,55 @@ type EntityCandidate = Record<string, any> & { id?: string; name?: string }
 type FieldMeta = { slug?: string }
 type DataSourceMeta = { fields?: Array<FieldMeta> }
 type CurrentUserResponse = { id?: string }
+
+const KNOWN_FIELDS: Record<ConvertTarget, Array<string>> = {
+  company: [
+    'name',
+    'email',
+    'phone',
+    'website',
+    'address',
+    'city',
+    'industry',
+    'company_size',
+    'country',
+    'source_lead',
+    'record_owner',
+  ],
+  contact: [
+    'name',
+    'job_title',
+    'email',
+    'mobile',
+    'organization',
+    'source_lead',
+    'record_owner',
+  ],
+  deal: [
+    'name',
+    'deal_value',
+    'description',
+    'stage',
+    'lead_source',
+    'customer_type',
+    'country',
+    'record_owner',
+    'organization',
+    'contact_person',
+    'source_lead',
+  ],
+}
+
+const SYSTEM_HIDDEN_FIELDS = new Set([
+  'id',
+  'autonumber_id',
+  'created_by',
+  'created_on',
+  'last_modified_by',
+  'last_modified_on',
+  'followers',
+  'status',
+])
 
 interface LeadConvertDialogProps {
   open: boolean
@@ -197,6 +247,31 @@ function getErrorMessage(error: unknown, t: (key: string) => string) {
   return t('leads.convert.alert.errorTitle')
 }
 
+function isAbortLikeError(error: unknown) {
+  if (!error || typeof error !== 'object') return false
+  const maybeAbort = error as { name?: string; code?: string }
+  return maybeAbort.name === 'AbortError' || maybeAbort.code === 'ABORT_ERROR'
+}
+
+function logLeadConvertEvent(
+  level: 'info' | 'warn' | 'error',
+  event: string,
+  payload: Record<string, unknown>,
+) {
+  const entry = {
+    event,
+    ...payload,
+  }
+
+  if (level === 'error') {
+    console.error('[LeadConvert]', entry)
+  } else if (level === 'warn') {
+    console.warn('[LeadConvert]', entry)
+  } else {
+    console.info('[LeadConvert]', entry)
+  }
+}
+
 function getFieldSlugs(dataSource?: DataSourceMeta | null) {
   return new Set(
     (dataSource?.fields ?? []).map((field) => field.slug).filter(Boolean),
@@ -298,6 +373,10 @@ export function LeadConvertDialog({
     useState<Array<PendingChange> | null>(null)
   const [changesConfirmed, setChangesConfirmed] = useState(false)
   const progressSectionRef = useRef<HTMLDivElement | null>(null)
+  const duplicateCheckRef = useRef<{
+    requestId: number
+    controller: AbortController | null
+  }>({ requestId: 0, controller: null })
   const [mode, setMode] = useState<ConversionMode>(() => {
     const savedMode = getRelationName(lead?.conversion_mode)
     if (savedMode === 'contact_deal' || savedMode === 'deal_only') {
@@ -562,6 +641,15 @@ export function LeadConvertDialog({
     }
   }, [mode])
 
+  useEffect(
+    () => () => {
+      duplicateCheckRef.current.requestId += 1
+      duplicateCheckRef.current.controller?.abort()
+      duplicateCheckRef.current.controller = null
+    },
+    [],
+  )
+
   useEffect(() => {
     if (!open || !client) return
     const dataSources = createDataSourceClient(client)
@@ -796,6 +884,10 @@ export function LeadConvertDialog({
 
   const findDuplicates = async () => {
     if (!client) return
+    duplicateCheckRef.current.controller?.abort()
+    const requestId = duplicateCheckRef.current.requestId + 1
+    const controller = new AbortController()
+    duplicateCheckRef.current = { requestId, controller }
     setIsWorking(true)
     setErrorMessage(null)
     setStep('precheck', 'running')
@@ -822,32 +914,51 @@ export function LeadConvertDialog({
         sanitizeKeyword(form.contactPhone)
       const [companies, contacts, deals] = await Promise.all([
         mode === 'company_contact_deal' && companyKeyword
-          ? client.get('/v1/apps/base/data-sources/organization/items', {
-              columns: 'id,name,email,phone,website,country(id,name)',
-              filterKeyword: companyKeyword,
-              limit: 8,
-            })
+          ? client.get(
+              '/v1/apps/base/data-sources/organization/items',
+              {
+                columns: 'id,name,email,phone,website,country(id,name)',
+                filterKeyword: companyKeyword,
+                limit: 8,
+              },
+              { signal: controller.signal },
+            )
           : Promise.resolve([]),
         mode !== 'deal_only' && contactKeyword
-          ? client.get('/v1/apps/base/data-sources/contact/items', {
-              columns: 'id,name,email,mobile,organization(id,name)',
-              filterKeyword: contactKeyword,
-              limit: 8,
-            })
+          ? client.get(
+              '/v1/apps/base/data-sources/contact/items',
+              {
+                columns: 'id,name,email,mobile,organization(id,name)',
+                filterKeyword: contactKeyword,
+                limit: 8,
+              },
+              { signal: controller.signal },
+            )
           : Promise.resolve([]),
         lead?.id
-          ? client.get('/v1/apps/base_crm/data-sources/deal/items', {
-              columns:
-                'id,name,stage(id,name),organization(id,name),source_lead(id,name)',
-              filters: {
-                rules: [
-                  { field: 'source_lead', operator: '=', value: lead.id },
-                ],
+          ? client.get(
+              '/v1/apps/base_crm/data-sources/deal/items',
+              {
+                columns:
+                  'id,name,stage(id,name),organization(id,name),source_lead(id,name)',
+                filters: {
+                  rules: [
+                    { field: 'source_lead', operator: '=', value: lead.id },
+                  ],
+                },
+                limit: 8,
               },
-              limit: 8,
-            })
+              { signal: controller.signal },
+            )
           : Promise.resolve([]),
       ])
+
+      if (
+        controller.signal.aborted ||
+        duplicateCheckRef.current.requestId !== requestId
+      ) {
+        return
+      }
 
       const companyMatches = unwrapItems(companies)
       const contactMatches = unwrapItems(contacts)
@@ -1009,14 +1120,40 @@ export function LeadConvertDialog({
         companyMatches.length > 0 ||
         contactMatches.length > 0 ||
         dealMatches.length > 0
+      logLeadConvertEvent('info', 'precheck_completed', {
+        leadId: lead?.id,
+        mode,
+        companyMatches: companyMatches.length,
+        contactMatches: contactMatches.length,
+        dealMatches: dealMatches.length,
+        exactCompanyId: exactCompany?.id ?? null,
+        exactContactId: exactContact?.id ?? null,
+        hasAnyMatch,
+      })
       setStep('precheck', hasAnyMatch ? 'warn' : 'done')
     } catch (error) {
+      if (controller.signal.aborted || isAbortLikeError(error)) {
+        return
+      }
       setStep('precheck', 'failed')
       const errMsg = getErrorMessage(error, t)
-      setStepDetail('precheck', [detail('error', `Hata: ${errMsg}`)])
+      setStepDetail('precheck', [
+        detail(
+          'error',
+          t('leads.convert.result.errorPrefix', { message: errMsg }),
+        ),
+      ])
       setErrorMessage(errMsg)
+      logLeadConvertEvent('error', 'precheck_failed', {
+        leadId: lead?.id,
+        mode,
+        message: errMsg,
+      })
     } finally {
-      setIsWorking(false)
+      if (duplicateCheckRef.current.requestId === requestId) {
+        duplicateCheckRef.current.controller = null
+        setIsWorking(false)
+      }
     }
   }
 
@@ -1638,6 +1775,17 @@ export function LeadConvertDialog({
         })
         linkedWorkDetails.push(detail('warn', warning))
         toast.warning(warning)
+        logLeadConvertEvent('warn', 'linked_work_migration_warning', {
+          leadId: lead?.id,
+          mode,
+          attemptedCount: linkedWorkMigration.attemptedCount,
+          updatedCount: linkedWorkMigration.updatedCount,
+          failedCount: linkedWorkMigration.failedCount,
+          warningCount: linkedWorkMigration.warningCount,
+          organizationId,
+          contactId,
+          dealId,
+        })
       }
       if (linkedWorkDetails.length === 0) {
         linkedWorkDetails.push(
@@ -1686,6 +1834,17 @@ export function LeadConvertDialog({
         queryClient.invalidateQueries({ queryKey: ['events'] }),
       ])
 
+      logLeadConvertEvent('info', 'conversion_completed', {
+        leadId: lead?.id,
+        mode,
+        organizationId,
+        contactId,
+        dealId,
+        linkedWorkAttemptedCount: linkedWorkMigration.attemptedCount,
+        linkedWorkUpdatedCount: linkedWorkMigration.updatedCount,
+        linkedWorkFailedCount: linkedWorkMigration.failedCount,
+        linkedWorkWarningCount: linkedWorkMigration.warningCount,
+      })
       toast.success(t('leads.convert.successMessage'), {
         description: (
           <div className="mt-2 flex flex-wrap gap-1.5">
@@ -1743,6 +1902,16 @@ export function LeadConvertDialog({
       setStepDetail(activeStep, [
         detail('error', t('leads.convert.result.errorPrefix', { message })),
       ])
+      logLeadConvertEvent('error', 'conversion_failed', {
+        leadId: lead?.id,
+        mode,
+        activeStep,
+        partial,
+        message,
+        organizationId,
+        contactId,
+        dealId,
+      })
       await updateLead({
         converted_organization: organizationId,
         converted_contact: contactId,
@@ -1879,55 +2048,6 @@ export function LeadConvertDialog({
     }))
   }
 
-  const KNOWN_FIELDS: Record<'company' | 'contact' | 'deal', Array<string>> = {
-    company: [
-      'name',
-      'email',
-      'phone',
-      'website',
-      'address',
-      'city',
-      'industry',
-      'company_size',
-      'country',
-      'source_lead',
-      'record_owner',
-    ],
-    contact: [
-      'name',
-      'job_title',
-      'email',
-      'mobile',
-      'organization',
-      'source_lead',
-      'record_owner',
-    ],
-    deal: [
-      'name',
-      'deal_value',
-      'description',
-      'stage',
-      'lead_source',
-      'customer_type',
-      'country',
-      'record_owner',
-      'organization',
-      'contact_person',
-      'source_lead',
-    ],
-  }
-
-  const SYSTEM_HIDDEN_FIELDS = new Set([
-    'id',
-    'autonumber_id',
-    'created_by',
-    'created_on',
-    'last_modified_by',
-    'last_modified_on',
-    'followers',
-    'status',
-  ])
-
   const inferKindFromType = (type: string): FieldKind => {
     if (type === 'field-money' || type === 'field-number') return 'number'
     if (type === 'field-date' || type === 'field-dateTime') return 'date'
@@ -1938,19 +2058,32 @@ export function LeadConvertDialog({
     return 'text'
   }
 
-  const availableExtraFields = (target: 'company' | 'contact' | 'deal') => {
-    const known = new Set(KNOWN_FIELDS[target])
-    const alreadyAdded = new Set(extraFields[target].map((field) => field.slug))
-    return targetFields[target].filter(
-      (field) =>
-        !known.has(field.slug) &&
-        !SYSTEM_HIDDEN_FIELDS.has(field.slug) &&
-        !alreadyAdded.has(field.slug),
-    )
-  }
+  const availableExtraFieldsByTarget = useMemo(() => {
+    const build = (target: ConvertTarget) => {
+      const known = new Set(KNOWN_FIELDS[target])
+      const alreadyAdded = new Set(
+        extraFields[target].map((field) => field.slug),
+      )
+      return targetFields[target].filter(
+        (field) =>
+          !known.has(field.slug) &&
+          !SYSTEM_HIDDEN_FIELDS.has(field.slug) &&
+          !alreadyAdded.has(field.slug),
+      )
+    }
+
+    return {
+      company: build('company'),
+      contact: build('contact'),
+      deal: build('deal'),
+    }
+  }, [extraFields, targetFields])
+
+  const availableExtraFields = (target: ConvertTarget) =>
+    availableExtraFieldsByTarget[target]
 
   const addExtraField = (
-    target: 'company' | 'contact' | 'deal',
+    target: ConvertTarget,
     field: { slug: string; name: string; type: string },
   ) => {
     setExtraFields((current) => ({
@@ -1979,7 +2112,7 @@ export function LeadConvertDialog({
     })
   }
 
-  const renderAddFieldPopover = (target: 'company' | 'contact' | 'deal') => {
+  const renderAddFieldPopover = (target: ConvertTarget) => {
     const targetLabel = TARGET_LABEL[target]
     const options = availableExtraFields(target)
     const addedCount = extraFields[target].length
