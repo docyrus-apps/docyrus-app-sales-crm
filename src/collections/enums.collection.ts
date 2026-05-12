@@ -1,4 +1,5 @@
 // Generated collection for enums
+import { useMemo } from 'react'
 import { useDocyrusClient } from '@docyrus/signin'
 
 export interface EnumEntity {
@@ -45,17 +46,23 @@ export interface EnumEntity {
 export function useEnumsCollection() {
   const client = useDocyrusClient()
 
-  return {
-    /**
-     * List all enums
-     * List all enums in a tree structure
-     * @returns Record<string, Record<string, Record<string, Array<EnumEntity>>>>
-     */
-    getEnums: (): Promise<
-      Record<string, Record<string, Record<string, Array<EnumEntity>>>>
-    > =>
-      client!.get<
+  // Memoized so the returned object's identity is stable across renders.
+  // Same rationale as the data-source collection hooks — see the comment
+  // in collections.ts.
+  return useMemo(
+    () => ({
+      /**
+       * List all enums
+       * List all enums in a tree structure
+       * @returns Record<string, Record<string, Record<string, Array<EnumEntity>>>>
+       */
+      getEnums: (): Promise<
         Record<string, Record<string, Record<string, Array<EnumEntity>>>>
-      >('/v1/apps/enums'),
-  }
+      > =>
+        client!.get<
+          Record<string, Record<string, Record<string, Array<EnumEntity>>>>
+        >('/v1/apps/enums'),
+    }),
+    [client],
+  )
 }

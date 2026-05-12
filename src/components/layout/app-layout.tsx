@@ -33,6 +33,10 @@ const SEGMENT_BREADCRUMB_KEYS: Record<string, string> = {
   'sales-orders': 'breadcrumb.salesOrders',
   activities: 'breadcrumb.activities',
   reports: 'breadcrumb.reports',
+  settings: 'fieldSales.settings.title',
+  'field-sales': 'fieldSales.groupLabel',
+  plans: 'fieldSales.plans.title',
+  approvals: 'fieldSales.approvals.title',
 }
 
 function AppBreadcrumb() {
@@ -57,7 +61,10 @@ function AppBreadcrumb() {
       // Skip dynamic param segments
       if (segment === entityId && entityId) continue
 
-      const key = SEGMENT_BREADCRUMB_KEYS[segment]
+      const key =
+        segment === 'calendar' && segments[i - 1] === 'field-sales'
+          ? 'fieldSales.calendar.title'
+          : SEGMENT_BREADCRUMB_KEYS[segment]
       const label = key
         ? t(key)
         : segment.charAt(0).toUpperCase() + segment.slice(1)

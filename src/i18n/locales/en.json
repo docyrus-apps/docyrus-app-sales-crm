@@ -1016,6 +1016,21 @@
     "urlPlaceholder": "https://example.com",
     "phonePlaceholder": "Enter phone number..."
   },
+  "fieldSales": {
+    "groupLabel": "Field Sales",
+    "plans": {
+      "title": "Planning"
+    },
+    "approvals": {
+      "title": "Approvals"
+    },
+    "calendar": {
+      "title": "Field Calendar"
+    },
+    "settings": {
+      "title": "Settings"
+    }
+  },
   "breadcrumb": {
     "home": "Home",
     "detail": "Detail",

@@ -1,4 +1,5 @@
 // Generated collection for base_crm/deal_product
+import { useMemo } from 'react'
 import { useDocyrusClient } from '@docyrus/signin'
 import type { QueryParamValue } from '@docyrus/api-client'
 import type { ICollectionListParams } from './types'
@@ -22,32 +23,29 @@ export interface BaseCrmDealProductEntity {
   /** Last Modified By */
   last_modified_by?: string
 
-  /** Category */
-  category: { id: string; name: string } | string
-
-  /** QTY */
-  qty: number
-
   /** Discount */
   discount?: number
-
-  /** Tax Rate */
-  tax_rate?: number
-
-  /** Unit Price */
-  unit_price: number
-
-  /** Total */
-  total?: number
 
   /** Gross Total */
   gross_total?: number
 
+  /** Related Deal */
+  related_deal: { id: string; name: string } | string
+
+  /** Tax Rate */
+  tax_rate?: number
+
+  /** Total */
+  total?: number
+
   /** Net Total */
   net_total?: number
 
-  /** Related Deal */
-  related_deal: { id: string; name: string } | string
+  /** QTY */
+  qty: number
+
+  /** Unit Price */
+  unit_price: number
 
   /** Product */
   product: { id: string; name: string } | string
@@ -56,57 +54,73 @@ export interface BaseCrmDealProductEntity {
 export function useBaseCrmDealProductCollection() {
   const client = useDocyrusClient()
 
-  return {
-    /** List records with optional filtering, sorting, and pagination. */
-    list: (
-      params?: ICollectionListParams,
-    ): Promise<Array<BaseCrmDealProductEntity>> =>
-      client!.get(
-        '/v1/apps/base_crm/data-sources/deal_product/items',
-        params as Record<string, QueryParamValue> | undefined,
-      ),
-
-    /** Get record */
-    get: (
-      recordId: string,
-      params?: { columns?: Array<string> },
-    ): Promise<BaseCrmDealProductEntity> =>
-      client!.get(
-        '/v1/apps/base_crm/data-sources/deal_product/items/{recordId}'.replace(
-          '{recordId}',
-          recordId,
+  /*
+   * Memoize the returned object so its identity is stable across renders.
+   * Consumers commonly put the collection in useCallback/useMemo deps
+   * (e.g. on a delete/save handler) — without memoization, every render
+   * produces a fresh object, those callbacks rebuild, and any effect that
+   * tracks them via deps fires every render. That's what triggers the
+   * infinite-loop case in <DataGrid>: an unstable handler reaches the
+   * grid's column-applier effect, which calls table.setColumnVisibility
+   * → store.set → store.notify → re-render → unstable collection again.
+   */
+  return useMemo(
+    () => ({
+      /** List records with optional filtering, sorting, and pagination. */
+      list: (
+        params?: ICollectionListParams,
+      ): Promise<Array<BaseCrmDealProductEntity>> =>
+        client!.get(
+          '/v1/apps/base_crm/data-sources/deal_product/items',
+          params as Record<string, QueryParamValue> | undefined,
         ),
-        params,
-      ),
 
-    /** Create record */
-    create: (data: Record<string, any>): Promise<BaseCrmDealProductEntity> =>
-      client!.post('/v1/apps/base_crm/data-sources/deal_product/items', data),
-
-    /** Update record */
-    update: (
-      recordId: string,
-      data: Record<string, any>,
-    ): Promise<BaseCrmDealProductEntity> =>
-      client!.patch(
-        '/v1/apps/base_crm/data-sources/deal_product/items/{recordId}'.replace(
-          '{recordId}',
-          recordId,
+      /** Get record */
+      get: (
+        recordId: string,
+        params?: { columns?: Array<string> },
+      ): Promise<BaseCrmDealProductEntity> =>
+        client!.get(
+          '/v1/apps/base_crm/data-sources/deal_product/items/{recordId}'.replace(
+            '{recordId}',
+            recordId,
+          ),
+          params,
         ),
-        data,
-      ),
 
-    /** Delete record */
-    delete: (recordId: string): Promise<void> =>
-      client!.delete(
-        '/v1/apps/base_crm/data-sources/deal_product/items/{recordId}'.replace(
-          '{recordId}',
-          recordId,
+      /** Create record */
+      create: (data: Record<string, any>): Promise<BaseCrmDealProductEntity> =>
+        client!.post('/v1/apps/base_crm/data-sources/deal_product/items', data),
+
+      /** Update record */
+      update: (
+        recordId: string,
+        data: Record<string, any>,
+      ): Promise<BaseCrmDealProductEntity> =>
+        client!.patch(
+          '/v1/apps/base_crm/data-sources/deal_product/items/{recordId}'.replace(
+            '{recordId}',
+            recordId,
+          ),
+          data,
         ),
-      ),
 
-    /** Delete many records */
-    deleteMany: (data: { recordIds: Array<string> }): Promise<void> =>
-      client!.delete('/v1/apps/base_crm/data-sources/deal_product/items', data),
-  }
+      /** Delete record */
+      delete: (recordId: string): Promise<void> =>
+        client!.delete(
+          '/v1/apps/base_crm/data-sources/deal_product/items/{recordId}'.replace(
+            '{recordId}',
+            recordId,
+          ),
+        ),
+
+      /** Delete many records */
+      deleteMany: (data: { recordIds: Array<string> }): Promise<void> =>
+        client!.delete(
+          '/v1/apps/base_crm/data-sources/deal_product/items',
+          data,
+        ),
+    }),
+    [client],
+  )
 }

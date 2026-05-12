@@ -1,4 +1,5 @@
 // Generated collection for base/thread
+import { useMemo } from 'react'
 import { useDocyrusClient } from '@docyrus/signin'
 import type { QueryParamValue } from '@docyrus/api-client'
 import type { ICollectionListParams } from './types'
@@ -25,6 +26,15 @@ export interface BaseThreadEntity {
   /** Subject */
   subject?: string
 
+  /** Team */
+  tenant_team_id?: { id: string; name: string } | string
+
+  /** Sender Phone */
+  sender_phone?: string
+
+  /** Incoming Channel */
+  incoming_channel?: { id: string; name: string } | any
+
   /** Closed On */
   closed_on?: string
 
@@ -39,6 +49,9 @@ export interface BaseThreadEntity {
 
   /** Sender CC */
   sender_cc?: string
+
+  /** Section */
+  section?: { id: string; name: string } | string
 
   /** Followers */
   followers?: { id: string; name: string } | Array<string>
@@ -107,7 +120,7 @@ export interface BaseThreadEntity {
   thread_mode?: string
 
   /** Instructions */
-  instructions?: any
+  instructions?: string
 
   /** View ID */
   tenant_view_id?: { id: string; name: string } | string
@@ -121,65 +134,77 @@ export interface BaseThreadEntity {
   /** Archived */
   archived?: boolean
 
-  /** Sender Phone */
-  sender_phone?: string
-
-  /** Incoming Channel */
-  incoming_channel?: { id: string; name: string } | any
+  /** Project */
+  project?: { id: string; name: string } | string
 }
 
 export function useBaseThreadCollection() {
   const client = useDocyrusClient()
 
-  return {
-    /** List records with optional filtering, sorting, and pagination. */
-    list: (params?: ICollectionListParams): Promise<Array<BaseThreadEntity>> =>
-      client!.get(
-        '/v1/apps/base/data-sources/thread/items',
-        params as Record<string, QueryParamValue> | undefined,
-      ),
-
-    /** Get record */
-    get: (
-      recordId: string,
-      params?: { columns?: Array<string> },
-    ): Promise<BaseThreadEntity> =>
-      client!.get(
-        '/v1/apps/base/data-sources/thread/items/{recordId}'.replace(
-          '{recordId}',
-          recordId,
+  /*
+   * Memoize the returned object so its identity is stable across renders.
+   * Consumers commonly put the collection in useCallback/useMemo deps
+   * (e.g. on a delete/save handler) — without memoization, every render
+   * produces a fresh object, those callbacks rebuild, and any effect that
+   * tracks them via deps fires every render. That's what triggers the
+   * infinite-loop case in <DataGrid>: an unstable handler reaches the
+   * grid's column-applier effect, which calls table.setColumnVisibility
+   * → store.set → store.notify → re-render → unstable collection again.
+   */
+  return useMemo(
+    () => ({
+      /** List records with optional filtering, sorting, and pagination. */
+      list: (
+        params?: ICollectionListParams,
+      ): Promise<Array<BaseThreadEntity>> =>
+        client!.get(
+          '/v1/apps/base/data-sources/thread/items',
+          params as Record<string, QueryParamValue> | undefined,
         ),
-        params,
-      ),
 
-    /** Create record */
-    create: (data: Record<string, any>): Promise<BaseThreadEntity> =>
-      client!.post('/v1/apps/base/data-sources/thread/items', data),
-
-    /** Update record */
-    update: (
-      recordId: string,
-      data: Record<string, any>,
-    ): Promise<BaseThreadEntity> =>
-      client!.patch(
-        '/v1/apps/base/data-sources/thread/items/{recordId}'.replace(
-          '{recordId}',
-          recordId,
+      /** Get record */
+      get: (
+        recordId: string,
+        params?: { columns?: Array<string> },
+      ): Promise<BaseThreadEntity> =>
+        client!.get(
+          '/v1/apps/base/data-sources/thread/items/{recordId}'.replace(
+            '{recordId}',
+            recordId,
+          ),
+          params,
         ),
-        data,
-      ),
 
-    /** Delete record */
-    delete: (recordId: string): Promise<void> =>
-      client!.delete(
-        '/v1/apps/base/data-sources/thread/items/{recordId}'.replace(
-          '{recordId}',
-          recordId,
+      /** Create record */
+      create: (data: Record<string, any>): Promise<BaseThreadEntity> =>
+        client!.post('/v1/apps/base/data-sources/thread/items', data),
+
+      /** Update record */
+      update: (
+        recordId: string,
+        data: Record<string, any>,
+      ): Promise<BaseThreadEntity> =>
+        client!.patch(
+          '/v1/apps/base/data-sources/thread/items/{recordId}'.replace(
+            '{recordId}',
+            recordId,
+          ),
+          data,
         ),
-      ),
 
-    /** Delete many records */
-    deleteMany: (data: { recordIds: Array<string> }): Promise<void> =>
-      client!.delete('/v1/apps/base/data-sources/thread/items', data),
-  }
+      /** Delete record */
+      delete: (recordId: string): Promise<void> =>
+        client!.delete(
+          '/v1/apps/base/data-sources/thread/items/{recordId}'.replace(
+            '{recordId}',
+            recordId,
+          ),
+        ),
+
+      /** Delete many records */
+      deleteMany: (data: { recordIds: Array<string> }): Promise<void> =>
+        client!.delete('/v1/apps/base/data-sources/thread/items', data),
+    }),
+    [client],
+  )
 }

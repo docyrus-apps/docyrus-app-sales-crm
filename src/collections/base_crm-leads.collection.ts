@@ -1,4 +1,5 @@
 // Generated collection for base_crm/leads
+import { useMemo } from 'react'
 import { useDocyrusClient } from '@docyrus/signin'
 import type { QueryParamValue } from '@docyrus/api-client'
 import type { ICollectionListParams } from './types'
@@ -22,77 +23,11 @@ export interface BaseCrmLeadsEntity {
   /** Last Modified By */
   last_modified_by?: string
 
-  /** How did you hear about us? Other */
-  how_did_you_hear_about_us_other?: string
-
-  /** How many people work at your company ? */
-  how_many_people_work_at_your_company_?: { id: string; name: string } | any
-
-  /** Title */
-  title?: string
-
-  /** Phone */
-  phone?: string
-
-  /** Address */
-  address?: string
-
-  /** Lead Source */
-  lead_source?: { id: string; name: string } | any
-
-  /** Lead Status */
-  lead_status?: { id: string; name: string } | any
-
-  /** Contact Message */
-  contact_message?: string
-
-  /** City */
-  city?: string
-
-  /** State */
-  state?: string
-
-  /** Website */
-  website?: string
-
-  /** Lead Type */
-  lead_type?: { id: string; name: string } | any
-
-  /** Email */
-  email?: string
-
-  /** Countries */
-  countries?: { id: string; name: string } | string
-
-  /** Select what you’d like to manage first */
-  select_what_youd_like_to_manage_first?: { id: string; name: string } | any
-
-  /** Lost Reason */
-  lost_reason?: { id: string; name: string } | any
-
-  /** Telefon 2 */
-  telefon_2?: string
-
-  /** Town */
-  town?: string
-
-  /** Select what you’d like to manage first? Other */
-  select_what_youd_like_to_manage_first_other?: string
-
-  /** How did you hear about us? */
-  how_did_you_hear_about_us?: { id: string; name: string } | any
-
-  /** Lead Form */
-  lead_form?: { id: string; name: string } | any
-
   /** Company Name */
   company_name?: { id: string; name: string } | string
 
   /** Company Name */
   company_name_text?: string
-
-  /** Contact Job Title */
-  contact_job_title?: string
 
   /** Company Email */
   company_email?: string
@@ -101,10 +36,13 @@ export interface BaseCrmLeadsEntity {
   company_phone?: string
 
   /** Company Industry */
-  company_industry?: { id: string; name: string } | string
+  company_industry?: { id: string; name: string } | any
 
   /** Company Size */
-  company_size?: { id: string; name: string } | string
+  company_size?: { id: string; name: string } | any
+
+  /** Contact Job Title */
+  contact_job_title?: string
 
   /** Deal Name */
   deal_name?: string
@@ -121,6 +59,9 @@ export interface BaseCrmLeadsEntity {
   /** Expected Closing Date */
   expected_closing_date?: string
 
+  /** Lead Form */
+  lead_form?: { id: string; name: string } | any
+
   /** Converted Organization */
   converted_organization?: { id: string; name: string } | string
 
@@ -130,76 +71,131 @@ export interface BaseCrmLeadsEntity {
   /** Converted Deal */
   converted_deal?: { id: string; name: string } | string
 
+  /** Converted By */
+  converted_by?: { id: string; name: string } | string
+
   /** Converted On */
   converted_on?: string
 
-  /** Converted By */
-  converted_by?: { id: string; firstname?: string; lastname?: string } | string
-
   /** Conversion State */
-  conversion_state?: { id: string; name: string } | string
+  conversion_state?: { id: string; name: string } | any
 
   /** Conversion Mode */
-  conversion_mode?: { id: string; name: string } | string
+  conversion_mode?: { id: string; name: string } | any
 
   /** Conversion Error Message */
   conversion_error_message?: string
+
+  /** Lost Reason */
+  lost_reason?: { id: string; name: string } | any
+
+  /** Countries */
+  countries?: { id: string; name: string } | string
+
+  /** Phone */
+  phone?: string
+
+  /** Address */
+  address?: string
+
+  /** Title */
+  title?: string
+
+  /** Lead Status */
+  lead_status?: { id: string; name: string } | any
+
+  /** Contact Message */
+  contact_message?: string
+
+  /** City */
+  city?: string
+
+  /** State */
+  state?: string
+
+  /** Lead Type */
+  lead_type?: { id: string; name: string } | any
+
+  /** Email */
+  email?: string
+
+  /** Town */
+  town?: string
+
+  /** Lead Source */
+  lead_source?: { id: string; name: string } | any
+
+  /** Company Website */
+  website?: string
 }
 
 export function useBaseCrmLeadsCollection() {
   const client = useDocyrusClient()
 
-  return {
-    /** List records with optional filtering, sorting, and pagination. */
-    list: (
-      params?: ICollectionListParams,
-    ): Promise<Array<BaseCrmLeadsEntity>> =>
-      client!.get(
-        '/v1/apps/base_crm/data-sources/leads/items',
-        params as Record<string, QueryParamValue> | undefined,
-      ),
-
-    /** Get record */
-    get: (
-      recordId: string,
-      params?: { columns?: Array<string> },
-    ): Promise<BaseCrmLeadsEntity> =>
-      client!.get(
-        '/v1/apps/base_crm/data-sources/leads/items/{recordId}'.replace(
-          '{recordId}',
-          recordId,
+  /*
+   * Memoize the returned object so its identity is stable across renders.
+   * Consumers commonly put the collection in useCallback/useMemo deps
+   * (e.g. on a delete/save handler) — without memoization, every render
+   * produces a fresh object, those callbacks rebuild, and any effect that
+   * tracks them via deps fires every render. That's what triggers the
+   * infinite-loop case in <DataGrid>: an unstable handler reaches the
+   * grid's column-applier effect, which calls table.setColumnVisibility
+   * → store.set → store.notify → re-render → unstable collection again.
+   */
+  return useMemo(
+    () => ({
+      /** List records with optional filtering, sorting, and pagination. */
+      list: (
+        params?: ICollectionListParams,
+      ): Promise<Array<BaseCrmLeadsEntity>> =>
+        client!.get(
+          '/v1/apps/base_crm/data-sources/leads/items',
+          params as Record<string, QueryParamValue> | undefined,
         ),
-        params,
-      ),
 
-    /** Create record */
-    create: (data: Record<string, any>): Promise<BaseCrmLeadsEntity> =>
-      client!.post('/v1/apps/base_crm/data-sources/leads/items', data),
-
-    /** Update record */
-    update: (
-      recordId: string,
-      data: Record<string, any>,
-    ): Promise<BaseCrmLeadsEntity> =>
-      client!.patch(
-        '/v1/apps/base_crm/data-sources/leads/items/{recordId}'.replace(
-          '{recordId}',
-          recordId,
+      /** Get record */
+      get: (
+        recordId: string,
+        params?: { columns?: Array<string> },
+      ): Promise<BaseCrmLeadsEntity> =>
+        client!.get(
+          '/v1/apps/base_crm/data-sources/leads/items/{recordId}'.replace(
+            '{recordId}',
+            recordId,
+          ),
+          params,
         ),
-        data,
-      ),
 
-    /** Delete record */
-    delete: (recordId: string): Promise<void> =>
-      client!.delete(
-        '/v1/apps/base_crm/data-sources/leads/items/{recordId}'.replace(
-          '{recordId}',
-          recordId,
+      /** Create record */
+      create: (data: Record<string, any>): Promise<BaseCrmLeadsEntity> =>
+        client!.post('/v1/apps/base_crm/data-sources/leads/items', data),
+
+      /** Update record */
+      update: (
+        recordId: string,
+        data: Record<string, any>,
+      ): Promise<BaseCrmLeadsEntity> =>
+        client!.patch(
+          '/v1/apps/base_crm/data-sources/leads/items/{recordId}'.replace(
+            '{recordId}',
+            recordId,
+          ),
+          data,
         ),
-      ),
 
-    /** Delete many records */
-    deleteMany: (data: { recordIds: Array<string> }): Promise<void> =>
-      client!.delete('/v1/apps/base_crm/data-sources/leads/items', data),
-  }
+      /** Delete record */
+      delete: (recordId: string): Promise<void> =>
+        client!.delete(
+          '/v1/apps/base_crm/data-sources/leads/items/{recordId}'.replace(
+            '{recordId}',
+            recordId,
+          ),
+        ),
+
+      /** Delete many records */
+      deleteMany: (data: { recordIds: Array<string> }): Promise<void> =>
+        client!.delete('/v1/apps/base_crm/data-sources/leads/items', data),
+    }),
+    [client],
+  )
 }

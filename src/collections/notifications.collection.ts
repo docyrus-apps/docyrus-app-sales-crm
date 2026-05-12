@@ -1,4 +1,5 @@
 // Generated collection for notifications
+import { useMemo } from 'react'
 import { useDocyrusClient } from '@docyrus/signin'
 
 export interface NotificationEntity {
@@ -42,42 +43,48 @@ export interface NotificationEntity {
 export function useNotificationsCollection() {
   const client = useDocyrusClient()
 
-  return {
-    /**
-     * Get notifications
-     * @returns Array<NotificationEntity>
-     */
-    getNotifications: (): Promise<Array<NotificationEntity>> =>
-      client!.get<Array<NotificationEntity>>('/v1/notifications'),
+  // Memoized so the returned object's identity is stable across renders.
+  // Same rationale as the data-source collection hooks — see the comment
+  // in collections.ts.
+  return useMemo(
+    () => ({
+      /**
+       * Get notifications
+       * @returns Array<NotificationEntity>
+       */
+      getNotifications: (): Promise<Array<NotificationEntity>> =>
+        client!.get<Array<NotificationEntity>>('/v1/notifications'),
 
-    /**
-     * Mark notification as read
-     * @param notification_id -
-     */
-    markNotificationAsRead: (notification_id: string) =>
-      client!.put(
-        '/v1/notifications/{notification_id}/status/read'.replace(
-          '{notification_id}',
-          notification_id.toString(),
+      /**
+       * Mark notification as read
+       * @param notification_id -
+       */
+      markNotificationAsRead: (notification_id: string) =>
+        client!.put(
+          '/v1/notifications/{notification_id}/status/read'.replace(
+            '{notification_id}',
+            notification_id.toString(),
+          ),
         ),
-      ),
 
-    /**
-     * Mark notification as unread
-     * @param notification_id -
-     */
-    markNotificationAsUnread: (notification_id: string) =>
-      client!.put(
-        '/v1/notifications/{notification_id}/status/unread'.replace(
-          '{notification_id}',
-          notification_id.toString(),
+      /**
+       * Mark notification as unread
+       * @param notification_id -
+       */
+      markNotificationAsUnread: (notification_id: string) =>
+        client!.put(
+          '/v1/notifications/{notification_id}/status/unread'.replace(
+            '{notification_id}',
+            notification_id.toString(),
+          ),
         ),
-      ),
 
-    /**
-     * Mark all notifications as read
-     */
-    markAllNotificationsAsRead: () =>
-      client!.put('/v1/notifications/status/read'),
-  }
+      /**
+       * Mark all notifications as read
+       */
+      markAllNotificationsAsRead: () =>
+        client!.put('/v1/notifications/status/read'),
+    }),
+    [client],
+  )
 }

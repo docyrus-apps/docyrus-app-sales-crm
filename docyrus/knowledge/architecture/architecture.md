@@ -14,6 +14,10 @@ The OAuth callback is configured as a path (`VITE_OAUTH2_REDIRECT_PATH`) and the
 
 The editor currently builds cleanly on PlateJS 53.x. Upgrade `platejs` and the `@platejs/*` packages together to avoid missing-export mismatches between core and plugin packages.
 
+## Field Sales Runtime Shape
+
+Field sales settings live in tenant app config under `fieldSales` for `base_crm`. Shared helpers cover ranges, enum IDs, and status normalization. A header-level location action handles nearby visits plus the active check-in or check-out sheets.
+
 <!-- docyrus-knowledge:auto:begin -->
 
 # Architecture

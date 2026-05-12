@@ -1,4 +1,5 @@
 // Generated collection for base/event
+import { useMemo } from 'react'
 import { useDocyrusClient } from '@docyrus/signin'
 import type { QueryParamValue } from '@docyrus/api-client'
 import type { ICollectionListParams } from './types'
@@ -25,14 +26,14 @@ export interface BaseEventEntity {
   /** Subject */
   subject: string
 
+  /** End Date */
+  end_date?: string
+
   /** Start Date */
   start_date?: string
 
   /** Description */
   description?: string
-
-  /** End Date */
-  end_date?: string
 
   /** Event Type */
   calendar?: { id: string; name: string } | string
@@ -40,14 +41,14 @@ export interface BaseEventEntity {
   /** Event Notes */
   event_notes?: Record<string, any>
 
-  /** Lead */
-  lead?: { id: string; name: string } | string
-
   /** Contact */
   contact?: { id: string; name: string } | string
 
   /** Organization */
   organization?: { id: string; name: string } | string
+
+  /** Lead */
+  lead?: { id: string; name: string } | string
 
   /** Deal */
   deal?: { id: string; name: string } | string
@@ -56,55 +57,68 @@ export interface BaseEventEntity {
 export function useBaseEventCollection() {
   const client = useDocyrusClient()
 
-  return {
-    /** List records with optional filtering, sorting, and pagination. */
-    list: (params?: ICollectionListParams): Promise<Array<BaseEventEntity>> =>
-      client!.get(
-        '/v1/apps/base/data-sources/event/items',
-        params as Record<string, QueryParamValue> | undefined,
-      ),
-
-    /** Get record */
-    get: (
-      recordId: string,
-      params?: { columns?: Array<string> },
-    ): Promise<BaseEventEntity> =>
-      client!.get(
-        '/v1/apps/base/data-sources/event/items/{recordId}'.replace(
-          '{recordId}',
-          recordId,
+  /*
+   * Memoize the returned object so its identity is stable across renders.
+   * Consumers commonly put the collection in useCallback/useMemo deps
+   * (e.g. on a delete/save handler) — without memoization, every render
+   * produces a fresh object, those callbacks rebuild, and any effect that
+   * tracks them via deps fires every render. That's what triggers the
+   * infinite-loop case in <DataGrid>: an unstable handler reaches the
+   * grid's column-applier effect, which calls table.setColumnVisibility
+   * → store.set → store.notify → re-render → unstable collection again.
+   */
+  return useMemo(
+    () => ({
+      /** List records with optional filtering, sorting, and pagination. */
+      list: (params?: ICollectionListParams): Promise<Array<BaseEventEntity>> =>
+        client!.get(
+          '/v1/apps/base/data-sources/event/items',
+          params as Record<string, QueryParamValue> | undefined,
         ),
-        params,
-      ),
 
-    /** Create record */
-    create: (data: Record<string, any>): Promise<BaseEventEntity> =>
-      client!.post('/v1/apps/base/data-sources/event/items', data),
-
-    /** Update record */
-    update: (
-      recordId: string,
-      data: Record<string, any>,
-    ): Promise<BaseEventEntity> =>
-      client!.patch(
-        '/v1/apps/base/data-sources/event/items/{recordId}'.replace(
-          '{recordId}',
-          recordId,
+      /** Get record */
+      get: (
+        recordId: string,
+        params?: { columns?: Array<string> },
+      ): Promise<BaseEventEntity> =>
+        client!.get(
+          '/v1/apps/base/data-sources/event/items/{recordId}'.replace(
+            '{recordId}',
+            recordId,
+          ),
+          params,
         ),
-        data,
-      ),
 
-    /** Delete record */
-    delete: (recordId: string): Promise<void> =>
-      client!.delete(
-        '/v1/apps/base/data-sources/event/items/{recordId}'.replace(
-          '{recordId}',
-          recordId,
+      /** Create record */
+      create: (data: Record<string, any>): Promise<BaseEventEntity> =>
+        client!.post('/v1/apps/base/data-sources/event/items', data),
+
+      /** Update record */
+      update: (
+        recordId: string,
+        data: Record<string, any>,
+      ): Promise<BaseEventEntity> =>
+        client!.patch(
+          '/v1/apps/base/data-sources/event/items/{recordId}'.replace(
+            '{recordId}',
+            recordId,
+          ),
+          data,
         ),
-      ),
 
-    /** Delete many records */
-    deleteMany: (data: { recordIds: Array<string> }): Promise<void> =>
-      client!.delete('/v1/apps/base/data-sources/event/items', data),
-  }
+      /** Delete record */
+      delete: (recordId: string): Promise<void> =>
+        client!.delete(
+          '/v1/apps/base/data-sources/event/items/{recordId}'.replace(
+            '{recordId}',
+            recordId,
+          ),
+        ),
+
+      /** Delete many records */
+      deleteMany: (data: { recordIds: Array<string> }): Promise<void> =>
+        client!.delete('/v1/apps/base/data-sources/event/items', data),
+    }),
+    [client],
+  )
 }

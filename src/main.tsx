@@ -39,6 +39,10 @@ import { Contacts } from './routes/contacts.tsx'
 import { ContactDetail } from './routes/contact-detail.tsx'
 import { Activities } from './routes/activities.tsx'
 import { Reports } from './routes/reports.tsx'
+import { SettingsPage } from './routes/settings.tsx'
+import { FieldSalesPlansPage } from './routes/field-sales-plans.tsx'
+import { FieldSalesApprovalsPage } from './routes/field-sales-approvals.tsx'
+import { FieldSalesCalendarPage } from './routes/field-sales-calendar.tsx'
 
 const rootRoute = createRootRoute({
   component: App,
@@ -176,6 +180,30 @@ const reportsRoute = createRoute({
   component: Reports,
 })
 
+const settingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/settings',
+  component: SettingsPage,
+})
+
+const fieldSalesPlansRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/field-sales/plans',
+  component: FieldSalesPlansPage,
+})
+
+const fieldSalesApprovalsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/field-sales/approvals',
+  component: FieldSalesApprovalsPage,
+})
+
+const fieldSalesCalendarRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/field-sales/calendar',
+  component: FieldSalesCalendarPage,
+})
+
 const oauthRedirectPath = resolveOauthRedirectPath()
 
 const authCallbackRoute = createRoute({
@@ -211,6 +239,10 @@ const routeTree = rootRoute.addChildren([
   salesOrderDetailRoute,
   activitiesRoute,
   reportsRoute,
+  settingsRoute,
+  fieldSalesPlansRoute,
+  fieldSalesApprovalsRoute,
+  fieldSalesCalendarRoute,
   authCallbackRoute,
 ])
 

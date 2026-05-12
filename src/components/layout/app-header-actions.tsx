@@ -21,6 +21,7 @@ import { DealFormDialog } from '@/components/deals/deal-form-dialog'
 import { NotificationsPanel } from '@/components/docyrus/notifications-panel'
 import { LeadFormDialog } from '@/components/leads/lead-form-dialog'
 import { QuickTaskDialog } from '@/components/tasks/quick-task-dialog'
+import { FieldSalesLocationActions } from '@/components/field-sales/field-sales-location-actions'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -183,6 +184,8 @@ export function AppHeaderActions() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <FieldSalesLocationActions />
 
       <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
         <PopoverTrigger asChild>

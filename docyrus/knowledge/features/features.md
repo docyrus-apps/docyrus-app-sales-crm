@@ -69,6 +69,10 @@ Every record created during convert is tagged with `source_lead = lead.id` (orga
 
 The tasks route now uses the shared Docyrus grid runtime with saved views, inline updates, and toolbar import/export actions so task management behaves consistently with the other CRM workspaces.
 
+## Field Sales Planning & Approvals
+
+The app now includes a field sales workspace with persisted settings, a drag-and-drop planning board, a manager approval screen, a monthly field calendar, and a global location action for nearby visits plus check-in or check-out flows.
+
 <!-- docyrus-knowledge:auto:begin -->
 
 # Features

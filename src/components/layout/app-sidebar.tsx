@@ -4,6 +4,7 @@ import {
   BadgeCheck,
   BarChart3,
   Building2,
+  CalendarCheck2,
   CalendarDays,
   CheckSquare,
   ChevronsUpDown,
@@ -12,8 +13,10 @@ import {
   Home,
   Inbox,
   LogOut,
+  MapPinned,
   NotepadText,
   Package,
+  Route,
   Search,
   Settings,
   ShoppingCart,
@@ -83,6 +86,29 @@ const DATA_SOURCES_NAV_KEYS: NavItem[] = [
   { titleKey: 'contacts.title', url: '/contacts', icon: Contact },
   { titleKey: 'products.title', url: '/products', icon: Package },
   { titleKey: 'salesOrders.title', url: '/sales-orders', icon: ShoppingCart },
+]
+
+const FIELD_SALES_NAV_KEYS: NavItem[] = [
+  {
+    titleKey: 'fieldSales.plans.title',
+    url: '/field-sales/plans',
+    icon: Route,
+  },
+  {
+    titleKey: 'fieldSales.approvals.title',
+    url: '/field-sales/approvals',
+    icon: CalendarCheck2,
+  },
+  {
+    titleKey: 'fieldSales.calendar.title',
+    url: '/field-sales/calendar',
+    icon: MapPinned,
+  },
+  {
+    titleKey: 'fieldSales.settings.title',
+    url: '/settings',
+    icon: Settings,
+  },
 ]
 
 function NavGroup({
@@ -323,6 +349,12 @@ export function AppSidebar() {
         <NavGroup
           label={t('nav.dataSources', 'Data Sources')}
           items={DATA_SOURCES_NAV_KEYS}
+          matchRoute={matchRoute}
+          t={t}
+        />
+        <NavGroup
+          label={t('fieldSales.groupLabel', 'Saha Satış')}
+          items={FIELD_SALES_NAV_KEYS}
           matchRoute={matchRoute}
           t={t}
         />

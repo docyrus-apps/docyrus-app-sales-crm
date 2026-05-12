@@ -989,6 +989,21 @@
     "urlPlaceholder": "https://ornek.com",
     "phonePlaceholder": "Telefon numarası girin..."
   },
+  "fieldSales": {
+    "groupLabel": "Saha Satış",
+    "plans": {
+      "title": "Planlama"
+    },
+    "approvals": {
+      "title": "Plan Onayları"
+    },
+    "calendar": {
+      "title": "Saha Takvimi"
+    },
+    "settings": {
+      "title": "Ayarlar"
+    }
+  },
   "breadcrumb": {
     "home": "Ana Sayfa",
     "detail": "Detay",
