@@ -29,6 +29,7 @@ import {
   useLeadConvertEnumMappings,
   optionByName,
 } from '@/components/leads/use-lead-convert-enum-mappings'
+import { useLeadConvertForm } from '@/components/leads/use-lead-convert-form'
 import {
   getRelationId,
   getRelationName,
@@ -401,32 +402,11 @@ export function LeadConvertDialog({
   const [stepDetails, setStepDetails] = useState<
     Record<string, Array<StepDetail>>
   >(() => initialStepState.details)
-  const [form, setForm] = useState(() => ({
-    companyName: lead?.company_name_text || '',
-    companyWebsite: lead?.website || '',
-    companyEmail: lead?.company_email || '',
-    companyPhone: lead?.company_phone || '',
-    companyAddress: lead?.address || '',
-    companyCity: lead?.city || '',
-    companyIndustry: '',
-    companySize: '',
-    companyCountry: getRelationId(lead?.countries) || '',
-    contactName: lead?.name || '',
-    contactEmail: lead?.email || '',
-    contactPhone: lead?.phone || '',
-    contactJobTitle: lead?.contact_job_title || '',
-    dealName:
-      [lead?.company_name_text, lead?.name].filter(Boolean).join(' - ') ||
-      lead?.name ||
-      t('leads.convert.dealDefaultName'),
-    dealValue: lead?.deal_value ? String(lead.deal_value) : '',
-    notes: lead?.contact_message || '',
-    dealStageId: '',
-    dealLeadSourceId: '',
-    dealCustomerTypeId: '',
-    dealCountry: getRelationId(lead?.countries) || '',
-    dealOwner: getRelationId(lead?.record_owner) || '',
-  }))
+  const { form, updateForm, sourceDealName } = useLeadConvertForm({
+    lead,
+    t,
+    onSearchRelevantChange: () => setDuplicatesChecked(false),
+  })
   const [extraFields, setExtraFields] = useState<{
     company: Array<{
       slug: string
@@ -630,22 +610,6 @@ export function LeadConvertDialog({
     tone,
     label,
   })
-
-  const SEARCH_RELEVANT_FIELDS = new Set<keyof typeof form>([
-    'companyName',
-    'companyWebsite',
-    'companyPhone',
-    'contactName',
-    'contactEmail',
-    'contactPhone',
-  ])
-
-  const updateForm = (key: keyof typeof form, value: string) => {
-    setForm((current) => ({ ...current, [key]: value }))
-    if (SEARCH_RELEVANT_FIELDS.has(key)) {
-      setDuplicatesChecked(false)
-    }
-  }
 
   const updateLead = async (data: Record<string, unknown>) => {
     if (!client || !lead?.id) throw new Error(t('leads.failedToLoad'))
@@ -1869,11 +1833,6 @@ export function LeadConvertDialog({
     form,
     mode,
   ])
-
-  const sourceDealName =
-    [lead?.company_name_text, lead?.name].filter(Boolean).join(' - ') ||
-    lead?.name ||
-    t('leads.convert.dealDefaultName')
 
   const setExtraValue = (
     target: 'company' | 'contact' | 'deal',
