@@ -26,8 +26,10 @@ The convert dialog at `src/components/leads/lead-convert-dialog.tsx` is a tabbed
 
 - Each tab renders `FieldMappingRow` (`src/components/leads/field-mapping-row.tsx`) — left chip shows the lead source value (muted), right input/select holds the editable target value pre-filled from source.
 - Required fields render a red asterisk; auto-match looks up lead enum values (industry, company_size, lead_source, lead_type) in target enums by name.
+- Reuse vs Create banner: when duplicate search returns matches on Company or Contact tab, an amber banner appears at the top with "Yeni oluştur / Mevcut kullan" toggle, the candidate list below it, and the editable form fields are hidden under a short note when reuse is selected.
 - "+ Alan ekle" popover at the top of each tab fetches target datasource fields, hides system slugs, and lets users add or remove dialog-only fields that get spread into the create payload.
 - Validation focus and added-field reveal both scroll the row into view and ring-highlight it.
+- Precheck step icon turns amber (`warn` state) if any duplicate is found; its tooltip renders a structured 3-column summary (Şirket / Kişi / Fırsat) with per-target status (clean / öneri / tam eşleşme), counts, and the example matching name.
 
 ### Convert Flow
 

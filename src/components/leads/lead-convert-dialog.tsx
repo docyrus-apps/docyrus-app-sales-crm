@@ -6,6 +6,7 @@ import { useDocyrusClient } from '@docyrus/signin'
 import { useTranslation } from 'react-i18next'
 import {
   AlertCircle,
+  AlertTriangle,
   ArrowRight,
   Building2,
   CheckCircle2,
@@ -72,9 +73,20 @@ import {
 import { cn } from '@/lib/utils'
 
 type ConversionMode = 'company_contact_deal' | 'contact_deal' | 'deal_only'
-type StepState = 'pending' | 'running' | 'done' | 'failed' | 'skipped'
+type StepState =
+  | 'pending'
+  | 'running'
+  | 'done'
+  | 'warn'
+  | 'failed'
+  | 'skipped'
 type DetailTone = 'success' | 'info' | 'warn' | 'error' | 'neutral'
 type StepDetail = { tone: DetailTone; label: string }
+type PrecheckTargetSummary = {
+  status: 'unchecked' | 'clean' | 'matches' | 'exact'
+  count: number
+  exactName?: string
+}
 type EntityCandidate = Record<string, any> & { id?: string; name?: string }
 type FieldMeta = { slug?: string }
 type DataSourceMeta = { fields?: Array<FieldMeta> }
@@ -232,6 +244,8 @@ function renderDetailIcon(tone: DetailTone) {
 function getStepIcon(state: StepState) {
   if (state === 'done')
     return <CheckCircle2 className="size-4 text-emerald-600" />
+  if (state === 'warn')
+    return <AlertTriangle className="size-4 text-amber-500" />
   if (state === 'running')
     return <Loader2 className="size-4 animate-spin text-sky-600" />
   if (state === 'failed')
@@ -274,6 +288,15 @@ export function LeadConvertDialog({
   const [dealCandidates, setDealCandidates] = useState<Array<EntityCandidate>>(
     [],
   )
+  const [precheckSummary, setPrecheckSummary] = useState<{
+    company: PrecheckTargetSummary
+    contact: PrecheckTargetSummary
+    deal: PrecheckTargetSummary
+  }>({
+    company: { status: 'unchecked', count: 0 },
+    contact: { status: 'unchecked', count: 0 },
+    deal: { status: 'unchecked', count: 0 },
+  })
   const [pendingChanges, setPendingChanges] = useState<Array<{
     tab: 'company' | 'contact' | 'deal'
     label: string
@@ -560,7 +583,9 @@ export function LeadConvertDialog({
   }, [open, client])
 
   const progress =
-    (Object.values(steps).filter((state) => ['done', 'skipped'].includes(state))
+    (Object.values(steps).filter((state) =>
+      ['done', 'warn', 'skipped'].includes(state),
+    )
       .length /
       Object.keys(steps).length) *
     100
@@ -895,8 +920,46 @@ export function LeadConvertDialog({
       }
       setStepDetail('precheck', precheckDetails)
 
+      setPrecheckSummary({
+        company:
+          mode === 'company_contact_deal'
+            ? {
+                status:
+                  companyMatches.length === 0
+                    ? 'clean'
+                    : exactCompany
+                      ? 'exact'
+                      : 'matches',
+                count: companyMatches.length,
+                exactName: exactCompany?.name,
+              }
+            : { status: 'unchecked', count: 0 },
+        contact:
+          mode !== 'deal_only'
+            ? {
+                status:
+                  contactMatches.length === 0
+                    ? 'clean'
+                    : exactContact
+                      ? 'exact'
+                      : 'matches',
+                count: contactMatches.length,
+                exactName: exactContact?.name,
+              }
+            : { status: 'unchecked', count: 0 },
+        deal: {
+          status: dealMatches.length === 0 ? 'clean' : 'matches',
+          count: dealMatches.length,
+          exactName: dealMatches[0]?.name,
+        },
+      })
+
       setDuplicatesChecked(true)
-      setStep('precheck', 'done')
+      const hasAnyMatch =
+        companyMatches.length > 0 ||
+        contactMatches.length > 0 ||
+        dealMatches.length > 0
+      setStep('precheck', hasAnyMatch ? 'warn' : 'done')
     } catch (error) {
       setStep('precheck', 'failed')
       const errMsg = getErrorMessage(error, t)
@@ -1737,7 +1800,7 @@ export function LeadConvertDialog({
     )
   }
 
-  const renderDuplicateMatches = (target: 'company' | 'contact') => {
+  const renderReuseBanner = (target: 'company' | 'contact') => {
     const candidates =
       target === 'company' ? companyCandidates : contactCandidates
     if (candidates.length === 0) return null
@@ -1745,45 +1808,212 @@ export function LeadConvertDialog({
       target === 'company' ? selectedCompanyId : selectedContactId
     const setSelected =
       target === 'company' ? setSelectedCompanyId : setSelectedContactId
+    const exactId = target === 'company' ? exactCompanyId : exactContactId
+    const isReuse = selectedId !== null
+    const titleEntity = target === 'company' ? 'şirket' : 'kişi'
+    const targetIcon =
+      target === 'company' ? (
+        <Building2 className="size-3.5 text-sky-600" />
+      ) : (
+        <UserRound className="size-3.5 text-emerald-600" />
+      )
 
     return (
-      <div className="space-y-2 rounded-md border border-dashed bg-muted/30 p-3">
-        <p className="text-xs font-medium">
-          {target === 'company'
-            ? t('leads.convert.duplicateMatches.companies')
-            : t('leads.convert.duplicateMatches.contacts')}
-        </p>
-        {candidates.map((candidate) => (
+      <div className="space-y-3 rounded-lg border-2 border-amber-200 bg-amber-50/50 p-3 dark:border-amber-900/40 dark:bg-amber-950/20">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="size-4 text-amber-600" />
+          <p className="text-sm font-medium">
+            {candidates.length} mevcut {titleEntity} bulundu
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
           <button
-            key={candidate.id}
             type="button"
             disabled={isWorking}
-            onClick={() => setSelected(candidate.id ?? null)}
+            onClick={() => setSelected(null)}
             className={cn(
-              'w-full rounded-md border bg-background px-3 py-2 text-left text-xs',
-              selectedId === candidate.id &&
-                'border-primary ring-1 ring-primary',
+              'flex flex-col items-start gap-1 rounded-md border bg-background p-2.5 text-left transition-colors',
+              !isReuse
+                ? 'border-primary ring-1 ring-primary'
+                : 'border-border hover:border-primary/40',
             )}
           >
-            <span className="font-medium">{candidate.name}</span>
-            <span className="ml-2 text-muted-foreground">
-              {target === 'company'
-                ? candidate.website || candidate.email || candidate.phone
-                : candidate.email || candidate.mobile}
-            </span>
+            <div className="flex items-center gap-1.5 text-xs font-medium">
+              <Plus className="size-3.5" />
+              <span>Yeni {titleEntity} oluştur</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Lead'in bilgileriyle yeni kayıt açılır
+            </p>
           </button>
-        ))}
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          disabled={isWorking}
-          onClick={() => setSelected(null)}
-        >
-          {target === 'company'
-            ? t('leads.convert.duplicateMatches.newCompany')
-            : t('leads.convert.duplicateMatches.newContact')}
-        </Button>
+          <button
+            type="button"
+            disabled={isWorking}
+            onClick={() => {
+              const fallback = exactId ?? candidates[0]?.id ?? null
+              setSelected(fallback)
+            }}
+            className={cn(
+              'flex flex-col items-start gap-1 rounded-md border bg-background p-2.5 text-left transition-colors',
+              isReuse
+                ? 'border-primary ring-1 ring-primary'
+                : 'border-border hover:border-primary/40',
+            )}
+          >
+            <div className="flex items-center gap-1.5 text-xs font-medium">
+              {targetIcon}
+              <span>Mevcut {titleEntity} kullan</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Yeni kayıt oluşturulmaz, mevcut bağlanır
+            </p>
+          </button>
+        </div>
+        {isReuse ? (
+          <div className="space-y-1.5 border-t border-amber-200 pt-2 dark:border-amber-900/40">
+            <p className="text-[10.5px] uppercase tracking-wide text-muted-foreground">
+              Hangisi kullanılacak?
+            </p>
+            {candidates.map((candidate) => (
+              <button
+                key={candidate.id}
+                type="button"
+                disabled={isWorking}
+                onClick={() => setSelected(candidate.id ?? null)}
+                className={cn(
+                  'flex w-full items-center justify-between gap-2 rounded-md border bg-background px-3 py-2 text-left text-xs transition-colors',
+                  selectedId === candidate.id &&
+                    'border-primary ring-1 ring-primary',
+                )}
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="truncate font-medium">
+                      {candidate.name}
+                    </span>
+                    {exactId === candidate.id ? (
+                      <Badge
+                        variant="secondary"
+                        className="h-4 text-[10px]"
+                      >
+                        Tam eşleşme
+                      </Badge>
+                    ) : null}
+                  </div>
+                  <p className="truncate text-muted-foreground">
+                    {target === 'company'
+                      ? candidate.website || candidate.email || candidate.phone
+                      : candidate.email || candidate.mobile}
+                  </p>
+                </div>
+                {selectedId === candidate.id ? (
+                  <CheckCircle2 className="size-4 shrink-0 text-primary" />
+                ) : null}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    )
+  }
+
+  const renderPrecheckTooltip = () => {
+    const TARGETS: Array<{
+      key: 'company' | 'contact' | 'deal'
+      icon: React.ReactNode
+      label: string
+    }> = [
+      {
+        key: 'company',
+        icon: <Building2 className="size-3.5 text-sky-600" />,
+        label: 'Şirket',
+      },
+      {
+        key: 'contact',
+        icon: <UserRound className="size-3.5 text-emerald-600" />,
+        label: 'Kişi',
+      },
+      {
+        key: 'deal',
+        icon: <CheckCircle2 className="size-3.5 text-violet-600" />,
+        label: 'Fırsat',
+      },
+    ]
+
+    const renderTargetCell = (target: PrecheckTargetSummary) => {
+      if (target.status === 'unchecked') {
+        return (
+          <div className="flex items-center gap-1 text-[10.5px] text-muted-foreground">
+            <CircleDashed className="size-3" />
+            <span>Atlandı</span>
+          </div>
+        )
+      }
+      if (target.status === 'clean') {
+        return (
+          <div className="flex items-center gap-1 text-[10.5px] text-emerald-700">
+            <CheckCircle2 className="size-3" />
+            <span>Temiz</span>
+          </div>
+        )
+      }
+      if (target.status === 'exact') {
+        return (
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-1 text-[10.5px] text-amber-700">
+              <AlertTriangle className="size-3" />
+              <span>{target.count} eşleşme</span>
+            </div>
+            {target.exactName ? (
+              <p className="truncate text-[10.5px] font-medium text-foreground">
+                {target.exactName}
+              </p>
+            ) : null}
+          </div>
+        )
+      }
+      return (
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-1 text-[10.5px] text-sky-700">
+            <Info className="size-3" />
+            <span>{target.count} öneri</span>
+          </div>
+          {target.exactName ? (
+            <p className="truncate text-[10.5px] text-muted-foreground">
+              örn: {target.exactName}
+            </p>
+          ) : null}
+        </div>
+      )
+    }
+
+    return (
+      <div className="space-y-2">
+        <ul className="space-y-1">
+          <li className="flex items-start gap-1.5 text-xs leading-snug">
+            <CheckCircle2 className="mt-0.5 size-3.5 text-emerald-600" />
+            <span className="text-foreground/90">
+              Zorunlu alanlar dolduruldu
+            </span>
+          </li>
+        </ul>
+        <div className="grid grid-cols-3 gap-1.5 border-t pt-2">
+          {TARGETS.map((targetMeta) => {
+            const summary = precheckSummary[targetMeta.key]
+            return (
+              <div
+                key={targetMeta.key}
+                className="rounded-md border bg-background/50 p-2"
+              >
+                <div className="mb-1 flex items-center gap-1 text-[11px] font-medium">
+                  {targetMeta.icon}
+                  <span>{targetMeta.label}</span>
+                </div>
+                {renderTargetCell(summary)}
+              </div>
+            )
+          })}
+        </div>
       </div>
     )
   }
@@ -1812,6 +2042,15 @@ export function LeadConvertDialog({
 
         {tabsToShow.includes('company') && (
           <TabsContent value="company" className="space-y-3">
+            {renderReuseBanner('company')}
+            {selectedCompanyId !== null ? (
+              <div className="rounded-md border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground">
+                Mevcut şirket convert sırasında bağlanacak. Yeni kayıt
+                oluşturulmayacak — bilgileri düzenlemek için şirket sayfasına
+                gidebilirsin.
+              </div>
+            ) : (
+              <>
             <div className="flex items-center justify-end">
               {renderAddFieldPopover('company')}
             </div>
@@ -1953,12 +2192,22 @@ export function LeadConvertDialog({
                 disabled={formDisabled}
               />
             ))}
-            {renderDuplicateMatches('company')}
+              </>
+            )}
           </TabsContent>
         )}
 
         {tabsToShow.includes('contact') && (
           <TabsContent value="contact" className="space-y-3">
+            {renderReuseBanner('contact')}
+            {selectedContactId !== null ? (
+              <div className="rounded-md border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground">
+                Mevcut kişi convert sırasında bağlanacak. Yeni kayıt
+                oluşturulmayacak — bilgileri düzenlemek için kişi sayfasına
+                gidebilirsin.
+              </div>
+            ) : (
+              <>
             <div className="flex items-center justify-end">
               {renderAddFieldPopover('contact')}
             </div>
@@ -2036,11 +2285,44 @@ export function LeadConvertDialog({
                 disabled={formDisabled}
               />
             ))}
-            {renderDuplicateMatches('contact')}
+              </>
+            )}
           </TabsContent>
         )}
 
         <TabsContent value="deal" className="space-y-3">
+          {dealCandidates.length > 0 ? (
+            <div className="space-y-2 rounded-lg border-2 border-amber-200 bg-amber-50/50 p-3 dark:border-amber-900/40 dark:bg-amber-950/20">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="size-4 text-amber-600" />
+                <p className="text-sm font-medium">
+                  {t('leads.convert.previousDealsTitle')}
+                </p>
+              </div>
+              <div className="space-y-1.5">
+                {dealCandidates.map((candidate) => (
+                  <div
+                    key={candidate.id}
+                    className="rounded-md border bg-background px-3 py-2 text-xs"
+                  >
+                    <p className="font-medium">{candidate.name}</p>
+                    <p className="text-muted-foreground">
+                      {typeof candidate.stage === 'object'
+                        ? candidate.stage?.name
+                        : null}
+                      {candidate.organization &&
+                      typeof candidate.organization === 'object'
+                        ? ` · ${candidate.organization.name}`
+                        : ''}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                {t('leads.convert.newDealWillBeCreated')}
+              </p>
+            </div>
+          ) : null}
           <div className="flex items-center justify-end">
             {renderAddFieldPopover('deal')}
           </div>
@@ -2151,34 +2433,6 @@ export function LeadConvertDialog({
               disabled={formDisabled}
             />
           ))}
-          {dealCandidates.length > 0 ? (
-            <div className="space-y-2 rounded-md border border-amber-300/60 bg-amber-50/60 p-3 dark:bg-amber-950/20">
-              <p className="flex items-center gap-1.5 text-xs font-medium text-amber-800 dark:text-amber-200">
-                <Sparkles className="size-3.5" />
-                {t('leads.convert.previousDealsTitle')}
-              </p>
-              {dealCandidates.map((candidate) => (
-                <div
-                  key={candidate.id}
-                  className="rounded-md border bg-background px-3 py-2 text-xs"
-                >
-                  <p className="font-medium">{candidate.name}</p>
-                  <p className="text-muted-foreground">
-                    {typeof candidate.stage === 'object'
-                      ? candidate.stage?.name
-                      : null}
-                    {candidate.organization &&
-                    typeof candidate.organization === 'object'
-                      ? ` · ${candidate.organization.name}`
-                      : ''}
-                  </p>
-                </div>
-              ))}
-              <p className="text-[11px] text-muted-foreground">
-                {t('leads.convert.newDealWillBeCreated')}
-              </p>
-            </div>
-          ) : null}
         </TabsContent>
       </Tabs>
     )
@@ -2337,12 +2591,16 @@ export function LeadConvertDialog({
                       <TooltipContent
                         side="bottom"
                         sideOffset={6}
-                        className="min-w-[220px] max-w-sm border border-border bg-popover p-3 text-popover-foreground shadow-lg [&_svg]:shrink-0"
+                        className="min-w-[260px] max-w-md border border-border bg-popover p-3 text-popover-foreground shadow-lg [&_svg]:shrink-0"
                       >
                         <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                           {label}
                         </p>
-                        {hasDetails ? (
+                        {key === 'precheck' &&
+                        duplicatesChecked &&
+                        (state === 'warn' || state === 'done') ? (
+                          renderPrecheckTooltip()
+                        ) : hasDetails ? (
                           <ul className="space-y-1.5">
                             {details.map((d, index) => (
                               <li
