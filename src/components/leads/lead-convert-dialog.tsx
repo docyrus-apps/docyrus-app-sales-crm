@@ -4,14 +4,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { useDocyrusClient } from '@docyrus/signin'
 import { useTranslation } from 'react-i18next'
-import {
-  AlertCircle,
-  AlertTriangle,
-  CheckCircle2,
-  Info,
-  Loader2,
-  Plus,
-} from 'lucide-react'
+import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/animate-ui/components/buttons/button'
 import { AwesomeDialog } from '@/components/docyrus/awesome-dialog/awesome-dialog'
@@ -19,25 +12,17 @@ import { AwesomeDialogBody } from '@/components/docyrus/awesome-dialog/awesome-d
 import { AwesomeDialogFooter } from '@/components/docyrus/awesome-dialog/awesome-dialog-footer'
 import { AwesomeDialogHeader } from '@/components/docyrus/awesome-dialog/awesome-dialog-header'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
-  FieldMappingRow,
   type FieldKind,
   type SelectOption,
 } from '@/components/leads/field-mapping-row'
-import { LeadConvertReuseBanner } from '@/components/leads/lead-convert-reuse-banner'
 import { LeadConvertModeSelector } from '@/components/leads/lead-convert-mode-selector'
 import {
   LeadConvertChangeConfirmDialog,
   type LeadConvertPendingChange,
 } from '@/components/leads/lead-convert-change-confirm-dialog'
 import { LeadConvertProgress } from '@/components/leads/lead-convert-progress'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+import { LeadConvertTabs } from '@/components/leads/lead-convert-tabs'
 import { createDataSourceClient } from '@docyrus/app-utils'
 import { useEnumEntities } from '@/hooks/use-enums'
 import {
@@ -2062,556 +2047,6 @@ export function LeadConvertDialog({
     })
   }
 
-  const renderAddFieldPopover = (target: ConvertTarget) => {
-    const targetLabel = TARGET_LABEL[target]
-    const options = availableExtraFields(target)
-    const addedCount = extraFields[target].length
-    return (
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={formDisabled || options.length === 0}
-            className="h-8"
-          >
-            <Plus className="mr-1 size-3.5" />
-            {t('leads.convert.addField', { target: targetLabel })}
-            {addedCount > 0 ? (
-              <Badge
-                variant="secondary"
-                className="ml-1.5 h-4 px-1 text-[10px]"
-              >
-                +{addedCount}
-              </Badge>
-            ) : null}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="start" className="w-64 p-0">
-          <div className="max-h-64 overflow-y-auto p-1">
-            {options.length === 0 ? (
-              <p className="px-2 py-3 text-xs text-muted-foreground">
-                {t('leads.convert.noFieldsAvailable')}
-              </p>
-            ) : (
-              options.map((option) => (
-                <button
-                  key={option.slug}
-                  type="button"
-                  onClick={() => addExtraField(target, option)}
-                  className="flex w-full items-center justify-between rounded px-2 py-1.5 text-left text-xs hover:bg-accent"
-                >
-                  <span className="truncate">{option.name}</span>
-                  <span className="ml-2 text-[10px] text-muted-foreground">
-                    {option.type.replace('field-', '')}
-                  </span>
-                </button>
-              ))
-            )}
-          </div>
-        </PopoverContent>
-      </Popover>
-    )
-  }
-
-  const renderMappingTabs = () => {
-    const tabsToShow: Array<'company' | 'contact' | 'deal'> = []
-    if (mode === 'company_contact_deal') tabsToShow.push('company')
-    if (mode !== 'deal_only') tabsToShow.push('contact')
-    tabsToShow.push('deal')
-
-    return (
-      <Tabs
-        value={activeTab}
-        onValueChange={(value) =>
-          setActiveTab(value as 'company' | 'contact' | 'deal')
-        }
-        className="w-full"
-      >
-        <TabsList className="w-full justify-start">
-          {tabsToShow.map((tab) => {
-            const extraCount = extraFields[tab].length
-            return (
-              <TabsTrigger key={tab} value={tab} className="flex-1 gap-1.5">
-                <span>{TARGET_LABEL[tab]}</span>
-                {extraCount > 0 ? (
-                  <Badge variant="secondary" className="h-4 px-1 text-[10px]">
-                    +{extraCount}
-                  </Badge>
-                ) : null}
-              </TabsTrigger>
-            )
-          })}
-        </TabsList>
-
-        {tabsToShow.includes('company') && (
-          <TabsContent value="company" className="space-y-3">
-            <LeadConvertReuseBanner
-              target="company"
-              candidates={companyCandidates}
-              selectedId={selectedCompanyId}
-              exactId={exactCompanyId}
-              isWorking={isWorking}
-              onSelect={setSelectedCompanyId}
-            />
-            {selectedCompanyId !== null ? (
-              <div className="rounded-md border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground">
-                {t('leads.convert.reuse.noteCompany', {
-                  defaultValue:
-                    'The existing company will be linked at convert time. No new record will be created — go to the company page to edit its details.',
-                })}
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center justify-end">
-                  {renderAddFieldPopover('company')}
-                </div>
-                <FieldMappingRow
-                  fieldKey="company:name"
-                  label={t('leads.convert.field.companyName')}
-                  sourceLabel={t('leads.convert.sourceLabel.lead', {
-                    field: 'company_name_text',
-                  })}
-                  targetLabel={t('leads.convert.targetLabel.organization', {
-                    field: 'name',
-                  })}
-                  sourceValue={lead?.company_name_text ?? ''}
-                  value={form.companyName}
-                  onChange={(v) => updateForm('companyName', v)}
-                  onRestoreSource={() =>
-                    updateForm('companyName', lead?.company_name_text || '')
-                  }
-                  disabled={formDisabled}
-                  highlight
-                  required
-                />
-                <FieldMappingRow
-                  label={t('leads.convert.field.companyEmail')}
-                  sourceLabel={t('leads.convert.sourceLabel.lead', {
-                    field: 'company_email',
-                  })}
-                  targetLabel={t('leads.convert.targetLabel.organization', {
-                    field: 'email',
-                  })}
-                  sourceValue={lead?.company_email ?? ''}
-                  value={form.companyEmail}
-                  kind="email"
-                  onChange={(v) => updateForm('companyEmail', v)}
-                  onRestoreSource={() =>
-                    updateForm('companyEmail', lead?.company_email || '')
-                  }
-                  disabled={formDisabled}
-                />
-                <FieldMappingRow
-                  label={t('leads.convert.field.companyPhone')}
-                  sourceLabel={t('leads.convert.sourceLabel.lead', {
-                    field: 'company_phone',
-                  })}
-                  targetLabel={t('leads.convert.targetLabel.organization', {
-                    field: 'phone',
-                  })}
-                  sourceValue={lead?.company_phone ?? ''}
-                  value={form.companyPhone}
-                  kind="phone"
-                  onChange={(v) => updateForm('companyPhone', v)}
-                  onRestoreSource={() =>
-                    updateForm('companyPhone', lead?.company_phone || '')
-                  }
-                  disabled={formDisabled}
-                />
-                <FieldMappingRow
-                  label={t('leads.convert.field.website')}
-                  sourceLabel={t('leads.convert.sourceLabel.lead', {
-                    field: 'website',
-                  })}
-                  targetLabel={t('leads.convert.targetLabel.organization', {
-                    field: 'website',
-                  })}
-                  sourceValue={lead?.website ?? ''}
-                  value={form.companyWebsite}
-                  kind="url"
-                  onChange={(v) => updateForm('companyWebsite', v)}
-                  onRestoreSource={() =>
-                    updateForm('companyWebsite', lead?.website || '')
-                  }
-                  disabled={formDisabled}
-                />
-                <FieldMappingRow
-                  label={t('leads.convert.field.address')}
-                  sourceLabel={t('leads.convert.sourceLabel.lead', {
-                    field: 'address',
-                  })}
-                  targetLabel={t('leads.convert.targetLabel.organization', {
-                    field: 'address',
-                  })}
-                  sourceValue={lead?.address ?? ''}
-                  value={form.companyAddress}
-                  kind="textarea"
-                  onChange={(v) => updateForm('companyAddress', v)}
-                  onRestoreSource={() =>
-                    updateForm('companyAddress', lead?.address || '')
-                  }
-                  disabled={formDisabled}
-                />
-                <FieldMappingRow
-                  label={t('leads.convert.field.city')}
-                  sourceLabel={t('leads.convert.sourceLabel.lead', {
-                    field: 'city',
-                  })}
-                  targetLabel={t('leads.convert.targetLabel.organization', {
-                    field: 'city',
-                  })}
-                  sourceValue={lead?.city ?? ''}
-                  value={form.companyCity}
-                  onChange={(v) => updateForm('companyCity', v)}
-                  onRestoreSource={() =>
-                    updateForm('companyCity', lead?.city || '')
-                  }
-                  disabled={formDisabled}
-                />
-                <FieldMappingRow
-                  fieldKey="company:industry"
-                  label={t('leads.convert.field.industry')}
-                  sourceLabel={t('leads.convert.sourceLabel.lead', {
-                    field: 'company_industry',
-                  })}
-                  targetLabel={t('leads.convert.targetLabel.organization', {
-                    field: 'industry',
-                  })}
-                  sourceValue={leadCompanyIndustryName}
-                  value={effectiveCompanyIndustryId}
-                  kind="select"
-                  options={industrySelectOptions}
-                  placeholder={t('leads.convert.placeholder.selectIndustry')}
-                  onChange={(v) => updateForm('companyIndustry', v)}
-                  onRestoreSource={() =>
-                    updateForm('companyIndustry', mappedCompanyIndustryId || '')
-                  }
-                  disabled={formDisabled}
-                />
-                {companySizeSelectOptions.length > 0 ? (
-                  <FieldMappingRow
-                    fieldKey="company:company_size"
-                    label={t('leads.convert.field.companySize')}
-                    sourceLabel={t('leads.convert.sourceLabel.lead', {
-                      field: 'company_size',
-                    })}
-                    targetLabel={t('leads.convert.targetLabel.organization', {
-                      field: 'company_size',
-                    })}
-                    sourceValue={leadCompanySizeName}
-                    value={effectiveCompanySizeId}
-                    kind="select"
-                    options={companySizeSelectOptions}
-                    placeholder={t('leads.convert.placeholder.selectSize')}
-                    onChange={(v) => updateForm('companySize', v)}
-                    onRestoreSource={() =>
-                      updateForm('companySize', mappedCompanySizeId || '')
-                    }
-                    disabled={formDisabled}
-                  />
-                ) : null}
-                {extraFields.company.map((extra) => (
-                  <FieldMappingRow
-                    key={extra.slug}
-                    fieldKey={`company:${extra.slug}`}
-                    label={extra.label}
-                    sourceLabel={t('leads.convert.sourceLabel.dialogOnly')}
-                    targetLabel={t('leads.convert.targetLabel.organization', {
-                      field: extra.slug,
-                    })}
-                    sourceValue=""
-                    value={extra.value}
-                    kind={extra.kind}
-                    onChange={(v) => setExtraValue('company', extra.slug, v)}
-                    onRemove={() => removeExtraField('company', extra.slug)}
-                    disabled={formDisabled}
-                  />
-                ))}
-              </>
-            )}
-          </TabsContent>
-        )}
-
-        {tabsToShow.includes('contact') && (
-          <TabsContent value="contact" className="space-y-3">
-            <LeadConvertReuseBanner
-              target="contact"
-              candidates={contactCandidates}
-              selectedId={selectedContactId}
-              exactId={exactContactId}
-              isWorking={isWorking}
-              onSelect={setSelectedContactId}
-            />
-            {selectedContactId !== null ? (
-              <div className="rounded-md border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground">
-                {t('leads.convert.reuse.noteContact', {
-                  defaultValue:
-                    'The existing contact will be linked at convert time. No new record will be created — go to the contact page to edit its details.',
-                })}
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center justify-end">
-                  {renderAddFieldPopover('contact')}
-                </div>
-                <FieldMappingRow
-                  fieldKey="contact:name"
-                  label={t('leads.convert.field.contactName')}
-                  sourceLabel={t('leads.convert.sourceLabel.lead', {
-                    field: 'name',
-                  })}
-                  targetLabel={t('leads.convert.targetLabel.contact', {
-                    field: 'name',
-                  })}
-                  sourceValue={lead?.name ?? ''}
-                  value={form.contactName}
-                  onChange={(v) => updateForm('contactName', v)}
-                  onRestoreSource={() =>
-                    updateForm('contactName', lead?.name || '')
-                  }
-                  disabled={formDisabled}
-                  highlight
-                  required
-                />
-                <FieldMappingRow
-                  label={t('leads.convert.field.jobTitle')}
-                  sourceLabel={t('leads.convert.sourceLabel.lead', {
-                    field: 'contact_job_title',
-                  })}
-                  targetLabel={t('leads.convert.targetLabel.contact', {
-                    field: 'job_title',
-                  })}
-                  sourceValue={lead?.contact_job_title ?? ''}
-                  value={form.contactJobTitle}
-                  onChange={(v) => updateForm('contactJobTitle', v)}
-                  onRestoreSource={() =>
-                    updateForm('contactJobTitle', lead?.contact_job_title || '')
-                  }
-                  disabled={formDisabled}
-                />
-                <FieldMappingRow
-                  label={t('leads.convert.field.email')}
-                  sourceLabel={t('leads.convert.sourceLabel.lead', {
-                    field: 'email',
-                  })}
-                  targetLabel={t('leads.convert.targetLabel.contact', {
-                    field: 'email',
-                  })}
-                  sourceValue={lead?.email ?? ''}
-                  value={form.contactEmail}
-                  kind="email"
-                  onChange={(v) => updateForm('contactEmail', v)}
-                  onRestoreSource={() =>
-                    updateForm('contactEmail', lead?.email || '')
-                  }
-                  disabled={formDisabled}
-                />
-                <FieldMappingRow
-                  label={t('leads.convert.field.phone')}
-                  sourceLabel={t('leads.convert.sourceLabel.lead', {
-                    field: 'phone',
-                  })}
-                  targetLabel={t('leads.convert.targetLabel.contact', {
-                    field: 'mobile',
-                  })}
-                  sourceValue={lead?.phone ?? ''}
-                  value={form.contactPhone}
-                  kind="phone"
-                  onChange={(v) => updateForm('contactPhone', v)}
-                  onRestoreSource={() =>
-                    updateForm('contactPhone', lead?.phone || '')
-                  }
-                  disabled={formDisabled}
-                />
-                {extraFields.contact.map((extra) => (
-                  <FieldMappingRow
-                    key={extra.slug}
-                    fieldKey={`contact:${extra.slug}`}
-                    label={extra.label}
-                    sourceLabel={t('leads.convert.sourceLabel.dialogOnly')}
-                    targetLabel={t('leads.convert.targetLabel.contact', {
-                      field: extra.slug,
-                    })}
-                    sourceValue=""
-                    value={extra.value}
-                    kind={extra.kind}
-                    onChange={(v) => setExtraValue('contact', extra.slug, v)}
-                    onRemove={() => removeExtraField('contact', extra.slug)}
-                    disabled={formDisabled}
-                  />
-                ))}
-              </>
-            )}
-          </TabsContent>
-        )}
-
-        <TabsContent value="deal" className="space-y-3">
-          {dealCandidates.length > 0 ? (
-            <div className="space-y-2 rounded-lg border-2 border-amber-200 bg-amber-50/50 p-3 dark:border-amber-900/40 dark:bg-amber-950/20">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="size-4 text-amber-600" />
-                <p className="text-sm font-medium">
-                  {t('leads.convert.previousDealsTitle')}
-                </p>
-              </div>
-              <div className="max-h-44 space-y-1.5 overflow-y-auto pr-1">
-                {dealCandidates.map((candidate) => (
-                  <div
-                    key={candidate.id}
-                    className="rounded-md border bg-background px-3 py-2 text-xs"
-                  >
-                    <p className="font-medium">{candidate.name}</p>
-                    <p className="text-muted-foreground">
-                      {typeof candidate.stage === 'object'
-                        ? candidate.stage?.name
-                        : null}
-                      {candidate.organization &&
-                      typeof candidate.organization === 'object'
-                        ? ` · ${candidate.organization.name}`
-                        : ''}
-                    </p>
-                  </div>
-                ))}
-              </div>
-              <p className="text-[11px] text-muted-foreground">
-                {t('leads.convert.newDealWillBeCreated')}
-              </p>
-            </div>
-          ) : null}
-          <div className="flex items-center justify-end">
-            {renderAddFieldPopover('deal')}
-          </div>
-          <FieldMappingRow
-            fieldKey="deal:name"
-            label={t('leads.convert.field.dealName')}
-            sourceLabel={t('leads.convert.sourceLabel.auto')}
-            targetLabel={t('leads.convert.targetLabel.deal', { field: 'name' })}
-            sourceValue={
-              [lead?.company_name_text, lead?.name]
-                .filter(Boolean)
-                .join(' - ') || ''
-            }
-            value={form.dealName}
-            onChange={(v) => updateForm('dealName', v)}
-            onRestoreSource={() => updateForm('dealName', sourceDealName)}
-            disabled={formDisabled}
-            highlight
-            required
-          />
-          <FieldMappingRow
-            label={t('leads.convert.field.estimatedValue')}
-            sourceLabel={t('leads.convert.sourceLabel.lead', {
-              field: 'deal_value',
-            })}
-            targetLabel={t('leads.convert.targetLabel.deal', {
-              field: 'deal_value',
-            })}
-            sourceValue={lead?.deal_value ? String(lead.deal_value) : ''}
-            value={form.dealValue}
-            kind="money"
-            onChange={(v) => updateForm('dealValue', v)}
-            onRestoreSource={() =>
-              updateForm(
-                'dealValue',
-                lead?.deal_value ? String(lead.deal_value) : '',
-              )
-            }
-            disabled={formDisabled}
-          />
-          <FieldMappingRow
-            label={t('leads.convert.field.description')}
-            sourceLabel={t('leads.convert.sourceLabel.lead', {
-              field: 'contact_message',
-            })}
-            targetLabel={t('leads.convert.targetLabel.deal', {
-              field: 'description',
-            })}
-            sourceValue={lead?.contact_message ?? ''}
-            value={form.notes}
-            kind="textarea"
-            onChange={(v) => updateForm('notes', v)}
-            onRestoreSource={() =>
-              updateForm('notes', lead?.contact_message || '')
-            }
-            disabled={formDisabled}
-          />
-          <FieldMappingRow
-            label={t('leads.convert.field.stage')}
-            sourceLabel={t('leads.convert.sourceLabel.fixed', { value: 'New' })}
-            targetLabel={t('leads.convert.targetLabel.deal', {
-              field: 'stage',
-            })}
-            sourceValue="New"
-            value={effectiveStageId}
-            kind="select"
-            options={stageSelectOptions}
-            placeholder={t('leads.convert.placeholder.selectStage')}
-            onChange={(v) => updateForm('dealStageId', v)}
-            onRestoreSource={() => updateForm('dealStageId', newStageId || '')}
-            disabled={formDisabled}
-          />
-          <FieldMappingRow
-            label={t('leads.convert.field.leadSource')}
-            sourceLabel={t('leads.convert.sourceLabel.lead', {
-              field: 'lead_source',
-            })}
-            targetLabel={t('leads.convert.targetLabel.deal', {
-              field: 'lead_source',
-            })}
-            sourceValue={leadSourceName}
-            value={effectiveLeadSourceId}
-            kind="select"
-            options={leadSourceSelectOptions}
-            placeholder={t('leads.convert.placeholder.selectSource')}
-            onChange={(v) => updateForm('dealLeadSourceId', v)}
-            onRestoreSource={() =>
-              updateForm('dealLeadSourceId', mappedDealLeadSourceId || '')
-            }
-            disabled={formDisabled}
-          />
-          <FieldMappingRow
-            label={t('leads.convert.field.customerType')}
-            sourceLabel={t('leads.convert.sourceLabel.lead', {
-              field: 'lead_type',
-            })}
-            targetLabel={t('leads.convert.targetLabel.deal', {
-              field: 'customer_type',
-            })}
-            sourceValue={leadTypeName}
-            value={effectiveCustomerTypeId}
-            kind="select"
-            options={customerTypeSelectOptions}
-            placeholder={t('leads.convert.placeholder.selectType')}
-            onChange={(v) => updateForm('dealCustomerTypeId', v)}
-            onRestoreSource={() =>
-              updateForm('dealCustomerTypeId', mappedCustomerTypeId || '')
-            }
-            disabled={formDisabled}
-          />
-          {extraFields.deal.map((extra) => (
-            <FieldMappingRow
-              key={extra.slug}
-              fieldKey={`deal:${extra.slug}`}
-              label={extra.label}
-              sourceLabel={t('leads.convert.sourceLabel.dialogOnly')}
-              targetLabel={t('leads.convert.targetLabel.deal', {
-                field: extra.slug,
-              })}
-              sourceValue=""
-              value={extra.value}
-              kind={extra.kind}
-              onChange={(v) => setExtraValue('deal', extra.slug, v)}
-              onRemove={() => removeExtraField('deal', extra.slug)}
-              disabled={formDisabled}
-            />
-          ))}
-        </TabsContent>
-      </Tabs>
-    )
-  }
-
   return (
     <AwesomeDialog
       open={open}
@@ -2707,7 +2142,51 @@ export function LeadConvertDialog({
             />
           </div>
 
-          {renderMappingTabs()}
+          <LeadConvertTabs
+            mode={mode}
+            activeTab={activeTab}
+            onActiveTabChange={setActiveTab}
+            targetLabels={TARGET_LABEL}
+            lead={lead}
+            form={form}
+            updateForm={updateForm}
+            formDisabled={formDisabled}
+            isWorking={isWorking}
+            sourceDealName={sourceDealName}
+            companyCandidates={companyCandidates}
+            contactCandidates={contactCandidates}
+            dealCandidates={dealCandidates}
+            selectedCompanyId={selectedCompanyId}
+            selectedContactId={selectedContactId}
+            exactCompanyId={exactCompanyId}
+            exactContactId={exactContactId}
+            onSelectCompany={setSelectedCompanyId}
+            onSelectContact={setSelectedContactId}
+            industrySelectOptions={industrySelectOptions}
+            companySizeSelectOptions={companySizeSelectOptions}
+            stageSelectOptions={stageSelectOptions}
+            leadSourceSelectOptions={leadSourceSelectOptions}
+            customerTypeSelectOptions={customerTypeSelectOptions}
+            effectiveCompanyIndustryId={effectiveCompanyIndustryId}
+            mappedCompanyIndustryId={mappedCompanyIndustryId}
+            effectiveCompanySizeId={effectiveCompanySizeId}
+            mappedCompanySizeId={mappedCompanySizeId}
+            effectiveStageId={effectiveStageId}
+            newStageId={newStageId}
+            effectiveLeadSourceId={effectiveLeadSourceId}
+            mappedDealLeadSourceId={mappedDealLeadSourceId}
+            effectiveCustomerTypeId={effectiveCustomerTypeId}
+            mappedCustomerTypeId={mappedCustomerTypeId}
+            leadCompanyIndustryName={leadCompanyIndustryName}
+            leadCompanySizeName={leadCompanySizeName}
+            leadSourceName={leadSourceName}
+            leadTypeName={leadTypeName}
+            extraFields={extraFields}
+            availableExtraFields={availableExtraFields}
+            addExtraField={addExtraField}
+            setExtraValue={setExtraValue}
+            removeExtraField={removeExtraField}
+          />
         </div>
       </AwesomeDialogBody>
 

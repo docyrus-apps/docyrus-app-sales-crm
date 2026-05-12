@@ -20,7 +20,7 @@ Field sales settings live in tenant app config under `fieldSales` for `base_crm`
 
 ## Lead Convert Refactor Checkpoint
 
-Current checkpoint after commit `bb4d4ad`:
+Current checkpoint:
 
 - `src/components/leads/lead-convert-dialog.tsx` still owns lead conversion state, form state, duplicate/precheck orchestration, conversion writes, partial/failure handling, query invalidation, navigation, and toast/logging side effects.
 - The safest presentational sections have already been split out:
@@ -29,16 +29,13 @@ Current checkpoint after commit `bb4d4ad`:
   - `lead-convert-precheck-tooltip.tsx`
   - `lead-convert-reuse-banner.tsx`
   - `lead-convert-change-confirm-dialog.tsx`
+  - `lead-convert-tabs.tsx` (Company/Contact/Deal tab JSX plus the add-field popover; receives form, extraFields, candidates, enum ids, and all handlers as props from the dialog)
 - These extracted components should remain presentational. Do not move API calls, conversion writes, query invalidation, or lead mutation side effects into them.
 - Build and tests passed after the presentational split. `pnpm check` still stops at `eslint: command not found` in the local environment after Prettier completes.
 
 Recommended next order:
 
-1. Extract `LeadConvertTabs` / tab section rendering only.
-   - Move the JSX currently inside `renderMappingTabs`.
-   - Keep `form`, `extraFields`, `updateForm`, `addExtraField`, reuse ids, and all handlers owned by `lead-convert-dialog.tsx`.
-   - Pass callbacks down explicitly; do not introduce new state inside the tab component except local UI-only state if absolutely necessary.
-   - Verify with `pnpm build` immediately after this step.
+1. ~~Extract `LeadConvertTabs` / tab section rendering only.~~ Done — tab rendering and the add-field popover now live in `lead-convert-tabs.tsx`. Form state, handlers, and reuse ids stayed owned by `lead-convert-dialog.tsx` and are passed explicitly as props. Shared types (`LeadConvertForm`, `LeadConvertExtraFieldsState`, `LeadConvertTarget`, `LeadConvertConversionMode`, `LeadConvertEntityCandidate`) are exported from `lead-convert-tabs.tsx` for downstream extractions.
 2. Extract enum mapping into a helper/hook.
    - Candidate name: `useLeadConvertEnumMappings`.
    - Inputs: lead enum relation names plus target enum option arrays.
