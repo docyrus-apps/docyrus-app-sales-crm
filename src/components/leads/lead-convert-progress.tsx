@@ -92,7 +92,7 @@ export function LeadConvertProgress({
   } as CSSProperties
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-linear-to-br from-card via-card to-muted/20 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-slate-700/80">
+    <div className="rounded-lg border border-slate-200 bg-linear-to-br from-card via-card to-muted/20 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-slate-700/80">
       <TooltipProvider delayDuration={200}>
         <div
           className="relative grid grid-cols-1 gap-2 md:grid-cols-[repeat(var(--step-count),minmax(0,1fr))] md:gap-0"
@@ -124,7 +124,7 @@ export function LeadConvertProgress({
                     aria-current={currentStepKey === key ? 'step' : undefined}
                     aria-label={`${label}: ${t(`leads.convert.stepState.${state}`, { defaultValue: state })}`}
                     className={cn(
-                      'relative z-10 flex min-w-0 items-center gap-3 rounded-xl border border-border/60 bg-background/80 px-3 py-2.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:flex-col md:gap-2 md:rounded-none md:border-0 md:bg-transparent md:px-2 md:py-0 md:text-center',
+                      'relative z-10 flex min-w-0 items-center gap-3 rounded-md border border-border/60 bg-background/80 px-3 py-2.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:flex-col md:gap-2 md:rounded-none md:border-0 md:bg-transparent md:px-2 md:py-0 md:text-center',
                       hasDetails && 'cursor-help',
                       isActive &&
                         'border-primary/60 bg-primary/[0.05] md:bg-transparent',

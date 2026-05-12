@@ -49,7 +49,7 @@ export function LeadConvertModeSelector({
   ]
 
   return (
-    <div className="space-y-3 rounded-2xl border border-slate-200 bg-linear-to-br from-card via-card to-muted/20 px-4 py-3 shadow-[0_1px_2px_rgba(15,23,42,0.04),inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-slate-700/80">
+    <div className="space-y-3 rounded-lg border border-slate-200 bg-linear-to-br from-card via-card to-muted/20 px-4 py-3 shadow-[0_1px_2px_rgba(15,23,42,0.04),inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-slate-700/80">
       <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
         {t('leads.convert.modeLabel')}
       </p>
@@ -66,7 +66,7 @@ export function LeadConvertModeSelector({
             aria-pressed={mode === option.value}
             onClick={() => onModeChange(option.value)}
             className={cn(
-              'flex min-h-14 items-center justify-between gap-3 rounded-xl border px-3 py-2.5 text-left text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-60',
+              'flex min-h-14 items-center justify-between gap-3 rounded-md border px-3 py-2.5 text-left text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-60',
               mode === option.value
                 ? 'border-primary/55 bg-primary/[0.06] shadow-sm ring-1 ring-primary/20'
                 : 'border-slate-200 bg-background/80 hover:border-primary/35 hover:bg-muted/30 dark:border-slate-700/80',

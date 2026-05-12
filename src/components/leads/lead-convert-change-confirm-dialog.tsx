@@ -59,14 +59,14 @@ export function LeadConvertChangeConfirmDialog({
           aria-label={t('leads.convert.changeConfirm.title')}
         >
           <div className="grid items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground sm:grid-cols-[1fr_auto_1fr]">
-            <div className="rounded-xl border border-sky-200/70 bg-sky-50/70 px-3 py-2 text-sky-800/80 dark:border-sky-900/50 dark:bg-sky-950/20 dark:text-sky-200/80">
+            <div className="rounded-md border border-sky-200/70 bg-sky-50/70 px-3 py-2 text-sky-800/80 dark:border-sky-900/50 dark:bg-sky-950/20 dark:text-sky-200/80">
               {t('leads.convert.mappingHeader.source')}
             </div>
             <ArrowRight
               className="hidden size-3.5 text-muted-foreground/50 sm:block"
               aria-hidden
             />
-            <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/70 px-3 py-2 text-emerald-800/80 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-200/80">
+            <div className="rounded-md border border-emerald-200/70 bg-emerald-50/70 px-3 py-2 text-emerald-800/80 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-200/80">
               {t('leads.convert.changeConfirm.targetLabel')}
             </div>
           </div>
@@ -74,7 +74,7 @@ export function LeadConvertChangeConfirmDialog({
             <div
               key={index}
               role="listitem"
-              className="rounded-2xl border border-border/70 bg-card/85 p-3 text-xs"
+              className="rounded-lg border border-border/70 bg-card/85 p-3 text-xs"
             >
               <div className="mb-2 flex items-center gap-1.5">
                 <span className="font-medium">{change.label}</span>
@@ -94,7 +94,7 @@ export function LeadConvertChangeConfirmDialog({
                 </Button>
               </div>
               <div className="grid grid-cols-1 items-center gap-2 sm:grid-cols-[1fr_auto_1fr]">
-                <div className="rounded-xl border border-sky-200/70 bg-sky-50/75 px-3 py-2 text-muted-foreground dark:border-sky-900/50 dark:bg-sky-950/20">
+                <div className="rounded-md border border-sky-200/70 bg-sky-50/75 px-3 py-2 text-muted-foreground dark:border-sky-900/50 dark:bg-sky-950/20">
                   <p className="truncate text-foreground/80">
                     {change.sourceText || '—'}
                   </p>
@@ -103,7 +103,7 @@ export function LeadConvertChangeConfirmDialog({
                   className="hidden size-3.5 text-muted-foreground sm:block"
                   aria-hidden
                 />
-                <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/70 px-3 py-2 dark:border-emerald-900/50 dark:bg-emerald-950/20">
+                <div className="rounded-md border border-emerald-200/70 bg-emerald-50/70 px-3 py-2 dark:border-emerald-900/50 dark:bg-emerald-950/20">
                   <p className="truncate font-medium">
                     {change.targetText || '—'}
                   </p>

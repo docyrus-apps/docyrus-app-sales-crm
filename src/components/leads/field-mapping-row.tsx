@@ -72,7 +72,7 @@ export function FieldMappingRow({
     <div
       data-field-key={fieldKey}
       className={cn(
-        'group rounded-2xl border border-border/70 bg-linear-to-br from-card via-card to-muted/[0.16] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] transition-colors',
+        'group rounded-lg border border-border/70 bg-linear-to-br from-card via-card to-muted/[0.16] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] transition-colors',
         required && 'border-rose-200/80 dark:border-rose-900/40',
         highlight &&
           'border-primary/35 bg-linear-to-br from-primary/[0.03] via-card to-sky-500/[0.035]',
@@ -113,7 +113,7 @@ export function FieldMappingRow({
       >
         {hasSourceValue ? (
           <>
-            <div className="min-w-0 rounded-xl border border-sky-200/70 bg-sky-50/75 px-3 py-2 text-xs dark:border-sky-900/50 dark:bg-sky-950/20">
+            <div className="min-w-0 rounded-md border border-sky-200/70 bg-sky-50/75 px-3 py-2 text-xs dark:border-sky-900/50 dark:bg-sky-950/20">
               <div className="flex min-w-0 items-center gap-1">
                 <span
                   className="truncate text-foreground/80"
@@ -144,7 +144,7 @@ export function FieldMappingRow({
             />
           </>
         ) : null}
-        <div className="min-w-0 rounded-xl border border-emerald-200/70 bg-emerald-50/70 p-2.5 dark:border-emerald-900/50 dark:bg-emerald-950/20">
+        <div className="min-w-0 rounded-md border border-emerald-200/70 bg-emerald-50/70 p-2.5 dark:border-emerald-900/50 dark:bg-emerald-950/20">
           {kind === 'textarea' ? (
             <Textarea
               value={value}
