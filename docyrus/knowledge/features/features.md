@@ -35,7 +35,7 @@ The convert dialog at `src/components/leads/lead-convert-dialog.tsx` is a tabbed
 
 ### Convert Flow
 
-`runConversion` runs precheck → organization → contact → deal → activity → lead, gated by three checks before the work starts.
+`runConversion` (in `src/components/leads/use-lead-convert-conversion.tsx`) runs precheck → organization → contact → deal → activity → lead, gated by three checks before the work starts.
 
 - Gate 1: duplicate search runs against organization, contact, and deal (`source_lead = lead.id`) — keyword is sanitized to strip tsquery-breaking characters.
 - Duplicate/precheck requests use an `AbortController` plus a request id guard, so a newer precheck cancels older network work and stale responses cannot overwrite candidate or step state. The race protection, candidate state, exact-match auto-selection, and precheck summary live in the `useLeadConvertDuplicates` hook (`src/components/leads/use-lead-convert-duplicates.ts`); the dialog wires step-machine setters and selected-reuse-id setters as callbacks so the hook can drive them without owning conversion state.

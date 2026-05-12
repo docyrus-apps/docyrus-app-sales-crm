@@ -19,13 +19,7 @@ import {
   type LeadConvertStepState,
 } from '@/components/leads/lead-convert-utils'
 
-type DocyrusClient = {
-  get: (
-    endpoint: string,
-    payload?: Record<string, unknown>,
-    options?: { signal?: AbortSignal },
-  ) => Promise<unknown>
-}
+type DocyrusClient = any
 
 export type LeadConvertPrecheckSummary = {
   company: LeadConvertPrecheckTargetSummary
