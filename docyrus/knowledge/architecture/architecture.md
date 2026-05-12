@@ -18,6 +18,54 @@ The editor currently builds cleanly on PlateJS 53.x. Upgrade `platejs` and the `
 
 Field sales settings live in tenant app config under `fieldSales` for `base_crm`. Shared helpers cover ranges, enum IDs, and status normalization. A header-level location action handles nearby visits plus the active check-in or check-out sheets.
 
+## Lead Convert Refactor Checkpoint
+
+Current checkpoint after commit `bb4d4ad`:
+
+- `src/components/leads/lead-convert-dialog.tsx` still owns lead conversion state, form state, duplicate/precheck orchestration, conversion writes, partial/failure handling, query invalidation, navigation, and toast/logging side effects.
+- The safest presentational sections have already been split out:
+  - `lead-convert-mode-selector.tsx`
+  - `lead-convert-progress.tsx`
+  - `lead-convert-precheck-tooltip.tsx`
+  - `lead-convert-reuse-banner.tsx`
+  - `lead-convert-change-confirm-dialog.tsx`
+- These extracted components should remain presentational. Do not move API calls, conversion writes, query invalidation, or lead mutation side effects into them.
+- Build and tests passed after the presentational split. `pnpm check` still stops at `eslint: command not found` in the local environment after Prettier completes.
+
+Recommended next order:
+
+1. Extract `LeadConvertTabs` / tab section rendering only.
+   - Move the JSX currently inside `renderMappingTabs`.
+   - Keep `form`, `extraFields`, `updateForm`, `addExtraField`, reuse ids, and all handlers owned by `lead-convert-dialog.tsx`.
+   - Pass callbacks down explicitly; do not introduce new state inside the tab component except local UI-only state if absolutely necessary.
+   - Verify with `pnpm build` immediately after this step.
+2. Extract enum mapping into a helper/hook.
+   - Candidate name: `useLeadConvertEnumMappings`.
+   - Inputs: lead enum relation names plus target enum option arrays.
+   - Outputs should preserve current effective ids and validation behavior, especially the guard that blocks conversion when a source enum cannot map to a target enum id.
+   - Do not change payload shapes.
+3. Extract form/prefill logic into `useLeadConvertForm`.
+   - Preserve current initial values, `sourceDealName`, `updateForm`, and change confirmation comparisons.
+   - Be careful with stale closures in `findChangedFromLead` and `runConversion`.
+4. Extract duplicate/precheck logic into `useDuplicateCheck`.
+   - Preserve `AbortController` + request id race protection.
+   - Preserve exact-match selection behavior and precheck summary/detail updates.
+   - Keep Docyrus query payload columns and limits unchanged.
+5. Extract conversion orchestration into `useConversionSteps` only after the above is stable.
+   - This is the highest-risk piece because it owns partial resume, idempotent source_lead reuse, linked work migration, lead state writes, and failure classification.
+   - First extraction should be behavior-preserving; avoid introducing a step registry in the same commit.
+6. Convert `runConversion` to a step registry as the final refactor.
+   - Separate commit.
+   - Define each step's `shouldRun`, payload, endpoint/reuse behavior, and success side effects.
+   - Preserve step detail ordering, partial vs failed detection, and query invalidations.
+
+Risk notes:
+
+- Do not combine UI extraction, hook extraction, and step-registry changes in one commit.
+- After every step, run `pnpm build`, `pnpm test`, `git diff --check`, and `docyrus knowledge check`.
+- If a step touches Docyrus API calls, apply the Docyrus API Doctor checklist: columns must stay explicit, limits must remain positive, and mutation/invalidation/error handling must remain intact.
+- The most fragile behaviors are validation focus, change-confirm restore, duplicate exact-match auto-selection, partial resume, linked task/event migration warnings, and converted-lead read-only enforcement.
+
 <!-- docyrus-knowledge:auto:begin -->
 
 # Architecture
