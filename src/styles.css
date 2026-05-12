@@ -350,6 +350,31 @@
   cursor: grabbing;
 }
 
+@keyframes lead-convert-field-attention {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 rgb(220 38 38 / 0),
+      inset 0 0 0 1px rgb(148 163 184 / 0.35);
+  }
+  18%,
+  58% {
+    box-shadow:
+      0 0 0 4px rgb(220 38 38 / 0.13),
+      inset 0 0 0 1px rgb(220 38 38 / 0.42);
+  }
+  38%,
+  78% {
+    box-shadow:
+      0 0 0 2px rgb(220 38 38 / 0.08),
+      inset 0 0 0 1px rgb(220 38 38 / 0.28);
+  }
+}
+
+.lead-convert-field-attention {
+  animation: lead-convert-field-attention 1.8s ease-in-out;
+}
+
 /* AstroVista Theme - Light */
 [data-theme='astrovista'] {
   --background: oklch(0.9383 0.0042 236.4993);

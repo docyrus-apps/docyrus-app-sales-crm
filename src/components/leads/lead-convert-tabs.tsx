@@ -176,14 +176,13 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
   tabsToShow.push('deal')
 
   const renderMappingHeader = (target: LeadConvertTarget) => (
-    <div className="grid items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1.3fr)]">
+    <div className="grid items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground sm:grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)]">
       <div className="rounded-md border border-sky-200/70 bg-sky-50/70 px-3 py-2 text-sky-800/80 dark:border-sky-900/50 dark:bg-sky-950/20 dark:text-sky-200/80">
         {t('leads.convert.mappingHeader.source')}
       </div>
-      <ArrowRight
-        className="hidden size-3.5 text-muted-foreground/50 sm:block"
-        aria-hidden
-      />
+      <div className="hidden h-7 items-center justify-center rounded-md border border-border/70 bg-background/90 text-muted-foreground/70 shadow-sm sm:flex">
+        <ArrowRight className="size-3.5" aria-hidden />
+      </div>
       <div className="rounded-md border border-emerald-200/70 bg-emerald-50/70 px-3 py-2 text-emerald-800/80 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-200/80">
         {targetLabels[target]}
       </div>
@@ -414,6 +413,7 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
                   updateForm('companyIndustry', mappedCompanyIndustryId || '')
                 }
                 disabled={formDisabled}
+                required={Boolean(leadCompanyIndustryName)}
               />
               {companySizeSelectOptions.length > 0 ? (
                 <FieldMappingRow
@@ -435,6 +435,7 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
                     updateForm('companySize', mappedCompanySizeId || '')
                   }
                   disabled={formDisabled}
+                  required={Boolean(leadCompanySizeName)}
                 />
               ) : null}
               {extraFields.company.map((extra) => (
@@ -664,6 +665,7 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
           disabled={formDisabled}
         />
         <FieldMappingRow
+          fieldKey="deal:stage"
           label={t('leads.convert.field.stage')}
           sourceLabel={t('leads.convert.sourceLabel.fixed', { value: 'New' })}
           targetLabel={t('leads.convert.targetLabel.deal', {
@@ -677,8 +679,10 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
           onChange={(v) => updateForm('dealStageId', v)}
           onRestoreSource={() => updateForm('dealStageId', newStageId || '')}
           disabled={formDisabled}
+          required
         />
         <FieldMappingRow
+          fieldKey="deal:lead_source"
           label={t('leads.convert.field.leadSource')}
           sourceLabel={t('leads.convert.sourceLabel.lead', {
             field: 'lead_source',
@@ -696,8 +700,10 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
             updateForm('dealLeadSourceId', mappedDealLeadSourceId || '')
           }
           disabled={formDisabled}
+          required={Boolean(leadSourceName)}
         />
         <FieldMappingRow
+          fieldKey="deal:customer_type"
           label={t('leads.convert.field.customerType')}
           sourceLabel={t('leads.convert.sourceLabel.lead', {
             field: 'lead_type',
@@ -715,6 +721,7 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
             updateForm('dealCustomerTypeId', mappedCustomerTypeId || '')
           }
           disabled={formDisabled}
+          required={Boolean(leadTypeName)}
         />
         {extraFields.deal.map((extra) => (
           <FieldMappingRow

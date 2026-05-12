@@ -115,18 +115,6 @@ export function useLeadConvertDuplicates({
       setStep('precheck', 'running')
 
       try {
-        if (!form.dealName.trim()) {
-          throw new Error(t('leads.convert.validation.dealNameRequired'))
-        }
-
-        if (mode === 'company_contact_deal' && !form.companyName.trim()) {
-          throw new Error(t('leads.convert.validation.companyNameRequired'))
-        }
-
-        if (!form.contactName.trim()) {
-          throw new Error(t('leads.convert.validation.contactNameRequired'))
-        }
-
         const companyKeyword =
           sanitizeKeyword(form.companyName) ||
           normalizeDomain(form.companyWebsite)

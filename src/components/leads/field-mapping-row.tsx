@@ -105,45 +105,57 @@ export function FieldMappingRow({
       </div>
       <div
         className={cn(
-          'grid items-center gap-2',
-          hasSourceValue
-            ? 'grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1.3fr)]'
-            : 'grid-cols-1',
+          'grid grid-cols-1 items-stretch gap-2 sm:grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)]',
         )}
       >
-        {hasSourceValue ? (
-          <>
-            <div className="min-w-0 rounded-md border border-sky-200/70 bg-sky-50/75 px-3 py-2 text-xs dark:border-sky-900/50 dark:bg-sky-950/20">
-              <div className="flex min-w-0 items-center gap-1">
-                <span
-                  className="truncate text-foreground/80"
-                  title={sourceDisplay}
+        <div
+          className={cn(
+            'min-w-0 rounded-md border px-3 py-2 text-xs',
+            hasSourceValue
+              ? 'border-sky-200/70 bg-sky-50/75 dark:border-sky-900/50 dark:bg-sky-950/20'
+              : 'border-dashed border-muted-foreground/25 bg-muted/20 text-muted-foreground dark:bg-muted/10',
+          )}
+        >
+          {hasSourceValue ? (
+            <div className="flex min-w-0 items-center gap-1">
+              <span
+                className="truncate text-foreground/80"
+                title={sourceDisplay}
+              >
+                {sourceDisplay}
+              </span>
+              {canRestoreSource ? (
+                <button
+                  type="button"
+                  onClick={onRestoreSource}
+                  className="ml-auto rounded-md p-1 text-muted-foreground opacity-0 transition hover:bg-background/80 hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
+                  aria-label={t('leads.convert.restoreFromSource', {
+                    defaultValue: 'Restore from lead',
+                  })}
+                  title={t('leads.convert.restoreFromSource', {
+                    defaultValue: 'Restore from lead',
+                  })}
                 >
-                  {sourceDisplay}
-                </span>
-                {canRestoreSource ? (
-                  <button
-                    type="button"
-                    onClick={onRestoreSource}
-                    className="ml-auto rounded-md p-1 text-muted-foreground opacity-0 transition hover:bg-background/80 hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
-                    aria-label={t('leads.convert.restoreFromSource', {
-                      defaultValue: 'Restore from lead',
-                    })}
-                    title={t('leads.convert.restoreFromSource', {
-                      defaultValue: 'Restore from lead',
-                    })}
-                  >
-                    <RotateCcw className="size-3" />
-                  </button>
-                ) : null}
-              </div>
+                  <RotateCcw className="size-3" />
+                </button>
+              ) : null}
             </div>
-            <ArrowRight
-              className="hidden size-3.5 text-muted-foreground/60 sm:block"
-              aria-hidden
-            />
-          </>
-        ) : null}
+          ) : (
+            <div className="text-xs leading-5">
+              {t('leads.convert.noSourceMatch', {
+                defaultValue: 'No matching lead value',
+              })}
+            </div>
+          )}
+        </div>
+        <div
+          className="hidden h-full items-center justify-center sm:flex"
+          aria-hidden
+        >
+          <div className="flex h-7 w-8 items-center justify-center rounded-md border border-border/70 bg-background/90 text-muted-foreground/70 shadow-sm">
+            <ArrowRight className="size-3.5" />
+          </div>
+        </div>
         <div className="min-w-0 rounded-md border border-emerald-200/70 bg-emerald-50/70 p-2.5 dark:border-emerald-900/50 dark:bg-emerald-950/20">
           {kind === 'textarea' ? (
             <Textarea

@@ -417,6 +417,7 @@
         "companyNameRequired": "Company name is required",
         "contactNameRequired": "Contact name is required",
         "missingField": "The \"{{label}}\" field is empty — it must be filled before conversion",
+        "completeHighlightedField": "Complete the highlighted field, then run the check again.",
         "enumOptionMissing": "{{field}} option \"{{value}}\" is missing. Check the enum setup before converting.",
         "alreadyInProgress": "This lead is already being converted in another session. Refresh the lead before trying again."
       },
@@ -566,6 +567,7 @@
       },
       "addField": "Add {{target}} field",
       "noFieldsAvailable": "No fields available to add.",
+      "noSourceMatch": "No matching lead value",
       "requiredField": "Required",
       "restoreFromSource": "Restore from lead",
       "dealDefaultName": "New deal"

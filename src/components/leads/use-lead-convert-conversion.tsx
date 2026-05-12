@@ -505,6 +505,26 @@ export function useLeadConvertConversion(
   const runConversion = async (options?: { skipChangeCheck?: boolean }) => {
     if (!client || !lead?.id) return
 
+    const warnMissingField = (missing: LeadConvertMissingField) => {
+      const message = t('leads.convert.validation.missingField', {
+        label: missing.label,
+      })
+      setErrorMessage(null)
+      setStep('precheck', 'warn')
+      setStepDetail('precheck', [
+        detail('warn', message),
+        detail('info', t('leads.convert.validation.completeHighlightedField')),
+      ])
+      toast.warning(message)
+      focusMissingField(missing.tab, missing.fieldKey)
+    }
+
+    const missingBeforePrecheck = findMissingField()
+    if (missingBeforePrecheck) {
+      warnMissingField(missingBeforePrecheck)
+      return
+    }
+
     if (!duplicatesChecked) {
       await findDuplicates({ form, mode })
       return
@@ -512,12 +532,7 @@ export function useLeadConvertConversion(
 
     const missing = findMissingField()
     if (missing) {
-      const message = t('leads.convert.validation.missingField', {
-        label: missing.label,
-      })
-      setErrorMessage(message)
-      toast.error(message)
-      focusMissingField(missing.tab, missing.fieldKey)
+      warnMissingField(missing)
       return
     }
 

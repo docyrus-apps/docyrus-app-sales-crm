@@ -431,16 +431,16 @@ export function LeadConvertDialog({
     fieldKey: string,
   ) => {
     setActiveTab(tab)
-    requestAnimationFrame(() => {
+    window.setTimeout(() => {
       const node = document.querySelector(`[data-field-key="${fieldKey}"]`)
       if (node instanceof HTMLElement) {
         node.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        node.classList.add('ring-2', 'ring-destructive/70')
+        node.classList.add('lead-convert-field-attention')
         window.setTimeout(() => {
-          node.classList.remove('ring-2', 'ring-destructive/70')
-        }, 1800)
+          node.classList.remove('lead-convert-field-attention')
+        }, 2200)
       }
-    })
+    }, 80)
   }
 
   type MissingField = {

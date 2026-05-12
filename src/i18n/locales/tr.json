@@ -408,6 +408,7 @@
         "companyNameRequired": "Şirket adı gerekli",
         "contactNameRequired": "Kişi adı gerekli",
         "missingField": "\"{{label}}\" alanı boş — dönüşüm öncesi doldurmalısınız",
+        "completeHighlightedField": "İşaretlenen alanı doldurup kontrolü tekrar çalıştırın.",
         "enumOptionMissing": "{{field}} için \"{{value}}\" seçeneği bulunamadı. Dönüştürmeden önce enum ayarını kontrol edin.",
         "alreadyInProgress": "Bu lead başka bir oturumda dönüştürülüyor. Tekrar denemeden önce lead'i yenileyin."
       },
@@ -557,6 +558,7 @@
       },
       "addField": "{{target}} alanı ekle",
       "noFieldsAvailable": "Eklenebilir alan yok.",
+      "noSourceMatch": "Lead'de eşleşen bilgi yok",
       "requiredField": "Zorunlu",
       "restoreFromSource": "Lead'deki değere geri al",
       "dealDefaultName": "Yeni fırsat"
