@@ -1810,7 +1810,10 @@ export function LeadConvertDialog({
       target === 'company' ? setSelectedCompanyId : setSelectedContactId
     const exactId = target === 'company' ? exactCompanyId : exactContactId
     const isReuse = selectedId !== null
-    const titleEntity = target === 'company' ? 'şirket' : 'kişi'
+    const entity =
+      target === 'company'
+        ? t('leads.convert.reuse.entityCompany', { defaultValue: 'company' })
+        : t('leads.convert.reuse.entityContact', { defaultValue: 'contact' })
     const targetIcon =
       target === 'company' ? (
         <Building2 className="size-3.5 text-sky-600" />
@@ -1823,7 +1826,11 @@ export function LeadConvertDialog({
         <div className="flex items-center gap-2">
           <AlertTriangle className="size-4 text-amber-600" />
           <p className="text-sm font-medium">
-            {candidates.length} mevcut {titleEntity} bulundu
+            {t('leads.convert.reuse.headline', {
+              count: candidates.length,
+              entity,
+              defaultValue: '{{count}} existing {{entity}} found',
+            })}
           </p>
         </div>
         <div className="grid grid-cols-2 gap-2">
@@ -1840,10 +1847,17 @@ export function LeadConvertDialog({
           >
             <div className="flex items-center gap-1.5 text-xs font-medium">
               <Plus className="size-3.5" />
-              <span>Yeni {titleEntity} oluştur</span>
+              <span>
+                {t('leads.convert.reuse.createOption', {
+                  entity,
+                  defaultValue: 'Create new {{entity}}',
+                })}
+              </span>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              Lead'in bilgileriyle yeni kayıt açılır
+              {t('leads.convert.reuse.createHelp', {
+                defaultValue: 'A new record will be created from the lead data',
+              })}
             </p>
           </button>
           <button
@@ -1862,17 +1876,27 @@ export function LeadConvertDialog({
           >
             <div className="flex items-center gap-1.5 text-xs font-medium">
               {targetIcon}
-              <span>Mevcut {titleEntity} kullan</span>
+              <span>
+                {t('leads.convert.reuse.reuseOption', {
+                  entity,
+                  defaultValue: 'Use existing {{entity}}',
+                })}
+              </span>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              Yeni kayıt oluşturulmaz, mevcut bağlanır
+              {t('leads.convert.reuse.reuseHelp', {
+                defaultValue:
+                  'No new record is created — the existing one will be linked',
+              })}
             </p>
           </button>
         </div>
         {isReuse ? (
           <div className="space-y-1.5 border-t border-amber-200 pt-2 dark:border-amber-900/40">
             <p className="text-[10.5px] uppercase tracking-wide text-muted-foreground">
-              Hangisi kullanılacak?
+              {t('leads.convert.reuse.pickOne', {
+                defaultValue: 'Which one to use?',
+              })}
             </p>
             {candidates.map((candidate) => (
               <button
@@ -1896,7 +1920,9 @@ export function LeadConvertDialog({
                         variant="secondary"
                         className="h-4 text-[10px]"
                       >
-                        Tam eşleşme
+                        {t('leads.convert.reuse.exactMatchBadge', {
+                          defaultValue: 'Exact match',
+                        })}
                       </Badge>
                     ) : null}
                   </div>
@@ -1926,17 +1952,17 @@ export function LeadConvertDialog({
       {
         key: 'company',
         icon: <Building2 className="size-3.5 text-sky-600" />,
-        label: 'Şirket',
+        label: t('leads.convert.target.company', { defaultValue: 'Company' }),
       },
       {
         key: 'contact',
         icon: <UserRound className="size-3.5 text-emerald-600" />,
-        label: 'Kişi',
+        label: t('leads.convert.target.contact', { defaultValue: 'Contact' }),
       },
       {
         key: 'deal',
         icon: <CheckCircle2 className="size-3.5 text-violet-600" />,
-        label: 'Fırsat',
+        label: t('leads.convert.target.deal', { defaultValue: 'Deal' }),
       },
     ]
 
@@ -1945,7 +1971,11 @@ export function LeadConvertDialog({
         return (
           <div className="flex items-center gap-1 text-[10.5px] text-muted-foreground">
             <CircleDashed className="size-3" />
-            <span>Atlandı</span>
+            <span>
+              {t('leads.convert.precheckStatus.unchecked', {
+                defaultValue: 'Skipped',
+              })}
+            </span>
           </div>
         )
       }
@@ -1953,7 +1983,11 @@ export function LeadConvertDialog({
         return (
           <div className="flex items-center gap-1 text-[10.5px] text-emerald-700">
             <CheckCircle2 className="size-3" />
-            <span>Temiz</span>
+            <span>
+              {t('leads.convert.precheckStatus.clean', {
+                defaultValue: 'Clean',
+              })}
+            </span>
           </div>
         )
       }
@@ -1962,7 +1996,12 @@ export function LeadConvertDialog({
           <div className="space-y-0.5">
             <div className="flex items-center gap-1 text-[10.5px] text-amber-700">
               <AlertTriangle className="size-3" />
-              <span>{target.count} eşleşme</span>
+              <span>
+                {t('leads.convert.precheckStatus.exact', {
+                  count: target.count,
+                  defaultValue: '{{count}} match(es)',
+                })}
+              </span>
             </div>
             {target.exactName ? (
               <p className="truncate text-[10.5px] font-medium text-foreground">
@@ -1976,11 +2015,19 @@ export function LeadConvertDialog({
         <div className="space-y-0.5">
           <div className="flex items-center gap-1 text-[10.5px] text-sky-700">
             <Info className="size-3" />
-            <span>{target.count} öneri</span>
+            <span>
+              {t('leads.convert.precheckStatus.matches', {
+                count: target.count,
+                defaultValue: '{{count}} suggestion(s)',
+              })}
+            </span>
           </div>
           {target.exactName ? (
             <p className="truncate text-[10.5px] text-muted-foreground">
-              örn: {target.exactName}
+              {t('leads.convert.precheckStatus.exampleMatch', {
+                name: target.exactName,
+                defaultValue: 'e.g. {{name}}',
+              })}
             </p>
           ) : null}
         </div>
@@ -1993,7 +2040,9 @@ export function LeadConvertDialog({
           <li className="flex items-start gap-1.5 text-xs leading-snug">
             <CheckCircle2 className="mt-0.5 size-3.5 text-emerald-600" />
             <span className="text-foreground/90">
-              Zorunlu alanlar dolduruldu
+              {t('leads.convert.precheckStatus.requiredFilled', {
+                defaultValue: 'Required fields filled',
+              })}
             </span>
           </li>
         </ul>
@@ -2045,9 +2094,10 @@ export function LeadConvertDialog({
             {renderReuseBanner('company')}
             {selectedCompanyId !== null ? (
               <div className="rounded-md border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground">
-                Mevcut şirket convert sırasında bağlanacak. Yeni kayıt
-                oluşturulmayacak — bilgileri düzenlemek için şirket sayfasına
-                gidebilirsin.
+                {t('leads.convert.reuse.noteCompany', {
+                  defaultValue:
+                    'The existing company will be linked at convert time. No new record will be created — go to the company page to edit its details.',
+                })}
               </div>
             ) : (
               <>
@@ -2202,9 +2252,10 @@ export function LeadConvertDialog({
             {renderReuseBanner('contact')}
             {selectedContactId !== null ? (
               <div className="rounded-md border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground">
-                Mevcut kişi convert sırasında bağlanacak. Yeni kayıt
-                oluşturulmayacak — bilgileri düzenlemek için kişi sayfasına
-                gidebilirsin.
+                {t('leads.convert.reuse.noteContact', {
+                  defaultValue:
+                    'The existing contact will be linked at convert time. No new record will be created — go to the contact page to edit its details.',
+                })}
               </div>
             ) : (
               <>

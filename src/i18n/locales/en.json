@@ -464,6 +464,27 @@
         "newCompany": "Create new company",
         "newContact": "Create new contact"
       },
+      "reuse": {
+        "entityCompany": "company",
+        "entityContact": "contact",
+        "headline": "{{count}} existing {{entity}} found",
+        "createOption": "Create new {{entity}}",
+        "createHelp": "A new record will be created from the lead data",
+        "reuseOption": "Use existing {{entity}}",
+        "reuseHelp": "No new record is created — the existing one will be linked",
+        "pickOne": "Which one to use?",
+        "exactMatchBadge": "Exact match",
+        "noteCompany": "The existing company will be linked at convert time. No new record will be created — go to the company page to edit its details.",
+        "noteContact": "The existing contact will be linked at convert time. No new record will be created — go to the contact page to edit its details."
+      },
+      "precheckStatus": {
+        "requiredFilled": "Required fields filled",
+        "unchecked": "Skipped",
+        "clean": "Clean",
+        "exact": "{{count}} match(es)",
+        "matches": "{{count}} suggestion(s)",
+        "exampleMatch": "e.g. {{name}}"
+      },
       "changeConfirm": {
         "title": "Values differ from lead",
         "description": "You have changed the lead values in the following fields. When converted, your entered values will be written to the target record instead of the existing lead information.",

@@ -455,6 +455,27 @@
         "newCompany": "Yeni şirket oluştur",
         "newContact": "Yeni kişi oluştur"
       },
+      "reuse": {
+        "entityCompany": "şirket",
+        "entityContact": "kişi",
+        "headline": "{{count}} mevcut {{entity}} bulundu",
+        "createOption": "Yeni {{entity}} oluştur",
+        "createHelp": "Lead'in bilgileriyle yeni kayıt açılır",
+        "reuseOption": "Mevcut {{entity}} kullan",
+        "reuseHelp": "Yeni kayıt oluşturulmaz, mevcut bağlanır",
+        "pickOne": "Hangisi kullanılacak?",
+        "exactMatchBadge": "Tam eşleşme",
+        "noteCompany": "Mevcut şirket convert sırasında bağlanacak. Yeni kayıt oluşturulmayacak — bilgileri düzenlemek için şirket sayfasına gidebilirsin.",
+        "noteContact": "Mevcut kişi convert sırasında bağlanacak. Yeni kayıt oluşturulmayacak — bilgileri düzenlemek için kişi sayfasına gidebilirsin."
+      },
+      "precheckStatus": {
+        "requiredFilled": "Zorunlu alanlar dolduruldu",
+        "unchecked": "Atlandı",
+        "clean": "Temiz",
+        "exact": "{{count}} eşleşme",
+        "matches": "{{count}} öneri",
+        "exampleMatch": "örn: {{name}}"
+      },
       "changeConfirm": {
         "title": "Lead bilgilerinden farklı değerler",
         "description": "Aşağıdaki alanlarda lead'deki değerleri değiştirmişsiniz. Convert ettiğinizde lead'in mevcut bilgisi yerine sizin yazdığınız değer hedef kayda yazılacak.",
