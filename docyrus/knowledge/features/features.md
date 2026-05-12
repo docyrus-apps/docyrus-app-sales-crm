@@ -37,6 +37,8 @@ The convert dialog at `src/components/leads/lead-convert-dialog.tsx` is a tabbed
 
 `runConversion` (in `src/components/leads/use-lead-convert-conversion.tsx`) runs precheck → organization → contact → deal → activity → lead, gated by three checks before the work starts.
 
+- The phases are expressed as a step registry: a `steps` array of `{ key, shouldRun, onSkip?, run }` entries that a single `for` loop iterates, setting `activeStep` and the `running` state before each `await step.run()` so a failure anywhere in the loop classifies the failed step correctly. Gates, latest-lead reconciliation, post-success invalidations/toast/navigation, and the partial-vs-failed catch block stay around the loop because they cross-cut all phases.
+
 - Gate 1: duplicate search runs against organization, contact, and deal (`source_lead = lead.id`) — keyword is sanitized to strip tsquery-breaking characters.
 - Duplicate/precheck requests use an `AbortController` plus a request id guard, so a newer precheck cancels older network work and stale responses cannot overwrite candidate or step state. The race protection, candidate state, exact-match auto-selection, and precheck summary live in the `useLeadConvertDuplicates` hook (`src/components/leads/use-lead-convert-duplicates.ts`); the dialog wires step-machine setters and selected-reuse-id setters as callbacks so the hook can drive them without owning conversion state.
 - Gate 2: `findMissingField` checks only conversion-required values: created company/contact names, deal name/stage, and source enum values that could not be mapped. Hidden reused records and optional fields do not block conversion.
