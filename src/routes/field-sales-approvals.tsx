@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { format, parseISO, addMonths, addWeeks } from 'date-fns'
+import { tr } from 'date-fns/locale'
 import { useQueryClient } from '@tanstack/react-query'
 import { CalendarCheck2, CheckCheck, MessageSquareReply } from 'lucide-react'
 import { toast } from 'sonner'
@@ -67,6 +68,16 @@ function getApprovalOwnerLabel(approval: ApprovalRecord) {
     approval.plan_owner.email ||
     'Plan sahibi'
   )
+}
+
+function formatApprovalDate(value?: string) {
+  if (!value) return '—'
+
+  try {
+    return format(parseISO(value), 'dd MMM yyyy', { locale: tr })
+  } catch {
+    return value
+  }
 }
 
 export function FieldSalesApprovalsPage() {
@@ -297,7 +308,8 @@ export function FieldSalesApprovalsPage() {
                               {getApprovalOwnerLabel(approval)}
                             </div>
                             <div className="mt-2 text-xs text-muted-foreground">
-                              {approval.start_date} – {approval.end_date}
+                              {formatApprovalDate(approval.start_date)} –{' '}
+                              {formatApprovalDate(approval.end_date)}
                             </div>
                           </button>
                         )
@@ -356,8 +368,8 @@ export function FieldSalesApprovalsPage() {
                 <CardContent className="space-y-4">
                   <div className="grid gap-2 text-sm text-muted-foreground">
                     <div>
-                      Dönem: {selectedApproval.start_date} –{' '}
-                      {selectedApproval.end_date}
+                      Dönem: {formatApprovalDate(selectedApproval.start_date)} –{' '}
+                      {formatApprovalDate(selectedApproval.end_date)}
                     </div>
                     <div>Plan sayısı: {relatedPlans.length}</div>
                     <div>

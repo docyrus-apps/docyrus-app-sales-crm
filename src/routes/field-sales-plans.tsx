@@ -8,7 +8,6 @@ import { PageHeader } from '@/components/layout/page-header'
 import { FieldSalesScheduleBoard } from '@/components/field-sales/field-sales-schedule-board'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
@@ -455,29 +454,6 @@ export function FieldSalesPlansPage() {
         }
       />
       <PageContainer className="space-y-4 overflow-x-hidden px-3 sm:px-4 lg:px-6">
-        <Card>
-          <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
-            <div className="space-y-1">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Aktif dönem
-              </p>
-              <p className="text-base font-semibold">
-                {format(approvalRange.start, 'dd MMM yyyy')} –{' '}
-                {format(approvalRange.end, 'dd MMM yyyy')}
-              </p>
-            </div>
-
-            <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
-              <Button variant="outline" size="sm" onClick={() => navigateRange('prev')}>
-                Önceki
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => navigateRange('next')}>
-                Sonraki
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
         {currentApprovalCode === 'revision_requested' ? (
           <Alert>
             <AlertTitle>Revizyon bekleniyor</AlertTitle>
@@ -548,25 +524,56 @@ export function FieldSalesPlansPage() {
           }
           title="Plan Takvimi"
           titleToolbar={
-            currentApprovalCode === 'revision_requested' ? (
-              <Button className="w-full sm:w-auto" onClick={resubmitRevision}>
-                <RefreshCcw className="mr-2 h-4 w-4" />
-                Tekrar Onaya Gönder
-              </Button>
-            ) : currentApproval || isOptimisticallyPending ? (
-              <Button className="w-full sm:w-auto" variant="secondary" disabled>
-                {effectiveCurrentApprovalCode === 'approved'
-                  ? 'Plan onaylandı'
-                  : 'Plan onay bekliyor'}
-              </Button>
-            ) : (
-              <Button className="w-full sm:w-auto" onClick={submitRangeForApproval}>
-                <Send className="mr-2 h-4 w-4" />
-                {approvalMode === 'monthly'
-                  ? 'Aylık Planı Onaya Gönder'
-                  : 'Haftalık Planı Onaya Gönder'}
-              </Button>
-            )
+            <div className="flex w-full flex-col gap-3 sm:w-auto sm:min-w-[320px] sm:items-end">
+              <div className="flex w-full flex-col gap-3 rounded-lg border bg-muted/30 px-3 py-3 sm:w-auto sm:min-w-[320px] sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-1 text-left">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Aktif dönem
+                  </p>
+                  <p className="text-sm font-semibold sm:text-base">
+                    {format(approvalRange.start, 'dd MMM yyyy')} –{' '}
+                    {format(approvalRange.end, 'dd MMM yyyy')}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigateRange('prev')}
+                  >
+                    Önceki
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigateRange('next')}
+                  >
+                    Sonraki
+                  </Button>
+                </div>
+              </div>
+
+              {currentApprovalCode === 'revision_requested' ? (
+                <Button className="w-full sm:w-auto" onClick={resubmitRevision}>
+                  <RefreshCcw className="mr-2 h-4 w-4" />
+                  Tekrar Onaya Gönder
+                </Button>
+              ) : currentApproval || isOptimisticallyPending ? (
+                <Button className="w-full sm:w-auto" variant="secondary" disabled>
+                  {effectiveCurrentApprovalCode === 'approved'
+                    ? 'Plan onaylandı'
+                    : 'Plan onay bekliyor'}
+                </Button>
+              ) : (
+                <Button className="w-full sm:w-auto" onClick={submitRangeForApproval}>
+                  <Send className="mr-2 h-4 w-4" />
+                  {approvalMode === 'monthly'
+                    ? 'Aylık Planı Onaya Gönder'
+                    : 'Haftalık Planı Onaya Gönder'}
+                </Button>
+              )}
+            </div>
           }
           days={days}
           slots={slots}
