@@ -8,7 +8,11 @@ import {
   useBaseEventCollection,
 } from '@/collections'
 import type { BaseEventEntity } from '@/collections/base-event.collection'
-import { FIELD_SALES_APP_ID, getFieldSalesConfig } from '@/lib/field-sales'
+import {
+  FIELD_SALES_APP_ID,
+  getDateKey,
+  getFieldSalesConfig,
+} from '@/lib/field-sales'
 
 export function useFieldSalesConfig() {
   const client = useDocyrusClient()
@@ -275,20 +279,29 @@ export function useFieldSalesCurrentApproval(
   startDate: string,
   endDate: string,
 ) {
-  return useMemo(
-    () =>
+  return useMemo(() => {
+    const startKey = startDate ? getDateKey(startDate) : ''
+    const endKey = endDate ? getDateKey(endDate) : ''
+
+    return (
       approvals.find((approval) => {
         const planOwnerId =
           typeof approval.plan_owner === 'object'
             ? approval.plan_owner?.id
             : approval.plan_owner
+        const approvalStartKey = approval.start_date
+          ? getDateKey(approval.start_date)
+          : ''
+        const approvalEndKey = approval.end_date
+          ? getDateKey(approval.end_date)
+          : ''
 
         return (
           planOwnerId === ownerId &&
-          approval.start_date === startDate &&
-          approval.end_date === endDate
+          approvalStartKey === startKey &&
+          approvalEndKey === endKey
         )
-      }) ?? null,
-    [approvals, ownerId, startDate, endDate],
-  )
+      }) ?? null
+    )
+  }, [approvals, ownerId, startDate, endDate])
 }

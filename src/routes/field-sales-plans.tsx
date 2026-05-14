@@ -139,11 +139,11 @@ export function FieldSalesPlansPage() {
 
   const [anchorDate, setAnchorDate] = useState(new Date())
   const [searchTerm, setSearchTerm] = useState('')
-  const [sourceFilter, setSourceFilter] =
-    useState<SourceFilterOption>('all')
+  const [sourceFilter, setSourceFilter] = useState<SourceFilterOption>('all')
   const [sourceSort, setSourceSort] = useState<SourceSortOption>('name_asc')
-  const [pendingDeletePlan, setPendingDeletePlan] =
-    useState<PlanRecord | null>(null)
+  const [pendingDeletePlan, setPendingDeletePlan] = useState<PlanRecord | null>(
+    null,
+  )
   const [optimisticApprovalRangeKeys, setOptimisticApprovalRangeKeys] =
     useState<Array<string>>([])
   const activeConfig = config
@@ -230,9 +230,10 @@ export function FieldSalesPlansPage() {
         const isPlanned = plannedSourceIds.has(sourceId)
 
         if (term) {
-          const matchesTerm = `${getSourceName(record)} ${getRecordSubtitle(record)}`
-            .toLocaleLowerCase('tr')
-            .includes(term)
+          const matchesTerm =
+            `${getSourceName(record)} ${getRecordSubtitle(record)}`
+              .toLocaleLowerCase('tr')
+              .includes(term)
 
           if (!matchesTerm) {
             return false
@@ -246,9 +247,13 @@ export function FieldSalesPlansPage() {
         return true
       })
       .sort((left, right) => {
-        const comparison = getSourceName(left).localeCompare(getSourceName(right), 'tr', {
-          sensitivity: 'base',
-        })
+        const comparison = getSourceName(left).localeCompare(
+          getSourceName(right),
+          'tr',
+          {
+            sensitivity: 'base',
+          },
+        )
 
         return sourceSort === 'name_desc' ? comparison * -1 : comparison
       })
@@ -278,7 +283,8 @@ export function FieldSalesPlansPage() {
     currentApproval?.approval_status,
   )
   const isOptimisticallyPending =
-    !currentApprovalCode && optimisticApprovalRangeKeys.includes(approvalRangeKey)
+    !currentApprovalCode &&
+    optimisticApprovalRangeKeys.includes(approvalRangeKey)
   const effectiveCurrentApprovalCode =
     currentApprovalCode ||
     (isOptimisticallyPending ? 'waiting_for_approval' : '')
@@ -410,11 +416,30 @@ export function FieldSalesPlansPage() {
 
   const resubmitRevision = async () => {
     if (!currentApproval?.id) return
+    if (currentApprovalCode !== 'revision_requested') {
+      toast.error('Sadece revizyona dönen planlar tekrar onaya gönderilebilir')
+      return
+    }
+    if (scopedPlans.length === 0) {
+      toast.error('Tekrar onaya göndermek için seçili dönemde en az bir plan olmalı')
+      return
+    }
 
     await approvalCollection.update(currentApproval.id, {
       approval_status: FIELD_SALES_APPROVAL_STATUS_IDS.waitingForApproval,
       revision_message: '',
     })
+
+    await Promise.all(
+      scopedPlans
+        .filter((plan) => plan.id)
+        .map((plan) =>
+          planCollection.update(plan.id!, {
+            plan_approval: currentApproval.id,
+            require_approval: true,
+          }),
+        ),
+    )
 
     setOptimisticApprovalRangeKeys((current) =>
       current.includes(approvalRangeKey)
@@ -459,7 +484,8 @@ export function FieldSalesPlansPage() {
             <AlertTitle>Revizyon bekleniyor</AlertTitle>
             <AlertDescription>
               {currentApproval?.revision_message ||
-                'Yönetici planın güncellenmesini talep etti.'}
+                'Yönetici planın güncellenmesini talep etti.'}{' '}
+              Gerekli değişiklikleri yapıp tekrar onaya gönderdiğinizde plan yeniden onaylanabilir hale gelir.
             </AlertDescription>
           </Alert>
         ) : null}
@@ -560,13 +586,20 @@ export function FieldSalesPlansPage() {
                   Tekrar Onaya Gönder
                 </Button>
               ) : currentApproval || isOptimisticallyPending ? (
-                <Button className="w-full sm:w-auto" variant="secondary" disabled>
+                <Button
+                  className="w-full sm:w-auto"
+                  variant="secondary"
+                  disabled
+                >
                   {effectiveCurrentApprovalCode === 'approved'
                     ? 'Plan onaylandı'
                     : 'Plan onay bekliyor'}
                 </Button>
               ) : (
-                <Button className="w-full sm:w-auto" onClick={submitRangeForApproval}>
+                <Button
+                  className="w-full sm:w-auto"
+                  onClick={submitRangeForApproval}
+                >
                   <Send className="mr-2 h-4 w-4" />
                   {approvalMode === 'monthly'
                     ? 'Aylık Planı Onaya Gönder'

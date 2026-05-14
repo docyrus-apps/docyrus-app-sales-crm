@@ -24,6 +24,7 @@ import {
   FIELD_SALES_PLAN_STATUS_IDS,
   generateSlotDefinitions,
   getApprovalRange,
+  getFieldSalesApprovalStatusCode,
   getFieldSalesPlanningDays,
   getStatusMeta,
   isDateWithinRange,
@@ -142,6 +143,29 @@ export function FieldSalesApprovalsPage() {
     setRevisionMessage(selectedApproval?.revision_message || '')
   }, [selectedApproval?.id, selectedApproval?.revision_message])
 
+  const selectedApprovalStatusCode = getFieldSalesApprovalStatusCode(
+    selectedApproval?.approval_status,
+  )
+  const selectedApprovalStatusMeta = getStatusMeta(
+    selectedApproval?.approval_status,
+  )
+  const approvalActionMeta =
+    selectedApprovalStatusCode === 'revision_requested'
+      ? {
+          title: 'Revizyon',
+          description:
+            'Bu kayıt için revizyon istendi. Plan sahibi gerekli değişiklikleri yapıp planı tekrar onaya gönderene kadar onay verilemez.',
+        }
+      : selectedApprovalStatusCode === 'approved'
+        ? {
+            title: 'Onay Tamamlandı',
+            description: 'Bu plan onaylandı.',
+          }
+        : {
+            title: 'Plan Onayı',
+            description: '',
+          }
+
   const boardDays = useMemo(() => {
     if (!selectedApproval?.start_date) {
       return getFieldSalesPlanningDays(anchorDate, approvalMode, showWeekends)
@@ -203,6 +227,10 @@ export function FieldSalesApprovalsPage() {
 
   const approveSelected = async () => {
     if (!selectedApproval?.id || !myInfo?.id) return
+    if (selectedApprovalStatusCode !== 'waiting_for_approval') {
+      toast.error('Bu kayıt şu anda onaya açık değil')
+      return
+    }
 
     await approvalCollection.update(selectedApproval.id, {
       approval_status: FIELD_SALES_APPROVAL_STATUS_IDS.approved,
@@ -226,6 +254,10 @@ export function FieldSalesApprovalsPage() {
 
   const requestRevision = async () => {
     if (!selectedApproval?.id) return
+    if (selectedApprovalStatusCode === 'approved') {
+      toast.error('Onaylanan plan için revizyon istenemez')
+      return
+    }
     if (!revisionMessage.trim()) {
       toast.error('Revizyon mesajı girin')
       return
@@ -262,13 +294,25 @@ export function FieldSalesApprovalsPage() {
         }
         actions={
           <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
-            <Button variant="outline" size="sm" onClick={() => navigateRange('prev')}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigateRange('prev')}
+            >
               Önceki
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setAnchorDate(new Date())}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setAnchorDate(new Date())}
+            >
               Bugün
             </Button>
-            <Button variant="outline" size="sm" onClick={() => navigateRange('next')}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigateRange('next')}
+            >
               Sonraki
             </Button>
           </div>
@@ -344,7 +388,7 @@ export function FieldSalesApprovalsPage() {
                     {getApprovalOwnerLabel(selectedApproval)}
                   </Badge>
                   <Badge variant="secondary">
-                    {getStatusMeta(selectedApproval.approval_status).name}
+                    {selectedApprovalStatusMeta.name}
                   </Badge>
                 </div>
               ) : null}
@@ -363,7 +407,7 @@ export function FieldSalesApprovalsPage() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Onay İşlemleri</CardTitle>
+                  <CardTitle>{approvalActionMeta.title}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid gap-2 text-sm text-muted-foreground">
@@ -372,38 +416,82 @@ export function FieldSalesApprovalsPage() {
                       {formatApprovalDate(selectedApproval.end_date)}
                     </div>
                     <div>Plan sayısı: {relatedPlans.length}</div>
-                    <div>
-                      Son durum:{' '}
-                      {getStatusMeta(selectedApproval.approval_status).name}
+                    <div>Son durum: {selectedApprovalStatusMeta.name}</div>
+                  </div>
+
+                  {approvalActionMeta.description ? (
+                    <div className="rounded-lg border bg-muted/40 px-3 py-3 text-sm text-muted-foreground">
+                      {approvalActionMeta.description}
                     </div>
-                  </div>
+                  ) : null}
 
-                  <Button className="w-full" onClick={approveSelected}>
-                    <CheckCheck className="mr-2 h-4 w-4" />
-                    Planı Onayla
-                  </Button>
+                  {selectedApprovalStatusCode === 'waiting_for_approval' ? (
+                    <>
+                      <Button className="w-full" onClick={approveSelected}>
+                        <CheckCheck className="mr-2 h-4 w-4" />
+                        Planı Onayla
+                      </Button>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="revision-message">Revizyon mesajı</Label>
-                    <Textarea
-                      id="revision-message"
-                      value={revisionMessage}
-                      onChange={(event) =>
-                        setRevisionMessage(event.target.value)
-                      }
-                      rows={6}
-                      placeholder="Planın hangi kısımlarının güncellenmesi gerektiğini yazın"
-                    />
-                  </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="revision-message">
+                          Revizyon mesajı
+                        </Label>
+                        <Textarea
+                          id="revision-message"
+                          value={revisionMessage}
+                          onChange={(event) =>
+                            setRevisionMessage(event.target.value)
+                          }
+                          rows={6}
+                          placeholder="Planın hangi kısımlarının güncellenmesi gerektiğini yazın"
+                        />
+                      </div>
 
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={requestRevision}
-                  >
-                    <MessageSquareReply className="mr-2 h-4 w-4" />
-                    Revizyon Talep Et
-                  </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={requestRevision}
+                      >
+                        <MessageSquareReply className="mr-2 h-4 w-4" />
+                        Revizyon Talep Et
+                      </Button>
+                    </>
+                  ) : null}
+
+                  {selectedApprovalStatusCode === 'revision_requested' ? (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="revision-message">
+                          Revizyon mesajı
+                        </Label>
+                        <Textarea
+                          id="revision-message"
+                          value={revisionMessage}
+                          onChange={(event) =>
+                            setRevisionMessage(event.target.value)
+                          }
+                          rows={6}
+                          placeholder="Planın hangi kısımlarının güncellenmesi gerektiğini yazın"
+                        />
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={requestRevision}
+                      >
+                        <MessageSquareReply className="mr-2 h-4 w-4" />
+                        Revizyon Mesajını Güncelle
+                      </Button>
+                    </>
+                  ) : null}
+
+                  {selectedApprovalStatusCode === 'approved' ? (
+                    <Button className="w-full" disabled>
+                      <CheckCheck className="mr-2 h-4 w-4" />
+                      Plan Onaylandı
+                    </Button>
+                  ) : null}
                 </CardContent>
               </Card>
             </div>
