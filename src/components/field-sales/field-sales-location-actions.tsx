@@ -392,7 +392,10 @@ export function FieldSalesLocationActions() {
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-[420px] p-0">
+          <PopoverContent
+            align="end"
+            className="w-[min(420px,calc(100vw-2rem))] p-0"
+          >
             <Tabs defaultValue="plans" className="gap-0">
               <div className="border-b px-4 pt-4">
                 <div className="mb-3 flex items-center justify-between">
@@ -410,7 +413,7 @@ export function FieldSalesLocationActions() {
                     Yenile
                   </Button>
                 </div>
-                <TabsList>
+                <TabsList className="h-auto w-full flex-wrap justify-start">
                   <TabsTrigger value="plans">
                     Yakındaki Ziyaret Planları
                   </TabsTrigger>

@@ -192,7 +192,7 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Feature ID: `feature-sales-execution-v1`
 - Version: 1
 - Feature Group: `feature-sales-execution`
-- Status: `planned`
+- Status: `in_progress`
 - Slug: `tasks-activities-calendar`
 - Summary: Execution workflows for follow-ups, meetings, and time-based coordination across the sales team.
 - Tasks: 2
@@ -216,7 +216,7 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Phase: `phase-sales-ops`
 - Type: `new-implementation`
 - Assignee: `agent`
-- Status: `planned`
+- Status: `in_progress`
 - Summary: Improve the event calendar experience so meetings and time-based work render with stable labels, assignments, and defaults.
 - Acceptance Criteria:
 - Calendar events render with safe user or calendar labels.
@@ -435,7 +435,7 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Feature: `feature-sales-execution-v1`
 - Type: `new-implementation`
 - Assignee: `agent`
-- Status: `planned`
+- Status: `in_progress`
 - Summary: Improve the event calendar experience so meetings and time-based work render with stable labels, assignments, and defaults.
 - Acceptance Criteria:
 - Calendar events render with safe user or calendar labels.

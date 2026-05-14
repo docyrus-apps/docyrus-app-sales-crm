@@ -5,8 +5,9 @@ import { createAppConfigClient } from '@docyrus/app-utils'
 import { toast } from 'sonner'
 import {
   useBaseCrmPlanApprovalCollection,
-  useBaseCrmPlanCollection,
+  useBaseEventCollection,
 } from '@/collections'
+import type { BaseEventEntity } from '@/collections/base-event.collection'
 import { FIELD_SALES_APP_ID, getFieldSalesConfig } from '@/lib/field-sales'
 
 export function useFieldSalesConfig() {
@@ -60,17 +61,16 @@ const PLAN_COLUMNS = [
   'actual_end_date',
   'check_in_time',
   'check_out_time',
-  'all_day',
   'location',
   'organization(id,name,map_location,phone,email,address)',
   'contact(id,name,map_location,email,mobile)',
-  'status',
-  'event_type',
+  'plan_status',
+  'plan_type',
   'cancel_postpone_reason',
   'postponed_to',
   'require_approval',
   'description',
-  'weekly_plan(id,label,approval_status,revision_message)',
+  'plan_approval(id,label,approval_status,revision_message)',
   'record_owner(id,firstname,lastname,email)',
   'created_on',
 ] as Array<string>
@@ -87,17 +87,71 @@ const APPROVAL_COLUMNS = [
   'created_on',
 ] as Array<string>
 
+type FieldSalesPlanRecord = BaseEventEntity & {
+  status?: BaseEventEntity['plan_status']
+  event_type?: BaseEventEntity['plan_type']
+  weekly_plan?: BaseEventEntity['plan_approval']
+}
+
+function isFieldSalesPlanRecord(record: BaseEventEntity) {
+  return Boolean(record.plan_status || record.plan_type || record.plan_approval)
+}
+
+function mapEventToFieldSalesPlan(
+  record: BaseEventEntity,
+): FieldSalesPlanRecord {
+  return {
+    ...record,
+    status: record.plan_status,
+    event_type: record.plan_type,
+    weekly_plan: record.plan_approval,
+  }
+}
+
+function mapFieldSalesPlanPayload(data: Record<string, unknown>) {
+  const payload: Record<string, unknown> = { ...data }
+
+  if ('name' in payload && !('subject' in payload)) {
+    payload.subject = payload.name
+  }
+
+  delete payload.name
+  delete payload.all_day
+
+  if ('status' in payload) {
+    payload.plan_status = payload.status
+    delete payload.status
+  }
+
+  if ('event_type' in payload) {
+    payload.plan_type = payload.event_type
+    delete payload.event_type
+  }
+
+  if ('weekly_plan' in payload) {
+    payload.plan_approval = payload.weekly_plan
+    delete payload.weekly_plan
+  }
+
+  return payload
+}
+
 export function useFieldSalesPlans() {
-  const collection = useBaseCrmPlanCollection()
+  const collection = useBaseEventCollection()
 
   return useQuery({
     queryKey: ['field-sales', 'plans'],
-    queryFn: async () =>
-      collection.list({
+    queryFn: async () => {
+      const records = await collection.list({
         columns: PLAN_COLUMNS,
         orderBy: 'start_date ASC',
-        limit: 500,
-      }),
+        limit: 1000,
+      })
+
+      return records
+        .filter((record) => isFieldSalesPlanRecord(record))
+        .map((record) => mapEventToFieldSalesPlan(record))
+    },
   })
 }
 
@@ -116,14 +170,15 @@ export function useFieldSalesApprovals() {
 }
 
 export function useCreateFieldSalesPlan() {
-  const collection = useBaseCrmPlanCollection()
+  const collection = useBaseEventCollection()
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (data: Record<string, unknown>) =>
-      collection.create(data),
+      collection.create(mapFieldSalesPlanPayload(data)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['field-sales', 'plans'] })
+      queryClient.invalidateQueries({ queryKey: ['events'] })
       toast.success('Plan oluşturuldu')
     },
     onError: (error: any) => {
@@ -133,7 +188,7 @@ export function useCreateFieldSalesPlan() {
 }
 
 export function useUpdateFieldSalesPlan() {
-  const collection = useBaseCrmPlanCollection()
+  const collection = useBaseEventCollection()
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -143,14 +198,33 @@ export function useUpdateFieldSalesPlan() {
     }: {
       planId: string
       data: Record<string, unknown>
-    }) => collection.update(planId, data),
+    }) => collection.update(planId, mapFieldSalesPlanPayload(data)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['field-sales', 'plans'] })
       queryClient.invalidateQueries({ queryKey: ['sales-orders'] })
+      queryClient.invalidateQueries({ queryKey: ['events'] })
       toast.success('Plan güncellendi')
     },
     onError: (error: any) => {
       toast.error(error?.message || 'Plan güncellenemedi')
+    },
+  })
+}
+
+export function useDeleteFieldSalesPlan() {
+  const collection = useBaseEventCollection()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (planId: string) => collection.delete(planId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['field-sales', 'plans'] })
+      queryClient.invalidateQueries({ queryKey: ['sales-orders'] })
+      queryClient.invalidateQueries({ queryKey: ['events'] })
+      toast.success('Plan silindi')
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Plan silinemedi')
     },
   })
 }

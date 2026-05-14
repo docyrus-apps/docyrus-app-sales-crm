@@ -18,6 +18,8 @@ The editor currently builds cleanly on PlateJS 53.x. Upgrade `platejs` and the `
 
 Field sales settings live in tenant app config under `fieldSales` for `base_crm`. Shared helpers cover ranges, enum IDs, and status normalization. A header-level location action handles nearby visits plus the active check-in or check-out sheets.
 
+The field sales plan runtime now reads and writes plan records through `base.event`, translating the field-sales view model (`status`, `event_type`, `weekly_plan`) onto the event schema (`plan_status`, `plan_type`, `plan_approval`). This keeps field planning inside the shared event infrastructure while preserving the existing field-sales UI flow.
+
 ## Lead Convert Refactor Checkpoint
 
 Current checkpoint:

@@ -76,6 +76,10 @@ The tasks route now uses the shared Docyrus grid runtime with saved views, inlin
 
 The app now includes a field sales workspace with persisted settings, a drag-and-drop planning board, a manager approval screen, a monthly field calendar, and a global location action for nearby visits plus check-in or check-out flows.
 
+Field sales plans are stored in `base.event` instead of a dedicated CRM plan datasource. Plan-specific behavior hangs off custom event fields: `plan_status`, `plan_type`, `plan_approval`, `require_approval`, visit timing fields, and visit location. The separate `base_crm.plan_approval` datasource remains the approval container, while each plan event links back to its approval window through `plan_approval`.
+
+The planning, approval, and field calendar screens now adapt for mobile use: navigation actions wrap safely, large calendar grids scroll horizontally when needed, and the planning board switches to a tap-friendly mobile flow where users can choose a record and assign or move it into a day and slot without desktop drag-and-drop. The planning sidebar also includes in-list search, filtering, and alphabetical sorting for companies or contacts so reps can narrow source records before assigning visits. Planned visits can now also be removed directly from the planning board with a confirmation step while the plan remains editable, and the approval submission action is rendered inside the planning board itself instead of the page header. After a weekly or monthly submission is triggered, the current range immediately reflects a waiting state in the board action area so the button label switches to the pending copy without requiring a visible manual refresh. Each day header in the planning board now also exposes a map action that opens the day route on a map, shows all available company/contact locations for that day, numbers markers in plan order, supports an alternate suggested route ordering, and can hand the active route off to Google Maps.
+
 <!-- docyrus-knowledge:auto:begin -->
 
 # Features

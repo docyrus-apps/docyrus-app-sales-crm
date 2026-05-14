@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { format, addMonths, addWeeks } from 'date-fns'
 import { useQueryClient } from '@tanstack/react-query'
-import { CalendarRange, RefreshCcw, Send } from 'lucide-react'
+import { CalendarRange, RefreshCcw, Send, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
@@ -11,10 +11,28 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useCompanies } from '@/hooks/use-companies'
 import { useContacts } from '@/hooks/use-contacts'
 import {
   useCreateFieldSalesPlan,
+  useDeleteFieldSalesPlan,
   useFieldSalesApprovals,
   useFieldSalesConfig,
   useFieldSalesCurrentApproval,
@@ -34,13 +52,12 @@ import {
   getFieldSalesApprovalStatusCode,
   getFieldSalesPlanningDays,
   getRelationName,
-  getStatusMeta,
   isDateWithinRange,
   type SlotDefinition,
 } from '@/lib/field-sales'
 import {
   useBaseCrmPlanApprovalCollection,
-  useBaseCrmPlanCollection,
+  useBaseEventCollection,
 } from '@/collections'
 
 type PlanRecord = {
@@ -74,20 +91,22 @@ function getUserId(value: any) {
   return value.id ?? ''
 }
 
-function getRecordSubtitle(record: SourceRecord) {
-  return record.mobile || record.phone || record.email || record.address || ''
+function getRelationId(value: any) {
+  if (!value) return ''
+  if (typeof value === 'string') return value
+  return value.id ?? ''
 }
 
-function getApprovalStatusBadge(approval: any) {
-  const status = getStatusMeta(approval?.approval_status)
-  if (!status.name) return null
-
-  return <Badge variant="secondary">{status.name}</Badge>
+function getRecordSubtitle(record: SourceRecord) {
+  return record.mobile || record.phone || record.email || record.address || ''
 }
 
 function getSourceName(record: SourceRecord) {
   return record.name || getRelationName(record.organization) || 'Kayıt'
 }
+
+type SourceFilterOption = 'all' | 'unplanned' | 'planned' | 'with_location'
+type SourceSortOption = 'name_asc' | 'name_desc'
 
 export function FieldSalesPlansPage() {
   const queryClient = useQueryClient()
@@ -115,11 +134,19 @@ export function FieldSalesPlansPage() {
   })
   const createPlan = useCreateFieldSalesPlan()
   const updatePlan = useUpdateFieldSalesPlan()
-  const planCollection = useBaseCrmPlanCollection()
+  const deletePlan = useDeleteFieldSalesPlan()
+  const planCollection = useBaseEventCollection()
   const approvalCollection = useBaseCrmPlanApprovalCollection()
 
   const [anchorDate, setAnchorDate] = useState(new Date())
   const [searchTerm, setSearchTerm] = useState('')
+  const [sourceFilter, setSourceFilter] =
+    useState<SourceFilterOption>('all')
+  const [sourceSort, setSourceSort] = useState<SourceSortOption>('name_asc')
+  const [pendingDeletePlan, setPendingDeletePlan] =
+    useState<PlanRecord | null>(null)
+  const [optimisticApprovalRangeKeys, setOptimisticApprovalRangeKeys] =
+    useState<Array<string>>([])
   const activeConfig = config
   const plannerConfig = activeConfig ?? {
     approvalMode: 'weekly',
@@ -177,15 +204,54 @@ export function FieldSalesPlansPage() {
       : (companies as Array<SourceRecord>)
   }, [companies, contacts, plannerConfig.planningEntity])
 
+  const plannedSourceIds = useMemo(() => {
+    const ids = new Set<string>()
+
+    for (const plan of scopedPlans) {
+      const sourceId =
+        plannerConfig.planningEntity === 'contact'
+          ? getRelationId(plan.contact)
+          : getRelationId(plan.organization)
+
+      if (sourceId) {
+        ids.add(sourceId)
+      }
+    }
+
+    return ids
+  }, [plannerConfig.planningEntity, scopedPlans])
+
   const sourceItems = useMemo(() => {
     const term = searchTerm.trim().toLocaleLowerCase('tr')
 
-    return sourceRecords
+    return [...sourceRecords]
       .filter((record) => {
-        if (!term) return true
-        return `${getSourceName(record)} ${getRecordSubtitle(record)}`
-          .toLocaleLowerCase('tr')
-          .includes(term)
+        const sourceId = record.id || ''
+        const hasLocation = Boolean(record.map_location)
+        const isPlanned = plannedSourceIds.has(sourceId)
+
+        if (term) {
+          const matchesTerm = `${getSourceName(record)} ${getRecordSubtitle(record)}`
+            .toLocaleLowerCase('tr')
+            .includes(term)
+
+          if (!matchesTerm) {
+            return false
+          }
+        }
+
+        if (sourceFilter === 'planned' && !isPlanned) return false
+        if (sourceFilter === 'unplanned' && isPlanned) return false
+        if (sourceFilter === 'with_location' && !hasLocation) return false
+
+        return true
+      })
+      .sort((left, right) => {
+        const comparison = getSourceName(left).localeCompare(getSourceName(right), 'tr', {
+          sensitivity: 'base',
+        })
+
+        return sourceSort === 'name_desc' ? comparison * -1 : comparison
       })
       .map((record) => ({
         id: record.id || '',
@@ -196,14 +262,30 @@ export function FieldSalesPlansPage() {
             : record.address || '',
         detail: getRecordSubtitle(record),
       }))
-  }, [plannerConfig.planningEntity, searchTerm, sourceRecords])
+  }, [
+    plannedSourceIds,
+    plannerConfig.planningEntity,
+    searchTerm,
+    sourceFilter,
+    sourceRecords,
+    sourceSort,
+  ])
 
+  const approvalRangeKey = `${format(approvalRange.start, 'yyyy-MM-dd')}|${format(
+    approvalRange.end,
+    'yyyy-MM-dd',
+  )}`
   const currentApprovalCode = getFieldSalesApprovalStatusCode(
     currentApproval?.approval_status,
   )
+  const isOptimisticallyPending =
+    !currentApprovalCode && optimisticApprovalRangeKeys.includes(approvalRangeKey)
+  const effectiveCurrentApprovalCode =
+    currentApprovalCode ||
+    (isOptimisticallyPending ? 'waiting_for_approval' : '')
   const planEditingLocked =
-    currentApprovalCode === 'waiting_for_approval' ||
-    currentApprovalCode === 'approved'
+    effectiveCurrentApprovalCode === 'waiting_for_approval' ||
+    effectiveCurrentApprovalCode === 'approved'
 
   const canEditPlan = (plan: PlanRecord) => {
     if (!plan.id) return false
@@ -281,6 +363,7 @@ export function FieldSalesPlansPage() {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ['field-sales', 'plans'] }),
       queryClient.invalidateQueries({ queryKey: ['field-sales', 'approvals'] }),
+      queryClient.invalidateQueries({ queryKey: ['events'] }),
     ])
   }
 
@@ -310,10 +393,16 @@ export function FieldSalesPlansPage() {
         .filter((plan) => plan.id)
         .map((plan) =>
           planCollection.update(plan.id!, {
-            weekly_plan: approval.id,
+            plan_approval: approval.id,
             require_approval: true,
           }),
         ),
+    )
+
+    setOptimisticApprovalRangeKeys((current) =>
+      current.includes(approvalRangeKey)
+        ? current
+        : [...current, approvalRangeKey],
     )
 
     await refreshQueries()
@@ -327,6 +416,12 @@ export function FieldSalesPlansPage() {
       approval_status: FIELD_SALES_APPROVAL_STATUS_IDS.waitingForApproval,
       revision_message: '',
     })
+
+    setOptimisticApprovalRangeKeys((current) =>
+      current.includes(approvalRangeKey)
+        ? current
+        : [...current, approvalRangeKey],
+    )
 
     await refreshQueries()
     toast.success('Revize edilen plan tekrar onaya gönderildi')
@@ -344,6 +439,12 @@ export function FieldSalesPlansPage() {
     )
   }
 
+  const confirmDeletePlan = async () => {
+    if (!pendingDeletePlan?.id) return
+    await deletePlan.mutateAsync(pendingDeletePlan.id)
+    setPendingDeletePlan(null)
+  }
+
   return (
     <>
       <PageHeader
@@ -352,77 +453,30 @@ export function FieldSalesPlansPage() {
         titleSuffix={
           <Badge variant="secondary">{scopedPlans.length} plan</Badge>
         }
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" onClick={() => navigateRange('prev')}>
-              Önceki
-            </Button>
-            <Button variant="outline" onClick={() => setAnchorDate(new Date())}>
-              Bugün
-            </Button>
-            <Button variant="outline" onClick={() => navigateRange('next')}>
-              Sonraki
-            </Button>
-            {currentApprovalCode === 'revision_requested' ? (
-              <Button onClick={resubmitRevision}>
-                <RefreshCcw className="mr-2 h-4 w-4" />
-                Tekrar Onaya Gönder
-              </Button>
-            ) : currentApproval ? (
-              <Button variant="secondary" disabled>
-                {currentApprovalCode === 'approved'
-                  ? 'Plan onaylandı'
-                  : 'Plan onay bekliyor'}
-              </Button>
-            ) : (
-              <Button onClick={submitRangeForApproval}>
-                <Send className="mr-2 h-4 w-4" />
-                {approvalMode === 'monthly'
-                  ? 'Aylık Planı Onaya Gönder'
-                  : 'Haftalık Planı Onaya Gönder'}
-              </Button>
-            )}
-          </div>
-        }
       />
-      <PageContainer className="space-y-4">
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <Card>
-            <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
-              <div>
-                <div className="text-sm text-muted-foreground">Aktif dönem</div>
-                <div className="text-lg font-semibold">
-                  {format(approvalRange.start, 'dd MMM yyyy')} –{' '}
-                  {format(approvalRange.end, 'dd MMM yyyy')}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {getApprovalStatusBadge(currentApproval)}
-                <Badge variant="outline">
-                  {plannerConfig.planningEntity === 'contact'
-                    ? 'Kişi planı'
-                    : 'Firma planı'}
-                </Badge>
-                <Badge variant="outline">
-                  {plannerConfig.slotMinutes === 60 ? 'Saatlik' : '30 dakika'}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="py-4">
-              <Input
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder={
-                  plannerConfig.planningEntity === 'contact'
-                    ? 'Kişi ara'
-                    : 'Firma ara'
-                }
-              />
-            </CardContent>
-          </Card>
-        </div>
+      <PageContainer className="space-y-4 overflow-x-hidden px-3 sm:px-4 lg:px-6">
+        <Card>
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+            <div className="space-y-1">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Aktif dönem
+              </p>
+              <p className="text-base font-semibold">
+                {format(approvalRange.start, 'dd MMM yyyy')} –{' '}
+                {format(approvalRange.end, 'dd MMM yyyy')}
+              </p>
+            </div>
+
+            <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
+              <Button variant="outline" size="sm" onClick={() => navigateRange('prev')}>
+                Önceki
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => navigateRange('next')}>
+                Sonraki
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {currentApprovalCode === 'revision_requested' ? (
           <Alert>
@@ -440,14 +494,124 @@ export function FieldSalesPlansPage() {
           }
           sourceItems={sourceItems}
           sourceEmptyText="Bu filtre ile eşleşen kayıt bulunamadı"
+          sourceToolbar={
+            <div className="space-y-3">
+              <Input
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder={
+                  plannerConfig.planningEntity === 'contact'
+                    ? 'Kişi ara'
+                    : 'Firma ara'
+                }
+              />
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Select
+                  value={sourceFilter}
+                  onValueChange={(value) =>
+                    setSourceFilter(value as SourceFilterOption)
+                  }
+                >
+                  <SelectTrigger className="w-full" size="sm">
+                    <SelectValue placeholder="Filtrele" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tüm kayıtlar</SelectItem>
+                    <SelectItem value="unplanned">
+                      Henüz planlanmayanlar
+                    </SelectItem>
+                    <SelectItem value="planned">Planda olanlar</SelectItem>
+                    <SelectItem value="with_location">
+                      Konumu olanlar
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={sourceSort}
+                  onValueChange={(value) =>
+                    setSourceSort(value as SourceSortOption)
+                  }
+                >
+                  <SelectTrigger className="w-full" size="sm">
+                    <SelectValue placeholder="Sırala" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name_asc">Ada göre (A-Z)</SelectItem>
+                    <SelectItem value="name_desc">Ada göre (Z-A)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {sourceItems.length} kayıt listeleniyor
+              </p>
+            </div>
+          }
           title="Plan Takvimi"
+          titleToolbar={
+            currentApprovalCode === 'revision_requested' ? (
+              <Button className="w-full sm:w-auto" onClick={resubmitRevision}>
+                <RefreshCcw className="mr-2 h-4 w-4" />
+                Tekrar Onaya Gönder
+              </Button>
+            ) : currentApproval || isOptimisticallyPending ? (
+              <Button className="w-full sm:w-auto" variant="secondary" disabled>
+                {effectiveCurrentApprovalCode === 'approved'
+                  ? 'Plan onaylandı'
+                  : 'Plan onay bekliyor'}
+              </Button>
+            ) : (
+              <Button className="w-full sm:w-auto" onClick={submitRangeForApproval}>
+                <Send className="mr-2 h-4 w-4" />
+                {approvalMode === 'monthly'
+                  ? 'Aylık Planı Onaya Gönder'
+                  : 'Haftalık Planı Onaya Gönder'}
+              </Button>
+            )
+          }
           days={days}
           slots={slots}
           plans={scopedPlans}
           canDragPlan={(plan) => canEditPlan(plan as PlanRecord)}
+          canDeletePlan={(plan) => canEditPlan(plan as PlanRecord)}
+          onDeletePlan={(plan) => setPendingDeletePlan(plan as PlanRecord)}
           onDropToSlot={handleDropToSlot}
         />
       </PageContainer>
+
+      <AlertDialog
+        open={pendingDeletePlan !== null}
+        onOpenChange={(open) => {
+          if (!open && !deletePlan.isPending) {
+            setPendingDeletePlan(null)
+          }
+        }}
+      >
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+              <Trash2 className="h-5 w-5" />
+            </div>
+            <AlertDialogTitle>Plan silinsin mi?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingDeletePlan
+                ? `${pendingDeletePlan.subject || getRelationName(pendingDeletePlan.organization) || getRelationName(pendingDeletePlan.contact) || 'Seçili plan'} takvimden kaldırılacak.`
+                : 'Seçili plan takvimden kaldırılacak.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletePlan.isPending}>
+              Vazgeç
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={deletePlan.isPending}
+              onClick={confirmDeletePlan}
+            >
+              {deletePlan.isPending ? 'Siliniyor...' : 'Planı Sil'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

@@ -268,7 +268,7 @@
       "summary": "Improve the event calendar experience so meetings and time-based work render with stable labels, assignments, and defaults.",
       "type": "new-implementation",
       "assignee": "agent",
-      "status": "planned",
+      "status": "in_progress",
       "acceptanceCriteria": [
         "Calendar events render with safe user or calendar labels.",
         "Time-based records map cleanly into the UI event model.",

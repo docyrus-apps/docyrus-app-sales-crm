@@ -29,7 +29,7 @@ import {
 } from '@/lib/field-sales'
 import {
   useBaseCrmPlanApprovalCollection,
-  useBaseCrmPlanCollection,
+  useBaseEventCollection,
 } from '@/collections'
 
 type PlanRecord = {
@@ -76,7 +76,7 @@ export function FieldSalesApprovalsPage() {
   const { data: plans = [] } = useFieldSalesPlans()
   const { data: myInfo } = useMyInfo()
   const approvalCollection = useBaseCrmPlanApprovalCollection()
-  const planCollection = useBaseCrmPlanCollection()
+  const planCollection = useBaseEventCollection()
 
   const [anchorDate, setAnchorDate] = useState(new Date())
   const [selectedApprovalId, setSelectedApprovalId] = useState<string>('')
@@ -186,6 +186,7 @@ export function FieldSalesApprovalsPage() {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ['field-sales', 'plans'] }),
       queryClient.invalidateQueries({ queryKey: ['field-sales', 'approvals'] }),
+      queryClient.invalidateQueries({ queryKey: ['events'] }),
     ])
   }
 
@@ -203,7 +204,7 @@ export function FieldSalesApprovalsPage() {
         .filter((plan) => plan.id)
         .map((plan) =>
           planCollection.update(plan.id!, {
-            status: FIELD_SALES_PLAN_STATUS_IDS.waiting,
+            plan_status: FIELD_SALES_PLAN_STATUS_IDS.waiting,
           }),
         ),
     )
@@ -249,26 +250,26 @@ export function FieldSalesApprovalsPage() {
           <Badge variant="secondary">{visibleApprovals.length}</Badge>
         }
         actions={
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => navigateRange('prev')}>
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
+            <Button variant="outline" size="sm" onClick={() => navigateRange('prev')}>
               Önceki
             </Button>
-            <Button variant="outline" onClick={() => setAnchorDate(new Date())}>
+            <Button variant="outline" size="sm" onClick={() => setAnchorDate(new Date())}>
               Bugün
             </Button>
-            <Button variant="outline" onClick={() => navigateRange('next')}>
+            <Button variant="outline" size="sm" onClick={() => navigateRange('next')}>
               Sonraki
             </Button>
           </div>
         }
       />
-      <PageContainer className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+      <PageContainer className="grid gap-4 overflow-x-hidden px-3 sm:px-4 lg:px-6 xl:grid-cols-[320px_minmax(0,1fr)]">
         <Card>
           <CardHeader>
             <CardTitle>Onay Kuyruğu</CardTitle>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[calc(100vh-18rem)] pr-3">
+            <ScrollArea className="h-[55vh] pr-3 xl:h-[calc(100vh-18rem)]">
               <div className="space-y-4">
                 {Object.entries(groupedApprovals).map(
                   ([statusLabel, items]) => (

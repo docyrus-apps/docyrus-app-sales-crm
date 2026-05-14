@@ -85,21 +85,24 @@ export function FieldSalesCalendarPage() {
           <Badge variant="secondary">{format(currentMonth, 'MMMM yyyy')}</Badge>
         }
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setCurrentMonth((value) => addMonths(value, -1))}
             >
               Önceki
             </Button>
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setCurrentMonth(new Date())}
             >
               Bugün
             </Button>
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setCurrentMonth((value) => addMonths(value, 1))}
             >
               Sonraki
@@ -107,13 +110,15 @@ export function FieldSalesCalendarPage() {
           </div>
         }
       />
-      <PageContainer className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <PageContainer className="grid gap-4 overflow-x-hidden px-3 sm:px-4 lg:px-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <Card>
           <CardHeader>
             <CardTitle>Aylık görünüm</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <div className="overflow-x-auto pb-2">
+              <div className="min-w-[42rem]">
+                <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cts', 'Paz'].map(
                 (label) => (
                   <div key={label} className="px-2 py-2">
@@ -122,7 +127,7 @@ export function FieldSalesCalendarPage() {
                 ),
               )}
             </div>
-            <div className="mt-2 grid grid-cols-7 gap-2">
+                <div className="mt-2 grid grid-cols-7 gap-2">
               {monthDays.map((day) => {
                 const dayToken = format(day, 'yyyy-MM-dd')
                 const dayPlans = (plans as Array<PlanRecord>).filter(
@@ -170,6 +175,8 @@ export function FieldSalesCalendarPage() {
                   </button>
                 )
               })}
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -179,7 +186,7 @@ export function FieldSalesCalendarPage() {
             <CardTitle>{format(selectedDate, 'dd MMMM yyyy')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[calc(100vh-18rem)] pr-3">
+            <ScrollArea className="h-[55vh] pr-3 xl:h-[calc(100vh-18rem)]">
               <div className="space-y-6">
                 <div className="space-y-3">
                   <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">

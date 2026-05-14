@@ -49,11 +49,11 @@ export const DEFAULT_FIELD_SALES_CONFIG: FieldSalesConfig = {
 }
 
 export const FIELD_SALES_PLAN_STATUS_IDS = {
-  waiting: '019e17ac-0b4b-749c-84ee-9e17fb3b4f8d',
-  postponed: '019e17ac-0b4c-7dc7-a4f6-deb03dab1c0e',
-  completed: '019e17ac-0b4b-7e93-9f85-25f0cd833712',
-  checkedIn: '019e17ac-0b4b-7bcf-b10c-831635ab3838',
-  cancelled: '019e17ac-0b4d-71cf-b5f3-fdcedf506855',
+  waiting: '019e206f-8bbb-776d-a4e0-555d7223b37f',
+  postponed: '019e206f-8bbf-770a-be89-13f4288ba964',
+  completed: '019e206f-8bbf-7b48-aa8d-d965aa224e84',
+  checkedIn: '019e206f-8bbf-7e04-ae6e-322768c55d45',
+  cancelled: '019e206f-8bc0-711b-a2e4-61a2cb38d028',
 } as const
 
 export const FIELD_SALES_APPROVAL_STATUS_IDS = {
@@ -63,9 +63,9 @@ export const FIELD_SALES_APPROVAL_STATUS_IDS = {
 } as const
 
 export const FIELD_SALES_EVENT_TYPE_IDS = {
-  plannedVisit: '019e17ab-de25-787b-b154-492ef5ea7e35',
-  task: '019e17ab-de27-7dfc-8531-48fe7e8c6f6f',
-  unplannedVisit: '019e17ab-de27-7a10-9b86-edfea7452372',
+  plannedVisit: '019e206f-9213-76d5-b4c1-cc5c0884afb3',
+  task: '019e206f-9214-7ce1-a619-c55ebae6f1d2',
+  unplannedVisit: '019e206f-9215-70e1-a720-fabf2d782d32',
 } as const
 
 export function getFieldSalesConfig(

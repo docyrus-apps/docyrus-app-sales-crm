@@ -9,7 +9,15 @@ export interface BaseEventEntity {
   id?: string
 
   /** Record owner */
-  record_owner?: string
+  record_owner?:
+    | string
+    | {
+        id?: string
+        firstname?: string
+        lastname?: string
+        email?: string
+        name?: string
+      }
 
   /** Created On */
   created_on?: string
@@ -52,6 +60,47 @@ export interface BaseEventEntity {
 
   /** Deal */
   deal?: { id: string; name: string } | string
+
+  /** Plan Status */
+  plan_status?: { id: string; name: string } | any
+
+  /** Plan Type */
+  plan_type?: { id: string; name: string } | any
+
+  /** Plan Approval */
+  plan_approval?:
+    | {
+        id: string
+        name?: string
+        label?: string
+        approval_status?: { id: string; name: string } | any
+        revision_message?: string
+      }
+    | string
+
+  /** Require Approval */
+  require_approval?: boolean
+
+  /** Check-in Time */
+  check_in_time?: string
+
+  /** Check-out Time */
+  check_out_time?: string
+
+  /** Actual Start Date */
+  actual_start_date?: string
+
+  /** Actual End Date */
+  actual_end_date?: string
+
+  /** Location */
+  location?: Record<string, any>
+
+  /** Cancel / Postpone Reason */
+  cancel_postpone_reason?: string
+
+  /** Postponed To */
+  postponed_to?: string
 }
 
 export function useBaseEventCollection() {
