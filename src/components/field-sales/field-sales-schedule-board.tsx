@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { format } from 'date-fns'
 import { MapPinned, Trash2 } from 'lucide-react'
 import {
-  Map,
+  Map as DocyrusMap,
   MapMarker,
   MapPopup,
   MapPolyline,
@@ -309,7 +309,9 @@ export function FieldSalesScheduleBoard({
   const isMobile = useIsMobile()
   const [selectedPayload, setSelectedPayload] =
     useState<FieldSalesBoardDropPayload | null>(null)
-  const [selectedMapDayKey, setSelectedMapDayKey] = useState<string | null>(null)
+  const [selectedMapDayKey, setSelectedMapDayKey] = useState<string | null>(
+    null,
+  )
   const [routeMode, setRouteMode] = useState<RouteMode>('plan')
   const selectedDayMapRef = useRef<any>(null)
 
@@ -383,7 +385,9 @@ export function FieldSalesScheduleBoard({
           order: index + 1,
         }))
       : selectedDayLocationEntries
-  const entriesWithoutLocation = selectedDayEntries.filter((entry) => !entry.location)
+  const entriesWithoutLocation = selectedDayEntries.filter(
+    (entry) => !entry.location,
+  )
   const selectedDayMarkerPoints = activeDayLocationEntries.map(
     (entry) =>
       [entry.location!.latitude, entry.location!.longitude] as [number, number],
@@ -406,7 +410,10 @@ export function FieldSalesScheduleBoard({
     if (!map || selectedDayMarkerPoints.length === 0) return
 
     if (selectedDayMarkerPoints.length === 1) {
-      map.setView(selectedDayMarkerPoints[0], Math.max(map.getZoom?.() ?? 13, 14))
+      map.setView(
+        selectedDayMarkerPoints[0],
+        Math.max(map.getZoom?.() ?? 13, 14),
+      )
       return
     }
 
@@ -421,7 +428,8 @@ export function FieldSalesScheduleBoard({
   )
 
   const plansById = useMemo(
-    () => new Map(plans.filter((plan) => plan.id).map((plan) => [plan.id!, plan])),
+    () =>
+      new Map(plans.filter((plan) => plan.id).map((plan) => [plan.id!, plan])),
     [plans],
   )
 
@@ -487,7 +495,12 @@ export function FieldSalesScheduleBoard({
           {sourceToolbar ? <div>{sourceToolbar}</div> : null}
         </CardHeader>
         <CardContent className="min-h-0 pb-4">
-          <ScrollArea className={cn('pr-3', isMobile ? 'h-auto max-h-72' : 'h-[calc(100vh-18rem)]')}>
+          <ScrollArea
+            className={cn(
+              'pr-3',
+              isMobile ? 'h-auto max-h-72' : 'h-[calc(100vh-18rem)]',
+            )}
+          >
             <div className="space-y-2">
               {sourceItems.length === 0 ? (
                 <div className="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
@@ -650,7 +663,8 @@ export function FieldSalesScheduleBoard({
                               return (
                                 <FieldSalesPlanCard
                                   key={
-                                    plan.id ?? `${slotKey}-${getPlanLabel(plan)}`
+                                    plan.id ??
+                                    `${slotKey}-${getPlanLabel(plan)}`
                                   }
                                   plan={plan}
                                   draggable={false}
@@ -691,7 +705,9 @@ export function FieldSalesScheduleBoard({
       {title || titleToolbar ? (
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           {title ? <CardTitle>{title}</CardTitle> : null}
-          {titleToolbar ? <div className="w-full sm:w-auto">{titleToolbar}</div> : null}
+          {titleToolbar ? (
+            <div className="w-full sm:w-auto">{titleToolbar}</div>
+          ) : null}
         </CardHeader>
       ) : null}
       <CardContent className="min-w-0 pb-4">
@@ -843,7 +859,11 @@ export function FieldSalesScheduleBoard({
                 disabled={!googleMapsRouteUrl}
                 onClick={() => {
                   if (!googleMapsRouteUrl) return
-                  window.open(googleMapsRouteUrl, '_blank', 'noopener,noreferrer')
+                  window.open(
+                    googleMapsRouteUrl,
+                    '_blank',
+                    'noopener,noreferrer',
+                  )
                 }}
               >
                 Google Maps'te Aç
@@ -855,7 +875,7 @@ export function FieldSalesScheduleBoard({
             <div className="border-b lg:border-r lg:border-b-0">
               {selectedDayLocationEntries.length > 0 ? (
                 <div className="h-[42vh] min-h-[320px] lg:h-[68vh]">
-                  <Map
+                  <DocyrusMap
                     ref={selectedDayMapRef}
                     center={selectedDayMarkerPoints[0] ?? [39, 35]}
                     zoom={13}
@@ -877,7 +897,9 @@ export function FieldSalesScheduleBoard({
                     ) : null}
                     {activeDayLocationEntries.map((entry) => (
                       <MapMarker
-                        key={entry.plan.id ?? `${selectedMapDayKey}-${entry.order}`}
+                        key={
+                          entry.plan.id ?? `${selectedMapDayKey}-${entry.order}`
+                        }
                         position={[
                           entry.location!.latitude,
                           entry.location!.longitude,
@@ -908,7 +930,7 @@ export function FieldSalesScheduleBoard({
                         </MapPopup>
                       </MapMarker>
                     ))}
-                  </Map>
+                  </DocyrusMap>
                 </div>
               ) : (
                 <div className="flex h-[42vh] min-h-[320px] items-center justify-center px-6 text-center text-sm text-muted-foreground lg:h-[68vh]">
@@ -938,7 +960,10 @@ export function FieldSalesScheduleBoard({
                       </div>
                       {activeDayLocationEntries.map((entry) => (
                         <div
-                          key={entry.plan.id ?? `${selectedMapDayKey}-list-${entry.order}`}
+                          key={
+                            entry.plan.id ??
+                            `${selectedMapDayKey}-list-${entry.order}`
+                          }
                           className="rounded-xl border bg-card px-3 py-3"
                         >
                           <div className="flex items-start gap-3">
@@ -973,7 +998,10 @@ export function FieldSalesScheduleBoard({
                         </div>
                         {entriesWithoutLocation.map((entry) => (
                           <div
-                            key={entry.plan.id ?? `${selectedMapDayKey}-missing-${entry.order}`}
+                            key={
+                              entry.plan.id ??
+                              `${selectedMapDayKey}-missing-${entry.order}`
+                            }
                             className="rounded-xl border border-dashed bg-card px-3 py-3"
                           >
                             <div className="space-y-1">
@@ -983,7 +1011,10 @@ export function FieldSalesScheduleBoard({
                               <div className="text-xs text-muted-foreground">
                                 {entry.timeLabel || 'Saat belirtilmedi'}
                               </div>
-                              <Badge variant="outline" className="mt-1 text-[11px]">
+                              <Badge
+                                variant="outline"
+                                className="mt-1 text-[11px]"
+                              >
                                 Konum yok
                               </Badge>
                             </div>
