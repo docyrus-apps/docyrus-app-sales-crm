@@ -71,6 +71,7 @@ export function TagSelectFormField({
               <PopoverTrigger asChild>
                 <Button
                   id={field.name}
+                  type="button"
                   variant="outline"
                   role="combobox"
                   aria-expanded={open}

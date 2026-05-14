@@ -51,7 +51,11 @@ import {
   mapEnumEntitiesToCellOptions,
   useEnumEntities,
 } from '@/hooks/use-enums'
-import { useDeleteLead, useUpdateLead } from '@/hooks/use-leads'
+import {
+  LEAD_DETAIL_COLUMNS,
+  useDeleteLead,
+  useUpdateLead,
+} from '@/hooks/use-leads'
 import { useDocyrusDataGrid } from '@/hooks/use-docyrus-data-grid'
 import { useDocyrusKanban } from '@/hooks/use-docyrus-kanban'
 import { useDocyrusDataImportWizard } from '@/hooks/use-docyrus-data-import-wizard'
@@ -156,15 +160,51 @@ function LeadsPageInner({
   }, [])
 
   const onOpenEdit = useCallback(
-    (lead: BaseCrmLeadsEntity) => {
+    async (lead: BaseCrmLeadsEntity) => {
       if (isLeadConverted(lead)) {
         toast.error(t('leads.convert.readOnlyDescription'))
         return
       }
 
-      setDialog({ mode: 'edit', lead })
+      if (!lead.id) {
+        setDialog({ mode: 'edit', lead })
+        return
+      }
+
+      try {
+        const fullLead = await collection.get(lead.id, {
+          columns: LEAD_DETAIL_COLUMNS,
+        })
+        setDialog({ mode: 'edit', lead: fullLead })
+      } catch {
+        setDialog({ mode: 'edit', lead })
+      }
     },
-    [t],
+    [collection, t],
+  )
+
+  const onOpenConvert = useCallback(
+    async (lead: BaseCrmLeadsEntity) => {
+      if (isLeadConverted(lead)) {
+        toast.error(t('leads.convert.readOnlyDescription'))
+        return
+      }
+
+      if (!lead.id) {
+        setConvertLead(lead)
+        return
+      }
+
+      try {
+        const fullLead = await collection.get(lead.id, {
+          columns: LEAD_DETAIL_COLUMNS,
+        })
+        setConvertLead(fullLead)
+      } catch {
+        setConvertLead(lead)
+      }
+    },
+    [collection, t],
   )
 
   const onDuplicate = useCallback((lead: BaseCrmLeadsEntity) => {
@@ -249,7 +289,7 @@ function LeadsPageInner({
                       {t('common.edit', 'Edit')}
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      onClick={() => setConvertLead(row.original)}
+                      onClick={() => void onOpenConvert(row.original)}
                     >
                       <RefreshCw className="size-4" />
                       {t('leads.convert.convertButton')}
@@ -273,7 +313,7 @@ function LeadsPageInner({
           </div>
         ),
       }),
-    [onDelete, onDuplicate, onOpenEdit, onView, t],
+    [onDelete, onDuplicate, onOpenConvert, onOpenEdit, onView, t],
   )
 
   const openWizardRef = useRef<() => void>(() => {})
@@ -465,7 +505,7 @@ function LeadsPageInner({
     enableItemsQuery: viewType === 'board',
     listParams: {
       columns:
-        'id, name, phone, email, website, company_name_text, company_email, company_phone, company_industry, company_size, lead_source(id,name), lead_status(id,name), lead_type(id,name), countries(id,name), record_owner, deal_value, converted_deal(id,name), converted_organization(id,name), converted_contact(id,name), conversion_state(id,name), converted_on, created_on, last_modified_on, created_by, last_modified_by',
+        'id, name, phone, email, website, company_name_text, company_email, company_phone, company_industry, company_size, lead_source(id,name), lead_status(id,name), lead_type(id,name), leads_products_tags, countries(id,name), record_owner, deal_value, converted_deal(id,name), converted_organization(id,name), converted_contact(id,name), conversion_state(id,name), converted_on, created_on, last_modified_on, created_by, last_modified_by',
       orderBy: 'created_on DESC',
       limit: 200,
     },
@@ -562,6 +602,7 @@ function LeadsPageInner({
 
         {convertLead && (
           <LeadConvertDialog
+            key={convertLead.id ?? 'convert-lead'}
             open
             onOpenChange={(open) => {
               if (!open) {

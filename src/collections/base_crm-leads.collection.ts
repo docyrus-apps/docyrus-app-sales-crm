@@ -41,6 +41,9 @@ export interface BaseCrmLeadsEntity {
   /** Company Size */
   company_size?: { id: string; name: string } | any
 
+  /** Leads Products */
+  leads_products_tags?: Array<{ id: string; name: string }> | Array<string>
+
   /** Contact Job Title */
   contact_job_title?: string
 

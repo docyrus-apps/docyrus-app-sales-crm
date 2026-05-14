@@ -66,6 +66,25 @@ function pickDefined(payload: Record<string, unknown>) {
   )
 }
 
+function getMultiRelationIds(value: unknown): Array<string> | undefined {
+  if (!Array.isArray(value)) return undefined
+
+  const ids = value.flatMap((item) => {
+    if (typeof item === 'string') return [item]
+    if (
+      item &&
+      typeof item === 'object' &&
+      'id' in item &&
+      typeof item.id === 'string'
+    ) {
+      return [item.id]
+    }
+    return []
+  })
+
+  return ids.length > 0 ? ids : undefined
+}
+
 export interface UseLeadConvertConversionOptions {
   client: DocyrusClient | null
   lead: any
@@ -751,6 +770,9 @@ export function useLeadConvertConversion(
           }
           const isReusedDeal = Boolean(state.dealId)
           if (!state.dealId) {
+            const leadProductTagIds = getMultiRelationIds(
+              lead?.leads_products_tags,
+            )
             const dealExtras = Object.fromEntries(
               extraFields.deal
                 .filter((field) => field.value !== '')
@@ -770,6 +792,7 @@ export function useLeadConvertConversion(
                 deal_value: form.dealValue ? Number(form.dealValue) : undefined,
                 description: form.notes || undefined,
                 source_lead: lead.id,
+                deals_products_tags: leadProductTagIds,
                 ...dealExtras,
               },
             )

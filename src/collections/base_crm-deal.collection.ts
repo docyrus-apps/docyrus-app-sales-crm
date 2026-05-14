@@ -71,6 +71,9 @@ export interface BaseCrmDealEntity {
   /** Country */
   country?: { id: string; name: string } | string
 
+  /** Deals Products */
+  deals_products_tags?: Array<{ id: string; name: string }> | Array<string>
+
   /** Qualification Notes */
   qualification_notes?: string
 }

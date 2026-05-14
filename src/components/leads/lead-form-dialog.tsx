@@ -1,10 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
+import { useEffect, useMemo } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { useQuery } from '@tanstack/react-query'
 import { zodValidator } from '@tanstack/zod-form-adapter'
 import { useTranslation } from 'react-i18next'
 import { Loader2 } from 'lucide-react'
 import { useBaseCountryCollection } from '@/collections'
+import { DynamicFormField } from '@/components/docyrus/form-fields/dynamic-form-field'
+import type { EnumOption, IField } from '@/components/docyrus/form-fields/types'
 import type { LeadFormData } from '@/schemas/lead-schema'
 import { Button } from '@/components/animate-ui/components/buttons/button'
 import { AwesomeDialog } from '@/components/docyrus/awesome-dialog/awesome-dialog'
@@ -26,6 +29,7 @@ import { Combobox } from '@/components/ui/combobox-simple'
 import { PhoneInput } from '@/components/ui/phone-input'
 import { leadFormSchema } from '@/schemas/lead-schema'
 import { useCreateLead, useUpdateLead } from '@/hooks/use-leads'
+import { useProducts } from '@/hooks/use-products'
 import { useUsers } from '@/hooks/use-users'
 import { useEnumOptions } from '@/hooks/use-enums'
 import { isLeadConvertedRecord } from '@/lib/lead-conversion'
@@ -48,6 +52,51 @@ function getRelationId(value: unknown) {
 
 function numericDefault(value: unknown) {
   return typeof value === 'number' ? value : undefined
+}
+
+function multiRelationDefault(value: unknown): Array<string> {
+  if (!Array.isArray(value)) return []
+
+  return value.flatMap((item) => {
+    if (typeof item === 'string') return [item]
+    if (
+      item &&
+      typeof item === 'object' &&
+      'id' in item &&
+      typeof item.id === 'string'
+    ) {
+      return [item.id]
+    }
+
+    return []
+  })
+}
+
+function buildLeadFormDefaults(lead: any): LeadFormData {
+  return {
+    name: lead?.name || '',
+    contact_job_title: lead?.contact_job_title || '',
+    email: lead?.email || '',
+    phone: lead?.phone || '',
+    company_name_text: lead?.company_name_text || '',
+    company_email: lead?.company_email || '',
+    company_phone: lead?.company_phone || '',
+    website: lead?.website || '',
+    address: lead?.address || '',
+    city: lead?.city || '',
+    state: lead?.state || '',
+    company_industry: getRelationId(lead?.company_industry),
+    company_size: getRelationId(lead?.company_size),
+    lead_source: getRelationId(lead?.lead_source),
+    lead_status: getRelationId(lead?.lead_status),
+    lead_type: getRelationId(lead?.lead_type),
+    country: getRelationId(lead?.countries),
+    record_owner: getRelationId(lead?.record_owner),
+    contact_message: lead?.contact_message || '',
+    lost_reason: getRelationId(lead?.lost_reason),
+    deal_value: numericDefault(lead?.deal_value),
+    leads_products_tags: multiRelationDefault(lead?.leads_products_tags),
+  }
 }
 
 export function LeadFormDialog({
@@ -89,6 +138,11 @@ export function LeadFormDialog({
     appSlug: 'base_crm',
     dataSourceSlug: 'leads',
   })
+  const { data: products = [] } = useProducts({
+    columns: ['id', 'name', 'product_code'],
+    orderBy: 'product_code ASC',
+    limit: 300,
+  })
   const { data: countries = [] } = useQuery({
     queryKey: ['base-country-options'],
     queryFn: () =>
@@ -100,31 +154,11 @@ export function LeadFormDialog({
   })
 
   const isConverted = isLeadConvertedRecord(lead)
+  const initialValues = useMemo(() => buildLeadFormDefaults(lead), [lead])
 
   const form = useForm<LeadFormData>({
-    defaultValues: {
-      name: lead?.name || '',
-      contact_job_title: lead?.contact_job_title || '',
-      email: lead?.email || '',
-      phone: lead?.phone || '',
-      company_name_text: lead?.company_name_text || '',
-      company_email: lead?.company_email || '',
-      company_phone: lead?.company_phone || '',
-      website: lead?.website || '',
-      address: lead?.address || '',
-      city: lead?.city || '',
-      state: lead?.state || '',
-      company_industry: getRelationId(lead?.company_industry),
-      company_size: getRelationId(lead?.company_size),
-      lead_source: getRelationId(lead?.lead_source),
-      lead_status: getRelationId(lead?.lead_status),
-      lead_type: getRelationId(lead?.lead_type),
-      country: getRelationId(lead?.countries),
-      record_owner: getRelationId(lead?.record_owner),
-      contact_message: lead?.contact_message || '',
-      lost_reason: getRelationId(lead?.lost_reason),
-      deal_value: numericDefault(lead?.deal_value),
-    },
+    formId: `lead-form-${mode}-${lead?.id ?? 'new'}`,
+    defaultValues: initialValues,
     validatorAdapter: zodValidator(),
     validators: {
       onChange: leadFormSchema,
@@ -149,9 +183,24 @@ export function LeadFormDialog({
     },
   })
 
+  useEffect(() => {
+    if (!open) return
+    form.reset(initialValues)
+  }, [form, initialValues, open, mode])
+
   const userOptions = users.map((user: any) => ({
     label: `${user.firstname} ${user.lastname}`,
     value: user.id,
+  }))
+  const productTagField: IField = {
+    id: 'leads_products_tags',
+    name: t('leads.form.productsLabel', { defaultValue: 'Products' }),
+    slug: 'leads_products_tags',
+    type: 'field-tagSelect',
+  }
+  const productOptions: Array<EnumOption> = products.map((product) => ({
+    id: product.id ?? '',
+    name: product.name || product.product_code || product.id || '',
   }))
   const countryOptions = countries.map((country) => ({
     label: country.name,
@@ -513,6 +562,15 @@ export function LeadFormDialog({
                     </Field>
                   )}
                 </form.Field>
+
+                <div className="col-span-2">
+                  <DynamicFormField
+                    field={productTagField}
+                    form={form}
+                    disabled={isConverted}
+                    enumOptions={productOptions}
+                  />
+                </div>
               </div>
             </section>
 
