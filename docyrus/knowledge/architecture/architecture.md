@@ -10,6 +10,8 @@ Keep `DocyrusDevtools` inside the auth/query provider tree, register auth-manage
 
 The OAuth callback is configured as a path (`VITE_OAUTH2_REDIRECT_PATH`) and the runtime redirect URI is always built from `window.location.origin` plus that path; keep the TanStack callback route and `DocyrusAuthProvider.callbackPath` aligned with the same value.
 
+The Vite dev server sends a `Content-Security-Policy` header with a `frame-ancestors` allowlist. Keep `https://build.docyrus.app` in that allowlist so hosted Docyrus preview surfaces can embed the local preview during development.
+
 ## Editor Dependency Alignment
 
 The editor currently builds cleanly on PlateJS 53.x. Upgrade `platejs` and the `@platejs/*` packages together to avoid missing-export mismatches between core and plugin packages.

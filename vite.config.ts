@@ -77,7 +77,7 @@ export default defineConfig({
     ],
     headers: {
       'Content-Security-Policy':
-        "frame-ancestors 'self' https://localhost:4200 http://localhost:5173 http://localhost:3000 https://localhost:3000 https://studio.docyrus.app https://docyrus.app https://next.docyrus.app https://docy.app",
+        "frame-ancestors 'self' https://localhost:4200 http://localhost:5173 http://localhost:3000 https://localhost:3000 https://studio.docyrus.app https://docyrus.app https://next.docyrus.app https://docy.app https://build.docyrus.app",
     },
     watch: {
       ignored: ['**/docyrus/**'],
