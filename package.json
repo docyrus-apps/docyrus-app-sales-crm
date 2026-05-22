@@ -6,6 +6,7 @@
     "dev": "vite --port 3000",
     "start": "vite --port 3000",
     "build": "NODE_OPTIONS='--max-old-space-size=4096' vite build",
+    "build:deploy": "pnpm build",
     "build:check": "vite build && tsc",
     "serve": "vite preview",
     "test": "vitest run",
