@@ -36,6 +36,7 @@
     "@docyrus/dom-selector-client": "^0.6.1",
     "@docyrus/signin": "^0.8.0",
     "@docyrus/tanstack-db-generator": "^0.9.0",
+    "@docyrus/theme-provider": "^0.0.1",
     "@emoji-mart/data": "^1.2.1",
     "@faker-js/faker": "^10.4.0",
     "@floating-ui/react": "^0.27.19",

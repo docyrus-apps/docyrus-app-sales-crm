@@ -9,6 +9,7 @@ import {
 import { DocyrusAuthProvider } from '@docyrus/signin'
 import { DocyrusDevtools } from '@docyrus/devtools'
 import { I18nextProvider } from 'react-i18next'
+import { ThemeProvider } from '@docyrus/theme-provider'
 
 import * as TanStackQueryProvider from './integrations/tanstack-query/root-provider.tsx'
 import i18n from './i18n'
@@ -334,34 +335,41 @@ if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
   root.render(
     <StrictMode>
-      <DocyrusAuthProvider
-        apiUrl={import.meta.env.VITE_API_BASE_URL}
-        clientId={import.meta.env.VITE_OAUTH2_CLIENT_ID}
-        redirectUri={oauthRedirectUri}
-        scopes={oauthScopes}
-        callbackPath={oauthRedirectPath}
-        allowedHostOrigins={
-          allowedHostOrigins.length > 0 ? allowedHostOrigins : undefined
-        }
-        forceMode={forceMode}
+      <ThemeProvider
+        modeStorageKey="app-theme"
+        colorThemeStorageKey="app-color-theme"
+        defaultColorTheme="docyrus-default"
+        disableTransitionOnChange
       >
-        <TanStackQueryProvider.Provider>
-          {/* @docyrus: [[architecture#Root Runtime Tooling]] */}
-          <DocyrusDevtools
-            queryClient={TanStackQueryProvider.queryClient}
-            openApiSpecPath="/openapi.json"
-          >
-            <DocyrusDevtoolsClientRegistration />
-            <I18nextProvider i18n={i18n}>
-              <I18nDirectionProvider>
-                <GlobalDialogProvider persist storageKey="sales-crm-dialogs">
-                  <RouterProvider router={router} />
-                </GlobalDialogProvider>
-              </I18nDirectionProvider>
-            </I18nextProvider>
-          </DocyrusDevtools>
-        </TanStackQueryProvider.Provider>
-      </DocyrusAuthProvider>
+        <DocyrusAuthProvider
+          apiUrl={import.meta.env.VITE_API_BASE_URL}
+          clientId={import.meta.env.VITE_OAUTH2_CLIENT_ID}
+          redirectUri={oauthRedirectUri}
+          scopes={oauthScopes}
+          callbackPath={oauthRedirectPath}
+          allowedHostOrigins={
+            allowedHostOrigins.length > 0 ? allowedHostOrigins : undefined
+          }
+          forceMode={forceMode}
+        >
+          <TanStackQueryProvider.Provider>
+            {/* @docyrus: [[architecture#Root Runtime Tooling]] */}
+            <DocyrusDevtools
+              queryClient={TanStackQueryProvider.queryClient}
+              openApiSpecPath="/openapi.json"
+            >
+              <DocyrusDevtoolsClientRegistration />
+              <I18nextProvider i18n={i18n}>
+                <I18nDirectionProvider>
+                  <GlobalDialogProvider persist storageKey="sales-crm-dialogs">
+                    <RouterProvider router={router} />
+                  </GlobalDialogProvider>
+                </I18nDirectionProvider>
+              </I18nextProvider>
+            </DocyrusDevtools>
+          </TanStackQueryProvider.Provider>
+        </DocyrusAuthProvider>
+      </ThemeProvider>
     </StrictMode>,
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { SettingsIcon } from 'lucide-react'
-import { useTheme } from 'next-themes'
+import { useTheme } from '@/hooks/use-theme'
 
 import { Button } from '@/components/ui/button'
 import {

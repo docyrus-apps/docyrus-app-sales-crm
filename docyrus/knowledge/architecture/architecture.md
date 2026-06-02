@@ -2,6 +2,25 @@
 
 Relation and enum fields can resolve to `null`. UI code must guard for both object shape and nullability before reading nested `.name` properties, especially in dashboard cards and summary lists.
 
+## Theme System
+
+The app uses `@docyrus/theme-provider` (`ThemeProvider` + `useTheme`) as the single source of truth for both dark/light/system mode and color preset themes.
+
+`ThemeProvider` wraps the entire React root in `src/main.tsx` (outermost provider, before auth). Configuration:
+- `modeStorageKey="app-theme"` — localStorage key for light/dark/system mode
+- `colorThemeStorageKey="app-color-theme"` — localStorage key for color preset
+- `defaultColorTheme="docyrus-default"`
+- `disableTransitionOnChange`
+
+Consumer hooks:
+- `src/hooks/use-theme.ts` — re-exports `useTheme` from `@docyrus/theme-provider` (returns `theme`, `setTheme`, `resolvedTheme`, `colorTheme`, `setColorTheme`, `availableThemes`)
+- `src/hooks/use-color-theme.ts` — thin wrapper exposing `{ colorTheme, setColorTheme }` for components that only need color preset
+- `src/lib/theme.tsx` — `useDocyTheme()` adapter for components needing `isDark` (e.g. code editor)
+
+`ThemeSelector` (`src/components/theme-selector.tsx`) reads `availableThemes` from the hook so the theme list is always driven by the provider (including any presets the shell app injects). `ModeToggle` and `ThemeToggle` use `useTheme` via `@/hooks/use-theme`.
+
+Cross-app sharing: because all Docyrus apps use the same storage keys (`app-theme`, `app-color-theme`), the shell app writing to these keys causes the embedded app to pick up the shared theme on next mount. For live (postMessage) sync, the shell app must additionally send a message that triggers `setTheme`/`setColorTheme` in the iframe.
+
 ## Root Runtime Tooling
 
 The React root mounts Docyrus auth, TanStack Query, Docyrus Devtools, and the shared app shell without the Agentation overlay.
