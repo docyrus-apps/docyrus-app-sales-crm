@@ -351,6 +351,7 @@ if (rootElement && !rootElement.innerHTML) {
             allowedHostOrigins.length > 0 ? allowedHostOrigins : undefined
           }
           forceMode={forceMode}
+          syncRouteToHost
         >
           <TanStackQueryProvider.Provider>
             {/* @docyrus: [[architecture#Root Runtime Tooling]] */}

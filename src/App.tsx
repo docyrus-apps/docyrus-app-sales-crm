@@ -9,6 +9,7 @@ import { AppLayout } from './components/layout/app-layout'
 import { Toaster } from './components/ui/sonner'
 import { TooltipProvider } from './components/ui/tooltip'
 import { CommandPalette } from './components/shared/command-palette'
+import { useHostBridge } from './hooks/use-host-bridge'
 import { DealFormDialog } from './components/deals/deal-form-dialog'
 import { LeadFormDialog } from './components/leads/lead-form-dialog'
 import { TaskFormSheet } from './components/tasks/task-form-sheet'
@@ -19,6 +20,10 @@ function App() {
   const { status } = useDocyrusAuth()
   const client = useDocyrusClient()
   const { t } = useTranslation()
+
+  // Bridge host shell postMessage events (navigation + notifications) into the
+  // embedded app. No-op outside iframe mode.
+  useHostBridge()
 
   // Command palette state
   const [commandOpen, setCommandOpen] = useState(false)
