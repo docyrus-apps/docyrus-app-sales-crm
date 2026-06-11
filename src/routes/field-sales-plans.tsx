@@ -421,7 +421,9 @@ export function FieldSalesPlansPage() {
       return
     }
     if (scopedPlans.length === 0) {
-      toast.error('Tekrar onaya göndermek için seçili dönemde en az bir plan olmalı')
+      toast.error(
+        'Tekrar onaya göndermek için seçili dönemde en az bir plan olmalı',
+      )
       return
     }
 
@@ -485,7 +487,8 @@ export function FieldSalesPlansPage() {
             <AlertDescription>
               {currentApproval?.revision_message ||
                 'Yönetici planın güncellenmesini talep etti.'}{' '}
-              Gerekli değişiklikleri yapıp tekrar onaya gönderdiğinizde plan yeniden onaylanabilir hale gelir.
+              Gerekli değişiklikleri yapıp tekrar onaya gönderdiğinizde plan
+              yeniden onaylanabilir hale gelir.
             </AlertDescription>
           </Alert>
         ) : null}

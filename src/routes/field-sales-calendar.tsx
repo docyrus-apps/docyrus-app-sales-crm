@@ -119,62 +119,69 @@ export function FieldSalesCalendarPage() {
             <div className="overflow-x-auto pb-2">
               <div className="min-w-[42rem]">
                 <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cts', 'Paz'].map(
-                (label) => (
-                  <div key={label} className="px-2 py-2">
-                    {label}
-                  </div>
-                ),
-              )}
-            </div>
+                  {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cts', 'Paz'].map(
+                    (label) => (
+                      <div key={label} className="px-2 py-2">
+                        {label}
+                      </div>
+                    ),
+                  )}
+                </div>
                 <div className="mt-2 grid grid-cols-7 gap-2">
-              {monthDays.map((day) => {
-                const dayToken = format(day, 'yyyy-MM-dd')
-                const dayPlans = (plans as Array<PlanRecord>).filter(
-                  (plan) => getDateToken(plan.start_date) === dayToken,
-                )
-                const visitCount = dayPlans.filter((plan) => {
-                  const statusCode = getFieldSalesPlanStatusCode(plan.status)
-                  return (
-                    statusCode === 'checked_in' || statusCode === 'completed'
-                  )
-                }).length
-                const dayTasks = (tasks as Array<TaskRecord>).filter(
-                  (task) => getDateToken(task.start_date) === dayToken,
-                )
-                const isSelected = selectedToken === dayToken
+                  {monthDays.map((day) => {
+                    const dayToken = format(day, 'yyyy-MM-dd')
+                    const dayPlans = (plans as Array<PlanRecord>).filter(
+                      (plan) => getDateToken(plan.start_date) === dayToken,
+                    )
+                    const visitCount = dayPlans.filter((plan) => {
+                      const statusCode = getFieldSalesPlanStatusCode(
+                        plan.status,
+                      )
+                      return (
+                        statusCode === 'checked_in' ||
+                        statusCode === 'completed'
+                      )
+                    }).length
+                    const dayTasks = (tasks as Array<TaskRecord>).filter(
+                      (task) => getDateToken(task.start_date) === dayToken,
+                    )
+                    const isSelected = selectedToken === dayToken
 
-                return (
-                  <button
-                    key={day.toISOString()}
-                    type="button"
-                    onClick={() => setSelectedDate(day)}
-                    className={`min-h-32 rounded-xl border p-3 text-left transition ${
-                      isSelected
-                        ? 'border-primary bg-primary/5'
-                        : 'hover:border-primary/30 hover:bg-muted/40'
-                    } ${!isSameMonth(day, currentMonth) ? 'opacity-50' : ''}`}
-                  >
-                    <div className="text-sm font-semibold">
-                      {format(day, 'dd')}
-                    </div>
-                    <div className="mt-3 space-y-2 text-xs">
-                      <div className="rounded-lg bg-muted px-2 py-1">
-                        Plan:{' '}
-                        <span className="font-semibold">{dayPlans.length}</span>
-                      </div>
-                      <div className="rounded-lg bg-muted px-2 py-1">
-                        Ziyaret:{' '}
-                        <span className="font-semibold">{visitCount}</span>
-                      </div>
-                      <div className="rounded-lg bg-muted px-2 py-1">
-                        Görev:{' '}
-                        <span className="font-semibold">{dayTasks.length}</span>
-                      </div>
-                    </div>
-                  </button>
-                )
-              })}
+                    return (
+                      <button
+                        key={day.toISOString()}
+                        type="button"
+                        onClick={() => setSelectedDate(day)}
+                        className={`min-h-32 rounded-xl border p-3 text-left transition ${
+                          isSelected
+                            ? 'border-primary bg-primary/5'
+                            : 'hover:border-primary/30 hover:bg-muted/40'
+                        } ${!isSameMonth(day, currentMonth) ? 'opacity-50' : ''}`}
+                      >
+                        <div className="text-sm font-semibold">
+                          {format(day, 'dd')}
+                        </div>
+                        <div className="mt-3 space-y-2 text-xs">
+                          <div className="rounded-lg bg-muted px-2 py-1">
+                            Plan:{' '}
+                            <span className="font-semibold">
+                              {dayPlans.length}
+                            </span>
+                          </div>
+                          <div className="rounded-lg bg-muted px-2 py-1">
+                            Ziyaret:{' '}
+                            <span className="font-semibold">{visitCount}</span>
+                          </div>
+                          <div className="rounded-lg bg-muted px-2 py-1">
+                            Görev:{' '}
+                            <span className="font-semibold">
+                              {dayTasks.length}
+                            </span>
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             </div>

@@ -11,8 +11,6 @@ export function useNotifications() {
       const response = await notificationsCollection.getNotifications()
       return response
     },
-    // Auto-refresh notifications every 30 seconds
-    refetchInterval: 30000,
     staleTime: QUERY_CONFIG.STALE_TIME.USER_DATA,
   })
 }

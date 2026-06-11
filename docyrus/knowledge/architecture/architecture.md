@@ -21,6 +21,20 @@ Consumer hooks:
 
 Cross-app sharing: because all Docyrus apps use the same storage keys (`app-theme`, `app-color-theme`), the shell app writing to these keys causes the embedded app to pick up the shared theme on next mount. For live (postMessage) sync, the shell app must additionally send a message that triggers `setTheme`/`setColorTheme` in the iframe.
 
+## Iframe Host Bridge
+
+The app runs as an embedded iframe inside a Docyrus super-app shell and uses three postMessage bridges provided by `@docyrus/signin` (≥ 0.12.0).
+
+Notifications arrive as real-time toasts via the bridge — polling (`refetchInterval`) is removed, the header bell icon and sidebar unread badge are gone; `/inbox` remains for history.
+
+1. **Route → Host sync** (`syncRouteToHost` on `DocyrusAuthProvider` in `src/main.tsx`) — patches `history.pushState`/`replaceState` and listens to `popstate`/`hashchange` to post a `route-change` message to the host on every navigation, keeping the shell address bar in sync for bookmarking and sharing.
+
+2. **Host → App navigation** (`useDocyrusHostNavigation`) — the host can push an absolute URL or relative path. The handler in `useHostBridge` resolves it via `new URL(url, window.location.origin)` and calls `router.history.push(pathname + search + hash)`; falls back to pushing the raw value on parse errors.
+
+3. **Host → App notifications** (`useDocyrusHostNotification`) — the host can push `DocyrusNotification` payloads. The handler fires a sonner `toast(notification.subject, { description: notification.message })`.
+
+All three bridges are wired in `src/hooks/use-host-bridge.ts` (`useHostBridge`). The hook is called **unconditionally** near the top of the `App` component (before any auth/loading early returns) so the listeners are always mounted. All hooks are no-ops when the app runs outside iframe mode.
+
 ## Root Runtime Tooling
 
 The React root mounts Docyrus auth, TanStack Query, Docyrus Devtools, and the shared app shell without the Agentation overlay.

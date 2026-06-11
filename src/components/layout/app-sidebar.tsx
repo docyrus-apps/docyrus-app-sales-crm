@@ -34,7 +34,6 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
@@ -51,7 +50,6 @@ import {
 } from '@/components/animate-ui/components/radix/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useUsersCollection } from '@/collections/users.collection'
-import { useNotifications } from '@/hooks/use-notifications'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { ThemeSelector } from '@/components/theme-selector'
 import { ProfileDialog } from '@/components/user/profile-dialog'
@@ -62,7 +60,6 @@ type NavItem = {
   titleKey: string
   url: string
   icon: typeof Home
-  hasBadge?: boolean
 }
 
 const MAIN_NAV_KEYS: NavItem[] = [
@@ -115,13 +112,11 @@ function NavGroup({
   label,
   items,
   matchRoute,
-  unreadCount,
   t,
 }: {
   label: string
   items: Array<NavItem>
   matchRoute: ReturnType<typeof useMatchRoute>
-  unreadCount?: number
   t: (key: string) => string
 }) {
   return (
@@ -139,12 +134,6 @@ function NavGroup({
                   <span>{title}</span>
                 </Link>
               </SidebarMenuButton>
-              {'hasBadge' in item &&
-                item.hasBadge &&
-                unreadCount !== undefined &&
-                unreadCount > 0 && (
-                  <SidebarMenuBadge>{unreadCount}</SidebarMenuBadge>
-                )}
             </SidebarMenuItem>
           )
         })}
@@ -158,7 +147,6 @@ export function AppSidebar() {
   const matchRoute = useMatchRoute()
   const { state } = useSidebar()
   const { t } = useTranslation()
-  const { data: notifications } = useNotifications()
   const usersCollection = useUsersCollection()
   const [userProfile, setUserProfile] = useState<
     (UserEntity & { photo?: string }) | null
@@ -166,8 +154,6 @@ export function AppSidebar() {
   const [profileDialogOpen, setProfileDialogOpen] = useState(false)
   const [changePasswordDialogOpen, setChangePasswordDialogOpen] =
     useState(false)
-
-  const unreadCount = notifications?.filter((n: any) => !n.seen).length || 0
 
   useEffect(() => {
     usersCollection.getMyInfo().then(setUserProfile).catch(console.error)
@@ -343,7 +329,6 @@ export function AppSidebar() {
           label={t('nav.mainNavigation')}
           items={MAIN_NAV_KEYS}
           matchRoute={matchRoute}
-          unreadCount={unreadCount}
           t={t}
         />
         <NavGroup
