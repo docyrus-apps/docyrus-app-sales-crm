@@ -106,8 +106,16 @@ export const RECORD_ACTIVITY_TYPES: Array<ActivityType> = [
   'record_update',
 ]
 
+/** Fallback for unknown / unmapped activity types (avoids runtime crashes). */
+export const DEFAULT_ACTIVITY_TYPE_CONFIG: ActivityTypeConfig = {
+  icon: ActivityIcon,
+  label: 'Activity',
+  colorClass: 'text-gray-400',
+  bgClass: 'bg-gray-400/10',
+}
+
 export function getActivityTypeConfig(type: ActivityType): ActivityTypeConfig {
-  return ACTIVITY_TYPE_CONFIG[type]
+  return ACTIVITY_TYPE_CONFIG[type] ?? DEFAULT_ACTIVITY_TYPE_CONFIG
 }
 
 export function isCompactActivity(type: ActivityType): boolean {

@@ -86,6 +86,25 @@ Risk notes:
 - If a step touches Docyrus API calls, apply the Docyrus API Doctor checklist: columns must stay explicit, limits must remain positive, and mutation/invalidation/error handling must remain intact.
 - The most fragile behaviors are validation focus, change-confirm restore, duplicate exact-match auto-selection, partial resume, linked task/event migration warnings, and converted-lead read-only enforcement.
 
+## Shared Record Detail Layout
+
+`RecordDetailLayout` (`src/components/crm/record-detail-layout.tsx`) is the single skeleton every CRM detail route renders ([[features#Record Detail Redesign (Attio-style)]]).
+
+It owns the bordered card, the draggable left/right divider (width 280–560px), the resizable attribute pane, the pill `Tabs`, and the dialer column.
+
+- The left pane is an internal `RecordAttributePanel` driven by `EditableRecordDetail`/`EditableRecordDetailField` (`src/components/docyrus/editable-record-detail.tsx`). Inline fields pass `editHint="progressive"` + `size="sm"`; a scoped `<style>` block clamps the in-edit input height so click-to-edit rows don't grow. The pencil opens a second `EditableRecordDetail` inside a `Dialog` ("edit all"). Both surfaces call the page's `onInlineSave(changes, values)`.
+- `useRecordVersion(record)` bumps a counter on record-reference change (refetch) and keys the inline editor so it remounts with fresh values without disrupting mid-typing.
+- Page contract props: `detailFields: RecordDetailField[]`, ordered `fieldSlugs: string[]`, a flattened `record` (relation/enum fields flattened to scalar id for editable fields, or to display name for read-only ones), `onInlineSave`, `tabs: RecordDetailTab[]`, controlled `activeTab`/`onTabChange`, optional `readOnly`, `attributeActions`, and `dialerTrigger`. Exports `RecordKpiCard` and `RecordTabPlaceholder` for tab bodies.
+- The dialer is a global context (`DialerProvider`/`useDialer`/`DialerPanel`, `src/components/dialer/dialer-widget.tsx`) wrapped once in `App.tsx`; the panel renders inside the layout as a width-animated column (mock telephony only).
+
+Backlink: `// @docyrus: [[architecture#Shared Record Detail Layout]]`.
+
+## Per-record Activity Source
+
+Per-record activity history comes from `base.event`, not `base.activity` — see [[features#Record Detail Redesign (Attio-style)]].
+
+`base.activity` has no relation field pointing back to a record, whereas `base.event` carries `contact` / `organization` / `lead` / `deal` relations plus `subject` / `start_date` / `record_owner`. `useRecordEvents(relation, recordId)` (`src/hooks/use-events.ts`) lists events filtered by the chosen relation field and feeds `RecordActivityTimeline` (Overview recap capped at 2 + the full Activity tab).
+
 <!-- docyrus-knowledge:auto:begin -->
 
 # Architecture

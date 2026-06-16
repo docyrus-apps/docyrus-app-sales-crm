@@ -50,6 +50,44 @@ export function useEvent(eventId: string | undefined) {
   })
 }
 
+/** Relation fields on a base/event that point back to a CRM record. */
+export type RecordEventRelation = 'contact' | 'organization' | 'lead' | 'deal'
+
+/**
+ * Fetch the events (the per-record activity timeline) linked to a single
+ * record via one of the event relation fields (contact/organization/lead/deal).
+ *
+ * @docyrus: [[architecture#Per-record Activity Source]]
+ */
+export function useRecordEvents(
+  relation: RecordEventRelation,
+  recordId: string | undefined,
+) {
+  const eventCollection = useBaseEventCollection()
+
+  return useQuery({
+    queryKey: ['events', 'record', relation, recordId],
+    queryFn: () =>
+      eventCollection.list({
+        columns: [
+          'id',
+          'subject',
+          'description',
+          'start_date',
+          'end_date',
+          'calendar(id,name)',
+          'record_owner(id,firstname,lastname,email)',
+          'created_on',
+        ],
+        filters: {
+          rules: [{ field: relation, operator: '=', value: recordId }],
+        },
+        orderBy: 'created_on DESC',
+      }),
+    enabled: !!recordId,
+  })
+}
+
 export function useCreateEvent() {
   const eventCollection = useBaseEventCollection()
   const queryClient = useQueryClient()

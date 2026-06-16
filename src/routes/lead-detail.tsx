@@ -1,41 +1,76 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { useMemo, useState } from 'react'
-import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
+import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import {
-  ArrowLeft,
-  FileText,
-  MessageSquare,
-  Pencil,
   Activity,
+  Building2,
+  CircleDot,
   ClipboardList,
+  FileText,
+  Mail,
+  MessageSquare,
+  Phone,
   RefreshCw,
+  StickyNote,
 } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
-import { Button } from '@/components/animate-ui/components/buttons/button'
+import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
-  Tabs,
-  TabsContent,
-  TabsContents,
-  TabsList,
-  TabsTrigger,
-} from '@/components/animate-ui/components/radix/tabs'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useLead } from '@/hooks/use-leads'
-import { LeadFormDialog } from '@/components/leads/lead-form-dialog'
+  RecordDetailLayout,
+  RecordKpiCard,
+  RecordTabPlaceholder,
+  type RecordDetailTab,
+} from '@/components/crm/record-detail-layout'
+import { RecordActivityTimeline } from '@/components/crm/record-activity-timeline'
+import { useDialer } from '@/components/dialer/dialer-widget'
+import { useLead, useUpdateLead } from '@/hooks/use-leads'
+import { useRecordEvents } from '@/hooks/use-events'
 import { LeadConvertDialog } from '@/components/leads/lead-convert-dialog'
 import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
-import { ContactActivityPanel } from '@/components/docyrus/contact-activity-panel'
 import { getRelationId, isLeadConvertedRecord } from '@/lib/lead-conversion'
 import {
-  EditableRecordDetail,
-  EditableRecordDetailField,
+  type FieldChange,
   type RecordDetailField,
 } from '@/components/docyrus/editable-record-detail'
 import type { IField } from '@/components/docyrus/form-fields/types'
+
+const FIELD_SLUGS = [
+  'name',
+  'lead_status',
+  'email',
+  'phone',
+  'contact_job_title',
+  'lead_source',
+  'lead_type',
+  'company_name_text',
+  'website',
+  'company_email',
+  'company_phone',
+  'company_industry',
+  'company_size',
+  'address',
+  'city',
+  'state',
+  'countries',
+  'record_owner',
+  'contact_message',
+]
+
+// Slugs that are enum / relation objects — rendered read-only (display name).
+const RELATION_SLUGS = new Set([
+  'lead_status',
+  'lead_source',
+  'lead_type',
+  'company_industry',
+  'company_size',
+  'city',
+  'state',
+  'countries',
+  'record_owner',
+])
 
 function makeField(
   slug: string,
@@ -45,10 +80,25 @@ function makeField(
   return { id: slug, name, slug, type }
 }
 
-function extractName(value: unknown): unknown {
+function extractName(value: unknown): string {
   if (value && typeof value === 'object' && 'name' in value)
-    return (value as { name: string }).name
-  return value
+    return ((value as { name?: string }).name ?? '') as string
+  if (typeof value === 'string') return value
+
+  return ''
+}
+
+function getInitials(value?: string): string {
+  if (!value) return '#'
+
+  return (
+    value
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('') || '#'
+  )
 }
 
 export function LeadDetail() {
@@ -56,34 +106,37 @@ export function LeadDetail() {
   const { leadId } = useParams({ strict: false })
   const { tab } = useSearch({ from: '/leads/$leadId' })
   const navigate = useNavigate({ from: '/leads/$leadId' })
-  const { data: lead, isLoading, error } = useLead(leadId)
-  const [isEditOpen, setIsEditOpen] = useState(false)
+  const { data: lead, isLoading } = useLead(leadId)
+  const updateLead = useUpdateLead()
+  const dialer = useDialer()
   const [isConvertOpen, setIsConvertOpen] = useState(false)
+
+  const activeTab = tab || 'overview'
 
   const handleTabChange = (value: string) => {
     void navigate({ search: { tab: value }, replace: true })
   }
 
-  const fields = useMemo<Array<RecordDetailField>>(
+  const { data: events = [], isLoading: eventsLoading } = useRecordEvents(
+    'lead',
+    leadId,
+  )
+
+  const detailFields = useMemo<Array<RecordDetailField>>(
     () => [
       {
         field: makeField(
           'name',
           t('leads.form.contactNameLabel', { defaultValue: 'Contact Name' }),
         ),
-        readOnly: true,
       },
-      {
-        field: makeField('lead_status', t('leads.status')),
-        readOnly: true,
-      },
+      { field: makeField('lead_status', t('leads.status')), readOnly: true },
       {
         field: makeField(
           'email',
           t('leads.form.emailLabel', { defaultValue: 'Contact Email' }),
           'field-email',
         ),
-        readOnly: true,
       },
       {
         field: makeField(
@@ -91,29 +144,20 @@ export function LeadDetail() {
           t('leads.form.phoneLabel', { defaultValue: 'Contact Phone' }),
           'field-phone',
         ),
-        readOnly: true,
       },
       {
         field: makeField(
           'contact_job_title',
           t('leads.form.jobTitleLabel', { defaultValue: 'Contact Job Title' }),
         ),
-        readOnly: true,
       },
-      {
-        field: makeField('lead_source', t('leads.source')),
-        readOnly: true,
-      },
-      {
-        field: makeField('lead_type', t('leads.leadType')),
-        readOnly: true,
-      },
+      { field: makeField('lead_source', t('leads.source')), readOnly: true },
+      { field: makeField('lead_type', t('leads.leadType')), readOnly: true },
       {
         field: makeField(
           'company_name_text',
           t('leads.form.companyLabel', { defaultValue: 'Company Name' }),
         ),
-        readOnly: true,
       },
       {
         field: makeField(
@@ -121,7 +165,6 @@ export function LeadDetail() {
           t('leads.form.websiteLabel', { defaultValue: 'Company Website' }),
           'field-url',
         ),
-        readOnly: true,
       },
       {
         field: makeField(
@@ -129,7 +172,6 @@ export function LeadDetail() {
           t('leads.form.companyEmailLabel', { defaultValue: 'Company Email' }),
           'field-email',
         ),
-        readOnly: true,
       },
       {
         field: makeField(
@@ -137,7 +179,6 @@ export function LeadDetail() {
           t('leads.form.companyPhoneLabel', { defaultValue: 'Company Phone' }),
           'field-phone',
         ),
-        readOnly: true,
       },
       {
         field: makeField(
@@ -161,7 +202,6 @@ export function LeadDetail() {
           t('leads.form.addressLabel', { defaultValue: 'Company Address' }),
           'field-textarea',
         ),
-        readOnly: true,
       },
       {
         field: makeField(
@@ -199,227 +239,276 @@ export function LeadDetail() {
           }),
           'field-textarea',
         ),
-        readOnly: true,
       },
     ],
     [t],
   )
 
-  const record = useMemo(() => {
+  const flatRecord = useMemo<Record<string, unknown>>(() => {
     if (!lead) return {}
-    return {
-      name: lead.name ?? '',
-      lead_status: extractName(lead.lead_status) ?? '',
-      email: lead.email ?? '',
-      phone: lead.phone ?? '',
-      website: lead.website ?? '',
-      lead_source: extractName(lead.lead_source) ?? '',
-      lead_type: extractName(lead.lead_type) ?? '',
-      company_name_text: lead.company_name_text ?? '',
-      company_email: lead.company_email ?? '',
-      company_phone: lead.company_phone ?? '',
-      company_industry: extractName(lead.company_industry) ?? '',
-      company_size: extractName(lead.company_size) ?? '',
-      contact_job_title: lead.contact_job_title ?? '',
-      address: lead.address ?? '',
-      city: extractName(lead.city) ?? '',
-      state: extractName(lead.state) ?? '',
-      countries: extractName(lead.countries) ?? '',
-      record_owner: extractName(lead.record_owner) ?? '',
-      contact_message: lead.contact_message ?? '',
+
+    const record: Record<string, unknown> = {}
+
+    for (const slug of FIELD_SLUGS) {
+      const raw = (lead as Record<string, unknown>)[slug]
+
+      record[slug] = RELATION_SLUGS.has(slug) ? extractName(raw) : (raw ?? '')
     }
+
+    return record
   }, [lead])
 
-  if (isLoading) {
-    return (
-      <PageContainer>
-        <Skeleton className="h-8 w-64 mb-4" />
-        <Skeleton className="h-96 w-full" />
-      </PageContainer>
-    )
-  }
-
-  if (error || !lead) {
-    return (
-      <PageContainer>
-        <Card className="border-destructive">
-          <CardHeader>
-            <CardTitle className="text-destructive">
-              {t('common.error')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>{t('leads.failedToLoad')}</p>
-            <Link to="/leads">
-              <Button variant="outline" className="mt-4">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                {t('leads.backToLeads')}
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </PageContainer>
-    )
-  }
-
-  const statusName =
-    lead.lead_status && typeof lead.lead_status === 'object'
-      ? lead.lead_status.name
-      : lead.lead_status
-  const isConverted = isLeadConvertedRecord(lead)
-  const convertedDealId = getRelationId(lead.converted_deal)
+  const isConverted = lead ? isLeadConvertedRecord(lead) : false
+  const convertedDealId = getRelationId(lead?.converted_deal)
   const hasPartialConvert =
     !isConverted &&
     Boolean(
-      getRelationId(lead.converted_organization) ||
-      getRelationId(lead.converted_contact) ||
-      getRelationId(lead.converted_deal),
+      getRelationId(lead?.converted_organization) ||
+      getRelationId(lead?.converted_contact) ||
+      getRelationId(lead?.converted_deal),
     )
 
-  return (
-    <PageContainer>
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link to="/leads">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              {t('leads.backToLeads')}
-            </Button>
-          </Link>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-semibold">
-              {lead.name ||
-                t('leads.untitledLead', { defaultValue: 'Untitled Lead' })}
-            </h1>
-            {statusName && <Badge variant="secondary">{statusName}</Badge>}
+  const handleInlineSave = async (
+    changes: Array<FieldChange>,
+    _values: Record<string, unknown>,
+  ) => {
+    if (!leadId || isConverted || changes.length === 0) return
+
+    const payload = Object.fromEntries(
+      changes.map((change) => [
+        change.fieldSlug,
+        change.newValue === '' ? null : change.newValue,
+      ]),
+    )
+
+    await updateLead.mutateAsync({ leadId, data: payload })
+  }
+
+  // Generated entity type omits `name`, present at runtime.
+  const leadRecord = lead as (typeof lead & { name?: string }) | undefined
+  const leadName =
+    leadRecord?.name?.trim() ||
+    t('leads.untitledLead', { defaultValue: 'Untitled Lead' })
+  const statusName = extractName(lead?.lead_status)
+
+  const tabs = useMemo<Array<RecordDetailTab>>(() => {
+    return [
+      {
+        value: 'overview',
+        label: t('leads.tabs.overview'),
+        icon: <ClipboardList className="size-3.5" />,
+        content: (
+          <div className="space-y-5">
+            <div className="grid gap-2.5 sm:grid-cols-3">
+              <RecordKpiCard
+                label={t('leads.status')}
+                value={statusName || '—'}
+                icon={<CircleDot className="size-3.5" />}
+              />
+              <RecordKpiCard
+                label={t('leads.source')}
+                value={extractName(lead?.lead_source) || '—'}
+              />
+              <RecordKpiCard
+                label={t('leads.form.companyLabel', {
+                  defaultValue: 'Company Name',
+                })}
+                value={lead?.company_name_text || '—'}
+                icon={<Building2 className="size-3.5" />}
+              />
+            </div>
+
+            <div className="rounded-xl border p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="text-[13px] font-semibold">
+                  {t('contacts.recentActivity', {
+                    defaultValue: 'Recent activity',
+                  })}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => handleTabChange('activity')}
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground"
+                >
+                  {t('common.viewAll', { defaultValue: 'View all' })}
+                </button>
+              </div>
+              <RecordActivityTimeline
+                events={events}
+                isLoading={eventsLoading}
+                limit={2}
+              />
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {!isConverted && (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => setIsConvertOpen(true)}
-            >
-              <RefreshCw className="mr-2 h-3.5 w-3.5" />
-              {hasPartialConvert
-                ? t('leads.convert.resumeButton', {
-                    defaultValue: 'Dönüşüme devam et',
-                  })
-                : t('leads.convert.convertButton')}
-            </Button>
-          )}
-          {!isConverted && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsEditOpen(true)}
-            >
-              <Pencil className="mr-2 h-3.5 w-3.5" />
-              {t('common.editAll', { defaultValue: 'Edit All' })}
-            </Button>
-          )}
-          {isConverted && convertedDealId && (
-            <Link to="/deals/$dealId" params={{ dealId: convertedDealId }}>
-              <Button variant="outline" size="sm">
-                {t('deals.viewDeal', { defaultValue: 'View deal' })}
-              </Button>
-            </Link>
-          )}
-        </div>
-      </div>
-
-      <Tabs
-        value={tab || 'details'}
-        onValueChange={handleTabChange}
-        className="w-full"
-      >
-        <TabsList>
-          <TabsTrigger value="details">
-            <ClipboardList className="h-4 w-4" />
-            {t('leads.tabs.overview')}
-          </TabsTrigger>
-          <TabsTrigger value="activity">
-            <Activity className="h-4 w-4" />
-            {t('leads.tabs.activity')}
-          </TabsTrigger>
-          <TabsTrigger value="comments">
-            <MessageSquare className="h-4 w-4" />
-            {t('leads.tabs.comments')}
-          </TabsTrigger>
-          <TabsTrigger value="files">
-            <FileText className="h-4 w-4" />
-            {t('leads.tabs.files')}
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContents>
-          <TabsContent value="details" className="mt-4">
-            <Card>
-              <CardContent className="pt-6">
-                <EditableRecordDetail fields={fields} record={record} readOnly>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
-                    <EditableRecordDetailField slug="title" />
-                    <EditableRecordDetailField slug="lead_status" />
-                    <EditableRecordDetailField slug="email" />
-                    <EditableRecordDetailField slug="phone" />
-                    <EditableRecordDetailField slug="website" />
-                    <EditableRecordDetailField slug="lead_source" />
-                    <EditableRecordDetailField slug="lead_type" />
-                    <EditableRecordDetailField slug="company_name_text" />
-                    <EditableRecordDetailField slug="contact_job_title" />
-                    <EditableRecordDetailField slug="company_email" />
-                    <EditableRecordDetailField slug="company_phone" />
-                    <EditableRecordDetailField slug="company_industry" />
-                    <EditableRecordDetailField slug="company_size" />
-                    <EditableRecordDetailField slug="address" />
-                    <EditableRecordDetailField slug="city" />
-                    <EditableRecordDetailField slug="state" />
-                    <EditableRecordDetailField slug="countries" />
-                    <EditableRecordDetailField slug="record_owner" />
-                  </div>
-                  {record.contact_message && (
-                    <div className="mt-4 pt-4 border-t">
-                      <EditableRecordDetailField slug="contact_message" />
-                    </div>
-                  )}
-                </EditableRecordDetail>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="activity" className="mt-4">
-            <ContactActivityPanel
-              activities={[]}
-              contactName={lead.name}
-              isLoading={false}
-            />
-          </TabsContent>
-
-          <TabsContent value="comments" className="mt-4">
+        ),
+      },
+      {
+        value: 'activity',
+        label: t('leads.tabs.activity'),
+        icon: <Activity className="size-3.5" />,
+        content: (
+          <RecordActivityTimeline events={events} isLoading={eventsLoading} />
+        ),
+      },
+      {
+        value: 'emails',
+        label: t('contacts.tabs.emails', { defaultValue: 'Emails' }),
+        icon: <Mail className="size-3.5" />,
+        content: (
+          <RecordTabPlaceholder
+            icon={<Mail className="size-5" />}
+            title={t('common.notAvailableYet', {
+              defaultValue: 'Not available yet',
+            })}
+            description={t('contacts.emailsComingSoon', {
+              defaultValue: 'Email history will appear here once connected.',
+            })}
+          />
+        ),
+      },
+      {
+        value: 'notes',
+        label: t('leads.tabs.comments'),
+        icon: <MessageSquare className="size-3.5" />,
+        bare: true,
+        content: (
+          <div className="h-full overflow-auto p-4">
             <CommentsPanel
               appSlug="base_crm"
               dataSource="leads"
               recordId={leadId!}
             />
-          </TabsContent>
-
-          <TabsContent value="files" className="mt-4">
+          </div>
+        ),
+      },
+      {
+        value: 'files',
+        label: t('leads.tabs.files'),
+        icon: <FileText className="size-3.5" />,
+        bare: true,
+        content: (
+          <div className="h-full overflow-auto p-4">
             <FileAttachments
               appSlug="base_crm"
               dataSource="leads"
               recordId={leadId!}
             />
-          </TabsContent>
-        </TabsContents>
-      </Tabs>
+          </div>
+        ),
+      },
+    ]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    t,
+    statusName,
+    lead?.lead_source,
+    lead?.company_name_text,
+    events,
+    eventsLoading,
+    leadId,
+  ])
 
-      <LeadFormDialog
-        open={isEditOpen}
-        onOpenChange={setIsEditOpen}
-        lead={lead}
-        mode="edit"
+  const attributeActions = (
+    <>
+      {!isConverted && (
+        <Button
+          variant="default"
+          size="sm"
+          className="h-7 gap-1.5 text-[13px]"
+          onClick={() => setIsConvertOpen(true)}
+        >
+          <RefreshCw className="size-3.5" />
+          {hasPartialConvert
+            ? t('leads.convert.resumeButton', {
+                defaultValue: 'Dönüşüme devam et',
+              })
+            : t('leads.convert.convertButton')}
+        </Button>
+      )}
+      {isConverted && convertedDealId && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 gap-1.5 text-[13px]"
+          onClick={() =>
+            navigate({
+              to: '/deals/$dealId',
+              params: { dealId: convertedDealId },
+              search: { tab: 'overview' },
+            })
+          }
+        >
+          {t('deals.viewDeal', { defaultValue: 'View deal' })}
+        </Button>
+      )}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-7 gap-1.5 text-[13px]"
+        onClick={() => handleTabChange('notes')}
+      >
+        <StickyNote className="size-3.5" />
+        {t('contacts.actions.note', { defaultValue: 'Note' })}
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-7 gap-1.5 text-[13px]"
+        disabled={!lead?.email}
+        onClick={() => lead?.email && window.open(`mailto:${lead.email}`)}
+      >
+        <Mail className="size-3.5" />
+        {t('contacts.actions.email', { defaultValue: 'Email' })}
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-7 gap-1.5 text-[13px] text-emerald-600"
+        disabled={!lead?.phone}
+        onClick={() => dialer.open({ name: leadName, number: lead?.phone })}
+      >
+        <Phone className="size-3.5" />
+        {t('contacts.actions.call', { defaultValue: 'Call' })}
+      </Button>
+    </>
+  )
+
+  return (
+    <PageContainer className="flex h-full min-h-0 flex-col overflow-hidden">
+      <RecordDetailLayout
+        isLoading={isLoading}
+        avatar={
+          <Avatar className="size-9 rounded-lg">
+            <AvatarFallback className="rounded-lg bg-muted text-xs font-semibold">
+              {getInitials(leadRecord?.name)}
+            </AvatarFallback>
+          </Avatar>
+        }
+        title={leadName}
+        subtitle={statusName || lead?.company_name_text}
+        onBack={() => navigate({ to: '/leads' })}
+        detailFields={detailFields}
+        fieldSlugs={FIELD_SLUGS}
+        record={flatRecord}
+        onInlineSave={handleInlineSave}
+        editTitle={t('common.editAll', { defaultValue: 'Edit All' })}
+        attributeActions={attributeActions}
+        readOnly={isConverted}
+        dialerTrigger={
+          <button
+            type="button"
+            onClick={() => dialer.open({ name: leadName, number: lead?.phone })}
+            aria-label="Call lead"
+            className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
+          >
+            <Phone className="size-4" />
+          </button>
+        }
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
       />
+
       <LeadConvertDialog
         open={isConvertOpen}
         onOpenChange={setIsConvertOpen}

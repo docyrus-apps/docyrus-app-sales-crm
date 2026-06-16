@@ -15,6 +15,7 @@ import { LeadFormDialog } from './components/leads/lead-form-dialog'
 import { TaskFormSheet } from './components/tasks/task-form-sheet'
 import { EventFormDialog } from './components/events/event-form-dialog'
 import { GlobalDialogBar } from './components/docyrus/awesome-dialog'
+import { DialerProvider } from './components/dialer/dialer-widget'
 
 function App() {
   const { status } = useDocyrusAuth()
@@ -109,9 +110,11 @@ function App() {
   return (
     <NuqsAdapter>
       <TooltipProvider>
-        <AppLayout>
-          <Outlet />
-        </AppLayout>
+        <DialerProvider>
+          <AppLayout>
+            <Outlet />
+          </AppLayout>
+        </DialerProvider>
         <Toaster />
         <CommandPalette
           open={commandOpen}

@@ -1,16 +1,20 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
-import { useMemo, useState } from 'react'
-import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
+import { useMemo } from 'react'
+import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import type { ColumnDef } from '@tanstack/react-table'
 import { useTranslation } from 'react-i18next'
 import {
   Activity,
-  ArrowLeft,
+  Briefcase,
+  CircleDot,
   FileText,
   MessageSquare,
   Package,
-  Pencil,
+  Percent,
+  Phone,
   ShoppingCart,
+  StickyNote,
+  Users,
 } from 'lucide-react'
 import {
   PricingEnginePanel,
@@ -30,44 +34,57 @@ import {
 import { DataGridStandardToolbar } from '@/components/docyrus/data-grid-standard-toolbar'
 import { getDataGridRowActionsColumn } from '@/components/docyrus/data-grid-row-actions-column'
 import {
-  EditableRecordDetail,
-  EditableRecordDetailField,
+  type FieldChange,
   type RecordDetailField,
 } from '@/components/docyrus/editable-record-detail'
-import { ContactActivityPanel } from '@/components/docyrus/contact-activity-panel'
-import { Button } from '@/components/animate-ui/components/buttons/button'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
 import {
-  Tabs,
-  TabsContent,
-  TabsContents,
-  TabsList,
-  TabsTrigger,
-} from '@/components/animate-ui/components/radix/tabs'
-import { DealFormDialog } from '@/components/deals/deal-form-dialog'
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/animate-ui/components/radix/dropdown-menu'
+import {
+  RecordDetailLayout,
+  RecordKpiCard,
+  type RecordDetailTab,
+} from '@/components/crm/record-detail-layout'
+import { RelatedContactsTable } from '@/components/crm/related-contacts-table'
+import { RecordActivityTimeline } from '@/components/crm/record-activity-timeline'
+import { useDialer } from '@/components/dialer/dialer-widget'
 import { PageContainer } from '@/components/layout/page-container'
 import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
 import { useDealProducts } from '@/hooks/use-deal-products'
 import { useDeal, useUpdateDeal } from '@/hooks/use-deals'
 import { useCompanies } from '@/hooks/use-companies'
 import { useContacts } from '@/hooks/use-contacts'
 import { useEnumEntities } from '@/hooks/use-enums'
+import { useRecordEvents } from '@/hooks/use-events'
 import { useSalesOrders } from '@/hooks/use-sales-orders'
 import { useUsers } from '@/hooks/use-users'
 import type { EnumOption, IField } from '@/components/docyrus/form-fields/types'
 import { UI_I18N_LOCALES, type UiI18nLocale } from '@/lib/ui-i18n'
 
-const RIGHT_PANE_TABS = new Set([
-  'activity',
-  'products',
-  'orders',
-  'comments',
-  'files',
-])
+const FIELD_SLUGS = [
+  'stage',
+  'deal_value',
+  'expected_revenue',
+  'close_probability',
+  'expected_closing_date',
+  'follow_up_on',
+  'closed_date',
+  'customer_type',
+  'lead_source',
+  'reason_for_lost',
+  'country',
+  'organization',
+  'contact_person',
+  'record_owner',
+  'hot_prospect',
+]
 
 function makeField(
   slug: string,
@@ -81,6 +98,7 @@ function makeField(
 function extractName(value: unknown): unknown {
   if (value && typeof value === 'object' && 'name' in value)
     return (value as { name: string }).name
+
   return value
 }
 
@@ -139,13 +157,18 @@ function getFieldValue(value: unknown): string | number | boolean | null {
 }
 
 function mapEnumEntitiesToOptions(
-  items: Array<{ id: string; name: string; color?: string; icon?: string }>,
+  items: Array<{
+    id: string
+    name: string
+    color?: string | null
+    icon?: string | null
+  }>,
 ): Array<EnumOption> {
   return items.map((item) => ({
     id: item.id,
     name: item.name,
-    color: item.color,
-    icon: item.icon,
+    color: item.color ?? undefined,
+    icon: item.icon ?? undefined,
   }))
 }
 
@@ -154,16 +177,21 @@ export function DealDetail() {
   const { dealId } = useParams({ strict: false })
   const { tab } = useSearch({ from: '/deals/$dealId' })
   const navigate = useNavigate({ from: '/deals/$dealId' })
-  const { data: deal, isLoading, error } = useDeal(dealId)
+  const { data: deal, isLoading } = useDeal(dealId)
   const updateDeal = useUpdateDeal()
-  const [isEditOpen, setIsEditOpen] = useState(false)
-  const activeTab = tab && RIGHT_PANE_TABS.has(tab) ? tab : 'activity'
+  const dialer = useDialer()
+
+  const activeTab = tab || 'overview'
+
+  const handleTabChange = (value: string) => {
+    void navigate({ search: { tab: value }, replace: true })
+  }
 
   const { data: companies = [] } = useCompanies({
     columns: ['id', 'name'],
     orderBy: 'name ASC',
   })
-  const { data: contacts = [] } = useContacts({
+  const { data: allContacts = [] } = useContacts({
     columns: ['id', 'name'],
     orderBy: 'name ASC',
   })
@@ -188,14 +216,27 @@ export function DealDetail() {
     },
   )
 
-  const handleTabChange = (value: string) => {
-    void navigate({ search: { tab: value }, replace: true })
-  }
-
   const orgId =
     deal?.organization && typeof deal.organization === 'object'
       ? deal.organization.id
       : undefined
+
+  const { data: orgContacts = [], isLoading: orgContactsLoading } = useContacts(
+    orgId
+      ? {
+          columns: ['id', 'name', 'job_title', 'email', 'mobile'],
+          filters: {
+            rules: [{ field: 'organization', operator: '=', value: orgId }],
+          },
+          orderBy: 'created_on desc',
+        }
+      : undefined,
+  )
+
+  const { data: events = [], isLoading: eventsLoading } = useRecordEvents(
+    'deal',
+    dealId,
+  )
 
   const { data: dealProducts, isLoading: productsLoading } = useDealProducts(
     dealId
@@ -240,15 +281,13 @@ export function DealDetail() {
       : undefined,
   )
 
-  const fields = useMemo<Array<RecordDetailField>>(
+  const detailFields = useMemo<Array<RecordDetailField>>(
     () => [
       {
         field: makeField('stage', t('deals.stage'), 'field-status'),
         enumOptions: mapEnumEntitiesToOptions(stageEntities),
       },
-      {
-        field: makeField('deal_value', t('deals.dealValue'), 'field-number'),
-      },
+      { field: makeField('deal_value', t('deals.dealValue'), 'field-number') },
       {
         field: makeField(
           'expected_revenue',
@@ -328,7 +367,7 @@ export function DealDetail() {
           t('deals.contactPerson', { defaultValue: 'Contact Person' }),
           'field-select',
         ),
-        enumOptions: contacts.map((contact: any) => ({
+        enumOptions: allContacts.map((contact: any) => ({
           id: contact.id,
           name: contact.name,
         })),
@@ -353,7 +392,7 @@ export function DealDetail() {
     ],
     [
       companies,
-      contacts,
+      allContacts,
       customerTypeEntities,
       leadSourceEntities,
       reasonForLostEntities,
@@ -363,7 +402,7 @@ export function DealDetail() {
     ],
   )
 
-  const record = useMemo(() => {
+  const flatRecord = useMemo<Record<string, unknown>>(() => {
     if (!deal) return {}
 
     return {
@@ -385,23 +424,20 @@ export function DealDetail() {
     }
   }, [deal])
 
-  const handleOverviewSave = async (
-    _changes: Array<unknown>,
-    values: Record<string, unknown>,
+  const handleInlineSave = async (
+    changes: Array<FieldChange>,
+    _values: Record<string, unknown>,
   ) => {
-    if (!dealId) return
+    if (!dealId || changes.length === 0) return
 
     const payload = Object.fromEntries(
-      Object.entries(values).map(([key, value]) => [
-        key,
-        value === '' ? undefined : value,
+      changes.map((change) => [
+        change.fieldSlug,
+        change.newValue === '' ? undefined : change.newValue,
       ]),
     )
 
-    await updateDeal.mutateAsync({
-      dealId,
-      data: payload,
-    })
+    await updateDeal.mutateAsync({ dealId, data: payload })
   }
 
   const locale = useMemo<UiI18nLocale | undefined>(() => {
@@ -495,11 +531,15 @@ export function DealDetail() {
     })
   }
 
+  const noopOrderAction = () => {}
+
   const orderColumns = useMemo<Array<ColumnDef<any>>>(
     () => [
       getDataGridRowActionsColumn<any>({
         onView: onViewOrder,
         onEdit: onViewOrder,
+        onDuplicate: noopOrderAction,
+        onDelete: noopOrderAction,
       }),
       {
         accessorKey: 'id',
@@ -569,318 +609,362 @@ export function DealDetail() {
     readOnly: true,
   })
 
-  if (isLoading) {
-    return (
-      <PageContainer>
-        <Skeleton className="mb-4 h-8 w-64" />
-        <Skeleton className="h-96 w-full" />
-      </PageContainer>
-    )
-  }
-
-  if (error || !deal) {
-    return (
-      <PageContainer>
-        <Card className="border-destructive">
-          <CardHeader>
-            <CardTitle className="text-destructive">
-              {t('common.error')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>{t('deals.failedToLoad')}</p>
-            <Link to="/deals">
-              <Button variant="outline" className="mt-4">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                {t('deals.backToPipeline')}
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </PageContainer>
-    )
-  }
-
+  // Generated entity type omits `name`/`autonumber_id`, present at runtime.
+  const dealRecord = deal as
+    | (typeof deal & { name?: string; autonumber_id?: string | number })
+    | undefined
   const stageName =
-    deal.stage && typeof deal.stage === 'object' ? deal.stage.name : deal.stage
-  const organization = getDealOrganization(deal.organization)
+    deal?.stage && typeof deal.stage === 'object'
+      ? deal.stage.name
+      : deal?.stage
+  const organization = getDealOrganization(deal?.organization)
   const organizationName = organization?.name ?? ''
   const organizationLogo = organization?.company_logo?.signed_url ?? undefined
   const dealTitle =
-    deal.name?.trim() ||
+    dealRecord?.name?.trim() ||
     t('deals.untitledDeal', { defaultValue: 'Untitled Deal' })
   const dealNumber =
-    deal.autonumber_id != null && String(deal.autonumber_id).trim().length > 0
-      ? `#${deal.autonumber_id}`
+    dealRecord?.autonumber_id != null &&
+    String(dealRecord.autonumber_id).trim().length > 0
+      ? `#${dealRecord.autonumber_id}`
       : null
 
-  return (
-    <PageContainer className="flex h-full min-h-0 flex-col gap-6 overflow-hidden">
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div className="space-y-4">
-          <Link to="/deals">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              {t('deals.backToPipeline')}
-            </Button>
-          </Link>
-          <div className="flex items-start gap-4">
-            <Avatar
-              className="size-14 rounded-2xl ring-1 ring-border/60"
-              size="lg"
-            >
-              {organizationLogo && (
-                <AvatarImage
-                  src={organizationLogo}
-                  alt={organizationName || dealTitle}
-                />
-              )}
-              <AvatarFallback className="rounded-2xl bg-muted text-sm font-semibold text-foreground">
-                {getInitials(organizationName || dealTitle)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0 space-y-2">
-              {dealNumber && (
-                <p className="text-xs font-medium tracking-[0.2em] text-muted-foreground">
-                  {dealNumber}
-                </p>
-              )}
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl font-semibold tracking-tight">
-                  {dealTitle}
-                </h1>
-                {stageName && <Badge variant="secondary">{stageName}</Badge>}
-                {deal.hot_prospect && (
-                  <Badge variant="destructive">{t('deals.hotProspect')}</Badge>
-                )}
+  const contactsWithPhone = useMemo(
+    () => orgContacts.filter((c: any) => c.mobile),
+    [orgContacts],
+  )
+
+  const tabs = useMemo<Array<RecordDetailTab>>(() => {
+    return [
+      {
+        value: 'overview',
+        label: t('deals.tabs.overview'),
+        icon: <CircleDot className="size-3.5" />,
+        content: (
+          <div className="space-y-5">
+            <div className="grid gap-2.5 sm:grid-cols-3">
+              <RecordKpiCard
+                label={t('deals.dealValue')}
+                value={
+                  typeof deal?.deal_value === 'number'
+                    ? deal.deal_value.toLocaleString()
+                    : '—'
+                }
+                icon={<Briefcase className="size-3.5" />}
+              />
+              <RecordKpiCard
+                label={t('deals.stage')}
+                value={stageName || '—'}
+                icon={<CircleDot className="size-3.5" />}
+              />
+              <RecordKpiCard
+                label={t('deals.closeProbability')}
+                value={
+                  deal?.close_probability != null
+                    ? `${deal.close_probability}%`
+                    : '—'
+                }
+                icon={<Percent className="size-3.5" />}
+              />
+            </div>
+
+            <div className="rounded-xl border p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="text-[13px] font-semibold">
+                  {t('contacts.recentActivity', {
+                    defaultValue: 'Recent activity',
+                  })}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => handleTabChange('activity')}
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground"
+                >
+                  {t('common.viewAll', { defaultValue: 'View all' })}
+                </button>
               </div>
-              {organizationName && (
-                <p className="text-sm text-muted-foreground">
-                  {organizationName}
-                </p>
-              )}
+              <RecordActivityTimeline
+                events={events}
+                isLoading={eventsLoading}
+                limit={2}
+              />
             </div>
           </div>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="self-start"
-          onClick={() => setIsEditOpen(true)}
-        >
-          <Pencil className="mr-2 h-3.5 w-3.5" />
-          {t('common.editAll', { defaultValue: 'Edit All' })}
-        </Button>
-      </div>
-
-      <div className="grid min-h-0 flex-1 gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
-        <aside className="flex min-h-0 flex-col">
-          <section className="flex h-full min-h-0 flex-col rounded-3xl border border-border/60 bg-background/80 p-5">
-            <div className="mb-5">
-              <h2 className="text-lg font-semibold">
-                {t('deals.tabs.overview')}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                {t('deals.dealDetails')}
+        ),
+      },
+      {
+        value: 'activity',
+        label: t('deals.tabs.activity'),
+        icon: <Activity className="size-3.5" />,
+        content: (
+          <RecordActivityTimeline events={events} isLoading={eventsLoading} />
+        ),
+      },
+      {
+        value: 'contacts',
+        label: t('deals.tabs.contacts', { defaultValue: 'Contacts' }),
+        icon: <Users className="size-3.5" />,
+        count: orgContacts.length,
+        bare: true,
+        content: (
+          <RelatedContactsTable
+            contacts={orgContacts as any}
+            isLoading={orgContactsLoading}
+            emptyLabel={t('deals.contacts.empty', {
+              defaultValue: 'No contacts for this organization',
+            })}
+            onAddContact={() => navigate({ to: '/contacts' })}
+            onOpenContact={(id) =>
+              navigate({
+                to: '/contacts/$contactId',
+                params: { contactId: id },
+                search: { tab: 'overview' },
+              })
+            }
+            onEmail={(c) => c.email && window.open(`mailto:${c.email}`)}
+            onCall={(c) => dialer.open({ name: c.name, number: c.mobile })}
+            onSms={(c) => c.mobile && window.open(`sms:${c.mobile}`)}
+          />
+        ),
+      },
+      {
+        value: 'products',
+        label: t('deals.tabs.products'),
+        icon: <Package className="size-3.5" />,
+        bare: true,
+        content: (
+          <div className="h-full overflow-auto p-4">
+            {productsLoading ? (
+              <div className="h-[32rem] w-full animate-pulse rounded-xl bg-muted/40" />
+            ) : (
+              <PricingEnginePanel
+                value={pricingDocument}
+                defaultValue={pricingDocument}
+                title={dealNumber ? `${dealNumber} ${dealTitle}` : dealTitle}
+                locale={locale}
+                readOnly
+                showActions={false}
+                showDescription={false}
+                showTerms={false}
+                showVatColumn={pricingDocument.config.showVatColumn}
+                showDiscountColumn={pricingDocument.config.showDiscountColumn}
+                showGrossColumn={pricingDocument.config.showGrossColumn}
+                showCategoryColumn={pricingDocument.config.showCategoryColumn}
+                discountBeforeVat={pricingDocument.config.discountBeforeVat}
+                enableVat={pricingDocument.config.enableVat}
+                enableLineDiscount={pricingDocument.config.enableLineDiscount}
+                enableGlobalDiscount={
+                  pricingDocument.config.enableGlobalDiscount
+                }
+                enableAdjustment={pricingDocument.config.enableAdjustment}
+                defaultVatRate={pricingDocument.config.defaultVatRate}
+                vatRates={pricingDocument.config.vatRates}
+                defaultCurrency={pricingDocument.currency.code}
+                viewMode={pricingDocument.config.viewMode}
+                size="full"
+                variant="bordered"
+              />
+            )}
+          </div>
+        ),
+      },
+      {
+        value: 'orders',
+        label: t('deals.tabs.orders'),
+        icon: <ShoppingCart className="size-3.5" />,
+        bare: true,
+        content: (
+          <div className="flex h-full min-h-0 flex-col overflow-auto p-4">
+            {organizationName && (
+              <p className="mb-4 text-sm text-muted-foreground">
+                {t('deals.orders.relatedByOrganization', {
+                  defaultValue:
+                    'Showing sales orders for the same organization: {{organization}}',
+                  organization: organizationName,
+                })}
               </p>
-            </div>
+            )}
 
-            <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-              <EditableRecordDetail
-                fields={fields}
-                record={record}
-                onSave={handleOverviewSave}
-                disabled={updateDeal.isPending}
-              >
-                <div className="space-y-4">
-                  {fields.map(({ field }) => (
-                    <div
-                      key={field.slug}
-                      className="border-b border-border/60 pb-4 last:border-b-0 last:pb-0"
-                    >
-                      <p className="mb-1.5 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                        {field.name}
-                      </p>
-                      <EditableRecordDetailField
-                        slug={field.slug}
-                        showLabel={false}
-                        variant="ghost"
-                        className="min-h-0 px-0 py-0"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </EditableRecordDetail>
-            </div>
-          </section>
-        </aside>
-
-        <section className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-3xl border border-border/60 bg-background/80 p-4 md:p-5">
-          <Tabs
-            value={activeTab}
-            onValueChange={handleTabChange}
-            className="h-full min-h-0 flex-1"
-          >
-            <TabsList>
-              <TabsTrigger value="activity">
-                <Activity className="h-4 w-4" />
-                {t('deals.tabs.activity')}
-              </TabsTrigger>
-              <TabsTrigger value="products">
-                <Package className="h-4 w-4" />
-                {t('deals.tabs.products')}
-              </TabsTrigger>
-              <TabsTrigger value="orders">
-                <ShoppingCart className="h-4 w-4" />
-                {t('deals.tabs.orders')}
-              </TabsTrigger>
-              <TabsTrigger value="comments">
-                <MessageSquare className="h-4 w-4" />
-                {t('deals.tabs.comments')}
-              </TabsTrigger>
-              <TabsTrigger value="files">
-                <FileText className="h-4 w-4" />
-                {t('deals.tabs.files')}
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContents mode="layout" className="min-h-0 flex-1">
-              <TabsContent
-                value="activity"
-                className="mt-4 min-h-0 overflow-y-auto pr-1"
-              >
-                <ContactActivityPanel
-                  activities={[]}
-                  contactName={dealTitle}
-                  isLoading={false}
+            {ordersLoading ? (
+              <DataGridSkeleton>
+                <DataGridSkeletonGrid />
+              </DataGridSkeleton>
+            ) : !salesOrders?.length ? (
+              <div className="rounded-2xl border border-dashed border-border/60 px-6 py-10 text-center">
+                <p className="font-medium">{t('deals.orders.empty')}</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {organizationName
+                    ? t('deals.orders.relatedByOrganizationEmpty', {
+                        defaultValue:
+                          'No sales orders were found for {{organization}}.',
+                        organization: organizationName,
+                      })
+                    : t('deals.orders.relatedByOrganizationMissing', {
+                        defaultValue:
+                          'This deal does not have an organization linked yet.',
+                      })}
+                </p>
+              </div>
+            ) : (
+              <>
+                <DataGridStandardToolbar
+                  table={ordersTable}
+                  searchPlaceholder={t('common.search', 'Search...')}
                 />
-              </TabsContent>
-
-              <TabsContent
-                value="products"
-                className="mt-4 min-h-0 overflow-y-auto pr-1"
-              >
-                {productsLoading ? (
-                  <Skeleton className="h-[32rem] w-full" />
-                ) : (
-                  <PricingEnginePanel
-                    value={pricingDocument}
-                    defaultValue={pricingDocument}
-                    title={
-                      dealNumber ? `${dealNumber} ${dealTitle}` : dealTitle
-                    }
-                    locale={locale}
-                    readOnly
-                    showActions={false}
-                    showDescription={false}
-                    showTerms={false}
-                    showVatColumn={pricingDocument.config.showVatColumn}
-                    showDiscountColumn={
-                      pricingDocument.config.showDiscountColumn
-                    }
-                    showGrossColumn={pricingDocument.config.showGrossColumn}
-                    showCategoryColumn={
-                      pricingDocument.config.showCategoryColumn
-                    }
-                    discountBeforeVat={pricingDocument.config.discountBeforeVat}
-                    enableVat={pricingDocument.config.enableVat}
-                    enableLineDiscount={
-                      pricingDocument.config.enableLineDiscount
-                    }
-                    enableGlobalDiscount={
-                      pricingDocument.config.enableGlobalDiscount
-                    }
-                    enableAdjustment={pricingDocument.config.enableAdjustment}
-                    defaultVatRate={pricingDocument.config.defaultVatRate}
-                    vatRates={pricingDocument.config.vatRates}
-                    defaultCurrency={pricingDocument.currency.code}
-                    viewMode={pricingDocument.config.viewMode}
-                    size="full"
-                    variant="bordered"
-                  />
-                )}
-              </TabsContent>
-
-              <TabsContent
-                value="orders"
-                className="mt-4 min-h-0 overflow-y-auto pr-1"
-              >
-                {organizationName && (
-                  <p className="mb-4 text-sm text-muted-foreground">
-                    {t('deals.orders.relatedByOrganization', {
-                      defaultValue:
-                        'Showing sales orders for the same organization: {{organization}}',
-                      organization: organizationName,
-                    })}
-                  </p>
-                )}
-
-                {ordersLoading ? (
-                  <DataGridSkeleton>
-                    <DataGridSkeletonGrid />
-                  </DataGridSkeleton>
-                ) : !salesOrders?.length ? (
-                  <div className="rounded-2xl border border-dashed border-border/60 px-6 py-10 text-center">
-                    <p className="font-medium">{t('deals.orders.empty')}</p>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      {organizationName
-                        ? t('deals.orders.relatedByOrganizationEmpty', {
-                            defaultValue:
-                              'No sales orders were found for {{organization}}.',
-                            organization: organizationName,
-                          })
-                        : t('deals.orders.relatedByOrganizationMissing', {
-                            defaultValue:
-                              'This deal does not have an organization linked yet.',
-                          })}
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <DataGridStandardToolbar
-                      table={ordersTable}
-                      searchPlaceholder={t('common.search', 'Search...')}
-                    />
-                    <DataGrid
-                      table={ordersTable}
-                      {...ordersGridProps}
-                      height={520}
-                    />
-                  </>
-                )}
-              </TabsContent>
-
-              <TabsContent
-                value="comments"
-                className="mt-4 min-h-0 overflow-y-auto pr-1"
-              >
-                <CommentsPanel
-                  appSlug="base_crm"
-                  dataSource="deal"
-                  recordId={dealId!}
+                <DataGrid
+                  table={ordersTable}
+                  {...ordersGridProps}
+                  height={520}
                 />
-              </TabsContent>
+              </>
+            )}
+          </div>
+        ),
+      },
+      {
+        value: 'notes',
+        label: t('deals.tabs.comments'),
+        icon: <MessageSquare className="size-3.5" />,
+        bare: true,
+        content: (
+          <div className="h-full overflow-auto p-4">
+            <CommentsPanel
+              appSlug="base_crm"
+              dataSource="deal"
+              recordId={dealId!}
+            />
+          </div>
+        ),
+      },
+      {
+        value: 'files',
+        label: t('deals.tabs.files'),
+        icon: <FileText className="size-3.5" />,
+        bare: true,
+        content: (
+          <div className="h-full overflow-auto p-4">
+            <FileAttachments
+              appSlug="base_crm"
+              dataSource="deal"
+              recordId={dealId!}
+            />
+          </div>
+        ),
+      },
+    ]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    t,
+    deal?.deal_value,
+    deal?.close_probability,
+    stageName,
+    events,
+    eventsLoading,
+    orgContacts,
+    orgContactsLoading,
+    productsLoading,
+    pricingDocument,
+    dealNumber,
+    dealTitle,
+    locale,
+    organizationName,
+    ordersLoading,
+    salesOrders,
+    ordersTable,
+    ordersGridProps,
+    dealId,
+  ])
 
-              <TabsContent
-                value="files"
-                className="mt-4 min-h-0 overflow-y-auto pr-1"
-              >
-                <FileAttachments
-                  appSlug="base_crm"
-                  dataSource="deal"
-                  recordId={dealId!}
-                />
-              </TabsContent>
-            </TabsContents>
-          </Tabs>
-        </section>
-      </div>
+  const attributeActions = (
+    <>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-7 gap-1.5 text-[13px]"
+        onClick={() => handleTabChange('notes')}
+      >
+        <StickyNote className="size-3.5" />
+        {t('contacts.actions.note', { defaultValue: 'Note' })}
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-7 gap-1.5 text-[13px]"
+        onClick={() => handleTabChange('activity')}
+      >
+        <Activity className="size-3.5" />
+        {t('deals.tabs.activity')}
+      </Button>
+    </>
+  )
 
-      <DealFormDialog
-        open={isEditOpen}
-        onOpenChange={setIsEditOpen}
-        deal={deal}
-        mode="edit"
+  const dialerTrigger = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label="Open dialer"
+          className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
+        >
+          <Phone className="size-4" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>
+          {t('companies.callContact', { defaultValue: 'Call a contact' })}
+        </DropdownMenuLabel>
+        {contactsWithPhone.length === 0 ? (
+          <DropdownMenuItem disabled>
+            {t('companies.noContactPhones', {
+              defaultValue: 'No contact phone numbers',
+            })}
+          </DropdownMenuItem>
+        ) : (
+          contactsWithPhone.map((c: any) => (
+            <DropdownMenuItem
+              key={c.id}
+              onClick={() => dialer.open({ name: c.name, number: c.mobile })}
+            >
+              <Phone className="size-4 text-emerald-600" />
+              <span className="truncate">{c.name}</span>
+            </DropdownMenuItem>
+          ))
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+
+  return (
+    <PageContainer className="flex h-full min-h-0 flex-col overflow-hidden">
+      <RecordDetailLayout
+        isLoading={isLoading}
+        avatar={
+          <Avatar className="size-9 rounded-lg">
+            {organizationLogo && (
+              <AvatarImage src={organizationLogo} alt={organizationName} />
+            )}
+            <AvatarFallback className="rounded-lg bg-muted text-xs font-semibold">
+              {getInitials(organizationName || dealTitle)}
+            </AvatarFallback>
+          </Avatar>
+        }
+        title={dealTitle}
+        subtitle={
+          dealNumber
+            ? `${dealNumber}${organizationName ? ` · ${organizationName}` : ''}`
+            : organizationName || stageName
+        }
+        onBack={() => navigate({ to: '/deals' })}
+        detailFields={detailFields}
+        fieldSlugs={FIELD_SLUGS}
+        record={flatRecord}
+        onInlineSave={handleInlineSave}
+        editTitle={t('common.editAll', { defaultValue: 'Edit All' })}
+        attributeActions={attributeActions}
+        dialerTrigger={dialerTrigger}
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
       />
     </PageContainer>
   )

@@ -1,37 +1,43 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
-import { useMemo, useState } from 'react'
-import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
+import { useMemo } from 'react'
+import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import {
-  ArrowLeft,
-  FileText,
-  MessageSquare,
-  Pencil,
   Activity,
+  Briefcase,
+  Building2,
+  FileText,
+  Mail,
+  MessageSquare,
+  Phone,
+  StickyNote,
   User,
 } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
-import { Button } from '@/components/animate-ui/components/buttons/button'
+import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
-  Tabs,
-  TabsContent,
-  TabsContents,
-  TabsList,
-  TabsTrigger,
-} from '@/components/animate-ui/components/radix/tabs'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useContact } from '@/hooks/use-contacts'
-import { ContactFormDialog } from '@/components/contacts/contact-form-dialog'
+  RecordDetailLayout,
+  RecordKpiCard,
+  RecordTabPlaceholder,
+  type RecordDetailTab,
+} from '@/components/crm/record-detail-layout'
+import { RelatedDealsTable } from '@/components/crm/related-deals-table'
+import { RecordActivityTimeline } from '@/components/crm/record-activity-timeline'
+import { useDialer } from '@/components/dialer/dialer-widget'
+import { useContact, useUpdateContact } from '@/hooks/use-contacts'
+import { useCompanies } from '@/hooks/use-companies'
+import { useDeals } from '@/hooks/use-deals'
+import { useRecordEvents } from '@/hooks/use-events'
 import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
-import { ContactActivityPanel } from '@/components/docyrus/contact-activity-panel'
 import {
-  EditableRecordDetail,
-  EditableRecordDetailField,
+  type FieldChange,
   type RecordDetailField,
 } from '@/components/docyrus/editable-record-detail'
 import type { IField } from '@/components/docyrus/form-fields/types'
+
+const FIELD_SLUGS = ['name', 'job_title', 'email', 'mobile', 'organization']
 
 function makeField(
   slug: string,
@@ -41,10 +47,33 @@ function makeField(
   return { id: slug, name, slug, type }
 }
 
-function extractName(value: unknown): unknown {
+function getInitials(value?: string): string {
+  if (!value) return '#'
+
+  return (
+    value
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('') || '#'
+  )
+}
+
+function relationId(value: unknown): string | null {
+  if (!value) return null
+  if (typeof value === 'object' && 'id' in value)
+    return (value as { id?: string }).id ?? null
+
+  return typeof value === 'string' ? value : null
+}
+
+function relationName(value: unknown): string | undefined {
   if (value && typeof value === 'object' && 'name' in value)
-    return (value as { name: string }).name
-  return value
+    return (value as { name?: string }).name
+  if (typeof value === 'string') return value
+
+  return undefined
 }
 
 export function ContactDetail() {
@@ -52,193 +81,319 @@ export function ContactDetail() {
   const { contactId } = useParams({ strict: false })
   const { tab } = useSearch({ from: '/contacts/$contactId' })
   const navigate = useNavigate({ from: '/contacts/$contactId' })
-  const { data: contact, isLoading, error } = useContact(contactId)
-  const [isEditOpen, setIsEditOpen] = useState(false)
+  const { data: contact, isLoading } = useContact(contactId)
+  const updateContact = useUpdateContact()
+  const dialer = useDialer()
+
+  const activeTab = tab || 'overview'
 
   const handleTabChange = (value: string) => {
     void navigate({ search: { tab: value }, replace: true })
   }
 
-  const fields = useMemo<Array<RecordDetailField>>(
-    () => [
-      { field: makeField('name', t('contacts.name')), readOnly: true },
-      { field: makeField('job_title', t('contacts.jobTitle')), readOnly: true },
-      {
-        field: makeField('email', t('contacts.email'), 'field-email'),
-        readOnly: true,
-      },
-      {
-        field: makeField('mobile', t('contacts.mobile'), 'field-phone'),
-        readOnly: true,
-      },
-      {
-        field: makeField('organization', t('contacts.organization')),
-        readOnly: true,
-      },
-    ],
-    [t],
+  const { data: companies = [] } = useCompanies({
+    columns: ['id', 'name'],
+    orderBy: 'name ASC',
+  })
+
+  const { data: deals = [], isLoading: dealsLoading } = useDeals(
+    contactId
+      ? {
+          columns: [
+            'id',
+            'name',
+            'stage',
+            'deal_value',
+            'expected_closing_date',
+          ],
+          filters: {
+            rules: [
+              { field: 'contact_person', operator: '=', value: contactId },
+            ],
+          },
+          orderBy: 'created_on desc',
+        }
+      : undefined,
   )
 
-  const record = useMemo(() => {
+  const { data: events = [], isLoading: eventsLoading } = useRecordEvents(
+    'contact',
+    contactId,
+  )
+
+  const detailFields = useMemo<Array<RecordDetailField>>(
+    () => [
+      { field: makeField('name', t('contacts.name')) },
+      { field: makeField('job_title', t('contacts.jobTitle')) },
+      { field: makeField('email', t('contacts.email'), 'field-email') },
+      { field: makeField('mobile', t('contacts.mobile'), 'field-phone') },
+      {
+        field: makeField(
+          'organization',
+          t('contacts.organization'),
+          'field-select',
+        ),
+        enumOptions: companies.map((company: any) => ({
+          id: company.id,
+          name: company.name,
+        })),
+      },
+    ],
+    [t, companies],
+  )
+
+  const flatRecord = useMemo<Record<string, unknown>>(() => {
     if (!contact) return {}
+
     return {
       name: contact.name ?? '',
       job_title: contact.job_title ?? '',
       email: contact.email ?? '',
       mobile: contact.mobile ?? '',
-      organization: extractName(contact.organization) ?? '',
+      organization: relationId(contact.organization),
     }
   }, [contact])
 
-  if (isLoading) {
-    return (
-      <PageContainer>
-        <Skeleton className="h-8 w-64 mb-4" />
-        <Skeleton className="h-96 w-full" />
-      </PageContainer>
+  const handleInlineSave = async (
+    changes: Array<FieldChange>,
+    _values: Record<string, unknown>,
+  ) => {
+    if (!contactId || changes.length === 0) return
+
+    const payload = Object.fromEntries(
+      changes.map((change) => [
+        change.fieldSlug,
+        change.newValue === '' ? null : change.newValue,
+      ]),
     )
+
+    await updateContact.mutateAsync({ contactId, data: payload })
   }
 
-  if (error || !contact) {
-    return (
-      <PageContainer>
-        <Card className="border-destructive">
-          <CardHeader>
-            <CardTitle className="text-destructive">
-              {t('common.error')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>{t('contacts.failedToLoad')}</p>
-            <Link to="/contacts">
-              <Button variant="outline" className="mt-4">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                {t('contacts.backToContacts')}
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </PageContainer>
-    )
-  }
+  const organizationName = relationName(contact?.organization)
+  const contactName =
+    contact?.name?.trim() ||
+    t('contacts.untitled', {
+      defaultValue: 'Untitled Contact',
+    })
 
-  return (
-    <PageContainer>
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link to="/contacts">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              {t('contacts.backToContacts')}
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-xl font-semibold">{contact.name}</h1>
-            {contact.job_title && (
-              <p className="text-sm text-muted-foreground">
-                {contact.job_title}
-              </p>
-            )}
+  const tabs = useMemo<Array<RecordDetailTab>>(() => {
+    return [
+      {
+        value: 'overview',
+        label: t('contacts.tabs.overview'),
+        icon: <User className="size-3.5" />,
+        content: (
+          <div className="space-y-5">
+            <div className="grid gap-2.5 sm:grid-cols-3">
+              <RecordKpiCard
+                label={t('contacts.organization')}
+                value={organizationName ?? '—'}
+                icon={<Building2 className="size-3.5" />}
+              />
+              <RecordKpiCard
+                label={t('contacts.tabs.deals', { defaultValue: 'Deals' })}
+                value={deals.length}
+                icon={<Briefcase className="size-3.5" />}
+              />
+              <RecordKpiCard
+                label={t('contacts.jobTitle')}
+                value={contact?.job_title || '—'}
+              />
+            </div>
+
+            <div className="rounded-xl border p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="text-[13px] font-semibold">
+                  {t('contacts.recentActivity', {
+                    defaultValue: 'Recent activity',
+                  })}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => handleTabChange('activity')}
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground"
+                >
+                  {t('common.viewAll', { defaultValue: 'View all' })}
+                </button>
+              </div>
+              <RecordActivityTimeline
+                events={events}
+                isLoading={eventsLoading}
+                limit={2}
+              />
+            </div>
           </div>
-        </div>
-        <Button variant="outline" size="sm" onClick={() => setIsEditOpen(true)}>
-          <Pencil className="mr-2 h-3.5 w-3.5" />
-          {t('common.editAll', { defaultValue: 'Edit All' })}
-        </Button>
-      </div>
-
-      <Tabs
-        value={tab || 'details'}
-        onValueChange={handleTabChange}
-        className="w-full"
-      >
-        <TabsList>
-          <TabsTrigger value="details">
-            <User className="h-4 w-4" />
-            {t('contacts.tabs.overview')}
-          </TabsTrigger>
-          <TabsTrigger value="activity">
-            <Activity className="h-4 w-4" />
-            {t('contacts.tabs.activity')}
-          </TabsTrigger>
-          <TabsTrigger value="comments">
-            <MessageSquare className="h-4 w-4" />
-            {t('contacts.tabs.comments')}
-          </TabsTrigger>
-          <TabsTrigger value="files">
-            <FileText className="h-4 w-4" />
-            {t('contacts.tabs.files')}
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContents>
-          <TabsContent value="details" className="mt-4">
-            <Card>
-              <CardContent className="pt-6">
-                <EditableRecordDetail fields={fields} record={record} readOnly>
-                  <div className="space-y-3">
-                    <EditableRecordDetailField slug="name" />
-                    <EditableRecordDetailField slug="job_title" />
-                    <EditableRecordDetailField slug="email" />
-                    <EditableRecordDetailField slug="mobile" />
-                    <EditableRecordDetailField slug="organization" />
-                  </div>
-                </EditableRecordDetail>
-
-                {contact.organization &&
-                  typeof contact.organization === 'object' && (
-                    <div className="mt-4 pt-4 border-t">
-                      <Link
-                        to="/companies/$companyId"
-                        params={{
-                          companyId: (contact.organization as { id: string })
-                            .id,
-                        }}
-                        search={{ tab: 'details' }}
-                        className="text-sm font-medium text-primary hover:underline"
-                      >
-                        {t('contacts.viewOrganization', {
-                          defaultValue: 'View Organization',
-                        })}{' '}
-                        &rarr;
-                      </Link>
-                    </div>
-                  )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="activity" className="mt-4">
-            <ContactActivityPanel
-              activities={[]}
-              contactName={contact.name}
-              isLoading={false}
-            />
-          </TabsContent>
-
-          <TabsContent value="comments" className="mt-4">
+        ),
+      },
+      {
+        value: 'activity',
+        label: t('contacts.tabs.activity'),
+        icon: <Activity className="size-3.5" />,
+        content: (
+          <RecordActivityTimeline events={events} isLoading={eventsLoading} />
+        ),
+      },
+      {
+        value: 'deals',
+        label: t('contacts.tabs.deals', { defaultValue: 'Deals' }),
+        icon: <Briefcase className="size-3.5" />,
+        count: deals.length,
+        bare: true,
+        content: (
+          <RelatedDealsTable
+            deals={deals as any}
+            isLoading={dealsLoading}
+            emptyLabel={t('companies.deals.empty')}
+            onOpenDeal={(id) =>
+              navigate({
+                to: '/deals/$dealId',
+                params: { dealId: id },
+                search: { tab: 'activity' },
+              })
+            }
+          />
+        ),
+      },
+      {
+        value: 'emails',
+        label: t('contacts.tabs.emails', { defaultValue: 'Emails' }),
+        icon: <Mail className="size-3.5" />,
+        content: (
+          <RecordTabPlaceholder
+            icon={<Mail className="size-5" />}
+            title={t('common.notAvailableYet', {
+              defaultValue: 'Not available yet',
+            })}
+            description={t('contacts.emailsComingSoon', {
+              defaultValue: 'Email history will appear here once connected.',
+            })}
+          />
+        ),
+      },
+      {
+        value: 'notes',
+        label: t('contacts.tabs.comments'),
+        icon: <MessageSquare className="size-3.5" />,
+        bare: true,
+        content: (
+          <div className="h-full overflow-auto p-4">
             <CommentsPanel
               appSlug="base"
               dataSource="contact"
               recordId={contactId!}
             />
-          </TabsContent>
-
-          <TabsContent value="files" className="mt-4">
+          </div>
+        ),
+      },
+      {
+        value: 'files',
+        label: t('contacts.tabs.files'),
+        icon: <FileText className="size-3.5" />,
+        bare: true,
+        content: (
+          <div className="h-full overflow-auto p-4">
             <FileAttachments
               appSlug="base"
               dataSource="contact"
               recordId={contactId!}
             />
-          </TabsContent>
-        </TabsContents>
-      </Tabs>
+          </div>
+        ),
+      },
+    ]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    t,
+    organizationName,
+    deals,
+    dealsLoading,
+    events,
+    eventsLoading,
+    contact?.job_title,
+    contactId,
+  ])
 
-      <ContactFormDialog
-        open={isEditOpen}
-        onOpenChange={setIsEditOpen}
-        contact={contact}
-        mode="edit"
+  const attributeActions = (
+    <>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-7 gap-1.5 text-[13px]"
+        onClick={() => handleTabChange('notes')}
+      >
+        <StickyNote className="size-3.5" />
+        {t('contacts.actions.note', { defaultValue: 'Note' })}
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-7 gap-1.5 text-[13px]"
+        disabled={!contact?.email}
+        onClick={() => contact?.email && window.open(`mailto:${contact.email}`)}
+      >
+        <Mail className="size-3.5" />
+        {t('contacts.actions.email', { defaultValue: 'Email' })}
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-7 gap-1.5 text-[13px]"
+        disabled={!contact?.mobile}
+        onClick={() => contact?.mobile && window.open(`sms:${contact.mobile}`)}
+      >
+        <MessageSquare className="size-3.5" />
+        {t('contacts.actions.sms', { defaultValue: 'SMS' })}
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-7 gap-1.5 text-[13px] text-emerald-600"
+        onClick={() =>
+          dialer.open({ name: contactName, number: contact?.mobile })
+        }
+      >
+        <Phone className="size-3.5" />
+        {t('contacts.actions.call', { defaultValue: 'Call' })}
+      </Button>
+    </>
+  )
+
+  return (
+    <PageContainer className="flex h-full min-h-0 flex-col overflow-hidden">
+      <RecordDetailLayout
+        isLoading={isLoading}
+        avatar={
+          <Avatar className="size-9 rounded-lg">
+            <AvatarFallback className="rounded-lg bg-muted text-xs font-semibold">
+              {getInitials(contact?.name)}
+            </AvatarFallback>
+          </Avatar>
+        }
+        title={contactName}
+        subtitle={contact?.job_title || organizationName}
+        onBack={() => navigate({ to: '/contacts' })}
+        detailFields={detailFields}
+        fieldSlugs={FIELD_SLUGS}
+        record={flatRecord}
+        onInlineSave={handleInlineSave}
+        editTitle={t('common.editAll', { defaultValue: 'Edit All' })}
+        attributeActions={attributeActions}
+        dialerTrigger={
+          <button
+            type="button"
+            onClick={() =>
+              dialer.open({ name: contactName, number: contact?.mobile })
+            }
+            aria-label="Call contact"
+            className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
+          >
+            <Phone className="size-4" />
+          </button>
+        }
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
       />
     </PageContainer>
   )

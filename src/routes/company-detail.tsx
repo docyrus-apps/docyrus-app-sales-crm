@@ -1,42 +1,68 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { useMemo, useState } from 'react'
+import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import {
-  ArrowLeft,
-  FileText,
-  MessageSquare,
-  Pencil,
-  Building2,
-  Users,
+  Activity,
   Briefcase,
+  Building2,
   ClipboardList,
+  FileText,
+  Globe,
+  Mail,
+  MessageSquare,
+  Phone,
+  StickyNote,
+  Users,
 } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
-import { Button } from '@/components/animate-ui/components/buttons/button'
+import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
-  Tabs,
-  TabsContent,
-  TabsContents,
-  TabsList,
-  TabsTrigger,
-} from '@/components/animate-ui/components/radix/tabs'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useCompany } from '@/hooks/use-companies'
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/animate-ui/components/radix/dropdown-menu'
+import {
+  RecordDetailLayout,
+  RecordKpiCard,
+  type RecordDetailTab,
+} from '@/components/crm/record-detail-layout'
+import { RelatedContactsTable } from '@/components/crm/related-contacts-table'
+import { RelatedDealsTable } from '@/components/crm/related-deals-table'
+import { RecordActivityTimeline } from '@/components/crm/record-activity-timeline'
+import { useDialer } from '@/components/dialer/dialer-widget'
+import { useCompany, useUpdateCompany } from '@/hooks/use-companies'
 import { useContacts } from '@/hooks/use-contacts'
 import { useDeals } from '@/hooks/use-deals'
 import { useLeads } from '@/hooks/use-leads'
-import { CompanyFormDialog } from '@/components/companies/company-form-dialog'
+import { useEnumEntities } from '@/hooks/use-enums'
+import { useRecordEvents } from '@/hooks/use-events'
+import { ContactFormDialog } from '@/components/contacts/contact-form-dialog'
 import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
 import {
-  EditableRecordDetail,
-  EditableRecordDetailField,
+  type FieldChange,
   type RecordDetailField,
 } from '@/components/docyrus/editable-record-detail'
-import type { IField } from '@/components/docyrus/form-fields/types'
+import type { EnumOption, IField } from '@/components/docyrus/form-fields/types'
+
+const FIELD_SLUGS = [
+  'name',
+  'industry',
+  'type',
+  'status',
+  'email',
+  'phone',
+  'website',
+  'address',
+  'country',
+  'city',
+  'district',
+  'tax_number',
+]
 
 function makeField(
   slug: string,
@@ -46,10 +72,49 @@ function makeField(
   return { id: slug, name, slug, type }
 }
 
-function extractName(value: unknown): unknown {
+function extractName(value: unknown): string {
   if (value && typeof value === 'object' && 'name' in value)
-    return (value as { name: string }).name
-  return value
+    return ((value as { name?: string }).name ?? '') as string
+  if (typeof value === 'string') return value
+
+  return ''
+}
+
+function fieldId(value: unknown): string | null {
+  if (!value) return null
+  if (typeof value === 'object' && 'id' in value)
+    return (value as { id?: string }).id ?? null
+
+  return typeof value === 'string' ? value : null
+}
+
+function getInitials(value?: string): string {
+  if (!value) return '#'
+
+  return (
+    value
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('') || '#'
+  )
+}
+
+function toOptions(
+  items: Array<{
+    id: string
+    name: string
+    color?: string | null
+    icon?: string | null
+  }>,
+): Array<EnumOption> {
+  return items.map((item) => ({
+    id: item.id,
+    name: item.name,
+    color: item.color ?? undefined,
+    icon: item.icon ?? undefined,
+  }))
 }
 
 export function CompanyDetail() {
@@ -57,14 +122,23 @@ export function CompanyDetail() {
   const { companyId } = useParams({ strict: false })
   const { tab } = useSearch({ from: '/companies/$companyId' })
   const navigate = useNavigate({ from: '/companies/$companyId' })
-  const { data: company, isLoading, error } = useCompany(companyId)
-  const [isEditOpen, setIsEditOpen] = useState(false)
+  const { data: company, isLoading } = useCompany(companyId)
+  const updateCompany = useUpdateCompany()
+  const dialer = useDialer()
+  const [addContactOpen, setAddContactOpen] = useState(false)
+
+  const activeTab = tab || 'overview'
 
   const handleTabChange = (value: string) => {
     void navigate({ search: { tab: value }, replace: true })
   }
 
-  const { data: contacts, isLoading: contactsLoading } = useContacts(
+  const enumOpts = { appSlug: 'base', dataSourceSlug: 'organization' }
+  const { data: statusEntities = [] } = useEnumEntities('status', enumOpts)
+  const { data: typeEntities = [] } = useEnumEntities('type', enumOpts)
+  const { data: industryEntities = [] } = useEnumEntities('industry', enumOpts)
+
+  const { data: contacts = [], isLoading: contactsLoading } = useContacts(
     companyId
       ? {
           columns: ['id', 'name', 'job_title', 'email', 'mobile'],
@@ -76,13 +150,14 @@ export function CompanyDetail() {
       : undefined,
   )
 
-  const { data: deals, isLoading: dealsLoading } = useDeals(
+  const { data: deals = [], isLoading: dealsLoading } = useDeals(
     companyId
       ? {
           columns: [
             'id',
-            'deal_value',
+            'name',
             'stage',
+            'deal_value',
             'expected_closing_date',
             'close_probability',
           ],
@@ -94,17 +169,10 @@ export function CompanyDetail() {
       : undefined,
   )
 
-  const { data: leads, isLoading: leadsLoading } = useLeads(
+  const { data: leads = [], isLoading: leadsLoading } = useLeads(
     companyId
       ? {
-          columns: [
-            'id',
-            'name',
-            'email',
-            'phone',
-            'lead_status',
-            'lead_source',
-          ],
+          columns: ['id', 'name', 'email', 'phone', 'lead_status'],
           filters: {
             rules: [
               {
@@ -119,22 +187,49 @@ export function CompanyDetail() {
       : undefined,
   )
 
-  const fields = useMemo<Array<RecordDetailField>>(
+  const { data: events = [], isLoading: eventsLoading } = useRecordEvents(
+    'organization',
+    companyId,
+  )
+
+  const statusEditable = statusEntities.length > 0
+  const typeEditable = typeEntities.length > 0
+  const industryEditable = industryEntities.length > 0
+
+  const detailFields = useMemo<Array<RecordDetailField>>(
     () => [
-      { field: makeField('name', t('companies.name')), readOnly: true },
-      { field: makeField('industry', t('companies.industry')), readOnly: true },
-      { field: makeField('type', t('companies.type')), readOnly: true },
-      { field: makeField('status', t('companies.status')), readOnly: true },
+      { field: makeField('name', t('companies.name')) },
       {
-        field: makeField('email', t('companies.email'), 'field-email'),
-        readOnly: true,
+        field: makeField(
+          'industry',
+          t('companies.industry'),
+          industryEditable ? 'field-select' : 'field-text',
+        ),
+        enumOptions: toOptions(industryEntities),
+        readOnly: !industryEditable,
       },
       {
-        field: makeField('phone', t('companies.phone'), 'field-phone'),
-        readOnly: true,
+        field: makeField(
+          'type',
+          t('companies.type'),
+          typeEditable ? 'field-select' : 'field-text',
+        ),
+        enumOptions: toOptions(typeEntities),
+        readOnly: !typeEditable,
       },
-      { field: makeField('website', t('companies.website')), readOnly: true },
-      { field: makeField('address', t('companies.address')), readOnly: true },
+      {
+        field: makeField(
+          'status',
+          t('companies.status'),
+          statusEditable ? 'field-status' : 'field-text',
+        ),
+        enumOptions: toOptions(statusEntities),
+        readOnly: !statusEditable,
+      },
+      { field: makeField('email', t('companies.email'), 'field-email') },
+      { field: makeField('phone', t('companies.phone'), 'field-phone') },
+      { field: makeField('website', t('companies.website'), 'field-url') },
+      { field: makeField('address', t('companies.address')) },
       {
         field: makeField(
           'country',
@@ -146,346 +241,371 @@ export function CompanyDetail() {
         field: makeField('city', t('companies.city', { defaultValue: 'City' })),
         readOnly: true,
       },
-      { field: makeField('district', t('companies.district')), readOnly: true },
-      {
-        field: makeField('tax_number', t('companies.taxNumber')),
-        readOnly: true,
-      },
+      { field: makeField('district', t('companies.district')) },
+      { field: makeField('tax_number', t('companies.taxNumber')) },
     ],
-    [t],
+    [
+      t,
+      statusEditable,
+      typeEditable,
+      industryEditable,
+      statusEntities,
+      typeEntities,
+      industryEntities,
+    ],
   )
 
-  const record = useMemo(() => {
+  const flatRecord = useMemo<Record<string, unknown>>(() => {
     if (!company) return {}
+
     return {
       name: company.name ?? '',
-      industry: extractName(company.industry) ?? '',
-      type: extractName(company.type) ?? '',
-      status: extractName(company.status) ?? '',
+      industry: industryEditable
+        ? fieldId(company.industry)
+        : extractName(company.industry),
+      type: typeEditable ? fieldId(company.type) : extractName(company.type),
+      status: statusEditable
+        ? fieldId(company.status)
+        : extractName(company.status),
       email: company.email ?? '',
       phone: company.phone ?? '',
       website: company.website ?? '',
       address: company.address ?? '',
-      country: extractName(company.country) ?? '',
-      city: extractName(company.city) ?? '',
+      country: extractName(company.country),
+      city: extractName(company.city),
       district: company.district ?? '',
       tax_number: company.tax_number ?? '',
     }
-  }, [company])
+  }, [company, statusEditable, typeEditable, industryEditable])
 
-  if (isLoading) {
-    return (
-      <PageContainer>
-        <Skeleton className="h-8 w-64 mb-4" />
-        <Skeleton className="h-96 w-full" />
-      </PageContainer>
+  const handleInlineSave = async (
+    changes: Array<FieldChange>,
+    _values: Record<string, unknown>,
+  ) => {
+    if (!companyId || changes.length === 0) return
+
+    const payload = Object.fromEntries(
+      changes.map((change) => [
+        change.fieldSlug,
+        change.newValue === '' ? null : change.newValue,
+      ]),
     )
+
+    await updateCompany.mutateAsync({ companyId, data: payload })
   }
 
-  if (error || !company) {
-    return (
-      <PageContainer>
-        <Card className="border-destructive">
-          <CardHeader>
-            <CardTitle className="text-destructive">
-              {t('common.error')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>{t('companies.failedToLoad')}</p>
-            <Link to="/companies">
-              <Button variant="outline" className="mt-4">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                {t('companies.backToCompanies')}
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </PageContainer>
-    )
-  }
+  const companyName =
+    company?.name?.trim() ||
+    t('companies.untitled', { defaultValue: 'Untitled Company' })
+  const statusName = extractName(company?.status)
+  const contactsWithPhone = useMemo(
+    () => contacts.filter((c: any) => c.mobile),
+    [contacts],
+  )
 
-  const statusName =
-    company.status && typeof company.status === 'object'
-      ? company.status.name
-      : company.status
+  const openContact = (id: string) =>
+    navigate({
+      to: '/contacts/$contactId',
+      params: { contactId: id },
+      search: { tab: 'overview' },
+    })
 
-  return (
-    <PageContainer>
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link to="/companies">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              {t('companies.backToCompanies')}
-            </Button>
-          </Link>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-semibold">{company.name}</h1>
-            {statusName && <Badge variant="secondary">{statusName}</Badge>}
+  const tabs = useMemo<Array<RecordDetailTab>>(() => {
+    return [
+      {
+        value: 'overview',
+        label: t('companies.tabs.overview'),
+        icon: <Building2 className="size-3.5" />,
+        content: (
+          <div className="space-y-5">
+            <div className="grid gap-2.5 sm:grid-cols-3">
+              <RecordKpiCard
+                label={t('companies.tabs.contacts')}
+                value={contacts.length}
+                icon={<Users className="size-3.5" />}
+              />
+              <RecordKpiCard
+                label={t('companies.tabs.deals')}
+                value={deals.length}
+                icon={<Briefcase className="size-3.5" />}
+              />
+              <RecordKpiCard
+                label={t('companies.industry')}
+                value={extractName(company?.industry) || '—'}
+              />
+            </div>
+
+            <div className="rounded-xl border p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="text-[13px] font-semibold">
+                  {t('contacts.recentActivity', {
+                    defaultValue: 'Recent activity',
+                  })}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => handleTabChange('activity')}
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground"
+                >
+                  {t('common.viewAll', { defaultValue: 'View all' })}
+                </button>
+              </div>
+              <RecordActivityTimeline
+                events={events}
+                isLoading={eventsLoading}
+                limit={2}
+              />
+            </div>
           </div>
-        </div>
-        <Button variant="outline" size="sm" onClick={() => setIsEditOpen(true)}>
-          <Pencil className="mr-2 h-3.5 w-3.5" />
-          {t('common.editAll', { defaultValue: 'Edit All' })}
-        </Button>
-      </div>
-
-      <Tabs
-        value={tab || 'details'}
-        onValueChange={handleTabChange}
-        className="w-full"
-      >
-        <TabsList>
-          <TabsTrigger value="details">
-            <Building2 className="h-4 w-4" />
-            {t('companies.tabs.overview')}
-          </TabsTrigger>
-          <TabsTrigger value="contacts">
-            <Users className="h-4 w-4" />
-            {t('companies.tabs.contacts')}
-          </TabsTrigger>
-          <TabsTrigger value="deals">
-            <Briefcase className="h-4 w-4" />
-            {t('companies.tabs.deals')}
-          </TabsTrigger>
-          <TabsTrigger value="leads">
-            <ClipboardList className="h-4 w-4" />
-            {t('companies.tabs.leads')}
-          </TabsTrigger>
-          <TabsTrigger value="comments">
-            <MessageSquare className="h-4 w-4" />
-            {t('companies.tabs.comments')}
-          </TabsTrigger>
-          <TabsTrigger value="files">
-            <FileText className="h-4 w-4" />
-            {t('companies.tabs.files')}
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContents>
-          <TabsContent value="details" className="mt-4">
-            <Card>
-              <CardContent className="pt-6">
-                <EditableRecordDetail fields={fields} record={record} readOnly>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
-                    <EditableRecordDetailField slug="name" />
-                    <EditableRecordDetailField slug="industry" />
-                    <EditableRecordDetailField slug="type" />
-                    <EditableRecordDetailField slug="status" />
-                    <EditableRecordDetailField slug="email" />
-                    <EditableRecordDetailField slug="phone" />
-                    <EditableRecordDetailField slug="website" />
-                    <EditableRecordDetailField slug="address" />
-                    <EditableRecordDetailField slug="country" />
-                    <EditableRecordDetailField slug="city" />
-                    <EditableRecordDetailField slug="district" />
-                    <EditableRecordDetailField slug="tax_number" />
-                  </div>
-                </EditableRecordDetail>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="contacts" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('companies.contacts.title')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {contactsLoading ? (
-                  <div className="space-y-3">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                  </div>
-                ) : !contacts?.length ? (
-                  <p className="text-sm text-muted-foreground">
-                    {t('companies.contacts.empty')}
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {contacts.map((contact: any) => (
-                      <Link
-                        key={contact.id}
-                        to="/contacts/$contactId"
-                        params={{ contactId: contact.id }}
-                        search={{ tab: 'details' }}
-                        className="block"
-                      >
-                        <div className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50">
-                          <div className="min-w-0 flex-1">
-                            <div className="font-medium">{contact.name}</div>
-                            {contact.job_title && (
-                              <div className="text-sm text-muted-foreground">
-                                {contact.job_title}
-                              </div>
-                            )}
-                          </div>
-                          <div className="text-right text-sm">
-                            {contact.email && (
-                              <div className="text-muted-foreground">
-                                {contact.email}
-                              </div>
-                            )}
-                            {contact.mobile && (
-                              <div className="text-muted-foreground">
-                                {contact.mobile}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="deals" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('companies.deals.title')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {dealsLoading ? (
-                  <div className="space-y-3">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                  </div>
-                ) : !deals?.length ? (
-                  <p className="text-sm text-muted-foreground">
-                    {t('companies.deals.empty')}
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {deals.map((deal: any) => (
-                      <Link
-                        key={deal.id}
-                        to="/deals/$dealId"
-                        params={{ dealId: deal.id }}
-                        search={{ tab: 'details' }}
-                        className="block"
-                      >
-                        <div className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50">
-                          <div className="min-w-0 flex-1">
-                            <div className="font-medium">
-                              {deal.stage && typeof deal.stage === 'object'
-                                ? deal.stage.name
-                                : deal.stage || t('common.na')}
-                            </div>
-                            {deal.expected_closing_date && (
-                              <div className="text-sm text-muted-foreground">
-                                {t('companies.expected')}:{' '}
-                                {new Date(
-                                  deal.expected_closing_date,
-                                ).toLocaleDateString()}
-                              </div>
-                            )}
-                          </div>
-                          <div className="text-right">
-                            {deal.deal_value != null && (
-                              <div className="font-semibold">
-                                ${deal.deal_value.toLocaleString()}
-                              </div>
-                            )}
-                            {deal.close_probability != null && (
-                              <div className="text-sm text-muted-foreground">
-                                {deal.close_probability}%
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="leads" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('companies.leads.title')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {leadsLoading ? (
-                  <div className="space-y-3">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                  </div>
-                ) : !leads?.length ? (
-                  <p className="text-sm text-muted-foreground">
-                    {t('companies.leads.empty')}
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {leads.map((lead: any) => (
-                      <Link
-                        key={lead.id}
-                        to="/leads/$leadId"
-                        params={{ leadId: lead.id }}
-                        search={{ tab: 'details' }}
-                        className="block"
-                      >
-                        <div className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50">
-                          <div className="min-w-0 flex-1">
-                            <div className="font-medium">
-                              {lead.name || t('leads.untitledLead')}
-                            </div>
-                            {lead.lead_status && (
-                              <div className="text-sm text-muted-foreground">
-                                {typeof lead.lead_status === 'object'
-                                  ? lead.lead_status.name
-                                  : lead.lead_status}
-                              </div>
-                            )}
-                          </div>
-                          <div className="text-right text-sm">
-                            {lead.email && (
-                              <div className="text-muted-foreground">
-                                {lead.email}
-                              </div>
-                            )}
-                            {lead.phone && (
-                              <div className="text-muted-foreground">
-                                {lead.phone}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="comments" className="mt-4">
+        ),
+      },
+      {
+        value: 'activity',
+        label: t('companies.tabs.activity', { defaultValue: 'Activity' }),
+        icon: <Activity className="size-3.5" />,
+        content: (
+          <RecordActivityTimeline events={events} isLoading={eventsLoading} />
+        ),
+      },
+      {
+        value: 'contacts',
+        label: t('companies.tabs.contacts'),
+        icon: <Users className="size-3.5" />,
+        count: contacts.length,
+        bare: true,
+        content: (
+          <RelatedContactsTable
+            contacts={contacts as any}
+            isLoading={contactsLoading}
+            addLabel={t('contacts.new', { defaultValue: 'New Contact' })}
+            emptyLabel={t('companies.contacts.empty')}
+            onAddContact={() => setAddContactOpen(true)}
+            onOpenContact={openContact}
+            onEmail={(c) => c.email && window.open(`mailto:${c.email}`)}
+            onCall={(c) => dialer.open({ name: c.name, number: c.mobile })}
+            onSms={(c) => c.mobile && window.open(`sms:${c.mobile}`)}
+          />
+        ),
+      },
+      {
+        value: 'deals',
+        label: t('companies.tabs.deals'),
+        icon: <Briefcase className="size-3.5" />,
+        count: deals.length,
+        bare: true,
+        content: (
+          <RelatedDealsTable
+            deals={deals as any}
+            isLoading={dealsLoading}
+            emptyLabel={t('companies.deals.empty')}
+            onOpenDeal={(id) =>
+              navigate({
+                to: '/deals/$dealId',
+                params: { dealId: id },
+                search: { tab: 'activity' },
+              })
+            }
+          />
+        ),
+      },
+      {
+        value: 'leads',
+        label: t('companies.tabs.leads'),
+        icon: <ClipboardList className="size-3.5" />,
+        count: leads.length,
+        content: leadsLoading ? (
+          <div className="space-y-2">
+            <div className="h-12 animate-pulse rounded-lg bg-muted/40" />
+            <div className="h-12 animate-pulse rounded-lg bg-muted/40" />
+          </div>
+        ) : !leads.length ? (
+          <p className="px-2 py-8 text-center text-[13px] text-muted-foreground">
+            {t('companies.leads.empty')}
+          </p>
+        ) : (
+          <ul className="space-y-1">
+            {leads.map((lead: any) => (
+              <li
+                key={lead.id}
+                role="button"
+                tabIndex={0}
+                onClick={() =>
+                  navigate({
+                    to: '/leads/$leadId',
+                    params: { leadId: lead.id },
+                    search: { tab: 'overview' },
+                  })
+                }
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter')
+                    navigate({
+                      to: '/leads/$leadId',
+                      params: { leadId: lead.id },
+                      search: { tab: 'overview' },
+                    })
+                }}
+                className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted/60"
+              >
+                <span className="truncate font-medium">
+                  {lead.name || t('leads.untitledLead')}
+                </span>
+                <span className="truncate text-xs text-muted-foreground">
+                  {extractName(lead.lead_status)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ),
+      },
+      {
+        value: 'notes',
+        label: t('companies.tabs.comments'),
+        icon: <MessageSquare className="size-3.5" />,
+        bare: true,
+        content: (
+          <div className="h-full overflow-auto p-4">
             <CommentsPanel
               appSlug="base"
               dataSource="organization"
               recordId={companyId!}
             />
-          </TabsContent>
-
-          <TabsContent value="files" className="mt-4">
+          </div>
+        ),
+      },
+      {
+        value: 'files',
+        label: t('companies.tabs.files'),
+        icon: <FileText className="size-3.5" />,
+        bare: true,
+        content: (
+          <div className="h-full overflow-auto p-4">
             <FileAttachments
               appSlug="base"
               dataSource="organization"
               recordId={companyId!}
             />
-          </TabsContent>
-        </TabsContents>
-      </Tabs>
+          </div>
+        ),
+      },
+    ]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    t,
+    company?.industry,
+    contacts,
+    contactsLoading,
+    deals,
+    dealsLoading,
+    leads,
+    leadsLoading,
+    events,
+    eventsLoading,
+    companyId,
+  ])
 
-      <CompanyFormDialog
-        open={isEditOpen}
-        onOpenChange={setIsEditOpen}
-        company={company}
-        mode="edit"
+  const attributeActions = (
+    <>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-7 gap-1.5 text-[13px]"
+        onClick={() => handleTabChange('notes')}
+      >
+        <StickyNote className="size-3.5" />
+        {t('contacts.actions.note', { defaultValue: 'Note' })}
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-7 gap-1.5 text-[13px]"
+        disabled={!company?.email}
+        onClick={() => company?.email && window.open(`mailto:${company.email}`)}
+      >
+        <Mail className="size-3.5" />
+        {t('contacts.actions.email', { defaultValue: 'Email' })}
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-7 gap-1.5 text-[13px]"
+        disabled={!company?.website}
+        onClick={() =>
+          company?.website && window.open(company.website, '_blank')
+        }
+      >
+        <Globe className="size-3.5" />
+        {t('companies.website')}
+      </Button>
+    </>
+  )
+
+  const dialerTrigger = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label="Open dialer"
+          className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
+        >
+          <Phone className="size-4" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>
+          {t('companies.callContact', { defaultValue: 'Call a contact' })}
+        </DropdownMenuLabel>
+        {contactsWithPhone.length === 0 ? (
+          <DropdownMenuItem disabled>
+            {t('companies.noContactPhones', {
+              defaultValue: 'No contact phone numbers',
+            })}
+          </DropdownMenuItem>
+        ) : (
+          contactsWithPhone.map((c: any) => (
+            <DropdownMenuItem
+              key={c.id}
+              onClick={() => dialer.open({ name: c.name, number: c.mobile })}
+            >
+              <Phone className="size-4 text-emerald-600" />
+              <span className="truncate">{c.name}</span>
+            </DropdownMenuItem>
+          ))
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+
+  return (
+    <PageContainer className="flex h-full min-h-0 flex-col overflow-hidden">
+      <RecordDetailLayout
+        isLoading={isLoading}
+        avatar={
+          <Avatar className="size-9 rounded-lg">
+            <AvatarFallback className="rounded-lg bg-muted text-xs font-semibold">
+              {getInitials(company?.name)}
+            </AvatarFallback>
+          </Avatar>
+        }
+        title={companyName}
+        subtitle={statusName || extractName(company?.industry)}
+        onBack={() => navigate({ to: '/companies' })}
+        detailFields={detailFields}
+        fieldSlugs={FIELD_SLUGS}
+        record={flatRecord}
+        onInlineSave={handleInlineSave}
+        editTitle={t('common.editAll', { defaultValue: 'Edit All' })}
+        attributeActions={attributeActions}
+        dialerTrigger={dialerTrigger}
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+      />
+
+      <ContactFormDialog
+        open={addContactOpen}
+        onOpenChange={setAddContactOpen}
+        contact={{ organization: company }}
+        mode="create"
       />
     </PageContainer>
   )
