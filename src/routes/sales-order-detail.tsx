@@ -18,6 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useSalesOrder } from '@/hooks/use-sales-orders'
 import { useSalesOrderItems } from '@/hooks/use-sales-order-items'
 import { UI_I18N_LOCALES, type UiI18nLocale } from '@/lib/ui-i18n'
+import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
 
 function getRelationName(
   value?: { name?: string } | string | null,
@@ -165,6 +166,10 @@ export function SalesOrderDetail() {
       },
     }
   }, [lineItems, order?.grand_total, order?.tax_total, t])
+
+  useSetDetailBreadcrumbTitle(
+    order ? t('salesOrders.salesOrderTitle', { id: order.id }) : null,
+  )
 
   if (isLoading) {
     return (

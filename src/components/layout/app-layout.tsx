@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { Link, useLocation, useParams } from '@tanstack/react-router'
+import { useDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
 import { useTranslation } from 'react-i18next'
 import { AppSidebar } from './app-sidebar'
 import { AppHeaderActions } from './app-header-actions'
@@ -43,13 +44,15 @@ function AppBreadcrumb() {
   const location = useLocation()
   const params = useParams({ strict: false })
   const { t } = useTranslation()
+  const detailTitle = useDetailBreadcrumbTitle()
 
   const segments = useMemo(() => {
     return location.pathname.split('/').filter(Boolean)
   }, [location.pathname])
 
   const p = params as Record<string, string>
-  const entityId = p.dealId || p.leadId || p.companyId || p.orderId || ''
+  const entityId =
+    p.dealId || p.leadId || p.companyId || p.contactId || p.orderId || ''
 
   const crumbs = useMemo(() => {
     const items: Array<{ label: string; href?: string }> = []
@@ -71,13 +74,14 @@ function AppBreadcrumb() {
       items.push({ label, href })
     }
 
-    // Append entity ID as last crumb for detail pages
+    // Append the record's name as the last crumb for detail pages, falling
+    // back to a generic label until the route publishes its resolved title.
     if (entityId) {
-      items.push({ label: t('breadcrumb.detail') })
+      items.push({ label: detailTitle || t('breadcrumb.detail') })
     }
 
     return items
-  }, [segments, entityId, t])
+  }, [segments, entityId, detailTitle, t])
 
   if (crumbs.length === 0) {
     return (

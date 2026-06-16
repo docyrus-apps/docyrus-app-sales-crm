@@ -191,6 +191,8 @@ interface RecordAttributePanelProps {
   editTitle?: ReactNode
   /** Quick-action buttons rendered above the search bar (note, email, …) */
   actions?: ReactNode
+  /** Soft banner shown above the attribute fields (e.g. read-only notice) */
+  notice?: ReactNode
   /** Render fields display-only (no inline edit / no edit-all modal) */
   readOnly?: boolean
 }
@@ -208,6 +210,7 @@ function RecordAttributePanel({
   editTitle,
   readOnly,
   actions,
+  notice,
 }: RecordAttributePanelProps) {
   const [query, setQuery] = useState('')
   const [expanded, setExpanded] = useState(false)
@@ -270,8 +273,9 @@ function RecordAttributePanel({
         }
       `}</style>
 
-      {/* Record header — logo + title, aligned with the tabs card */}
-      <div className="flex items-center gap-2.5 border-b px-3 py-2.5">
+      {/* Record header — logo + title, aligned with the tabs card. The
+          edit-all pencil sits on the title's line, flush right. */}
+      <div className="flex items-start gap-2.5 border-b px-3 py-2.5">
         {onBack && (
           <button
             type="button"
@@ -284,8 +288,21 @@ function RecordAttributePanel({
         )}
         {avatar}
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[15px] font-semibold leading-tight">
-            {title}
+          <div className="flex items-center gap-1.5">
+            <div className="min-w-0 flex-1 truncate text-[15px] font-semibold leading-tight">
+              {title}
+            </div>
+            {!readOnly && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="-my-1 size-7 shrink-0 text-muted-foreground"
+                onClick={() => setEditOpen(true)}
+                aria-label="Edit all attributes"
+              >
+                <Pencil className="size-3.5" />
+              </Button>
+            )}
           </div>
           {subtitle && (
             <div className="truncate text-xs text-muted-foreground">
@@ -296,8 +313,12 @@ function RecordAttributePanel({
       </div>
 
       {actions && (
-        <div className="flex flex-wrap items-center gap-1 border-b px-2.5 py-2">
-          {actions}
+        <div className="border-b px-2.5 py-2">
+          {/* Quick actions scroll horizontally when the panel is narrowed
+              instead of wrapping onto a second line. */}
+          <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide [&>*]:shrink-0 [mask-image:linear-gradient(to_right,#000_0,#000_calc(100%-1.25rem),transparent_100%)]">
+            {actions}
+          </div>
         </div>
       )}
 
@@ -311,18 +332,9 @@ function RecordAttributePanel({
             className="h-7 border-none bg-transparent pl-8 text-[13px] shadow-none focus-visible:ring-0"
           />
         </div>
-        {!readOnly && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7 shrink-0 text-muted-foreground"
-            onClick={() => setEditOpen(true)}
-            aria-label="Edit all attributes"
-          >
-            <Pencil className="size-3.5" />
-          </Button>
-        )}
       </div>
+
+      {notice && <div className="border-b px-2.5 py-2">{notice}</div>}
 
       <div className="min-h-0 flex-1 overflow-auto px-1.5 py-2">
         <EditableRecordDetail
@@ -440,6 +452,8 @@ export interface RecordDetailLayoutProps {
   editTitle?: ReactNode
   /** Quick-action buttons above the attribute panel (note, email, sms, call) */
   attributeActions?: ReactNode
+  /** Soft banner above the attribute fields (e.g. converted/read-only notice) */
+  attributeNotice?: ReactNode
   /** Render the attribute panel display-only (e.g. converted/locked records) */
   readOnly?: boolean
   /** Custom dialer launcher in the tab bar (overrides the default phone button) */
@@ -464,6 +478,7 @@ export function RecordDetailLayout({
   onInlineSave,
   editTitle,
   attributeActions,
+  attributeNotice,
   readOnly,
   dialerTrigger,
   tabs,
@@ -526,21 +541,22 @@ export function RecordDetailLayout({
       onSave={onInlineSave}
       editTitle={editTitle}
       actions={attributeActions}
+      notice={attributeNotice}
       readOnly={readOnly}
     />
   )
 
   const tabsPane = (
-    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <Tabs
         {...(activeTab != null
           ? { value: activeTab, onValueChange: onTabChange }
           : { defaultValue: defaultTab ?? tabs[0]?.value })}
-        className="flex min-h-0 flex-1 flex-col"
+        className="flex min-h-0 min-w-0 flex-1 flex-col"
       >
         {/* Tab bar — tabs left, dialer toggle right-aligned on the same line */}
         <div className="flex items-center gap-2 border-b px-4 py-2.5">
-          <div className="min-w-0 flex-1 overflow-x-auto">
+          <div className="min-w-0 flex-1 overflow-x-auto scrollbar-hide [mask-image:linear-gradient(to_right,#000_0,#000_calc(100%-1.25rem),transparent_100%)]">
             <TabsList className="w-max gap-0.5">
               {tabs.map((tab) => (
                 <TabsTrigger
@@ -573,8 +589,8 @@ export function RecordDetailLayout({
         </div>
 
         {/* Body — tab content + dialer column (content narrows when open) */}
-        <div className="flex min-h-0 flex-1">
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="flex min-h-0 min-w-0 flex-1">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
             {tabs.map((tab) => (
               <TabsContent
                 key={tab.value}
@@ -640,8 +656,9 @@ export function RecordDetailLayout({
         <span className="absolute inset-y-0 -left-1.5 -right-1.5" />
       </div>
 
-      {/* Right: tabs pane (fills remaining width) */}
-      <div className="flex min-h-0 flex-1 flex-col">{tabsPane}</div>
+      {/* Right: tabs pane (fills remaining width). min-w-0 lets it shrink
+          below its content's natural width so the divider can narrow it. */}
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">{tabsPane}</div>
     </div>
   )
 }

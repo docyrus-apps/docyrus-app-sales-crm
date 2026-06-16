@@ -8,6 +8,7 @@ import {
   CircleDot,
   ClipboardList,
   FileText,
+  Lock,
   Mail,
   MessageSquare,
   Phone,
@@ -31,6 +32,7 @@ import { LeadConvertDialog } from '@/components/leads/lead-convert-dialog'
 import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
 import { getRelationId, isLeadConvertedRecord } from '@/lib/lead-conversion'
+import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
 import {
   type FieldChange,
   type RecordDetailField,
@@ -291,6 +293,8 @@ export function LeadDetail() {
     t('leads.untitledLead', { defaultValue: 'Untitled Lead' })
   const statusName = extractName(lead?.lead_status)
 
+  useSetDetailBreadcrumbTitle(leadRecord ? leadName : null)
+
   const tabs = useMemo<Array<RecordDetailTab>>(() => {
     return [
       {
@@ -412,9 +416,9 @@ export function LeadDetail() {
     <>
       {!isConverted && (
         <Button
-          variant="default"
+          variant="ghost"
           size="sm"
-          className="h-7 gap-1.5 text-[13px]"
+          className="h-7 gap-1.5 text-[13px] bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400 dark:hover:bg-emerald-900/50 dark:hover:text-emerald-300"
           onClick={() => setIsConvertOpen(true)}
         >
           <RefreshCw className="size-3.5" />
@@ -503,6 +507,18 @@ export function LeadDetail() {
         onInlineSave={handleInlineSave}
         editTitle={t('common.editAll', { defaultValue: 'Edit All' })}
         attributeActions={attributeActions}
+        attributeNotice={
+          isConverted ? (
+            <div className="flex items-center gap-2 rounded-md bg-muted/50 px-2.5 py-1.5 text-[12px] text-muted-foreground">
+              <Lock className="size-3.5 shrink-0" />
+              <span>
+                {t('leads.convert.readOnlyNotice', {
+                  defaultValue: 'Bu lead dönüştürüldü, alanlar salt okunur.',
+                })}
+              </span>
+            </div>
+          ) : null
+        }
         readOnly={isConverted}
         dialerTrigger={
           <button

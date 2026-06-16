@@ -25,6 +25,7 @@ import {
 import { RelatedDealsTable } from '@/components/crm/related-deals-table'
 import { RecordActivityTimeline } from '@/components/crm/record-activity-timeline'
 import { useDialer } from '@/components/dialer/dialer-widget'
+import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
 import { useContact, useUpdateContact } from '@/hooks/use-contacts'
 import { useCompanies } from '@/hooks/use-companies'
 import { useDeals } from '@/hooks/use-deals'
@@ -176,6 +177,8 @@ export function ContactDetail() {
     t('contacts.untitled', {
       defaultValue: 'Untitled Contact',
     })
+
+  useSetDetailBreadcrumbTitle(contact ? contactName : null)
 
   const tabs = useMemo<Array<RecordDetailTab>>(() => {
     return [

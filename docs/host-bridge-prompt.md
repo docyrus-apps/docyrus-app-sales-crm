@@ -23,10 +23,14 @@ import {
 } from '@docyrus/signin'
 
 // Host → App navigation (no-op outside iframe; latest closure always used)
-useDocyrusHostNavigation(({ url }) => { /* navigate to url */ })
+useDocyrusHostNavigation(({ url }) => {
+  /* navigate to url */
+})
 
 // Host → App notification (DocyrusNotification has: subject, message, id, status, seen, ...)
-useDocyrusHostNotification((n: DocyrusNotification) => { /* show toast: n.subject + n.message */ })
+useDocyrusHostNotification((n: DocyrusNotification) => {
+  /* show toast: n.subject + n.message */
+})
 ```
 
 For route→host sync, the simplest path is the `syncRouteToHost` prop on the provider — it patches `history.pushState/replaceState` and listens for `popstate`/`hashchange`, so it works with any router:
@@ -53,6 +57,6 @@ Match the existing code style/router/toast library of this repo. Run the project
   use whichever router/toast library each repo already has, so the navigation
   parsing logic stays identical but the primitive adapts.
 - If a repo's router is the strict source of truth and you'd rather avoid history
-  patching, append: *"Instead of `syncRouteToHost`, use `useDocyrusHostRouteSync()`
+  patching, append: _"Instead of `syncRouteToHost`, use `useDocyrusHostRouteSync()`
   or call `notifyRouteChange()` from `useDocyrusAuth()` on a router location
-  subscription."*
+  subscription."_

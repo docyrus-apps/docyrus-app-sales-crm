@@ -67,6 +67,7 @@ import { useSalesOrders } from '@/hooks/use-sales-orders'
 import { useUsers } from '@/hooks/use-users'
 import type { EnumOption, IField } from '@/components/docyrus/form-fields/types'
 import { UI_I18N_LOCALES, type UiI18nLocale } from '@/lib/ui-i18n'
+import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
 
 const FIELD_SLUGS = [
   'stage',
@@ -629,6 +630,10 @@ export function DealDetail() {
       ? `#${dealRecord.autonumber_id}`
       : null
 
+  useSetDetailBreadcrumbTitle(
+    dealRecord ? (dealNumber ? `${dealNumber} ${dealTitle}` : dealTitle) : null,
+  )
+
   const contactsWithPhone = useMemo(
     () => orgContacts.filter((c: any) => c.mobile),
     [orgContacts],
@@ -885,15 +890,6 @@ export function DealDetail() {
       >
         <StickyNote className="size-3.5" />
         {t('contacts.actions.note', { defaultValue: 'Note' })}
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-7 gap-1.5 text-[13px]"
-        onClick={() => handleTabChange('activity')}
-      >
-        <Activity className="size-3.5" />
-        {t('deals.tabs.activity')}
       </Button>
     </>
   )

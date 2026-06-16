@@ -7,12 +7,14 @@ Relation and enum fields can resolve to `null`. UI code must guard for both obje
 The app uses `@docyrus/theme-provider` (`ThemeProvider` + `useTheme`) as the single source of truth for both dark/light/system mode and color preset themes.
 
 `ThemeProvider` wraps the entire React root in `src/main.tsx` (outermost provider, before auth). Configuration:
+
 - `modeStorageKey="app-theme"` — localStorage key for light/dark/system mode
 - `colorThemeStorageKey="app-color-theme"` — localStorage key for color preset
 - `defaultColorTheme="docyrus-default"`
 - `disableTransitionOnChange`
 
 Consumer hooks:
+
 - `src/hooks/use-theme.ts` — re-exports `useTheme` from `@docyrus/theme-provider` (returns `theme`, `setTheme`, `resolvedTheme`, `colorTheme`, `setColorTheme`, `availableThemes`)
 - `src/hooks/use-color-theme.ts` — thin wrapper exposing `{ colorTheme, setColorTheme }` for components that only need color preset
 - `src/lib/theme.tsx` — `useDocyTheme()` adapter for components needing `isDark` (e.g. code editor)

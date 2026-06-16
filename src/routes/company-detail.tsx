@@ -8,7 +8,6 @@ import {
   Building2,
   ClipboardList,
   FileText,
-  Globe,
   Mail,
   MessageSquare,
   Phone,
@@ -39,6 +38,7 @@ import { useContacts } from '@/hooks/use-contacts'
 import { useDeals } from '@/hooks/use-deals'
 import { useLeads } from '@/hooks/use-leads'
 import { useEnumEntities } from '@/hooks/use-enums'
+import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
 import { useRecordEvents } from '@/hooks/use-events'
 import { ContactFormDialog } from '@/components/contacts/contact-form-dialog'
 import { CommentsPanel } from '@/components/shared/comments-panel'
@@ -285,6 +285,9 @@ export function CompanyDetail() {
     company?.name?.trim() ||
     t('companies.untitled', { defaultValue: 'Untitled Company' })
   const statusName = extractName(company?.status)
+
+  useSetDetailBreadcrumbTitle(company ? companyName : null)
+
   const companyLogoUrl =
     company?.company_logo && typeof company.company_logo === 'object'
       ? ((company.company_logo as { signed_url?: string }).signed_url ??
@@ -520,13 +523,24 @@ export function CompanyDetail() {
         variant="ghost"
         size="sm"
         className="h-7 gap-1.5 text-[13px]"
-        disabled={!company?.website}
+        disabled={!company?.phone}
+        onClick={() => company?.phone && window.open(`sms:${company.phone}`)}
+      >
+        <MessageSquare className="size-3.5" />
+        {t('contacts.actions.sms', { defaultValue: 'SMS' })}
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-7 gap-1.5 text-[13px] text-emerald-600"
+        disabled={!company?.phone}
         onClick={() =>
-          company?.website && window.open(company.website, '_blank')
+          company?.phone &&
+          dialer.open({ name: companyName, number: company.phone })
         }
       >
-        <Globe className="size-3.5" />
-        {t('companies.website')}
+        <Phone className="size-3.5" />
+        {t('contacts.actions.call', { defaultValue: 'Call' })}
       </Button>
     </>
   )
