@@ -32,7 +32,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@docyrus/addin-client": "^0.2.3",
     "@docyrus/api-client": "^0.3.4",
-    "@docyrus/app-utils": "^0.15.0",
+    "@docyrus/app-utils": "^0.16.0",
     "@docyrus/devtools": "^0.9.0",
     "@docyrus/dom-selector-client": "^0.6.3",
     "@docyrus/signin": "^0.12.0",
