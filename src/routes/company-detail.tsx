@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
 import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { CompanyLogoAvatar } from '@/components/companies/company-logo-avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -86,19 +86,6 @@ function fieldId(value: unknown): string | null {
     return (value as { id?: string }).id ?? null
 
   return typeof value === 'string' ? value : null
-}
-
-function getInitials(value?: string): string {
-  if (!value) return '#'
-
-  return (
-    value
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase() ?? '')
-      .join('') || '#'
-  )
 }
 
 function toOptions(
@@ -298,6 +285,11 @@ export function CompanyDetail() {
     company?.name?.trim() ||
     t('companies.untitled', { defaultValue: 'Untitled Company' })
   const statusName = extractName(company?.status)
+  const companyLogoUrl =
+    company?.company_logo && typeof company.company_logo === 'object'
+      ? ((company.company_logo as { signed_url?: string }).signed_url ??
+        undefined)
+      : undefined
   const contactsWithPhone = useMemo(
     () => contacts.filter((c: any) => c.mobile),
     [contacts],
@@ -576,15 +568,15 @@ export function CompanyDetail() {
   )
 
   return (
-    <PageContainer className="flex h-full min-h-0 flex-col overflow-hidden">
+    <PageContainer className="flex h-full min-h-0 flex-col overflow-hidden pt-0 pb-0">
       <RecordDetailLayout
         isLoading={isLoading}
         avatar={
-          <Avatar className="size-9 rounded-lg">
-            <AvatarFallback className="rounded-lg bg-muted text-xs font-semibold">
-              {getInitials(company?.name)}
-            </AvatarFallback>
-          </Avatar>
+          <CompanyLogoAvatar
+            companyId={companyId}
+            name={company?.name}
+            logoUrl={companyLogoUrl}
+          />
         }
         title={companyName}
         subtitle={statusName || extractName(company?.industry)}

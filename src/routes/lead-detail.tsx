@@ -463,6 +463,16 @@ export function LeadDetail() {
       <Button
         variant="ghost"
         size="sm"
+        className="h-7 gap-1.5 text-[13px]"
+        disabled={!lead?.phone}
+        onClick={() => lead?.phone && window.open(`sms:${lead.phone}`)}
+      >
+        <MessageSquare className="size-3.5" />
+        {t('contacts.actions.sms', { defaultValue: 'SMS' })}
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
         className="h-7 gap-1.5 text-[13px] text-emerald-600"
         disabled={!lead?.phone}
         onClick={() => dialer.open({ name: leadName, number: lead?.phone })}
@@ -474,7 +484,7 @@ export function LeadDetail() {
   )
 
   return (
-    <PageContainer className="flex h-full min-h-0 flex-col overflow-hidden">
+    <PageContainer className="flex h-full min-h-0 flex-col overflow-hidden pt-0 pb-0">
       <RecordDetailLayout
         isLoading={isLoading}
         avatar={

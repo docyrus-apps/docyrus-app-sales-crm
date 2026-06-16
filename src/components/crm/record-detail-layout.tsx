@@ -539,7 +539,7 @@ export function RecordDetailLayout({
         className="flex min-h-0 flex-1 flex-col"
       >
         {/* Tab bar — tabs left, dialer toggle right-aligned on the same line */}
-        <div className="flex items-center gap-2 border-b px-3 py-2">
+        <div className="flex items-center gap-2 border-b px-4 py-2.5">
           <div className="min-w-0 flex-1 overflow-x-auto">
             <TabsList className="w-max gap-0.5">
               {tabs.map((tab) => (
@@ -618,7 +618,7 @@ export function RecordDetailLayout({
   return (
     <div
       ref={containerRef}
-      className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border bg-card/80 shadow-sm lg:flex-row"
+      className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border bg-card/80 shadow-sm lg:flex-row"
     >
       {/* Left: attribute pane (fixed-but-resizable width on wide screens) */}
       <div
@@ -682,7 +682,7 @@ export function RecordTabPlaceholder({
 
 function RecordDetailLayoutSkeleton() {
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border bg-card/80 shadow-sm lg:flex-row">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border bg-card/80 shadow-sm lg:flex-row">
       <div className="space-y-3 p-3 max-lg:border-b lg:w-[340px] lg:shrink-0 lg:border-e">
         <div className="flex items-center gap-2.5">
           <Skeleton className="size-9 rounded-lg" />

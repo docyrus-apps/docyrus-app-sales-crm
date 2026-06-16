@@ -94,7 +94,7 @@ export function RelatedContactsTable({
   return (
     <div className="flex h-full min-h-0 flex-col">
       {/* Toolbar — search + add */}
-      <div className="flex items-center gap-2 px-3 py-2">
+      <div className="flex items-center gap-2 px-4 py-2.5">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input

@@ -360,7 +360,7 @@ export function ContactDetail() {
   )
 
   return (
-    <PageContainer className="flex h-full min-h-0 flex-col overflow-hidden">
+    <PageContainer className="flex h-full min-h-0 flex-col overflow-hidden pt-0 pb-0">
       <RecordDetailLayout
         isLoading={isLoading}
         avatar={

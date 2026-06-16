@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { ICollectionListParams } from '@/collections/types'
 import { useBaseOrganizationCollection } from '@/collections'
+import { getApiClient } from '@/lib/api'
 
 /**
  * Hook to list companies (organizations) with optional filters
@@ -63,12 +64,89 @@ export function useCompany(companyId: string | undefined) {
           'address',
           'tax_number',
           'district',
+          'company_logo',
           'created_on',
         ],
       })
       return response
     },
     enabled: !!companyId,
+  })
+}
+
+/**
+ * Stored value shape for an image/file field (e.g. `company_logo`).
+ * Mirrors the platform's image field value so it round-trips through update.
+ */
+export interface CompanyLogoValue {
+  file_name: string
+  file_type: string
+  file_size: number
+  signed_url: string
+  source: string
+  file_data?: unknown
+}
+
+/**
+ * Upload an image to the organization data source and persist it as the
+ * company's `company_logo` field value. Uploading to the data-source-level
+ * `/files/upload` endpoint returns the stored file metadata (incl. signed_url),
+ * which is the same shape `company_logo` is read back as.
+ */
+export function useUploadCompanyLogo() {
+  const organizationCollection = useBaseOrganizationCollection()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      companyId,
+      file,
+    }: {
+      companyId: string
+      file: File
+    }) => {
+      const apiClient = getApiClient()
+      const formData = new FormData()
+      formData.append('files', file)
+
+      const uploadResponse = await apiClient.post(
+        '/v1/apps/base/data-sources/organization/files/upload',
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      )
+
+      // The endpoint may return the file object directly or wrapped in an array.
+      const uploaded = (
+        Array.isArray(uploadResponse)
+          ? uploadResponse[0]
+          : ((uploadResponse as any)?.files?.[0] ?? uploadResponse)
+      ) as Record<string, any> | undefined
+
+      if (!uploaded?.signed_url && !uploaded?.source) {
+        throw new Error('Upload did not return a usable file reference')
+      }
+
+      const logo: CompanyLogoValue = {
+        file_name: uploaded.file_name ?? file.name,
+        file_type: uploaded.file_type ?? file.type,
+        file_size: uploaded.file_size ?? file.size,
+        signed_url: uploaded.signed_url ?? '',
+        source: uploaded.source ?? 'local',
+        file_data: uploaded.file_data ?? null,
+      }
+
+      return organizationCollection.update(companyId, { company_logo: logo })
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['companies'] })
+      queryClient.invalidateQueries({
+        queryKey: ['companies', variables.companyId],
+      })
+      toast.success('Logo updated')
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to upload logo')
+    },
   })
 }
 
@@ -112,7 +190,7 @@ export function useUpdateCompany() {
       const response = await organizationCollection.update(companyId, data)
       return response
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['companies'] })
       queryClient.invalidateQueries({
         queryKey: ['companies', variables.companyId],
