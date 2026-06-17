@@ -4,14 +4,11 @@ import { useTranslation } from 'react-i18next'
 import { useDocyrusClient } from '@docyrus/signin'
 import { toast } from 'sonner'
 import {
+  CheckCircle2,
   Columns3,
-  Copy,
-  Eye,
   List,
-  MoreHorizontal,
   Pencil,
   Plus,
-  RefreshCw,
   Trash2,
   Upload,
   UserRoundSearch,
@@ -28,6 +25,7 @@ import {
 } from '@/components/animate-ui/components/radix/tabs'
 import {
   DataGrid,
+  DataGridRowActions,
   DataGridSkeleton,
   DataGridSkeletonGrid,
   getDataGridActionsColumn,
@@ -41,13 +39,6 @@ import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
   mapEnumEntitiesToCellOptions,
   useEnumEntities,
 } from '@/hooks/use-enums'
@@ -56,13 +47,13 @@ import {
   useDeleteLead,
   useUpdateLead,
 } from '@/hooks/use-leads'
+import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 import { useDocyrusDataGrid } from '@/hooks/use-docyrus-data-grid'
+import { useSeedDefaultViews } from '@/hooks/use-seed-default-views'
 import { useDocyrusKanban } from '@/hooks/use-docyrus-kanban'
 import { useDocyrusDataImportWizard } from '@/hooks/use-docyrus-data-import-wizard'
-import {
-  buildDuplicatePayload,
-  saveGridChanges,
-} from '@/lib/data-grid-record-utils'
+import { saveGridChanges } from '@/lib/data-grid-record-utils'
+import { createSystemViews } from '@/lib/crm-system-views'
 import { isLeadConvertedRecord } from '@/lib/lead-conversion'
 import { useDateFormat } from '@/lib/use-date-format'
 
@@ -101,6 +92,17 @@ const LEAD_GRID_VISIBLE_FIELDS = new Set(
   Object.keys(LEAD_GRID_COLUMN_OVERRIDES),
 )
 
+const LEAD_GRID_COLUMNS = Object.keys(LEAD_GRID_COLUMN_OVERRIDES)
+
+const LEAD_GRID_SYSTEM_VIEWS = createSystemViews('base-crm-leads', [
+  {
+    id: 'all',
+    name: 'All',
+    columns: LEAD_GRID_COLUMNS,
+    sorting: [{ id: 'created_on', desc: true }],
+  },
+])
+
 const LEAD_GRID_LIST_COLUMNS = [
   'id',
   'title',
@@ -134,6 +136,14 @@ function LeadsPageInner({
   const deleteLead = useDeleteLead()
   const updateLead = useUpdateLead()
   const { formatDate, formatDateTime } = useDateFormat()
+
+  useSeedDefaultViews({
+    client,
+    appSlug: APP_SLUG,
+    dataSourceSlug: DATA_SOURCE_SLUG,
+    templates: LEAD_GRID_SYSTEM_VIEWS,
+    pruneUnlisted: true,
+  })
 
   const [viewType, setViewType] = useState<LeadsView>('board')
   const [dialog, setDialog] = useState<LeadDialogState | null>(null)
@@ -207,13 +217,6 @@ function LeadsPageInner({
     [collection, t],
   )
 
-  const onDuplicate = useCallback((lead: BaseCrmLeadsEntity) => {
-    setDialog({
-      mode: 'create',
-      lead: buildDuplicatePayload(lead as Record<string, unknown>),
-    })
-  }, [])
-
   const onCloseDialog = useCallback(() => {
     setDialog(null)
   }, [])
@@ -249,71 +252,45 @@ function LeadsPageInner({
       getDataGridActionsColumn<BaseCrmLeadsEntity>({
         actionCount: 2,
         cell: ({ row }) => (
-          <div className="flex items-center gap-0.5 px-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="size-7"
-              onClick={() => onView(row.original)}
-            >
-              <Eye className="size-4" />
-              <span className="sr-only">
-                {t('leads.viewLead', 'View lead')}
-              </span>
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-7"
-                >
-                  <MoreHorizontal className="size-4" />
-                  <span className="sr-only">
-                    {t('common.actions', 'Actions')}
-                  </span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {isLeadConverted(row.original) ? (
-                  <DropdownMenuItem onClick={() => onView(row.original)}>
-                    <Eye className="size-4" />
-                    {t('leads.viewLead', 'View lead')}
-                  </DropdownMenuItem>
-                ) : (
-                  <>
-                    <DropdownMenuItem onClick={() => onOpenEdit(row.original)}>
-                      <Pencil className="size-4" />
-                      {t('common.edit', 'Edit')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => void onOpenConvert(row.original)}
-                    >
-                      <RefreshCw className="size-4" />
-                      {t('leads.convert.convertButton')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onDuplicate(row.original)}>
-                      <Copy className="size-4" />
-                      {t('common.duplicate', 'Duplicate')}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => onDelete(row.original)}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      <Trash2 className="size-4" />
-                      {t('common.delete', 'Delete')}
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <DataGridRowActions
+            row={row.original}
+            openPageLabel={t('leads.viewLead', 'View lead')}
+            actionsLabel={t('common.actions', 'Actions')}
+            onOpenPage={onView}
+            actions={[
+              {
+                key: 'edit',
+                label: t('common.edit', 'Edit'),
+                icon: <Pencil className="size-4" />,
+                hidden: isLeadConverted(row.original),
+                onSelect: onOpenEdit,
+              },
+              {
+                key: 'convert',
+                label: t('leads.convert.convertButton'),
+                icon: <CheckCircle2 className="size-4" />,
+                hidden: isLeadConverted(row.original),
+                onSelect: onOpenConvert,
+              },
+              {
+                key: 'open',
+                label: t('common.openPage', 'Open page'),
+                icon: <DocyrusIcon icon="huge sidebar-right-01" size="sm" />,
+                onSelect: onView,
+              },
+              {
+                key: 'delete',
+                label: t('common.delete', 'Delete'),
+                icon: <Trash2 className="size-4" />,
+                destructive: true,
+                hidden: isLeadConverted(row.original),
+                onSelect: onDelete,
+              },
+            ]}
+          />
         ),
       }),
-    [onDelete, onDuplicate, onOpenConvert, onOpenEdit, onView, t],
+    [onDelete, onOpenConvert, onOpenEdit, onView, t],
   )
 
   const openWizardRef = useRef<() => void>(() => {})
@@ -378,6 +355,7 @@ function LeadsPageInner({
   const {
     table,
     gridProps,
+    pagingMode,
     toolbar,
     items: listLeads,
     reload: reloadList,
@@ -472,10 +450,34 @@ function LeadsPageInner({
     onCardOpen: onView,
     onCardEdit: onOpenEdit,
     onCardClick: onView,
-    cardMenuItems: (row, defaults) =>
-      isLeadConverted(row)
-        ? defaults.filter((item) => item.key === 'open')
-        : defaults,
+    cardMenuItems: (row, defaults) => {
+      const openItem = defaults.find((item) => item.key === 'open')
+      const editItem = defaults.find((item) => item.key === 'edit')
+      const deleteItem = defaults.find((item) => item.key === 'delete')
+
+      if (isLeadConverted(row)) return openItem ? [openItem] : []
+
+      return [
+        ...(editItem ? [editItem] : []),
+        ...(openItem
+          ? [
+              {
+                ...openItem,
+                label: t('common.openPage', 'Open page'),
+              },
+            ]
+          : []),
+        {
+          key: 'convert',
+          label: t('leads.convert.convertButton'),
+          icon: <CheckCircle2 className="size-4" />,
+          onAction: (lead: BaseCrmLeadsEntity) => {
+            void onOpenConvert(lead)
+          },
+        },
+        ...(deleteItem ? [deleteItem] : []),
+      ]
+    },
     onCardDelete: async (row) => {
       if (!row.id) return
       if (isLeadConverted(row)) {
@@ -503,10 +505,10 @@ function LeadsPageInner({
       reloadBoardRef.current()
     },
     enableItemsQuery: viewType === 'board',
+    enableViewSelect: false,
     listParams: {
       columns:
         'id, name, phone, email, website, company_name_text, company_email, company_phone, company_industry, company_size, lead_source(id,name), lead_status(id,name), lead_type(id,name), leads_products_tags, countries(id,name), record_owner, deal_value, converted_deal(id,name), converted_organization(id,name), converted_contact(id,name), conversion_state(id,name), converted_on, created_on, last_modified_on, created_by, last_modified_by',
-      orderBy: 'created_on DESC',
       limit: 200,
     },
     searchPlaceholder: t('common.search', 'Search...'),
@@ -681,7 +683,12 @@ function LeadsPageInner({
           listLeads.length > 0 && (
             <div className="space-y-4">
               {toolbar}
-              <DataGrid table={table} {...gridProps} height={600} />
+              <DataGrid
+                table={table}
+                {...gridProps}
+                pagingMode={pagingMode}
+                height={600}
+              />
             </div>
           )}
 

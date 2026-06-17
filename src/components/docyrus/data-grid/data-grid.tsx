@@ -51,6 +51,7 @@ import {
 } from './lib/data-grid'
 
 const EMPTY_CELL_SELECTION_SET = new Set<string>()
+const PAGINATION_FOOTER_HEIGHT_PX = 40
 
 export interface DataGridAction<TData> {
   /** Stable key for React reconciliation (defaults to `label`). */
@@ -154,6 +155,19 @@ export function DataGrid<TData>({
   const hasActiveFilters =
     columnFilters.length > 0 || (searchState?.searchQuery?.length ?? 0) > 0
   const showEmptyState = rows.length === 0
+  const hasStandardPaging = pagingMode === 'standard'
+  const contentHeight =
+    typeof height === 'number' && hasStandardPaging
+      ? Math.max(0, height - PAGINATION_FOOTER_HEIGHT_PX)
+      : height
+  const contentHeightStyle =
+    contentHeight === 'auto'
+      ? {
+          height: hasStandardPaging
+            ? `calc(100% - ${PAGINATION_FOOTER_HEIGHT_PX}px)`
+            : '100%',
+        }
+      : { maxHeight: `${contentHeight}px` }
 
   const onClearFilters = useCallback(() => {
     if (columnFilters.length > 0) table.resetColumnFilters()
@@ -231,7 +245,7 @@ export function DataGrid<TData>({
           table={table}
           tableMeta={tableMeta}
           cardConfig={cardConfig}
-          height={height}
+          height={contentHeight}
         />
       ) : (
         <div
@@ -254,12 +268,7 @@ export function DataGrid<TData>({
               ? 'rounded-t-md border-b-0'
               : 'rounded-md',
           )}
-          style={{
-            ...columnSizeVars,
-            ...(height === 'auto'
-              ? { height: '100%' }
-              : { maxHeight: `${height}px` }),
-          }}
+          style={{ ...columnSizeVars, ...contentHeightStyle }}
           onContextMenu={onDataGridContextMenu}
         >
           <div
@@ -539,7 +548,7 @@ export function DataGrid<TData>({
             getRowLabel={getRowLabel}
           />
         )}
-      {pagingMode === 'standard' && <DataGridPaginationFooter table={table} />}
+      {hasStandardPaging && <DataGridPaginationFooter table={table} />}
       {isReloading && (
         <div
           aria-hidden

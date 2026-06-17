@@ -16,7 +16,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { type FullField } from 'react-querybuilder'
 
 import { type DataGridViewSelectProps } from '@/components/docyrus/data-grid-view-select'
-import { type SavedDataGridView } from '@/components/docyrus/data-grid/types'
+import {
+  DATA_GRID_DEFAULT_PAGE_SIZE,
+  type DataGridPagingMode,
+  type SavedDataGridView,
+} from '@/components/docyrus/data-grid/types'
 import {
   FILTER_GROUP_INPUT_TYPE,
   FILTER_GROUP_VALUE_EDITOR_TYPE,
@@ -752,11 +756,46 @@ function pickRecord(
   return value[key]
 }
 
+function getSavedViewPageSize(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
+    ? value
+    : DATA_GRID_DEFAULT_PAGE_SIZE
+}
+
+function getSavedViewPaging(columns: Record<string, unknown>): {
+  pagingEnabled: boolean
+  pagingMode?: DataGridPagingMode
+  pageSize?: number
+} {
+  const pagingEnabled = pickRecord(columns, 'pagingEnabled') !== false
+
+  if (!pagingEnabled) {
+    return {
+      pagingEnabled,
+      pagingMode: undefined,
+      pageSize: undefined,
+    }
+  }
+
+  /*
+   * Legacy views could be saved as `pagingEnabled: true` with
+   * `pagingMode: "virtual-scroll"`, which makes Configure look enabled while
+   * no footer appears. Normalize every active saved view to the visible
+   * standard footer contract.
+   */
+  return {
+    pagingEnabled: true,
+    pagingMode: 'standard',
+    pageSize: getSavedViewPageSize(pickRecord(columns, 'pageSize')),
+  }
+}
+
 function dataViewToSavedView(dv: DataView): SavedDataGridView {
   const columns = dv.columns ?? {}
   const filters = dv.filters ?? {}
   const sort = dv.sort ?? {}
   const colorRules = dv.color_rules ?? {}
+  const paging = getSavedViewPaging(columns)
 
   return {
     id: dv.id,
@@ -800,12 +839,9 @@ function dataViewToSavedView(dv: DataView): SavedDataGridView {
      * stashed inside the opaque `columns` blob so the backend doesn't need
      * a dedicated schema for it.
      */
-    pagingEnabled: pickRecord(columns, 'pagingEnabled') as boolean | undefined,
-    pagingMode: pickRecord(
-      columns,
-      'pagingMode',
-    ) as SavedDataGridView['pagingMode'],
-    pageSize: pickRecord(columns, 'pageSize') as number | undefined,
+    pagingEnabled: paging.pagingEnabled,
+    pagingMode: paging.pagingMode,
+    pageSize: paging.pageSize,
     inlineEditingEnabled: pickRecord(columns, 'inlineEditingEnabled') as
       | boolean
       | undefined,

@@ -1,16 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDocyrusClient } from '@docyrus/signin'
-import {
-  Copy,
-  Eye,
-  MoreHorizontal,
-  Plus,
-  Trash2,
-  Upload,
-  CheckSquare,
-  Pencil,
-} from 'lucide-react'
+import { Plus, Trash2, Upload, CheckSquare, Pencil } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
 
 import type { BaseTaskEntity } from '@/collections/base-task.collection'
@@ -18,6 +9,7 @@ import { useBaseTaskCollection } from '@/collections/base-task.collection'
 import { Button as MotionButton } from '@/components/animate-ui/components/buttons/button'
 import {
   DataGrid,
+  DataGridRowActions,
   DataGridSkeleton,
   DataGridSkeletonGrid,
   getDataGridActionsColumn,
@@ -30,25 +22,36 @@ import { PageHeader } from '@/components/layout/page-header'
 import { TaskFormSheet } from '@/components/tasks/task-form-sheet'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 import { useDocyrusDataGrid } from '@/hooks/use-docyrus-data-grid'
+import { useSeedDefaultViews } from '@/hooks/use-seed-default-views'
 import { useDocyrusDataImportWizard } from '@/hooks/use-docyrus-data-import-wizard'
 import { useDeleteTask, useUpdateTask } from '@/hooks/use-tasks'
 import { useUsers } from '@/hooks/use-users'
-import {
-  buildDuplicatePayload,
-  saveGridChanges,
-} from '@/lib/data-grid-record-utils'
+import { saveGridChanges } from '@/lib/data-grid-record-utils'
+import { createSystemViews } from '@/lib/crm-system-views'
 import { useDateFormat } from '@/lib/use-date-format'
 
 const APP_SLUG = 'base'
 const DATA_SOURCE_SLUG = 'task'
+
+const TASK_GRID_COLUMNS = [
+  'subject',
+  'status',
+  'start_date',
+  'end_date',
+  'organization',
+  'record_owner',
+]
+
+const TASK_GRID_SYSTEM_VIEWS = createSystemViews('base-task', [
+  {
+    id: 'all',
+    name: 'All',
+    columns: TASK_GRID_COLUMNS,
+    sorting: [{ id: 'start_date', desc: false }],
+  },
+])
 
 type TaskFormMode = 'create' | 'edit'
 
@@ -78,6 +81,14 @@ function TasksPageInner({
   const updateTask = useUpdateTask()
   const { data: users = [] } = useUsers()
   const { formatDate, formatDateTime } = useDateFormat()
+
+  useSeedDefaultViews({
+    client,
+    appSlug: APP_SLUG,
+    dataSourceSlug: DATA_SOURCE_SLUG,
+    templates: TASK_GRID_SYSTEM_VIEWS,
+    pruneUnlisted: true,
+  })
 
   const [dialog, setDialog] = useState<TaskDialogState | null>(null)
   const [pendingDelete, setPendingDelete] = useState<BaseTaskEntity | null>(
@@ -124,13 +135,6 @@ function TasksPageInner({
     setDialog({ mode: 'edit', task })
   }, [])
 
-  const onDuplicate = useCallback((task: BaseTaskEntity) => {
-    setDialog({
-      mode: 'create',
-      task: buildDuplicatePayload(task as Record<string, unknown>),
-    })
-  }, [])
-
   const onCloseDialog = useCallback(() => {
     setDialog(null)
   }, [])
@@ -146,56 +150,36 @@ function TasksPageInner({
       getDataGridActionsColumn<BaseTaskEntity>({
         actionCount: 2,
         cell: ({ row }) => (
-          <div className="flex items-center gap-0.5 px-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="size-7"
-              onClick={() => onOpenEdit(row.original)}
-            >
-              <Eye className="size-4" />
-              <span className="sr-only">
-                {t('tasks.viewTask', 'View task')}
-              </span>
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-7"
-                >
-                  <MoreHorizontal className="size-4" />
-                  <span className="sr-only">
-                    {t('common.actions', 'Actions')}
-                  </span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onOpenEdit(row.original)}>
-                  <Pencil className="size-4" />
-                  {t('common.edit', 'Edit')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDuplicate(row.original)}>
-                  <Copy className="size-4" />
-                  {t('common.duplicate', 'Duplicate')}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => onDelete(row.original)}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="size-4" />
-                  {t('common.delete', 'Delete')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <DataGridRowActions
+            row={row.original}
+            openPageLabel={t('tasks.viewTask', 'View task')}
+            actionsLabel={t('common.actions', 'Actions')}
+            onOpenPage={onOpenEdit}
+            actions={[
+              {
+                key: 'edit',
+                label: t('common.edit', 'Edit'),
+                icon: <Pencil className="size-4" />,
+                onSelect: onOpenEdit,
+              },
+              {
+                key: 'open',
+                label: t('common.openPage', 'Open page'),
+                icon: <DocyrusIcon icon="huge sidebar-right-01" size="sm" />,
+                onSelect: onOpenEdit,
+              },
+              {
+                key: 'delete',
+                label: t('common.delete', 'Delete'),
+                icon: <Trash2 className="size-4" />,
+                destructive: true,
+                onSelect: onDelete,
+              },
+            ]}
+          />
         ),
       }),
-    [onDelete, onDuplicate, onOpenEdit, t],
+    [onDelete, onOpenEdit, t],
   )
 
   const onChangesSave = useCallback(
@@ -265,6 +249,7 @@ function TasksPageInner({
   const {
     table,
     gridProps,
+    pagingMode,
     toolbar,
     items: tasks,
     reload,
@@ -385,7 +370,12 @@ function TasksPageInner({
         {!isLoading && !error && tasks.length > 0 && (
           <div className="space-y-4">
             {toolbar}
-            <DataGrid table={table} {...gridProps} height={600} />
+            <DataGrid
+              table={table}
+              {...gridProps}
+              pagingMode={pagingMode}
+              height={600}
+            />
           </div>
         )}
 

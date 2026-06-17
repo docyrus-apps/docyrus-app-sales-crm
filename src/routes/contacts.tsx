@@ -2,16 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useDocyrusClient } from '@docyrus/signin'
-import {
-  Copy,
-  Eye,
-  MoreHorizontal,
-  Pencil,
-  Plus,
-  Trash2,
-  Upload,
-  User,
-} from 'lucide-react'
+import { Pencil, Plus, Trash2, Upload, User } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
 
 import type { BaseContactEntity } from '@/collections/base-contact.collection'
@@ -19,6 +10,7 @@ import { useBaseContactCollection } from '@/collections/base-contact.collection'
 import { ContactFormDialog } from '@/components/contacts/contact-form-dialog'
 import {
   DataGrid,
+  DataGridRowActions,
   DataGridSkeleton,
   DataGridSkeletonGrid,
   getDataGridActionsColumn,
@@ -31,21 +23,14 @@ import { PageHeader } from '@/components/layout/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { ViewSwitcher, type ViewType } from '@/components/view-switcher'
 import { useUpdateContact } from '@/hooks/use-contacts'
+import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 import { useDocyrusDataGrid } from '@/hooks/use-docyrus-data-grid'
+import { useSeedDefaultViews } from '@/hooks/use-seed-default-views'
 import { useDocyrusDataImportWizard } from '@/hooks/use-docyrus-data-import-wizard'
-import {
-  buildDuplicatePayload,
-  saveGridChanges,
-} from '@/lib/data-grid-record-utils'
+import { saveGridChanges } from '@/lib/data-grid-record-utils'
+import { createSystemViews } from '@/lib/crm-system-views'
 import { useDateFormat } from '@/lib/use-date-format'
 
 const APP_SLUG = 'base'
@@ -76,6 +61,17 @@ const CONTACT_GRID_VISIBLE_FIELDS = new Set(
   Object.keys(CONTACT_GRID_COLUMN_OVERRIDES),
 )
 
+const CONTACT_GRID_COLUMNS = Object.keys(CONTACT_GRID_COLUMN_OVERRIDES)
+
+const CONTACT_GRID_SYSTEM_VIEWS = createSystemViews('base-contact', [
+  {
+    id: 'all',
+    name: 'All',
+    columns: CONTACT_GRID_COLUMNS,
+    sorting: [{ id: 'created_on', desc: true }],
+  },
+])
+
 export function Contacts() {
   const client = useDocyrusClient()
 
@@ -95,6 +91,14 @@ function ContactsPageInner({
   const updateContact = useUpdateContact()
   const { formatDate, formatDateTime } = useDateFormat()
 
+  useSeedDefaultViews({
+    client,
+    appSlug: APP_SLUG,
+    dataSourceSlug: DATA_SOURCE_SLUG,
+    templates: CONTACT_GRID_SYSTEM_VIEWS,
+    pruneUnlisted: true,
+  })
+
   const [dialog, setDialog] = useState<ContactDialogState | null>(null)
   const [pendingDelete, setPendingDelete] = useState<BaseContactEntity | null>(
     null,
@@ -108,13 +112,6 @@ function ContactsPageInner({
 
   const onOpenEdit = useCallback((contact: BaseContactEntity) => {
     setDialog({ mode: 'edit', contact })
-  }, [])
-
-  const onDuplicate = useCallback((contact: BaseContactEntity) => {
-    setDialog({
-      mode: 'create',
-      contact: buildDuplicatePayload(contact as Record<string, unknown>),
-    })
   }, [])
 
   const onCloseDialog = useCallback(() => {
@@ -145,56 +142,36 @@ function ContactsPageInner({
       getDataGridActionsColumn<BaseContactEntity>({
         actionCount: 2,
         cell: ({ row }) => (
-          <div className="flex items-center gap-0.5 px-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="size-7"
-              onClick={() => onView(row.original)}
-            >
-              <Eye className="size-4" />
-              <span className="sr-only">
-                {t('contacts.viewContact', 'View contact')}
-              </span>
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-7"
-                >
-                  <MoreHorizontal className="size-4" />
-                  <span className="sr-only">
-                    {t('common.actions', 'Actions')}
-                  </span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onOpenEdit(row.original)}>
-                  <Pencil className="size-4" />
-                  {t('common.edit', 'Edit')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDuplicate(row.original)}>
-                  <Copy className="size-4" />
-                  {t('common.duplicate', 'Duplicate')}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => onDelete(row.original)}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="size-4" />
-                  {t('common.delete', 'Delete')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <DataGridRowActions
+            row={row.original}
+            openPageLabel={t('contacts.viewContact', 'View contact')}
+            actionsLabel={t('common.actions', 'Actions')}
+            onOpenPage={onView}
+            actions={[
+              {
+                key: 'edit',
+                label: t('common.edit', 'Edit'),
+                icon: <Pencil className="size-4" />,
+                onSelect: onOpenEdit,
+              },
+              {
+                key: 'open',
+                label: t('common.openPage', 'Open page'),
+                icon: <DocyrusIcon icon="huge sidebar-right-01" size="sm" />,
+                onSelect: onView,
+              },
+              {
+                key: 'delete',
+                label: t('common.delete', 'Delete'),
+                icon: <Trash2 className="size-4" />,
+                destructive: true,
+                onSelect: onDelete,
+              },
+            ]}
+          />
         ),
       }),
-    [onDelete, onDuplicate, onOpenEdit, onView, t],
+    [onDelete, onOpenEdit, onView, t],
   )
 
   const onChangesSave = useCallback(
@@ -227,6 +204,7 @@ function ContactsPageInner({
   const {
     table,
     gridProps,
+    pagingMode,
     toolbar,
     items: contacts,
     reload,
@@ -411,7 +389,12 @@ function ContactsPageInner({
         {!isLoading && !error && contacts.length > 0 && viewType === 'list' && (
           <div className="space-y-4">
             {toolbar}
-            <DataGrid table={table} {...gridProps} height={600} />
+            <DataGrid
+              table={table}
+              {...gridProps}
+              pagingMode={pagingMode}
+              height={600}
+            />
           </div>
         )}
 

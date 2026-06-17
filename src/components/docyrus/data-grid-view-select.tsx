@@ -1291,6 +1291,9 @@ function createEmptyDraft(): Omit<SavedDataGridView, 'id'> {
     columnFilters: [],
     grouping: [],
     filterQuery: { ...DEFAULT_FILTER_QUERY },
+    pagingEnabled: true,
+    pagingMode: 'standard',
+    pageSize: DATA_GRID_DEFAULT_PAGE_SIZE,
   }
 }
 
@@ -1405,9 +1408,9 @@ function ViewEditorDialog<TData>({
   const [draftRowHeight, setDraftRowHeight] = useState<RowHeightValue>('short')
   const [draftDisplayMode, setDraftDisplayMode] =
     useState<DataGridDisplayMode>('table')
-  const [draftPagingEnabled, setDraftPagingEnabled] = useState<boolean>(false)
+  const [draftPagingEnabled, setDraftPagingEnabled] = useState<boolean>(true)
   const [draftPagingMode, setDraftPagingMode] =
-    useState<DataGridPagingMode>('virtual-scroll')
+    useState<DataGridPagingMode>('standard')
   const [draftPageSize, setDraftPageSize] = useState<number>(
     DATA_GRID_DEFAULT_PAGE_SIZE,
   )
@@ -1435,8 +1438,8 @@ function ViewEditorDialog<TData>({
       setDraftGrouping(value.grouping?.[0])
       setDraftRowHeight(value.rowHeight ?? 'short')
       setDraftDisplayMode(value.displayMode ?? 'table')
-      setDraftPagingEnabled(value.pagingEnabled ?? false)
-      setDraftPagingMode(value.pagingMode ?? 'virtual-scroll')
+      setDraftPagingEnabled(value.pagingEnabled ?? true)
+      setDraftPagingMode('standard')
       setDraftPageSize(value.pageSize ?? DATA_GRID_DEFAULT_PAGE_SIZE)
       setDraftInlineEditingEnabled(value.inlineEditingEnabled ?? false)
       setDraftReadOnlyColumns(
@@ -1455,8 +1458,8 @@ function ViewEditorDialog<TData>({
       setDraftGrouping(undefined)
       setDraftRowHeight(table.options.meta?.rowHeight ?? 'short')
       setDraftDisplayMode(table.options.meta?.displayMode ?? 'table')
-      setDraftPagingEnabled(false)
-      setDraftPagingMode('virtual-scroll')
+      setDraftPagingEnabled(empty.pagingEnabled ?? true)
+      setDraftPagingMode(empty.pagingMode ?? 'standard')
       setDraftPageSize(DATA_GRID_DEFAULT_PAGE_SIZE)
       setDraftInlineEditingEnabled(false)
       setDraftReadOnlyColumns([])
@@ -1623,6 +1626,12 @@ function ViewEditorDialog<TData>({
     [],
   )
 
+  const onPagingEnabledChange = useCallback((enabled: boolean) => {
+    setDraftPagingEnabled(enabled)
+
+    if (enabled) setDraftPagingMode('standard')
+  }, [])
+
   const canSave = draftName.trim().length > 0
 
   /*
@@ -1732,7 +1741,7 @@ function ViewEditorDialog<TData>({
           onGroupingChange={setDraftGrouping}
           onRowHeightChange={setDraftRowHeight}
           onDisplayModeChange={setDraftDisplayMode}
-          onPagingEnabledChange={setDraftPagingEnabled}
+          onPagingEnabledChange={onPagingEnabledChange}
           onPagingModeChange={setDraftPagingMode}
           onPageSizeChange={setDraftPageSize}
           onInlineEditingEnabledChange={setDraftInlineEditingEnabled}

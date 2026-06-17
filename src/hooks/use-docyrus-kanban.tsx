@@ -980,108 +980,120 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
   const toolbar = (
     <div
       data-slot="docyrus-kanban-toolbar"
-      className={cn('flex items-start gap-2 px-3 py-2', toolbarClassName)}
+      className={cn('flex flex-col gap-2 px-3 py-2', toolbarClassName)}
     >
-      <div className="flex min-w-0 flex-1 items-center gap-2 flex-wrap">
-        {toolbarStartContent}
-        {showViewSelect && (
-          <Select value={activeViewId} onValueChange={setActiveViewId}>
-            <SelectTrigger className="h-8 min-w-[10rem]">
-              <SelectValue placeholder="View" />
-            </SelectTrigger>
-            <SelectContent>
+      {(toolbarStartContent || showViewSelect) && (
+        <div className="flex min-w-0 items-center gap-2 overflow-x-auto">
+          {toolbarStartContent}
+          {showViewSelect && (
+            <div className="flex min-w-0 items-center gap-1">
               {views.map((view) => (
-                <SelectItem key={view.id} value={view.id}>
+                <Button
+                  key={view.id}
+                  type="button"
+                  variant={view.id === activeViewId ? 'ghost' : 'ghost'}
+                  size="sm"
+                  className={cn(
+                    'h-8 shrink-0 rounded-none border-b-2 border-transparent px-3 text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground',
+                    view.id === activeViewId &&
+                      'border-foreground text-foreground',
+                  )}
+                  onClick={() => setActiveViewId(view.id)}
+                >
                   {view.name}
-                </SelectItem>
+                </Button>
               ))}
-            </SelectContent>
-          </Select>
-        )}
-        {enableSearchInput && (
-          <div className="relative shrink-0">
-            <Search className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-              placeholder={searchPlaceholder}
-              className="h-8 w-56 pl-7"
-            />
-          </div>
-        )}
-      </div>
-      <div className="flex flex-none shrink-0 items-center gap-2">
-        {showDateMenu && (
-          <div className="flex items-center gap-2">
-            <Label className="text-xs text-muted-foreground">Group by</Label>
-            <Select
-              value={dateGroupBy}
-              onValueChange={(value) =>
-                setDateGroupBy(value as DocyrusKanbanDateGroupBy)
-              }
+            </div>
+          )}
+        </div>
+      )}
+      <div className="flex items-start gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-2 flex-wrap">
+          {enableSearchInput && (
+            <div className="relative shrink-0">
+              <Search className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+                placeholder={searchPlaceholder}
+                className="h-8 w-56 pl-7"
+              />
+            </div>
+          )}
+        </div>
+        <div className="flex flex-none shrink-0 items-center gap-2">
+          {showDateMenu && (
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-muted-foreground">Group by</Label>
+              <Select
+                value={dateGroupBy}
+                onValueChange={(value) =>
+                  setDateGroupBy(value as DocyrusKanbanDateGroupBy)
+                }
+              >
+                <SelectTrigger className="h-8 w-[7.5rem]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="day">Day</SelectItem>
+                  <SelectItem value="week">Week</SelectItem>
+                  <SelectItem value="month">Month</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {showUserMenu && (
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-muted-foreground">Group by</Label>
+              <Select
+                value={userGroupBy}
+                onValueChange={(value) =>
+                  setUserGroupBy(value as DocyrusKanbanUserGroupBy)
+                }
+              >
+                <SelectTrigger className="h-8 w-[7rem]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="team">Team</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {showAllSwitch && (
+            <div className="flex items-center gap-2">
+              <Switch
+                id="docyrus-kanban-show-all"
+                checked={showAllColumns}
+                onCheckedChange={setShowAllColumns}
+              />
+              <Label
+                htmlFor="docyrus-kanban-show-all"
+                className="text-xs text-muted-foreground"
+              >
+                Show all
+              </Label>
+            </div>
+          )}
+          {enableReloadButton && (
+            <Button
+              variant="outline"
+              size="icon-sm"
+              aria-label="Reload"
+              disabled={isReloading}
+              onClick={reloadItems}
             >
-              <SelectTrigger className="h-8 w-[7.5rem]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="day">Day</SelectItem>
-                <SelectItem value="week">Week</SelectItem>
-                <SelectItem value="month">Month</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-        {showUserMenu && (
-          <div className="flex items-center gap-2">
-            <Label className="text-xs text-muted-foreground">Group by</Label>
-            <Select
-              value={userGroupBy}
-              onValueChange={(value) =>
-                setUserGroupBy(value as DocyrusKanbanUserGroupBy)
-              }
-            >
-              <SelectTrigger className="h-8 w-[7rem]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="team">Team</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-        {showAllSwitch && (
-          <div className="flex items-center gap-2">
-            <Switch
-              id="docyrus-kanban-show-all"
-              checked={showAllColumns}
-              onCheckedChange={setShowAllColumns}
-            />
-            <Label
-              htmlFor="docyrus-kanban-show-all"
-              className="text-xs text-muted-foreground"
-            >
-              Show all
-            </Label>
-          </div>
-        )}
-        {enableReloadButton && (
-          <Button
-            variant="outline"
-            size="icon-sm"
-            aria-label="Reload"
-            disabled={isReloading}
-            onClick={reloadItems}
-          >
-            {isReloading ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <RotateCw className="size-4" />
-            )}
-          </Button>
-        )}
-        {toolbarEndContent}
+              {isReloading ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <RotateCw className="size-4" />
+              )}
+            </Button>
+          )}
+          {toolbarEndContent}
+        </div>
       </div>
     </div>
   )

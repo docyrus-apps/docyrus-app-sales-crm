@@ -4,11 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { useDocyrusClient } from '@docyrus/signin'
 import {
   Columns3,
-  Copy,
   DollarSign,
-  Eye,
   List,
-  MoreHorizontal,
   Pencil,
   Plus,
   Trash2,
@@ -26,6 +23,7 @@ import {
 } from '@/components/animate-ui/components/radix/tabs'
 import {
   DataGrid,
+  DataGridRowActions,
   DataGridSkeleton,
   DataGridSkeletonGrid,
   getDataGridActionsColumn,
@@ -39,24 +37,17 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
   mapEnumEntitiesToCellOptions,
   useEnumEntities,
 } from '@/hooks/use-enums'
 import { useDeleteDeal, useUpdateDeal } from '@/hooks/use-deals'
+import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 import { useDocyrusDataGrid } from '@/hooks/use-docyrus-data-grid'
+import { useSeedDefaultViews } from '@/hooks/use-seed-default-views'
 import { useDocyrusDataImportWizard } from '@/hooks/use-docyrus-data-import-wizard'
 import { useDocyrusKanban } from '@/hooks/use-docyrus-kanban'
-import {
-  buildDuplicatePayload,
-  saveGridChanges,
-} from '@/lib/data-grid-record-utils'
+import { saveGridChanges } from '@/lib/data-grid-record-utils'
+import { createSystemViews } from '@/lib/crm-system-views'
 import { useDateFormat } from '@/lib/use-date-format'
 
 type DealsView = 'board' | 'list'
@@ -90,6 +81,17 @@ const DEAL_GRID_VISIBLE_FIELDS = new Set(
   Object.keys(DEAL_GRID_COLUMN_OVERRIDES),
 )
 
+const DEAL_GRID_COLUMNS = Object.keys(DEAL_GRID_COLUMN_OVERRIDES)
+
+const DEAL_GRID_SYSTEM_VIEWS = createSystemViews('base-crm-deal', [
+  {
+    id: 'all',
+    name: 'All',
+    columns: DEAL_GRID_COLUMNS,
+    sorting: [{ id: 'created_on', desc: true }],
+  },
+])
+
 export function Deals() {
   const client = useDocyrusClient()
 
@@ -109,6 +111,14 @@ function DealsPageInner({
   const deleteDeal = useDeleteDeal()
   const updateDeal = useUpdateDeal()
   const { formatDate, formatDateTime } = useDateFormat()
+
+  useSeedDefaultViews({
+    client,
+    appSlug: APP_SLUG,
+    dataSourceSlug: DATA_SOURCE_SLUG,
+    templates: DEAL_GRID_SYSTEM_VIEWS,
+    pruneUnlisted: true,
+  })
 
   const [viewType, setViewType] = useState<DealsView>('board')
   const [dialog, setDialog] = useState<DealDialogState | null>(null)
@@ -133,13 +143,6 @@ function DealsPageInner({
 
   const onOpenEdit = useCallback((deal: BaseCrmDealsEntity) => {
     setDialog({ mode: 'edit', deal })
-  }, [])
-
-  const onDuplicate = useCallback((deal: BaseCrmDealsEntity) => {
-    setDialog({
-      mode: 'create',
-      deal: buildDuplicatePayload(deal as Record<string, unknown>),
-    })
   }, [])
 
   const onCloseDialog = useCallback(() => {
@@ -170,56 +173,36 @@ function DealsPageInner({
       getDataGridActionsColumn<BaseCrmDealsEntity>({
         actionCount: 2,
         cell: ({ row }) => (
-          <div className="flex items-center gap-0.5 px-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="size-7"
-              onClick={() => onView(row.original)}
-            >
-              <Eye className="size-4" />
-              <span className="sr-only">
-                {t('deals.viewDeal', 'View deal')}
-              </span>
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-7"
-                >
-                  <MoreHorizontal className="size-4" />
-                  <span className="sr-only">
-                    {t('common.actions', 'Actions')}
-                  </span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onOpenEdit(row.original)}>
-                  <Pencil className="size-4" />
-                  {t('common.edit', 'Edit')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDuplicate(row.original)}>
-                  <Copy className="size-4" />
-                  {t('common.duplicate', 'Duplicate')}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => onDelete(row.original)}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="size-4" />
-                  {t('common.delete', 'Delete')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <DataGridRowActions
+            row={row.original}
+            openPageLabel={t('deals.viewDeal', 'View deal')}
+            actionsLabel={t('common.actions', 'Actions')}
+            onOpenPage={onView}
+            actions={[
+              {
+                key: 'edit',
+                label: t('common.edit', 'Edit'),
+                icon: <Pencil className="size-4" />,
+                onSelect: onOpenEdit,
+              },
+              {
+                key: 'open',
+                label: t('common.openPage', 'Open page'),
+                icon: <DocyrusIcon icon="huge sidebar-right-01" size="sm" />,
+                onSelect: onView,
+              },
+              {
+                key: 'delete',
+                label: t('common.delete', 'Delete'),
+                icon: <Trash2 className="size-4" />,
+                destructive: true,
+                onSelect: onDelete,
+              },
+            ]}
+          />
         ),
       }),
-    [onDelete, onDuplicate, onOpenEdit, onView, t],
+    [onDelete, onOpenEdit, onView, t],
   )
 
   const onChangesSave = useCallback(
@@ -253,6 +236,7 @@ function DealsPageInner({
   const {
     table,
     gridProps,
+    pagingMode,
     toolbar,
     items: listDeals,
     reload: reloadList,
@@ -374,6 +358,39 @@ function DealsPageInner({
     onCardOpen: onView,
     onCardEdit: onOpenEdit,
     onCardClick: onView,
+    cardMenuItems: (_row, defaults) => {
+      const openItem = defaults.find((item) => item.key === 'open')
+      const editItem = defaults.find((item) => item.key === 'edit')
+      const deleteItem = defaults.find((item) => item.key === 'delete')
+
+      return [
+        ...(editItem
+          ? [
+              {
+                ...editItem,
+                icon: <Pencil className="size-4" />,
+              },
+            ]
+          : []),
+        ...(openItem
+          ? [
+              {
+                ...openItem,
+                label: t('common.openPage', 'Open page'),
+                icon: <DocyrusIcon icon="huge sidebar-right-01" size="sm" />,
+              },
+            ]
+          : []),
+        ...(deleteItem
+          ? [
+              {
+                ...deleteItem,
+                icon: <Trash2 className="size-4" />,
+              },
+            ]
+          : []),
+      ]
+    },
     onCardDelete: async (row) => {
       if (!row.id) return
 
@@ -389,10 +406,10 @@ function DealsPageInner({
       reloadBoardRef.current()
     },
     enableItemsQuery: viewType === 'board',
+    enableViewSelect: false,
     listParams: {
       columns:
         'id, name, autonumber_id, record_owner, expected_revenue, deal_value, stage, organization(id,name,company_logo), contact_person(id,name), hot_prospect, expected_closing_date, close_probability, customer_type, lead_source, created_on, last_modified_on, created_by, last_modified_by',
-      orderBy: 'created_on DESC',
       limit: 200,
     },
     searchPlaceholder: t('common.search', 'Search...'),
@@ -522,33 +539,32 @@ function DealsPageInner({
           </Card>
         )}
 
-        {viewType === 'list' &&
-          !isListLoading &&
-          !listError &&
-          listDeals.length === 0 && (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <p className="text-lg font-medium">{t('deals.emptyTitle')}</p>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {t('deals.emptyDescription')}
-                </p>
-                <MotionButton className="mt-4" onClick={onOpenCreate}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  {t('deals.createDeal')}
-                </MotionButton>
-              </CardContent>
-            </Card>
-          )}
-
-        {viewType === 'list' &&
-          !isListLoading &&
-          !listError &&
-          listDeals.length > 0 && (
-            <div className="space-y-4">
-              {toolbar}
-              <DataGrid table={table} {...gridProps} height={600} />
-            </div>
-          )}
+        {viewType === 'list' && !isListLoading && !listError && (
+          <div className="space-y-4">
+            {toolbar}
+            {listDeals.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <p className="text-lg font-medium">{t('deals.emptyTitle')}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {t('deals.emptyDescription')}
+                  </p>
+                  <MotionButton className="mt-4" onClick={onOpenCreate}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    {t('deals.createDeal')}
+                  </MotionButton>
+                </CardContent>
+              </Card>
+            ) : (
+              <DataGrid
+                table={table}
+                {...gridProps}
+                pagingMode={pagingMode}
+                height={600}
+              />
+            )}
+          </div>
+        )}
 
         <RecordDeleteConfirmDialog
           open={pendingDelete !== null}

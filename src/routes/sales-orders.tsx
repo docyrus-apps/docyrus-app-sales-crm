@@ -2,20 +2,14 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useDocyrusClient } from '@docyrus/signin'
-import {
-  Copy,
-  Eye,
-  FileText,
-  MoreHorizontal,
-  Trash2,
-  Upload,
-} from 'lucide-react'
+import { FileText, Pencil, Trash2, Upload } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
 
 import type { BaseCrmSalesOrderEntity } from '@/collections/base_crm-sales_order.collection'
 import { useBaseCrmSalesOrderCollection } from '@/collections/base_crm-sales_order.collection'
 import {
   DataGrid,
+  DataGridRowActions,
   DataGridSkeleton,
   DataGridSkeletonGrid,
   getDataGridActionsColumn,
@@ -27,24 +21,14 @@ import { PageHeader } from '@/components/layout/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { ViewSwitcher, type ViewType } from '@/components/view-switcher'
-import {
-  useCreateSalesOrder,
-  useUpdateSalesOrder,
-} from '@/hooks/use-sales-orders'
+import { useUpdateSalesOrder } from '@/hooks/use-sales-orders'
+import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 import { useDocyrusDataGrid } from '@/hooks/use-docyrus-data-grid'
+import { useSeedDefaultViews } from '@/hooks/use-seed-default-views'
 import { useDocyrusDataImportWizard } from '@/hooks/use-docyrus-data-import-wizard'
-import {
-  buildDuplicatePayload,
-  saveGridChanges,
-} from '@/lib/data-grid-record-utils'
+import { saveGridChanges } from '@/lib/data-grid-record-utils'
+import { createSystemViews } from '@/lib/crm-system-views'
 import { useDateFormat } from '@/lib/use-date-format'
 
 const APP_SLUG = 'base_crm'
@@ -66,6 +50,20 @@ const SALES_ORDER_GRID_VISIBLE_FIELDS = new Set(
   Object.keys(SALES_ORDER_GRID_COLUMN_OVERRIDES),
 )
 
+const SALES_ORDER_GRID_COLUMNS = Object.keys(SALES_ORDER_GRID_COLUMN_OVERRIDES)
+
+const SALES_ORDER_GRID_SYSTEM_VIEWS = createSystemViews(
+  'base-crm-sales-order',
+  [
+    {
+      id: 'all',
+      name: 'All',
+      columns: SALES_ORDER_GRID_COLUMNS,
+      sorting: [{ id: 'created_on', desc: true }],
+    },
+  ],
+)
+
 export function SalesOrders() {
   const client = useDocyrusClient()
 
@@ -82,9 +80,16 @@ function SalesOrdersPageInner({
   const { t } = useTranslation()
   const navigate = useNavigate()
   const collection = useBaseCrmSalesOrderCollection()
-  const createOrder = useCreateSalesOrder()
   const updateOrder = useUpdateSalesOrder()
   const { formatDate, formatDateTime } = useDateFormat()
+
+  useSeedDefaultViews({
+    client,
+    appSlug: APP_SLUG,
+    dataSourceSlug: DATA_SOURCE_SLUG,
+    templates: SALES_ORDER_GRID_SYSTEM_VIEWS,
+    pruneUnlisted: true,
+  })
 
   const [pendingDelete, setPendingDelete] =
     useState<BaseCrmSalesOrderEntity | null>(null)
@@ -103,15 +108,6 @@ function SalesOrdersPageInner({
     [navigate],
   )
 
-  const onDuplicate = useCallback(
-    async (order: BaseCrmSalesOrderEntity) => {
-      const payload = buildDuplicatePayload(order as Record<string, unknown>)
-      await createOrder.mutateAsync(payload)
-      reloadRef.current()
-    },
-    [createOrder],
-  )
-
   const onDelete = useCallback((order: BaseCrmSalesOrderEntity) => {
     if (!order.id) return
 
@@ -123,52 +119,36 @@ function SalesOrdersPageInner({
       getDataGridActionsColumn<BaseCrmSalesOrderEntity>({
         actionCount: 2,
         cell: ({ row }) => (
-          <div className="flex items-center gap-0.5 px-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="size-7"
-              onClick={() => onView(row.original)}
-            >
-              <Eye className="size-4" />
-              <span className="sr-only">
-                {t('salesOrders.viewOrder', 'View order')}
-              </span>
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-7"
-                >
-                  <MoreHorizontal className="size-4" />
-                  <span className="sr-only">
-                    {t('common.actions', 'Actions')}
-                  </span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onDuplicate(row.original)}>
-                  <Copy className="size-4" />
-                  {t('common.duplicate', 'Duplicate')}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => onDelete(row.original)}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="size-4" />
-                  {t('common.delete', 'Delete')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <DataGridRowActions
+            row={row.original}
+            openPageLabel={t('salesOrders.viewOrder', 'View order')}
+            actionsLabel={t('common.actions', 'Actions')}
+            onOpenPage={onView}
+            actions={[
+              {
+                key: 'edit',
+                label: t('common.edit', 'Edit'),
+                icon: <Pencil className="size-4" />,
+                onSelect: onView,
+              },
+              {
+                key: 'open',
+                label: t('common.openPage', 'Open page'),
+                icon: <DocyrusIcon icon="huge sidebar-right-01" size="sm" />,
+                onSelect: onView,
+              },
+              {
+                key: 'delete',
+                label: t('common.delete', 'Delete'),
+                icon: <Trash2 className="size-4" />,
+                destructive: true,
+                onSelect: onDelete,
+              },
+            ]}
+          />
         ),
       }),
-    [onDelete, onDuplicate, onView, t],
+    [onDelete, onView, t],
   )
 
   const onChangesSave = useCallback(
@@ -184,7 +164,6 @@ function SalesOrdersPageInner({
   )
 
   const openWizardRef = useRef<() => void>(() => {})
-  const reloadRef = useRef<() => void>(() => {})
 
   const importToolbarButton = useMemo(
     () => (
@@ -205,6 +184,7 @@ function SalesOrdersPageInner({
   const {
     table,
     gridProps,
+    pagingMode,
     toolbar,
     items: orders,
     reload,
@@ -246,7 +226,6 @@ function SalesOrdersPageInner({
   })
 
   openWizardRef.current = openWizard
-  reloadRef.current = reload
 
   const onConfirmDelete = useCallback(async () => {
     if (!pendingDelete?.id) return
@@ -379,7 +358,12 @@ function SalesOrdersPageInner({
         {!isLoading && !error && orders.length > 0 && viewType === 'list' && (
           <div className="space-y-4">
             {toolbar}
-            <DataGrid table={table} {...gridProps} height={600} />
+            <DataGrid
+              table={table}
+              {...gridProps}
+              pagingMode={pagingMode}
+              height={600}
+            />
           </div>
         )}
 

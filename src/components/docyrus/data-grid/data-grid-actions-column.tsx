@@ -1,6 +1,19 @@
 'use client'
 
 import { type ColumnDef } from '@tanstack/react-table'
+import { MoreHorizontal } from 'lucide-react'
+import { Fragment, type ReactNode } from 'react'
+
+import { Button } from '@/components/ui/button'
+import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { cn } from '@/lib/utils'
 
 const BUTTON_SIZE = 28
 const BUTTON_GAP = 2
@@ -48,4 +61,100 @@ export function getDataGridActionsColumn<TData>({
     }),
     ...props,
   }
+}
+
+export interface DataGridRowAction<TData> {
+  key: string
+  label: ReactNode
+  icon?: ReactNode
+  destructive?: boolean
+  disabled?: boolean
+  hidden?: boolean
+  onSelect: (row: TData) => void | Promise<void>
+}
+
+interface DataGridRowActionsProps<TData> {
+  row: TData
+  openPageLabel: string
+  actionsLabel: string
+  onOpenPage: (row: TData) => void | Promise<void>
+  actions?: Array<DataGridRowAction<TData>>
+  className?: string
+}
+
+export function DataGridRowActions<TData>({
+  row,
+  openPageLabel,
+  actionsLabel,
+  onOpenPage,
+  actions = [],
+  className,
+}: DataGridRowActionsProps<TData>) {
+  const visibleActions = actions.filter((action) => !action.hidden)
+
+  return (
+    <div className={cn('flex items-center gap-0.5 px-1', className)}>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="size-7"
+        aria-label={openPageLabel}
+        title={openPageLabel}
+        onClick={() => {
+          void onOpenPage(row)
+        }}
+      >
+        <DocyrusIcon icon="huge square-arrow-expand-01" size="sm" />
+      </Button>
+      {visibleActions.length > 0 ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-7"
+              aria-label={actionsLabel}
+              title={actionsLabel}
+            >
+              <MoreHorizontal className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {visibleActions.map((action, index) => {
+              /*
+               * Visually separate destructive actions (e.g. Delete) from the
+               * preceding non-destructive group with a divider, matching the
+               * standard row-actions menu layout.
+               */
+              const showSeparator =
+                action.destructive === true &&
+                index > 0 &&
+                visibleActions[index - 1].destructive !== true
+
+              return (
+                <Fragment key={action.key}>
+                  {showSeparator ? <DropdownMenuSeparator /> : null}
+                  <DropdownMenuItem
+                    disabled={action.disabled}
+                    onClick={() => {
+                      void action.onSelect(row)
+                    }}
+                    className={cn(
+                      action.destructive &&
+                        'text-destructive focus:text-destructive',
+                    )}
+                  >
+                    {action.icon}
+                    {action.label}
+                  </DropdownMenuItem>
+                </Fragment>
+              )
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : null}
+    </div>
+  )
 }

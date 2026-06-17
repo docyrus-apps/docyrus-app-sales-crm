@@ -1681,73 +1681,79 @@ export function useDocyrusDataGrid<TData>(
     () => (
       <div
         data-slot="docyrus-data-grid-toolbar"
-        className={cn('flex items-start gap-2 px-3 py-2', toolbarClassName)}
+        className={cn('flex flex-col gap-2 px-3 py-2', toolbarClassName)}
       >
-        <div className="flex min-w-0 flex-1 items-center gap-2 flex-wrap">
-          {toolbarStartContent}
-          {renderViewSelectInToolbar && (
-            <DataGridViewSelect
-              table={table}
-              variant={viewSelectVariant}
-              maxVisibleViews={viewSelectMaxVisible}
-              editable
-              {...gridViewSelectProps}
-            />
-          )}
-          {enableSearchInput && (
-            <div className="relative shrink-0">
-              <Search className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="search"
-                value={searchInput}
-                onChange={(event) => setSearchInput(event.target.value)}
-                placeholder={searchPlaceholder}
-                className="h-8 w-56 pl-7"
+        {(toolbarStartContent || renderViewSelectInToolbar) && (
+          <div className="flex min-w-0 items-center gap-2 overflow-x-auto">
+            {toolbarStartContent}
+            {renderViewSelectInToolbar && (
+              <DataGridViewSelect
+                table={table}
+                variant={viewSelectVariant}
+                maxVisibleViews={viewSelectMaxVisible}
+                editable
+                {...gridViewSelectProps}
               />
-            </div>
-          )}
-          {enableFilterMenu && (
-            <DataGridFilterMenu
-              table={table}
-              getAsyncOptions={getAsyncOptions}
-              className="min-w-fit flex-1"
-            />
-          )}
-        </div>
-        <div className="flex flex-none shrink-0 items-center gap-2">
-          {enableGroupMenu && (
-            <DataGridGroupMenu
-              table={table}
-              defaultRowGroupingColumn={defaultRowGroupingColumn}
-            />
-          )}
-          {enableSortMenu && <DataGridSortMenu table={table} />}
-          {enableRowHeightMenu && <DataGridRowHeightMenu table={table} />}
-          {enableDisplayMenu && <DataGridDisplayMenu table={table} />}
-          {canServerExport && (
-            <DocyrusDataExportMenu
-              onExport={handleServerExport}
-              fields={serverExportFieldOptions}
-              visibleSlugs={serverExportVisibleSlugs}
-              isExporting={isServerExporting}
-            />
-          )}
-          {enableReloadButton && (
-            <Button
-              variant="outline"
-              size="icon-sm"
-              aria-label="Reload"
-              disabled={isReloading}
-              onClick={reloadItems}
-            >
-              {isReloading ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <RotateCw className="size-4" />
-              )}
-            </Button>
-          )}
-          {toolbarEndContent}
+            )}
+          </div>
+        )}
+        <div className="flex items-start gap-2">
+          <div className="flex min-w-0 flex-1 items-center gap-2 flex-wrap">
+            {enableSearchInput && (
+              <div className="relative shrink-0">
+                <Search className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="search"
+                  value={searchInput}
+                  onChange={(event) => setSearchInput(event.target.value)}
+                  placeholder={searchPlaceholder}
+                  className="h-8 w-56 pl-7"
+                />
+              </div>
+            )}
+            {enableFilterMenu && (
+              <DataGridFilterMenu
+                table={table}
+                getAsyncOptions={getAsyncOptions}
+                className="min-w-fit flex-1"
+              />
+            )}
+          </div>
+          <div className="flex flex-none shrink-0 items-center gap-2">
+            {enableGroupMenu && (
+              <DataGridGroupMenu
+                table={table}
+                defaultRowGroupingColumn={defaultRowGroupingColumn}
+              />
+            )}
+            {enableSortMenu && <DataGridSortMenu table={table} />}
+            {enableRowHeightMenu && <DataGridRowHeightMenu table={table} />}
+            {enableDisplayMenu && <DataGridDisplayMenu table={table} />}
+            {canServerExport && (
+              <DocyrusDataExportMenu
+                onExport={handleServerExport}
+                fields={serverExportFieldOptions}
+                visibleSlugs={serverExportVisibleSlugs}
+                isExporting={isServerExporting}
+              />
+            )}
+            {enableReloadButton && (
+              <Button
+                variant="outline"
+                size="icon-sm"
+                aria-label="Reload"
+                disabled={isReloading}
+                onClick={reloadItems}
+              >
+                {isReloading ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <RotateCw className="size-4" />
+                )}
+              </Button>
+            )}
+            {toolbarEndContent}
+          </div>
         </div>
       </div>
     ),

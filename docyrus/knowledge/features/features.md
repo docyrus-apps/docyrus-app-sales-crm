@@ -2,13 +2,21 @@
 
 The companies and contacts routes now use the Docyrus data-grid runtime for list views with saved views, Docyrus-backed search/filtering, inline change saving, and toolbar import/export actions. Alternate layouts remain where implemented.
 
+List grid toolbars render saved views above the search/filter/tool row, and every datasource ships system views: All plus two query-backed filtered views that merge through `filterQuery` rather than toolbar quick-filter state.
+
+Saved data views are normalized to standard paging (`pagingEnabled: true`, `pagingMode: standard`) so the pagination footer is visible when the active list view loads. In standard paging mode, the shared DataGrid treats the configured `height` as the total grid area including the pagination footer, preventing large pages from pushing the footer below the viewport.
+
 ## Products & Sales Orders
 
 The products and sales orders routes now follow the shared Docyrus grid pattern with saved views, card/list browsing, inline change saving, and toolbar import/export actions so catalog workflows behave consistently with the CRM workspaces.
 
+Their list grids use the same row action pattern as the CRM workspaces: an inline open-page button plus an overflow menu for Edit, Open page, and Delete.
+
 ## Leads & Deals Pipeline
 
 The leads and deals routes use the shared Docyrus grid runtime for list tabs and the Docyrus kanban hook for board tabs, with saved views, inline updates, and toolbar import/export actions.
+
+Their list views use system saved views (All plus two query-backed filtered views), so list filtering and sorting come from the active view query rather than local toolbar filter chips. Board/kanban views keep saved data views hidden; DataView controls are only rendered for list grids.
 
 ### Lead Datasource (Pure Lead Model)
 
@@ -65,12 +73,16 @@ Every record created during convert is tagged with `source_lead = lead.id` (orga
 
 - `isLeadConvertedRecord` (`src/lib/lead-conversion.ts`) returns true when `converted_deal` is set or `conversion_state = completed`.
 - The lead form, kanban drag, command palette, and detail edit flows derive read-only behavior from this single helper.
-- The leads list and board fetch hidden conversion marker fields (`converted_deal`, `conversion_state`) and enforce read-only behavior from route-level callbacks and save handlers, leaving Docyrus grid/kanban component implementations untouched. `lead_status = Converted` alone is not treated as a real conversion lock.
+- The leads list and board fetch hidden conversion marker fields (`converted_deal`, `conversion_state`) and enforce read-only behavior from route-level callbacks and save handlers, leaving Docyrus grid/kanban component implementations untouched. Converted lead grid rows expose only the open-page action; editable/convert/delete actions remain unavailable. `lead_status = Converted` alone is not treated as a real conversion lock.
 - Step state, tooltip details, the "+ field" popover, the mode selector, and the form all check the same flag.
 
 ## Tasks, Activities & Calendar
 
 The tasks route now uses the shared Docyrus grid runtime with saved views, inline updates, and toolbar import/export actions so task management behaves consistently with the other CRM workspaces.
+
+Non-list detail grids use `DataGridStandardToolbar` without `DataGridViewSelect`, so saved DataView controls do not appear inside record-detail tabs.
+
+Its system views are query-backed (`All`, `My Tasks`, `Due Soon`) and keep the toolbar quick filter visually untouched.
 
 ## Field Sales Planning & Approvals
 

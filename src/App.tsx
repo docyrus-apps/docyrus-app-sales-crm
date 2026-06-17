@@ -16,6 +16,7 @@ import { TaskFormSheet } from './components/tasks/task-form-sheet'
 import { EventFormDialog } from './components/events/event-form-dialog'
 import { GlobalDialogBar } from './components/docyrus/awesome-dialog'
 import { DialerProvider } from './components/dialer/dialer-widget'
+import { DocyrusDateFormatProvider } from './lib/docyrus-date-format-provider'
 
 function App() {
   const { status } = useDocyrusAuth()
@@ -107,45 +108,51 @@ function App() {
     )
   }
 
+  // Authenticated + client ready by this point; guard narrows the type for the
+  // date-format provider (which needs a non-null client to read tenant prefs).
+  if (!client) return null
+
   return (
     <NuqsAdapter>
-      <TooltipProvider>
-        <DialerProvider>
-          <AppLayout>
-            <Outlet />
-          </AppLayout>
-        </DialerProvider>
-        <Toaster />
-        <CommandPalette
-          open={commandOpen}
-          onOpenChange={setCommandOpen}
-          onCreateDeal={() => setDealFormOpen(true)}
-          onCreateLead={() => setLeadFormOpen(true)}
-          onCreateTask={() => setTaskFormOpen(true)}
-          onCreateEvent={() => setEventFormOpen(true)}
-        />
-        <DealFormDialog
-          open={dealFormOpen}
-          onOpenChange={setDealFormOpen}
-          mode="create"
-        />
-        <LeadFormDialog
-          open={leadFormOpen}
-          onOpenChange={setLeadFormOpen}
-          mode="create"
-        />
-        <TaskFormSheet
-          open={taskFormOpen}
-          onOpenChange={setTaskFormOpen}
-          mode="create"
-        />
-        <EventFormDialog
-          open={eventFormOpen}
-          onOpenChange={setEventFormOpen}
-          mode="create"
-        />
-        <GlobalDialogBar />
-      </TooltipProvider>
+      <DocyrusDateFormatProvider client={client}>
+        <TooltipProvider>
+          <DialerProvider>
+            <AppLayout>
+              <Outlet />
+            </AppLayout>
+          </DialerProvider>
+          <Toaster />
+          <CommandPalette
+            open={commandOpen}
+            onOpenChange={setCommandOpen}
+            onCreateDeal={() => setDealFormOpen(true)}
+            onCreateLead={() => setLeadFormOpen(true)}
+            onCreateTask={() => setTaskFormOpen(true)}
+            onCreateEvent={() => setEventFormOpen(true)}
+          />
+          <DealFormDialog
+            open={dealFormOpen}
+            onOpenChange={setDealFormOpen}
+            mode="create"
+          />
+          <LeadFormDialog
+            open={leadFormOpen}
+            onOpenChange={setLeadFormOpen}
+            mode="create"
+          />
+          <TaskFormSheet
+            open={taskFormOpen}
+            onOpenChange={setTaskFormOpen}
+            mode="create"
+          />
+          <EventFormDialog
+            open={eventFormOpen}
+            onOpenChange={setEventFormOpen}
+            mode="create"
+          />
+          <GlobalDialogBar />
+        </TooltipProvider>
+      </DocyrusDateFormatProvider>
     </NuqsAdapter>
   )
 }

@@ -1,15 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDocyrusClient } from '@docyrus/signin'
-import {
-  Copy,
-  MoreHorizontal,
-  Package,
-  Pencil,
-  Plus,
-  Trash2,
-  Upload,
-} from 'lucide-react'
+import { Package, Pencil, Plus, Trash2, Upload } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
 
 import type { BaseCrmProductEntity } from '@/collections/base_crm-product.collection'
@@ -18,6 +10,7 @@ import { Button as MotionButton } from '@/components/animate-ui/components/butto
 import { ProductFormDialog } from '@/components/products/product-form-dialog'
 import {
   DataGrid,
+  DataGridRowActions,
   DataGridSkeleton,
   DataGridSkeletonGrid,
   getDataGridActionsColumn,
@@ -29,21 +22,14 @@ import { PageHeader } from '@/components/layout/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { ViewSwitcher, type ViewType } from '@/components/view-switcher'
 import { useUpdateProduct } from '@/hooks/use-products'
+import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 import { useDocyrusDataGrid } from '@/hooks/use-docyrus-data-grid'
+import { useSeedDefaultViews } from '@/hooks/use-seed-default-views'
 import { useDocyrusDataImportWizard } from '@/hooks/use-docyrus-data-import-wizard'
-import {
-  buildDuplicatePayload,
-  saveGridChanges,
-} from '@/lib/data-grid-record-utils'
+import { saveGridChanges } from '@/lib/data-grid-record-utils'
+import { createSystemViews } from '@/lib/crm-system-views'
 import { useDateFormat } from '@/lib/use-date-format'
 
 const APP_SLUG = 'base_crm'
@@ -73,6 +59,17 @@ const PRODUCT_GRID_VISIBLE_FIELDS = new Set(
   Object.keys(PRODUCT_GRID_COLUMN_OVERRIDES),
 )
 
+const PRODUCT_GRID_COLUMNS = Object.keys(PRODUCT_GRID_COLUMN_OVERRIDES)
+
+const PRODUCT_GRID_SYSTEM_VIEWS = createSystemViews('base-crm-product', [
+  {
+    id: 'all',
+    name: 'All',
+    columns: PRODUCT_GRID_COLUMNS,
+    sorting: [{ id: 'product_code', desc: false }],
+  },
+])
+
 export function Products() {
   const client = useDocyrusClient()
 
@@ -91,6 +88,14 @@ function ProductsPageInner({
   const updateProduct = useUpdateProduct()
   const { formatDate, formatDateTime } = useDateFormat()
 
+  useSeedDefaultViews({
+    client,
+    appSlug: APP_SLUG,
+    dataSourceSlug: DATA_SOURCE_SLUG,
+    templates: PRODUCT_GRID_SYSTEM_VIEWS,
+    pruneUnlisted: true,
+  })
+
   const [dialog, setDialog] = useState<ProductDialogState | null>(null)
   const [pendingDelete, setPendingDelete] =
     useState<BaseCrmProductEntity | null>(null)
@@ -103,13 +108,6 @@ function ProductsPageInner({
 
   const onOpenEdit = useCallback((product: BaseCrmProductEntity) => {
     setDialog({ mode: 'edit', product })
-  }, [])
-
-  const onDuplicate = useCallback((product: BaseCrmProductEntity) => {
-    setDialog({
-      mode: 'create',
-      product: buildDuplicatePayload(product as Record<string, unknown>),
-    })
   }, [])
 
   const onCloseDialog = useCallback(() => {
@@ -127,56 +125,36 @@ function ProductsPageInner({
       getDataGridActionsColumn<BaseCrmProductEntity>({
         actionCount: 2,
         cell: ({ row }) => (
-          <div className="flex items-center gap-0.5 px-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="size-7"
-              onClick={() => onOpenEdit(row.original)}
-            >
-              <Pencil className="size-4" />
-              <span className="sr-only">
-                {t('products.editProduct', 'Edit product')}
-              </span>
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-7"
-                >
-                  <MoreHorizontal className="size-4" />
-                  <span className="sr-only">
-                    {t('common.actions', 'Actions')}
-                  </span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onOpenEdit(row.original)}>
-                  <Pencil className="size-4" />
-                  {t('common.edit', 'Edit')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDuplicate(row.original)}>
-                  <Copy className="size-4" />
-                  {t('common.duplicate', 'Duplicate')}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => onDelete(row.original)}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="size-4" />
-                  {t('common.delete', 'Delete')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <DataGridRowActions
+            row={row.original}
+            openPageLabel={t('products.openProduct', 'Open product')}
+            actionsLabel={t('common.actions', 'Actions')}
+            onOpenPage={onOpenEdit}
+            actions={[
+              {
+                key: 'edit',
+                label: t('common.edit', 'Edit'),
+                icon: <Pencil className="size-4" />,
+                onSelect: onOpenEdit,
+              },
+              {
+                key: 'open',
+                label: t('common.openPage', 'Open page'),
+                icon: <DocyrusIcon icon="huge sidebar-right-01" size="sm" />,
+                onSelect: onOpenEdit,
+              },
+              {
+                key: 'delete',
+                label: t('common.delete', 'Delete'),
+                icon: <Trash2 className="size-4" />,
+                destructive: true,
+                onSelect: onDelete,
+              },
+            ]}
+          />
         ),
       }),
-    [onDelete, onDuplicate, onOpenEdit, t],
+    [onDelete, onOpenEdit, t],
   )
 
   const onChangesSave = useCallback(
@@ -212,6 +190,7 @@ function ProductsPageInner({
   const {
     table,
     gridProps,
+    pagingMode,
     toolbar,
     items: products,
     reload,
@@ -398,7 +377,12 @@ function ProductsPageInner({
         {!isLoading && !error && products.length > 0 && viewType === 'list' && (
           <div className="space-y-4">
             {toolbar}
-            <DataGrid table={table} {...gridProps} height={600} />
+            <DataGrid
+              table={table}
+              {...gridProps}
+              pagingMode={pagingMode}
+              height={600}
+            />
           </div>
         )}
 

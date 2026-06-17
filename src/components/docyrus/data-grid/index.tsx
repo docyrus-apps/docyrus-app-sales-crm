@@ -9,7 +9,11 @@ export {
   DataGridSkeletonGrid,
   DataGridSkeletonToolbar,
 } from './data-grid-skeleton'
-export { getDataGridActionsColumn } from './data-grid-actions-column'
+export {
+  DataGridRowActions,
+  getDataGridActionsColumn,
+  type DataGridRowAction,
+} from './data-grid-actions-column'
 export { getDataGridSelectColumn } from './data-grid-select-column'
 export { DataGridSortMenu } from './data-grid-sort-menu'
 export { DataGridViewMenu } from './data-grid-view-menu'
