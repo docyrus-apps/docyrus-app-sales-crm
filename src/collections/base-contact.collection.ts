@@ -43,6 +43,12 @@ export interface BaseContactEntity {
 
   /** Map Location */
   map_location?: Record<string, any>
+
+  /** Type */
+  contact_type?: { id: string; name: string } | any
+
+  /** Status */
+  contact_status?: { id: string; name: string } | any
 }
 
 export function useBaseContactCollection() {

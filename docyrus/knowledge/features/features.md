@@ -6,6 +6,24 @@ List grid toolbars render saved views above the search/filter/tool row, and ever
 
 Saved data views are normalized to standard paging (`pagingEnabled: true`, `pagingMode: standard`) so the pagination footer is visible when the active list view loads. In standard paging mode, the shared DataGrid treats the configured `height` as the total grid area including the pagination footer, preventing large pages from pushing the footer below the viewport.
 
+## CRM Status & Type Taxonomy
+
+Status/type fields are tenant-enum picklists (`tenant.enum`, scoped per `tenant_field_id`), rendered in `sortOrder` order. Enum config is edited via `docyrus studio update-enums` (id-based upsert).
+
+When `sortOrder` is null the UI (`src/hooks/use-enums.ts`) falls back to creation order (`autonumber_id`), so pipeline/funnel fields must carry an explicit `sortOrder`. Sending a subset of options to `update-enums` patches only those ids; the rest are untouched.
+
+Canonical ordered options (`sortOrder` in steps of 10, `*` = `isFinalOption`):
+
+- Deal `stage`: New → Demo → Budget → Proposal → Negotiation → Follow-Up → Won\* → Lost\* → Cancelled\*.
+- Lead `lead_status`: New → Contacted → Qualified → Converted\* → Disqualified\*. Conversion sets both `lead_status="Converted"` and `conversion_state="completed"` together; `isLeadConvertedRecord` keys off `conversion_state`/`converted_deal`, not the picklist value.
+- Organization `status`: Active → Inactive\* → Review (the legacy "Deneme" test option was renamed to "Review" and is in active use, so it is kept rather than deleted).
+- Organization `type`: Customer → Prospect → Partner → Vendor. The former "Lead" option was renamed in place to "Prospect" (existing records reclassified without data migration, since "Lead" is its own entity); the stray "Deneme" test value is gone.
+- Contact carries `contact_type` (role: Decision Maker, Champion, Influencer, Technical, Billing, Other) and `contact_status` (Active, Inactive\*, Do Not Contact\*). The bare slugs `type`/`status` are reserved system field slugs, hence the `contact_` prefix; both fields are CUSTOM-owned additions on the shared `base.contact` datasource.
+
+Paired cross-datasource picklists now share identical option names: Deal `customer_type` and Lead `lead_type` = {New Business, Existing Business}; Deal `reason_for_lost` and Lead `lost_reason` = one canonical list (Competition, Price, Feature Gap, Expectation Mismatch, Lack of Response, Missed Follow Ups, Unqualified, Wrong Target, Future Interest, Other); `lead_source`, `company_size`, and `industry`/`company_industry` already match across leads/deal/organization.
+
+These shared concepts are deliberately kept as separate per-field enum definitions (NOT consolidated into a shared `tenant_enum_set_id`): the CLI has no `create-enum-set` and enums can only be created against a field, so a true shared set would need field-repointing plus record migration with unverified merge semantics on the shared `base` app. Instead, paired fields are kept name-identical, and lead convert maps them by normalized name (`optionByName` / `mapEnumBetweenDataSources` in `use-lead-convert-enum-mappings.ts`). Keep paired option names in sync when editing either side.
+
 ## Products & Sales Orders
 
 The products and sales orders routes now follow the shared Docyrus grid pattern with saved views, card/list browsing, inline change saving, and toolbar import/export actions so catalog workflows behave consistently with the CRM workspaces.

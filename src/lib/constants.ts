@@ -61,32 +61,6 @@ export const PAGINATION = {
 } as const
 
 /**
- * Status colors for badges and indicators
- */
-export const STATUS_COLORS = {
-  // Deal stages
-  PROSPECTING: 'blue',
-  DISCOVERY: 'purple',
-  PROPOSAL: 'yellow',
-  NEGOTIATION: 'orange',
-  WON: 'green',
-  LOST: 'red',
-  CANCELLED: 'gray',
-
-  // Lead statuses
-  NEW: 'blue',
-  CONTACTED: 'purple',
-  QUALIFIED: 'green',
-  UNQUALIFIED: 'gray',
-
-  // Task statuses
-  TODO: 'gray',
-  IN_PROGRESS: 'blue',
-  COMPLETED: 'green',
-  BLOCKED: 'red',
-} as const
-
-/**
  * Navigation menu items configuration
  */
 export const NAV_ITEMS = [
