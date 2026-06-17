@@ -57,6 +57,22 @@ Field sales settings live in tenant app config under `fieldSales` for `base_crm`
 
 The field sales plan runtime now reads and writes plan records through `base.event`, translating the field-sales view model (`status`, `event_type`, `weekly_plan`) onto the event schema (`plan_status`, `plan_type`, `plan_approval`). This keeps field planning inside the shared event infrastructure while preserving the existing field-sales UI flow.
 
+## App Module Configuration
+
+Tenant-level module switches live in the same app config record as the field-sales settings (app id `FIELD_SALES_APP_ID`, slug `base_crm`), under a separate `data.modules` key alongside `data.fieldSales` — see [[architecture#Field Sales Runtime Shape]].
+
+`src/lib/app-config.ts` defines `AppModulesConfig` (`fieldSales`, `webphone`), the defaults (`fieldSales: true`, `webphone: false`), and `isModuleEnabled`. `src/hooks/use-app-config.ts` exposes `useAppModules()` (reads `data.modules` via `createAppConfigClient`) and `useUpdateAppModules()` (merges `modules` back onto the existing `data` blob so the `fieldSales` settings are never clobbered).
+
+Consumers:
+
+- `app-sidebar.tsx` hides the whole "Saha Satış" nav group when `fieldSales` is off. The always-visible "Uygulama Ayarları" (`/app-config`) entry sits in its own admin nav group, deliberately outside any toggleable group, so a disabled module can always be re-enabled.
+- `app-header-actions.tsx` renders the field-sales location action only when `fieldSales` is on.
+- `ModuleGuard` (`src/components/shared/module-guard.tsx`) wraps the field-sales routes plus `/settings` in `main.tsx`: it shows a spinner while the config resolves and redirects to `/` when the module is off, so deep links into a turned-off module never render their page.
+
+`/app-config` (`src/routes/app-config.tsx`) is the tenant-level toggle screen; field-sales' own detail settings stay at `/settings` under the Saha Satış group. The webphone toggle is scaffolded (persists to `data.modules.webphone`, shown with a "coming soon" badge) ahead of the call-center / webphone feature that will consume the flag.
+
+Backlink: `// @docyrus: [[architecture#App Module Configuration]]`.
+
 ## Lead Convert Refactor Checkpoint
 
 Current checkpoint:

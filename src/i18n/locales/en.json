@@ -2,6 +2,7 @@
   "common": {
     "cancel": "Cancel",
     "save": "Save",
+    "saving": "Saving...",
     "delete": "Delete",
     "edit": "Edit",
     "create": "Create",
@@ -35,7 +36,8 @@
     "noResultsFound": "No results found.",
     "pages": "Pages",
     "searchTooltip": "Search",
-    "dataSources": "Data Sources"
+    "dataSources": "Data Sources",
+    "administration": "Administration"
   },
   "sidebar": {
     "appName": "Sales CRM",
@@ -1019,6 +1021,23 @@
     "emailPlaceholder": "email@example.com",
     "urlPlaceholder": "https://example.com",
     "phonePlaceholder": "Enter phone number..."
+  },
+  "appConfig": {
+    "title": "App Settings",
+    "navTitle": "App Settings",
+    "comingSoon": "Coming soon",
+    "modules": {
+      "title": "Modules",
+      "subtitle": "Turn modules on or off for this app. Disabled modules hide their menus, pages and actions from every user.",
+      "fieldSales": {
+        "title": "Field Sales",
+        "description": "Planning, plan approvals, field calendar and the location / visit action in the top bar."
+      },
+      "webphone": {
+        "title": "Webphone",
+        "description": "Call center telephony integration (dial / answer). Enabled in a later release."
+      }
+    }
   },
   "fieldSales": {
     "groupLabel": "Field Sales",

@@ -41,9 +41,11 @@ import { ContactDetail } from './routes/contact-detail.tsx'
 import { Activities } from './routes/activities.tsx'
 import { Reports } from './routes/reports.tsx'
 import { SettingsPage } from './routes/settings.tsx'
+import { AppConfigPage } from './routes/app-config.tsx'
 import { FieldSalesPlansPage } from './routes/field-sales-plans.tsx'
 import { FieldSalesApprovalsPage } from './routes/field-sales-approvals.tsx'
 import { FieldSalesCalendarPage } from './routes/field-sales-calendar.tsx'
+import { ModuleGuard } from './components/shared/module-guard.tsx'
 
 const rootRoute = createRootRoute({
   component: App,
@@ -181,28 +183,50 @@ const reportsRoute = createRoute({
   component: Reports,
 })
 
+const appConfigRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/app-config',
+  component: AppConfigPage,
+})
+
 const settingsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/settings',
-  component: SettingsPage,
+  component: () => (
+    <ModuleGuard module="fieldSales">
+      <SettingsPage />
+    </ModuleGuard>
+  ),
 })
 
 const fieldSalesPlansRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/field-sales/plans',
-  component: FieldSalesPlansPage,
+  component: () => (
+    <ModuleGuard module="fieldSales">
+      <FieldSalesPlansPage />
+    </ModuleGuard>
+  ),
 })
 
 const fieldSalesApprovalsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/field-sales/approvals',
-  component: FieldSalesApprovalsPage,
+  component: () => (
+    <ModuleGuard module="fieldSales">
+      <FieldSalesApprovalsPage />
+    </ModuleGuard>
+  ),
 })
 
 const fieldSalesCalendarRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/field-sales/calendar',
-  component: FieldSalesCalendarPage,
+  component: () => (
+    <ModuleGuard module="fieldSales">
+      <FieldSalesCalendarPage />
+    </ModuleGuard>
+  ),
 })
 
 const oauthRedirectPath = resolveOauthRedirectPath()
@@ -240,6 +264,7 @@ const routeTree = rootRoute.addChildren([
   salesOrderDetailRoute,
   activitiesRoute,
   reportsRoute,
+  appConfigRoute,
   settingsRoute,
   fieldSalesPlansRoute,
   fieldSalesApprovalsRoute,

@@ -20,6 +20,7 @@ import {
   Search,
   Settings,
   ShoppingCart,
+  SlidersHorizontal,
   UserRoundSearch,
   Zap,
 } from 'lucide-react'
@@ -55,6 +56,8 @@ import { ThemeSelector } from '@/components/theme-selector'
 import { ProfileDialog } from '@/components/user/profile-dialog'
 import { ChangePasswordDialog } from '@/components/user/change-password-dialog'
 import { LanguageSelector } from '@/components/shared/language-selector'
+import { useAppModules } from '@/hooks/use-app-config'
+import { isModuleEnabled } from '@/lib/app-config'
 
 type NavItem = {
   titleKey: string
@@ -108,6 +111,14 @@ const FIELD_SALES_NAV_KEYS: NavItem[] = [
   },
 ]
 
+const ADMIN_NAV_KEYS: NavItem[] = [
+  {
+    titleKey: 'appConfig.navTitle',
+    url: '/app-config',
+    icon: SlidersHorizontal,
+  },
+]
+
 function NavGroup({
   label,
   items,
@@ -147,6 +158,8 @@ export function AppSidebar() {
   const matchRoute = useMatchRoute()
   const { state } = useSidebar()
   const { t } = useTranslation()
+  const { data: modules } = useAppModules()
+  const fieldSalesEnabled = isModuleEnabled(modules, 'fieldSales')
   const usersCollection = useUsersCollection()
   const [userProfile, setUserProfile] = useState<
     (UserEntity & { photo?: string }) | null
@@ -337,9 +350,17 @@ export function AppSidebar() {
           matchRoute={matchRoute}
           t={t}
         />
+        {fieldSalesEnabled && (
+          <NavGroup
+            label={t('fieldSales.groupLabel', 'Saha Satış')}
+            items={FIELD_SALES_NAV_KEYS}
+            matchRoute={matchRoute}
+            t={t}
+          />
+        )}
         <NavGroup
-          label={t('fieldSales.groupLabel', 'Saha Satış')}
-          items={FIELD_SALES_NAV_KEYS}
+          label={t('nav.administration', 'Yönetim')}
+          items={ADMIN_NAV_KEYS}
           matchRoute={matchRoute}
           t={t}
         />

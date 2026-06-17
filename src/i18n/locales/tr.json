@@ -2,6 +2,7 @@
   "common": {
     "cancel": "İptal",
     "save": "Kaydet",
+    "saving": "Kaydediliyor...",
     "delete": "Sil",
     "edit": "Düzenle",
     "create": "Oluştur",
@@ -35,7 +36,8 @@
     "noResultsFound": "Sonuç bulunamadı.",
     "pages": "Sayfalar",
     "searchTooltip": "Ara",
-    "dataSources": "Veri Kaynakları"
+    "dataSources": "Veri Kaynakları",
+    "administration": "Yönetim"
   },
   "sidebar": {
     "appName": "Satış CRM",
@@ -992,6 +994,23 @@
     "emailPlaceholder": "eposta@ornek.com",
     "urlPlaceholder": "https://ornek.com",
     "phonePlaceholder": "Telefon numarası girin..."
+  },
+  "appConfig": {
+    "title": "Uygulama Ayarları",
+    "navTitle": "Uygulama Ayarları",
+    "comingSoon": "Yakında",
+    "modules": {
+      "title": "Modüller",
+      "subtitle": "Bu uygulama için modülleri açıp kapatın. Kapalı modüllerin menüleri, sayfaları ve aksiyonları tüm kullanıcılardan gizlenir.",
+      "fieldSales": {
+        "title": "Saha Satış",
+        "description": "Planlama, plan onayları, saha takvimi ve üst menüdeki konum/ziyaret aksiyonunu içerir."
+      },
+      "webphone": {
+        "title": "Webphone",
+        "description": "Çağrı merkezi telefon entegrasyonu (arama/yanıtlama). Yakında etkinleştirilecek."
+      }
+    }
   },
   "fieldSales": {
     "groupLabel": "Saha Satış",

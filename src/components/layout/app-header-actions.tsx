@@ -17,6 +17,8 @@ import { DealFormDialog } from '@/components/deals/deal-form-dialog'
 import { LeadFormDialog } from '@/components/leads/lead-form-dialog'
 import { QuickTaskDialog } from '@/components/tasks/quick-task-dialog'
 import { FieldSalesLocationActions } from '@/components/field-sales/field-sales-location-actions'
+import { useAppModules } from '@/hooks/use-app-config'
+import { isModuleEnabled } from '@/lib/app-config'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -29,6 +31,8 @@ import {
 
 export function AppHeaderActions() {
   const { t } = useTranslation()
+  const { data: modules } = useAppModules()
+  const fieldSalesEnabled = isModuleEnabled(modules, 'fieldSales')
   const [quickCreateOpen, setQuickCreateOpen] = useState(false)
 
   const [dealOpen, setDealOpen] = useState(false)
@@ -108,7 +112,7 @@ export function AppHeaderActions() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <FieldSalesLocationActions />
+      {fieldSalesEnabled && <FieldSalesLocationActions />}
 
       <LeadFormDialog
         open={leadOpen}
