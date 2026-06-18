@@ -1050,6 +1050,18 @@
       "missingSettings": "Telefon ayarı eksik",
       "micDenied": "Mikrofon izni yok"
     },
+    "errors": {
+      "connection_problem": "Telefon bağlantısı kurulamadı. Dahili bilgilerinizi kontrol edip tekrar deneyin.",
+      "connection_lost": "Telefon bağlantısı kesildi. Lütfen tekrar çevrimiçi olun.",
+      "registration_failed": "Dahili veya SIP şifresi doğrulanamadı. Bilgileri kontrol edip tekrar deneyin.",
+      "registration_ended": "Telefon oturumu sona erdi. Tekrar çevrimiçi olabilirsiniz.",
+      "missing_credentials": "Dahili ve SIP şifresi eksik. Lütfen dahili ayarlarınızı tamamlayın.",
+      "microphone_denied": "Mikrofon izni verilmedi. Arama yapmak için mikrofon iznini açın.",
+      "config_unavailable": "Telefon ayarları hazır değil. Lütfen biraz sonra tekrar deneyin.",
+      "not_registered": "Arama yapmak için önce çevrimiçi olun.",
+      "call_in_progress": "Devam eden bir görüşme var.",
+      "invalid_target": "Aranacak numara geçerli değil."
+    },
     "connect": "Bağlan",
     "dialing": "Aranıyor…",
     "ringing": "Çalıyor…",

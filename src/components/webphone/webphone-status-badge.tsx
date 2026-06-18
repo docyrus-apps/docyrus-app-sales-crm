@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Check, Loader2, Phone, SlidersHorizontal } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 import { useWebphone } from './webphone-context'
 import { WebphoneExtensionDialog } from './webphone-extension-dialog'
 import {
@@ -26,13 +27,13 @@ export function WebphoneStatusBadge() {
     ready,
     registrationStatus,
     microphoneStatus,
+    lastError,
     connect,
     disconnect,
   } = useWebphone()
 
   const [extensionOpen, setExtensionOpen] = useState(false)
-
-  if (!enabled) return null
+  const lastToastRef = useRef<string | null>(null)
 
   const state = (() => {
     if (microphoneStatus === 'denied') {
@@ -62,6 +63,23 @@ export function WebphoneStatusBadge() {
   const label = t(state.labelKey)
   const connecting = registrationStatus === 'registering'
   const isOnline = registrationStatus === 'registered'
+  const errorMessage = lastError
+    ? t(`webphone.errors.${lastError}`, {
+        defaultValue: t('webphone.errors.connection_problem'),
+      })
+    : null
+
+  useEffect(() => {
+    if (!enabled || !lastError || lastToastRef.current === lastError) return
+    lastToastRef.current = lastError
+    toast.error(
+      t(`webphone.errors.${lastError}`, {
+        defaultValue: t('webphone.errors.connection_problem'),
+      }),
+    )
+  }, [enabled, lastError, t])
+
+  if (!enabled) return null
 
   return (
     <DropdownMenu>
@@ -79,9 +97,14 @@ export function WebphoneStatusBadge() {
           <span className="hidden sm:inline">{label}</span>
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-44">
-        <DropdownMenuLabel className="text-xs text-muted-foreground">
-          {t('webphone.statusMenu.title')}
+      <DropdownMenuContent align="end" className="w-64">
+        <DropdownMenuLabel className="space-y-1 text-xs text-muted-foreground">
+          <span className="block">{t('webphone.statusMenu.title')}</span>
+          {errorMessage && (
+            <span className="block font-normal leading-snug text-amber-600 dark:text-amber-400">
+              {errorMessage}
+            </span>
+          )}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem

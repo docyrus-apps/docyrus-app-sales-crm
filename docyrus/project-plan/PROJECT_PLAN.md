@@ -254,7 +254,7 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Status: `planned`
 - Slug: `inbox-email-notes`
 - Summary: Communication views and lightweight note-taking that keep account context and follow-up history visible.
-- Tasks: 2
+- Tasks: 3
 
 #### Harden webphone live SIP behavior
 
@@ -282,6 +282,19 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Inbox and email screens expose meaningful CRM context for related records.
 - Notes behave as a lightweight but usable personal workspace.
 - Communication surfaces avoid dead ends and unfinished states.
+
+#### Prevent stale WebPhone UA status updates
+
+- Task ID: `task-webphone-registration-stale-ua`
+- Phase: `phase-communications-insights`
+- Type: `bug-fix`
+- Assignee: `agent`
+- Status: `done`
+- Summary: Guard old JsSIP UA event handlers so reconnecting with a different extension cannot be overwritten to Offline by delayed events from the stopped UA.
+- Acceptance Criteria:
+- Old UA unregistered/disconnected events cannot overwrite the active UA registration status
+- Saving a different extension reconnects against the fresh config
+- Build succeeds after the registration guard change
 
 ### Reports & Analytics
 
@@ -473,7 +486,7 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 
 - Phase ID: `phase-communications-insights`
 - Status: `planned`
-- Tasks: 3
+- Tasks: 4
 
 #### Harden webphone live SIP behavior
 
@@ -501,6 +514,19 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Inbox and email screens expose meaningful CRM context for related records.
 - Notes behave as a lightweight but usable personal workspace.
 - Communication surfaces avoid dead ends and unfinished states.
+
+#### Prevent stale WebPhone UA status updates
+
+- Task ID: `task-webphone-registration-stale-ua`
+- Feature: `feature-communications-v1`
+- Type: `bug-fix`
+- Assignee: `agent`
+- Status: `done`
+- Summary: Guard old JsSIP UA event handlers so reconnecting with a different extension cannot be overwritten to Offline by delayed events from the stopped UA.
+- Acceptance Criteria:
+- Old UA unregistered/disconnected events cannot overwrite the active UA registration status
+- Saving a different extension reconnects against the fresh config
+- Build succeeds after the registration guard change
 
 #### Harden sales reports and analytics views
 

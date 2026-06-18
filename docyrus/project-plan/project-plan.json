@@ -216,6 +216,22 @@
       "order": 1
     },
     {
+      "id": "task-webphone-registration-stale-ua",
+      "title": "Prevent stale WebPhone UA status updates",
+      "summary": "Guard old JsSIP UA event handlers so reconnecting with a different extension cannot be overwritten to Offline by delayed events from the stopped UA.",
+      "type": "bug-fix",
+      "assignee": "agent",
+      "status": "done",
+      "acceptanceCriteria": [
+        "Old UA unregistered/disconnected events cannot overwrite the active UA registration status",
+        "Saving a different extension reconnects against the fresh config",
+        "Build succeeds after the registration guard change"
+      ],
+      "featureId": "feature-communications-v1",
+      "phaseId": "phase-communications-insights",
+      "order": 2
+    },
+    {
       "id": "task-reports-analytics",
       "title": "Harden sales reports and analytics views",
       "summary": "Review chart queries, summaries, and empty states so reporting tabs provide trustworthy operational insights.",

@@ -1077,6 +1077,18 @@
       "missingSettings": "Phone setup missing",
       "micDenied": "Microphone blocked"
     },
+    "errors": {
+      "connection_problem": "The phone connection could not be established. Check your extension details and try again.",
+      "connection_lost": "The phone connection was lost. Please go online again.",
+      "registration_failed": "The extension or SIP password could not be verified. Check the details and try again.",
+      "registration_ended": "The phone session ended. You can go online again.",
+      "missing_credentials": "Extension and SIP password are missing. Please complete your extension settings.",
+      "microphone_denied": "Microphone access was not allowed. Enable microphone access to make calls.",
+      "config_unavailable": "Phone settings are not ready yet. Please try again shortly.",
+      "not_registered": "Go online before making a call.",
+      "call_in_progress": "There is already an active call.",
+      "invalid_target": "The number is not valid."
+    },
     "connect": "Connect",
     "dialing": "Dialing…",
     "ringing": "Ringing…",

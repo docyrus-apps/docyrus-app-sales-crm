@@ -342,12 +342,13 @@ export function useWebphoneSip(args: UseWebphoneSipArgs): WebphoneController {
       // whose listeners left `uaRef` set) so a re-register always builds a fresh
       // connection with the latest config instead of silently no-op'ing.
       if (uaRef.current) {
+        const oldUa = uaRef.current
+        uaRef.current = null
         try {
-          uaRef.current.stop()
+          oldUa.stop()
         } catch {
           // ignore
         }
-        uaRef.current = null
       }
 
       setMicrophoneStatus('requesting')
@@ -383,18 +384,33 @@ export function useWebphoneSip(args: UseWebphoneSipArgs): WebphoneController {
         } as any)
 
         uaRef.current = ua
-        ua.on('registered', () => setRegistrationStatus('registered'))
-        ua.on('unregistered', () => setRegistrationStatus('unregistered'))
+        const isCurrentUa = () => uaRef.current === ua
+        ua.on('registered', () => {
+          if (!isCurrentUa()) return
+          setRegistrationStatus('registered')
+          setLastError(null)
+        })
+        ua.on('unregistered', () => {
+          if (!isCurrentUa()) return
+          setRegistrationStatus('unregistered')
+          setLastError('registration_ended')
+        })
         ua.on('registrationFailed', () => {
+          if (!isCurrentUa()) return
           setRegistrationStatus('failed')
           setLastError('registration_failed')
         })
-        ua.on('disconnected', () =>
+        ua.on('disconnected', () => {
+          if (!isCurrentUa()) return
           setRegistrationStatus((prev) =>
-            prev === 'registered' ? 'unregistered' : prev,
-          ),
-        )
-        ua.on('newRTCSession', handleNewRTCSession)
+            prev === 'registered' || prev === 'registering' ? 'failed' : prev,
+          )
+          setLastError('connection_lost')
+        })
+        ua.on('newRTCSession', (data: any) => {
+          if (!isCurrentUa()) return
+          handleNewRTCSession(data)
+        })
         ua.start()
       } catch (error) {
         setRegistrationStatus('failed')
@@ -407,16 +423,17 @@ export function useWebphoneSip(args: UseWebphoneSipArgs): WebphoneController {
   const unregister = useCallback(() => {
     const ua = uaRef.current
     if (ua) {
+      uaRef.current = null
       try {
         ua.stop()
       } catch {
         // ignore
       }
-      uaRef.current = null
     }
     sessionRef.current = null
     setActiveSession(null)
     setIncomingSession(null)
+    setLastError(null)
     setRegistrationStatus('unregistered')
   }, [])
 
