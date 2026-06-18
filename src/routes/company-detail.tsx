@@ -33,6 +33,8 @@ import { RelatedContactsTable } from '@/components/crm/related-contacts-table'
 import { RelatedDealsTable } from '@/components/crm/related-deals-table'
 import { RecordActivityTimeline } from '@/components/crm/record-activity-timeline'
 import { useDialer } from '@/components/dialer/dialer-widget'
+import { useWebphone } from '@/components/webphone/webphone-context'
+import { WebphoneCallButton } from '@/components/webphone/webphone-call-button'
 import { useCompany, useUpdateCompany } from '@/hooks/use-companies'
 import { useContacts } from '@/hooks/use-contacts'
 import { useDeals } from '@/hooks/use-deals'
@@ -112,6 +114,7 @@ export function CompanyDetail() {
   const { data: company, isLoading } = useCompany(companyId)
   const updateCompany = useUpdateCompany()
   const dialer = useDialer()
+  const webphone = useWebphone()
   const [addContactOpen, setAddContactOpen] = useState(false)
 
   const activeTab = tab || 'overview'
@@ -377,7 +380,11 @@ export function CompanyDetail() {
             onAddContact={() => setAddContactOpen(true)}
             onOpenContact={openContact}
             onEmail={(c) => c.email && window.open(`mailto:${c.email}`)}
-            onCall={(c) => dialer.open({ name: c.name, number: c.mobile })}
+            onCall={(c) =>
+              webphone.enabled
+                ? void webphone.dial(c.mobile, { contactId: c.id })
+                : dialer.open({ name: c.name, number: c.mobile })
+            }
             onSms={(c) => c.mobile && window.open(`sms:${c.mobile}`)}
           />
         ),
@@ -529,19 +536,28 @@ export function CompanyDetail() {
         <MessageSquare className="size-3.5" />
         {t('contacts.actions.sms', { defaultValue: 'SMS' })}
       </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-7 gap-1.5 text-[13px] text-emerald-600"
-        disabled={!company?.phone}
-        onClick={() =>
-          company?.phone &&
-          dialer.open({ name: companyName, number: company.phone })
-        }
-      >
-        <Phone className="size-3.5" />
-        {t('contacts.actions.call', { defaultValue: 'Call' })}
-      </Button>
+      {webphone.enabled ? (
+        <WebphoneCallButton
+          phone={company?.phone}
+          variant="ghost"
+          className="h-7 gap-1.5 text-[13px] text-emerald-600"
+          label={t('contacts.actions.call', { defaultValue: 'Call' })}
+        />
+      ) : (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 gap-1.5 text-[13px] text-emerald-600"
+          disabled={!company?.phone}
+          onClick={() =>
+            company?.phone &&
+            dialer.open({ name: companyName, number: company.phone })
+          }
+        >
+          <Phone className="size-3.5" />
+          {t('contacts.actions.call', { defaultValue: 'Call' })}
+        </Button>
+      )}
     </>
   )
 
@@ -570,7 +586,11 @@ export function CompanyDetail() {
           contactsWithPhone.map((c: any) => (
             <DropdownMenuItem
               key={c.id}
-              onClick={() => dialer.open({ name: c.name, number: c.mobile })}
+              onClick={() =>
+                webphone.enabled
+                  ? void webphone.dial(c.mobile, { contactId: c.id })
+                  : dialer.open({ name: c.name, number: c.mobile })
+              }
             >
               <Phone className="size-4 text-emerald-600" />
               <span className="truncate">{c.name}</span>

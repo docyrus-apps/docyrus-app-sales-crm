@@ -36,6 +36,7 @@ import type {
   CustomerMatch,
   MicrophoneStatus,
   RegistrationStatus,
+  WebphoneAgentProfile,
   WebphoneCallDirection,
   WebphoneLifecycleEvent,
   WebphoneSessionSnapshot,
@@ -62,7 +63,7 @@ interface WebphoneContextValue {
   lastError: string | null
   connect: () => void
   disconnect: () => void
-  requestConnect: () => void
+  requestConnect: (profileOverride?: WebphoneAgentProfile) => void
   dial: (
     phone: string,
     opts?: { contactId?: string; leadId?: string },
@@ -177,7 +178,6 @@ export function WebphoneProvider({ children }: { children: ReactNode }) {
   const triedRegisterRef = useRef(false)
   const lastIncomingRef = useRef<string | null>(null)
   const lastOutgoingRef = useRef<string | null>(null)
-  const pendingConnectRef = useRef(false)
 
   // Auto-connect a ready agent once when the module is on.
   useEffect(() => {
@@ -188,38 +188,24 @@ export function WebphoneProvider({ children }: { children: ReactNode }) {
     void controller.register()
   }, [enabled, readiness.ready, controller.registrationStatus, controller])
 
-  // Explicit (re)connect after the user saves their extension credentials. We
-  // tear down any existing UA first, then register once the rebuilt config is
-  // ready — `config` changes when the profile refetches, so this fires with the
-  // fresh credentials rather than stale ones.
-  const requestConnect = useCallback(() => {
-    pendingConnectRef.current = true
-    if (
-      controller.registrationStatus === 'registered' ||
-      controller.registrationStatus === 'registering'
-    ) {
-      controller.unregister()
-    }
-  }, [controller])
-
-  useEffect(() => {
-    if (!pendingConnectRef.current) return
-    if (!enabled || !readiness.ready || !config) return
-    if (
-      controller.registrationStatus === 'registered' ||
-      controller.registrationStatus === 'registering'
-    ) {
-      return
-    }
-    pendingConnectRef.current = false
-    void controller.register()
-  }, [
-    enabled,
-    readiness.ready,
-    config,
-    controller.registrationStatus,
-    controller,
-  ])
+  // Explicit (re)connect after the user saves extension credentials. When the
+  // dialog has just written a new password, it passes a merged profile snapshot
+  // so registration uses the fresh values immediately instead of racing the
+  // profile refetch and accidentally registering with stale credentials.
+  const requestConnect = useCallback(
+    (profileOverride?: WebphoneAgentProfile) => {
+      const nextConfig = profileOverride
+        ? buildWebrtcRuntimeConfig({
+            settings: settings ?? null,
+            profile: profileOverride,
+          })
+        : config
+      if (!enabled || !nextConfig) return
+      triedRegisterRef.current = true
+      void controller.register(nextConfig)
+    },
+    [config, controller, enabled, settings],
+  )
 
   // Outbound: fill the call's customer relation from the dial context.
   useEffect(() => {

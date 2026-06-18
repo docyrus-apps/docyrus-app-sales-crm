@@ -119,6 +119,23 @@
   ],
   "tasks": [
     {
+      "id": "task-webphone-live-sip-hardening",
+      "title": "Harden webphone live SIP behavior",
+      "summary": "Fix WebPhone credential refresh, real outbound call handling, ringback feedback, and CRM call action wiring.",
+      "type": "bug-fix",
+      "assignee": "agent",
+      "status": "done",
+      "acceptanceCriteria": [
+        "Dahili credentials save and reconnect with the freshly fetched profile",
+        "Outbound calls only appear active when the SIP session is created and expose progress/ringback feedback",
+        "Existing CRM call actions use the WebPhone when the module is enabled",
+        "Call lifecycle closes failed or ended outbound attempts cleanly"
+      ],
+      "featureId": "feature-communications-v1",
+      "phaseId": "phase-communications-insights",
+      "order": 1
+    },
+    {
       "id": "task-inbox-email-notes",
       "title": "Improve inbox, email, and notes usability",
       "summary": "Align communication surfaces with CRM context so reps can review threads, notes, and related records without leaving the workflow.",

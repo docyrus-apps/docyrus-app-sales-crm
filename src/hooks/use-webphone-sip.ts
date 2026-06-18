@@ -32,6 +32,13 @@ function parseIceServers(json: string): Array<RTCIceServer> {
   }
 }
 
+function splitSipHeaders(value: string): Array<string> {
+  return value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+}
+
 function buildSnapshot(
   session: any,
   state: WebphoneSessionState,
@@ -77,6 +84,10 @@ export function useWebphoneSip(args: UseWebphoneSipArgs): WebphoneController {
   const uaRef = useRef<JsSIP.UA | null>(null)
   const sessionRef = useRef<any>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const ringbackContextRef = useRef<AudioContext | null>(null)
+  const ringbackOscillatorRef = useRef<OscillatorNode | null>(null)
+  const ringbackGainRef = useRef<GainNode | null>(null)
+  const ringbackTimerRef = useRef<number | null>(null)
 
   const configRef = useRef(args.config)
   configRef.current = args.config
@@ -98,12 +109,67 @@ export function useWebphoneSip(args: UseWebphoneSipArgs): WebphoneController {
     return element
   }, [])
 
+  const stopRingback = useCallback(() => {
+    if (ringbackTimerRef.current) {
+      window.clearInterval(ringbackTimerRef.current)
+      ringbackTimerRef.current = null
+    }
+    try {
+      ringbackOscillatorRef.current?.stop()
+    } catch {
+      // ignore
+    }
+    ringbackOscillatorRef.current = null
+    ringbackGainRef.current?.disconnect()
+    ringbackGainRef.current = null
+  }, [])
+
+  const startRingback = useCallback(() => {
+    if (ringbackOscillatorRef.current) return
+    try {
+      const AudioContextCtor =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext?: typeof AudioContext })
+          .webkitAudioContext
+      if (!AudioContextCtor) return
+      const context = ringbackContextRef.current ?? new AudioContextCtor()
+      ringbackContextRef.current = context
+      void context.resume?.()
+      const oscillator = context.createOscillator()
+      const gain = context.createGain()
+      oscillator.type = 'sine'
+      oscillator.frequency.value = 425
+      gain.gain.value = 0
+      oscillator.connect(gain)
+      gain.connect(context.destination)
+      oscillator.start()
+      ringbackOscillatorRef.current = oscillator
+      ringbackGainRef.current = gain
+
+      const pulse = () => {
+        if (!ringbackGainRef.current) return
+        const now = context.currentTime
+        const node = ringbackGainRef.current.gain
+        node.cancelScheduledValues(now)
+        node.setValueAtTime(0, now)
+        node.linearRampToValueAtTime(0.08, now + 0.03)
+        node.setValueAtTime(0.08, now + 1.5)
+        node.linearRampToValueAtTime(0, now + 1.56)
+      }
+      pulse()
+      ringbackTimerRef.current = window.setInterval(pulse, 4000)
+    } catch {
+      // Browser audio feedback is best-effort; SIP media still drives the call.
+    }
+  }, [])
+
   const attachRemoteAudio = useCallback(
     (pc: any) => {
       if (!pc) return
       const audio = ensureAudio()
       const play = (stream: MediaStream) => {
         try {
+          stopRingback()
           audio.srcObject = stream
           void audio.play?.()
         } catch {
@@ -127,27 +193,31 @@ export function useWebphoneSip(args: UseWebphoneSipArgs): WebphoneController {
         // ignore
       }
     },
-    [ensureAudio],
+    [ensureAudio, stopRingback],
   )
 
-  const cleanupSession = useCallback((callId?: string) => {
-    if (!callId || sessionRef.current?.id === callId) {
-      sessionRef.current = null
-    }
-    setIncomingSession((prev) =>
-      prev && callId && prev.id !== callId ? prev : null,
-    )
-    setActiveSession((prev) =>
-      prev && callId && prev.id !== callId ? prev : null,
-    )
-    if (audioRef.current) {
-      try {
-        audioRef.current.srcObject = null
-      } catch {
-        // ignore
+  const cleanupSession = useCallback(
+    (callId?: string) => {
+      if (!callId || sessionRef.current?.id === callId) {
+        sessionRef.current = null
       }
-    }
-  }, [])
+      setIncomingSession((prev) =>
+        prev && callId && prev.id !== callId ? prev : null,
+      )
+      setActiveSession((prev) =>
+        prev && callId && prev.id !== callId ? prev : null,
+      )
+      stopRingback()
+      if (audioRef.current) {
+        try {
+          audioRef.current.srcObject = null
+        } catch {
+          // ignore
+        }
+      }
+    },
+    [stopRingback],
+  )
 
   const handleNewRTCSession = useCallback(
     (data: any) => {
@@ -185,9 +255,25 @@ export function useWebphoneSip(args: UseWebphoneSipArgs): WebphoneController {
         remoteDisplayName: displayName,
       })
 
+      const markRinging = () => {
+        if (answered) return
+        if (direction === 'outbound') {
+          setActiveSession((prev) => {
+            const base =
+              prev && prev.id === callId
+                ? prev
+                : buildSnapshot(session, 'ringing')
+            return { ...base, state: 'ringing' }
+          })
+          startRingback()
+        }
+        if (session.connection) attachRemoteAudio(session.connection)
+      }
+
       const markAnswered = () => {
         if (answered) return
         answered = true
+        stopRingback()
         setIncomingSession(null)
         setActiveSession((prev) => {
           const base =
@@ -232,74 +318,91 @@ export function useWebphoneSip(args: UseWebphoneSipArgs): WebphoneController {
       session.on('peerconnection', (e: any) =>
         attachRemoteAudio(e?.peerconnection),
       )
+      session.on('progress', markRinging)
       session.on('accepted', markAnswered)
       session.on('confirmed', markAnswered)
       session.on('ended', (e: any) => finish(e))
       session.on('failed', (e: any) => finish(e))
     },
-    [emit, attachRemoteAudio, cleanupSession],
+    [emit, attachRemoteAudio, cleanupSession, startRingback, stopRingback],
   )
 
-  const register = useCallback(async () => {
-    const config = configRef.current
-    if (!config) {
-      setLastError('config_unavailable')
-      return
-    }
-    if (!config.username || !config.password) {
-      setLastError('missing_credentials')
-      return
-    }
-    if (uaRef.current) return
+  const register = useCallback(
+    async (configOverride?: WebrtcRuntimeConfig) => {
+      const config = configOverride ?? configRef.current
+      if (!config) {
+        setLastError('config_unavailable')
+        return
+      }
+      if (!config.username || !config.password) {
+        setLastError('missing_credentials')
+        return
+      }
+      // Tear down any existing UA (e.g. after a failed/disconnected registration
+      // whose listeners left `uaRef` set) so a re-register always builds a fresh
+      // connection with the latest config instead of silently no-op'ing.
+      if (uaRef.current) {
+        try {
+          uaRef.current.stop()
+        } catch {
+          // ignore
+        }
+        uaRef.current = null
+      }
 
-    setMicrophoneStatus('requesting')
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      stream.getTracks().forEach((track) => track.stop())
-      setMicrophoneStatus('granted')
-    } catch {
-      setMicrophoneStatus('denied')
-      setLastError('microphone_denied')
-      return
-    }
+      setMicrophoneStatus('requesting')
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        })
+        stream.getTracks().forEach((track) => track.stop())
+        setMicrophoneStatus('granted')
+      } catch {
+        setMicrophoneStatus('denied')
+        setLastError('microphone_denied')
+        return
+      }
 
-    try {
-      setRegistrationStatus('registering')
-      setLastError(null)
-      const socket = new JsSIP.WebSocketInterface(config.wssUrl)
-      const ua = new JsSIP.UA({
-        sockets: [socket],
-        uri: `sip:${config.username}@${config.realm || config.pbxHost}`,
-        password: config.password,
-        display_name: config.displayName || config.username,
-        registrar_server: config.registrarServer || undefined,
-        register: true,
-        register_expires: Number(config.registerExpires) || 600,
-        session_timers: config.sessionTimers,
-        session_timers_refresh_method: config.sessionTimersRefreshMethod,
-        use_preloaded_route: config.usePreloadedRoute,
-        no_answer_timeout: Number(config.noAnswerTimeout) || 60,
-      })
+      try {
+        setRegistrationStatus('registering')
+        setLastError(null)
+        const socket = new JsSIP.WebSocketInterface(config.wssUrl)
+        const ua = new JsSIP.UA({
+          sockets: [socket],
+          uri: `sip:${config.username}@${config.realm || config.pbxHost}`,
+          password: config.password,
+          display_name: config.displayName || config.username,
+          registrar_server: config.registrarServer || undefined,
+          register: true,
+          register_expires: Number(config.registerExpires) || 600,
+          session_timers: config.sessionTimers,
+          session_timers_refresh_method: config.sessionTimersRefreshMethod,
+          use_preloaded_route: config.usePreloadedRoute,
+          no_answer_timeout: Number(config.noAnswerTimeout) || 60,
+          register_extra_headers: splitSipHeaders(config.extraRegisterHeaders),
+        } as any)
 
-      uaRef.current = ua
-      ua.on('registered', () => setRegistrationStatus('registered'))
-      ua.on('unregistered', () => setRegistrationStatus('unregistered'))
-      ua.on('registrationFailed', () => {
+        uaRef.current = ua
+        ua.on('registered', () => setRegistrationStatus('registered'))
+        ua.on('unregistered', () => setRegistrationStatus('unregistered'))
+        ua.on('registrationFailed', () => {
+          setRegistrationStatus('failed')
+          setLastError('registration_failed')
+        })
+        ua.on('disconnected', () =>
+          setRegistrationStatus((prev) =>
+            prev === 'registered' ? 'unregistered' : prev,
+          ),
+        )
+        ua.on('newRTCSession', handleNewRTCSession)
+        ua.start()
+      } catch (error) {
         setRegistrationStatus('failed')
-        setLastError('registration_failed')
-      })
-      ua.on('disconnected', () =>
-        setRegistrationStatus((prev) =>
-          prev === 'registered' ? 'unregistered' : prev,
-        ),
-      )
-      ua.on('newRTCSession', handleNewRTCSession)
-      ua.start()
-    } catch (error) {
-      setRegistrationStatus('failed')
-      setLastError(getErrorMessage(error))
-    }
-  }, [handleNewRTCSession])
+        setLastError(getErrorMessage(error))
+      }
+    },
+    [handleNewRTCSession],
+  )
 
   const unregister = useCallback(() => {
     const ua = uaRef.current
@@ -337,6 +440,7 @@ export function useWebphoneSip(args: UseWebphoneSipArgs): WebphoneController {
       ua.call(`sip:${dial}@${config.pbxHost}`, {
         mediaConstraints: { audio: true, video: false },
         pcConfig: { iceServers: parseIceServers(config.iceServersJson) },
+        extraHeaders: splitSipHeaders(config.extraInviteHeaders),
       })
     } catch (error) {
       setLastError(getErrorMessage(error))
@@ -435,12 +539,15 @@ export function useWebphoneSip(args: UseWebphoneSipArgs): WebphoneController {
       }
       uaRef.current = null
       sessionRef.current = null
+      stopRingback()
+      ringbackContextRef.current?.close?.().catch(() => undefined)
+      ringbackContextRef.current = null
       if (audioRef.current) {
         audioRef.current.remove()
         audioRef.current = null
       }
     }
-  }, [])
+  }, [stopRingback])
 
   return useMemo<WebphoneController>(
     () => ({

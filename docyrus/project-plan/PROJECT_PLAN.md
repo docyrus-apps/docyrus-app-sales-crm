@@ -254,7 +254,21 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Status: `planned`
 - Slug: `inbox-email-notes`
 - Summary: Communication views and lightweight note-taking that keep account context and follow-up history visible.
-- Tasks: 1
+- Tasks: 2
+
+#### Harden webphone live SIP behavior
+
+- Task ID: `task-webphone-live-sip-hardening`
+- Phase: `phase-communications-insights`
+- Type: `bug-fix`
+- Assignee: `agent`
+- Status: `done`
+- Summary: Fix WebPhone credential refresh, real outbound call handling, ringback feedback, and CRM call action wiring.
+- Acceptance Criteria:
+- Dahili credentials save and reconnect with the freshly fetched profile
+- Outbound calls only appear active when the SIP session is created and expose progress/ringback feedback
+- Existing CRM call actions use the WebPhone when the module is enabled
+- Call lifecycle closes failed or ended outbound attempts cleanly
 
 #### Improve inbox, email, and notes usability
 
@@ -459,7 +473,21 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 
 - Phase ID: `phase-communications-insights`
 - Status: `planned`
-- Tasks: 2
+- Tasks: 3
+
+#### Harden webphone live SIP behavior
+
+- Task ID: `task-webphone-live-sip-hardening`
+- Feature: `feature-communications-v1`
+- Type: `bug-fix`
+- Assignee: `agent`
+- Status: `done`
+- Summary: Fix WebPhone credential refresh, real outbound call handling, ringback feedback, and CRM call action wiring.
+- Acceptance Criteria:
+- Dahili credentials save and reconnect with the freshly fetched profile
+- Outbound calls only appear active when the SIP session is created and expose progress/ringback feedback
+- Existing CRM call actions use the WebPhone when the module is enabled
+- Call lifecycle closes failed or ended outbound attempts cleanly
 
 #### Improve inbox, email, and notes usability
 

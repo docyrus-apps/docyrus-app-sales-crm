@@ -93,7 +93,7 @@ export interface WebphoneController {
   activeSession: WebphoneSessionSnapshot | null
   incomingSession: WebphoneSessionSnapshot | null
   lastError: string | null
-  register: () => Promise<void>
+  register: (configOverride?: WebrtcRuntimeConfig) => Promise<void>
   unregister: () => void
   call: (target: string) => Promise<void>
   answer: () => Promise<void>

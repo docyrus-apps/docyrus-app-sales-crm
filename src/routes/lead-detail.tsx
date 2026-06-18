@@ -26,6 +26,8 @@ import {
 } from '@/components/crm/record-detail-layout'
 import { RecordActivityTimeline } from '@/components/crm/record-activity-timeline'
 import { useDialer } from '@/components/dialer/dialer-widget'
+import { useWebphone } from '@/components/webphone/webphone-context'
+import { WebphoneCallButton } from '@/components/webphone/webphone-call-button'
 import { useLead, useUpdateLead } from '@/hooks/use-leads'
 import { useRecordEvents } from '@/hooks/use-events'
 import { LeadConvertDialog } from '@/components/leads/lead-convert-dialog'
@@ -111,6 +113,7 @@ export function LeadDetail() {
   const { data: lead, isLoading } = useLead(leadId)
   const updateLead = useUpdateLead()
   const dialer = useDialer()
+  const webphone = useWebphone()
   const [isConvertOpen, setIsConvertOpen] = useState(false)
 
   const activeTab = tab || 'overview'
@@ -474,16 +477,26 @@ export function LeadDetail() {
         <MessageSquare className="size-3.5" />
         {t('contacts.actions.sms', { defaultValue: 'SMS' })}
       </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-7 gap-1.5 text-[13px] text-emerald-600"
-        disabled={!lead?.phone}
-        onClick={() => dialer.open({ name: leadName, number: lead?.phone })}
-      >
-        <Phone className="size-3.5" />
-        {t('contacts.actions.call', { defaultValue: 'Call' })}
-      </Button>
+      {webphone.enabled ? (
+        <WebphoneCallButton
+          phone={lead?.phone}
+          leadId={leadId}
+          variant="ghost"
+          className="h-7 gap-1.5 text-[13px] text-emerald-600"
+          label={t('contacts.actions.call', { defaultValue: 'Call' })}
+        />
+      ) : (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 gap-1.5 text-[13px] text-emerald-600"
+          disabled={!lead?.phone}
+          onClick={() => dialer.open({ name: leadName, number: lead?.phone })}
+        >
+          <Phone className="size-3.5" />
+          {t('contacts.actions.call', { defaultValue: 'Call' })}
+        </Button>
+      )}
     </>
   )
 
@@ -521,14 +534,26 @@ export function LeadDetail() {
         }
         readOnly={isConverted}
         dialerTrigger={
-          <button
-            type="button"
-            onClick={() => dialer.open({ name: leadName, number: lead?.phone })}
-            aria-label="Call lead"
-            className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
-          >
-            <Phone className="size-4" />
-          </button>
+          webphone.enabled ? (
+            <WebphoneCallButton
+              phone={lead?.phone}
+              leadId={leadId}
+              size="icon"
+              variant="outline"
+              className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() =>
+                dialer.open({ name: leadName, number: lead?.phone })
+              }
+              aria-label="Call lead"
+              className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
+            >
+              <Phone className="size-4" />
+            </button>
+          )
         }
         tabs={tabs}
         activeTab={activeTab}

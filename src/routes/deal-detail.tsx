@@ -54,6 +54,7 @@ import {
 import { RelatedContactsTable } from '@/components/crm/related-contacts-table'
 import { RecordActivityTimeline } from '@/components/crm/record-activity-timeline'
 import { useDialer } from '@/components/dialer/dialer-widget'
+import { useWebphone } from '@/components/webphone/webphone-context'
 import { PageContainer } from '@/components/layout/page-container'
 import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
@@ -181,6 +182,7 @@ export function DealDetail() {
   const { data: deal, isLoading } = useDeal(dealId)
   const updateDeal = useUpdateDeal()
   const dialer = useDialer()
+  const webphone = useWebphone()
 
   const activeTab = tab || 'overview'
 
@@ -727,7 +729,11 @@ export function DealDetail() {
               })
             }
             onEmail={(c) => c.email && window.open(`mailto:${c.email}`)}
-            onCall={(c) => dialer.open({ name: c.name, number: c.mobile })}
+            onCall={(c) =>
+              webphone.enabled
+                ? void webphone.dial(c.mobile, { contactId: c.id })
+                : dialer.open({ name: c.name, number: c.mobile })
+            }
             onSms={(c) => c.mobile && window.open(`sms:${c.mobile}`)}
           />
         ),
@@ -919,7 +925,11 @@ export function DealDetail() {
           contactsWithPhone.map((c: any) => (
             <DropdownMenuItem
               key={c.id}
-              onClick={() => dialer.open({ name: c.name, number: c.mobile })}
+              onClick={() =>
+                webphone.enabled
+                  ? void webphone.dial(c.mobile, { contactId: c.id })
+                  : dialer.open({ name: c.name, number: c.mobile })
+              }
             >
               <Phone className="size-4 text-emerald-600" />
               <span className="truncate">{c.name}</span>

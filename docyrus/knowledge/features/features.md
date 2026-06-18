@@ -165,7 +165,6 @@ This section highlights the files that appear to integrate with Docyrus APIs or 
 <!-- docyrus-knowledge:auto:end -->
 
 <!-- docyrus-project-plan:features:begin -->
-
 ## Planned Features
 
 Features tracked in the project plan.

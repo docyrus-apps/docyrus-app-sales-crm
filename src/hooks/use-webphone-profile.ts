@@ -77,8 +77,21 @@ export function useUpdateMyAgentTelephonyProfile() {
       )
       return collection.update(profileId, payload)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async (_row, variables) => {
+      queryClient.setQueryData<WebphoneAgentProfile | null>(
+        ['webphone', 'agent-profile', me?.id],
+        (current) => {
+          if (!current || current.id !== variables.profileId) return current
+          return {
+            ...current,
+            extension: variables.extension ?? current.extension,
+            pbx_user_id: variables.pbx_user_id ?? current.pbx_user_id,
+            display_name: variables.display_name ?? current.display_name,
+            sip_password: variables.sip_password ?? current.sip_password,
+          }
+        },
+      )
+      await queryClient.invalidateQueries({
         queryKey: ['webphone', 'agent-profile', me?.id],
       })
       toast.success('Dahili ayarları kaydedildi')

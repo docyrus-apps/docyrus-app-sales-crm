@@ -378,17 +378,27 @@ export function ContactDetail() {
         <MessageSquare className="size-3.5" />
         {t('contacts.actions.sms', { defaultValue: 'SMS' })}
       </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-7 gap-1.5 text-[13px] text-emerald-600"
-        onClick={() =>
-          dialer.open({ name: contactName, number: contact?.mobile })
-        }
-      >
-        <Phone className="size-3.5" />
-        {t('contacts.actions.call', { defaultValue: 'Call' })}
-      </Button>
+      {webphone.enabled ? (
+        <WebphoneCallButton
+          phone={contact?.mobile}
+          contactId={contactId}
+          variant="ghost"
+          className="h-7 gap-1.5 text-[13px] text-emerald-600"
+          label={t('contacts.actions.call', { defaultValue: 'Call' })}
+        />
+      ) : (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 gap-1.5 text-[13px] text-emerald-600"
+          onClick={() =>
+            dialer.open({ name: contactName, number: contact?.mobile })
+          }
+        >
+          <Phone className="size-3.5" />
+          {t('contacts.actions.call', { defaultValue: 'Call' })}
+        </Button>
+      )}
     </>
   )
 
@@ -413,16 +423,26 @@ export function ContactDetail() {
         editTitle={t('common.editAll', { defaultValue: 'Edit All' })}
         attributeActions={attributeActions}
         dialerTrigger={
-          <button
-            type="button"
-            onClick={() =>
-              dialer.open({ name: contactName, number: contact?.mobile })
-            }
-            aria-label="Call contact"
-            className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
-          >
-            <Phone className="size-4" />
-          </button>
+          webphone.enabled ? (
+            <WebphoneCallButton
+              phone={contact?.mobile}
+              contactId={contactId}
+              size="icon"
+              variant="outline"
+              className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() =>
+                dialer.open({ name: contactName, number: contact?.mobile })
+              }
+              aria-label="Call contact"
+              className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
+            >
+              <Phone className="size-4" />
+            </button>
+          )
         }
         tabs={tabs}
         activeTab={activeTab}

@@ -59,14 +59,21 @@ export function WebphoneExtensionDialog({
 
   const onSave = async () => {
     if (!profile?.id || update.isPending) return
-    await update.mutateAsync({
-      profileId: profile.id,
+    const nextProfile = {
+      ...profile,
       extension: extension.trim(),
       pbx_user_id: username.trim(),
       display_name: displayName.trim(),
+      sip_password: password.trim() || profile.sip_password,
+    }
+    await update.mutateAsync({
+      profileId: profile.id,
+      extension: nextProfile.extension,
+      pbx_user_id: nextProfile.pbx_user_id,
+      display_name: nextProfile.display_name,
       sip_password: password.trim() || undefined,
     })
-    requestConnect()
+    requestConnect(nextProfile)
     onOpenChange(false)
   }
 
