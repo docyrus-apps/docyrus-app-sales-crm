@@ -1026,6 +1026,15 @@
     "title": "App Settings",
     "navTitle": "App Settings",
     "comingSoon": "Coming soon",
+    "fieldSalesSettingsTitle": "Field Sales Settings",
+    "fieldSalesSettingsSubtitle": "Plan structure, working hours and location check.",
+    "status": {
+      "complete": "All settings complete",
+      "incomplete": "Settings missing"
+    },
+    "settings": {
+      "open": "Settings"
+    },
     "modules": {
       "title": "Modules",
       "subtitle": "Turn modules on or off for this app. Disabled modules hide their menus, pages and actions from every user.",
@@ -1035,8 +1044,145 @@
       },
       "webphone": {
         "title": "Webphone",
-        "description": "Call center telephony integration (dial / answer). Enabled in a later release."
+        "description": "Call center telephony: dialing, incoming caller matching, call outcome and call history."
       }
+    }
+  },
+  "webphone": {
+    "groupLabel": "Webphone",
+    "statusMenu": {
+      "title": "Status",
+      "online": "Online",
+      "offline": "Offline",
+      "extension": "Extension settings"
+    },
+    "extension": {
+      "title": "Extension Settings",
+      "subtitle": "Enter your SIP username and password, then connect.",
+      "extension": "Extension",
+      "username": "SIP username",
+      "usernameHint": "Defaults to your extension if left blank.",
+      "password": "SIP password",
+      "passwordHint": "Enter your SIP password.",
+      "passwordHintSaved": "Saved — enter a new password to change it.",
+      "displayName": "Display name",
+      "saveConnect": "Save & connect",
+      "noProfile": "You have no phone profile. Please contact your administrator."
+    },
+    "status": {
+      "ready": "Ready",
+      "connecting": "Connecting",
+      "failed": "Connection error",
+      "offline": "Offline",
+      "missingSettings": "Phone setup missing",
+      "micDenied": "Microphone blocked"
+    },
+    "connect": "Connect",
+    "dialing": "Dialing…",
+    "ringing": "Ringing…",
+    "dialpad": {
+      "title": "Dialpad",
+      "placeholder": "Enter a number",
+      "backspace": "Delete",
+      "call": "Call",
+      "busy": "Call in progress",
+      "matches": "Saved contacts",
+      "noMatch": "No matching contact"
+    },
+    "calls": {
+      "title": "Calls",
+      "navTitle": "Calls",
+      "customer": "Customer",
+      "outcome": "Outcome",
+      "date": "Date",
+      "duration": "Duration",
+      "agent": "Agent",
+      "empty": "No calls yet",
+      "filterAll": "All",
+      "filterInbound": "Inbound",
+      "filterOutbound": "Outbound"
+    },
+    "incoming": {
+      "title": "Incoming call",
+      "unknown": "Unknown number",
+      "answer": "Answer",
+      "reject": "Reject",
+      "matches": "Matching records"
+    },
+    "active": {
+      "title": "On call",
+      "mute": "Mute",
+      "unmute": "Unmute",
+      "hold": "Hold",
+      "resume": "Resume",
+      "keypad": "Keypad",
+      "hangup": "Hang up"
+    },
+    "wrapup": {
+      "title": "Call outcome",
+      "disposition": "Outcome",
+      "dispositionPlaceholder": "Select an outcome",
+      "notesPlaceholder": "Call notes",
+      "liveNotesPlaceholder": "Take notes during the call…",
+      "followup": "Follow-up required",
+      "submit": "Save",
+      "skip": "Skip",
+      "error": "Could not save the call outcome",
+      "dispositions": {
+        "completed": "Completed",
+        "interested": "Interested",
+        "callback_requested": "Callback requested",
+        "not_interested": "Not interested",
+        "wrong_number": "Wrong number",
+        "no_answer": "No answer",
+        "voicemail": "Voicemail"
+      }
+    },
+    "callButton": "Call",
+    "history": {
+      "title": "Call history",
+      "empty": "No calls yet"
+    },
+    "notes": {
+      "title": "Notes",
+      "placeholder": "Add a pinned note to this customer…",
+      "add": "Add note",
+      "empty": "No notes yet",
+      "error": "Could not save the note"
+    },
+    "settings": {
+      "title": "Webphone Settings",
+      "subtitle": "SIP/WebRTC connection settings. Username and password come from the agent phone profile and are not stored here.",
+      "wssUrl": "SIP WebSocket (WSS)",
+      "pbxHost": "PBX host",
+      "realm": "Realm",
+      "registrarServer": "Registrar (optional)",
+      "registerExpires": "Register expiry (s)",
+      "noAnswerTimeout": "No-answer timeout (s)",
+      "audioCodecs": "Audio codec order",
+      "iceServers": "ICE/STUN (JSON)",
+      "readinessReady": "Your phone profile is ready",
+      "readinessMissing": "Your phone profile has missing settings",
+      "readonlyNotice": "These are the core WebRTC settings for the webphone; only authorized people should edit them.",
+      "edit": "Edit",
+      "editConfirmTitle": "Edit settings?",
+      "editConfirmBody": "These are core webphone settings. Wrong values can break calling for every user. Do you want to continue?",
+      "editConfirm": "Yes, edit"
+    },
+    "readiness": {
+      "not_authenticated": "Not signed in",
+      "insecure_context": "HTTPS required",
+      "missing_profile": "No phone profile",
+      "profile_disabled": "Profile disabled",
+      "webrtc_disabled": "WebRTC not allowed",
+      "non_webrtc_device": "Preferred device is not WebRTC",
+      "missing_extension": "Extension missing",
+      "missing_username": "SIP username missing",
+      "missing_password": "SIP password missing",
+      "missing_wss": "WSS URL missing",
+      "missing_pbx_host": "PBX host missing",
+      "missing_realm": "Realm missing",
+      "missing_ice": "ICE config missing"
     }
   },
   "fieldSales": {

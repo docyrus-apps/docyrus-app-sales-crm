@@ -125,6 +125,7 @@
     "immer": "^11.1.4",
     "input-otp": "^1.4.2",
     "jsonata": "^2.1.0",
+    "jssip": "^3.13.8",
     "leaflet": "^1.9.4",
     "leaflet-draw": "^1.0.4",
     "leaflet.fullscreen": "^5.3.1",

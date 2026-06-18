@@ -73,6 +73,37 @@ Consumers:
 
 Backlink: `// @docyrus: [[architecture#App Module Configuration]]`.
 
+## Webphone (Callcenter WebRTC) Module
+
+A minimal Verimor WebRTC softphone integrated from `docs/callcenter-webrtc-integration-kit`. Gated by the `webphone` switch in [[architecture#App Module Configuration]] (`data.modules.webphone`); every surface is hidden/guarded when the module is off.
+
+The backend is the existing `base_callcenter` collections (`call`, `agent_telephony_profile`, `call_activity`, `call_screen_note`, `callback`) plus `base.contact` for customer identity. A schema audit confirmed every required field and enum is present on the tenant, so the module needs no schema mutation and no enum-ID hardcoding. Two profile fields (`sip_password`, `display_name`) exist in the live schema but are missing from the generated entity type (openapi.json is stale for them); they are read via explicit `columns` and typed locally as `WebphoneAgentProfile` instead of regenerating all 114 collections.
+
+Foundation (`src/lib/webphone/` + `src/hooks/use-webphone-*`):
+
+- `types.ts` — runtime config, session snapshot, controller, agent-profile, and customer match/adapter contracts.
+- `phone.ts` — digit-based phone normalization with a last-10 fallback (match / storage / dial forms).
+- `runtime.ts` — Verimor/`bulutsantralim` defaults, `buildWebrtcRuntimeConfig` (settings + profile credentials), and the single `resolveWebphoneReadiness` that all dial gating reads. SIP credentials always come from the agent profile, never from tenant config or env.
+- `enum-resolver.ts` / `use-webphone-enums.ts` — slug/name normalized resolution of `base_callcenter` enums (`direction`, `state`, `call_type`, `device_type`, `outcome`, activity `disposition`); a field is omitted when its token cannot be resolved.
+- `use-webphone-config.ts` — credential-free runtime settings stored under `data.webrtc` in the shared app config record (alongside `data.fieldSales` / `data.modules`).
+- `use-webphone-profile.ts` — the current user's `agent_telephony_profile`, driving readiness and credentials.
+- `use-webphone-customer-adapter.ts` — `base.contact` → `CustomerAdapter` (`findByPhone` digit match, customer card = `/contacts/$contactId`); the contact datasource is never mutated.
+
+Runtime + UI (implemented; live SIP verification is manual):
+
+- `use-webphone-sip.ts` — single JsSIP UA controller (register/call/answer/hangup/mute/hold/DTMF, mic permission, remote-audio wiring, 486-busy on a second call), emitting `ringing/answered/ended/missed/rejected` lifecycle events.
+- `call-lifecycle.ts` + `use-webphone-call-log.ts` — one canonical `base_callcenter.call` record per `call_id` (create on ringing, update on answer/end, duration, relation-patch guard); a persistence failure never blocks the live call.
+- `screen-pop.ts` — incoming caller → `findByPhone` → 0/1/N handling (single auto-opens the card and patches the relation; multi shows a picker; none = unknown caller).
+- `webphone-context.tsx` (`WebphoneProvider` / `useWebphone`) — composes settings + profile + readiness + controller + call-log + adapter + screen-pop, auto-registers a ready agent, and tracks live notes + pending wrap-up. Mounted in `App.tsx`; a no-op when the module is off.
+- `wrapup.ts` + `use-webphone-wrapup.ts` — wrap-up persistence (`call_activity` upsert + `call` patch with disposition→enum mapping) and pinned notes (`call_screen_note`); live notes prefill wrap-up notes; an activity-write failure keeps the form open.
+- UI: `webphone-status-badge.tsx` (header chip; clicking opens a menu to go Online/Offline via `connect`/`disconnect`, plus an "Extension settings" item — `webphone-extension-dialog.tsx` — where the agent saves their own SIP username/password onto their `agent_telephony_profile` and reconnects through `requestConnect`) + `webphone-dialpad.tsx` (header; once ≥7 digits are typed it searches `base.contact` so a known customer can be dialled and linked in one click), `webphone-widget.tsx` (global incoming screen-pop / active-call / wrap-up surface), `webphone-call-button.tsx` + `webphone-customer-calls.tsx` (a gated "Calls" tab on the contact detail with history + pinned notes), `webphone-settings-form.tsx` + `WebphoneReadinessSummary` (tenant runtime settings, opened read-only from a gear button in an App Config modal — editing is unlocked behind an "authorized only" confirm), and `calls.tsx` (`/calls`, the tenant-wide call log built on the shared DataGrid).
+
+`calls.tsx` uses the shared `useDocyrusDataGrid` + `useSeedDefaultViews` with seeded All / Gelen / Giden saved views (read-only, standard paging at 25/page). Inbound/Giden filter on the `direction` enum **id** — the slug does not match server-side (verified), so the page resolves the inbound/outbound ids via the webphone enum resolver and only mounts the grid once they are known.
+
+App Config (`/app-config`) renders each module as a row; once a module is toggled on the row shows a complete/incomplete status badge (hover explains what is missing) and a gear button that opens a settings modal — `WebphoneSettingsForm` for webphone, `FieldSalesSettingsForm` for field sales. The standalone `/settings` route was removed: field-sales settings are now reached only from this modal (`FieldSalesSettingsForm` is the shared form). `createSystemViews` gained an optional per-view `pageSize`. Surfaces are wired into `App.tsx` (provider + widget), the header actions (status menu + dialpad, with a soft divider before the field-sales location action; the former global "quick add" button was removed), `contact-detail.tsx` (Calls tab), the sidebar (a gated Webphone group → `/calls`), and `/app-config`. Outbound, inbound screen-pop, call logging, wrap-up, pinned notes, history, and the tenant call log are all functional; the remaining step is live SIP verification against a populated agent profile.
+
+Backlink: `// @docyrus: [[architecture#Webphone (Callcenter WebRTC) Module]]`.
+
 ## Lead Convert Refactor Checkpoint
 
 Current checkpoint:

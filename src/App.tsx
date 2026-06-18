@@ -16,6 +16,8 @@ import { TaskFormSheet } from './components/tasks/task-form-sheet'
 import { EventFormDialog } from './components/events/event-form-dialog'
 import { GlobalDialogBar } from './components/docyrus/awesome-dialog'
 import { DialerProvider } from './components/dialer/dialer-widget'
+import { WebphoneProvider } from './components/webphone/webphone-context'
+import { WebphoneWidget } from './components/webphone/webphone-widget'
 import { DocyrusDateFormatProvider } from './lib/docyrus-date-format-provider'
 
 function App() {
@@ -116,11 +118,14 @@ function App() {
     <NuqsAdapter>
       <DocyrusDateFormatProvider client={client}>
         <TooltipProvider>
-          <DialerProvider>
-            <AppLayout>
-              <Outlet />
-            </AppLayout>
-          </DialerProvider>
+          <WebphoneProvider>
+            <DialerProvider>
+              <AppLayout>
+                <Outlet />
+              </AppLayout>
+            </DialerProvider>
+            <WebphoneWidget />
+          </WebphoneProvider>
           <Toaster />
           <CommandPalette
             open={commandOpen}

@@ -16,6 +16,7 @@ import {
   MapPinned,
   NotepadText,
   Package,
+  PhoneCall,
   Route,
   Search,
   Settings,
@@ -104,10 +105,13 @@ const FIELD_SALES_NAV_KEYS: NavItem[] = [
     url: '/field-sales/calendar',
     icon: MapPinned,
   },
+]
+
+const WEBPHONE_NAV_KEYS: NavItem[] = [
   {
-    titleKey: 'fieldSales.settings.title',
-    url: '/settings',
-    icon: Settings,
+    titleKey: 'webphone.calls.navTitle',
+    url: '/calls',
+    icon: PhoneCall,
   },
 ]
 
@@ -160,6 +164,7 @@ export function AppSidebar() {
   const { t } = useTranslation()
   const { data: modules } = useAppModules()
   const fieldSalesEnabled = isModuleEnabled(modules, 'fieldSales')
+  const webphoneEnabled = isModuleEnabled(modules, 'webphone')
   const usersCollection = useUsersCollection()
   const [userProfile, setUserProfile] = useState<
     (UserEntity & { photo?: string }) | null
@@ -354,6 +359,14 @@ export function AppSidebar() {
           <NavGroup
             label={t('fieldSales.groupLabel', 'Saha Satış')}
             items={FIELD_SALES_NAV_KEYS}
+            matchRoute={matchRoute}
+            t={t}
+          />
+        )}
+        {webphoneEnabled && (
+          <NavGroup
+            label={t('webphone.groupLabel', 'Webphone')}
+            items={WEBPHONE_NAV_KEYS}
             matchRoute={matchRoute}
             t={t}
           />

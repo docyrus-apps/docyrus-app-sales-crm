@@ -10,6 +10,7 @@ import {
   Mail,
   MessageSquare,
   Phone,
+  PhoneCall,
   StickyNote,
   User,
 } from 'lucide-react'
@@ -25,6 +26,9 @@ import {
 import { RelatedDealsTable } from '@/components/crm/related-deals-table'
 import { RecordActivityTimeline } from '@/components/crm/record-activity-timeline'
 import { useDialer } from '@/components/dialer/dialer-widget'
+import { useWebphone } from '@/components/webphone/webphone-context'
+import { WebphoneCallButton } from '@/components/webphone/webphone-call-button'
+import { WebphoneCustomerCalls } from '@/components/webphone/webphone-customer-calls'
 import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
 import { useContact, useUpdateContact } from '@/hooks/use-contacts'
 import { useCompanies } from '@/hooks/use-companies'
@@ -85,6 +89,7 @@ export function ContactDetail() {
   const { data: contact, isLoading } = useContact(contactId)
   const updateContact = useUpdateContact()
   const dialer = useDialer()
+  const webphone = useWebphone()
 
   const activeTab = tab || 'overview'
 
@@ -237,6 +242,29 @@ export function ContactDetail() {
           <RecordActivityTimeline events={events} isLoading={eventsLoading} />
         ),
       },
+      ...(webphone.enabled
+        ? [
+            {
+              value: 'calls',
+              label: t('webphone.history.title'),
+              icon: <PhoneCall className="size-3.5" />,
+              content: (
+                <div className="space-y-4">
+                  <div className="flex justify-end">
+                    <WebphoneCallButton
+                      phone={contact?.mobile}
+                      contactId={contactId}
+                    />
+                  </div>
+                  <WebphoneCustomerCalls
+                    contactId={contactId}
+                    phone={contact?.mobile ?? undefined}
+                  />
+                </div>
+              ),
+            } satisfies RecordDetailTab,
+          ]
+        : []),
       {
         value: 'deals',
         label: t('contacts.tabs.deals', { defaultValue: 'Deals' }),
@@ -314,7 +342,9 @@ export function ContactDetail() {
     events,
     eventsLoading,
     contact?.job_title,
+    contact?.mobile,
     contactId,
+    webphone.enabled,
   ])
 
   const attributeActions = (

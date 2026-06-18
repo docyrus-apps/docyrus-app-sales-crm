@@ -999,6 +999,15 @@
     "title": "Uygulama Ayarları",
     "navTitle": "Uygulama Ayarları",
     "comingSoon": "Yakında",
+    "fieldSalesSettingsTitle": "Saha Satış Ayarları",
+    "fieldSalesSettingsSubtitle": "Plan yapısı, çalışma saatleri ve konum kontrolü.",
+    "status": {
+      "complete": "Tüm ayarlar tamam",
+      "incomplete": "Eksik ayar var"
+    },
+    "settings": {
+      "open": "Ayarlar"
+    },
     "modules": {
       "title": "Modüller",
       "subtitle": "Bu uygulama için modülleri açıp kapatın. Kapalı modüllerin menüleri, sayfaları ve aksiyonları tüm kullanıcılardan gizlenir.",
@@ -1008,8 +1017,145 @@
       },
       "webphone": {
         "title": "Webphone",
-        "description": "Çağrı merkezi telefon entegrasyonu (arama/yanıtlama). Yakında etkinleştirilecek."
+        "description": "Çağrı merkezi telefon entegrasyonu: arama, gelen çağrı eşleştirme, görüşme sonucu ve çağrı geçmişi."
       }
+    }
+  },
+  "webphone": {
+    "groupLabel": "Webphone",
+    "statusMenu": {
+      "title": "Durum",
+      "online": "Çevrimiçi",
+      "offline": "Çevrimdışı",
+      "extension": "Dahili ayarları"
+    },
+    "extension": {
+      "title": "Dahili Ayarları",
+      "subtitle": "SIP kullanıcı adı ve şifrenizi girin, ardından bağlanın.",
+      "extension": "Dahili",
+      "username": "SIP kullanıcı adı",
+      "usernameHint": "Boş bırakılırsa dahili numara kullanılır.",
+      "password": "SIP şifresi",
+      "passwordHint": "SIP şifrenizi girin.",
+      "passwordHintSaved": "Kayıtlı — değiştirmek için yeni şifre girin.",
+      "displayName": "Görünen ad",
+      "saveConnect": "Kaydet ve Bağlan",
+      "noProfile": "Telefon profiliniz yok. Lütfen yöneticinize başvurun."
+    },
+    "status": {
+      "ready": "Hazır",
+      "connecting": "Bağlanıyor",
+      "failed": "Bağlantı hatası",
+      "offline": "Çevrimdışı",
+      "missingSettings": "Telefon ayarı eksik",
+      "micDenied": "Mikrofon izni yok"
+    },
+    "connect": "Bağlan",
+    "dialing": "Aranıyor…",
+    "ringing": "Çalıyor…",
+    "dialpad": {
+      "title": "Tuş takımı",
+      "placeholder": "Numara girin",
+      "backspace": "Sil",
+      "call": "Ara",
+      "busy": "Görüşme devam ediyor",
+      "matches": "Kayıtlı kişiler",
+      "noMatch": "Eşleşen kişi yok"
+    },
+    "calls": {
+      "title": "Çağrılar",
+      "navTitle": "Çağrılar",
+      "customer": "Müşteri",
+      "outcome": "Sonuç",
+      "date": "Tarih",
+      "duration": "Süre",
+      "agent": "Temsilci",
+      "empty": "Henüz çağrı yok",
+      "filterAll": "Tümü",
+      "filterInbound": "Gelen",
+      "filterOutbound": "Giden"
+    },
+    "incoming": {
+      "title": "Gelen çağrı",
+      "unknown": "Bilinmeyen numara",
+      "answer": "Cevapla",
+      "reject": "Reddet",
+      "matches": "Eşleşen kayıtlar"
+    },
+    "active": {
+      "title": "Görüşme",
+      "mute": "Sustur",
+      "unmute": "Aç",
+      "hold": "Beklet",
+      "resume": "Devam",
+      "keypad": "Tuşlar",
+      "hangup": "Kapat"
+    },
+    "wrapup": {
+      "title": "Görüşme sonucu",
+      "disposition": "Sonuç",
+      "dispositionPlaceholder": "Sonuç seçin",
+      "notesPlaceholder": "Görüşme notu",
+      "liveNotesPlaceholder": "Görüşme sırasında not alın…",
+      "followup": "Takip gerekli",
+      "submit": "Kaydet",
+      "skip": "Atla",
+      "error": "Görüşme sonucu kaydedilemedi",
+      "dispositions": {
+        "completed": "Tamamlandı",
+        "interested": "İlgileniyor",
+        "callback_requested": "Geri arama istendi",
+        "not_interested": "İlgilenmiyor",
+        "wrong_number": "Yanlış numara",
+        "no_answer": "Cevap yok",
+        "voicemail": "Telesekreter"
+      }
+    },
+    "callButton": "Ara",
+    "history": {
+      "title": "Çağrı geçmişi",
+      "empty": "Henüz arama yok"
+    },
+    "notes": {
+      "title": "Notlar",
+      "placeholder": "Müşteri kartına kalıcı not ekleyin…",
+      "add": "Not ekle",
+      "empty": "Henüz not yok",
+      "error": "Not kaydedilemedi"
+    },
+    "settings": {
+      "title": "Webphone Ayarları",
+      "subtitle": "SIP/WebRTC bağlantı ayarları. Kullanıcı adı ve şifre agent telefon profilinden gelir, burada tutulmaz.",
+      "wssUrl": "SIP WebSocket (WSS)",
+      "pbxHost": "PBX host",
+      "realm": "Realm",
+      "registrarServer": "Registrar (opsiyonel)",
+      "registerExpires": "Register süresi (sn)",
+      "noAnswerTimeout": "Cevapsız zaman aşımı (sn)",
+      "audioCodecs": "Ses codec sırası",
+      "iceServers": "ICE/STUN (JSON)",
+      "readinessReady": "Telefon profiliniz hazır",
+      "readinessMissing": "Telefon profilinizde eksik ayar var",
+      "readonlyNotice": "Bunlar webphone'un temel WebRTC ayarlarıdır; yalnızca yetkililer düzenlemelidir.",
+      "edit": "Düzenle",
+      "editConfirmTitle": "Ayarları düzenle?",
+      "editConfirmBody": "Bunlar temel webphone ayarlarıdır. Hatalı değerler tüm kullanıcılarda aramayı bozabilir. Devam etmek istiyor musunuz?",
+      "editConfirm": "Evet, düzenle"
+    },
+    "readiness": {
+      "not_authenticated": "Oturum açılmamış",
+      "insecure_context": "HTTPS gerekli",
+      "missing_profile": "Telefon profili yok",
+      "profile_disabled": "Profil pasif",
+      "webrtc_disabled": "WebRTC yetkisi kapalı",
+      "non_webrtc_device": "Tercih edilen cihaz WebRTC değil",
+      "missing_extension": "Dahili numara eksik",
+      "missing_username": "SIP kullanıcı adı eksik",
+      "missing_password": "SIP şifresi eksik",
+      "missing_wss": "WSS adresi eksik",
+      "missing_pbx_host": "PBX host eksik",
+      "missing_realm": "Realm eksik",
+      "missing_ice": "ICE ayarı eksik"
     }
   },
   "fieldSales": {

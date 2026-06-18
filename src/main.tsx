@@ -40,8 +40,8 @@ import { Contacts } from './routes/contacts.tsx'
 import { ContactDetail } from './routes/contact-detail.tsx'
 import { Activities } from './routes/activities.tsx'
 import { Reports } from './routes/reports.tsx'
-import { SettingsPage } from './routes/settings.tsx'
 import { AppConfigPage } from './routes/app-config.tsx'
+import { CallsPage } from './routes/calls.tsx'
 import { FieldSalesPlansPage } from './routes/field-sales-plans.tsx'
 import { FieldSalesApprovalsPage } from './routes/field-sales-approvals.tsx'
 import { FieldSalesCalendarPage } from './routes/field-sales-calendar.tsx'
@@ -189,12 +189,12 @@ const appConfigRoute = createRoute({
   component: AppConfigPage,
 })
 
-const settingsRoute = createRoute({
+const callsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/settings',
+  path: '/calls',
   component: () => (
-    <ModuleGuard module="fieldSales">
-      <SettingsPage />
+    <ModuleGuard module="webphone">
+      <CallsPage />
     </ModuleGuard>
   ),
 })
@@ -265,7 +265,7 @@ const routeTree = rootRoute.addChildren([
   activitiesRoute,
   reportsRoute,
   appConfigRoute,
-  settingsRoute,
+  callsRoute,
   fieldSalesPlansRoute,
   fieldSalesApprovalsRoute,
   fieldSalesCalendarRoute,

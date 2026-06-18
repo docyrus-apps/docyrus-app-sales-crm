@@ -23,6 +23,8 @@ interface SystemViewDefinition {
   columns: Array<string>
   sorting?: SortingState
   filterQuery?: RuleGroupType
+  /** Override the standard-paging page size (defaults to the grid default). */
+  pageSize?: number
 }
 
 export function andFilter(rules: RuleGroupType['rules']): RuleGroupType {
@@ -54,7 +56,7 @@ export function createSystemViews(
      */
     pagingEnabled: true,
     pagingMode: 'standard',
-    pageSize: DATA_GRID_DEFAULT_PAGE_SIZE,
+    pageSize: view.pageSize ?? DATA_GRID_DEFAULT_PAGE_SIZE,
     isDefault: index === 0,
   }))
 }

@@ -1,0 +1,81 @@
+{
+  "name": "callcenter-webrtc-integration-kit",
+  "version": "1.0.0",
+  "purpose": "Guide AI agents to add a minimal Docyrus Callcenter WebRTC module into CRM, ticket/support, or customer-management apps.",
+  "requiredDataSources": [
+    {
+      "appSlug": "base_callcenter",
+      "dataSourceSlug": "call",
+      "required": true
+    },
+    {
+      "appSlug": "base_callcenter",
+      "dataSourceSlug": "agent_telephony_profile",
+      "required": true
+    },
+    {
+      "appSlug": "base_callcenter",
+      "dataSourceSlug": "call_activity",
+      "required": true,
+      "reason": "Required for wrap-up and disposition persistence"
+    },
+    {
+      "appSlug": "base_callcenter",
+      "dataSourceSlug": "call_screen_note",
+      "required": true,
+      "reason": "Required for pinned/customer call notes in the full module"
+    }
+  ],
+  "recommendedDataSources": [
+    {
+      "appSlug": "base",
+      "dataSourceSlug": "contact",
+      "reason": "Canonical contact relation for call history"
+    },
+    {
+      "appSlug": "base_callcenter",
+      "dataSourceSlug": "call_event",
+      "reason": "Optional audit/debug event trail"
+    }
+  ],
+  "requiredUiParts": [
+    "Agent WebPhone readiness/status",
+    "Dial button or dialpad",
+    "Incoming call screen-pop",
+    "Active call panel",
+    "Wrap-up form and disposition persistence",
+    "Live call notes and pinned customer notes",
+    "Customer card integration",
+    "Customer call history panel",
+    "Admin agent phone profile settings",
+    "Admin WebRTC runtime settings"
+  ],
+  "mustNotDo": [
+    "Do not hardcode enum IDs",
+    "Do not modify existing customer datasource without approval",
+    "Do not show developer-facing datasource/backend/debug messages to end users",
+    "Do not store SIP passwords in frontend env variables",
+    "Do not mark the integration complete without a live inbound and outbound verification"
+  ],
+  "entryDocuments": [
+    "README.md",
+    "00-agent-prompt.md",
+    "01-schema-contract.md",
+    "02-runtime-settings.md",
+    "03-ui-behavior-contract.md",
+    "04-implementation-playbook.md",
+    "05-verification-checklist.md",
+    "06-risk-controls.md",
+    "07-wrapup-notes-contract.md"
+  ],
+  "referenceDocuments": [
+    "reference/schema-audit-cli.md",
+    "reference/customer-adapter.example.md",
+    "reference/webrtc-runtime-contract.example.md",
+    "reference/call-record-lifecycle.example.md",
+    "reference/call-history-query.example.md",
+    "reference/incoming-screen-pop-flow.example.md",
+    "reference/enum-resolver.example.md",
+    "reference/wrapup-notes-persistence.example.md"
+  ]
+}
