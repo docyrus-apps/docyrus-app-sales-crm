@@ -27,7 +27,7 @@ Cross-app sharing: because all Docyrus apps use the same storage keys (`app-them
 
 The app runs as an embedded iframe inside a Docyrus super-app shell and uses three postMessage bridges provided by `@docyrus/signin` (≥ 0.12.0).
 
-Notifications arrive as real-time toasts via the bridge — polling (`refetchInterval`) is removed, the header bell icon and sidebar unread badge are gone; `/inbox` remains for history.
+Notifications arrive as real-time toasts via the bridge — polling (`refetchInterval`) is removed, the header bell icon and sidebar unread badge are gone. The standalone `/inbox` and `/notifications` history routes were removed in the sidebar restructure (the Inbox, Notes, and Emails pages were dropped), so notification history no longer has a dedicated page; the toast bridge and `notifications.collection` API remain.
 
 1. **Route → Host sync** (`syncRouteToHost` on `DocyrusAuthProvider` in `src/main.tsx`) — patches `history.pushState`/`replaceState` and listens to `popstate`/`hashchange` to post a `route-change` message to the host on every navigation, keeping the shell address bar in sync for bookmarking and sharing.
 

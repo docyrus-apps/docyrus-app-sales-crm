@@ -1,20 +1,23 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useMatchRoute } from '@tanstack/react-router'
 import {
+  Activity,
   BadgeCheck,
   BarChart3,
+  Briefcase,
   Building2,
   CalendarCheck2,
   CalendarDays,
   CheckSquare,
+  ChevronRight,
   ChevronsUpDown,
   Contact,
   DollarSign,
-  Home,
-  Inbox,
+  LayoutDashboard,
   LogOut,
+  type LucideIcon,
+  Map,
   MapPinned,
-  NotepadText,
   Package,
   PhoneCall,
   Route,
@@ -33,6 +36,7 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
+  SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
@@ -41,6 +45,11 @@ import {
   SidebarRail,
   useSidebar,
 } from '@/components/animate-ui/components/radix/sidebar'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,33 +72,31 @@ import { isModuleEnabled } from '@/lib/app-config'
 type NavItem = {
   titleKey: string
   url: string
-  icon: typeof Home
+  icon: LucideIcon
 }
 
-const MAIN_NAV_KEYS: NavItem[] = [
-  { titleKey: 'nav.home', url: '/', icon: Home },
-  {
-    titleKey: 'notifications.title',
-    url: '/inbox',
-    icon: Inbox,
-  },
-  { titleKey: 'deals.title', url: '/deals', icon: DollarSign },
+const DASHBOARD_NAV: NavItem = {
+  titleKey: 'nav.dashboard',
+  url: '/',
+  icon: LayoutDashboard,
+}
+
+const CRM_NAV_KEYS: Array<NavItem> = [
   { titleKey: 'leads.title', url: '/leads', icon: UserRoundSearch },
-  { titleKey: 'tasks.title', url: '/tasks', icon: CheckSquare },
-  { titleKey: 'notes.title', url: '/notes', icon: NotepadText },
-  { titleKey: 'activities.title', url: '/activities', icon: Zap },
-  { titleKey: 'calendar.title', url: '/calendar', icon: CalendarDays },
-  { titleKey: 'reports.title', url: '/reports', icon: BarChart3 },
-]
-
-const DATA_SOURCES_NAV_KEYS: NavItem[] = [
-  { titleKey: 'companies.title', url: '/companies', icon: Building2 },
-  { titleKey: 'contacts.title', url: '/contacts', icon: Contact },
-  { titleKey: 'products.title', url: '/products', icon: Package },
+  { titleKey: 'deals.title', url: '/deals', icon: DollarSign },
   { titleKey: 'salesOrders.title', url: '/sales-orders', icon: ShoppingCart },
+  { titleKey: 'contacts.title', url: '/contacts', icon: Contact },
+  { titleKey: 'companies.title', url: '/companies', icon: Building2 },
+  { titleKey: 'products.title', url: '/products', icon: Package },
 ]
 
-const FIELD_SALES_NAV_KEYS: NavItem[] = [
+const WEBPHONE_CALLS_ITEM: NavItem = {
+  titleKey: 'webphone.calls.navTitle',
+  url: '/calls',
+  icon: PhoneCall,
+}
+
+const FIELD_SALES_NAV_KEYS: Array<NavItem> = [
   {
     titleKey: 'fieldSales.plans.title',
     url: '/field-sales/plans',
@@ -107,53 +114,109 @@ const FIELD_SALES_NAV_KEYS: NavItem[] = [
   },
 ]
 
-const WEBPHONE_NAV_KEYS: NavItem[] = [
-  {
-    titleKey: 'webphone.calls.navTitle',
-    url: '/calls',
-    icon: PhoneCall,
-  },
-]
+const APP_CONFIG_NAV: NavItem = {
+  titleKey: 'appConfig.navTitle',
+  url: '/app-config',
+  icon: SlidersHorizontal,
+}
 
-const ADMIN_NAV_KEYS: NavItem[] = [
-  {
-    titleKey: 'appConfig.navTitle',
-    url: '/app-config',
-    icon: SlidersHorizontal,
-  },
-]
+function useGroupOpen(groupId: string, hasActive: boolean) {
+  const storageKey = `sidebar.group.${groupId}`
+  const [open, setOpen] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true
+    const stored = window.localStorage.getItem(storageKey)
+    if (stored !== null) return stored === '1'
+    return true
+  })
+  const prevActive = useRef(false)
 
-function NavGroup({
+  useEffect(() => {
+    // Auto-expand a group when the active route moves into it.
+    if (hasActive && !prevActive.current) {
+      setOpen(true)
+    }
+    prevActive.current = hasActive
+  }, [hasActive])
+
+  const onOpenChange = (value: boolean) => {
+    setOpen(value)
+    try {
+      window.localStorage.setItem(storageKey, value ? '1' : '0')
+    } catch {
+      // Ignore storage failures (e.g. private browsing).
+    }
+  }
+
+  return { open, onOpenChange }
+}
+
+function CollapsibleNavGroup({
+  groupId,
   label,
+  icon: Icon,
   items,
   matchRoute,
   t,
 }: {
+  groupId: string
   label: string
+  icon: LucideIcon
   items: Array<NavItem>
   matchRoute: ReturnType<typeof useMatchRoute>
   t: (key: string) => string
 }) {
+  const { state } = useSidebar()
+  const isIconMode = state === 'collapsed'
+  const hasActive = items.some(
+    (item) => !!matchRoute({ to: item.url, fuzzy: true }),
+  )
+  const { open, onOpenChange } = useGroupOpen(groupId, hasActive)
+  // In icon (rail) mode group labels are hidden, so keep items reachable.
+  const effectiveOpen = isIconMode ? true : open
+
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel>{label}</SidebarGroupLabel>
-      <SidebarMenu>
-        {items.map((item) => {
-          const isActive = matchRoute({ to: item.url, fuzzy: true })
-          const title = t(item.titleKey)
-          return (
-            <SidebarMenuItem key={item.titleKey}>
-              <SidebarMenuButton asChild isActive={!!isActive} tooltip={title}>
-                <Link to={item.url}>
-                  <item.icon />
-                  <span>{title}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          )
-        })}
-      </SidebarMenu>
-    </SidebarGroup>
+    <Collapsible
+      open={effectiveOpen}
+      onOpenChange={onOpenChange}
+      className="group/collapsible"
+    >
+      <SidebarGroup className="py-0.5">
+        <SidebarGroupLabel
+          asChild
+          className="w-full cursor-pointer gap-2 text-[11px] font-semibold tracking-wider uppercase text-sidebar-foreground/55 transition-colors hover:text-sidebar-foreground"
+        >
+          <CollapsibleTrigger>
+            <Icon className="size-4 shrink-0" />
+            <span className="flex-1 text-left">{label}</span>
+            <ChevronRight className="size-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+          </CollapsibleTrigger>
+        </SidebarGroupLabel>
+        <CollapsibleContent>
+          <SidebarGroupContent>
+            <SidebarMenu className="pl-4 group-data-[collapsible=icon]:pl-0">
+              {items.map((item) => {
+                const isActive = matchRoute({ to: item.url, fuzzy: true })
+                const title = t(item.titleKey)
+                return (
+                  <SidebarMenuItem key={item.titleKey}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={!!isActive}
+                      tooltip={title}
+                    >
+                      <Link to={item.url}>
+                        <item.icon />
+                        <span>{title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </CollapsibleContent>
+      </SidebarGroup>
+    </Collapsible>
   )
 }
 
@@ -165,6 +228,13 @@ export function AppSidebar() {
   const { data: modules } = useAppModules()
   const fieldSalesEnabled = isModuleEnabled(modules, 'fieldSales')
   const webphoneEnabled = isModuleEnabled(modules, 'webphone')
+  const operationsItems: Array<NavItem> = [
+    { titleKey: 'tasks.title', url: '/tasks', icon: CheckSquare },
+    { titleKey: 'activities.title', url: '/activities', icon: Zap },
+    { titleKey: 'calendar.title', url: '/calendar', icon: CalendarDays },
+    ...(webphoneEnabled ? [WEBPHONE_CALLS_ITEM] : []),
+    { titleKey: 'reports.title', url: '/reports', icon: BarChart3 },
+  ]
   const usersCollection = useUsersCollection()
   const [userProfile, setUserProfile] = useState<
     (UserEntity & { photo?: string }) | null
@@ -317,9 +387,9 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="gap-0">
         {/* Search trigger */}
-        <SidebarGroup>
+        <SidebarGroup className="pb-1">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
@@ -343,40 +413,69 @@ export function AppSidebar() {
           </SidebarMenu>
         </SidebarGroup>
 
-        <NavGroup
-          label={t('nav.mainNavigation')}
-          items={MAIN_NAV_KEYS}
+        {/* Dashboard (pinned, top of nav list) */}
+        <SidebarGroup className="py-0.5">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={!!matchRoute({ to: DASHBOARD_NAV.url })}
+                tooltip={t(DASHBOARD_NAV.titleKey)}
+                className="text-[11px] font-semibold tracking-wider uppercase text-sidebar-foreground/55"
+              >
+                <Link to={DASHBOARD_NAV.url}>
+                  <DASHBOARD_NAV.icon />
+                  <span>{t(DASHBOARD_NAV.titleKey)}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+
+        <CollapsibleNavGroup
+          groupId="crm"
+          label={t('nav.crm', 'CRM')}
+          icon={Briefcase}
+          items={CRM_NAV_KEYS}
           matchRoute={matchRoute}
           t={t}
         />
-        <NavGroup
-          label={t('nav.dataSources', 'Data Sources')}
-          items={DATA_SOURCES_NAV_KEYS}
+        <CollapsibleNavGroup
+          groupId="operations"
+          label={t('nav.operations', 'Operasyon')}
+          icon={Activity}
+          items={operationsItems}
           matchRoute={matchRoute}
           t={t}
         />
         {fieldSalesEnabled && (
-          <NavGroup
+          <CollapsibleNavGroup
+            groupId="fieldSales"
             label={t('fieldSales.groupLabel', 'Saha Satış')}
+            icon={Map}
             items={FIELD_SALES_NAV_KEYS}
             matchRoute={matchRoute}
             t={t}
           />
         )}
-        {webphoneEnabled && (
-          <NavGroup
-            label={t('webphone.groupLabel', 'Webphone')}
-            items={WEBPHONE_NAV_KEYS}
-            matchRoute={matchRoute}
-            t={t}
-          />
-        )}
-        <NavGroup
-          label={t('nav.administration', 'Yönetim')}
-          items={ADMIN_NAV_KEYS}
-          matchRoute={matchRoute}
-          t={t}
-        />
+
+        {/* App Config (pinned, bottom) */}
+        <SidebarGroup className="mt-auto pt-1">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={!!matchRoute({ to: APP_CONFIG_NAV.url, fuzzy: true })}
+                tooltip={t(APP_CONFIG_NAV.titleKey)}
+              >
+                <Link to={APP_CONFIG_NAV.url}>
+                  <APP_CONFIG_NAV.icon />
+                  <span>{t(APP_CONFIG_NAV.titleKey)}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter>

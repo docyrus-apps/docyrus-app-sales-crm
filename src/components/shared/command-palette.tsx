@@ -7,7 +7,6 @@ import {
   CheckSquare,
   DollarSign,
   FileText,
-  Mail,
   Package,
   Plus,
   Search,
@@ -214,15 +213,6 @@ export function CommandPalette({
                 >
                   <Calendar className="h-4 w-4" />
                   <span>{t('commandPalette.calendar')}</span>
-                </CommandItem>
-                <CommandItem
-                  onSelect={() =>
-                    handleSelect(() => navigate({ to: '/emails' }))
-                  }
-                  className="cursor-pointer gap-2"
-                >
-                  <Mail className="h-4 w-4" />
-                  <span>{t('commandPalette.emails')}</span>
                 </CommandItem>
                 <CommandItem
                   onSelect={() =>

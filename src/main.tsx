@@ -29,10 +29,7 @@ import { LeadDetail } from './routes/lead-detail.tsx'
 import { Companies } from './routes/companies.tsx'
 import { CompanyDetail } from './routes/company-detail.tsx'
 import { Tasks } from './routes/tasks.tsx'
-import { InboxPage } from './routes/notifications.tsx'
-import { Emails } from './routes/emails.tsx'
 import { CalendarPage } from './routes/calendar.tsx'
-import { Notes } from './routes/notes.tsx'
 import { Products } from './routes/products.tsx'
 import { SalesOrders } from './routes/sales-orders.tsx'
 import { SalesOrderDetail } from './routes/sales-order-detail.tsx'
@@ -123,34 +120,10 @@ const tasksRoute = createRoute({
   component: Tasks,
 })
 
-const inboxRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/inbox',
-  component: InboxPage,
-})
-
-const notificationsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/notifications',
-  component: InboxPage,
-})
-
-const emailsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/emails',
-  component: Emails,
-})
-
 const calendarRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/calendar',
   component: CalendarPage,
-})
-
-const notesRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/notes',
-  component: Notes,
 })
 
 const productsRoute = createRoute({
@@ -254,11 +227,7 @@ const routeTree = rootRoute.addChildren([
   contactsRoute,
   contactDetailRoute,
   tasksRoute,
-  inboxRoute,
-  notificationsRoute,
-  emailsRoute,
   calendarRoute,
-  notesRoute,
   productsRoute,
   salesOrdersRoute,
   salesOrderDetailRoute,

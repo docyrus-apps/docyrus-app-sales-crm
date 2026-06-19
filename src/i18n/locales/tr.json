@@ -37,7 +37,9 @@
     "pages": "Sayfalar",
     "searchTooltip": "Ara",
     "dataSources": "Veri Kaynakları",
-    "administration": "Yönetim"
+    "administration": "Yönetim",
+    "crm": "CRM",
+    "operations": "Operasyon"
   },
   "sidebar": {
     "appName": "Satış CRM",

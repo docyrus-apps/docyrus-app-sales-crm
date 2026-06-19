@@ -37,7 +37,9 @@
     "pages": "Pages",
     "searchTooltip": "Search",
     "dataSources": "Data Sources",
-    "administration": "Administration"
+    "administration": "Administration",
+    "crm": "CRM",
+    "operations": "Operations"
   },
   "sidebar": {
     "appName": "Sales CRM",

@@ -18,8 +18,6 @@ export const ROUTES = {
   CONTACT_DETAIL: '/contacts/:contactId',
   TASKS: '/tasks',
   EVENTS: '/calendar',
-  EMAILS: '/emails',
-  THREAD_DETAIL: '/emails/:threadId',
   PRODUCTS: '/products',
   SALES_ORDERS: '/sales-orders',
   SALES_ORDER_DETAIL: '/sales-orders/:orderId',
@@ -91,11 +89,6 @@ export const NAV_ITEMS = [
     title: 'Tasks',
     href: ROUTES.TASKS,
     icon: 'CheckSquare',
-  },
-  {
-    title: 'Emails',
-    href: ROUTES.EMAILS,
-    icon: 'Mail',
   },
   {
     title: 'Products',
