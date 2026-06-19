@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CRM Karşılaştırma — Bizim vs Diğer</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#171a21; --line:#262b36; --txt:#e7eaf0; --muted:#9aa3b2;
+    --add:#3fb950; --rem:#f85149; --diff:#d29922; --same:#58a6ff; --chip:#1f242e;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding:28px 18px}
+  .wrap{max-width:1100px;margin:0 auto}
+  h1{font-size:24px;margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 22px;font-size:14px}
+  h2{font-size:19px;margin:34px 0 6px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  h3{font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px;font-weight:600}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0 18px;font-size:13px}
+  .legend span{display:inline-flex;align-items:center;gap:6px;background:var(--chip);padding:4px 10px;border-radius:20px}
+  .dot{width:9px;height:9px;border-radius:50%}
+  .scroll{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+  table{border-collapse:collapse;width:100%;min-width:560px;font-size:14px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:#1b1f27;color:var(--muted);font-weight:600;position:sticky;top:0}
+  tr:last-child td{border-bottom:0}
+  td.flag{white-space:nowrap;font-weight:600}
+  .add{color:var(--add)} .rem{color:var(--rem)} .diff{color:var(--diff)} .same{color:var(--same)}
+  .mut{color:var(--muted)}
+  code{background:var(--chip);padding:1px 6px;border-radius:5px;font-size:12.5px}
+  .rec{background:#12161d;border:1px solid var(--line);border-left:3px solid var(--diff);border-radius:8px;padding:10px 14px;margin:10px 0;font-size:14px}
+  .rec b{color:var(--diff)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>CRM Karşılaştırma — Bizim vs Diğer</h1>
+  <p class="sub">Bizim: <code>base_crm</code>/<code>base</code> (tenant 2483, canlı enum). Diğer: <code>crm</code>/<code>base</code>. Karar vermeden önce referans tablo — kod değişmedi.</p>
+
+  <div class="legend">
+    <span><i class="dot" style="background:var(--add)"></i>➕ Onlarda var, bizde yok</span>
+    <span><i class="dot" style="background:var(--rem)"></i>➖ Bizde var, onlarda yok</span>
+    <span><i class="dot" style="background:var(--diff)"></i>✏️ Aynı kavram, farklı değer/ad</span>
+    <span><i class="dot" style="background:var(--same)"></i>✅ Ortak</span>
+  </div>
+
+  <!-- CONTACT -->
+  <h2>1) Contact</h2>
+  <h3>Alanlar</h3>
+  <div class="scroll"><table>
+    <tr><th>Alan</th><th>Bizde</th><th>Onlarda</th><th>Durum</th></tr>
+    <tr><td>name</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+    <tr><td>email</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+    <tr><td>mobile</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+    <tr><td>job_title</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+    <tr><td>organization (ilişki)</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+    <tr><td>source_lead</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+    <tr><td>contact_type / status</td><td><code>contact_type</code> + <code>contact_status</code></td><td><code>status</code> + <code>buying_role</code></td><td class="flag diff">✏️</td></tr>
+    <tr><td>buying_role</td><td class="mut">—</td><td>✓ (Champion, Decision Maker, Influencer, User, Legal, Blocker)</td><td class="flag add">➕</td></tr>
+    <tr><td>related_product</td><td class="mut">—</td><td>✓</td><td class="flag add">➕</td></tr>
+  </table></div>
+
+  <h3>Enum değerleri</h3>
+  <div class="scroll"><table>
+    <tr><th>Alan</th><th>Bizde</th><th>Onlarda</th></tr>
+    <tr><td>status</td><td>Active · Inactive · Do&nbsp;Not&nbsp;Contact <span class="mut">(contact_status)</span></td><td>Active · Left&nbsp;Company · Unknown</td></tr>
+    <tr><td>type / role</td><td>Decision&nbsp;Maker · Champion · Influencer · Technical · Billing · Other <span class="mut">(contact_type)</span></td><td>Champion · Decision&nbsp;Maker · Influencer · User · Legal · Blocker <span class="mut">(buying_role)</span></td></tr>
+  </table></div>
+  <div class="rec"><b>Not:</b> Bizim <code>contact_type</code> ≈ onların <code>buying_role</code> (rol kavramı), bizim <code>contact_status</code> ≈ onların <code>status</code>. Onlarda ayrıca <code>buying_role</code>'dan farklı bir "type" yok.</div>
+
+  <h3>Sekmeler</h3>
+  <div class="scroll"><table>
+    <tr><th>Sekme</th><th>Bizde</th><th>Onlarda</th><th>Durum</th></tr>
+    <tr><td>Overview</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+    <tr><td>Activity</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+    <tr><td>Company</td><td class="mut">(üst panelde ilişki)</td><td>✓ ayrı sekme</td><td class="flag diff">✏️</td></tr>
+    <tr><td>Deals</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+    <tr><td>Emails</td><td>placeholder</td><td>✓ gerçek</td><td class="flag diff">✏️</td></tr>
+    <tr><td>Calls</td><td>✓ (webphone'a bağlı)</td><td>✓</td><td class="flag diff">✏️</td></tr>
+    <tr><td>Comments</td><td>✓ (Notes = Comments)</td><td>✓ ayrı</td><td class="flag diff">✏️</td></tr>
+    <tr><td>Notes</td><td>✓ (Comments ile aynı)</td><td>✓ ayrı</td><td class="flag diff">✏️</td></tr>
+    <tr><td>Tasks</td><td class="mut">—</td><td>✓</td><td class="flag add">➕</td></tr>
+    <tr><td>Files</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+  </table></div>
+
+  <!-- ORGANIZATION -->
+  <h2>2) Organization / Company</h2>
+  <h3>Alanlar</h3>
+  <div class="scroll"><table>
+    <tr><th>Alan</th><th>Bizde</th><th>Onlarda</th><th>Durum</th></tr>
+    <tr><td>name</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+    <tr><td>email · phone · website</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+    <tr><td>address · city · district · country</td><td>✓</td><td>✓ (address)</td><td class="flag same">✅</td></tr>
+    <tr><td>tax_number</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+    <tr><td>status · type · industry</td><td>✓</td><td>✓</td><td class="flag diff">✏️ değerler</td></tr>
+    <tr><td>company_size</td><td>✓</td><td class="mut">? (belirtilmedi)</td><td class="flag rem">➖?</td></tr>
+    <tr><td>account_owner</td><td><code>record_owner</code></td><td><code>account_owner</code></td><td class="flag same">✅ (ad farkı)</td></tr>
+    <tr><td>commercial_title</td><td class="mut">—</td><td>✓</td><td class="flag add">➕</td></tr>
+    <tr><td>parent_organization</td><td class="mut">—</td><td>✓</td><td class="flag add">➕</td></tr>
+    <tr><td>referring_partner</td><td class="mut">—</td><td>✓</td><td class="flag add">➕</td></tr>
+    <tr><td>account_type</td><td class="mut">—</td><td>✓</td><td class="flag add">➕</td></tr>
+    <tr><td>lifecycle_stage</td><td class="mut">—</td><td>✓</td><td class="flag add">➕</td></tr>
+  </table></div>
+
+  <h3>Enum değerleri</h3>
+  <div class="scroll"><table>
+    <tr><th>Alan</th><th>Bizde</th><th>Onlarda</th></tr>
+    <tr><td>status</td><td>Active · Inactive · Review</td><td>Active · Deneme · Inactive</td></tr>
+    <tr><td>type</td><td>Customer · Prospect · Partner · Vendor</td><td>Vendor · Customer · Lead</td></tr>
+    <tr><td>account_type</td><td class="mut">— (yok)</td><td>Prospect · Customer · Partner · Partner&nbsp;Candidate · Former&nbsp;Customer · Vendor</td></tr>
+    <tr><td>lifecycle_stage</td><td class="mut">— (yok)</td><td>Prospect · Engaged · Customer · Expansion · Churned</td></tr>
+    <tr><td>industry</td><td>Automotive · Consumer&nbsp;Services · Energy · Finance · Healthcare · Manufacturing · Technology (7)</td><td>+ Software · Entertainment · HR (10)</td></tr>
+  </table></div>
+  <div class="rec"><b>Dikkat:</b> Onlarda <code>type</code>, <code>account_type</code> ve <code>lifecycle_stage</code> üçü birden var — kavram çakışması riski. Bizde tek <code>type</code> bu işi görüyor. Üçünü de almak mı, yoksa <code>lifecycle_stage</code>'i tek "olgunluk" alanı yapmak mı?</div>
+
+  <h3>Sekmeler</h3>
+  <div class="scroll"><table>
+    <tr><th>Sekme</th><th>Bizde</th><th>Onlarda</th><th>Durum</th></tr>
+    <tr><td>Overview · Activity</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+    <tr><td>Team / Contacts</td><td>✓ Contacts</td><td>✓ Team</td><td class="flag same">✅ (ad)</td></tr>
+    <tr><td>Deals</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+    <tr><td>Leads</td><td>✓</td><td class="mut">—</td><td class="flag rem">➖</td></tr>
+    <tr><td>Emails · Calls</td><td class="mut">—</td><td>✓</td><td class="flag add">➕</td></tr>
+    <tr><td>Subscriptions</td><td class="mut">—</td><td>✓</td><td class="flag add">➕</td></tr>
+    <tr><td>Interactions</td><td class="mut">—</td><td>✓</td><td class="flag add">➕</td></tr>
+    <tr><td>Subsidiaries (koşullu)</td><td class="mut">—</td><td>✓ (alt şirket varsa)</td><td class="flag add">➕</td></tr>
+    <tr><td>Customers (Partner ise)</td><td class="mut">—</td><td>✓</td><td class="flag add">➕</td></tr>
+    <tr><td>Comments · Notes</td><td>✓ (tek, birleşik)</td><td>✓ (ayrı)</td><td class="flag diff">✏️</td></tr>
+    <tr><td>Tasks</td><td class="mut">—</td><td>✓</td><td class="flag add">➕</td></tr>
+    <tr><td>Files</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+  </table></div>
+
+  <!-- DEAL -->
+  <h2>3) Deal</h2>
+  <h3>Alanlar</h3>
+  <div class="scroll"><table>
+    <tr><th>Alan</th><th>Bizde</th><th>Onlarda</th><th>Durum</th></tr>
+    <tr><td>name</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+    <tr><td>deal_value · expected_revenue</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+    <tr><td>expected_closing_date</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+    <tr><td>organization · contact_person</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+    <tr><td>owner</td><td><code>record_owner</code></td><td><code>deal_owner</code></td><td class="flag same">✅ (ad)</td></tr>
+    <tr><td>hot_prospect</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+    <tr><td>description / notes</td><td><code>qualification_notes</code></td><td><code>description</code></td><td class="flag diff">✏️ (ad)</td></tr>
+    <tr><td>close_probability</td><td>✓</td><td class="mut">?</td><td class="flag rem">➖?</td></tr>
+    <tr><td>follow_up_on · closed_date</td><td>✓</td><td class="mut">?</td><td class="flag rem">➖?</td></tr>
+    <tr><td>country</td><td>✓</td><td class="mut">?</td><td class="flag rem">➖?</td></tr>
+    <tr><td>deals_products_tags</td><td>✓</td><td class="mut">?</td><td class="flag rem">➖?</td></tr>
+    <tr><td>deal_type</td><td class="mut">—</td><td>✓</td><td class="flag add">➕</td></tr>
+  </table></div>
+
+  <h3>Enum değerleri</h3>
+  <div class="scroll"><table>
+    <tr><th>Alan</th><th>Bizde</th><th>Onlarda</th></tr>
+    <tr><td>stage</td><td>New · Demo · Budget · Proposal · Negotiation · Follow-Up · Won · Lost · Cancelled (9)</td><td>New · Follow-Up · Proposal · Demo · Negotiation · Won · Lost · Budget · Cancelled (9) <span class="mut">— aynı küme, farklı sıra</span></td></tr>
+    <tr><td>customer_type</td><td>New&nbsp;Business · Existing&nbsp;Business</td><td>New&nbsp;Business · Existing&nbsp;Business <span class="mut">— birebir</span></td></tr>
+    <tr><td>deal_type</td><td class="mut">— (yok)</td><td>New&nbsp;Business · Renewal · Expansion · Upsell · Partner · Pilot</td></tr>
+    <tr><td>lead_source</td><td>Website · Social&nbsp;Media · Ads · Email · Chat · Conference/Fair/Event · Customer&nbsp;Reference · Partner (8)</td><td>Ads · Chat · Email · Social&nbsp;Media · Website (5)</td></tr>
+    <tr><td>lost_reason</td><td>Competition · Price · Feature&nbsp;Gap · Expectation&nbsp;Mismatch · Lack&nbsp;of&nbsp;Response · Missed&nbsp;Follow&nbsp;Ups · Unqualified · Wrong&nbsp;Target · Future&nbsp;Interest · Other (10)</td><td>Price&nbsp;Too&nbsp;High · Lost&nbsp;to&nbsp;Competitor · No&nbsp;Budget · No&nbsp;Decision/Timing · Chose&nbsp;Status&nbsp;Quo · Other (6)</td></tr>
+  </table></div>
+  <div class="rec"><b>Not:</b> <code>deal_type</code> (New Business/Renewal/Expansion/Upsell/Partner/Pilot) onlarda <code>customer_type</code>'tan AYRI bir alan. Bizde sadece <code>customer_type</code> (2 değer) var. <code>deal_type</code> eklemek satış tipi raporlaması için anlamlı.</div>
+
+  <h3>Sekmeler</h3>
+  <div class="scroll"><table>
+    <tr><th>Sekme</th><th>Bizde</th><th>Onlarda</th><th>Durum</th></tr>
+    <tr><td>Overview · Activity</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+    <tr><td>Contacts</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+    <tr><td>Products</td><td>✓ (PricingEngine)</td><td class="mut">—</td><td class="flag rem">➖</td></tr>
+    <tr><td>Orders</td><td>✓</td><td class="mut">—</td><td class="flag rem">➖</td></tr>
+    <tr><td>Emails · Calls</td><td class="mut">—</td><td>✓</td><td class="flag add">➕</td></tr>
+    <tr><td>Comments · Notes</td><td>✓ (birleşik)</td><td>✓ (ayrı)</td><td class="flag diff">✏️</td></tr>
+    <tr><td>Tasks</td><td class="mut">—</td><td>✓</td><td class="flag add">➕</td></tr>
+    <tr><td>Files</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+  </table></div>
+
+  <!-- LEAD -->
+  <h2>4) Lead</h2>
+  <h3>Alanlar</h3>
+  <div class="scroll"><table>
+    <tr><th>Alan</th><th>Bizde</th><th>Onlarda</th><th>Durum</th></tr>
+    <tr><td>isim</td><td><code>name</code> + <code>title</code> (tek)</td><td><code>firstname</code> + <code>lastname</code> (ayrı)</td><td class="flag diff">✏️</td></tr>
+    <tr><td>company adı</td><td><code>company_name_text</code></td><td><code>company_name</code></td><td class="flag diff">✏️ (ad)</td></tr>
+    <tr><td>email · mobile/phone</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+    <tr><td>address · city · state · town</td><td>✓</td><td>✓ (address)</td><td class="flag same">✅</td></tr>
+    <tr><td>contact_person</td><td class="mut">— (contact_job_title var)</td><td>✓</td><td class="flag add">➕</td></tr>
+    <tr><td>converted_* (org/contact/deal)</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+    <tr><td>company_industry · company_size</td><td>✓</td><td class="mut">?</td><td class="flag rem">➖?</td></tr>
+    <tr><td>deal_value · expected_revenue · close_probability</td><td>✓</td><td class="mut">?</td><td class="flag rem">➖?</td></tr>
+    <tr><td>contact_consent / kvkk_consent</td><td class="mut">—</td><td>✓</td><td class="flag add">➕</td></tr>
+    <tr><td>lead_category</td><td class="mut">—</td><td>✓</td><td class="flag add">➕</td></tr>
+  </table></div>
+
+  <h3>Enum değerleri</h3>
+  <div class="scroll"><table>
+    <tr><th>Alan</th><th>Bizde</th><th>Onlarda</th></tr>
+    <tr><td>lead_status</td><td>New · Contacted · Qualified · Converted · Disqualified (5)</td><td>New&nbsp;Leads · Connected · Proposal&nbsp;Sent · Current&nbsp;Customer · Converted · Unqualified · Trial&nbsp;Started (7)</td></tr>
+    <tr><td>lead_type</td><td>New&nbsp;Business · Existing&nbsp;Business</td><td>Yeni&nbsp;Müşteri · Mevcut&nbsp;Müşteri <span class="mut">— aynı, TR</span></td></tr>
+    <tr><td>lead_category</td><td class="mut">— (yok)</td><td>Lead · Partner · Investor · Other</td></tr>
+    <tr><td>lead_source</td><td>8 değer (Deal ile ortak liste)</td><td>16 değer (Search Engines, Webform, Signup, Import…)</td></tr>
+    <tr><td>conversion_state / mode</td><td>✓ (in_progress/completed/partial/failed · company_contact_deal/contact_deal)</td><td>✓ birebir aynı</td></tr>
+  </table></div>
+  <div class="rec"><b>Not:</b> Bizim Lead modelimiz "saf lead" (provenance + conversion logic'e bağlı, salt-okunur kuralları var). İsim alanını <code>firstname/lastname</code>'e bölmek conversion mapping'i ve grid'leri etkiler — dikkatli olunmalı.</div>
+
+  <h3>Sekmeler</h3>
+  <div class="scroll"><table>
+    <tr><th>Sekme</th><th>Bizde</th><th>Onlarda</th><th>Durum</th></tr>
+    <tr><td>Overview · Activity</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+    <tr><td>Emails</td><td>placeholder</td><td>✓ gerçek</td><td class="flag diff">✏️</td></tr>
+    <tr><td>Calls</td><td class="mut">—</td><td>✓</td><td class="flag add">➕</td></tr>
+    <tr><td>Comments · Notes</td><td>✓ (birleşik)</td><td>✓ (ayrı)</td><td class="flag diff">✏️</td></tr>
+    <tr><td>Tasks</td><td class="mut">—</td><td>✓</td><td class="flag add">➕</td></tr>
+    <tr><td>Files</td><td>✓</td><td>✓</td><td class="flag same">✅</td></tr>
+  </table></div>
+
+  <!-- CROSS -->
+  <h2>Tekrar eden temalar (4 ekranda da)</h2>
+  <div class="scroll"><table>
+    <tr><th>Tema</th><th>Bizde</th><th>Onlarda</th><th>Öneri</th></tr>
+    <tr><td><b>Tasks sekmesi</b></td><td class="rem">yok (sadece global /tasks)</td><td>her ekranda var</td><td>Kayıt-bazlı Tasks sekmesi ekle (task→kayıt ilişkisi gerekli)</td></tr>
+    <tr><td><b>Emails sekmesi</b></td><td>placeholder</td><td>gerçek</td><td>Backend e-posta kaynağı yoksa placeholder kalsın; varsa bağla</td></tr>
+    <tr><td><b>Calls sekmesi</b></td><td>webphone'a bağlı / kısmi</td><td>her yerde</td><td>Webphone modülüne bağlı tutmaya devam (tutarlı)</td></tr>
+    <tr><td><b>Comments vs Notes</b></td><td>tek (Notes=Comments)</td><td>iki ayrı</td><td>İhtiyaç netse ayır; değilse tek bırak (sade)</td></tr>
+  </table></div>
+</div>
+</body>
+</html>

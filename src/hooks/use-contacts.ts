@@ -42,6 +42,8 @@ export function useContact(contactId: string | undefined) {
           'email',
           'mobile',
           'organization(id,name,phone,email,website)',
+          'contact_type',
+          'contact_status',
           'created_on',
         ],
       })

@@ -816,14 +816,25 @@ const EditableValue = forwardRef<HTMLDivElement, EditableValueProps>(
         onKeyDown={handleDisplayKeyDown}
         {...props}
       >
-        {children ?? (
-          <DynamicValue
-            field={field}
-            value={value}
-            record={record}
-            enumOptions={enumOptions}
-          />
-        )}
+        {/* When the field is editable, neutralize interactive children (e.g.
+            email mailto: / phone tel: links) so a click enters edit mode
+            instead of triggering the mail/phone action. Read-only fields keep
+            their links clickable. */}
+        <div
+          className={cn(
+            'contents',
+            !isFieldReadOnly && '[&_a]:pointer-events-none',
+          )}
+        >
+          {children ?? (
+            <DynamicValue
+              field={field}
+              value={value}
+              record={record}
+              enumOptions={enumOptions}
+            />
+          )}
+        </div>
       </div>
     )
   },

@@ -22,6 +22,7 @@ import {
   Hash,
   Image as ImageIcon,
   Link2,
+  MoreHorizontal,
   Pencil,
   Phone,
   Search,
@@ -42,6 +43,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 import {
   type FieldChange,
@@ -314,11 +321,10 @@ function RecordAttributePanel({
 
       {actions && (
         <div className="border-b px-2.5 py-2">
-          {/* Quick actions scroll horizontally when the panel is narrowed
-              instead of wrapping onto a second line. */}
-          <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide [&>*]:shrink-0 [mask-image:linear-gradient(to_right,#000_0,#000_calc(100%-1.25rem),transparent_100%)]">
-            {actions}
-          </div>
+          {/* Quick actions: the primary (Note) sits left; secondary icon
+              actions (email/sms/call) are right-aligned via an `ml-auto`
+              group provided by the caller. */}
+          <div className="flex items-center gap-1">{actions}</div>
         </div>
       )}
 
@@ -428,6 +434,172 @@ function RecordAttributePanel({
   )
 }
 
+// ─── Tab bar with overflow "+N more" menu ───────────────────────────────────────
+/**
+ * Renders tabs that fit the available width inline; the rest collapse into a
+ * "+N more" dropdown instead of horizontally scrolling. Widths are measured
+ * from a hidden mirror row, and the visible count is recomputed on resize.
+ */
+function RecordDetailTabBar({
+  tabs,
+  current,
+  onSelect,
+}: {
+  tabs: Array<RecordDetailTab>
+  current: string
+  onSelect: (value: string) => void
+}) {
+  const rowRef = useRef<HTMLDivElement>(null)
+  const measureRef = useRef<HTMLDivElement>(null)
+  const widthsRef = useRef<Array<number>>([])
+  const [visibleCount, setVisibleCount] = useState(tabs.length)
+
+  const signal = tabs.map((tab) => `${tab.value}:${tab.count ?? ''}`).join('|')
+
+  const recompute = useCallback(() => {
+    const row = rowRef.current
+    const widths = widthsRef.current
+
+    if (!row || widths.length !== tabs.length) return
+
+    const available = row.clientWidth
+    const GAP = 2
+    const MORE = 76 // reserved width for the "+N more" trigger
+
+    const totalAll = widths.reduce((sum, width) => sum + width + GAP, 0)
+
+    if (totalAll <= available) {
+      setVisibleCount(tabs.length)
+
+      return
+    }
+
+    let used = 0
+    let count = 0
+
+    for (const width of widths) {
+      const next = width + GAP
+
+      if (used + next + MORE > available) break
+      used += next
+      count++
+    }
+
+    setVisibleCount(Math.max(1, count))
+  }, [tabs.length])
+
+  // Measure intrinsic tab widths whenever the tab set changes.
+  useEffect(() => {
+    const node = measureRef.current
+
+    if (!node) return
+
+    widthsRef.current = Array.from(node.children).map(
+      (child) => (child as HTMLElement).offsetWidth,
+    )
+    recompute()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signal, recompute])
+
+  // Recompute on container resize.
+  useEffect(() => {
+    const row = rowRef.current
+
+    if (!row) return
+
+    const observer = new ResizeObserver(recompute)
+
+    observer.observe(row)
+
+    return () => observer.disconnect()
+  }, [recompute])
+
+  const visible = tabs.slice(0, visibleCount)
+  const overflow = tabs.slice(visibleCount)
+  const activeHidden = overflow.some((tab) => tab.value === current)
+
+  return (
+    <div ref={rowRef} className="relative min-w-0 flex-1 overflow-hidden">
+      {/* Hidden mirror row — sized like the triggers to measure their widths. */}
+      <div
+        ref={measureRef}
+        aria-hidden
+        className="pointer-events-none invisible absolute left-0 top-0 flex gap-0.5 whitespace-nowrap"
+      >
+        {tabs.map((tab) => (
+          <span
+            key={tab.value}
+            className="inline-flex items-center gap-1.5 px-2.5 text-[13px]"
+          >
+            {tab.icon}
+            {tab.label}
+            {tab.count != null && (
+              <span className="rounded px-1 text-[11px] tabular-nums leading-tight">
+                {tab.count}
+              </span>
+            )}
+          </span>
+        ))}
+      </div>
+
+      <TabsList className="w-max gap-0.5">
+        {visible.map((tab) => (
+          <TabsTrigger
+            key={tab.value}
+            value={tab.value}
+            className="gap-1.5 px-2.5 text-[13px]"
+          >
+            {tab.icon}
+            {tab.label}
+            {tab.count != null && (
+              <span className="rounded bg-muted-foreground/15 px-1 text-[11px] tabular-nums leading-tight text-muted-foreground">
+                {tab.count}
+              </span>
+            )}
+          </TabsTrigger>
+        ))}
+
+        {overflow.length > 0 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className={cn(
+                  'inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground',
+                  activeHidden && 'bg-muted text-foreground',
+                )}
+              >
+                <MoreHorizontal className="size-3.5" />
+                {overflow.length} more
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-44">
+              {overflow.map((tab) => (
+                <DropdownMenuItem
+                  key={tab.value}
+                  onSelect={() => onSelect(tab.value)}
+                  className={cn(
+                    'gap-2 text-[13px]',
+                    tab.value === current && 'bg-accent',
+                  )}
+                >
+                  {tab.icon}
+                  <span className="flex-1">{tab.label}</span>
+                  {tab.count != null && (
+                    <span className="rounded bg-muted-foreground/15 px-1 text-[11px] tabular-nums leading-tight text-muted-foreground">
+                      {tab.count}
+                    </span>
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </TabsList>
+    </div>
+  )
+}
+
 // ─── Layout ───────────────────────────────────────────────────────────────────
 export interface RecordDetailLayoutProps {
   isLoading?: boolean
@@ -490,6 +662,20 @@ export function RecordDetailLayout({
   const isWide = useIsWideViewport()
   const dialer = useDialer()
 
+  // Unify controlled (activeTab) and uncontrolled (defaultTab) modes so the
+  // overflow "+N more" menu can switch tabs in both cases.
+  const [internalTab, setInternalTab] = useState(
+    defaultTab ?? tabs[0]?.value ?? '',
+  )
+  const currentTab = activeTab ?? internalTab
+  const changeTab = useCallback(
+    (value: string) => {
+      onTabChange?.(value)
+      if (activeTab == null) setInternalTab(value)
+    },
+    [activeTab, onTabChange],
+  )
+
   const containerRef = useRef<HTMLDivElement>(null)
   const [panelWidth, setPanelWidth] = useState(PANEL_DEFAULT_WIDTH)
 
@@ -549,32 +735,17 @@ export function RecordDetailLayout({
   const tabsPane = (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <Tabs
-        {...(activeTab != null
-          ? { value: activeTab, onValueChange: onTabChange }
-          : { defaultValue: defaultTab ?? tabs[0]?.value })}
+        value={currentTab}
+        onValueChange={changeTab}
         className="flex min-h-0 min-w-0 flex-1 flex-col"
       >
-        {/* Tab bar — tabs left, dialer toggle right-aligned on the same line */}
+        {/* Tab bar — tabs left (overflow into "+N more"), dialer toggle right */}
         <div className="flex items-center gap-2 border-b px-4 py-2.5">
-          <div className="min-w-0 flex-1 overflow-x-auto scrollbar-hide [mask-image:linear-gradient(to_right,#000_0,#000_calc(100%-1.25rem),transparent_100%)]">
-            <TabsList className="w-max gap-0.5">
-              {tabs.map((tab) => (
-                <TabsTrigger
-                  key={tab.value}
-                  value={tab.value}
-                  className="gap-1.5 px-2.5 text-[13px]"
-                >
-                  {tab.icon}
-                  {tab.label}
-                  {tab.count != null && (
-                    <span className="rounded bg-muted-foreground/15 px-1 text-[11px] tabular-nums leading-tight text-muted-foreground">
-                      {tab.count}
-                    </span>
-                  )}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </div>
+          <RecordDetailTabBar
+            tabs={tabs}
+            current={currentTab}
+            onSelect={changeTab}
+          />
           {!dialer.isOpen &&
             (dialerTrigger ?? (
               <button

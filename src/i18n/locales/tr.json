@@ -25,6 +25,8 @@
     "detail": "Detay",
     "home": "Ana Sayfa",
     "comingSoon": "Yakında",
+    "notesComingSoon": "Notlar yakında burada görünecek.",
+    "tasksComingSoon": "Bu kayda ait görevler yakında burada görünecek.",
     "required": "*"
   },
   "nav": {
@@ -213,6 +215,7 @@
     "hotProspect": "Sıcak Fırsat",
     "expectedRevenue": "Beklenen Gelir",
     "customerType": "Müşteri Tipi",
+    "dealType": "Anlaşma Tipi",
     "leadSource": "Potansiyel Müşteri Kaynağı",
     "owner": "Sorumlu",
     "organization": "Şirket/Organizasyon",
@@ -230,6 +233,8 @@
       "orders": "Siparişler",
       "activity": "Aktivite",
       "comments": "Yorumlar",
+      "notes": "Notlar",
+      "tasks": "Görevler",
       "files": "Dosyalar"
     },
     "products": {
@@ -296,6 +301,8 @@
     "phone": "Telefon",
     "source": "Kaynak",
     "leadType": "Potansiyel Müşteri Tipi",
+    "leadCategory": "Aday Kategorisi",
+    "contactPerson": "İlgili Kişi",
     "website": "Web Sitesi",
     "address": "Adres",
     "message": "Mesaj",
@@ -305,6 +312,8 @@
       "overview": "Genel Bakış",
       "activity": "Aktivite",
       "comments": "Yorumlar",
+      "notes": "Notlar",
+      "tasks": "Görevler",
       "files": "Dosyalar"
     },
     "activity": {
@@ -582,9 +591,11 @@
     "backToCompanies": "Şirketlere Dön",
     "failedToLoad": "Şirket detayları yüklenemedi",
     "name": "Ad",
+    "commercialTitle": "Ticari Unvan",
     "industry": "Sektör",
     "status": "Durum",
     "type": "Tip",
+    "lifecycleStage": "Yaşam Döngüsü Aşaması",
     "email": "E-posta",
     "phone": "Telefon",
     "website": "Web Sitesi",
@@ -598,6 +609,8 @@
       "deals": "Fırsatlar",
       "leads": "Potansiyel Müşteriler",
       "comments": "Yorumlar",
+      "notes": "Notlar",
+      "tasks": "Görevler",
       "files": "Dosyalar"
     },
     "contacts": {
@@ -667,6 +680,8 @@
       "overview": "Genel Bakış",
       "activity": "Aktivite",
       "comments": "Yorumlar",
+      "notes": "Notlar",
+      "tasks": "Görevler",
       "files": "Dosyalar"
     },
     "form": {

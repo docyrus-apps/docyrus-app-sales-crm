@@ -32,6 +32,9 @@ export interface BaseCrmDealEntity {
   /** Customer Type */
   customer_type?: { id: string; name: string } | any
 
+  /** Deal Type */
+  deal_type?: { id: string; name: string } | any
+
   /** Deal Value */
   deal_value?: number
 

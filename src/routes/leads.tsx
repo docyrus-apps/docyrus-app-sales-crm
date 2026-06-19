@@ -5,8 +5,6 @@ import { useDocyrusClient } from '@docyrus/signin'
 import { toast } from 'sonner'
 import {
   CheckCircle2,
-  Columns3,
-  List,
   Pencil,
   Plus,
   Trash2,
@@ -18,11 +16,6 @@ import type { ColumnDef } from '@tanstack/react-table'
 import type { BaseCrmLeadsEntity } from '@/collections/base_crm-leads.collection'
 import { useBaseCrmLeadsCollection } from '@/collections/base_crm-leads.collection'
 import { Button as MotionButton } from '@/components/animate-ui/components/buttons/button'
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from '@/components/animate-ui/components/radix/tabs'
 import {
   DataGrid,
   DataGridRowActions,
@@ -50,14 +43,11 @@ import {
 import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 import { useDocyrusDataGrid } from '@/hooks/use-docyrus-data-grid'
 import { useSeedDefaultViews } from '@/hooks/use-seed-default-views'
-import { useDocyrusKanban } from '@/hooks/use-docyrus-kanban'
 import { useDocyrusDataImportWizard } from '@/hooks/use-docyrus-data-import-wizard'
 import { saveGridChanges } from '@/lib/data-grid-record-utils'
 import { createSystemViews } from '@/lib/crm-system-views'
 import { isLeadConvertedRecord } from '@/lib/lead-conversion'
 import { useDateFormat } from '@/lib/use-date-format'
-
-type LeadsView = 'board' | 'list'
 
 type LeadFormMode = 'create' | 'edit'
 
@@ -145,7 +135,6 @@ function LeadsPageInner({
     pruneUnlisted: true,
   })
 
-  const [viewType, setViewType] = useState<LeadsView>('board')
   const [dialog, setDialog] = useState<LeadDialogState | null>(null)
   const [pendingDelete, setPendingDelete] = useState<BaseCrmLeadsEntity | null>(
     null,
@@ -296,7 +285,6 @@ function LeadsPageInner({
   const openWizardRef = useRef<() => void>(() => {})
   const listLeadsRef = useRef<Array<BaseCrmLeadsEntity>>([])
   const reloadListRef = useRef<() => void>(() => {})
-  const reloadBoardRef = useRef<() => void>(() => {})
 
   const onChangesSave = useCallback(
     async (changes: Array<RowChange>, gridData: Array<BaseCrmLeadsEntity>) => {
@@ -320,7 +308,6 @@ function LeadsPageInner({
 
       if (allowedChanges.length === 0) {
         reloadListRef.current()
-        reloadBoardRef.current()
         return
       }
 
@@ -330,7 +317,6 @@ function LeadsPageInner({
 
       if (blockedCount > 0) {
         reloadListRef.current()
-        reloadBoardRef.current()
       }
     },
     [t, updateLead],
@@ -374,7 +360,7 @@ function LeadsPageInner({
     trackChanges: true,
     onSaveChanges: onChangesSave,
     bulkActions: ['delete'],
-    enableItemsQuery: viewType === 'list',
+    enableItemsQuery: true,
     listParams: {
       columns: LEAD_GRID_LIST_COLUMNS,
     },
@@ -406,129 +392,18 @@ function LeadsPageInner({
     },
   })
 
-  const {
-    toolbar: boardToolbar,
-    board,
-    reload: reloadBoard,
-    dataSource: boardDataSource,
-    isLoading: isBoardLoading,
-    error: boardError,
-  } = useDocyrusKanban<BaseCrmLeadsEntity>({
-    client,
-    appSlug: APP_SLUG,
-    dataSourceSlug: DATA_SOURCE_SLUG,
-    collection: {
-      list: (params) => collection.list(params),
-    },
-    groupByFieldSlug: 'lead_status',
-    titleColumn: 'name',
-    descriptionColumn: 'email',
-    avatarColumn: 'lead_source',
-    userColumn: 'record_owner',
-    cardContent: ({ row }) => {
-      const companyName = row.company_name_text
-      const countryName =
-        typeof row.countries === 'object' ? row.countries?.name : row.countries
-      const websiteOrPhone = row.website || row.phone
-
-      return (
-        <div className="space-y-2">
-          {companyName ? (
-            <p className="text-xs font-medium text-foreground">{companyName}</p>
-          ) : null}
-          {websiteOrPhone ? (
-            <p className="text-xs text-muted-foreground">{websiteOrPhone}</p>
-          ) : null}
-          {countryName ? (
-            <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-              {countryName}
-            </p>
-          ) : null}
-        </div>
-      )
-    },
-    onCardOpen: onView,
-    onCardEdit: onOpenEdit,
-    onCardClick: onView,
-    cardMenuItems: (row, defaults) => {
-      const openItem = defaults.find((item) => item.key === 'open')
-      const editItem = defaults.find((item) => item.key === 'edit')
-      const deleteItem = defaults.find((item) => item.key === 'delete')
-
-      if (isLeadConverted(row)) return openItem ? [openItem] : []
-
-      return [
-        ...(editItem ? [editItem] : []),
-        ...(openItem
-          ? [
-              {
-                ...openItem,
-                label: t('common.openPage', 'Open page'),
-              },
-            ]
-          : []),
-        {
-          key: 'convert',
-          label: t('leads.convert.convertButton'),
-          icon: <CheckCircle2 className="size-4" />,
-          onAction: (lead: BaseCrmLeadsEntity) => {
-            void onOpenConvert(lead)
-          },
-        },
-        ...(deleteItem ? [deleteItem] : []),
-      ]
-    },
-    onCardDelete: async (row) => {
-      if (!row.id) return
-      if (isLeadConverted(row)) {
-        toast.error(t('leads.convert.readOnlyDescription'))
-        reloadList()
-        reloadBoardRef.current()
-        return
-      }
-
-      await deleteLead.mutateAsync(row.id)
-      reloadList()
-      reloadBoardRef.current()
-    },
-    onItemMoveCommit: async ({ row, payload }) => {
-      if (!row.id) return
-      if (isLeadConverted(row)) {
-        toast.error(t('leads.convert.readOnlyDescription'))
-        reloadList()
-        reloadBoardRef.current()
-        return
-      }
-
-      await updateLead.mutateAsync({ leadId: row.id, data: payload })
-      reloadList()
-      reloadBoardRef.current()
-    },
-    enableItemsQuery: viewType === 'board',
-    enableViewSelect: false,
-    listParams: {
-      columns:
-        'id, name, phone, email, website, company_name_text, company_email, company_phone, company_industry, company_size, lead_source(id,name), lead_status(id,name), lead_type(id,name), leads_products_tags, countries(id,name), record_owner, deal_value, converted_deal(id,name), converted_organization(id,name), converted_contact(id,name), conversion_state(id,name), converted_on, created_on, last_modified_on, created_by, last_modified_by',
-      limit: 200,
-    },
-    searchPlaceholder: t('common.search', 'Search...'),
-    toolbarEndContent: importToolbarButton,
-  })
-
   listLeadsRef.current = listLeads
   reloadListRef.current = reloadList
-  reloadBoardRef.current = reloadBoard
 
   const reload = useCallback(() => {
     reloadList()
-    reloadBoard()
-  }, [reloadBoard, reloadList])
+  }, [reloadList])
 
   const { openWizard, wizard } = useDocyrusDataImportWizard({
     client,
     appSlug: APP_SLUG,
     dataSourceSlug: DATA_SOURCE_SLUG,
-    fields: listDataSource?.fields ?? boardDataSource?.fields,
+    fields: listDataSource?.fields,
     onImported: reload,
   })
 
@@ -558,24 +433,6 @@ function LeadsPageInner({
       <PageHeader
         title={t('leads.title')}
         icon={<UserRoundSearch className="h-4 w-4 text-sky-500" />}
-        titleSuffix={
-          <Tabs
-            value={viewType}
-            onValueChange={(value) => setViewType(value as LeadsView)}
-            className="w-full sm:w-auto"
-          >
-            <TabsList className="w-full sm:w-auto">
-              <TabsTrigger value="board" className="gap-2 px-3">
-                <Columns3 className="h-4 w-4" />
-                <span>{t('viewSwitcher.board')}</span>
-              </TabsTrigger>
-              <TabsTrigger value="list" className="gap-2 px-3">
-                <List className="h-4 w-4" />
-                <span>{t('viewSwitcher.list')}</span>
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        }
         actions={
           <MotionButton size="sm" onClick={onOpenCreate}>
             <Plus className="mr-2 h-4 w-4" />
@@ -583,13 +440,7 @@ function LeadsPageInner({
           </MotionButton>
         }
       />
-      <PageContainer
-        className={
-          viewType === 'board'
-            ? 'flex min-h-0 flex-1 max-w-full flex-col overflow-hidden pb-0'
-            : ''
-        }
-      >
+      <PageContainer>
         {dialog && (
           <LeadFormDialog
             open
@@ -616,24 +467,13 @@ function LeadsPageInner({
           />
         )}
 
-        {isListLoading && viewType === 'list' && (
+        {isListLoading && (
           <DataGridSkeleton>
             <DataGridSkeletonGrid />
           </DataGridSkeleton>
         )}
 
-        {isBoardLoading && viewType === 'board' && (
-          <div className="flex gap-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-96 w-80 shrink-0 animate-pulse rounded-md bg-muted"
-              />
-            ))}
-          </div>
-        )}
-
-        {viewType === 'list' && listError && (
+        {listError && (
           <Card className="border-destructive">
             <CardHeader>
               <CardTitle className="text-destructive">
@@ -646,51 +486,32 @@ function LeadsPageInner({
           </Card>
         )}
 
-        {viewType === 'board' && boardError && (
-          <Card className="border-destructive">
-            <CardHeader>
-              <CardTitle className="text-destructive">
-                {t('leads.errorLoading')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm">{boardError.message}</p>
+        {!isListLoading && !listError && listLeads.length === 0 && (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <p className="text-lg font-medium">{t('leads.emptyTitle')}</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {t('leads.emptyDescription')}
+              </p>
+              <MotionButton className="mt-4" onClick={onOpenCreate}>
+                <Plus className="mr-2 h-4 w-4" />
+                {t('leads.createLead')}
+              </MotionButton>
             </CardContent>
           </Card>
         )}
 
-        {viewType === 'list' &&
-          !isListLoading &&
-          !listError &&
-          listLeads.length === 0 && (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <p className="text-lg font-medium">{t('leads.emptyTitle')}</p>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {t('leads.emptyDescription')}
-                </p>
-                <MotionButton className="mt-4" onClick={onOpenCreate}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  {t('leads.createLead')}
-                </MotionButton>
-              </CardContent>
-            </Card>
-          )}
-
-        {viewType === 'list' &&
-          !isListLoading &&
-          !listError &&
-          listLeads.length > 0 && (
-            <div className="space-y-4">
-              {toolbar}
-              <DataGrid
-                table={table}
-                {...gridProps}
-                pagingMode={pagingMode}
-                height={600}
-              />
-            </div>
-          )}
+        {!isListLoading && !listError && listLeads.length > 0 && (
+          <div className="space-y-4">
+            {toolbar}
+            <DataGrid
+              table={table}
+              {...gridProps}
+              pagingMode={pagingMode}
+              height={600}
+            />
+          </div>
+        )}
 
         <RecordDeleteConfirmDialog
           open={pendingDelete !== null}
@@ -703,13 +524,6 @@ function LeadsPageInner({
         />
 
         {wizard}
-
-        {viewType === 'board' && !isBoardLoading && !boardError && (
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div className="mb-4 shrink-0">{boardToolbar}</div>
-            <div className="min-h-0 flex-1 overflow-hidden">{board}</div>
-          </div>
-        )}
       </PageContainer>
     </div>
   )

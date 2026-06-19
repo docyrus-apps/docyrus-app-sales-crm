@@ -46,6 +46,8 @@ export const LEAD_DETAIL_COLUMNS = [
   'lead_source',
   'lead_status',
   'lead_type',
+  'lead_category',
+  'contact_person(id,name)',
   'contact_message',
   'contact_job_title',
   'company_name_text',

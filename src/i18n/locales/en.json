@@ -25,6 +25,8 @@
     "detail": "Detail",
     "home": "Home",
     "comingSoon": "Coming soon",
+    "notesComingSoon": "Notes will be available here soon.",
+    "tasksComingSoon": "Tasks for this record will be available here soon.",
     "required": "*"
   },
   "nav": {
@@ -222,6 +224,7 @@
     "hotProspect": "Hot Prospect",
     "expectedRevenue": "Expected Revenue",
     "customerType": "Customer Type",
+    "dealType": "Deal Type",
     "leadSource": "Lead Source",
     "owner": "Owner",
     "organization": "Organization",
@@ -239,6 +242,8 @@
       "orders": "Orders",
       "activity": "Activity",
       "comments": "Comments",
+      "notes": "Notes",
+      "tasks": "Tasks",
       "files": "Files"
     },
     "products": {
@@ -305,6 +310,8 @@
     "phone": "Phone",
     "source": "Source",
     "leadType": "Lead Type",
+    "leadCategory": "Lead Category",
+    "contactPerson": "Contact Person",
     "website": "Website",
     "address": "Address",
     "message": "Message",
@@ -314,6 +321,8 @@
       "overview": "Overview",
       "activity": "Activity",
       "comments": "Comments",
+      "notes": "Notes",
+      "tasks": "Tasks",
       "files": "Files"
     },
     "activity": {
@@ -591,9 +600,11 @@
     "backToCompanies": "Back to Companies",
     "failedToLoad": "Failed to load company details",
     "name": "Name",
+    "commercialTitle": "Commercial Title",
     "industry": "Industry",
     "status": "Status",
     "type": "Type",
+    "lifecycleStage": "Lifecycle Stage",
     "email": "Email",
     "phone": "Phone",
     "website": "Website",
@@ -607,6 +618,8 @@
       "deals": "Deals",
       "leads": "Leads",
       "comments": "Comments",
+      "notes": "Notes",
+      "tasks": "Tasks",
       "files": "Files"
     },
     "contacts": {
@@ -676,6 +689,8 @@
       "overview": "Overview",
       "activity": "Activity",
       "comments": "Comments",
+      "notes": "Notes",
+      "tasks": "Tasks",
       "files": "Files"
     },
     "form": {

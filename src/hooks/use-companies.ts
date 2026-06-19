@@ -61,6 +61,8 @@ export function useCompany(companyId: string | undefined) {
           'city(id,name,latitude,longitude)',
           'status',
           'type',
+          'lifecycle_stage',
+          'commercial_title',
           'address',
           'tax_number',
           'district',

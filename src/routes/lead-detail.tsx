@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import {
   Activity,
@@ -8,6 +9,7 @@ import {
   CircleDot,
   ClipboardList,
   FileText,
+  ListTodo,
   Lock,
   Mail,
   MessageSquare,
@@ -30,6 +32,10 @@ import { useWebphone } from '@/components/webphone/webphone-context'
 import { WebphoneCallButton } from '@/components/webphone/webphone-call-button'
 import { useLead, useUpdateLead } from '@/hooks/use-leads'
 import { useRecordEvents } from '@/hooks/use-events'
+import { useEnumEntities } from '@/hooks/use-enums'
+import { useUsers } from '@/hooks/use-users'
+import { useContacts } from '@/hooks/use-contacts'
+import { useBaseCountryCollection } from '@/collections'
 import { LeadConvertDialog } from '@/components/leads/lead-convert-dialog'
 import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
@@ -39,7 +45,7 @@ import {
   type FieldChange,
   type RecordDetailField,
 } from '@/components/docyrus/editable-record-detail'
-import type { IField } from '@/components/docyrus/form-fields/types'
+import type { EnumOption, IField } from '@/components/docyrus/form-fields/types'
 
 const FIELD_SLUGS = [
   'name',
@@ -53,8 +59,10 @@ const FIELD_SLUGS = [
   'website',
   'company_email',
   'company_phone',
+  'lead_category',
   'company_industry',
   'company_size',
+  'contact_person',
   'address',
   'city',
   'state',
@@ -63,17 +71,21 @@ const FIELD_SLUGS = [
   'contact_message',
 ]
 
-// Slugs that are enum / relation objects — rendered read-only (display name).
-const RELATION_SLUGS = new Set([
+// Enum-backed slugs — editable selects when their options load (value = id).
+const ENUM_SLUGS = [
   'lead_status',
   'lead_source',
   'lead_type',
+  'lead_category',
   'company_industry',
   'company_size',
-  'city',
-  'state',
+] as const
+
+// Relation/user slugs edited as selects — flat record stores the id value.
+const ID_RELATION_SLUGS = new Set([
   'countries',
   'record_owner',
+  'contact_person',
 ])
 
 function makeField(
@@ -90,6 +102,22 @@ function extractName(value: unknown): string {
   if (typeof value === 'string') return value
 
   return ''
+}
+
+function toOptions(
+  items: Array<{
+    id: string
+    name: string
+    color?: string | null
+    icon?: string | null
+  }>,
+): Array<EnumOption> {
+  return items.map((item) => ({
+    id: item.id,
+    name: item.name,
+    color: item.color ?? undefined,
+    icon: item.icon ?? undefined,
+  }))
 }
 
 function getInitials(value?: string): string {
@@ -127,15 +155,119 @@ export function LeadDetail() {
     leadId,
   )
 
-  const detailFields = useMemo<Array<RecordDetailField>>(
-    () => [
+  const enumOpts = { appSlug: 'base_crm', dataSourceSlug: 'leads' }
+  const { data: leadStatusEntities = [] } = useEnumEntities(
+    'lead_status',
+    enumOpts,
+  )
+  const { data: leadSourceEntities = [] } = useEnumEntities(
+    'lead_source',
+    enumOpts,
+  )
+  const { data: leadTypeEntities = [] } = useEnumEntities('lead_type', enumOpts)
+  const { data: companyIndustryEntities = [] } = useEnumEntities(
+    'company_industry',
+    enumOpts,
+  )
+  const { data: companySizeEntities = [] } = useEnumEntities(
+    'company_size',
+    enumOpts,
+  )
+  const { data: leadCategoryEntities = [] } = useEnumEntities(
+    'lead_category',
+    enumOpts,
+  )
+
+  const enumEntities = useMemo(
+    () => ({
+      lead_status: leadStatusEntities,
+      lead_source: leadSourceEntities,
+      lead_type: leadTypeEntities,
+      lead_category: leadCategoryEntities,
+      company_industry: companyIndustryEntities,
+      company_size: companySizeEntities,
+    }),
+    [
+      leadStatusEntities,
+      leadSourceEntities,
+      leadTypeEntities,
+      leadCategoryEntities,
+      companyIndustryEntities,
+      companySizeEntities,
+    ],
+  )
+
+  const countriesCollection = useBaseCountryCollection()
+  const { data: countryList = [] } = useQuery({
+    queryKey: ['base-country-options'],
+    queryFn: () =>
+      countriesCollection.list({
+        columns: ['id', 'name'],
+        orderBy: 'name ASC',
+        limit: 300,
+      }),
+  })
+  const { data: users = [] } = useUsers()
+  const { data: contacts = [] } = useContacts({
+    columns: ['id', 'name'],
+    orderBy: 'name ASC',
+  })
+
+  const contactOptions = useMemo<Array<EnumOption>>(
+    () =>
+      contacts.map((contact: any) => ({
+        id: contact.id,
+        name: contact.name,
+      })),
+    [contacts],
+  )
+
+  const countryOptions = useMemo<Array<EnumOption>>(
+    () =>
+      countryList.map((country) => ({
+        id: country.id ?? '',
+        name: country.name ?? '',
+      })),
+    [countryList],
+  )
+
+  const ownerOptions = useMemo<Array<EnumOption>>(
+    () =>
+      users.map((user: any) => ({
+        id: user.id,
+        name:
+          `${user.firstname ?? ''} ${user.lastname ?? ''}`.trim() ||
+          user.email ||
+          user.name ||
+          user.id,
+      })),
+    [users],
+  )
+
+  const detailFields = useMemo<Array<RecordDetailField>>(() => {
+    const enumField = (
+      slug: (typeof ENUM_SLUGS)[number],
+      name: string,
+      type: IField['type'] = 'field-select',
+    ): RecordDetailField => {
+      const entities = enumEntities[slug]
+      const editable = entities.length > 0
+
+      return {
+        field: makeField(slug, name, editable ? type : 'field-text'),
+        enumOptions: toOptions(entities),
+        readOnly: !editable,
+      }
+    }
+
+    return [
       {
         field: makeField(
           'name',
           t('leads.form.contactNameLabel', { defaultValue: 'Contact Name' }),
         ),
       },
-      { field: makeField('lead_status', t('leads.status')), readOnly: true },
+      enumField('lead_status', t('leads.status'), 'field-status'),
       {
         field: makeField(
           'email',
@@ -156,8 +288,20 @@ export function LeadDetail() {
           t('leads.form.jobTitleLabel', { defaultValue: 'Contact Job Title' }),
         ),
       },
-      { field: makeField('lead_source', t('leads.source')), readOnly: true },
-      { field: makeField('lead_type', t('leads.leadType')), readOnly: true },
+      enumField('lead_source', t('leads.source')),
+      enumField('lead_type', t('leads.leadType')),
+      enumField(
+        'lead_category',
+        t('leads.leadCategory', { defaultValue: 'Lead Category' }),
+      ),
+      {
+        field: makeField(
+          'contact_person',
+          t('leads.contactPerson', { defaultValue: 'Contact Person' }),
+          'field-select',
+        ),
+        enumOptions: contactOptions,
+      },
       {
         field: makeField(
           'company_name_text',
@@ -185,22 +329,16 @@ export function LeadDetail() {
           'field-phone',
         ),
       },
-      {
-        field: makeField(
-          'company_industry',
-          t('leads.form.companyIndustryLabel', {
-            defaultValue: 'Company Industry',
-          }),
-        ),
-        readOnly: true,
-      },
-      {
-        field: makeField(
-          'company_size',
-          t('leads.form.companySizeLabel', { defaultValue: 'Company Size' }),
-        ),
-        readOnly: true,
-      },
+      enumField(
+        'company_industry',
+        t('leads.form.companyIndustryLabel', {
+          defaultValue: 'Company Industry',
+        }),
+      ),
+      enumField(
+        'company_size',
+        t('leads.form.companySizeLabel', { defaultValue: 'Company Size' }),
+      ),
       {
         field: makeField(
           'address',
@@ -213,28 +351,28 @@ export function LeadDetail() {
           'city',
           t('leads.form.cityLabel', { defaultValue: 'Company City' }),
         ),
-        readOnly: true,
       },
       {
         field: makeField(
           'state',
           t('leads.form.stateLabel', { defaultValue: 'Company State' }),
         ),
-        readOnly: true,
       },
       {
         field: makeField(
           'countries',
           t('leads.form.countryLabel', { defaultValue: 'Company Country' }),
+          'field-select',
         ),
-        readOnly: true,
+        enumOptions: countryOptions,
       },
       {
         field: makeField(
           'record_owner',
           t('leads.owner', { defaultValue: 'Owner' }),
+          'field-select',
         ),
-        readOnly: true,
+        enumOptions: ownerOptions,
       },
       {
         field: makeField(
@@ -245,9 +383,8 @@ export function LeadDetail() {
           'field-textarea',
         ),
       },
-    ],
-    [t],
-  )
+    ]
+  }, [t, enumEntities, countryOptions, ownerOptions, contactOptions])
 
   const flatRecord = useMemo<Record<string, unknown>>(() => {
     if (!lead) return {}
@@ -257,11 +394,21 @@ export function LeadDetail() {
     for (const slug of FIELD_SLUGS) {
       const raw = (lead as Record<string, unknown>)[slug]
 
-      record[slug] = RELATION_SLUGS.has(slug) ? extractName(raw) : (raw ?? '')
+      if ((ENUM_SLUGS as ReadonlyArray<string>).includes(slug)) {
+        const entities = enumEntities[slug as (typeof ENUM_SLUGS)[number]]
+        // Editable enum → store the id (select value); otherwise show the name.
+        record[slug] =
+          entities.length > 0 ? (getRelationId(raw) ?? '') : extractName(raw)
+      } else if (ID_RELATION_SLUGS.has(slug)) {
+        // Relation/user select → store the id.
+        record[slug] = getRelationId(raw) ?? ''
+      } else {
+        record[slug] = raw ?? ''
+      }
     }
 
     return record
-  }, [lead])
+  }, [lead, enumEntities])
 
   const isConverted = lead ? isLeadConvertedRecord(lead) : false
   const convertedDealId = getRelationId(lead?.converted_deal)
@@ -374,7 +521,7 @@ export function LeadDetail() {
         ),
       },
       {
-        value: 'notes',
+        value: 'comments',
         label: t('leads.tabs.comments'),
         icon: <MessageSquare className="size-3.5" />,
         bare: true,
@@ -386,6 +533,35 @@ export function LeadDetail() {
               recordId={leadId!}
             />
           </div>
+        ),
+      },
+      {
+        value: 'notes',
+        label: t('leads.tabs.notes', { defaultValue: 'Notes' }),
+        icon: <StickyNote className="size-3.5" />,
+        content: (
+          <RecordTabPlaceholder
+            icon={<StickyNote className="size-5" />}
+            title={t('common.comingSoon', { defaultValue: 'Coming soon' })}
+            description={t('common.notesComingSoon', {
+              defaultValue: 'Notes will be available here soon.',
+            })}
+          />
+        ),
+      },
+      {
+        value: 'tasks',
+        label: t('leads.tabs.tasks', { defaultValue: 'Tasks' }),
+        icon: <ListTodo className="size-3.5" />,
+        content: (
+          <RecordTabPlaceholder
+            icon={<ListTodo className="size-5" />}
+            title={t('common.comingSoon', { defaultValue: 'Coming soon' })}
+            description={t('common.tasksComingSoon', {
+              defaultValue:
+                'Tasks for this record will be available here soon.',
+            })}
+          />
         ),
       },
       {
@@ -457,46 +633,52 @@ export function LeadDetail() {
         <StickyNote className="size-3.5" />
         {t('contacts.actions.note', { defaultValue: 'Note' })}
       </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-7 gap-1.5 text-[13px]"
-        disabled={!lead?.email}
-        onClick={() => lead?.email && window.open(`mailto:${lead.email}`)}
-      >
-        <Mail className="size-3.5" />
-        {t('contacts.actions.email', { defaultValue: 'Email' })}
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-7 gap-1.5 text-[13px]"
-        disabled={!lead?.phone}
-        onClick={() => lead?.phone && window.open(`sms:${lead.phone}`)}
-      >
-        <MessageSquare className="size-3.5" />
-        {t('contacts.actions.sms', { defaultValue: 'SMS' })}
-      </Button>
-      {webphone.enabled ? (
-        <WebphoneCallButton
-          phone={lead?.phone}
-          leadId={leadId}
-          variant="ghost"
-          className="h-7 gap-1.5 text-[13px] text-emerald-600"
-          label={t('contacts.actions.call', { defaultValue: 'Call' })}
-        />
-      ) : (
+      <div className="ml-auto flex items-center gap-0.5">
         <Button
           variant="ghost"
-          size="sm"
-          className="h-7 gap-1.5 text-[13px] text-emerald-600"
-          disabled={!lead?.phone}
-          onClick={() => dialer.open({ name: leadName, number: lead?.phone })}
+          size="icon"
+          className="size-7"
+          disabled={!lead?.email}
+          onClick={() => lead?.email && window.open(`mailto:${lead.email}`)}
+          aria-label={t('contacts.actions.email', { defaultValue: 'Email' })}
+          title={t('contacts.actions.email', { defaultValue: 'Email' })}
         >
-          <Phone className="size-3.5" />
-          {t('contacts.actions.call', { defaultValue: 'Call' })}
+          <Mail className="size-3.5" />
         </Button>
-      )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-7"
+          disabled={!lead?.phone}
+          onClick={() => lead?.phone && window.open(`sms:${lead.phone}`)}
+          aria-label={t('contacts.actions.sms', { defaultValue: 'SMS' })}
+          title={t('contacts.actions.sms', { defaultValue: 'SMS' })}
+        >
+          <MessageSquare className="size-3.5" />
+        </Button>
+        {webphone.enabled ? (
+          <WebphoneCallButton
+            phone={lead?.phone}
+            leadId={leadId}
+            variant="ghost"
+            size="icon"
+            className="size-7 text-emerald-600"
+            label={t('contacts.actions.call', { defaultValue: 'Call' })}
+          />
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7 text-emerald-600"
+            disabled={!lead?.phone}
+            onClick={() => dialer.open({ name: leadName, number: lead?.phone })}
+            aria-label={t('contacts.actions.call', { defaultValue: 'Call' })}
+            title={t('contacts.actions.call', { defaultValue: 'Call' })}
+          >
+            <Phone className="size-3.5" />
+          </Button>
+        )}
+      </div>
     </>
   )
 

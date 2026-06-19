@@ -8,6 +8,7 @@ import {
   Building2,
   ClipboardList,
   FileText,
+  ListTodo,
   Mail,
   MessageSquare,
   Phone,
@@ -27,6 +28,7 @@ import {
 import {
   RecordDetailLayout,
   RecordKpiCard,
+  RecordTabPlaceholder,
   type RecordDetailTab,
 } from '@/components/crm/record-detail-layout'
 import { RelatedContactsTable } from '@/components/crm/related-contacts-table'
@@ -53,9 +55,11 @@ import type { EnumOption, IField } from '@/components/docyrus/form-fields/types'
 
 const FIELD_SLUGS = [
   'name',
+  'commercial_title',
   'industry',
   'type',
   'status',
+  'lifecycle_stage',
   'email',
   'phone',
   'website',
@@ -127,6 +131,11 @@ export function CompanyDetail() {
   const { data: statusEntities = [] } = useEnumEntities('status', enumOpts)
   const { data: typeEntities = [] } = useEnumEntities('type', enumOpts)
   const { data: industryEntities = [] } = useEnumEntities('industry', enumOpts)
+  const { data: countryEntities = [] } = useEnumEntities('country')
+  const { data: lifecycleEntities = [] } = useEnumEntities(
+    'lifecycle_stage',
+    enumOpts,
+  )
 
   const { data: contacts = [], isLoading: contactsLoading } = useContacts(
     companyId
@@ -185,10 +194,18 @@ export function CompanyDetail() {
   const statusEditable = statusEntities.length > 0
   const typeEditable = typeEntities.length > 0
   const industryEditable = industryEntities.length > 0
+  const countryEditable = countryEntities.length > 0
+  const lifecycleEditable = lifecycleEntities.length > 0
 
   const detailFields = useMemo<Array<RecordDetailField>>(
     () => [
       { field: makeField('name', t('companies.name')) },
+      {
+        field: makeField(
+          'commercial_title',
+          t('companies.commercialTitle', { defaultValue: 'Commercial Title' }),
+        ),
+      },
       {
         field: makeField(
           'industry',
@@ -216,6 +233,15 @@ export function CompanyDetail() {
         enumOptions: toOptions(statusEntities),
         readOnly: !statusEditable,
       },
+      {
+        field: makeField(
+          'lifecycle_stage',
+          t('companies.lifecycleStage', { defaultValue: 'Lifecycle Stage' }),
+          lifecycleEditable ? 'field-select' : 'field-text',
+        ),
+        enumOptions: toOptions(lifecycleEntities),
+        readOnly: !lifecycleEditable,
+      },
       { field: makeField('email', t('companies.email'), 'field-email') },
       { field: makeField('phone', t('companies.phone'), 'field-phone') },
       { field: makeField('website', t('companies.website'), 'field-url') },
@@ -224,12 +250,13 @@ export function CompanyDetail() {
         field: makeField(
           'country',
           t('companies.country', { defaultValue: 'Country' }),
+          countryEditable ? 'field-select' : 'field-text',
         ),
-        readOnly: true,
+        enumOptions: toOptions(countryEntities),
+        readOnly: !countryEditable,
       },
       {
         field: makeField('city', t('companies.city', { defaultValue: 'City' })),
-        readOnly: true,
       },
       { field: makeField('district', t('companies.district')) },
       { field: makeField('tax_number', t('companies.taxNumber')) },
@@ -239,9 +266,13 @@ export function CompanyDetail() {
       statusEditable,
       typeEditable,
       industryEditable,
+      countryEditable,
+      lifecycleEditable,
       statusEntities,
       typeEntities,
       industryEntities,
+      countryEntities,
+      lifecycleEntities,
     ],
   )
 
@@ -250,6 +281,7 @@ export function CompanyDetail() {
 
     return {
       name: company.name ?? '',
+      commercial_title: company.commercial_title ?? '',
       industry: industryEditable
         ? fieldId(company.industry)
         : extractName(company.industry),
@@ -257,16 +289,28 @@ export function CompanyDetail() {
       status: statusEditable
         ? fieldId(company.status)
         : extractName(company.status),
+      lifecycle_stage: lifecycleEditable
+        ? fieldId(company.lifecycle_stage)
+        : extractName(company.lifecycle_stage),
       email: company.email ?? '',
       phone: company.phone ?? '',
       website: company.website ?? '',
       address: company.address ?? '',
-      country: extractName(company.country),
+      country: countryEditable
+        ? fieldId(company.country)
+        : extractName(company.country),
       city: extractName(company.city),
       district: company.district ?? '',
       tax_number: company.tax_number ?? '',
     }
-  }, [company, statusEditable, typeEditable, industryEditable])
+  }, [
+    company,
+    statusEditable,
+    typeEditable,
+    industryEditable,
+    countryEditable,
+    lifecycleEditable,
+  ])
 
   const handleInlineSave = async (
     changes: Array<FieldChange>,
@@ -460,7 +504,7 @@ export function CompanyDetail() {
         ),
       },
       {
-        value: 'notes',
+        value: 'comments',
         label: t('companies.tabs.comments'),
         icon: <MessageSquare className="size-3.5" />,
         bare: true,
@@ -472,6 +516,35 @@ export function CompanyDetail() {
               recordId={companyId!}
             />
           </div>
+        ),
+      },
+      {
+        value: 'notes',
+        label: t('companies.tabs.notes', { defaultValue: 'Notes' }),
+        icon: <StickyNote className="size-3.5" />,
+        content: (
+          <RecordTabPlaceholder
+            icon={<StickyNote className="size-5" />}
+            title={t('common.comingSoon', { defaultValue: 'Coming soon' })}
+            description={t('common.notesComingSoon', {
+              defaultValue: 'Notes will be available here soon.',
+            })}
+          />
+        ),
+      },
+      {
+        value: 'tasks',
+        label: t('companies.tabs.tasks', { defaultValue: 'Tasks' }),
+        icon: <ListTodo className="size-3.5" />,
+        content: (
+          <RecordTabPlaceholder
+            icon={<ListTodo className="size-5" />}
+            title={t('common.comingSoon', { defaultValue: 'Coming soon' })}
+            description={t('common.tasksComingSoon', {
+              defaultValue:
+                'Tasks for this record will be available here soon.',
+            })}
+          />
         ),
       },
       {
@@ -516,48 +589,56 @@ export function CompanyDetail() {
         <StickyNote className="size-3.5" />
         {t('contacts.actions.note', { defaultValue: 'Note' })}
       </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-7 gap-1.5 text-[13px]"
-        disabled={!company?.email}
-        onClick={() => company?.email && window.open(`mailto:${company.email}`)}
-      >
-        <Mail className="size-3.5" />
-        {t('contacts.actions.email', { defaultValue: 'Email' })}
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-7 gap-1.5 text-[13px]"
-        disabled={!company?.phone}
-        onClick={() => company?.phone && window.open(`sms:${company.phone}`)}
-      >
-        <MessageSquare className="size-3.5" />
-        {t('contacts.actions.sms', { defaultValue: 'SMS' })}
-      </Button>
-      {webphone.enabled ? (
-        <WebphoneCallButton
-          phone={company?.phone}
-          variant="ghost"
-          className="h-7 gap-1.5 text-[13px] text-emerald-600"
-          label={t('contacts.actions.call', { defaultValue: 'Call' })}
-        />
-      ) : (
+      <div className="ml-auto flex items-center gap-0.5">
         <Button
           variant="ghost"
-          size="sm"
-          className="h-7 gap-1.5 text-[13px] text-emerald-600"
-          disabled={!company?.phone}
+          size="icon"
+          className="size-7"
+          disabled={!company?.email}
           onClick={() =>
-            company?.phone &&
-            dialer.open({ name: companyName, number: company.phone })
+            company?.email && window.open(`mailto:${company.email}`)
           }
+          aria-label={t('contacts.actions.email', { defaultValue: 'Email' })}
+          title={t('contacts.actions.email', { defaultValue: 'Email' })}
         >
-          <Phone className="size-3.5" />
-          {t('contacts.actions.call', { defaultValue: 'Call' })}
+          <Mail className="size-3.5" />
         </Button>
-      )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-7"
+          disabled={!company?.phone}
+          onClick={() => company?.phone && window.open(`sms:${company.phone}`)}
+          aria-label={t('contacts.actions.sms', { defaultValue: 'SMS' })}
+          title={t('contacts.actions.sms', { defaultValue: 'SMS' })}
+        >
+          <MessageSquare className="size-3.5" />
+        </Button>
+        {webphone.enabled ? (
+          <WebphoneCallButton
+            phone={company?.phone}
+            variant="ghost"
+            size="icon"
+            className="size-7 text-emerald-600"
+            label={t('contacts.actions.call', { defaultValue: 'Call' })}
+          />
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7 text-emerald-600"
+            disabled={!company?.phone}
+            onClick={() =>
+              company?.phone &&
+              dialer.open({ name: companyName, number: company.phone })
+            }
+            aria-label={t('contacts.actions.call', { defaultValue: 'Call' })}
+            title={t('contacts.actions.call', { defaultValue: 'Call' })}
+          >
+            <Phone className="size-3.5" />
+          </Button>
+        )}
+      </div>
     </>
   )
 

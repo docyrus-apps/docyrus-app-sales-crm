@@ -73,6 +73,7 @@ export function useDeal(dealId: string | undefined) {
           'expected_closing_date',
           'close_probability',
           'customer_type',
+          'deal_type',
           'lead_source',
           'reason_for_lost',
           'closed_date',

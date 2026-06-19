@@ -73,6 +73,12 @@ export interface BaseOrganizationEntity {
 
   /** Company Size */
   company_size?: { id: string; name: string } | any
+
+  /** Lifecycle Stage */
+  lifecycle_stage?: { id: string; name: string } | any
+
+  /** Commercial Title */
+  commercial_title?: string
 }
 
 export function useBaseOrganizationCollection() {

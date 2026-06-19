@@ -7,6 +7,7 @@ import {
   Briefcase,
   Building2,
   FileText,
+  ListTodo,
   Mail,
   MessageSquare,
   Phone,
@@ -34,15 +35,24 @@ import { useContact, useUpdateContact } from '@/hooks/use-contacts'
 import { useCompanies } from '@/hooks/use-companies'
 import { useDeals } from '@/hooks/use-deals'
 import { useRecordEvents } from '@/hooks/use-events'
+import { useEnumEntities } from '@/hooks/use-enums'
 import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
 import {
   type FieldChange,
   type RecordDetailField,
 } from '@/components/docyrus/editable-record-detail'
-import type { IField } from '@/components/docyrus/form-fields/types'
+import type { EnumOption, IField } from '@/components/docyrus/form-fields/types'
 
-const FIELD_SLUGS = ['name', 'job_title', 'email', 'mobile', 'organization']
+const FIELD_SLUGS = [
+  'name',
+  'job_title',
+  'email',
+  'mobile',
+  'organization',
+  'contact_type',
+  'contact_status',
+]
 
 function makeField(
   slug: string,
@@ -50,6 +60,22 @@ function makeField(
   type: IField['type'] = 'field-text',
 ): IField {
   return { id: slug, name, slug, type }
+}
+
+function toOptions(
+  items: Array<{
+    id: string
+    name: string
+    color?: string | null
+    icon?: string | null
+  }>,
+): Array<EnumOption> {
+  return items.map((item) => ({
+    id: item.id,
+    name: item.name,
+    color: item.color ?? undefined,
+    icon: item.icon ?? undefined,
+  }))
 }
 
 function getInitials(value?: string): string {
@@ -127,6 +153,19 @@ export function ContactDetail() {
     contactId,
   )
 
+  const contactEnumOpts = { appSlug: 'base', dataSourceSlug: 'contact' }
+  const { data: typeEntities = [] } = useEnumEntities(
+    'contact_type',
+    contactEnumOpts,
+  )
+  const { data: statusEntities = [] } = useEnumEntities(
+    'contact_status',
+    contactEnumOpts,
+  )
+
+  const typeEditable = typeEntities.length > 0
+  const statusEditable = statusEntities.length > 0
+
   const detailFields = useMemo<Array<RecordDetailField>>(
     () => [
       { field: makeField('name', t('contacts.name')) },
@@ -144,8 +183,26 @@ export function ContactDetail() {
           name: company.name,
         })),
       },
+      {
+        field: makeField(
+          'contact_type',
+          t('contacts.type', { defaultValue: 'Type' }),
+          typeEditable ? 'field-select' : 'field-text',
+        ),
+        enumOptions: toOptions(typeEntities),
+        readOnly: !typeEditable,
+      },
+      {
+        field: makeField(
+          'contact_status',
+          t('contacts.status', { defaultValue: 'Status' }),
+          statusEditable ? 'field-status' : 'field-text',
+        ),
+        enumOptions: toOptions(statusEntities),
+        readOnly: !statusEditable,
+      },
     ],
-    [t, companies],
+    [t, companies, typeEditable, statusEditable, typeEntities, statusEntities],
   )
 
   const flatRecord = useMemo<Record<string, unknown>>(() => {
@@ -157,8 +214,14 @@ export function ContactDetail() {
       email: contact.email ?? '',
       mobile: contact.mobile ?? '',
       organization: relationId(contact.organization),
+      contact_type: typeEditable
+        ? relationId(contact.contact_type)
+        : relationName(contact.contact_type),
+      contact_status: statusEditable
+        ? relationId(contact.contact_status)
+        : relationName(contact.contact_status),
     }
-  }, [contact])
+  }, [contact, typeEditable, statusEditable])
 
   const handleInlineSave = async (
     changes: Array<FieldChange>,
@@ -303,7 +366,7 @@ export function ContactDetail() {
         ),
       },
       {
-        value: 'notes',
+        value: 'comments',
         label: t('contacts.tabs.comments'),
         icon: <MessageSquare className="size-3.5" />,
         bare: true,
@@ -315,6 +378,35 @@ export function ContactDetail() {
               recordId={contactId!}
             />
           </div>
+        ),
+      },
+      {
+        value: 'notes',
+        label: t('contacts.tabs.notes', { defaultValue: 'Notes' }),
+        icon: <StickyNote className="size-3.5" />,
+        content: (
+          <RecordTabPlaceholder
+            icon={<StickyNote className="size-5" />}
+            title={t('common.comingSoon', { defaultValue: 'Coming soon' })}
+            description={t('common.notesComingSoon', {
+              defaultValue: 'Notes will be available here soon.',
+            })}
+          />
+        ),
+      },
+      {
+        value: 'tasks',
+        label: t('contacts.tabs.tasks', { defaultValue: 'Tasks' }),
+        icon: <ListTodo className="size-3.5" />,
+        content: (
+          <RecordTabPlaceholder
+            icon={<ListTodo className="size-5" />}
+            title={t('common.comingSoon', { defaultValue: 'Coming soon' })}
+            description={t('common.tasksComingSoon', {
+              defaultValue:
+                'Tasks for this record will be available here soon.',
+            })}
+          />
         ),
       },
       {
@@ -358,47 +450,57 @@ export function ContactDetail() {
         <StickyNote className="size-3.5" />
         {t('contacts.actions.note', { defaultValue: 'Note' })}
       </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-7 gap-1.5 text-[13px]"
-        disabled={!contact?.email}
-        onClick={() => contact?.email && window.open(`mailto:${contact.email}`)}
-      >
-        <Mail className="size-3.5" />
-        {t('contacts.actions.email', { defaultValue: 'Email' })}
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-7 gap-1.5 text-[13px]"
-        disabled={!contact?.mobile}
-        onClick={() => contact?.mobile && window.open(`sms:${contact.mobile}`)}
-      >
-        <MessageSquare className="size-3.5" />
-        {t('contacts.actions.sms', { defaultValue: 'SMS' })}
-      </Button>
-      {webphone.enabled ? (
-        <WebphoneCallButton
-          phone={contact?.mobile}
-          contactId={contactId}
-          variant="ghost"
-          className="h-7 gap-1.5 text-[13px] text-emerald-600"
-          label={t('contacts.actions.call', { defaultValue: 'Call' })}
-        />
-      ) : (
+      <div className="ml-auto flex items-center gap-0.5">
         <Button
           variant="ghost"
-          size="sm"
-          className="h-7 gap-1.5 text-[13px] text-emerald-600"
+          size="icon"
+          className="size-7"
+          disabled={!contact?.email}
           onClick={() =>
-            dialer.open({ name: contactName, number: contact?.mobile })
+            contact?.email && window.open(`mailto:${contact.email}`)
           }
+          aria-label={t('contacts.actions.email', { defaultValue: 'Email' })}
+          title={t('contacts.actions.email', { defaultValue: 'Email' })}
         >
-          <Phone className="size-3.5" />
-          {t('contacts.actions.call', { defaultValue: 'Call' })}
+          <Mail className="size-3.5" />
         </Button>
-      )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-7"
+          disabled={!contact?.mobile}
+          onClick={() =>
+            contact?.mobile && window.open(`sms:${contact.mobile}`)
+          }
+          aria-label={t('contacts.actions.sms', { defaultValue: 'SMS' })}
+          title={t('contacts.actions.sms', { defaultValue: 'SMS' })}
+        >
+          <MessageSquare className="size-3.5" />
+        </Button>
+        {webphone.enabled ? (
+          <WebphoneCallButton
+            phone={contact?.mobile}
+            contactId={contactId}
+            variant="ghost"
+            size="icon"
+            className="size-7 text-emerald-600"
+            label={t('contacts.actions.call', { defaultValue: 'Call' })}
+          />
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7 text-emerald-600"
+            onClick={() =>
+              dialer.open({ name: contactName, number: contact?.mobile })
+            }
+            aria-label={t('contacts.actions.call', { defaultValue: 'Call' })}
+            title={t('contacts.actions.call', { defaultValue: 'Call' })}
+          >
+            <Phone className="size-3.5" />
+          </Button>
+        )}
+      </div>
     </>
   )
 

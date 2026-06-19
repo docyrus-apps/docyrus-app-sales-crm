@@ -8,6 +8,7 @@ import {
   Briefcase,
   CircleDot,
   FileText,
+  ListTodo,
   MessageSquare,
   Package,
   Percent,
@@ -49,6 +50,7 @@ import {
 import {
   RecordDetailLayout,
   RecordKpiCard,
+  RecordTabPlaceholder,
   type RecordDetailTab,
 } from '@/components/crm/record-detail-layout'
 import { RelatedContactsTable } from '@/components/crm/related-contacts-table'
@@ -79,6 +81,7 @@ const FIELD_SLUGS = [
   'follow_up_on',
   'closed_date',
   'customer_type',
+  'deal_type',
   'lead_source',
   'reason_for_lost',
   'country',
@@ -218,6 +221,11 @@ export function DealDetail() {
       dataSourceSlug: 'deal',
     },
   )
+  const { data: countryEntities = [] } = useEnumEntities('country')
+  const { data: dealTypeEntities = [] } = useEnumEntities('deal_type', {
+    appSlug: 'base_crm',
+    dataSourceSlug: 'deal',
+  })
 
   const orgId =
     deal?.organization && typeof deal.organization === 'object'
@@ -335,6 +343,14 @@ export function DealDetail() {
         enumOptions: mapEnumEntitiesToOptions(customerTypeEntities),
       },
       {
+        field: makeField(
+          'deal_type',
+          t('deals.dealType', { defaultValue: 'Deal Type' }),
+          'field-select',
+        ),
+        enumOptions: mapEnumEntitiesToOptions(dealTypeEntities),
+      },
+      {
         field: makeField('lead_source', t('deals.leadSource'), 'field-select'),
         enumOptions: mapEnumEntitiesToOptions(leadSourceEntities),
       },
@@ -350,8 +366,10 @@ export function DealDetail() {
         field: makeField(
           'country',
           t('deals.country', { defaultValue: 'Country' }),
+          countryEntities.length > 0 ? 'field-select' : 'field-text',
         ),
-        readOnly: true,
+        enumOptions: mapEnumEntitiesToOptions(countryEntities),
+        readOnly: countryEntities.length === 0,
       },
       {
         field: makeField(
@@ -397,9 +415,11 @@ export function DealDetail() {
       companies,
       allContacts,
       customerTypeEntities,
+      dealTypeEntities,
       leadSourceEntities,
       reasonForLostEntities,
       stageEntities,
+      countryEntities,
       t,
       users,
     ],
@@ -417,15 +437,19 @@ export function DealDetail() {
       follow_up_on: deal.follow_up_on ?? null,
       closed_date: deal.closed_date ?? null,
       customer_type: getFieldValue(deal.customer_type),
+      deal_type: getFieldValue(deal.deal_type),
       lead_source: getFieldValue(deal.lead_source),
       reason_for_lost: getFieldValue(deal.reason_for_lost),
-      country: extractName(deal.country) ?? '',
+      country:
+        countryEntities.length > 0
+          ? (getFieldValue(deal.country) ?? '')
+          : (extractName(deal.country) ?? ''),
       organization: getFieldValue(deal.organization),
       contact_person: getFieldValue(deal.contact_person),
       record_owner: getFieldValue(deal.record_owner),
       hot_prospect: deal.hot_prospect ?? false,
     }
-  }, [deal])
+  }, [deal, countryEntities])
 
   const handleInlineSave = async (
     changes: Array<FieldChange>,
@@ -833,7 +857,7 @@ export function DealDetail() {
         ),
       },
       {
-        value: 'notes',
+        value: 'comments',
         label: t('deals.tabs.comments'),
         icon: <MessageSquare className="size-3.5" />,
         bare: true,
@@ -845,6 +869,35 @@ export function DealDetail() {
               recordId={dealId!}
             />
           </div>
+        ),
+      },
+      {
+        value: 'notes',
+        label: t('deals.tabs.notes', { defaultValue: 'Notes' }),
+        icon: <StickyNote className="size-3.5" />,
+        content: (
+          <RecordTabPlaceholder
+            icon={<StickyNote className="size-5" />}
+            title={t('common.comingSoon', { defaultValue: 'Coming soon' })}
+            description={t('common.notesComingSoon', {
+              defaultValue: 'Notes will be available here soon.',
+            })}
+          />
+        ),
+      },
+      {
+        value: 'tasks',
+        label: t('deals.tabs.tasks', { defaultValue: 'Tasks' }),
+        icon: <ListTodo className="size-3.5" />,
+        content: (
+          <RecordTabPlaceholder
+            icon={<ListTodo className="size-5" />}
+            title={t('common.comingSoon', { defaultValue: 'Coming soon' })}
+            description={t('common.tasksComingSoon', {
+              defaultValue:
+                'Tasks for this record will be available here soon.',
+            })}
+          />
         ),
       },
       {

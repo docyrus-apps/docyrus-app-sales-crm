@@ -130,6 +130,12 @@ export interface BaseCrmLeadsEntity {
 
   /** Company Website */
   website?: string
+
+  /** Lead Category */
+  lead_category?: { id: string; name: string } | any
+
+  /** Contact Person */
+  contact_person?: { id: string; name: string } | string
 }
 
 export function useBaseCrmLeadsCollection() {
