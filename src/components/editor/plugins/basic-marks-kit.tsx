@@ -1,5 +1,6 @@
+/* eslint-disable */
 // @ts-nocheck
-'use client'
+'use client';
 
 import {
   BoldRules,
@@ -11,7 +12,7 @@ import {
   SubscriptRules,
   SuperscriptRules,
   UnderlineRules,
-} from '@platejs/basic-nodes'
+} from '@platejs/basic-nodes';
 import {
   BoldPlugin,
   CodePlugin,
@@ -22,11 +23,11 @@ import {
   SubscriptPlugin,
   SuperscriptPlugin,
   UnderlinePlugin,
-} from '@platejs/basic-nodes/react'
+} from '@platejs/basic-nodes/react';
 
-import { CodeLeaf } from '@/components/editor/ui/code-node'
-import { HighlightLeaf } from '@/components/editor/ui/highlight-node'
-import { KbdLeaf } from '@/components/editor/ui/kbd-node'
+import { CodeLeaf } from '@/components/editor/ui/code-node';
+import { HighlightLeaf } from '@/components/editor/ui/highlight-node';
+import { KbdLeaf } from '@/components/editor/ui/kbd-node';
 
 export const BasicMarksKit = [
   BoldPlugin.configure({
@@ -74,4 +75,4 @@ export const BasicMarksKit = [
     shortcuts: { toggle: { keys: 'mod+shift+h' } },
   }),
   KbdPlugin.withComponent(KbdLeaf),
-]
+];

@@ -32,6 +32,8 @@ const SEGMENT_BREADCRUMB_KEYS: Record<string, string> = {
   notes: 'breadcrumb.notes',
   products: 'breadcrumb.products',
   'sales-orders': 'breadcrumb.salesOrders',
+  quotes: 'quotes.title',
+  build: 'quotes.builderCrumb',
   activities: 'breadcrumb.activities',
   reports: 'breadcrumb.reports',
   calls: 'webphone.calls.title',
@@ -53,7 +55,13 @@ function AppBreadcrumb() {
 
   const p = params as Record<string, string>
   const entityId =
-    p.dealId || p.leadId || p.companyId || p.contactId || p.orderId || ''
+    p.dealId ||
+    p.leadId ||
+    p.companyId ||
+    p.contactId ||
+    p.orderId ||
+    p.quoteId ||
+    ''
 
   const crumbs = useMemo(() => {
     const items: Array<{ label: string; href?: string }> = []

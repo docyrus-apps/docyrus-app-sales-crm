@@ -1,47 +1,48 @@
+/* eslint-disable */
 // @ts-nocheck
-'use client'
+'use client';
 
-import React from 'react'
+import React from 'react';
 
-import type { TListElement } from 'platejs'
+import type { TListElement } from 'platejs';
 
-import { isOrderedList } from '@platejs/list'
+import { isOrderedList } from '@platejs/list';
 import {
   useTodoListElement,
   useTodoListElementState,
-} from '@platejs/list/react'
+} from '@platejs/list/react';
 import {
   type PlateElementProps,
   type RenderNodeWrapper,
   useReadOnly,
-} from 'platejs/react'
+} from 'platejs/react';
 
-import { Checkbox } from '@/components/ui/checkbox'
-import { cn } from '@/lib/utils'
+import { Checkbox } from '@/components/ui/checkbox';
+import { cn } from '@/lib/utils';
 
 const config: Record<
   string,
   {
-    Li: React.FC<PlateElementProps & { lineBreakBadge?: React.ReactNode }>
-    Marker: React.FC<PlateElementProps>
+    Li: React.FC<PlateElementProps & { lineBreakBadge?: React.ReactNode }>;
+    Marker: React.FC<PlateElementProps>;
   }
 > = {
   todo: {
     Li: TodoLi,
     Marker: TodoMarker,
   },
-}
+};
 
 export const BlockList: RenderNodeWrapper = (props) => {
-  if (!props.element.listStyleType) return
+  if (!props.element.listStyleType) return;
 
-  return (props) => <List {...props} />
-}
+  return (props) => <List {...props} />;
+};
 
 function List(props: PlateElementProps & { lineBreakBadge?: React.ReactNode }) {
-  const { listStart, listStyleType } = props.element as TListElement
-  const { Li, Marker } = config[listStyleType] ?? {}
-  const List = isOrderedList(props.element) ? 'ol' : 'ul'
+  const { listStart, listStyleType } = props.element as TListElement;
+  const { Li, Marker } = config[listStyleType] ?? {};
+  const List = isOrderedList(props.element) ? 'ol' : 'ul';
 
   return (
     <List
@@ -59,40 +60,40 @@ function List(props: PlateElementProps & { lineBreakBadge?: React.ReactNode }) {
         </li>
       )}
     </List>
-  )
+  );
 }
 
 function TodoMarker(props: PlateElementProps) {
-  const state = useTodoListElementState({ element: props.element })
-  const { checkboxProps } = useTodoListElement(state)
-  const readOnly = useReadOnly()
+  const state = useTodoListElementState({ element: props.element });
+  const { checkboxProps } = useTodoListElement(state);
+  const readOnly = useReadOnly();
 
   return (
     <div contentEditable={false}>
       <Checkbox
         className={cn(
           '-left-6 absolute top-1',
-          readOnly && 'pointer-events-none',
+          readOnly && 'pointer-events-none'
         )}
         {...checkboxProps}
       />
     </div>
-  )
+  );
 }
 
 function TodoLi(
-  props: PlateElementProps & { lineBreakBadge?: React.ReactNode },
+  props: PlateElementProps & { lineBreakBadge?: React.ReactNode }
 ) {
   return (
     <li
       className={cn(
         'list-none',
         (props.element.checked as boolean) &&
-          'text-muted-foreground line-through',
+          'text-muted-foreground line-through'
       )}
     >
       {props.children}
       {props.lineBreakBadge}
     </li>
-  )
+  );
 }

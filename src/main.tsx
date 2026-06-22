@@ -33,6 +33,8 @@ import { CalendarPage } from './routes/calendar.tsx'
 import { Products } from './routes/products.tsx'
 import { SalesOrders } from './routes/sales-orders.tsx'
 import { SalesOrderDetail } from './routes/sales-order-detail.tsx'
+import { QuoteDetail } from './routes/quote-detail.tsx'
+import { QuoteBuild } from './routes/quote-build.tsx'
 import { Contacts } from './routes/contacts.tsx'
 import { ContactDetail } from './routes/contact-detail.tsx'
 import { Activities } from './routes/activities.tsx'
@@ -144,6 +146,35 @@ const salesOrderDetailRoute = createRoute({
   component: SalesOrderDetail,
 })
 
+const quoteNewRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/quotes/new',
+  component: QuoteBuild,
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): {
+    organization?: string
+    organizationName?: string
+    deal?: string
+  } => ({
+    organization: (search.organization as string) || undefined,
+    organizationName: (search.organizationName as string) || undefined,
+    deal: (search.deal as string) || undefined,
+  }),
+})
+
+const quoteEditRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/quotes/$quoteId',
+  component: QuoteDetail,
+})
+
+const quoteBuildRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/quotes/$quoteId/build',
+  component: QuoteBuild,
+})
+
 const activitiesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/activities',
@@ -231,6 +262,9 @@ const routeTree = rootRoute.addChildren([
   productsRoute,
   salesOrdersRoute,
   salesOrderDetailRoute,
+  quoteNewRoute,
+  quoteEditRoute,
+  quoteBuildRoute,
   activitiesRoute,
   reportsRoute,
   appConfigRoute,

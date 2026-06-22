@@ -54,6 +54,7 @@ import {
   type RecordDetailTab,
 } from '@/components/crm/record-detail-layout'
 import { RelatedContactsTable } from '@/components/crm/related-contacts-table'
+import { RelatedQuotesTable } from '@/components/crm/related-quotes-table'
 import { RecordActivityTimeline } from '@/components/crm/record-activity-timeline'
 import { useDialer } from '@/components/dialer/dialer-widget'
 import { useWebphone } from '@/components/webphone/webphone-context'
@@ -291,6 +292,19 @@ export function DealDetail() {
         }
       : undefined,
   )
+
+  const { data: dealQuotes = [], isLoading: dealQuotesLoading } =
+    useSalesOrders(
+      dealId
+        ? {
+            columns: ['id', 'status', 'grand_total', 'created_on'],
+            filters: {
+              rules: [{ field: 'deal', operator: '=', value: dealId }],
+            },
+            orderBy: 'created_on DESC',
+          }
+        : undefined,
+    )
 
   const detailFields = useMemo<Array<RecordDetailField>>(
     () => [
@@ -804,6 +818,32 @@ export function DealDetail() {
         ),
       },
       {
+        value: 'quotes',
+        label: t('quotes.tabLabel', { defaultValue: 'Quotes' }),
+        icon: <FileText className="size-3.5" />,
+        count: dealQuotes.length,
+        bare: true,
+        content: (
+          <RelatedQuotesTable
+            quotes={dealQuotes as any}
+            isLoading={dealQuotesLoading}
+            onOpenQuote={(id) =>
+              navigate({ to: '/quotes/$quoteId', params: { quoteId: id } })
+            }
+            onNewQuote={() =>
+              navigate({
+                to: '/quotes/new',
+                search: {
+                  deal: dealId,
+                  organization: orgId,
+                  organizationName,
+                },
+              })
+            }
+          />
+        ),
+      },
+      {
         value: 'orders',
         label: t('deals.tabs.orders'),
         icon: <ShoppingCart className="size-3.5" />,
@@ -936,6 +976,8 @@ export function DealDetail() {
     salesOrders,
     ordersTable,
     ordersGridProps,
+    dealQuotes,
+    dealQuotesLoading,
     dealId,
   ])
 

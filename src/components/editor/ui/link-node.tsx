@@ -1,16 +1,17 @@
+/* eslint-disable */
 // @ts-nocheck
-'use client'
+'use client';
 
-import * as React from 'react'
+import * as React from 'react';
 
-import type { TLinkElement } from 'platejs'
-import type { PlateElementProps } from 'platejs/react'
+import type { TLinkElement } from 'platejs';
+import type { PlateElementProps } from 'platejs/react';
 
-import { getLinkAttributes } from '@platejs/link'
-import { PlateElement } from 'platejs/react'
+import { getLinkAttributes } from '@platejs/link';
+import { PlateElement } from 'platejs/react';
 
-import { cn } from '@/lib/utils'
-import { inlineSuggestionVariants } from '@/lib/suggestion'
+import { cn } from '@/lib/utils';
+import { inlineSuggestionVariants } from '@/lib/suggestion';
 
 export function LinkElement(props: PlateElementProps<TLinkElement>) {
   return (
@@ -19,17 +20,17 @@ export function LinkElement(props: PlateElementProps<TLinkElement>) {
       as="a"
       className={cn(
         'font-medium text-primary underline decoration-primary underline-offset-4',
-        inlineSuggestionVariants(),
+        inlineSuggestionVariants()
       )}
       attributes={{
         ...props.attributes,
         ...getLinkAttributes(props.editor, props.element),
         onMouseOver: (e) => {
-          e.stopPropagation()
+          e.stopPropagation();
         },
       }}
     >
       {props.children}
     </PlateElement>
-  )
+  );
 }

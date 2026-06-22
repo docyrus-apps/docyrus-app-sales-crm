@@ -38,11 +38,13 @@ export function useSalesOrder(orderId: string | undefined) {
         columns: [
           'id',
           'organization(id,name,phone,email)',
+          'deal(id,name)',
           'status',
           'sub_total',
           'tax_total',
           'grand_total',
           'created_on',
+          'record_owner',
         ],
       })
     },

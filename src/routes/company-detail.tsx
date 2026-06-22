@@ -33,6 +33,7 @@ import {
 } from '@/components/crm/record-detail-layout'
 import { RelatedContactsTable } from '@/components/crm/related-contacts-table'
 import { RelatedDealsTable } from '@/components/crm/related-deals-table'
+import { RelatedQuotesTable } from '@/components/crm/related-quotes-table'
 import { RecordActivityTimeline } from '@/components/crm/record-activity-timeline'
 import { useDialer } from '@/components/dialer/dialer-widget'
 import { useWebphone } from '@/components/webphone/webphone-context'
@@ -40,6 +41,7 @@ import { WebphoneCallButton } from '@/components/webphone/webphone-call-button'
 import { useCompany, useUpdateCompany } from '@/hooks/use-companies'
 import { useContacts } from '@/hooks/use-contacts'
 import { useDeals } from '@/hooks/use-deals'
+import { useSalesOrders } from '@/hooks/use-sales-orders'
 import { useLeads } from '@/hooks/use-leads'
 import { useEnumEntities } from '@/hooks/use-enums'
 import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
@@ -164,6 +166,18 @@ export function CompanyDetail() {
             rules: [{ field: 'organization', operator: '=', value: companyId }],
           },
           orderBy: 'created_on desc',
+        }
+      : undefined,
+  )
+
+  const { data: companyQuotes = [], isLoading: quotesLoading } = useSalesOrders(
+    companyId
+      ? {
+          columns: ['id', 'status', 'grand_total', 'created_on'],
+          filters: {
+            rules: [{ field: 'organization', operator: '=', value: companyId }],
+          },
+          orderBy: 'created_on DESC',
         }
       : undefined,
   )
@@ -455,6 +469,31 @@ export function CompanyDetail() {
         ),
       },
       {
+        value: 'quotes',
+        label: t('quotes.tabLabel', { defaultValue: 'Quotes' }),
+        icon: <FileText className="size-3.5" />,
+        count: companyQuotes.length,
+        bare: true,
+        content: (
+          <RelatedQuotesTable
+            quotes={companyQuotes as any}
+            isLoading={quotesLoading}
+            onOpenQuote={(id) =>
+              navigate({ to: '/quotes/$quoteId', params: { quoteId: id } })
+            }
+            onNewQuote={() =>
+              navigate({
+                to: '/quotes/new',
+                search: {
+                  organization: companyId,
+                  organizationName: company?.name,
+                },
+              })
+            }
+          />
+        ),
+      },
+      {
         value: 'leads',
         label: t('companies.tabs.leads'),
         icon: <ClipboardList className="size-3.5" />,
@@ -571,6 +610,9 @@ export function CompanyDetail() {
     contactsLoading,
     deals,
     dealsLoading,
+    companyQuotes,
+    quotesLoading,
+    company?.name,
     leads,
     leadsLoading,
     events,

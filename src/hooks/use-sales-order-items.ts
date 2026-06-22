@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ICollectionListParams } from '@/collections/types'
 import { useBaseCrmSalesOrderItemCollection } from '@/collections'
 
@@ -27,5 +27,46 @@ export function useSalesOrderItems(params?: ICollectionListParams) {
       return response
     },
     enabled: !!params,
+  })
+}
+
+export function useCreateSalesOrderItem() {
+  const salesOrderItemCollection = useBaseCrmSalesOrderItemCollection()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: Record<string, any>) =>
+      await salesOrderItemCollection.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sales-order-items'] })
+    },
+  })
+}
+
+export function useUpdateSalesOrderItem() {
+  const salesOrderItemCollection = useBaseCrmSalesOrderItemCollection()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      itemId,
+      data,
+    }: {
+      itemId: string
+      data: Record<string, any>
+    }) => await salesOrderItemCollection.update(itemId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sales-order-items'] })
+    },
+  })
+}
+
+export function useDeleteSalesOrderItem() {
+  const salesOrderItemCollection = useBaseCrmSalesOrderItemCollection()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (itemId: string) =>
+      await salesOrderItemCollection.delete(itemId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sales-order-items'] })
+    },
   })
 }

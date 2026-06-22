@@ -101,8 +101,20 @@ function SalesOrdersPageInner({
       if (!order.id) return
 
       void navigate({
-        to: '/sales-orders/$orderId',
-        params: { orderId: order.id },
+        to: '/quotes/$quoteId',
+        params: { quoteId: order.id },
+      })
+    },
+    [navigate],
+  )
+
+  const onBuild = useCallback(
+    (order: BaseCrmSalesOrderEntity) => {
+      if (!order.id) return
+
+      void navigate({
+        to: '/quotes/$quoteId/build',
+        params: { quoteId: order.id },
       })
     },
     [navigate],
@@ -126,10 +138,10 @@ function SalesOrdersPageInner({
             onOpenPage={onView}
             actions={[
               {
-                key: 'edit',
-                label: t('common.edit', 'Edit'),
+                key: 'build',
+                label: t('quotes.openBuilder', 'Open builder'),
                 icon: <Pencil className="size-4" />,
-                onSelect: onView,
+                onSelect: onBuild,
               },
               {
                 key: 'open',
@@ -148,7 +160,7 @@ function SalesOrdersPageInner({
           />
         ),
       }),
-    [onDelete, onView, t],
+    [onBuild, onDelete, onView, t],
   )
 
   const onChangesSave = useCallback(
@@ -244,14 +256,24 @@ function SalesOrdersPageInner({
   return (
     <>
       <PageHeader
-        title={t('salesOrders.title')}
+        title={t('quotes.title')}
         icon={<FileText className="h-4 w-4 text-red-500" />}
         actions={
-          <ViewSwitcher
-            value={viewType}
-            onValueChange={setViewType}
-            options={['card', 'list']}
-          />
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              className="gap-1.5"
+              onClick={() => navigate({ to: '/quotes/new', search: {} })}
+            >
+              <FileText className="size-4" />
+              {t('quotes.newQuote', 'New quote')}
+            </Button>
+            <ViewSwitcher
+              value={viewType}
+              onValueChange={setViewType}
+              options={['card', 'list']}
+            />
+          </div>
         }
       />
       <PageContainer>
@@ -301,8 +323,8 @@ function SalesOrdersPageInner({
             {orders.map((order) => (
               <Link
                 key={order.id}
-                to="/sales-orders/$orderId"
-                params={{ orderId: order.id! }}
+                to="/quotes/$quoteId"
+                params={{ quoteId: order.id! }}
               >
                 <Card className="cursor-pointer transition-all hover:shadow-md">
                   <CardHeader>
