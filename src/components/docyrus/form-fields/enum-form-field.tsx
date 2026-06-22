@@ -60,7 +60,7 @@ export function EnumFormField({
                   ) : null}
                 </SelectValue>
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="min-w-[18rem]">
                 {enumOptions.map((option) => (
                   <SelectItem key={option.id} value={option.id}>
                     <EnumOptionDisplay option={option} />

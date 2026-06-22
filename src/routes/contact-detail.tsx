@@ -25,7 +25,9 @@ import {
   type RecordDetailTab,
 } from '@/components/crm/record-detail-layout'
 import { RelatedDealsTable } from '@/components/crm/related-deals-table'
-import { RecordActivityTimeline } from '@/components/crm/record-activity-timeline'
+import { RecordActivityPanel } from '@/components/docyrus/record-activity-panel'
+import { RecordTasksPanel } from '@/components/crm/record-tasks-panel'
+import { ContactNameField } from '@/components/crm/contact-name-field'
 import { useDialer } from '@/components/dialer/dialer-widget'
 import { useWebphone } from '@/components/webphone/webphone-context'
 import { WebphoneCallButton } from '@/components/webphone/webphone-call-button'
@@ -34,7 +36,7 @@ import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
 import { useContact, useUpdateContact } from '@/hooks/use-contacts'
 import { useCompanies } from '@/hooks/use-companies'
 import { useDeals } from '@/hooks/use-deals'
-import { useRecordEvents } from '@/hooks/use-events'
+import { useRecordActivities } from '@/hooks/use-record-activities'
 import { useEnumEntities } from '@/hooks/use-enums'
 import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
@@ -148,10 +150,8 @@ export function ContactDetail() {
       : undefined,
   )
 
-  const { data: events = [], isLoading: eventsLoading } = useRecordEvents(
-    'contact',
-    contactId,
-  )
+  const { data: activities = [], isLoading: activitiesLoading } =
+    useRecordActivities('base', 'contact', contactId)
 
   const contactEnumOpts = { appSlug: 'base', dataSourceSlug: 'contact' }
   const { data: typeEntities = [] } = useEnumEntities(
@@ -288,10 +288,9 @@ export function ContactDetail() {
                   {t('common.viewAll', { defaultValue: 'View all' })}
                 </button>
               </div>
-              <RecordActivityTimeline
-                events={events}
-                isLoading={eventsLoading}
-                limit={2}
+              <RecordActivityPanel
+                activities={activities.slice(0, 2)}
+                isLoading={activitiesLoading}
               />
             </div>
           </div>
@@ -302,7 +301,11 @@ export function ContactDetail() {
         label: t('contacts.tabs.activity'),
         icon: <Activity className="size-3.5" />,
         content: (
-          <RecordActivityTimeline events={events} isLoading={eventsLoading} />
+          <RecordActivityPanel
+            activities={activities}
+            isLoading={activitiesLoading}
+            filterable
+          />
         ),
       },
       ...(webphone.enabled
@@ -398,15 +401,9 @@ export function ContactDetail() {
         value: 'tasks',
         label: t('contacts.tabs.tasks', { defaultValue: 'Tasks' }),
         icon: <ListTodo className="size-3.5" />,
+        bare: true,
         content: (
-          <RecordTabPlaceholder
-            icon={<ListTodo className="size-5" />}
-            title={t('common.comingSoon', { defaultValue: 'Coming soon' })}
-            description={t('common.tasksComingSoon', {
-              defaultValue:
-                'Tasks for this record will be available here soon.',
-            })}
-          />
+          <RecordTasksPanel parentField="contact" parentId={contactId} />
         ),
       },
       {
@@ -431,8 +428,8 @@ export function ContactDetail() {
     organizationName,
     deals,
     dealsLoading,
-    events,
-    eventsLoading,
+    activities,
+    activitiesLoading,
     contact?.job_title,
     contact?.mobile,
     contactId,
@@ -523,6 +520,14 @@ export function ContactDetail() {
         record={flatRecord}
         onInlineSave={handleInlineSave}
         editTitle={t('common.editAll', { defaultValue: 'Edit All' })}
+        fieldRenderers={{
+          name: ({ record, save }) => (
+            <ContactNameField
+              name={record.name as string | undefined}
+              onSave={(name) => save({ name })}
+            />
+          ),
+        }}
         attributeActions={attributeActions}
         dialerTrigger={
           webphone.enabled ? (

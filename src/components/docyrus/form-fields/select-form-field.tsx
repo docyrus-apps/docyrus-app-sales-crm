@@ -82,7 +82,7 @@ export function SelectFormField({
                   ) : null}
                 </SelectValue>
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="min-w-[18rem]">
                 {flatOptions
                   ? flatOptions.map(({ option, depth }) =>
                       renderOption(option, depth),

@@ -26,12 +26,13 @@ import {
   RecordTabPlaceholder,
   type RecordDetailTab,
 } from '@/components/crm/record-detail-layout'
-import { RecordActivityTimeline } from '@/components/crm/record-activity-timeline'
+import { RecordActivityPanel } from '@/components/docyrus/record-activity-panel'
+import { RecordTasksPanel } from '@/components/crm/record-tasks-panel'
 import { useDialer } from '@/components/dialer/dialer-widget'
 import { useWebphone } from '@/components/webphone/webphone-context'
 import { WebphoneCallButton } from '@/components/webphone/webphone-call-button'
 import { useLead, useUpdateLead } from '@/hooks/use-leads'
-import { useRecordEvents } from '@/hooks/use-events'
+import { useRecordActivities } from '@/hooks/use-record-activities'
 import { useEnumEntities } from '@/hooks/use-enums'
 import { useUsers } from '@/hooks/use-users'
 import { useContacts } from '@/hooks/use-contacts'
@@ -150,10 +151,8 @@ export function LeadDetail() {
     void navigate({ search: { tab: value }, replace: true })
   }
 
-  const { data: events = [], isLoading: eventsLoading } = useRecordEvents(
-    'lead',
-    leadId,
-  )
+  const { data: activities = [], isLoading: activitiesLoading } =
+    useRecordActivities('base_crm', 'leads', leadId)
 
   const enumOpts = { appSlug: 'base_crm', dataSourceSlug: 'leads' }
   const { data: leadStatusEntities = [] } = useEnumEntities(
@@ -487,10 +486,9 @@ export function LeadDetail() {
                   {t('common.viewAll', { defaultValue: 'View all' })}
                 </button>
               </div>
-              <RecordActivityTimeline
-                events={events}
-                isLoading={eventsLoading}
-                limit={2}
+              <RecordActivityPanel
+                activities={activities.slice(0, 2)}
+                isLoading={activitiesLoading}
               />
             </div>
           </div>
@@ -501,7 +499,11 @@ export function LeadDetail() {
         label: t('leads.tabs.activity'),
         icon: <Activity className="size-3.5" />,
         content: (
-          <RecordActivityTimeline events={events} isLoading={eventsLoading} />
+          <RecordActivityPanel
+            activities={activities}
+            isLoading={activitiesLoading}
+            filterable
+          />
         ),
       },
       {
@@ -553,16 +555,8 @@ export function LeadDetail() {
         value: 'tasks',
         label: t('leads.tabs.tasks', { defaultValue: 'Tasks' }),
         icon: <ListTodo className="size-3.5" />,
-        content: (
-          <RecordTabPlaceholder
-            icon={<ListTodo className="size-5" />}
-            title={t('common.comingSoon', { defaultValue: 'Coming soon' })}
-            description={t('common.tasksComingSoon', {
-              defaultValue:
-                'Tasks for this record will be available here soon.',
-            })}
-          />
-        ),
+        bare: true,
+        content: <RecordTasksPanel parentField="lead" parentId={leadId} />,
       },
       {
         value: 'files',
@@ -586,8 +580,8 @@ export function LeadDetail() {
     statusName,
     lead?.lead_source,
     lead?.company_name_text,
-    events,
-    eventsLoading,
+    activities,
+    activitiesLoading,
     leadId,
   ])
 

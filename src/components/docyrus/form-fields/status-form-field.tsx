@@ -355,7 +355,7 @@ function StatusFormFieldInner({
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-(--radix-popover-trigger-width) p-0"
+          className="w-(--radix-popover-trigger-width) min-w-[18rem] p-0"
           align="start"
         >
           <div className="flex flex-col">

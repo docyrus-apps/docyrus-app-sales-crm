@@ -15,7 +15,7 @@ export function TextValue({ field, value, className }: DocyrusValueProps) {
   return (
     <span
       className={cn(
-        isMultiline ? 'whitespace-pre-wrap' : 'truncate',
+        isMultiline ? 'block whitespace-pre-wrap' : 'block truncate',
         className,
       )}
     >

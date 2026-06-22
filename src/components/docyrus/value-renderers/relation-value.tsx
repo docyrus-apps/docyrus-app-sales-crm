@@ -32,7 +32,7 @@ export function RelationValue({
     return (
       <span
         className={cn(
-          'inline-flex items-center gap-1 text-primary text-sm',
+          'inline-flex min-w-0 max-w-full items-center gap-1 text-primary text-sm',
           className,
         )}
       >
@@ -51,7 +51,7 @@ export function RelationValue({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 text-sm',
+        'inline-flex min-w-0 max-w-full items-center gap-1 text-sm',
         enumMatch ? 'text-primary' : 'text-muted-foreground',
         className,
       )}

@@ -44,7 +44,12 @@ export function UserValue({
     const avatarUrl = value.avatar_url ?? value.profile_image_url
 
     return (
-      <span className={cn('inline-flex items-center gap-1.5', className)}>
+      <span
+        className={cn(
+          'inline-flex min-w-0 max-w-full items-center gap-1.5',
+          className,
+        )}
+      >
         <Avatar size="sm">
           {avatarUrl && <AvatarImage src={avatarUrl} alt={name} />}
           <AvatarFallback>{getInitials(name)}</AvatarFallback>
@@ -61,7 +66,12 @@ export function UserValue({
 
   if (enumMatch) {
     return (
-      <span className={cn('inline-flex items-center gap-1.5', className)}>
+      <span
+        className={cn(
+          'inline-flex min-w-0 max-w-full items-center gap-1.5',
+          className,
+        )}
+      >
         <Avatar size="sm">
           <AvatarFallback>{getInitials(enumMatch.name)}</AvatarFallback>
         </Avatar>
@@ -71,7 +81,12 @@ export function UserValue({
   }
 
   return (
-    <span className={cn('inline-flex items-center gap-1.5', className)}>
+    <span
+      className={cn(
+        'inline-flex min-w-0 max-w-full items-center gap-1.5',
+        className,
+      )}
+    >
       <Avatar size="sm">
         <AvatarFallback>
           <User className="size-3" />

@@ -26,4 +26,6 @@ export interface RecordActivityPanelProps {
   activities: Array<RecordActivity>
   isLoading?: boolean
   className?: string
+  /** Show the category filter (Created/Updated/Status/…) when >1 category is present */
+  filterable?: boolean
 }

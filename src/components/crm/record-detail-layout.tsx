@@ -22,9 +22,11 @@ import {
   Hash,
   Image as ImageIcon,
   Link2,
+  MapPin,
   MoreHorizontal,
   Pencil,
   Phone,
+  Rows3,
   Search,
   Tag,
   Type,
@@ -84,7 +86,20 @@ const FIELD_TYPE_ICONS: Record<
   'field-percent': Hash,
   'field-date': CalendarClock,
   'field-datetime': CalendarClock,
+  'field-locationSelect': MapPin,
 }
+
+/**
+ * Context handed to a custom field renderer (see `fieldRenderers`): the current
+ * record plus a `save` that persists a partial patch through the page's
+ * `onInlineSave` (building the `FieldChange[]` for the changed slugs).
+ */
+export interface FieldRenderContext {
+  record: Record<string, unknown>
+  save: (patch: Record<string, unknown>) => void | Promise<void>
+}
+
+type FieldRendererMap = Record<string, (ctx: FieldRenderContext) => ReactNode>
 
 function getFieldIcon(type?: string): ComponentType<{ className?: string }> {
   return (type && FIELD_TYPE_ICONS[type]) || Building2
@@ -202,6 +217,8 @@ interface RecordAttributePanelProps {
   notice?: ReactNode
   /** Render fields display-only (no inline edit / no edit-all modal) */
   readOnly?: boolean
+  /** Per-slug custom renderers that replace the default inline editor */
+  fieldRenderers?: FieldRendererMap
 }
 
 function RecordAttributePanel({
@@ -218,6 +235,7 @@ function RecordAttributePanel({
   readOnly,
   actions,
   notice,
+  fieldRenderers,
 }: RecordAttributePanelProps) {
   const [query, setQuery] = useState('')
   const [expanded, setExpanded] = useState(false)
@@ -263,6 +281,21 @@ function RecordAttributePanel({
     setEditOpen(false)
   }
 
+  // Persist a partial patch coming from a custom field renderer.
+  const handleFieldSave = useCallback(
+    (patch: Record<string, unknown>) =>
+      onSave(
+        Object.entries(patch).map(([fieldSlug, newValue]) => ({
+          fieldSlug,
+          fieldName: fieldBySlug.get(fieldSlug)?.field.name ?? fieldSlug,
+          originalValue: record[fieldSlug],
+          newValue,
+        })),
+        { ...record, ...patch },
+      ),
+    [fieldBySlug, onSave, record],
+  )
+
   return (
     <div className="crm-attribute-panel flex h-full min-h-0 flex-col overflow-hidden">
       {/* Keep the inline editor at the same compact height as the display row
@@ -277,6 +310,17 @@ function RecordAttributePanel({
         ) {
           height: 1.5rem !important;
           min-height: 1.5rem !important;
+        }
+
+        /* Normalize every value renderer to a single font size (13px) so the
+           key–value list reads uniformly regardless of each renderer's own
+           text-sm / text-xs. Scoped to the attribute panel only — renderers
+           keep their native sizes everywhere else. */
+        .crm-attribute-panel [data-slot="editable-value"] {
+          font-size: 13px;
+        }
+        .crm-attribute-panel [data-slot="editable-value"] :is(span, p, a, div, button) {
+          font-size: inherit;
         }
       `}</style>
 
@@ -301,6 +345,7 @@ function RecordAttributePanel({
             </div>
             {!readOnly && (
               <Button
+                id="edit-record-button"
                 variant="ghost"
                 size="icon"
                 className="-my-1 size-7 shrink-0 text-muted-foreground"
@@ -343,6 +388,10 @@ function RecordAttributePanel({
       {notice && <div className="border-b px-2.5 py-2">{notice}</div>}
 
       <div className="min-h-0 flex-1 overflow-auto px-1.5 py-2">
+        <div className="mb-1.5 flex items-center gap-1.5 px-1.5 text-[13px] font-medium text-muted-foreground">
+          <Rows3 className="size-3.5" />
+          Attributes
+        </div>
         <EditableRecordDetail
           key={recordVersion}
           fields={detailFields}
@@ -365,16 +414,20 @@ function RecordAttributePanel({
                   className="group flex items-center gap-2 rounded-md py-0.5 pl-1.5 pr-0.5 transition-colors hover:bg-muted/40"
                 >
                   <Icon className="size-3.5 shrink-0 text-muted-foreground/60" />
-                  <span className="w-24 shrink-0 truncate text-[13px] text-muted-foreground">
+                  <span className="w-24 shrink-0 break-words text-[13px] leading-tight text-muted-foreground">
                     {entry.field.name}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <EditableRecordDetailField
-                      slug={slug}
-                      showLabel={false}
-                      editHint="progressive"
-                      size="sm"
-                    />
+                    {fieldRenderers?.[slug] ? (
+                      fieldRenderers[slug]({ record, save: handleFieldSave })
+                    ) : (
+                      <EditableRecordDetailField
+                        slug={slug}
+                        showLabel={false}
+                        editHint="progressive"
+                        size="sm"
+                      />
+                    )}
                   </div>
                 </div>
               )
@@ -421,9 +474,21 @@ function RecordAttributePanel({
                 onSave={handleModalSave}
               >
                 <div className="space-y-0.5">
-                  {fieldSlugs.map((slug) => (
-                    <EditableRecordDetailField key={slug} slug={slug} />
-                  ))}
+                  {fieldSlugs.map((slug) =>
+                    fieldRenderers?.[slug] ? (
+                      <div key={slug} className="space-y-1 py-1">
+                        <div className="text-[13px] font-medium text-muted-foreground">
+                          {fieldBySlug.get(slug)?.field.name}
+                        </div>
+                        {fieldRenderers[slug]({
+                          record,
+                          save: handleFieldSave,
+                        })}
+                      </div>
+                    ) : (
+                      <EditableRecordDetailField key={slug} slug={slug} />
+                    ),
+                  )}
                 </div>
               </EditableRecordDetail>
             </div>
@@ -628,6 +693,8 @@ export interface RecordDetailLayoutProps {
   attributeNotice?: ReactNode
   /** Render the attribute panel display-only (e.g. converted/locked records) */
   readOnly?: boolean
+  /** Per-slug custom renderers that replace the default inline editor */
+  fieldRenderers?: FieldRendererMap
   /** Custom dialer launcher in the tab bar (overrides the default phone button) */
   dialerTrigger?: ReactNode
   /** Right-side tab definitions */
@@ -652,6 +719,7 @@ export function RecordDetailLayout({
   attributeActions,
   attributeNotice,
   readOnly,
+  fieldRenderers,
   dialerTrigger,
   tabs,
   defaultTab,
@@ -729,6 +797,7 @@ export function RecordDetailLayout({
       actions={attributeActions}
       notice={attributeNotice}
       readOnly={readOnly}
+      fieldRenderers={fieldRenderers}
     />
   )
 

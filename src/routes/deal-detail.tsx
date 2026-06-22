@@ -55,7 +55,8 @@ import {
 } from '@/components/crm/record-detail-layout'
 import { RelatedContactsTable } from '@/components/crm/related-contacts-table'
 import { RelatedQuotesTable } from '@/components/crm/related-quotes-table'
-import { RecordActivityTimeline } from '@/components/crm/record-activity-timeline'
+import { RecordActivityPanel } from '@/components/docyrus/record-activity-panel'
+import { RecordTasksPanel } from '@/components/crm/record-tasks-panel'
 import { useDialer } from '@/components/dialer/dialer-widget'
 import { useWebphone } from '@/components/webphone/webphone-context'
 import { PageContainer } from '@/components/layout/page-container'
@@ -66,7 +67,7 @@ import { useDeal, useUpdateDeal } from '@/hooks/use-deals'
 import { useCompanies } from '@/hooks/use-companies'
 import { useContacts } from '@/hooks/use-contacts'
 import { useEnumEntities } from '@/hooks/use-enums'
-import { useRecordEvents } from '@/hooks/use-events'
+import { useRecordActivities } from '@/hooks/use-record-activities'
 import { useSalesOrders } from '@/hooks/use-sales-orders'
 import { useUsers } from '@/hooks/use-users'
 import type { EnumOption, IField } from '@/components/docyrus/form-fields/types'
@@ -245,10 +246,8 @@ export function DealDetail() {
       : undefined,
   )
 
-  const { data: events = [], isLoading: eventsLoading } = useRecordEvents(
-    'deal',
-    dealId,
-  )
+  const { data: activities = [], isLoading: activitiesLoading } =
+    useRecordActivities('base_crm', 'deal', dealId)
 
   const { data: dealProducts, isLoading: productsLoading } = useDealProducts(
     dealId
@@ -728,10 +727,9 @@ export function DealDetail() {
                   {t('common.viewAll', { defaultValue: 'View all' })}
                 </button>
               </div>
-              <RecordActivityTimeline
-                events={events}
-                isLoading={eventsLoading}
-                limit={2}
+              <RecordActivityPanel
+                activities={activities.slice(0, 2)}
+                isLoading={activitiesLoading}
               />
             </div>
           </div>
@@ -742,7 +740,11 @@ export function DealDetail() {
         label: t('deals.tabs.activity'),
         icon: <Activity className="size-3.5" />,
         content: (
-          <RecordActivityTimeline events={events} isLoading={eventsLoading} />
+          <RecordActivityPanel
+            activities={activities}
+            isLoading={activitiesLoading}
+            filterable
+          />
         ),
       },
       {
@@ -929,16 +931,8 @@ export function DealDetail() {
         value: 'tasks',
         label: t('deals.tabs.tasks', { defaultValue: 'Tasks' }),
         icon: <ListTodo className="size-3.5" />,
-        content: (
-          <RecordTabPlaceholder
-            icon={<ListTodo className="size-5" />}
-            title={t('common.comingSoon', { defaultValue: 'Coming soon' })}
-            description={t('common.tasksComingSoon', {
-              defaultValue:
-                'Tasks for this record will be available here soon.',
-            })}
-          />
-        ),
+        bare: true,
+        content: <RecordTasksPanel parentField="deal" parentId={dealId} />,
       },
       {
         value: 'files',
@@ -962,8 +956,8 @@ export function DealDetail() {
     deal?.deal_value,
     deal?.close_probability,
     stageName,
-    events,
-    eventsLoading,
+    activities,
+    activitiesLoading,
     orgContacts,
     orgContactsLoading,
     productsLoading,

@@ -34,7 +34,9 @@ import {
 import { RelatedContactsTable } from '@/components/crm/related-contacts-table'
 import { RelatedDealsTable } from '@/components/crm/related-deals-table'
 import { RelatedQuotesTable } from '@/components/crm/related-quotes-table'
-import { RecordActivityTimeline } from '@/components/crm/record-activity-timeline'
+import { RecordActivityPanel } from '@/components/docyrus/record-activity-panel'
+import { RecordTasksPanel } from '@/components/crm/record-tasks-panel'
+import { LocationField } from '@/components/crm/location-field'
 import { useDialer } from '@/components/dialer/dialer-widget'
 import { useWebphone } from '@/components/webphone/webphone-context'
 import { WebphoneCallButton } from '@/components/webphone/webphone-call-button'
@@ -45,7 +47,7 @@ import { useSalesOrders } from '@/hooks/use-sales-orders'
 import { useLeads } from '@/hooks/use-leads'
 import { useEnumEntities } from '@/hooks/use-enums'
 import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
-import { useRecordEvents } from '@/hooks/use-events'
+import { useRecordActivities } from '@/hooks/use-record-activities'
 import { ContactFormDialog } from '@/components/contacts/contact-form-dialog'
 import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
@@ -66,8 +68,7 @@ const FIELD_SLUGS = [
   'phone',
   'website',
   'address',
-  'country',
-  'city',
+  'location',
   'district',
   'tax_number',
 ]
@@ -133,7 +134,6 @@ export function CompanyDetail() {
   const { data: statusEntities = [] } = useEnumEntities('status', enumOpts)
   const { data: typeEntities = [] } = useEnumEntities('type', enumOpts)
   const { data: industryEntities = [] } = useEnumEntities('industry', enumOpts)
-  const { data: countryEntities = [] } = useEnumEntities('country')
   const { data: lifecycleEntities = [] } = useEnumEntities(
     'lifecycle_stage',
     enumOpts,
@@ -200,15 +200,12 @@ export function CompanyDetail() {
       : undefined,
   )
 
-  const { data: events = [], isLoading: eventsLoading } = useRecordEvents(
-    'organization',
-    companyId,
-  )
+  const { data: activities = [], isLoading: activitiesLoading } =
+    useRecordActivities('base', 'organization', companyId)
 
   const statusEditable = statusEntities.length > 0
   const typeEditable = typeEntities.length > 0
   const industryEditable = industryEntities.length > 0
-  const countryEditable = countryEntities.length > 0
   const lifecycleEditable = lifecycleEntities.length > 0
 
   const detailFields = useMemo<Array<RecordDetailField>>(
@@ -262,15 +259,10 @@ export function CompanyDetail() {
       { field: makeField('address', t('companies.address')) },
       {
         field: makeField(
-          'country',
-          t('companies.country', { defaultValue: 'Country' }),
-          countryEditable ? 'field-select' : 'field-text',
+          'location',
+          t('companies.location', { defaultValue: 'Location' }),
+          'field-locationSelect',
         ),
-        enumOptions: toOptions(countryEntities),
-        readOnly: !countryEditable,
-      },
-      {
-        field: makeField('city', t('companies.city', { defaultValue: 'City' })),
       },
       { field: makeField('district', t('companies.district')) },
       { field: makeField('tax_number', t('companies.taxNumber')) },
@@ -280,12 +272,10 @@ export function CompanyDetail() {
       statusEditable,
       typeEditable,
       industryEditable,
-      countryEditable,
       lifecycleEditable,
       statusEntities,
       typeEntities,
       industryEntities,
-      countryEntities,
       lifecycleEntities,
     ],
   )
@@ -310,9 +300,7 @@ export function CompanyDetail() {
       phone: company.phone ?? '',
       website: company.website ?? '',
       address: company.address ?? '',
-      country: countryEditable
-        ? fieldId(company.country)
-        : extractName(company.country),
+      country: company.country ?? null,
       city: extractName(company.city),
       district: company.district ?? '',
       tax_number: company.tax_number ?? '',
@@ -322,7 +310,6 @@ export function CompanyDetail() {
     statusEditable,
     typeEditable,
     industryEditable,
-    countryEditable,
     lifecycleEditable,
   ])
 
@@ -406,10 +393,9 @@ export function CompanyDetail() {
                   {t('common.viewAll', { defaultValue: 'View all' })}
                 </button>
               </div>
-              <RecordActivityTimeline
-                events={events}
-                isLoading={eventsLoading}
-                limit={2}
+              <RecordActivityPanel
+                activities={activities.slice(0, 2)}
+                isLoading={activitiesLoading}
               />
             </div>
           </div>
@@ -420,7 +406,11 @@ export function CompanyDetail() {
         label: t('companies.tabs.activity', { defaultValue: 'Activity' }),
         icon: <Activity className="size-3.5" />,
         content: (
-          <RecordActivityTimeline events={events} isLoading={eventsLoading} />
+          <RecordActivityPanel
+            activities={activities}
+            isLoading={activitiesLoading}
+            filterable
+          />
         ),
       },
       {
@@ -575,15 +565,9 @@ export function CompanyDetail() {
         value: 'tasks',
         label: t('companies.tabs.tasks', { defaultValue: 'Tasks' }),
         icon: <ListTodo className="size-3.5" />,
+        bare: true,
         content: (
-          <RecordTabPlaceholder
-            icon={<ListTodo className="size-5" />}
-            title={t('common.comingSoon', { defaultValue: 'Coming soon' })}
-            description={t('common.tasksComingSoon', {
-              defaultValue:
-                'Tasks for this record will be available here soon.',
-            })}
-          />
+          <RecordTasksPanel parentField="organization" parentId={companyId} />
         ),
       },
       {
@@ -615,8 +599,8 @@ export function CompanyDetail() {
     company?.name,
     leads,
     leadsLoading,
-    events,
-    eventsLoading,
+    activities,
+    activitiesLoading,
     companyId,
   ])
 
@@ -743,6 +727,11 @@ export function CompanyDetail() {
         record={flatRecord}
         onInlineSave={handleInlineSave}
         editTitle={t('common.editAll', { defaultValue: 'Edit All' })}
+        fieldRenderers={{
+          location: ({ record, save }) => (
+            <LocationField record={record} onSave={save} />
+          ),
+        }}
         attributeActions={attributeActions}
         dialerTrigger={dialerTrigger}
         tabs={tabs}

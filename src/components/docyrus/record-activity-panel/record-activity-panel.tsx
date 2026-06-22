@@ -1,6 +1,8 @@
 'use client'
 
-import { type LucideIcon } from 'lucide-react'
+import { useMemo, useState } from 'react'
+
+import { Check, ListFilter, type LucideIcon } from 'lucide-react'
 
 import {
   ActivityIcon,
@@ -13,6 +15,11 @@ import {
 } from 'lucide-react'
 
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import {
   Timeline,
   TimelineConnector,
@@ -64,11 +71,79 @@ function getActorName(activity: RecordActivity): string {
   return name || user.name || 'System'
 }
 
+// Raw audit operations reduced to readable categories for the filter.
+const CATEGORY_ORDER = [
+  'Created',
+  'Updated',
+  'Status',
+  'Comments',
+  'Files',
+  'Deleted',
+  'Other',
+] as const
+
+type ActivityCategory = (typeof CATEGORY_ORDER)[number]
+
+function categoryOf(operation: string): ActivityCategory {
+  switch (operation) {
+    case 'INSERT':
+      return 'Created'
+
+    case 'UPDATE':
+      return 'Updated'
+
+    case 'STATUS_UPDATE':
+      return 'Status'
+
+    case 'DELETE':
+
+    case 'TRASH':
+      return 'Deleted'
+
+    default:
+      if (operation.endsWith('_COMMENT')) return 'Comments'
+      if (operation.endsWith('_FILE')) return 'Files'
+
+      return 'Other'
+  }
+}
+
 export function RecordActivityPanel({
   activities,
   isLoading,
   className,
+  filterable,
 }: RecordActivityPanelProps) {
+  const [hidden, setHidden] = useState<Set<string>>(() => new Set())
+
+  const presentCategories = useMemo(() => {
+    const set = new Set<ActivityCategory>()
+
+    for (const activity of activities ?? []) {
+      set.add(categoryOf(activity.operation))
+    }
+
+    return CATEGORY_ORDER.filter((category) => set.has(category))
+  }, [activities])
+
+  const visibleActivities = useMemo(
+    () =>
+      (activities ?? []).filter(
+        (activity) => !hidden.has(categoryOf(activity.operation)),
+      ),
+    [activities, hidden],
+  )
+
+  const toggleCategory = (category: ActivityCategory) =>
+    setHidden((prev) => {
+      const next = new Set(prev)
+
+      if (next.has(category)) next.delete(category)
+      else next.add(category)
+
+      return next
+    })
+
   if (isLoading) {
     return (
       <div
@@ -110,40 +185,86 @@ export function RecordActivityPanel({
     )
   }
 
-  return (
-    <Timeline className={`[--timeline-dot-size:2rem] ${className ?? ''}`}>
-      {activities.map((activity) => {
-        const config = getOperationConfig(activity.operation)
-        const Icon = config.icon
-        const actorName = getActorName(activity)
+  const showFilter = Boolean(filterable) && presentCategories.length > 1
+  const hasActiveFilter = hidden.size > 0
 
-        return (
-          <TimelineItem key={activity.id}>
-            <TimelineDot>
-              <Icon className={`size-3.5 ${config.className}`} />
-            </TimelineDot>
-            <TimelineConnector />
-            <TimelineContent>
-              <TimelineHeader>
-                {activity.created_on && (
-                  <TimelineTime dateTime={activity.created_on}>
-                    {formatDate(activity.created_on, {
-                      month: 'short',
-                      day: 'numeric',
-                      hour: 'numeric',
-                      minute: '2-digit',
-                    })}
-                  </TimelineTime>
+  return (
+    <div className={cn('space-y-2', className)}>
+      {showFilter && (
+        <div className="flex items-center justify-end">
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[13px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground',
+                  hasActiveFilter && 'text-primary',
                 )}
-                <TimelineTitle className="text-sm">{actorName}</TimelineTitle>
-              </TimelineHeader>
-              <TimelineDescription>
-                {activity.shortDescription || activity.description}
-              </TimelineDescription>
-            </TimelineContent>
-          </TimelineItem>
-        )
-      })}
-    </Timeline>
+              >
+                <ListFilter className="size-3.5" />
+                Filter
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-44 p-1">
+              {presentCategories.map((category) => (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() => toggleCategory(category)}
+                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors hover:bg-muted"
+                >
+                  <Check
+                    className={cn(
+                      'size-3.5 shrink-0',
+                      hidden.has(category) ? 'opacity-0' : 'opacity-100',
+                    )}
+                  />
+                  {category}
+                </button>
+              ))}
+            </PopoverContent>
+          </Popover>
+        </div>
+      )}
+      <Timeline className="[--timeline-dot-size:2rem]">
+        {visibleActivities.map((activity) => {
+          const config = getOperationConfig(activity.operation)
+          const Icon = config.icon
+          const actorName = getActorName(activity)
+
+          return (
+            <TimelineItem key={activity.id}>
+              <TimelineDot>
+                <Icon className={`size-3.5 ${config.className}`} />
+              </TimelineDot>
+              <TimelineConnector />
+              <TimelineContent>
+                <TimelineHeader>
+                  {activity.created_on && (
+                    <TimelineTime dateTime={activity.created_on}>
+                      {formatDate(activity.created_on, {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                      })}
+                    </TimelineTime>
+                  )}
+                  <TimelineTitle className="text-sm">{actorName}</TimelineTitle>
+                </TimelineHeader>
+                <TimelineDescription>
+                  {activity.shortDescription || activity.description}
+                </TimelineDescription>
+              </TimelineContent>
+            </TimelineItem>
+          )
+        })}
+      </Timeline>
+      {visibleActivities.length === 0 && (
+        <p className="py-6 text-center text-sm text-muted-foreground">
+          No activity matches the selected filters.
+        </p>
+      )}
+    </div>
   )
 }
