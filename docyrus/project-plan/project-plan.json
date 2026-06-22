@@ -344,6 +344,22 @@
       "order": 3
     },
     {
+      "id": "task-saved-view-filter-normalization",
+      "title": "Normalize saved view filters before data queries",
+      "summary": "Map Query Builder saved-view filters to backend query filter shape before list requests.",
+      "type": "bug-fix",
+      "assignee": "agent",
+      "status": "done",
+      "acceptanceCriteria": [
+        "Saved-view filters strip Query Builder-only keys before item queries",
+        "Display operators such as is one of are mapped to backend operators",
+        "Targeted unit tests and production build pass; lint blocker is captured as missing @docyrus/rules"
+      ],
+      "featureId": "feature-runtime-auth-v1",
+      "phaseId": "phase-foundation",
+      "order": 3
+    },
+    {
       "id": "task-release-readiness",
       "title": "Prepare v0.1 release readiness checklist",
       "summary": "Consolidate release blockers, validation status, and launch readiness items for the first tagged version of the app.",

@@ -6,6 +6,8 @@ List grid toolbars render saved views above the search/filter/tool row, and ever
 
 Saved data views are normalized to standard paging (`pagingEnabled: true`, `pagingMode: standard`) so the pagination footer is visible when the active list view loads. In standard paging mode, the shared DataGrid treats the configured `height` as the total grid area including the pagination footer, preventing large pages from pushing the footer below the viewport.
 
+Saved view filter queries are normalized into backend filter syntax before list/board requests are sent: Query Builder-only fields are stripped and display operators like `is one of` are mapped to `in`, matching toolbar-generated filters. See [[architecture#Saved View Filter Normalization]].
+
 ## CRM Status & Type Taxonomy
 
 Status/type fields are tenant-enum picklists (`tenant.enum`, scoped per `tenant_field_id`), rendered in `sortOrder` order. Enum config is edited via `docyrus studio update-enums` (id-based upsert).

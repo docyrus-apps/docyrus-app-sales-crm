@@ -43,6 +43,7 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { normalizeSavedViewFilterQuery } from '@/lib/docyrus-filter-normalization'
 import { cn } from '@/lib/utils'
 
 import {
@@ -475,13 +476,10 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
 
     if (expand.size > 0) params.expand = Array.from(expand)
 
-    if (
-      activeView?.filterQuery &&
-      'rules' in activeView.filterQuery &&
-      Array.isArray((activeView.filterQuery as RuleGroupType).rules) &&
-      (activeView.filterQuery as RuleGroupType).rules.length > 0
-    ) {
-      params.filters = activeView.filterQuery as RuleGroupType
+    const viewFilter = normalizeSavedViewFilterQuery(activeView?.filterQuery)
+
+    if (viewFilter) {
+      params.filters = viewFilter
     }
 
     if (activeView?.sorting && activeView.sorting.length > 0) {

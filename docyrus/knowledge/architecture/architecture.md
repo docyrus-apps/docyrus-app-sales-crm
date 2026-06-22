@@ -47,6 +47,16 @@ The OAuth callback is configured as a path (`VITE_OAUTH2_REDIRECT_PATH`) and the
 
 The Vite dev server sends a `Content-Security-Policy` header with a `frame-ancestors` allowlist. Keep `https://build.docyrus.app` in that allowlist so hosted Docyrus preview surfaces can embed the local preview during development.
 
+## Saved View Filter Normalization
+
+Saved data-view filters created by `QueryBuilderDocyrus` are normalized before they are sent to Docyrus item queries.
+
+`src/lib/docyrus-filter-normalization.ts` strips React Query Builder-only keys such as `id` and `valueSource`, keeps only backend filter fields, and maps display operators (`is one of` / `is none of`) to backend operators (`in` / `not in`).
+
+Consumers: `useDocyrusDataGrid`, `useDocyrusDataTable`, and `useDocyrusKanban` must call this helper before assigning `params.filters`, so saved views behave the same as app-generated toolbar filters.
+
+Backlink: `// @docyrus: [[architecture#Saved View Filter Normalization]]`.
+
 ## Editor Dependency Alignment
 
 The editor currently builds cleanly on PlateJS 53.x. Upgrade `platejs` and the `@platejs/*` packages together to avoid missing-export mismatches between core and plugin packages.

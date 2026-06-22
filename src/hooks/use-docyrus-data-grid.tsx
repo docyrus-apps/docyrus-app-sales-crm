@@ -73,6 +73,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
+import { normalizeSavedViewFilterQuery } from '@/lib/docyrus-filter-normalization'
 import { cn } from '@/lib/utils'
 import { useDataExport, type DataExportColumn } from '@/hooks/use-data-export'
 import {
@@ -2380,13 +2381,7 @@ function buildFiltersParam(
   toolbarFilters?: ColumnFiltersState,
   sideFilters?: RuleGroupType | undefined,
 ): RuleGroupType | undefined {
-  const viewFilter =
-    filterQuery &&
-    'rules' in filterQuery &&
-    Array.isArray(filterQuery.rules) &&
-    filterQuery.rules.length > 0
-      ? (filterQuery as RuleGroupType)
-      : undefined
+  const viewFilter = normalizeSavedViewFilterQuery(filterQuery)
 
   const toolbarRules = (toolbarFilters ?? [])
     .map((filter) => toServerRule(filter))

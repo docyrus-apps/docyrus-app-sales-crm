@@ -12,7 +12,7 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - Status: `in_progress`
 - Slug: `runtime-auth-developer-tooling`
 - Summary: The shared app shell, Docyrus authentication, query runtime, command infrastructure, and developer tooling at the root of the SPA.
-- Tasks: 7
+- Tasks: 8
 
 #### Stabilize root runtime, auth boot, and shared provider wiring
 
@@ -78,6 +78,19 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - `pnpm build` succeeds consistently.
 - TypeScript verification path is documented or repaired.
 - Known toolchain warnings blocking routine validation are captured in the plan.
+
+#### Normalize saved view filters before data queries
+
+- Task ID: `task-saved-view-filter-normalization`
+- Phase: `phase-foundation`
+- Type: `bug-fix`
+- Assignee: `agent`
+- Status: `done`
+- Summary: Map Query Builder saved-view filters to backend query filter shape before list requests.
+- Acceptance Criteria:
+- Saved-view filters strip Query Builder-only keys before item queries
+- Display operators such as is one of are mapped to backend operators
+- Targeted unit tests and production build pass; lint blocker is captured as missing @docyrus/rules
 
 #### Prepare v0.1 release readiness checklist
 
@@ -325,7 +338,7 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 
 - Phase ID: `phase-foundation`
 - Status: `in_progress`
-- Tasks: 4
+- Tasks: 5
 
 #### Stabilize root runtime, auth boot, and shared provider wiring
 
@@ -365,6 +378,19 @@ This file is derived from `docyrus/project-plan/project-plan.json`.
 - `pnpm build` succeeds consistently.
 - TypeScript verification path is documented or repaired.
 - Known toolchain warnings blocking routine validation are captured in the plan.
+
+#### Normalize saved view filters before data queries
+
+- Task ID: `task-saved-view-filter-normalization`
+- Feature: `feature-runtime-auth-v1`
+- Type: `bug-fix`
+- Assignee: `agent`
+- Status: `done`
+- Summary: Map Query Builder saved-view filters to backend query filter shape before list requests.
+- Acceptance Criteria:
+- Saved-view filters strip Query Builder-only keys before item queries
+- Display operators such as is one of are mapped to backend operators
+- Targeted unit tests and production build pass; lint blocker is captured as missing @docyrus/rules
 
 #### Fix OAuth redirect path configuration
 
