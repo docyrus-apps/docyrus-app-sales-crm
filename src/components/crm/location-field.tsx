@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 
-import { Check, Loader2, Search, X } from 'lucide-react'
+import { Loader2, Search, X } from 'lucide-react'
 
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -11,7 +11,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { useEnumEntities } from '@/hooks/use-enums'
+import { useBaseCountryCollection } from '@/collections'
+import { useDebounce } from '@/hooks/use-debounce'
 
 interface LocationFieldProps {
   record: Record<string, unknown>
@@ -21,80 +22,75 @@ interface LocationFieldProps {
   }) => void | Promise<void>
 }
 
-interface CountryOption {
+interface CountryRef {
   id: string
   name: string
 }
 
-function refId(value: unknown): string | null {
+function countryRef(value: unknown): CountryRef | null {
   if (!value) return null
   if (typeof value === 'object' && 'id' in value) {
-    return (value as { id?: string }).id ?? null
+    const obj = value as { id?: string; name?: string }
+
+    return obj.id ? { id: obj.id, name: obj.name ?? obj.id } : null
   }
 
-  return typeof value === 'string' ? value : null
-}
+  if (typeof value === 'string') return { id: value, name: value }
 
-/** Diacritic- + case-insensitive so "Turkiye" matches "Türkiye". */
-function normalize(value: string): string {
-  return value
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-    .toLowerCase()
+  return null
 }
 
 /**
- * Single "Location" attribute: a searchable country picker + a free-text city.
- * Countries come from the tenant's `country` reference enum (`useEnumEntities`)
- * — the same populated source the create dialogs and Deal detail use — so the
- * saved value (the option id) stays consistent with existing records. Saves
- * `{ country: id|null, city: text|null }`.
+ * Single "Location" attribute: a country picked from the Docyrus `base/country`
+ * datasource (250 seeded countries) + a free-text city. The picker searches
+ * server-side via `filterKeyword` (cmdk-style, no client filtering); `country`
+ * is saved as the `base/country` relation id, `city` as plain text.
  */
 export function LocationField({ record, onSave }: LocationFieldProps) {
   const { t } = useTranslation()
-  const { data: countryEntities = [], isLoading } = useEnumEntities('country')
+  const collection = useBaseCountryCollection()
 
-  const options = useMemo<Array<CountryOption>>(
-    () =>
-      countryEntities.map((entity) => ({ id: entity.id, name: entity.name })),
-    [countryEntities],
-  )
-
-  const currentId = refId(record.country)
-  const currentName =
-    options.find((option) => option.id === currentId)?.name ??
-    (record.country && typeof record.country === 'object'
-      ? (record.country as { name?: string }).name
-      : undefined) ??
-    currentId ??
-    undefined
+  const initialCountry = countryRef(record.country)
   const initialCity = typeof record.city === 'string' ? record.city : ''
 
   const [open, setOpen] = useState(false)
-  const [countryId, setCountryId] = useState<string | null>(currentId)
+  const [selected, setSelected] = useState<CountryRef | null>(initialCountry)
   const [city, setCity] = useState(initialCity)
   const [query, setQuery] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const filtered = useMemo(() => {
-    const q = normalize(query.trim())
+  const debouncedQuery = useDebounce(query, 300)
 
-    if (!q) return options
+  // Server-side keyword search across all 250 countries. `columns` is required
+  // — without it the API returns only `id` and the names come back empty.
+  const { data, isFetching } = useQuery({
+    queryKey: ['location-country-search', debouncedQuery],
+    queryFn: () =>
+      collection.list({
+        columns: ['id', 'name'],
+        filterKeyword: debouncedQuery || undefined,
+        limit: 50,
+        orderBy: { field: 'name', direction: 'asc' },
+      }),
+    enabled: open && !selected,
+    staleTime: 5 * 60 * 1000,
+  })
 
-    return options.filter((option) => normalize(option.name).includes(q))
-  }, [options, query])
+  const results = useMemo<Array<CountryRef>>(
+    () =>
+      ((data ?? []) as Array<{ id?: unknown; name?: unknown }>).map((item) => ({
+        id: String(item?.id ?? ''),
+        name: String(item?.name ?? ''),
+      })),
+    [data],
+  )
 
-  const selectedName =
-    options.find((option) => option.id === countryId)?.name ??
-    currentName ??
-    countryId ??
-    ''
-  const display = [initialCity, currentName].filter(Boolean).join(', ')
+  const display = [initialCity, initialCountry?.name].filter(Boolean).join(', ')
 
   const handleSave = async () => {
     setSaving(true)
     try {
-      await onSave({ country: countryId, city: city.trim() || null })
+      await onSave({ country: selected?.id ?? null, city: city.trim() || null })
       setOpen(false)
     } finally {
       setSaving(false)
@@ -107,7 +103,7 @@ export function LocationField({ record, onSave }: LocationFieldProps) {
       onOpenChange={(next) => {
         setOpen(next)
         if (next) {
-          setCountryId(currentId)
+          setSelected(initialCountry)
           setCity(initialCity)
           setQuery('')
         }
@@ -131,13 +127,13 @@ export function LocationField({ record, onSave }: LocationFieldProps) {
           <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70">
             {t('companies.country', { defaultValue: 'Country' })}
           </div>
-          {countryId ? (
+          {selected ? (
             <div className="flex items-center justify-between gap-2 rounded-md border px-2 py-1">
-              <span className="truncate text-[13px]">{selectedName}</span>
+              <span className="truncate text-[13px]">{selected.name}</span>
               <button
                 type="button"
                 aria-label={t('common.clear', { defaultValue: 'Clear' })}
-                onClick={() => setCountryId(null)}
+                onClick={() => setSelected(null)}
                 className="shrink-0 text-muted-foreground hover:text-foreground"
               >
                 <X className="size-3.5" />
@@ -158,31 +154,25 @@ export function LocationField({ record, onSave }: LocationFieldProps) {
                 />
               </div>
               <div className="max-h-44 overflow-auto rounded-md border">
-                {filtered.length > 0 ? (
-                  filtered.map((option) => (
-                    <button
-                      key={option.id}
-                      type="button"
-                      onClick={() => setCountryId(option.id)}
-                      className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-[13px] transition-colors hover:bg-muted/60"
-                    >
-                      <Check
-                        className={cn(
-                          'size-3.5 shrink-0',
-                          countryId === option.id ? 'opacity-100' : 'opacity-0',
-                        )}
-                      />
-                      <span className="truncate">{option.name}</span>
-                    </button>
-                  ))
-                ) : isLoading ? (
+                {isFetching ? (
                   <div className="flex items-center justify-center py-4 text-muted-foreground">
                     <Loader2 className="size-4 animate-spin" />
                   </div>
-                ) : (
+                ) : results.length === 0 ? (
                   <p className="py-3 text-center text-[13px] text-muted-foreground">
                     {t('common.noResults', { defaultValue: 'No results' })}
                   </p>
+                ) : (
+                  results.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => setSelected(option)}
+                      className="flex w-full items-center px-2.5 py-1.5 text-left text-[13px] transition-colors hover:bg-muted/60"
+                    >
+                      <span className="truncate">{option.name}</span>
+                    </button>
+                  ))
                 )}
               </div>
             </>
