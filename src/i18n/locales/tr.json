@@ -1110,12 +1110,15 @@
     "extension": {
       "title": "Dahili Ayarları",
       "subtitle": "SIP kullanıcı adı ve şifrenizi girin, ardından bağlanın.",
+      "createHint": "Henüz bir telefon profiliniz yok. Bilgileri girip kaydedin, profiliniz oluşturulup bağlanılır.",
       "extension": "Dahili",
       "username": "SIP kullanıcı adı",
       "usernameHint": "Boş bırakılırsa dahili numara kullanılır.",
       "password": "SIP şifresi",
       "passwordHint": "SIP şifrenizi girin.",
-      "passwordHintSaved": "Kayıtlı — değiştirmek için yeni şifre girin.",
+      "passwordHintSaved": "Kayıtlı şifreniz dolduruldu. Görmek için göz simgesine tıklayın; değiştirmek için düzenleyin.",
+      "showPassword": "Şifreyi göster",
+      "hidePassword": "Şifreyi gizle",
       "displayName": "Görünen ad",
       "saveConnect": "Kaydet ve Bağlan",
       "noProfile": "Telefon profiliniz yok. Lütfen yöneticinize başvurun."

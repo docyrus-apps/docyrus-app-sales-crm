@@ -49,6 +49,52 @@ export function useMyAgentTelephonyProfile() {
   })
 }
 
+export interface CreateAgentProfileInput {
+  /** Backend-required field on the profile entity. */
+  extension: string
+  pbx_user_id?: string
+  sip_password?: string
+  display_name?: string
+}
+
+/**
+ * Creates the agent telephony profile for the current user when they don't have
+ * one yet — there is no other provisioning UI in this app, so the extension
+ * dialog is the only place a user can bootstrap their own profile. `user` is the
+ * backend-required relation; `webrtc_enabled` defaults to false in the schema so
+ * it is forced on here, otherwise readiness would immediately fail.
+ */
+export function useCreateMyAgentTelephonyProfile() {
+  const collection = useBaseCallcenterAgentTelephonyProfileCollection()
+  const queryClient = useQueryClient()
+  const { data: me } = useMyInfo()
+
+  return useMutation({
+    mutationFn: async (input: CreateAgentProfileInput) => {
+      if (!me?.id) throw new Error('Kullanıcı bilgisi yüklenemedi')
+      const payload: Record<string, unknown> = {
+        user: me.id,
+        enabled: true,
+        webrtc_enabled: true,
+        extension: input.extension,
+      }
+      if (input.pbx_user_id) payload.pbx_user_id = input.pbx_user_id
+      if (input.sip_password) payload.sip_password = input.sip_password
+      if (input.display_name) payload.display_name = input.display_name
+      return collection.create(payload)
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['webphone', 'agent-profile', me?.id],
+      })
+      toast.success('Telefon profili oluşturuldu')
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Telefon profili oluşturulamadı')
+    },
+  })
+}
+
 export interface UpdateAgentExtensionInput {
   profileId: string
   extension?: string

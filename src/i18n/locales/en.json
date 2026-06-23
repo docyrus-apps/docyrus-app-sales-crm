@@ -1137,12 +1137,15 @@
     "extension": {
       "title": "Extension Settings",
       "subtitle": "Enter your SIP username and password, then connect.",
+      "createHint": "You don't have a phone profile yet. Enter your details and save — your profile is created and connected.",
       "extension": "Extension",
       "username": "SIP username",
       "usernameHint": "Defaults to your extension if left blank.",
       "password": "SIP password",
       "passwordHint": "Enter your SIP password.",
-      "passwordHintSaved": "Saved — enter a new password to change it.",
+      "passwordHintSaved": "Your saved password is prefilled. Click the eye to reveal it, or edit to change it.",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
       "displayName": "Display name",
       "saveConnect": "Save & connect",
       "noProfile": "You have no phone profile. Please contact your administrator."
