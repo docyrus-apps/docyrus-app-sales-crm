@@ -284,6 +284,7 @@ export function LeadConvertDialog({
   const { form, updateForm, sourceDealName } = useLeadConvertForm({
     lead,
     t,
+    open,
     onSearchRelevantChange: () => setDuplicatesChecked(false),
   })
   const [extraFields, setExtraFields] = useState<{
@@ -860,8 +861,8 @@ export function LeadConvertDialog({
         description={t('leads.convert.description')}
       />
 
-      <AwesomeDialogBody>
-        <div className="space-y-5">
+      <AwesomeDialogBody className="pt-0">
+        <div className="space-y-5 pt-4">
           {isAlreadyCompleted && (
             <Alert>
               <CheckCircle2 />

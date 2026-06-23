@@ -11,12 +11,6 @@ import {
   Sparkles,
   XCircle,
 } from 'lucide-react'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { LeadConvertPrecheckTooltip } from '@/components/leads/lead-convert-precheck-tooltip'
 import { cn } from '@/lib/utils'
 
@@ -86,19 +80,43 @@ export function LeadConvertProgress({
     stepEntries.length <= 1
       ? 0
       : Math.min(100, (completedCount / (stepEntries.length - 1)) * 100)
+
+  // The detail strip below the stepper follows whichever step is "active":
+  // the one running / needing attention, else the last settled step, else the
+  // first step. This replaces the old hover popover with always-visible status.
+  const settledKeys = stepEntries
+    .map(([key]) => key)
+    .filter((key) =>
+      ['done', 'warn', 'failed'].includes(steps[key] ?? 'pending'),
+    )
+  const lastSettledKey = settledKeys[settledKeys.length - 1]
+  const activeKey =
+    currentStepKey ?? lastSettledKey ?? stepEntries[0]?.[0] ?? ''
+  const activeIndex = Math.max(
+    0,
+    stepEntries.findIndex(([key]) => key === activeKey),
+  )
+  const activeLabel = stepLabels[activeKey] ?? activeKey
+  const activeState = steps[activeKey] ?? 'pending'
+  const activeDetails = stepDetails[activeKey] ?? []
+  const showPrecheckSummary =
+    activeKey === 'precheck' &&
+    duplicatesChecked &&
+    (activeState === 'warn' || activeState === 'done')
+
   const stepperStyle = {
     '--step-count': stepEntries.length,
     '--connector-progress': `${connectorProgress}%`,
+    '--active-index': activeIndex,
   } as CSSProperties
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-linear-to-br from-card via-card to-muted/20 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-slate-700/80">
-      <TooltipProvider delayDuration={200}>
+    <div className="rounded-lg border border-slate-200 bg-linear-to-br from-card via-card to-muted/20 p-3 shadow-[0_1px_2px_rgba(15,23,42,0.04),inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-slate-700/80">
+      <div style={stepperStyle}>
         <div
-          className="relative grid grid-cols-1 gap-2 overflow-x-auto pb-1 md:grid-cols-[repeat(var(--step-count),minmax(7.5rem,1fr))] md:gap-0 md:overflow-visible md:pb-0"
+          className="relative grid grid-cols-1 gap-2 md:grid-cols-[repeat(var(--step-count),minmax(7rem,1fr))] md:gap-0"
           role="list"
           aria-label={t('leads.convert.progress')}
-          style={stepperStyle}
         >
           <div
             aria-hidden
@@ -111,106 +129,107 @@ export function LeadConvertProgress({
           </div>
           {stepEntries.map(([key, label]) => {
             const state = steps[key] ?? 'pending'
-            const details = stepDetails[key] ?? []
-            const hasDetails = details.length > 0
-            const isActive = currentStepKey === key
+            const isActive = activeKey === key
 
             return (
-              <Tooltip key={key}>
-                <TooltipTrigger asChild>
-                  <div
-                    role="listitem"
-                    tabIndex={0}
-                    aria-current={currentStepKey === key ? 'step' : undefined}
-                    aria-label={`${label}: ${t(`leads.convert.stepState.${state}`, { defaultValue: state })}`}
-                    className={cn(
-                      'relative z-10 flex min-w-0 items-center gap-3 rounded-md border border-border/60 bg-background/80 px-3 py-2.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:min-h-16 md:flex-col md:gap-2 md:rounded-none md:border-0 md:bg-transparent md:px-2 md:py-0 md:text-center',
-                      hasDetails && 'cursor-help',
-                      isActive &&
-                        'border-primary/60 bg-primary/[0.05] md:bg-transparent',
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        'flex size-8 shrink-0 items-center justify-center rounded-full border bg-background shadow-sm ring-4 ring-card',
-                        state === 'done' &&
-                          'border-emerald-400 bg-emerald-50 text-emerald-700',
-                        state === 'warn' &&
-                          'border-amber-300 bg-amber-50 text-amber-700',
-                        state === 'running' &&
-                          'border-sky-400 bg-sky-50 text-sky-700',
-                        state === 'failed' &&
-                          'border-destructive/50 bg-destructive/10',
-                        state === 'pending' &&
-                          'border-slate-300 bg-background text-muted-foreground',
-                        state === 'skipped' &&
-                          'border-border bg-muted text-muted-foreground',
-                      )}
-                    >
-                      {getStepIcon(state)}
-                    </div>
-                    <div className="min-w-0 md:w-full">
-                      <span className="block truncate font-medium text-foreground">
-                        {label}
-                      </span>
-                    </div>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent
-                  side="bottom"
-                  sideOffset={6}
+              <div
+                key={key}
+                role="listitem"
+                aria-current={currentStepKey === key ? 'step' : undefined}
+                aria-label={`${label}: ${t(`leads.convert.stepState.${state}`, { defaultValue: state })}`}
+                className={cn(
+                  'relative z-10 flex min-w-0 items-center gap-3 rounded-md border border-border/60 bg-background/80 px-3 py-2 text-xs md:min-h-14 md:flex-col md:gap-1.5 md:rounded-none md:border-0 md:bg-transparent md:px-2 md:py-0 md:text-center',
+                  isActive &&
+                    'border-primary/60 bg-primary/[0.05] md:bg-transparent',
+                )}
+              >
+                <div
                   className={cn(
-                    'border border-border bg-popover p-3 text-popover-foreground shadow-lg [&_svg]:shrink-0',
-                    key === 'precheck'
-                      ? 'w-[30rem] max-w-[calc(100vw-2rem)]'
-                      : 'min-w-[260px] max-w-md',
+                    'flex size-8 shrink-0 items-center justify-center rounded-full border bg-background shadow-sm ring-4 ring-card transition-transform',
+                    isActive && 'md:scale-110',
+                    state === 'done' &&
+                      'border-emerald-400 bg-emerald-50 text-emerald-700',
+                    state === 'warn' &&
+                      'border-amber-300 bg-amber-50 text-amber-700',
+                    state === 'running' &&
+                      'border-sky-400 bg-sky-50 text-sky-700',
+                    state === 'failed' &&
+                      'border-destructive/50 bg-destructive/10',
+                    state === 'pending' &&
+                      'border-slate-300 bg-background text-muted-foreground',
+                    state === 'skipped' &&
+                      'border-border bg-muted text-muted-foreground',
                   )}
                 >
-                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {getStepIcon(state)}
+                </div>
+                <div className="min-w-0 md:w-full">
+                  <span
+                    className={cn(
+                      'block truncate font-medium',
+                      isActive ? 'text-foreground' : 'text-muted-foreground',
+                    )}
+                  >
                     {label}
-                  </p>
-                  {key === 'precheck' &&
-                  duplicatesChecked &&
-                  (state === 'warn' || state === 'done') ? (
-                    <LeadConvertPrecheckTooltip summary={precheckSummary} />
-                  ) : hasDetails ? (
-                    <ul className="space-y-1.5">
-                      {details.map((d, index) => (
-                        <li
-                          key={index}
-                          className="flex items-start gap-1.5 text-xs leading-snug"
-                        >
-                          {renderDetailIcon(d.tone)}
-                          <span className="text-foreground/90">{d.label}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      {state === 'pending' ? (
-                        <>
-                          <Circle className="size-3" />
-                          <span>{t('leads.convert.state.notStarted')}</span>
-                        </>
-                      ) : state === 'running' ? (
-                        <>
-                          <Loader2 className="size-3 animate-spin text-sky-600" />
-                          <span>{t('leads.convert.state.processing')}</span>
-                        </>
-                      ) : (
-                        <>
-                          <Info className="size-3" />
-                          <span>{t('leads.convert.state.noDetails')}</span>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </TooltipContent>
-              </Tooltip>
+                  </span>
+                </div>
+              </div>
             )
           })}
         </div>
-      </TooltipProvider>
+
+        {/* Inline status strip — always visible, pointed at the active step. */}
+        <div className="relative mt-2.5">
+          <div
+            aria-hidden
+            className="absolute -top-1 hidden size-2.5 -translate-x-1/2 rotate-45 bg-muted/60 md:block"
+            style={{
+              left: 'calc((var(--active-index) + 0.5) * (100% / var(--step-count)))',
+            }}
+          />
+          <div
+            className="rounded-md bg-muted/50 px-3 py-2"
+            role="status"
+            aria-live="polite"
+            aria-label={activeLabel}
+          >
+            {showPrecheckSummary ? (
+              <LeadConvertPrecheckTooltip summary={precheckSummary} />
+            ) : activeDetails.length > 0 ? (
+              <ul className="space-y-1.5">
+                {activeDetails.map((detail, index) => (
+                  <li
+                    key={index}
+                    className="flex items-start gap-1.5 text-xs leading-snug"
+                  >
+                    {renderDetailIcon(detail.tone)}
+                    <span className="text-foreground/90">{detail.label}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                {activeState === 'pending' ? (
+                  <>
+                    <Circle className="size-3" />
+                    <span>{t('leads.convert.state.notStarted')}</span>
+                  </>
+                ) : activeState === 'running' ? (
+                  <>
+                    <Loader2 className="size-3 animate-spin text-sky-600" />
+                    <span>{t('leads.convert.state.processing')}</span>
+                  </>
+                ) : (
+                  <>
+                    <Info className="size-3" />
+                    <span>{t('leads.convert.state.noDetails')}</span>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

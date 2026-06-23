@@ -72,13 +72,13 @@ export function FieldMappingRow({
     <div
       data-field-key={fieldKey}
       className={cn(
-        'group rounded-lg border border-border/70 bg-linear-to-br from-card via-card to-muted/[0.16] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] transition-colors',
+        'group rounded-lg border border-border/70 bg-linear-to-br from-card via-card to-muted/[0.16] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] transition-colors',
         required && 'border-rose-200/80 dark:border-rose-900/40',
         highlight &&
           'border-primary/35 bg-linear-to-br from-primary/[0.03] via-card to-sky-500/[0.035]',
       )}
     >
-      <div className="mb-3 flex items-center justify-between gap-2">
+      <div className="mb-2.5 flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-1.5">
           <Label className="truncate text-xs font-medium text-foreground/90">
             {label}
@@ -110,7 +110,7 @@ export function FieldMappingRow({
       >
         <div
           className={cn(
-            'min-w-0 rounded-md border px-3 py-2 text-xs',
+            'min-w-0 rounded-md border px-3 py-1.5 text-xs',
             hasSourceValue
               ? 'border-sky-200/70 bg-sky-50/75 dark:border-sky-900/50 dark:bg-sky-950/20'
               : 'border-dashed border-muted-foreground/25 bg-muted/20 text-muted-foreground dark:bg-muted/10',
@@ -156,14 +156,14 @@ export function FieldMappingRow({
             <ArrowRight className="size-3.5" />
           </div>
         </div>
-        <div className="min-w-0 rounded-md border border-emerald-200/70 bg-emerald-50/70 p-2.5 dark:border-emerald-900/50 dark:bg-emerald-950/20">
+        <div className="min-w-0 rounded-md border border-emerald-200/70 bg-emerald-50/70 p-2 dark:border-emerald-900/50 dark:bg-emerald-950/20">
           {kind === 'textarea' ? (
             <Textarea
               value={value}
               disabled={disabled}
               onChange={(event) => onChange(event.target.value)}
               placeholder={placeholder}
-              rows={3}
+              rows={2}
             />
           ) : kind === 'select' ? (
             <Select value={value} disabled={disabled} onValueChange={onChange}>

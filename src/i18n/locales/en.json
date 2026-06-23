@@ -398,6 +398,11 @@
         "company_contact_deal": "Company + Contact + Deal",
         "contact_deal": "Contact + Deal"
       },
+      "modeName": {
+        "company_contact_deal": "Corporate account",
+        "contact_deal": "Individual deal"
+      },
+      "modeRecordsTitle": "Will create",
       "target": {
         "company": "Company",
         "contact": "Contact",
@@ -511,7 +516,9 @@
         "clean": "Clean",
         "exact": "{{count}} match(es)",
         "matches": "{{count}} suggestion(s)",
-        "exampleMatch": "e.g. {{name}}"
+        "exampleMatch": "e.g. {{name}}",
+        "noDuplicates": "No duplicate records found",
+        "othersClean": "{{targets}} clean"
       },
       "changeConfirm": {
         "title": "Fields to update",
