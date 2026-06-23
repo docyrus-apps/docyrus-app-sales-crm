@@ -13,6 +13,7 @@ import { useAppModules } from '@/hooks/use-app-config'
 import { isModuleEnabled } from '@/lib/app-config'
 import { useWebphoneRuntimeSettings } from '@/hooks/use-webphone-config'
 import { useMyAgentTelephonyProfile } from '@/hooks/use-webphone-profile'
+import { useMyInfo } from '@/hooks/use-users'
 import { useWebphoneCustomerAdapter } from '@/hooks/use-webphone-customer-adapter'
 import { useWebphoneCallLog } from '@/hooks/use-webphone-call-log'
 import { useWebphoneSip } from '@/hooks/use-webphone-sip'
@@ -22,6 +23,7 @@ import {
   resolveWebphoneReadiness,
   type WebphoneReadinessReason,
 } from '@/lib/webphone/runtime'
+import { loadPresenceIntent, savePresenceIntent } from '@/lib/webphone/presence'
 import {
   type ScreenPopState,
   buildSingleMatchRelationPatch,
@@ -103,6 +105,8 @@ export function WebphoneProvider({ children }: { children: ReactNode }) {
 
   const { data: settings } = useWebphoneRuntimeSettings()
   const { data: profile } = useMyAgentTelephonyProfile()
+  const { data: me } = useMyInfo()
+  const userId = me?.id
   const adapter = useWebphoneCustomerAdapter()
   const callLog = useWebphoneCallLog()
   const wrapup = useWebphoneWrapup()
@@ -179,14 +183,24 @@ export function WebphoneProvider({ children }: { children: ReactNode }) {
   const lastIncomingRef = useRef<string | null>(null)
   const lastOutgoingRef = useRef<string | null>(null)
 
-  // Auto-connect a ready agent once when the module is on.
+  // Auto-connect a ready agent once when the module is on — but only if their
+  // last explicit choice was Online (or they have never chosen). If they went
+  // Offline, stay offline across reloads: don't re-register or re-prompt for
+  // the microphone until they choose Online again.
   useEffect(() => {
     if (!enabled || !readiness.ready) return
     if (controller.registrationStatus !== 'idle') return
     if (triedRegisterRef.current) return
     triedRegisterRef.current = true
+    if (loadPresenceIntent(userId) === 'offline') return
     void controller.register()
-  }, [enabled, readiness.ready, controller.registrationStatus, controller])
+  }, [
+    enabled,
+    readiness.ready,
+    controller.registrationStatus,
+    controller,
+    userId,
+  ])
 
   // Explicit (re)connect after the user saves extension credentials. When the
   // dialog has just written a new password, it passes a merged profile snapshot
@@ -201,11 +215,27 @@ export function WebphoneProvider({ children }: { children: ReactNode }) {
           })
         : config
       if (!enabled || !nextConfig) return
+      // Saving credentials and connecting is an explicit "go Online" choice.
+      savePresenceIntent(userId, 'online')
       triedRegisterRef.current = true
       void controller.register(nextConfig)
     },
-    [config, controller, enabled, settings],
+    [config, controller, enabled, settings, userId],
   )
+
+  // Explicit Online/Offline from the header status menu. These persist the
+  // agent's choice so a refresh restores it (see the auto-connect effect).
+  const connect = useCallback(() => {
+    savePresenceIntent(userId, 'online')
+    triedRegisterRef.current = true
+    void controller.register()
+  }, [controller, userId])
+
+  const disconnect = useCallback(() => {
+    savePresenceIntent(userId, 'offline')
+    triedRegisterRef.current = true
+    controller.unregister()
+  }, [controller, userId])
 
   // Outbound: fill the call's customer relation from the dial context.
   useEffect(() => {
@@ -323,8 +353,8 @@ export function WebphoneProvider({ children }: { children: ReactNode }) {
       incomingSession: controller.incomingSession,
       screenPop,
       lastError: controller.lastError,
-      connect: controller.register,
-      disconnect: controller.unregister,
+      connect,
+      disconnect,
       requestConnect,
       dial,
       answer: controller.answer,
@@ -351,6 +381,8 @@ export function WebphoneProvider({ children }: { children: ReactNode }) {
       screenPop,
       dial,
       selectScreenPopMatch,
+      connect,
+      disconnect,
       requestConnect,
       liveNotes,
       pendingWrapup,
