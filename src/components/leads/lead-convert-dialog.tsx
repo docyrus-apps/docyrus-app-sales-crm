@@ -68,7 +68,7 @@ const KNOWN_FIELDS: Record<ConvertTarget, Array<string>> = {
   deal: [
     'name',
     'deal_value',
-    'description',
+    'qualification_notes',
     'stage',
     'lead_source',
     'customer_type',

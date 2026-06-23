@@ -46,7 +46,6 @@ export type LeadConvertForm = {
   companyCity: string
   companyIndustry: string
   companySize: string
-  companyCountry: string
   contactName: string
   contactEmail: string
   contactPhone: string
@@ -57,8 +56,6 @@ export type LeadConvertForm = {
   dealStageId: string
   dealLeadSourceId: string
   dealCustomerTypeId: string
-  dealCountry: string
-  dealOwner: string
 }
 
 export interface LeadConvertTabsProps {
@@ -653,7 +650,7 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
             field: 'contact_message',
           })}
           targetLabel={t('leads.convert.targetLabel.deal', {
-            field: 'description',
+            field: 'qualification_notes',
           })}
           sourceValue={lead?.contact_message ?? ''}
           value={form.notes}

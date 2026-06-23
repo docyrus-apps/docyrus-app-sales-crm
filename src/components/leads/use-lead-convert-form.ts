@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { getRelationId } from '@/lib/lead-conversion'
 import type { LeadConvertForm } from '@/components/leads/lead-convert-tabs'
 
 const SEARCH_RELEVANT_FIELDS = new Set<keyof LeadConvertForm>([
@@ -37,7 +36,6 @@ export function useLeadConvertForm({
     companyCity: lead?.city || '',
     companyIndustry: '',
     companySize: '',
-    companyCountry: getRelationId(lead?.countries) || '',
     contactName: lead?.name || '',
     contactEmail: lead?.email || '',
     contactPhone: lead?.phone || '',
@@ -51,8 +49,6 @@ export function useLeadConvertForm({
     dealStageId: '',
     dealLeadSourceId: '',
     dealCustomerTypeId: '',
-    dealCountry: getRelationId(lead?.countries) || '',
-    dealOwner: getRelationId(lead?.record_owner) || '',
   }))
 
   const updateForm = (key: keyof LeadConvertForm, value: string) => {
