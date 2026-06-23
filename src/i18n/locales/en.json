@@ -721,9 +721,18 @@
     "emptyTitle": "No tasks yet",
     "emptyDescription": "Create your first task",
     "confirmDelete": "Are you sure you want to delete this task?",
+    "panel": {
+      "search": "Search tasks…",
+      "newTask": "New Task",
+      "empty": "No tasks yet",
+      "noMatch": "No tasks match your search.",
+      "deleteTitle": "Delete task?",
+      "deleteDescription": "This task will be permanently removed."
+    },
     "columns": {
       "subject": "Subject",
       "status": "Status",
+      "priority": "Priority",
       "startDate": "Start Date",
       "dueDate": "Due Date",
       "organization": "Organization",
@@ -740,6 +749,8 @@
       "descriptionPlaceholder": "Enter task description...",
       "statusLabel": "Status",
       "statusPlaceholder": "Select status...",
+      "priorityLabel": "Priority",
+      "priorityPlaceholder": "Select priority...",
       "organizationLabel": "Organization",
       "organizationPlaceholder": "Select organization...",
       "organizationEmpty": "No organization found",

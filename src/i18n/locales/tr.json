@@ -712,9 +712,18 @@
     "emptyTitle": "Henüz görev yok",
     "emptyDescription": "İlk görevinizi oluşturun",
     "confirmDelete": "Bu görevi silmek istediğinizden emin misiniz?",
+    "panel": {
+      "search": "Görev ara…",
+      "newTask": "Yeni Görev",
+      "empty": "Henüz görev yok",
+      "noMatch": "Aramanızla eşleşen görev yok.",
+      "deleteTitle": "Görev silinsin mi?",
+      "deleteDescription": "Bu görev kalıcı olarak kaldırılacak."
+    },
     "columns": {
       "subject": "Konu",
       "status": "Durum",
+      "priority": "Öncelik",
       "startDate": "Başlangıç Tarihi",
       "dueDate": "Bitiş Tarihi",
       "organization": "Şirket",
@@ -731,6 +740,8 @@
       "descriptionPlaceholder": "Görev açıklamasını girin...",
       "statusLabel": "Durum",
       "statusPlaceholder": "Durum seçin...",
+      "priorityLabel": "Öncelik",
+      "priorityPlaceholder": "Öncelik seçin...",
       "organizationLabel": "Şirket",
       "organizationPlaceholder": "Şirket seçin...",
       "organizationEmpty": "Şirket bulunamadı",

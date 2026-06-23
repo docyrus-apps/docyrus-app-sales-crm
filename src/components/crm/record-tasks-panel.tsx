@@ -37,7 +37,7 @@ import {
 import { DynamicValue } from '@/components/docyrus/value-renderers/dynamic-value'
 import type { EnumOption, IField } from '@/components/docyrus/form-fields/types'
 import { TaskFormSheet } from '@/components/tasks/task-form-sheet'
-import { useCreateTask, useDeleteTask, useTasks } from '@/hooks/use-tasks'
+import { useDeleteTask, useTasks } from '@/hooks/use-tasks'
 import { useEnumEntities } from '@/hooks/use-enums'
 import { useDateFormat } from '@/lib/use-date-format'
 
@@ -107,13 +107,12 @@ export function RecordTasksPanel({
   const { formatDate } = useDateFormat()
 
   const [query, setQuery] = useState('')
-  const [subject, setSubject] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('end_date')
   const [sortDesc, setSortDesc] = useState(true)
+  const [createOpen, setCreateOpen] = useState(false)
   const [editTask, setEditTask] = useState<RecordTask | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
-  const createTask = useCreateTask()
   const deleteTask = useDeleteTask()
 
   const { data: statusEntities = [] } = useEnumEntities('status', {
@@ -246,15 +245,6 @@ export function RecordTasksPanel({
     }
   }
 
-  const handleAdd = async () => {
-    const value = subject.trim()
-
-    if (!value || !parentId) return
-
-    await createTask.mutateAsync({ subject: value, [parentField]: parentId })
-    setSubject('')
-  }
-
   const confirmDelete = async () => {
     if (!deleteId) return
 
@@ -270,54 +260,29 @@ export function RecordTasksPanel({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {/* Quick add + search */}
-      <div className="space-y-2 px-3 py-2">
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <Plus className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={subject}
-              onChange={(event) => setSubject(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  event.preventDefault()
-                  void handleAdd()
-                }
-              }}
-              placeholder={t('tasks.panel.addPlaceholder', {
-                defaultValue: 'Add a task and press Enter…',
-              })}
-              className="h-8 border-none bg-muted/50 pl-8 text-[13px] shadow-none focus-visible:ring-1"
-            />
-          </div>
-          <Button
-            size="sm"
-            className="h-8 shrink-0 gap-1.5"
-            disabled={!subject.trim() || !parentId || createTask.isPending}
-            onClick={() => void handleAdd()}
-          >
-            {createTask.isPending ? (
-              <Loader2 className="size-3.5 animate-spin" />
-            ) : (
-              <Plus className="size-3.5" />
-            )}
-            {t('tasks.panel.add', { defaultValue: 'Add' })}
-          </Button>
+      {/* Toolbar: search + New Task */}
+      <div className="flex items-center gap-2 px-3 py-2">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={t('tasks.panel.search', {
+              defaultValue: 'Search tasks…',
+            })}
+            className="h-8 border-none bg-muted/50 pl-8 text-[13px] shadow-none focus-visible:ring-1"
+          />
         </div>
-
-        {tasks.length > 0 && (
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={t('tasks.panel.search', {
-                defaultValue: 'Search tasks…',
-              })}
-              className="h-8 border-none bg-muted/50 pl-8 text-[13px] shadow-none focus-visible:ring-1"
-            />
-          </div>
-        )}
+        <Button
+          id={`new-task-${parentField}`}
+          size="sm"
+          className="h-8 shrink-0 gap-1.5"
+          disabled={!parentId}
+          onClick={() => setCreateOpen(true)}
+        >
+          <Plus className="size-3.5" />
+          {t('tasks.panel.newTask', { defaultValue: 'New Task' })}
+        </Button>
       </div>
 
       {/* Header */}
@@ -486,6 +451,18 @@ export function RecordTasksPanel({
           </div>
         )}
       </div>
+
+      {createOpen && (
+        <TaskFormSheet
+          open
+          mode="create"
+          parentField={parentField}
+          parentId={parentId}
+          onOpenChange={(open) => {
+            if (!open) setCreateOpen(false)
+          }}
+        />
+      )}
 
       {editTask && (
         <TaskFormSheet

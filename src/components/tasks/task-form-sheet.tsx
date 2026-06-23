@@ -55,6 +55,13 @@ interface TaskFormSheetProps {
   task?: any
   mode: 'create' | 'edit'
   onSubmitSuccess?: () => void | Promise<void>
+  /**
+   * When creating from a record detail page, the parent relation column on
+   * `base.task` (e.g. `lead`, `contact`, `organization`, `deal`) and the parent
+   * record id. The new task is auto-associated with this parent on submit.
+   */
+  parentField?: string
+  parentId?: string
 }
 
 export function TaskFormSheet({
@@ -63,6 +70,8 @@ export function TaskFormSheet({
   task,
   mode,
   onSubmitSuccess,
+  parentField,
+  parentId,
 }: TaskFormSheetProps) {
   const { t } = useTranslation()
   const createTask = useCreateTask()
@@ -135,7 +144,11 @@ export function TaskFormSheet({
       )
 
       if (mode === 'create') {
-        await createTask.mutateAsync(cleanedData)
+        const payload =
+          parentField && parentId
+            ? { ...cleanedData, [parentField]: parentId }
+            : cleanedData
+        await createTask.mutateAsync(payload)
       } else if (task?.id) {
         await updateTask.mutateAsync({ taskId: task.id, data: cleanedData })
       }
