@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import {
   Activity,
@@ -28,6 +27,7 @@ import {
 } from '@/components/crm/record-detail-layout'
 import { RecordActivityPanel } from '@/components/docyrus/record-activity-panel'
 import { RecordTasksPanel } from '@/components/crm/record-tasks-panel'
+import { LocationField } from '@/components/crm/location-field'
 import { useDialer } from '@/components/dialer/dialer-widget'
 import { useWebphone } from '@/components/webphone/webphone-context'
 import { WebphoneCallButton } from '@/components/webphone/webphone-call-button'
@@ -36,7 +36,6 @@ import { useRecordActivities } from '@/hooks/use-record-activities'
 import { useEnumEntities } from '@/hooks/use-enums'
 import { useUsers } from '@/hooks/use-users'
 import { useContacts } from '@/hooks/use-contacts'
-import { useBaseCountryCollection } from '@/collections'
 import { LeadConvertDialog } from '@/components/leads/lead-convert-dialog'
 import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
@@ -65,9 +64,8 @@ const FIELD_SLUGS = [
   'company_size',
   'contact_person',
   'address',
-  'city',
   'state',
-  'countries',
+  'location',
   'record_owner',
   'contact_message',
 ]
@@ -196,16 +194,6 @@ export function LeadDetail() {
     ],
   )
 
-  const countriesCollection = useBaseCountryCollection()
-  const { data: countryList = [] } = useQuery({
-    queryKey: ['base-country-options'],
-    queryFn: () =>
-      countriesCollection.list({
-        columns: ['id', 'name'],
-        orderBy: 'name ASC',
-        limit: 300,
-      }),
-  })
   const { data: users = [] } = useUsers()
   const { data: contacts = [] } = useContacts({
     columns: ['id', 'name'],
@@ -219,15 +207,6 @@ export function LeadDetail() {
         name: contact.name,
       })),
     [contacts],
-  )
-
-  const countryOptions = useMemo<Array<EnumOption>>(
-    () =>
-      countryList.map((country) => ({
-        id: country.id ?? '',
-        name: country.name ?? '',
-      })),
-    [countryList],
   )
 
   const ownerOptions = useMemo<Array<EnumOption>>(
@@ -347,23 +326,16 @@ export function LeadDetail() {
       },
       {
         field: makeField(
-          'city',
-          t('leads.form.cityLabel', { defaultValue: 'Company City' }),
-        ),
-      },
-      {
-        field: makeField(
           'state',
           t('leads.form.stateLabel', { defaultValue: 'Company State' }),
         ),
       },
       {
         field: makeField(
-          'countries',
-          t('leads.form.countryLabel', { defaultValue: 'Company Country' }),
-          'field-select',
+          'location',
+          t('companies.location', { defaultValue: 'Location' }),
+          'field-locationSelect',
         ),
-        enumOptions: countryOptions,
       },
       {
         field: makeField(
@@ -383,7 +355,7 @@ export function LeadDetail() {
         ),
       },
     ]
-  }, [t, enumEntities, countryOptions, ownerOptions, contactOptions])
+  }, [t, enumEntities, ownerOptions, contactOptions])
 
   const flatRecord = useMemo<Record<string, unknown>>(() => {
     if (!lead) return {}
@@ -405,6 +377,11 @@ export function LeadDetail() {
         record[slug] = raw ?? ''
       }
     }
+
+    // "location" is a synthetic row — expose its underlying fields so
+    // LocationField can read the country relation + city.
+    record.countries = lead.countries ?? null
+    record.city = lead.city ?? ''
 
     return record
   }, [lead, enumEntities])
@@ -695,6 +672,16 @@ export function LeadDetail() {
         record={flatRecord}
         onInlineSave={handleInlineSave}
         editTitle={t('common.editAll', { defaultValue: 'Edit All' })}
+        fieldRenderers={{
+          location: ({ record, save, readOnly }) => (
+            <LocationField
+              record={record}
+              onSave={save}
+              countryField="countries"
+              readOnly={readOnly}
+            />
+          ),
+        }}
         attributeActions={attributeActions}
         attributeNotice={
           isConverted ? (

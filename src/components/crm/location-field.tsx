@@ -16,10 +16,11 @@ import { useDebounce } from '@/hooks/use-debounce'
 
 interface LocationFieldProps {
   record: Record<string, unknown>
-  onSave: (patch: {
-    country: string | null
-    city: string | null
-  }) => void | Promise<void>
+  onSave: (patch: Record<string, string | null>) => void | Promise<void>
+  /** Record field that stores the country relation id (default "country") */
+  countryField?: string
+  /** Render display-only (e.g. converted/locked records) */
+  readOnly?: boolean
 }
 
 interface CountryRef {
@@ -46,11 +47,16 @@ function countryRef(value: unknown): CountryRef | null {
  * server-side via `filterKeyword` (cmdk-style, no client filtering); `country`
  * is saved as the `base/country` relation id, `city` as plain text.
  */
-export function LocationField({ record, onSave }: LocationFieldProps) {
+export function LocationField({
+  record,
+  onSave,
+  countryField = 'country',
+  readOnly,
+}: LocationFieldProps) {
   const { t } = useTranslation()
   const collection = useBaseCountryCollection()
 
-  const initialCountry = countryRef(record.country)
+  const initialCountry = countryRef(record[countryField])
   const initialCity = typeof record.city === 'string' ? record.city : ''
 
   const [open, setOpen] = useState(false)
@@ -87,10 +93,21 @@ export function LocationField({ record, onSave }: LocationFieldProps) {
 
   const display = [initialCity, initialCountry?.name].filter(Boolean).join(', ')
 
+  if (readOnly) {
+    return display ? (
+      <span className="truncate text-[13px]">{display}</span>
+    ) : (
+      <span className="text-muted-foreground">—</span>
+    )
+  }
+
   const handleSave = async () => {
     setSaving(true)
     try {
-      await onSave({ country: selected?.id ?? null, city: city.trim() || null })
+      await onSave({
+        [countryField]: selected?.id ?? null,
+        city: city.trim() || null,
+      })
       setOpen(false)
     } finally {
       setSaving(false)

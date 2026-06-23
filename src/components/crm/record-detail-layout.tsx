@@ -97,6 +97,8 @@ const FIELD_TYPE_ICONS: Record<
 export interface FieldRenderContext {
   record: Record<string, unknown>
   save: (patch: Record<string, unknown>) => void | Promise<void>
+  /** True when the attribute panel is display-only */
+  readOnly: boolean
 }
 
 type FieldRendererMap = Record<string, (ctx: FieldRenderContext) => ReactNode>
@@ -419,7 +421,11 @@ function RecordAttributePanel({
                   </span>
                   <div className="min-w-0 flex-1">
                     {fieldRenderers?.[slug] ? (
-                      fieldRenderers[slug]({ record, save: handleFieldSave })
+                      fieldRenderers[slug]({
+                        record,
+                        save: handleFieldSave,
+                        readOnly: readOnly ?? false,
+                      })
                     ) : (
                       <EditableRecordDetailField
                         slug={slug}
@@ -483,6 +489,7 @@ function RecordAttributePanel({
                         {fieldRenderers[slug]({
                           record,
                           save: handleFieldSave,
+                          readOnly: readOnly ?? false,
                         })}
                       </div>
                     ) : (
