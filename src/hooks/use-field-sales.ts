@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useDocyrusClient } from '@docyrus/signin'
 import { createAppConfigClient } from '@docyrus/app-utils'
@@ -34,6 +35,7 @@ export function useFieldSalesConfig() {
 export function useUpdateFieldSalesConfig() {
   const client = useDocyrusClient()
   const queryClient = useQueryClient()
+  const { t } = useTranslation()
 
   return useMutation({
     mutationFn: async (nextConfig: Record<string, unknown>) => {
@@ -48,10 +50,10 @@ export function useUpdateFieldSalesConfig() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['field-sales', 'config'] })
-      toast.success('Saha satış ayarları kaydedildi')
+      toast.success(t('fieldSales.messages.settingsSaved'))
     },
     onError: (error: any) => {
-      toast.error(error?.message || 'Saha satış ayarları kaydedilemedi')
+      toast.error(error?.message || t('fieldSales.messages.settingsSaveError'))
     },
   })
 }
@@ -176,6 +178,7 @@ export function useFieldSalesApprovals() {
 export function useCreateFieldSalesPlan() {
   const collection = useBaseEventCollection()
   const queryClient = useQueryClient()
+  const { t } = useTranslation()
 
   return useMutation({
     mutationFn: async (data: Record<string, unknown>) =>
@@ -183,10 +186,10 @@ export function useCreateFieldSalesPlan() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['field-sales', 'plans'] })
       queryClient.invalidateQueries({ queryKey: ['events'] })
-      toast.success('Plan oluşturuldu')
+      toast.success(t('fieldSales.messages.planCreated'))
     },
     onError: (error: any) => {
-      toast.error(error?.message || 'Plan oluşturulamadı')
+      toast.error(error?.message || t('fieldSales.messages.planCreationError'))
     },
   })
 }
@@ -194,6 +197,7 @@ export function useCreateFieldSalesPlan() {
 export function useUpdateFieldSalesPlan() {
   const collection = useBaseEventCollection()
   const queryClient = useQueryClient()
+  const { t } = useTranslation()
 
   return useMutation({
     mutationFn: async ({
@@ -207,10 +211,10 @@ export function useUpdateFieldSalesPlan() {
       queryClient.invalidateQueries({ queryKey: ['field-sales', 'plans'] })
       queryClient.invalidateQueries({ queryKey: ['sales-orders'] })
       queryClient.invalidateQueries({ queryKey: ['events'] })
-      toast.success('Plan güncellendi')
+      toast.success(t('fieldSales.messages.planUpdated'))
     },
     onError: (error: any) => {
-      toast.error(error?.message || 'Plan güncellenemedi')
+      toast.error(error?.message || t('fieldSales.messages.planUpdateError'))
     },
   })
 }
@@ -218,6 +222,7 @@ export function useUpdateFieldSalesPlan() {
 export function useDeleteFieldSalesPlan() {
   const collection = useBaseEventCollection()
   const queryClient = useQueryClient()
+  const { t } = useTranslation()
 
   return useMutation({
     mutationFn: async (planId: string) => collection.delete(planId),
@@ -225,10 +230,10 @@ export function useDeleteFieldSalesPlan() {
       queryClient.invalidateQueries({ queryKey: ['field-sales', 'plans'] })
       queryClient.invalidateQueries({ queryKey: ['sales-orders'] })
       queryClient.invalidateQueries({ queryKey: ['events'] })
-      toast.success('Plan silindi')
+      toast.success(t('fieldSales.messages.planDeleted'))
     },
     onError: (error: any) => {
-      toast.error(error?.message || 'Plan silinemedi')
+      toast.error(error?.message || t('fieldSales.messages.planDeletionError'))
     },
   })
 }
@@ -236,16 +241,17 @@ export function useDeleteFieldSalesPlan() {
 export function useCreateFieldSalesApproval() {
   const collection = useBaseCrmPlanApprovalCollection()
   const queryClient = useQueryClient()
+  const { t } = useTranslation()
 
   return useMutation({
     mutationFn: async (data: Record<string, unknown>) =>
       collection.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['field-sales', 'approvals'] })
-      toast.success('Plan onaya gönderildi')
+      toast.success(t('fieldSales.messages.planSubmittedForApproval'))
     },
     onError: (error: any) => {
-      toast.error(error?.message || 'Plan onaya gönderilemedi')
+      toast.error(error?.message || t('fieldSales.messages.planSubmissionError'))
     },
   })
 }
@@ -253,6 +259,7 @@ export function useCreateFieldSalesApproval() {
 export function useUpdateFieldSalesApproval() {
   const collection = useBaseCrmPlanApprovalCollection()
   const queryClient = useQueryClient()
+  const { t } = useTranslation()
 
   return useMutation({
     mutationFn: async ({
@@ -265,10 +272,10 @@ export function useUpdateFieldSalesApproval() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['field-sales', 'approvals'] })
       queryClient.invalidateQueries({ queryKey: ['field-sales', 'plans'] })
-      toast.success('Plan onayı güncellendi')
+      toast.success(t('fieldSales.messages.approvalUpdated'))
     },
     onError: (error: any) => {
-      toast.error(error?.message || 'Plan onayı güncellenemedi')
+      toast.error(error?.message || t('fieldSales.messages.approvalUpdateError'))
     },
   })
 }

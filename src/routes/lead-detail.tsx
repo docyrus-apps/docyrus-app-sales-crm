@@ -594,9 +594,7 @@ export function LeadDetail() {
         >
           <RefreshCw className="size-3.5" />
           {hasPartialConvert
-            ? t('leads.convert.resumeButton', {
-                defaultValue: 'Dönüşüme devam et',
-              })
+            ? t('leads.convert.resumeButton')
             : t('leads.convert.convertButton')}
         </Button>
       )}
@@ -712,7 +710,7 @@ export function LeadDetail() {
             <button
               type="button"
               onClick={openCallComposer}
-              aria-label="Call lead"
+              aria-label={t('common.callLead')}
               className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
             >
               <Phone className="size-4" />

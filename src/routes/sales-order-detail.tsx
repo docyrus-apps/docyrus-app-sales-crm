@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSalesOrder } from '@/hooks/use-sales-orders'
 import { useSalesOrderItems } from '@/hooks/use-sales-order-items'
-import { UI_I18N_LOCALES, type UiI18nLocale } from '@/lib/ui-i18n'
+import { useUiLocale } from '@/hooks/use-ui-locale'
 import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
 
 function getRelationName(
@@ -36,7 +36,7 @@ function getRelationId(value?: { id?: string } | string | null): string | null {
 }
 
 export function SalesOrderDetail() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const { orderId } = useParams({ strict: false })
   const { data: order, isLoading, error } = useSalesOrder(orderId)
 
@@ -69,15 +69,7 @@ export function SalesOrderDetail() {
       : undefined,
   )
 
-  const locale = useMemo<UiI18nLocale | undefined>(() => {
-    const language = i18n.resolvedLanguage?.split('-')[0]
-
-    if (language && UI_I18N_LOCALES.includes(language as UiI18nLocale)) {
-      return language as UiI18nLocale
-    }
-
-    return undefined
-  }, [i18n.resolvedLanguage])
+  const locale = useUiLocale()
 
   const pricingDocument = useMemo(() => {
     const pricingLineItems: Array<ILineItem> = (lineItems ?? []).map(

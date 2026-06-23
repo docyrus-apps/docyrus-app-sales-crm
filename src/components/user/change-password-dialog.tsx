@@ -43,6 +43,7 @@ function PasswordInput({
   placeholder: string
   ariaInvalid?: boolean
 }) {
+  const { t } = useTranslation()
   const [visible, setVisible] = useState(false)
 
   return (
@@ -60,7 +61,11 @@ function PasswordInput({
         tabIndex={-1}
         className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
         onClick={() => setVisible((v) => !v)}
-        aria-label={visible ? 'Hide password' : 'Show password'}
+        aria-label={
+          visible
+            ? t('changePassword.hidePassword')
+            : t('changePassword.showPassword')
+        }
       >
         {visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
       </button>

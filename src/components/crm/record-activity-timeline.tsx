@@ -1,5 +1,7 @@
 import { CalendarClock, Plus } from 'lucide-react'
 
+import { useTranslation } from 'react-i18next'
+
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
@@ -56,11 +58,15 @@ export function RecordActivityTimeline({
   events,
   isLoading,
   limit,
-  emptyLabel = 'No activity yet',
+  emptyLabel,
   onAdd,
-  addLabel = 'Log activity',
+  addLabel,
   className,
 }: RecordActivityTimelineProps) {
+  const { t } = useTranslation()
+  const resolvedEmptyLabel = emptyLabel ?? t('recordDetail.activity.empty')
+  const resolvedAddLabel = addLabel ?? t('recordDetail.activity.logActivity')
+
   if (isLoading) {
     return (
       <div className={cn('space-y-2', className)}>
@@ -85,7 +91,9 @@ export function RecordActivityTimeline({
         <div className="flex size-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
           <CalendarClock className="size-4.5" />
         </div>
-        <p className="text-[13px] text-muted-foreground">{emptyLabel}</p>
+        <p className="text-[13px] text-muted-foreground">
+          {resolvedEmptyLabel}
+        </p>
         {onAdd && (
           <Button
             size="sm"
@@ -94,7 +102,7 @@ export function RecordActivityTimeline({
             onClick={onAdd}
           >
             <Plus className="size-3.5" />
-            {addLabel}
+            {resolvedAddLabel}
           </Button>
         )}
       </div>
@@ -119,7 +127,7 @@ export function RecordActivityTimeline({
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-[13px] font-medium">
-                {event.subject || 'Untitled activity'}
+                {event.subject || t('recordDetail.activity.untitled')}
               </p>
               {event.description && (
                 <p className="truncate text-xs text-muted-foreground">

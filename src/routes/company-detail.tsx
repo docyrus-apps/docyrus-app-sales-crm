@@ -688,7 +688,7 @@ export function CompanyDetail() {
     <button
       type="button"
       onClick={openCallComposer}
-      aria-label="Open dialer"
+      aria-label={t('common.openDialer')}
       className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
     >
       <Phone className="size-4" />

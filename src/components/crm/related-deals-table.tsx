@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 
 import { CalendarClock, Search, Target } from 'lucide-react'
 
+import { useTranslation } from 'react-i18next'
+
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 
@@ -33,10 +35,14 @@ function stageName(stage: RelatedDeal['stage']): string | undefined {
 export function RelatedDealsTable({
   deals,
   isLoading,
-  searchPlaceholder = 'Search deals…',
-  emptyLabel = 'No deals yet',
+  searchPlaceholder,
+  emptyLabel,
   onOpenDeal,
 }: RelatedDealsTableProps) {
+  const { t } = useTranslation()
+  const resolvedSearchPlaceholder =
+    searchPlaceholder ?? t('relatedTables.deals.search')
+  const resolvedEmptyLabel = emptyLabel ?? t('relatedTables.deals.empty')
   const [query, setQuery] = useState('')
 
   const filtered = useMemo(() => {
@@ -63,7 +69,7 @@ export function RelatedDealsTable({
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder={searchPlaceholder}
+            placeholder={resolvedSearchPlaceholder}
             className="h-8 border-none bg-muted/50 pl-8 text-[13px] shadow-none focus-visible:ring-1"
           />
         </div>
@@ -76,10 +82,12 @@ export function RelatedDealsTable({
           'px-4 pb-2 pt-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70',
         )}
       >
-        <span>Deal</span>
-        <span>Stage</span>
-        <span>Value</span>
-        <span className="max-sm:hidden">Close date</span>
+        <span>{t('relatedTables.deals.deal')}</span>
+        <span>{t('relatedTables.deals.stage')}</span>
+        <span>{t('relatedTables.deals.value')}</span>
+        <span className="max-sm:hidden">
+          {t('relatedTables.deals.closeDate')}
+        </span>
       </div>
 
       {/* Body */}
@@ -99,7 +107,7 @@ export function RelatedDealsTable({
               <Target className="size-5" />
             </div>
             <p className="text-[13px] text-muted-foreground">
-              {query ? 'No deals match your search.' : emptyLabel}
+              {query ? t('relatedTables.deals.noMatch') : resolvedEmptyLabel}
             </p>
           </div>
         ) : (

@@ -667,7 +667,7 @@ export function Dashboard() {
                             {deal.organization &&
                             typeof deal.organization === 'object'
                               ? deal.organization.name
-                              : 'Deal'}
+                              : t('dashboard.defaultDeal')}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {deal.stage && typeof deal.stage === 'object'

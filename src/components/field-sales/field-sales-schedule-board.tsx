@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { format } from 'date-fns'
 import { MapPinned, Trash2 } from 'lucide-react'
 import {
@@ -83,12 +84,12 @@ interface FieldSalesScheduleBoardProps {
   ) => void
 }
 
-function getPlanLabel(plan: FieldSalesBoardPlanItem) {
+function getPlanLabel(plan: FieldSalesBoardPlanItem, planFallback: string) {
   return (
     plan.subject ||
     getRelationName(plan.organization) ||
     getRelationName(plan.contact) ||
-    'Plan'
+    planFallback
   )
 }
 
@@ -223,6 +224,7 @@ function FieldSalesPlanCard({
   onClick?: () => void
   onDelete?: () => void
 }) {
+  const { t } = useTranslation()
   const status = getStatusMeta(plan.status)
   const eventType = getStatusMeta(plan.event_type)
 
@@ -257,7 +259,7 @@ function FieldSalesPlanCard({
           )}
         >
           <div className="text-sm font-semibold text-foreground">
-            {getPlanLabel(plan)}
+            {getPlanLabel(plan, t('fieldSales.common.plan'))}
           </div>
           <div className="mt-2 flex flex-wrap gap-1">
             {eventType.name ? (
@@ -281,7 +283,9 @@ function FieldSalesPlanCard({
             onClick={onDelete}
           >
             <Trash2 className="h-3.5 w-3.5" />
-            <span className="sr-only">Planı sil</span>
+            <span className="sr-only">
+              {t('fieldSales.common.deletePlan')}
+            </span>
           </Button>
         ) : null}
       </div>
@@ -306,6 +310,7 @@ export function FieldSalesScheduleBoard({
   onDeletePlan,
   onDropToSlot,
 }: FieldSalesScheduleBoardProps) {
+  const { t } = useTranslation()
   const isMobile = useIsMobile()
   const [selectedPayload, setSelectedPayload] =
     useState<FieldSalesBoardDropPayload | null>(null)
@@ -356,7 +361,7 @@ export function FieldSalesScheduleBoard({
         sortedPlans.map((plan, index) => ({
           plan,
           order: index + 1,
-          label: getPlanLabel(plan),
+          label: getPlanLabel(plan, t('fieldSales.common.plan')),
           timeLabel: plan.start_date
             ? format(new Date(plan.start_date), 'HH:mm')
             : '',
@@ -366,7 +371,7 @@ export function FieldSalesScheduleBoard({
     }
 
     return entries
-  }, [plans])
+  }, [plans, t])
 
   const selectedDayEntries = selectedMapDayKey
     ? (dayEntriesByKey.get(selectedMapDayKey) ?? [])
@@ -394,8 +399,10 @@ export function FieldSalesScheduleBoard({
   )
   const selectedDay = days.find((day) => getDateKey(day) === selectedMapDayKey)
   const selectedDayMapTitle = selectedDay
-    ? `${format(selectedDay, 'dd MMMM')} rotası`
-    : 'Günlük rota'
+    ? t('fieldSales.scheduleBoard.routeForDate', {
+        date: format(selectedDay, 'dd MMMM'),
+      })
+    : t('fieldSales.scheduleBoard.dailyRoute')
   const activeRouteColor = routeMode === 'optimized' ? '#0f766e' : '#2563eb'
   const googleMapsRouteUrl = buildGoogleMapsRouteUrl(activeDayLocationEntries)
 
@@ -437,11 +444,17 @@ export function FieldSalesScheduleBoard({
     if (!selectedPayload) return ''
 
     if (selectedPayload.type === 'source') {
-      return sourceItemsById.get(selectedPayload.id)?.title ?? 'Kayıt'
+      return (
+        sourceItemsById.get(selectedPayload.id)?.title ??
+        t('fieldSales.common.record')
+      )
     }
 
-    return getPlanLabel(plansById.get(selectedPayload.id) ?? {})
-  }, [plansById, selectedPayload, sourceItemsById])
+    return getPlanLabel(
+      plansById.get(selectedPayload.id) ?? {},
+      t('fieldSales.common.plan'),
+    )
+  }, [plansById, selectedPayload, sourceItemsById, t])
 
   const handleMobileAssign = (day: Date, slot: SlotDefinition) => {
     if (!selectedPayload || readOnly || !onDropToSlot) return
@@ -464,13 +477,13 @@ export function FieldSalesScheduleBoard({
         className="shrink-0 text-muted-foreground hover:text-foreground"
         title={
           hasLocations
-            ? 'Günün rotasını haritada göster'
-            : 'Bu gün için gösterilecek konum yok'
+            ? t('fieldSales.scheduleBoard.showRouteOnMap')
+            : t('fieldSales.scheduleBoard.noLocationToShow')
         }
         aria-label={
           hasLocations
-            ? 'Günün rotasını haritada göster'
-            : 'Bu gün için gösterilecek konum yok'
+            ? t('fieldSales.scheduleBoard.showRouteOnMap')
+            : t('fieldSales.scheduleBoard.noLocationToShow')
         }
         onClick={(event) => {
           event.preventDefault()
@@ -504,7 +517,7 @@ export function FieldSalesScheduleBoard({
             <div className="space-y-2">
               {sourceItems.length === 0 ? (
                 <div className="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
-                  {sourceEmptyText || 'Kayıt bulunamadı'}
+                  {sourceEmptyText || t('fieldSales.scheduleBoard.noRecords')}
                 </div>
               ) : (
                 sourceItems.map((item) => {
@@ -570,13 +583,15 @@ export function FieldSalesScheduleBoard({
           <div className="rounded-xl border bg-muted/30 px-3 py-3 text-sm">
             <p className="font-medium text-foreground">
               {selectedPayload
-                ? 'Seçim hazır'
-                : 'Planlamak için bir kayıt seçin'}
+                ? t('fieldSales.scheduleBoard.selectionReady')
+                : t('fieldSales.scheduleBoard.selectRecord')}
             </p>
             <p className="mt-1 text-muted-foreground">
               {selectedPayload
-                ? `${selectedPayloadLabel} için uygun günü ve saati seçin.`
-                : 'Listeden firma veya kişiyi seçip uygun saate dokunun.'}
+                ? t('fieldSales.scheduleBoard.selectDayTimeForRecord', {
+                    label: selectedPayloadLabel,
+                  })
+                : t('fieldSales.scheduleBoard.selectionHint')}
             </p>
             {selectedPayload ? (
               <Button
@@ -585,7 +600,7 @@ export function FieldSalesScheduleBoard({
                 className="mt-2 h-auto px-0 text-sm"
                 onClick={() => setSelectedPayload(null)}
               >
-                Seçimi temizle
+                {t('fieldSales.scheduleBoard.clearSelection')}
               </Button>
             ) : null}
           </div>
@@ -613,7 +628,10 @@ export function FieldSalesScheduleBoard({
                         {format(day, 'dd MMMM')}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {format(day, 'EEEE')} • {dayPlanCount} plan
+                        {format(day, 'EEEE')} •{' '}
+                        {t('fieldSales.plans.planCount', {
+                          count: dayPlanCount,
+                        })}
                       </div>
                     </div>
                     {renderDayLocationButton(day)}
@@ -640,14 +658,14 @@ export function FieldSalesScheduleBoard({
                               disabled={!selectedPayload}
                               onClick={() => handleMobileAssign(day, slot)}
                             >
-                              Buraya ekle
+                              {t('fieldSales.scheduleBoard.addHere')}
                             </Button>
                           ) : null}
                         </div>
 
                         {slotPlans.length === 0 ? (
                           <div className="mt-3 text-xs text-muted-foreground">
-                            Bu saat için plan yok.
+                            {t('fieldSales.scheduleBoard.noPlansForTime')}
                           </div>
                         ) : (
                           <div className="mt-3 space-y-2">
@@ -664,7 +682,10 @@ export function FieldSalesScheduleBoard({
                                 <FieldSalesPlanCard
                                   key={
                                     plan.id ??
-                                    `${slotKey}-${getPlanLabel(plan)}`
+                                    `${slotKey}-${getPlanLabel(
+                                      plan,
+                                      t('fieldSales.common.plan'),
+                                    )}`
                                   }
                                   plan={plan}
                                   draggable={false}
@@ -719,7 +740,7 @@ export function FieldSalesScheduleBoard({
             }}
           >
             <div className="sticky left-0 top-0 z-20 border-b bg-muted/80 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground backdrop-blur">
-              Saat
+              {t('fieldSales.scheduleBoard.time')}
             </div>
             {days.map((day) => (
               <div
@@ -779,7 +800,11 @@ export function FieldSalesScheduleBoard({
                           return (
                             <FieldSalesPlanCard
                               key={
-                                plan.id ?? `${slotKey}-${getPlanLabel(plan)}`
+                                plan.id ??
+                                `${slotKey}-${getPlanLabel(
+                                  plan,
+                                  t('fieldSales.common.plan'),
+                                )}`
                               }
                               plan={plan}
                               draggable={draggable}
@@ -830,8 +855,11 @@ export function FieldSalesScheduleBoard({
               <DialogTitle>{selectedDayMapTitle}</DialogTitle>
               <DialogDescription>
                 {selectedDayLocationEntries.length > 0
-                  ? `${selectedDayEntries.length} planın ${selectedDayLocationEntries.length} konumu haritada gösteriliyor.`
-                  : 'Bu gün için haritada gösterilecek konum bulunmuyor.'}
+                  ? t('fieldSales.scheduleBoard.mapSummary', {
+                      total: selectedDayEntries.length,
+                      shown: selectedDayLocationEntries.length,
+                    })
+                  : t('fieldSales.scheduleBoard.noMapLocationsForDay')}
               </DialogDescription>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -841,7 +869,7 @@ export function FieldSalesScheduleBoard({
                 variant={routeMode === 'plan' ? 'default' : 'outline'}
                 onClick={() => setRouteMode('plan')}
               >
-                Plan sırası
+                {t('fieldSales.scheduleBoard.planOrder')}
               </Button>
               <Button
                 type="button"
@@ -850,7 +878,7 @@ export function FieldSalesScheduleBoard({
                 disabled={selectedDayLocationEntries.length < 2}
                 onClick={() => setRouteMode('optimized')}
               >
-                Önerilen rota
+                {t('fieldSales.scheduleBoard.suggestedRoute')}
               </Button>
               <Button
                 type="button"
@@ -866,7 +894,7 @@ export function FieldSalesScheduleBoard({
                   )
                 }}
               >
-                Google Maps'te Aç
+                {t('fieldSales.scheduleBoard.openInGoogleMaps')}
               </Button>
             </div>
           </DialogHeader>
@@ -919,7 +947,8 @@ export function FieldSalesScheduleBoard({
                               {entry.order}. {entry.label}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {entry.timeLabel || 'Saat belirtilmedi'}
+                              {entry.timeLabel ||
+                                t('fieldSales.scheduleBoard.noTimeSpecified')}
                             </div>
                             {entry.location?.label ? (
                               <div className="text-xs text-muted-foreground">
@@ -934,7 +963,7 @@ export function FieldSalesScheduleBoard({
                 </div>
               ) : (
                 <div className="flex h-[42vh] min-h-[320px] items-center justify-center px-6 text-center text-sm text-muted-foreground lg:h-[68vh]">
-                  Bu gün için konumu kayıtlı plan bulunmuyor.
+                  {t('fieldSales.scheduleBoard.noPlansWithLocation')}
                 </div>
               )}
             </div>
@@ -943,7 +972,7 @@ export function FieldSalesScheduleBoard({
               <div className="space-y-4 p-4">
                 {selectedDayEntries.length === 0 ? (
                   <div className="rounded-xl border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
-                    Bu gün için plan yok.
+                    {t('fieldSales.scheduleBoard.noPlansForDay')}
                   </div>
                 ) : (
                   <>
@@ -951,11 +980,13 @@ export function FieldSalesScheduleBoard({
                       <div className="flex items-center justify-between gap-3">
                         <div className="text-sm font-semibold text-foreground">
                           {routeMode === 'optimized'
-                            ? 'Önerilen ziyaret sırası'
-                            : 'Planlanan ziyaret sırası'}
+                            ? t('fieldSales.scheduleBoard.suggestedVisitOrder')
+                            : t('fieldSales.scheduleBoard.plannedVisitOrder')}
                         </div>
                         <Badge variant="secondary" className="text-[11px]">
-                          {activeDayLocationEntries.length} konum
+                          {t('fieldSales.scheduleBoard.locationsCount', {
+                            count: activeDayLocationEntries.length,
+                          })}
                         </Badge>
                       </div>
                       {activeDayLocationEntries.map((entry) => (
@@ -978,7 +1009,8 @@ export function FieldSalesScheduleBoard({
                                 {entry.label}
                               </div>
                               <div className="text-xs text-muted-foreground">
-                                {entry.timeLabel || 'Saat belirtilmedi'}
+                                {entry.timeLabel ||
+                                t('fieldSales.scheduleBoard.noTimeSpecified')}
                               </div>
                               {entry.location?.label ? (
                                 <div className="text-xs text-muted-foreground">
@@ -994,7 +1026,7 @@ export function FieldSalesScheduleBoard({
                     {entriesWithoutLocation.length > 0 ? (
                       <div className="space-y-3">
                         <div className="text-sm font-semibold text-foreground">
-                          Konumu eksik olan planlar
+                          {t('fieldSales.scheduleBoard.plansWithoutLocation')}
                         </div>
                         {entriesWithoutLocation.map((entry) => (
                           <div
@@ -1009,13 +1041,14 @@ export function FieldSalesScheduleBoard({
                                 {entry.label}
                               </div>
                               <div className="text-xs text-muted-foreground">
-                                {entry.timeLabel || 'Saat belirtilmedi'}
+                                {entry.timeLabel ||
+                                t('fieldSales.scheduleBoard.noTimeSpecified')}
                               </div>
                               <Badge
                                 variant="outline"
                                 className="mt-1 text-[11px]"
                               >
-                                Konum yok
+                                {t('fieldSales.scheduleBoard.noLocation')}
                               </Badge>
                             </div>
                           </div>

@@ -64,7 +64,7 @@ import { useRecordActivities } from '@/hooks/use-record-activities'
 import { useSalesOrders } from '@/hooks/use-sales-orders'
 import { useUsers } from '@/hooks/use-users'
 import type { EnumOption, IField } from '@/components/docyrus/form-fields/types'
-import { UI_I18N_LOCALES, type UiI18nLocale } from '@/lib/ui-i18n'
+import { useUiLocale } from '@/hooks/use-ui-locale'
 import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
 
 const FIELD_SLUGS = [
@@ -173,7 +173,7 @@ function mapEnumEntitiesToOptions(
 }
 
 export function DealDetail() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const { dealId } = useParams({ strict: false })
   const { tab } = useSearch({ from: '/deals/$dealId' })
   const navigate = useNavigate({ from: '/deals/$dealId' })
@@ -473,15 +473,7 @@ export function DealDetail() {
     await updateDeal.mutateAsync({ dealId, data: payload })
   }
 
-  const locale = useMemo<UiI18nLocale | undefined>(() => {
-    const language = i18n.resolvedLanguage?.split('-')[0]
-
-    if (language && UI_I18N_LOCALES.includes(language as UiI18nLocale)) {
-      return language as UiI18nLocale
-    }
-
-    return undefined
-  }, [i18n.resolvedLanguage])
+  const locale = useUiLocale()
 
   const pricingDocument = useMemo(() => {
     const pricingLineItems: Array<ILineItem> = (dealProducts ?? []).map(
@@ -1009,7 +1001,7 @@ export function DealDetail() {
     <button
       type="button"
       onClick={openCallComposer}
-      aria-label="Open dialer"
+      aria-label={t('common.openDialer')}
       className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
     >
       <Phone className="size-4" />

@@ -34,6 +34,7 @@ interface FieldSalesSettingsFormProps {
 export function FieldSalesSettingsForm({
   onSaved,
 }: FieldSalesSettingsFormProps) {
+  const { t } = useTranslation()
   const { data, isLoading } = useFieldSalesConfig()
   const updateConfig = useUpdateFieldSalesConfig()
   const [draft, setDraft] = useState<FieldSalesConfig>(
@@ -70,11 +71,13 @@ export function FieldSalesSettingsForm({
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Plan Yapısı</CardTitle>
+            <CardTitle>{t('fieldSales.settings.planStructure')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="approval-mode">Plan onay periyodu</Label>
+              <Label htmlFor="approval-mode">
+                {t('fieldSales.settings.approvalPeriod')}
+              </Label>
               <Select
                 value={draft.approvalMode}
                 onValueChange={(value) =>
@@ -88,14 +91,20 @@ export function FieldSalesSettingsForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="weekly">Haftalık</SelectItem>
-                  <SelectItem value="monthly">Aylık</SelectItem>
+                  <SelectItem value="weekly">
+                    {t('fieldSales.settings.weekly')}
+                  </SelectItem>
+                  <SelectItem value="monthly">
+                    {t('fieldSales.settings.monthly')}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="planning-entity">Plan ilişki kaynağı</Label>
+              <Label htmlFor="planning-entity">
+                {t('fieldSales.settings.planningEntity')}
+              </Label>
               <Select
                 value={draft.planningEntity}
                 onValueChange={(value) =>
@@ -109,14 +118,20 @@ export function FieldSalesSettingsForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="organization">Firmalar</SelectItem>
-                  <SelectItem value="contact">Kişiler</SelectItem>
+                  <SelectItem value="organization">
+                    {t('fieldSales.settings.organizations')}
+                  </SelectItem>
+                  <SelectItem value="contact">
+                    {t('fieldSales.settings.contacts')}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="slot-minutes">Varsayılan zaman aralığı</Label>
+              <Label htmlFor="slot-minutes">
+                {t('fieldSales.settings.slotDuration')}
+              </Label>
               <Select
                 value={String(draft.slotMinutes)}
                 onValueChange={(value) =>
@@ -130,17 +145,23 @@ export function FieldSalesSettingsForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="30">30 dakika</SelectItem>
-                  <SelectItem value="60">60 dakika</SelectItem>
+                  <SelectItem value="30">
+                    {t('fieldSales.settings.thirtyMinutes')}
+                  </SelectItem>
+                  <SelectItem value="60">
+                    {t('fieldSales.settings.sixtyMinutes')}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="flex items-center justify-between rounded-xl border px-4 py-3">
               <div className="space-y-1">
-                <div className="font-medium">Hafta sonlarını göster</div>
+                <div className="font-medium">
+                  {t('fieldSales.settings.showWeekends')}
+                </div>
                 <div className="text-sm text-muted-foreground">
-                  Planlama ekranında cumartesi ve pazar kolonlarını açar.
+                  {t('fieldSales.settings.showWeekendsDescription')}
                 </div>
               </div>
               <Switch
@@ -155,12 +176,16 @@ export function FieldSalesSettingsForm({
 
         <Card>
           <CardHeader>
-            <CardTitle>Çalışma Saatleri ve Konum</CardTitle>
+            <CardTitle>
+              {t('fieldSales.settings.workingHoursLocation')}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="day-start">Başlangıç saati</Label>
+                <Label htmlFor="day-start">
+                  {t('fieldSales.settings.startTime')}
+                </Label>
                 <Input
                   id="day-start"
                   type="time"
@@ -171,7 +196,9 @@ export function FieldSalesSettingsForm({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="day-end">Bitiş saati</Label>
+                <Label htmlFor="day-end">
+                  {t('fieldSales.settings.endTime')}
+                </Label>
                 <Input
                   id="day-end"
                   type="time"
@@ -185,10 +212,11 @@ export function FieldSalesSettingsForm({
 
             <div className="flex items-center justify-between rounded-xl border px-4 py-3">
               <div className="space-y-1">
-                <div className="font-medium">Konum kontrolünü kullan</div>
+                <div className="font-medium">
+                  {t('fieldSales.settings.useLocationCheck')}
+                </div>
                 <div className="text-sm text-muted-foreground">
-                  Yakındaki planlar ve firmalar akışında mesafe doğrulaması
-                  yapar.
+                  {t('fieldSales.settings.locationCheckDescription')}
                 </div>
               </div>
               <Switch
@@ -201,7 +229,7 @@ export function FieldSalesSettingsForm({
 
             <div className="space-y-2">
               <Label htmlFor="distance">
-                Maksimum kuş uçuşu mesafe (metre)
+                {t('fieldSales.settings.maxDistance')}
               </Label>
               <Input
                 id="distance"
@@ -223,7 +251,9 @@ export function FieldSalesSettingsForm({
 
       <div className="flex justify-end">
         <Button onClick={save} disabled={updateConfig.isPending || isLoading}>
-          {updateConfig.isPending ? 'Kaydediliyor...' : 'Kaydet'}
+          {updateConfig.isPending
+            ? t('fieldSales.common.saving')
+            : t('fieldSales.common.save')}
         </Button>
       </div>
     </div>

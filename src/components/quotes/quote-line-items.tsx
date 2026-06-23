@@ -20,7 +20,7 @@ import {
 } from '@/hooks/use-sales-order-items'
 import { useProducts } from '@/hooks/use-products'
 import { useBaseCrmSalesOrderCollection } from '@/collections'
-import { UI_I18N_LOCALES, type UiI18nLocale } from '@/lib/ui-i18n'
+import { useUiLocale } from '@/hooks/use-ui-locale'
 
 const DEFAULT_CURRENCY = 'TRY'
 const DEFAULT_VAT_RATE = 20
@@ -56,7 +56,7 @@ export interface QuoteLineItemsProps {
  * @docyrus: [[architecture#Quote Builder & PDF]]
  */
 export function QuoteLineItems({ quoteId, readOnly }: QuoteLineItemsProps) {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const salesOrderCollection = useBaseCrmSalesOrderCollection()
   const createItem = useCreateSalesOrderItem()
@@ -103,13 +103,7 @@ export function QuoteLineItems({ quoteId, readOnly }: QuoteLineItemsProps) {
     [products, t],
   )
 
-  const locale = useMemo<UiI18nLocale | undefined>(() => {
-    const language = i18n.resolvedLanguage?.split('-')[0]
-    if (language && UI_I18N_LOCALES.includes(language as UiI18nLocale)) {
-      return language as UiI18nLocale
-    }
-    return undefined
-  }, [i18n.resolvedLanguage])
+  const locale = useUiLocale()
 
   const [isSaving, setIsSaving] = useState(false)
   const originalItemIds = useRef<Set<string>>(new Set())

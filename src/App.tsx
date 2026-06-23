@@ -19,11 +19,22 @@ import { DialerProvider } from './components/dialer/dialer-widget'
 import { WebphoneProvider } from './components/webphone/webphone-context'
 import { WebphoneWidget } from './components/webphone/webphone-widget'
 import { DocyrusDateFormatProvider } from './lib/docyrus-date-format-provider'
+import { UiTranslationProvider as LibUiTranslationProvider } from './lib/use-ui-translation'
+import { UiTranslationProvider as HooksUiTranslationProvider } from './hooks/docyrus/use-ui-translation'
 
 function App() {
   const { status } = useDocyrusAuth()
   const client = useDocyrusClient()
   const { t } = useTranslation()
+
+  // Adapter so the Docyrus UI translation bridge (which expects a simple
+  // `(key, fallback) => string` signature) can be backed by react-i18next's
+  // overloaded `TFunction`. Lets every Docyrus UI component follow the app
+  // language instead of always falling back to its English default.
+  const translateForUi = (
+    key: string,
+    fallbackOrParams?: string | Record<string, string | number>,
+  ): string => t(key, fallbackOrParams as string)
 
   // Bridge host shell postMessage events (navigation + notifications) into the
   // embedded app. No-op outside iframe mode.
@@ -116,7 +127,9 @@ function App() {
 
   return (
     <NuqsAdapter>
-      <DocyrusDateFormatProvider client={client}>
+      <LibUiTranslationProvider t={translateForUi}>
+        <HooksUiTranslationProvider t={translateForUi}>
+          <DocyrusDateFormatProvider client={client}>
         <TooltipProvider>
           <WebphoneProvider>
             <DialerProvider>
@@ -157,7 +170,9 @@ function App() {
           />
           <GlobalDialogBar />
         </TooltipProvider>
-      </DocyrusDateFormatProvider>
+          </DocyrusDateFormatProvider>
+        </HooksUiTranslationProvider>
+      </LibUiTranslationProvider>
     </NuqsAdapter>
   )
 }

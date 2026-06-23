@@ -67,11 +67,6 @@ import {
 
 const DEFAULT_CURRENCY = 'TRY'
 
-const TEMPLATE_PRESETS = [
-  { id: 'standard', name: 'Standart', body: DEFAULT_TEMPLATE },
-  { id: 'minimal', name: 'Sade', body: MINIMAL_TEMPLATE },
-]
-
 function getRelationName(
   value?: { name?: string } | string | null,
 ): string | undefined {
@@ -237,6 +232,21 @@ export function QuoteBuild() {
   const id = quoteId ?? ''
   const storageId = id || 'new'
   const { formatDate } = useDateFormat()
+  const TEMPLATE_PRESETS = useMemo(
+    () => [
+      {
+        id: 'standard',
+        name: t('quotes.templateNames.standard'),
+        body: DEFAULT_TEMPLATE,
+      },
+      {
+        id: 'minimal',
+        name: t('quotes.templateNames.minimal'),
+        body: MINIMAL_TEMPLATE,
+      },
+    ],
+    [t],
+  )
   const salesOrderCollection = useBaseCrmSalesOrderCollection()
   const search = useSearch({ strict: false }) as {
     organization?: string

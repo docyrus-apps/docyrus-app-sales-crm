@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Building2,
   ClipboardList,
@@ -68,6 +69,7 @@ export function FieldSalesVisitSheet({
   elapsedLabel,
   onStartOrder,
 }: FieldSalesVisitSheetProps) {
+  const { t } = useTranslation()
   const [orderDialogOpen, setOrderDialogOpen] = useState(false)
   const { data: company } = useCompany(visit?.organizationId)
   const { data: companies = [] } = useCompanies({
@@ -189,13 +191,13 @@ export function FieldSalesVisitSheet({
             <div className="flex items-start justify-between gap-4">
               <div>
                 <SheetTitle className="text-xl">
-                  {visit?.organizationName || 'Müşteri ziyareti'}
+                  {visit?.organizationName || t('fieldSales.visitSheet.defaultTitle')}
                 </SheetTitle>
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                   <Badge variant="secondary">
                     {visit?.source === 'plan'
-                      ? 'Planlı ziyaret'
-                      : 'Plansız ziyaret'}
+                      ? t('fieldSales.visitSheet.plannedVisit')
+                      : t('fieldSales.visitSheet.unplannedVisit')}
                   </Badge>
                   <span className="inline-flex items-center gap-1">
                     <Clock3 className="h-4 w-4" />
@@ -211,7 +213,7 @@ export function FieldSalesVisitSheet({
                   }}
                 >
                   <ShoppingCart className="mr-2 h-4 w-4" />
-                  Sipariş Oluştur
+                  {t('fieldSales.visitSheet.createOrder')}
                 </Button>
               ) : null}
             </div>
@@ -220,31 +222,52 @@ export function FieldSalesVisitSheet({
           <ScrollArea className="h-[calc(100vh-7rem)] pr-3">
             <div className="space-y-4 px-1 py-4">
               <div className="grid gap-3 md:grid-cols-4">
-                <StatCard title="Kişiler" value={contacts.length} />
-                <StatCard title="Açık Fırsatlar" value={deals.length} />
-                <StatCard title="Potansiyeller" value={leads.length} />
-                <StatCard title="Teslim Sipariş" value={completedOrders} />
+                <StatCard
+                  title={t('fieldSales.visitSheet.contacts')}
+                  value={contacts.length}
+                />
+                <StatCard
+                  title={t('fieldSales.visitSheet.openOpportunities')}
+                  value={deals.length}
+                />
+                <StatCard
+                  title={t('fieldSales.visitSheet.leads')}
+                  value={leads.length}
+                />
+                <StatCard
+                  title={t('fieldSales.visitSheet.deliveredOrders')}
+                  value={completedOrders}
+                />
               </div>
 
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Building2 className="h-4 w-4 text-cyan-500" />
-                    Müşteri Özeti
+                    {t('fieldSales.visitSheet.customerSummary')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="grid gap-3 md:grid-cols-2">
                   <div className="flex items-start gap-2 text-sm">
                     <Phone className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                    <span>{organization?.phone || 'Telefon bilgisi yok'}</span>
+                    <span>
+                      {organization?.phone ||
+                        t('fieldSales.visitSheet.noPhoneInfo')}
+                    </span>
                   </div>
                   <div className="flex items-start gap-2 text-sm">
                     <Mail className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                    <span>{organization?.email || 'E-posta bilgisi yok'}</span>
+                    <span>
+                      {organization?.email ||
+                        t('fieldSales.visitSheet.noEmailInfo')}
+                    </span>
                   </div>
                   <div className="flex items-start gap-2 text-sm md:col-span-2">
                     <MapPin className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                    <span>{organization?.address || 'Adres bilgisi yok'}</span>
+                    <span>
+                      {organization?.address ||
+                        t('fieldSales.visitSheet.noAddressInfo')}
+                    </span>
                   </div>
                 </CardContent>
               </Card>
@@ -253,19 +276,19 @@ export function FieldSalesVisitSheet({
                 <TabsList>
                   <TabsTrigger value="contacts">
                     <ContactRound className="h-4 w-4" />
-                    Kişiler
+                    {t('fieldSales.visitSheet.contacts')}
                   </TabsTrigger>
                   <TabsTrigger value="deals">
                     <DollarSign className="h-4 w-4" />
-                    Fırsatlar
+                    {t('fieldSales.visitSheet.opportunities')}
                   </TabsTrigger>
                   <TabsTrigger value="leads">
                     <ClipboardList className="h-4 w-4" />
-                    Potansiyeller
+                    {t('fieldSales.visitSheet.leads')}
                   </TabsTrigger>
                   <TabsTrigger value="orders">
                     <ShoppingCart className="h-4 w-4" />
-                    Siparişler
+                    {t('fieldSales.visitSheet.orders')}
                   </TabsTrigger>
                 </TabsList>
 
@@ -273,7 +296,7 @@ export function FieldSalesVisitSheet({
                   {contacts.length === 0 ? (
                     <Card>
                       <CardContent className="px-4 py-8 text-sm text-muted-foreground">
-                        Bu müşteri için kayıtlı kişi bulunmuyor.
+                        {t('fieldSales.visitSheet.noContactsForCustomer')}
                       </CardContent>
                     </Card>
                   ) : (
@@ -282,12 +305,13 @@ export function FieldSalesVisitSheet({
                         <CardContent className="px-4 py-3">
                           <div className="font-medium">{contact.name}</div>
                           <div className="mt-1 text-sm text-muted-foreground">
-                            {contact.job_title || 'Görev bilgisi yok'}
+                            {contact.job_title ||
+                              t('fieldSales.visitSheet.noJobInfo')}
                           </div>
                           <div className="mt-2 text-sm text-muted-foreground">
                             {contact.email ||
                               contact.mobile ||
-                              'İletişim bilgisi yok'}
+                              t('fieldSales.visitSheet.noContactInfo')}
                           </div>
                         </CardContent>
                       </Card>
@@ -299,7 +323,7 @@ export function FieldSalesVisitSheet({
                   {deals.length === 0 ? (
                     <Card>
                       <CardContent className="px-4 py-8 text-sm text-muted-foreground">
-                        Bu müşteri için açık fırsat bulunmuyor.
+                        {t('fieldSales.visitSheet.noOpportunitiesForCustomer')}
                       </CardContent>
                     </Card>
                   ) : (
@@ -308,16 +332,18 @@ export function FieldSalesVisitSheet({
                         <CardContent className="flex items-start justify-between gap-4 px-4 py-3">
                           <div>
                             <div className="font-medium">
-                              {deal.name || 'Fırsat'}
+                              {deal.name ||
+                                t('fieldSales.visitSheet.opportunity')}
                             </div>
                             <div className="mt-1 text-sm text-muted-foreground">
-                              {getStatusMeta(deal.stage).name || 'Aşama yok'}
+                              {getStatusMeta(deal.stage).name ||
+                                t('fieldSales.visitSheet.noStage')}
                             </div>
                           </div>
                           <div className="text-right text-sm font-medium">
                             {deal.deal_value != null
                               ? `${deal.deal_value.toLocaleString()} `
-                              : 'Tutar yok'}
+                              : t('fieldSales.visitSheet.noAmount')}
                           </div>
                         </CardContent>
                       </Card>
@@ -329,7 +355,7 @@ export function FieldSalesVisitSheet({
                   {leads.length === 0 ? (
                     <Card>
                       <CardContent className="px-4 py-8 text-sm text-muted-foreground">
-                        Bu müşteri için potansiyel kayıt bulunmuyor.
+                        {t('fieldSales.visitSheet.noLeadsForCustomer')}
                       </CardContent>
                     </Card>
                   ) : (
@@ -337,14 +363,17 @@ export function FieldSalesVisitSheet({
                       <Card key={lead.id}>
                         <CardContent className="px-4 py-3">
                           <div className="font-medium">
-                            {lead.title || 'Potansiyel kayıt'}
+                            {lead.title ||
+                              t('fieldSales.visitSheet.leadRecord')}
                           </div>
                           <div className="mt-1 text-sm text-muted-foreground">
                             {getStatusMeta(lead.lead_status).name ||
-                              'Durum yok'}
+                              t('fieldSales.visitSheet.noStatus')}
                           </div>
                           <div className="mt-2 text-sm text-muted-foreground">
-                            {lead.email || lead.phone || 'İletişim bilgisi yok'}
+                            {lead.email ||
+                              lead.phone ||
+                              t('fieldSales.visitSheet.noContactInfo')}
                           </div>
                         </CardContent>
                       </Card>
@@ -356,7 +385,7 @@ export function FieldSalesVisitSheet({
                   {salesOrders.length === 0 ? (
                     <Card>
                       <CardContent className="px-4 py-8 text-sm text-muted-foreground">
-                        Bu müşteri için sipariş bulunmuyor.
+                        {t('fieldSales.visitSheet.noOrdersForCustomer')}
                       </CardContent>
                     </Card>
                   ) : (
@@ -365,16 +394,19 @@ export function FieldSalesVisitSheet({
                         <CardContent className="flex items-start justify-between gap-4 px-4 py-3">
                           <div>
                             <div className="font-medium">
-                              Sipariş #{order.id?.slice(0, 8)}
+                              {t('fieldSales.visitSheet.orderNumber', {
+                                id: order.id?.slice(0, 8),
+                              })}
                             </div>
                             <div className="mt-1 text-sm text-muted-foreground">
-                              {getStatusMeta(order.status).name || 'Durum yok'}
+                              {getStatusMeta(order.status).name ||
+                                t('fieldSales.visitSheet.noStatus')}
                             </div>
                           </div>
                           <div className="text-right text-sm font-medium">
                             {order.grand_total != null
                               ? `${order.grand_total.toLocaleString()} `
-                              : 'Toplam yok'}
+                              : t('fieldSales.visitSheet.noTotal')}
                           </div>
                         </CardContent>
                       </Card>

@@ -66,24 +66,6 @@ interface RecordTasksPanelProps {
 
 type SortKey = 'subject' | 'status' | 'priority' | 'end_date'
 
-// Minimal field descriptor so the shared status renderer produces the same
-// chip used across the attribute panels.
-const STATUS_FIELD: IField = {
-  id: 'status',
-  slug: 'status',
-  name: 'Status',
-  type: 'field-status',
-}
-
-// Priority is a field-select on base.task whose options carry icon+color, so
-// the status renderer produces the same chip treatment the guide asks for.
-const PRIORITY_FIELD: IField = {
-  id: 'priority',
-  slug: 'priority',
-  name: 'Priority',
-  type: 'field-status',
-}
-
 function optionId(value: OptionValue): string | null {
   if (!value) return null
   if (typeof value === 'object') return value.id ?? null
@@ -105,6 +87,30 @@ export function RecordTasksPanel({
 }: RecordTasksPanelProps) {
   const { t } = useTranslation()
   const { formatDate } = useDateFormat()
+
+  // Minimal field descriptors so the shared status renderer produces the same
+  // chip used across the attribute panels. Priority is a field-select on
+  // base.task whose options carry icon+color, so the status renderer produces
+  // the same chip treatment the guide asks for.
+  const statusField = useMemo<IField>(
+    () => ({
+      id: 'status',
+      slug: 'status',
+      name: t('recordDetail.tasks.status'),
+      type: 'field-status',
+    }),
+    [t],
+  )
+
+  const priorityField = useMemo<IField>(
+    () => ({
+      id: 'priority',
+      slug: 'priority',
+      name: t('recordDetail.tasks.priority'),
+      type: 'field-status',
+    }),
+    [t],
+  )
 
   const [query, setQuery] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('end_date')
@@ -381,7 +387,7 @@ export function RecordTasksPanel({
                   <span className="min-w-0 truncate">
                     {optionId(task.status) ? (
                       <DynamicValue
-                        field={STATUS_FIELD}
+                        field={statusField}
                         value={optionId(task.status)}
                         enumOptions={statusOptions}
                       />
@@ -393,7 +399,7 @@ export function RecordTasksPanel({
                   <span className="hidden min-w-0 truncate md:block">
                     {optionId(task.priority) ? (
                       <DynamicValue
-                        field={PRIORITY_FIELD}
+                        field={priorityField}
                         value={optionId(task.priority)}
                         enumOptions={priorityOptions}
                       />

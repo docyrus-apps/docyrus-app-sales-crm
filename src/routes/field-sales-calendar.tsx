@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   addMonths,
   eachDayOfInterval,
@@ -45,6 +46,7 @@ function getDateToken(value: string | undefined) {
 }
 
 export function FieldSalesCalendarPage() {
+  const { t } = useTranslation()
   const taskCollection = useBaseTaskCollection()
   const { data: plans = [] } = useFieldSalesPlans()
   const [currentMonth, setCurrentMonth] = useState(new Date())
@@ -79,7 +81,7 @@ export function FieldSalesCalendarPage() {
   return (
     <>
       <PageHeader
-        title="Saha Takvimi"
+        title={t('fieldSales.calendar.title')}
         icon={<CalendarDays className="h-4 w-4 text-cyan-500" />}
         titleSuffix={
           <Badge variant="secondary">{format(currentMonth, 'MMMM yyyy')}</Badge>
@@ -91,21 +93,21 @@ export function FieldSalesCalendarPage() {
               size="sm"
               onClick={() => setCurrentMonth((value) => addMonths(value, -1))}
             >
-              Önceki
+              {t('fieldSales.common.previous')}
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setCurrentMonth(new Date())}
             >
-              Bugün
+              {t('fieldSales.common.today')}
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setCurrentMonth((value) => addMonths(value, 1))}
             >
-              Sonraki
+              {t('fieldSales.common.next')}
             </Button>
           </div>
         }
@@ -113,19 +115,21 @@ export function FieldSalesCalendarPage() {
       <PageContainer className="grid gap-4 overflow-x-hidden px-3 sm:px-4 lg:px-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <Card>
           <CardHeader>
-            <CardTitle>Aylık görünüm</CardTitle>
+            <CardTitle>{t('fieldSales.calendar.monthlyView')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto pb-2">
               <div className="min-w-[42rem]">
                 <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cts', 'Paz'].map(
-                    (label) => (
-                      <div key={label} className="px-2 py-2">
-                        {label}
-                      </div>
-                    ),
-                  )}
+                  {(
+                    t('fieldSales.calendar.weekdaysShort', {
+                      returnObjects: true,
+                    }) as string[]
+                  ).map((label) => (
+                    <div key={label} className="px-2 py-2">
+                      {label}
+                    </div>
+                  ))}
                 </div>
                 <div className="mt-2 grid grid-cols-7 gap-2">
                   {monthDays.map((day) => {
@@ -163,17 +167,17 @@ export function FieldSalesCalendarPage() {
                         </div>
                         <div className="mt-3 space-y-2 text-xs">
                           <div className="rounded-lg bg-muted px-2 py-1">
-                            Plan:{' '}
+                            {t('fieldSales.calendar.planLabel')}
                             <span className="font-semibold">
                               {dayPlans.length}
                             </span>
                           </div>
                           <div className="rounded-lg bg-muted px-2 py-1">
-                            Ziyaret:{' '}
+                            {t('fieldSales.calendar.visitLabel')}
                             <span className="font-semibold">{visitCount}</span>
                           </div>
                           <div className="rounded-lg bg-muted px-2 py-1">
-                            Görev:{' '}
+                            {t('fieldSales.calendar.taskLabel')}
                             <span className="font-semibold">
                               {dayTasks.length}
                             </span>
@@ -197,11 +201,11 @@ export function FieldSalesCalendarPage() {
               <div className="space-y-6">
                 <div className="space-y-3">
                   <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Planlar
+                    {t('fieldSales.calendar.plans')}
                   </div>
                   {selectedPlans.length === 0 ? (
                     <div className="rounded-lg border border-dashed px-4 py-6 text-sm text-muted-foreground">
-                      Bu gün için plan bulunmuyor.
+                      {t('fieldSales.calendar.noPlansForDay')}
                     </div>
                   ) : (
                     selectedPlans.map((plan) => (
@@ -210,12 +214,12 @@ export function FieldSalesCalendarPage() {
                         className="rounded-xl border px-3 py-3"
                       >
                         <div className="font-medium">
-                          {plan.subject || 'Plan'}
+                          {plan.subject || t('fieldSales.common.plan')}
                         </div>
                         <div className="mt-1 text-sm text-muted-foreground">
                           {plan.organization?.name ||
                             plan.contact?.name ||
-                            'İlişkili kayıt yok'}
+                            t('fieldSales.calendar.noRelatedRecord')}
                         </div>
                         <div className="mt-2">
                           <Badge variant="outline">
@@ -229,11 +233,11 @@ export function FieldSalesCalendarPage() {
 
                 <div className="space-y-3">
                   <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Görevler
+                    {t('fieldSales.calendar.tasks')}
                   </div>
                   {selectedTasks.length === 0 ? (
                     <div className="rounded-lg border border-dashed px-4 py-6 text-sm text-muted-foreground">
-                      Bu gün için görev bulunmuyor.
+                      {t('fieldSales.calendar.noTasksForDay')}
                     </div>
                   ) : (
                     selectedTasks.map((task) => (
@@ -242,11 +246,12 @@ export function FieldSalesCalendarPage() {
                         className="rounded-xl border px-3 py-3"
                       >
                         <div className="font-medium">
-                          {task.name || 'Görev'}
+                          {task.name || t('fieldSales.common.task')}
                         </div>
                         <div className="mt-2">
                           <Badge variant="outline">
-                            {getStatusMeta(task.status).name || 'Açık'}
+                            {getStatusMeta(task.status).name ||
+                              t('fieldSales.common.open')}
                           </Badge>
                         </div>
                       </div>

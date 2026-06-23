@@ -47,9 +47,10 @@ function getEventId(rawId: string | undefined, index: number): number {
 
 function getCalendarLabel(
   calendar: { id: string; name: string } | string | undefined,
+  t: (key: string) => string,
 ) {
   if (!calendar) {
-    return 'General'
+    return t('events.defaultCalendarName')
   }
 
   return typeof calendar === 'string' ? calendar : calendar.name
@@ -83,7 +84,7 @@ export function CalendarPage() {
     const userMap = new Map<string, IUser>()
 
     for (const record of records) {
-      const label = getCalendarLabel(record.calendar)
+      const label = getCalendarLabel(record.calendar, t)
       const userId = `calendar-${label.toLowerCase().replace(/\s+/g, '-')}`
 
       if (!userMap.has(userId)) {
@@ -98,18 +99,18 @@ export function CalendarPage() {
     if (userMap.size === 0) {
       userMap.set('calendar-general', {
         id: 'calendar-general',
-        name: 'General',
+        name: t('events.defaultCalendarName'),
         picturePath: null,
       })
     }
 
     return Array.from(userMap.values())
-  }, [records])
+  }, [records, t])
 
   const calendarEvents = useMemo<Array<IEvent>>(() => {
     const defaultUser = users[0] ?? {
       id: 'calendar-general',
-      name: 'General',
+      name: t('events.defaultCalendarName'),
       picturePath: null,
     }
     const userLookup = new Map(users.map((user) => [user.name, user]))
@@ -117,7 +118,7 @@ export function CalendarPage() {
     return records
       .filter((record) => Boolean(record.start_date))
       .map((record, index) => {
-        const calendarLabel = getCalendarLabel(record.calendar)
+        const calendarLabel = getCalendarLabel(record.calendar, t)
         const assignedUser = userLookup.get(calendarLabel) ?? defaultUser
         const startDate = record.start_date ?? new Date().toISOString()
         const endDate =
@@ -136,7 +137,7 @@ export function CalendarPage() {
           user: assignedUser,
         }
       })
-  }, [records, users])
+  }, [records, users, t])
 
   return (
     <>

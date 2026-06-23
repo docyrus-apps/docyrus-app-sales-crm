@@ -34,17 +34,20 @@ const TYPE_ICONS: Record<string, React.ElementType> = {
   task: CheckSquare,
 }
 
-function timeAgo(dateStr: string): string {
+function timeAgo(
+  dateStr: string,
+  t: (key: string, options?: Record<string, unknown>) => string,
+): string {
   const now = Date.now()
   const then = new Date(dateStr).getTime()
   const diffMs = now - then
   const mins = Math.floor(diffMs / 60000)
-  if (mins < 1) return 'Just now'
-  if (mins < 60) return `${mins}m ago`
+  if (mins < 1) return t('dashboard.timeAgo.justNow')
+  if (mins < 60) return t('dashboard.timeAgo.minutesAgo', { count: mins })
   const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `${hrs}h ago`
+  if (hrs < 24) return t('dashboard.timeAgo.hoursAgo', { count: hrs })
   const days = Math.floor(hrs / 24)
-  return `${days}d ago`
+  return t('dashboard.timeAgo.daysAgo', { count: days })
 }
 
 function getDateRange(tab: TabValue): { start: Date; end: Date } {
@@ -171,7 +174,7 @@ export function LatestUpdatesPanel() {
                 </div>
                 {item.modifiedOn && (
                   <span className="shrink-0 text-xs text-muted-foreground">
-                    {timeAgo(item.modifiedOn)}
+                    {timeAgo(item.modifiedOn, t)}
                   </span>
                 )}
               </Link>

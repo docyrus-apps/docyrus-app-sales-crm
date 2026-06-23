@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { format, parseISO, addMonths, addWeeks } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import { useQueryClient } from '@tanstack/react-query'
@@ -58,8 +59,11 @@ type ApprovalRecord = {
   created_on?: string
 }
 
-function getApprovalOwnerLabel(approval: ApprovalRecord) {
-  if (!approval.plan_owner) return 'Plan sahibi yok'
+function getApprovalOwnerLabel(
+  approval: ApprovalRecord,
+  t: (key: string) => string,
+) {
+  if (!approval.plan_owner) return t('fieldSales.approvals.noOwner')
   if (typeof approval.plan_owner === 'string') return approval.plan_owner
   return (
     [approval.plan_owner.firstname, approval.plan_owner.lastname]
@@ -67,7 +71,7 @@ function getApprovalOwnerLabel(approval: ApprovalRecord) {
       .join(' ') ||
     approval.plan_owner.name ||
     approval.plan_owner.email ||
-    'Plan sahibi'
+    t('fieldSales.approvals.defaultOwner')
   )
 }
 
@@ -82,6 +86,7 @@ function formatApprovalDate(value?: string) {
 }
 
 export function FieldSalesApprovalsPage() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const { data: config } = useFieldSalesConfig()
   const { data: approvals = [] } = useFieldSalesApprovals()
@@ -152,17 +157,16 @@ export function FieldSalesApprovalsPage() {
   const approvalActionMeta =
     selectedApprovalStatusCode === 'revision_requested'
       ? {
-          title: 'Revizyon',
-          description:
-            'Bu kayıt için revizyon istendi. Plan sahibi gerekli değişiklikleri yapıp planı tekrar onaya gönderene kadar onay verilemez.',
+          title: t('fieldSales.approvals.actionRevisionTitle'),
+          description: t('fieldSales.approvals.actionRevisionDescription'),
         }
       : selectedApprovalStatusCode === 'approved'
         ? {
-            title: 'Onay Tamamlandı',
-            description: 'Bu plan onaylandı.',
+            title: t('fieldSales.approvals.actionApprovedTitle'),
+            description: t('fieldSales.approvals.actionApprovedDescription'),
           }
         : {
-            title: 'Plan Onayı',
+            title: t('fieldSales.approvals.actionPendingTitle'),
             description: '',
           }
 
@@ -208,7 +212,9 @@ export function FieldSalesApprovalsPage() {
   const groupedApprovals = useMemo(() => {
     return visibleApprovals.reduce<Record<string, Array<ApprovalRecord>>>(
       (accumulator, approval) => {
-        const status = getStatusMeta(approval.approval_status).name || 'Diğer'
+        const status =
+          getStatusMeta(approval.approval_status).name ||
+          t('fieldSales.common.other')
         accumulator[status] = accumulator[status] || []
         accumulator[status].push(approval)
         return accumulator
@@ -228,7 +234,7 @@ export function FieldSalesApprovalsPage() {
   const approveSelected = async () => {
     if (!selectedApproval?.id || !myInfo?.id) return
     if (selectedApprovalStatusCode !== 'waiting_for_approval') {
-      toast.error('Bu kayıt şu anda onaya açık değil')
+      toast.error(t('fieldSales.approvals.notOpenForApproval'))
       return
     }
 
@@ -249,17 +255,17 @@ export function FieldSalesApprovalsPage() {
     )
 
     await refreshQueries()
-    toast.success('Plan onaylandı')
+    toast.success(t('fieldSales.approvals.planApproved'))
   }
 
   const requestRevision = async () => {
     if (!selectedApproval?.id) return
     if (selectedApprovalStatusCode === 'approved') {
-      toast.error('Onaylanan plan için revizyon istenemez')
+      toast.error(t('fieldSales.approvals.cannotRequestRevisionForApproved'))
       return
     }
     if (!revisionMessage.trim()) {
-      toast.error('Revizyon mesajı girin')
+      toast.error(t('fieldSales.approvals.revisionMessageRequired'))
       return
     }
 
@@ -269,7 +275,7 @@ export function FieldSalesApprovalsPage() {
     })
 
     await refreshQueries()
-    toast.success('Revizyon talebi kaydedildi')
+    toast.success(t('fieldSales.approvals.revisionRequestSaved'))
   }
 
   const navigateRange = (direction: 'prev' | 'next') => {
@@ -287,7 +293,7 @@ export function FieldSalesApprovalsPage() {
   return (
     <>
       <PageHeader
-        title="Plan Onayları"
+        title={t('fieldSales.approvals.title')}
         icon={<CalendarCheck2 className="h-4 w-4 text-cyan-500" />}
         titleSuffix={
           <Badge variant="secondary">{visibleApprovals.length}</Badge>
@@ -299,21 +305,21 @@ export function FieldSalesApprovalsPage() {
               size="sm"
               onClick={() => navigateRange('prev')}
             >
-              Önceki
+              {t('fieldSales.common.previous')}
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setAnchorDate(new Date())}
             >
-              Bugün
+              {t('fieldSales.common.today')}
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => navigateRange('next')}
             >
-              Sonraki
+              {t('fieldSales.common.next')}
             </Button>
           </div>
         }
@@ -321,7 +327,7 @@ export function FieldSalesApprovalsPage() {
       <PageContainer className="grid gap-4 overflow-x-hidden px-3 sm:px-4 lg:px-6 xl:grid-cols-[320px_minmax(0,1fr)]">
         <Card>
           <CardHeader>
-            <CardTitle>Onay Kuyruğu</CardTitle>
+            <CardTitle>{t('fieldSales.approvals.queue')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[55vh] pr-3 xl:h-[calc(100vh-18rem)]">
@@ -349,7 +355,7 @@ export function FieldSalesApprovalsPage() {
                           >
                             <div className="font-medium">{approval.label}</div>
                             <div className="mt-1 text-sm text-muted-foreground">
-                              {getApprovalOwnerLabel(approval)}
+                              {getApprovalOwnerLabel(approval, t)}
                             </div>
                             <div className="mt-2 text-xs text-muted-foreground">
                               {formatApprovalDate(approval.start_date)} –{' '}
@@ -363,7 +369,7 @@ export function FieldSalesApprovalsPage() {
                 )}
                 {visibleApprovals.length === 0 ? (
                   <div className="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
-                    Bu döneme ait plan onayı bulunmuyor.
+                    {t('fieldSales.approvals.noApprovalsForPeriod')}
                   </div>
                 ) : null}
               </div>
@@ -376,16 +382,17 @@ export function FieldSalesApprovalsPage() {
             <CardContent className="flex flex-col gap-4 py-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <div className="text-sm text-muted-foreground">
-                  Seçili kayıt
+                  {t('fieldSales.common.selectedRecord')}
                 </div>
                 <div className="text-lg font-semibold">
-                  {selectedApproval?.label || 'Plan onayı seçin'}
+                  {selectedApproval?.label ||
+                    t('fieldSales.approvals.selectApproval')}
                 </div>
               </div>
               {selectedApproval ? (
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="outline">
-                    {getApprovalOwnerLabel(selectedApproval)}
+                    {getApprovalOwnerLabel(selectedApproval, t)}
                   </Badge>
                   <Badge variant="secondary">
                     {selectedApprovalStatusMeta.name}
@@ -398,7 +405,7 @@ export function FieldSalesApprovalsPage() {
           {selectedApproval ? (
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
               <FieldSalesScheduleBoard
-                title="Onay Takvimi"
+                title={t('fieldSales.approvals.approvalCalendar')}
                 days={boardDays}
                 slots={slots}
                 plans={relatedPlans}
@@ -412,11 +419,20 @@ export function FieldSalesApprovalsPage() {
                 <CardContent className="space-y-4">
                   <div className="grid gap-2 text-sm text-muted-foreground">
                     <div>
-                      Dönem: {formatApprovalDate(selectedApproval.start_date)} –{' '}
+                      {t('fieldSales.approvals.periodLabel')}{' '}
+                      {formatApprovalDate(selectedApproval.start_date)} –{' '}
                       {formatApprovalDate(selectedApproval.end_date)}
                     </div>
-                    <div>Plan sayısı: {relatedPlans.length}</div>
-                    <div>Son durum: {selectedApprovalStatusMeta.name}</div>
+                    <div>
+                      {t('fieldSales.approvals.planCount', {
+                        count: relatedPlans.length,
+                      })}
+                    </div>
+                    <div>
+                      {t('fieldSales.approvals.lastStatus', {
+                        status: selectedApprovalStatusMeta.name,
+                      })}
+                    </div>
                   </div>
 
                   {approvalActionMeta.description ? (
@@ -429,12 +445,12 @@ export function FieldSalesApprovalsPage() {
                     <>
                       <Button className="w-full" onClick={approveSelected}>
                         <CheckCheck className="mr-2 h-4 w-4" />
-                        Planı Onayla
+                        {t('fieldSales.approvals.approveButton')}
                       </Button>
 
                       <div className="space-y-2">
                         <Label htmlFor="revision-message">
-                          Revizyon mesajı
+                          {t('fieldSales.approvals.revisionMessage')}
                         </Label>
                         <Textarea
                           id="revision-message"
@@ -443,7 +459,9 @@ export function FieldSalesApprovalsPage() {
                             setRevisionMessage(event.target.value)
                           }
                           rows={6}
-                          placeholder="Planın hangi kısımlarının güncellenmesi gerektiğini yazın"
+                          placeholder={t(
+                            'fieldSales.approvals.revisionPlaceholder',
+                          )}
                         />
                       </div>
 
@@ -453,7 +471,7 @@ export function FieldSalesApprovalsPage() {
                         onClick={requestRevision}
                       >
                         <MessageSquareReply className="mr-2 h-4 w-4" />
-                        Revizyon Talep Et
+                        {t('fieldSales.approvals.requestRevision')}
                       </Button>
                     </>
                   ) : null}
@@ -462,7 +480,7 @@ export function FieldSalesApprovalsPage() {
                     <>
                       <div className="space-y-2">
                         <Label htmlFor="revision-message">
-                          Revizyon mesajı
+                          {t('fieldSales.approvals.revisionMessage')}
                         </Label>
                         <Textarea
                           id="revision-message"
@@ -471,7 +489,9 @@ export function FieldSalesApprovalsPage() {
                             setRevisionMessage(event.target.value)
                           }
                           rows={6}
-                          placeholder="Planın hangi kısımlarının güncellenmesi gerektiğini yazın"
+                          placeholder={t(
+                            'fieldSales.approvals.revisionPlaceholder',
+                          )}
                         />
                       </div>
 
@@ -481,7 +501,7 @@ export function FieldSalesApprovalsPage() {
                         onClick={requestRevision}
                       >
                         <MessageSquareReply className="mr-2 h-4 w-4" />
-                        Revizyon Mesajını Güncelle
+                        {t('fieldSales.approvals.updateRevisionMessage')}
                       </Button>
                     </>
                   ) : null}
@@ -489,7 +509,7 @@ export function FieldSalesApprovalsPage() {
                   {selectedApprovalStatusCode === 'approved' ? (
                     <Button className="w-full" disabled>
                       <CheckCheck className="mr-2 h-4 w-4" />
-                      Plan Onaylandı
+                      {t('fieldSales.approvals.planApprovedButton')}
                     </Button>
                   ) : null}
                 </CardContent>

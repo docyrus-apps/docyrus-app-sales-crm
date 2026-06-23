@@ -183,6 +183,18 @@ PDF export is client-side via the `HtmlTemplateEditor`'s own `lib/html-to-pdf` (
 
 Studio mutations are authenticated and work from this environment (`list-html-templates`, `create-html-template`, etc. — `list-fields`/`create-field` too). A sample template **"Teklif Şablonu (Örnek)"** (is_default, bound to `sales_order`, body uses the same `{{customer.name}}`/`{{#each lineItems}}`/`{{totals.*}}` shape the app feeds) is seeded via `create-html-template`. Wiring the app to fetch/save these studio templates (a "Templates" picker, and server-side template persistence replacing localStorage) is the next step — no runtime list/render endpoint for html-templates is confirmed in openapi.json yet, so app↔studio template sync needs the Docyrus dev to confirm the endpoint.
 
+## Localization (i18n)
+
+The app UI uses **react-i18next**; the Docyrus UI component library uses a separate translation bridge. Two systems coexist.
+
+App UI: `useTranslation()` → `t('namespace.key')`. Locale files at `src/i18n/locales/{en,tr,de,fr,it,es,nl,pt,sl,el,ar}.json` (init in `src/i18n/index.ts`), `fallbackLng: 'en'`, language from `localStorage('i18nextLng')` then navigator, switched via `LanguageSelector`. **en.json and tr.json are kept at full key parity** — add every key to BOTH (other languages fall back to en). The 2026-06-23 audit took en/tr to ~2004 keys each.
+
+**Two i18n systems coexist.** Besides react-i18next, the **Docyrus UI component library** (data grid, form fields, value renderers, html-template-editor, email composer, agent panel, data-import-wizard) translates through a separate bridge: `useUiTranslation()` (two independent context copies — `src/hooks/docyrus/use-ui-translation.tsx` and `src/lib/use-ui-translation.tsx`) reads a `t` from a `UiTranslationProvider`; with no provider it returns the inline English `defaultValue`. Those components call `t('ui.<area>.<key>', 'English default')` — the `ui.*` namespace.
+
+⚠️ Both `UiTranslationProvider`s were **unmounted**, so the entire Docyrus UI layer always rendered English regardless of app language. Fixed by mounting BOTH providers in `src/App.tsx` (each given a `translateForUi` adapter that bridges react-i18next's `TFunction` to the bridge's `(key, fallback) => string` shape), and adding the full `ui.*` namespace to en/tr.json. **When you add a new Docyrus UI component that uses `useUiTranslation`, add its `ui.*` keys to en+tr.json.** For Docyrus components that take a `locale` prop (`UiI18nLocale` for `tUi()`, or `DataTableFilterLocale`), derive it from the app language with `useUiLocale()` (`src/hooks/use-ui-locale.ts`) — this replaced three duplicated `i18n.resolvedLanguage` useMemo blocks in deal-detail/sales-order-detail/quote-line-items. The data-grid hook (`use-docyrus-data-grid.tsx`) now also translates its bulk-action labels (Update/Delete/Export/Reload) via react-i18next.
+
+Intentionally NOT translated (no regression — would need component edits): ~16 `ui.dataImportWizard.*` keys whose default is a JS template literal (`${…}`, needs i18next `{{}}` params + component change) and ~26 data-table-filter bare keys (`all`, `operators`, `datePresets.*`…) which use their own `DataTableFilterLocale` object. The Field Sales module (routes + `src/components/field-sales/*` + `use-field-sales`) was fully migrated from hardcoded Turkish to `t('fieldSales.*')`.
+
 <!-- docyrus-knowledge:auto:begin -->
 
 # Architecture

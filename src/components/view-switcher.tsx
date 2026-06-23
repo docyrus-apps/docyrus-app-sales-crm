@@ -1,5 +1,6 @@
 import { ChevronDown, Columns3, LayoutGrid, List } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/animate-ui/components/buttons/button'
 import {
   DropdownMenu,
@@ -13,14 +14,14 @@ export type ViewType = 'card' | 'list' | 'kanban'
 
 interface ViewOption {
   value: ViewType
-  label: string
+  labelKey: string
   icon: LucideIcon
 }
 
 const viewOptions: Array<ViewOption> = [
-  { value: 'card', label: 'Card', icon: LayoutGrid },
-  { value: 'list', label: 'List', icon: List },
-  { value: 'kanban', label: 'Board', icon: Columns3 },
+  { value: 'card', labelKey: 'viewSwitcher.card', icon: LayoutGrid },
+  { value: 'list', labelKey: 'viewSwitcher.list', icon: List },
+  { value: 'kanban', labelKey: 'viewSwitcher.board', icon: Columns3 },
 ]
 
 interface ViewSwitcherProps {
@@ -34,6 +35,7 @@ export function ViewSwitcher({
   onValueChange,
   options,
 }: ViewSwitcherProps) {
+  const { t } = useTranslation()
   const visibleOptions =
     options && options.length > 0
       ? viewOptions.filter((option) => options.includes(option.value))
@@ -49,7 +51,7 @@ export function ViewSwitcher({
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="gap-1.5">
           <current.icon className="h-4 w-4" />
-          <span>{current.label} view</span>
+          <span>{t(current.labelKey)} view</span>
           <ChevronDown className="h-3.5 w-3.5 opacity-50" />
         </Button>
       </DropdownMenuTrigger>
@@ -65,7 +67,7 @@ export function ViewSwitcher({
               className="gap-2"
             >
               <option.icon className="h-4 w-4" />
-              {option.label} view
+              {t(option.labelKey)} view
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>

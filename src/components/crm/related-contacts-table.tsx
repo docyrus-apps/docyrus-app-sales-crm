@@ -11,6 +11,8 @@ import {
   Users,
 } from 'lucide-react'
 
+import { useTranslation } from 'react-i18next'
+
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -64,9 +66,9 @@ function stop(event: ReactMouseEvent) {
 export function RelatedContactsTable({
   contacts,
   isLoading,
-  addLabel = 'New Contact',
-  searchPlaceholder = 'Search contacts…',
-  emptyLabel = 'No contacts yet',
+  addLabel,
+  searchPlaceholder,
+  emptyLabel,
   onAddContact,
   onOpenContact,
   onEmail,
@@ -74,6 +76,11 @@ export function RelatedContactsTable({
   onSms,
   onMeeting,
 }: RelatedContactsTableProps) {
+  const { t } = useTranslation()
+  const resolvedAddLabel = addLabel ?? t('relatedTables.contacts.add')
+  const resolvedSearchPlaceholder =
+    searchPlaceholder ?? t('relatedTables.contacts.search')
+  const resolvedEmptyLabel = emptyLabel ?? t('relatedTables.contacts.empty')
   const [query, setQuery] = useState('')
 
   const filtered = useMemo(() => {
@@ -100,7 +107,7 @@ export function RelatedContactsTable({
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder={searchPlaceholder}
+            placeholder={resolvedSearchPlaceholder}
             className="h-8 border-none bg-muted/50 pl-8 text-[13px] shadow-none focus-visible:ring-1"
           />
         </div>
@@ -111,7 +118,7 @@ export function RelatedContactsTable({
           onClick={onAddContact}
         >
           <Plus className="size-3.5" />
-          {addLabel}
+          {resolvedAddLabel}
         </Button>
       </div>
 
@@ -123,10 +130,12 @@ export function RelatedContactsTable({
         )}
       >
         <span />
-        <span>Name</span>
-        <span>Email</span>
-        <span className="max-sm:hidden">Phone</span>
-        <span>Title</span>
+        <span>{t('relatedTables.contacts.name')}</span>
+        <span>{t('relatedTables.contacts.email')}</span>
+        <span className="max-sm:hidden">
+          {t('relatedTables.contacts.phone')}
+        </span>
+        <span>{t('relatedTables.contacts.title')}</span>
       </div>
 
       {/* Body */}
@@ -146,7 +155,9 @@ export function RelatedContactsTable({
               <Users className="size-5" />
             </div>
             <p className="text-[13px] text-muted-foreground">
-              {query ? 'No contacts match your search.' : emptyLabel}
+              {query
+                ? t('relatedTables.contacts.noMatch')
+                : resolvedEmptyLabel}
             </p>
             {!query && (
               <Button
@@ -156,7 +167,7 @@ export function RelatedContactsTable({
                 onClick={onAddContact}
               >
                 <Plus className="size-3.5" />
-                {addLabel}
+                {resolvedAddLabel}
               </Button>
             )}
           </div>
@@ -187,7 +198,7 @@ export function RelatedContactsTable({
                       <button
                         type="button"
                         onClick={stop}
-                        aria-label="Contact actions"
+                        aria-label={t('relatedTables.contacts.actions')}
                         className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground/60 transition-colors hover:bg-background hover:text-foreground hover:shadow-sm data-[state=open]:bg-background data-[state=open]:text-foreground data-[state=open]:shadow-sm"
                       >
                         <EllipsisVertical className="size-4" />
@@ -200,22 +211,22 @@ export function RelatedContactsTable({
                     >
                       <DropdownMenuItem onClick={() => onEmail(contact)}>
                         <Mail className="size-4 text-blue-500" />
-                        Send email
+                        {t('relatedTables.contacts.sendEmail')}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onCall(contact)}>
                         <Phone className="size-4 text-emerald-600" />
-                        Call
+                        {t('relatedTables.contacts.call')}
                       </DropdownMenuItem>
                       {onSms && (
                         <DropdownMenuItem onClick={() => onSms(contact)}>
                           <MessageSquare className="size-4 text-violet-500" />
-                          Send SMS
+                          {t('relatedTables.contacts.sendSms')}
                         </DropdownMenuItem>
                       )}
                       {onMeeting && (
                         <DropdownMenuItem onClick={() => onMeeting(contact)}>
                           <CalendarPlus className="size-4 text-amber-500" />
-                          Schedule meeting
+                          {t('relatedTables.contacts.scheduleMeeting')}
                         </DropdownMenuItem>
                       )}
                     </DropdownMenuContent>

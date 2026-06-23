@@ -254,7 +254,7 @@ export function AppSidebar() {
   const displayName = userProfile
     ? [userProfile.firstname, userProfile.lastname].filter(Boolean).join(' ') ||
       userProfile.email
-    : 'Loading...'
+    : t('common.loading')
 
   const tenantName = userProfile?.tenant?.name ?? userProfile?.name ?? ''
   const tenantLogoUrl = userProfile?.tenant?.logo_url
@@ -483,7 +483,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              tooltip="Sales CRM"
+              tooltip={t('sidebar.appName')}
               className="cursor-default"
             >
               <img

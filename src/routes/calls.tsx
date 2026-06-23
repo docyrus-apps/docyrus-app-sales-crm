@@ -106,7 +106,7 @@ function CallsPageInner({
         },
         {
           id: 'inbound',
-          name: 'Gelen',
+          name: 'Inbound',
           columns: CALL_GRID_COLUMNS,
           sorting: CALL_GRID_SORTING,
           pageSize: PAGE_SIZE,
@@ -116,7 +116,7 @@ function CallsPageInner({
         },
         {
           id: 'outbound',
-          name: 'Giden',
+          name: 'Outbound',
           columns: CALL_GRID_COLUMNS,
           sorting: CALL_GRID_SORTING,
           pageSize: PAGE_SIZE,

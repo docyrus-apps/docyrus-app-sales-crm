@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslation } from 'react-i18next'
 import {
   useCallback,
   useEffect,
@@ -588,6 +589,8 @@ export function useDocyrusDataGrid<TData>(
     sideFiltersWidth = 280,
     ...viewSelectOptions
   } = options
+
+  const { t } = useTranslation()
 
   const bulkActionSet = useMemo(() => {
     if (bulkActions === false) return new Set<DocyrusDataGridBulkAction>()
@@ -1742,7 +1745,7 @@ export function useDocyrusDataGrid<TData>(
               <Button
                 variant="outline"
                 size="icon-sm"
-                aria-label="Reload"
+                aria-label={t('common.reload')}
                 disabled={isReloading}
                 onClick={reloadItems}
               >
@@ -1891,7 +1894,7 @@ export function useDocyrusDataGrid<TData>(
     if (bulkActionSet.has('update')) {
       list.push({
         key: 'bulk-update',
-        label: 'Update',
+        label: t('common.update'),
         icon: <Pencil className="size-4" />,
         onAction: (rows) => {
           if (rows.length === 0) return
@@ -1904,7 +1907,7 @@ export function useDocyrusDataGrid<TData>(
     if (bulkActionSet.has('delete')) {
       list.push({
         key: 'bulk-delete',
-        label: 'Delete',
+        label: t('common.delete'),
         icon: <Trash2 className="size-4" />,
         variant: 'destructive',
         onAction: (rows) => {
@@ -1926,13 +1929,13 @@ export function useDocyrusDataGrid<TData>(
     if (bulkActionSet.has('export')) {
       list.push({
         key: 'bulk-export',
-        label: 'Export',
+        label: t('common.export'),
         render: (rows) => (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="sm">
                 <Download className="size-4" />
-                Export
+                {t('common.export')}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -1961,7 +1964,7 @@ export function useDocyrusDataGrid<TData>(
     }
 
     return list
-  }, [bulkActionSet, exportData, extraBulkActions])
+  }, [bulkActionSet, exportData, extraBulkActions, t])
 
   const bulkDialogs =
     bulkActionSet.size > 0 ? (

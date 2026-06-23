@@ -34,6 +34,8 @@ import {
 
 import { AnimatePresence, motion } from 'motion/react'
 
+import { useTranslation } from 'react-i18next'
+
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -239,6 +241,7 @@ function RecordAttributePanel({
   notice,
   fieldRenderers,
 }: RecordAttributePanelProps) {
+  const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const [expanded, setExpanded] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
@@ -333,7 +336,7 @@ function RecordAttributePanel({
           <button
             type="button"
             onClick={onBack}
-            aria-label="Back"
+            aria-label={t('common.back')}
             className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <ArrowLeft className="size-4" />
@@ -352,7 +355,7 @@ function RecordAttributePanel({
                 size="icon"
                 className="-my-1 size-7 shrink-0 text-muted-foreground"
                 onClick={() => setEditOpen(true)}
-                aria-label="Edit all attributes"
+                aria-label={t('recordDetail.editAllAttributes')}
               >
                 <Pencil className="size-3.5" />
               </Button>
@@ -381,7 +384,7 @@ function RecordAttributePanel({
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search attributes..."
+            placeholder={t('recordDetail.searchAttributes')}
             className="h-7 border-none bg-transparent pl-8 text-[13px] shadow-none focus-visible:ring-0"
           />
         </div>
@@ -392,7 +395,7 @@ function RecordAttributePanel({
       <div className="min-h-0 flex-1 overflow-auto px-1.5 py-2">
         <div className="mb-1.5 flex items-center gap-1.5 px-1.5 text-[13px] font-medium text-muted-foreground">
           <Rows3 className="size-3.5" />
-          Attributes
+          {t('recordDetail.attributes')}
         </div>
         <EditableRecordDetail
           key={recordVersion}
@@ -443,7 +446,7 @@ function RecordAttributePanel({
 
         {isSearching && matchedSlugs.length === 0 && (
           <p className="px-2 py-6 text-center text-[13px] text-muted-foreground">
-            No attributes match your search.
+            {t('recordDetail.noAttributesMatch')}
           </p>
         )}
 
@@ -459,7 +462,9 @@ function RecordAttributePanel({
                 expanded && 'rotate-180',
               )}
             />
-            {expanded ? 'Show less' : `Show ${hiddenCount} more`}
+            {expanded
+              ? t('recordDetail.showLess')
+              : t('recordDetail.showMore', { count: hiddenCount })}
           </button>
         )}
       </div>
@@ -468,7 +473,9 @@ function RecordAttributePanel({
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>{editTitle ?? 'Edit details'}</DialogTitle>
+              <DialogTitle>
+                {editTitle ?? t('recordDetail.editDetails')}
+              </DialogTitle>
             </DialogHeader>
             <div className="max-h-[70vh] overflow-auto pr-1">
               <EditableRecordDetail
@@ -521,6 +528,7 @@ function RecordDetailTabBar({
   current: string
   onSelect: (value: string) => void
 }) {
+  const { t } = useTranslation()
   const rowRef = useRef<HTMLDivElement>(null)
   const measureRef = useRef<HTMLDivElement>(null)
   const widthsRef = useRef<Array<number>>([])
@@ -642,7 +650,7 @@ function RecordDetailTabBar({
                 )}
               >
                 <MoreHorizontal className="size-3.5" />
-                {overflow.length} more
+                {t('recordDetail.more', { count: overflow.length })}
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-44">

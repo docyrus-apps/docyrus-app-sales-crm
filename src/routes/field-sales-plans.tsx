@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { format, addMonths, addWeeks } from 'date-fns'
 import { useQueryClient } from '@tanstack/react-query'
 import { CalendarRange, RefreshCcw, Send, Trash2 } from 'lucide-react'
@@ -100,14 +101,19 @@ function getRecordSubtitle(record: SourceRecord) {
   return record.mobile || record.phone || record.email || record.address || ''
 }
 
-function getSourceName(record: SourceRecord) {
-  return record.name || getRelationName(record.organization) || 'Kayıt'
+function getSourceName(record: SourceRecord, t: (key: string) => string) {
+  return (
+    record.name ||
+    getRelationName(record.organization) ||
+    t('fieldSales.common.record')
+  )
 }
 
 type SourceFilterOption = 'all' | 'unplanned' | 'planned' | 'with_location'
 type SourceSortOption = 'name_asc' | 'name_desc'
 
 export function FieldSalesPlansPage() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const { data: config } = useFieldSalesConfig()
   const { data: allPlans = [] } = useFieldSalesPlans()
@@ -231,7 +237,7 @@ export function FieldSalesPlansPage() {
 
         if (term) {
           const matchesTerm =
-            `${getSourceName(record)} ${getRecordSubtitle(record)}`
+            `${getSourceName(record, t)} ${getRecordSubtitle(record)}`
               .toLocaleLowerCase('tr')
               .includes(term)
 
@@ -247,8 +253,8 @@ export function FieldSalesPlansPage() {
         return true
       })
       .sort((left, right) => {
-        const comparison = getSourceName(left).localeCompare(
-          getSourceName(right),
+        const comparison = getSourceName(left, t).localeCompare(
+          getSourceName(right, t),
           'tr',
           {
             sensitivity: 'base',
@@ -259,7 +265,7 @@ export function FieldSalesPlansPage() {
       })
       .map((record) => ({
         id: record.id || '',
-        title: getSourceName(record),
+        title: getSourceName(record, t),
         subtitle:
           plannerConfig.planningEntity === 'contact'
             ? getRelationName(record.organization)
@@ -273,6 +279,7 @@ export function FieldSalesPlansPage() {
     sourceFilter,
     sourceRecords,
     sourceSort,
+    t,
   ])
 
   const approvalRangeKey = `${format(approvalRange.start, 'yyyy-MM-dd')}|${format(
@@ -312,7 +319,7 @@ export function FieldSalesPlansPage() {
   ) => {
     if (!myInfo?.id) return
     if (planEditingLocked) {
-      toast.error('Onay bekleyen veya onaylı planlar düzenlenemez')
+      toast.error(t('fieldSales.plans.cannotEditApprovedPlans'))
       return
     }
 
@@ -324,8 +331,8 @@ export function FieldSalesPlansPage() {
       if (!record?.id) return
 
       const basePayload: Record<string, unknown> = {
-        name: getSourceName(record),
-        subject: getSourceName(record),
+        name: getSourceName(record, t),
+        subject: getSourceName(record, t),
         start_date: startDate,
         end_date: endDate,
         status: FIELD_SALES_PLAN_STATUS_IDS.waiting,
@@ -351,7 +358,7 @@ export function FieldSalesPlansPage() {
     const plan = scopedPlans.find((item) => item.id === payload.id)
     if (!plan?.id) return
     if (!canEditPlan(plan)) {
-      toast.error('Bu plan onay sürecinde olduğu için taşınamaz')
+      toast.error(t('fieldSales.plans.cannotMoveInApproval'))
       return
     }
 
@@ -375,7 +382,7 @@ export function FieldSalesPlansPage() {
   const submitRangeForApproval = async () => {
     if (!myInfo?.id) return
     if (scopedPlans.length === 0) {
-      toast.error('Onaya göndermek için seçili dönemde en az bir plan olmalı')
+      toast.error(t('fieldSales.plans.requiresPlansForSubmission'))
       return
     }
 
@@ -411,19 +418,17 @@ export function FieldSalesPlansPage() {
     )
 
     await refreshQueries()
-    toast.success('Plan onaya gönderildi')
+    toast.success(t('fieldSales.messages.planSubmittedForApproval'))
   }
 
   const resubmitRevision = async () => {
     if (!currentApproval?.id) return
     if (currentApprovalCode !== 'revision_requested') {
-      toast.error('Sadece revizyona dönen planlar tekrar onaya gönderilebilir')
+      toast.error(t('fieldSales.plans.onlyRevisionPlansCanResubmit'))
       return
     }
     if (scopedPlans.length === 0) {
-      toast.error(
-        'Tekrar onaya göndermek için seçili dönemde en az bir plan olmalı',
-      )
+      toast.error(t('fieldSales.plans.requiresPlansForResubmission'))
       return
     }
 
@@ -450,7 +455,7 @@ export function FieldSalesPlansPage() {
     )
 
     await refreshQueries()
-    toast.success('Revize edilen plan tekrar onaya gönderildi')
+    toast.success(t('fieldSales.plans.resubmittedToast'))
   }
 
   const navigateRange = (direction: 'prev' | 'next') => {
@@ -474,31 +479,36 @@ export function FieldSalesPlansPage() {
   return (
     <>
       <PageHeader
-        title="Planlama"
+        title={t('fieldSales.plans.title')}
         icon={<CalendarRange className="h-4 w-4 text-cyan-500" />}
         titleSuffix={
-          <Badge variant="secondary">{scopedPlans.length} plan</Badge>
+          <Badge variant="secondary">
+            {t('fieldSales.plans.planCount', { count: scopedPlans.length })}
+          </Badge>
         }
       />
       <PageContainer className="space-y-4 overflow-x-hidden px-3 sm:px-4 lg:px-6">
         {currentApprovalCode === 'revision_requested' ? (
           <Alert>
-            <AlertTitle>Revizyon bekleniyor</AlertTitle>
+            <AlertTitle>
+              {t('fieldSales.plans.revisionPending')}
+            </AlertTitle>
             <AlertDescription>
               {currentApproval?.revision_message ||
-                'Yönetici planın güncellenmesini talep etti.'}{' '}
-              Gerekli değişiklikleri yapıp tekrar onaya gönderdiğinizde plan
-              yeniden onaylanabilir hale gelir.
+                t('fieldSales.plans.revisionPendingDescription')}{' '}
+              {t('fieldSales.plans.revisionPendingHint')}
             </AlertDescription>
           </Alert>
         ) : null}
 
         <FieldSalesScheduleBoard
           sourceTitle={
-            plannerConfig.planningEntity === 'contact' ? 'Kişiler' : 'Firmalar'
+            plannerConfig.planningEntity === 'contact'
+              ? t('fieldSales.plans.contactsTab')
+              : t('fieldSales.plans.organizationsTab')
           }
           sourceItems={sourceItems}
-          sourceEmptyText="Bu filtre ile eşleşen kayıt bulunamadı"
+          sourceEmptyText={t('fieldSales.plans.noRecordsMatchFilter')}
           sourceToolbar={
             <div className="space-y-3">
               <Input
@@ -506,8 +516,8 @@ export function FieldSalesPlansPage() {
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder={
                   plannerConfig.planningEntity === 'contact'
-                    ? 'Kişi ara'
-                    : 'Firma ara'
+                    ? t('fieldSales.plans.searchContacts')
+                    : t('fieldSales.plans.searchOrganizations')
                 }
               />
               <div className="grid gap-2 sm:grid-cols-2">
@@ -518,16 +528,22 @@ export function FieldSalesPlansPage() {
                   }
                 >
                   <SelectTrigger className="w-full" size="sm">
-                    <SelectValue placeholder="Filtrele" />
+                    <SelectValue
+                      placeholder={t('fieldSales.plans.filterLabel')}
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Tüm kayıtlar</SelectItem>
-                    <SelectItem value="unplanned">
-                      Henüz planlanmayanlar
+                    <SelectItem value="all">
+                      {t('fieldSales.plans.allRecords')}
                     </SelectItem>
-                    <SelectItem value="planned">Planda olanlar</SelectItem>
+                    <SelectItem value="unplanned">
+                      {t('fieldSales.plans.unplannedOnly')}
+                    </SelectItem>
+                    <SelectItem value="planned">
+                      {t('fieldSales.plans.plannedOnly')}
+                    </SelectItem>
                     <SelectItem value="with_location">
-                      Konumu olanlar
+                      {t('fieldSales.plans.withLocationOnly')}
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -538,26 +554,34 @@ export function FieldSalesPlansPage() {
                   }
                 >
                   <SelectTrigger className="w-full" size="sm">
-                    <SelectValue placeholder="Sırala" />
+                    <SelectValue
+                      placeholder={t('fieldSales.plans.sortLabel')}
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="name_asc">Ada göre (A-Z)</SelectItem>
-                    <SelectItem value="name_desc">Ada göre (Z-A)</SelectItem>
+                    <SelectItem value="name_asc">
+                      {t('fieldSales.plans.sortAZ')}
+                    </SelectItem>
+                    <SelectItem value="name_desc">
+                      {t('fieldSales.plans.sortZA')}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <p className="text-xs text-muted-foreground">
-                {sourceItems.length} kayıt listeleniyor
+                {t('fieldSales.plans.recordsListed', {
+                  count: sourceItems.length,
+                })}
               </p>
             </div>
           }
-          title="Plan Takvimi"
+          title={t('fieldSales.plans.scheduleTitle')}
           titleToolbar={
             <div className="flex w-full flex-col gap-3 sm:w-auto sm:min-w-[320px] sm:items-end">
               <div className="flex w-full flex-col gap-3 rounded-lg border bg-muted/30 px-3 py-3 sm:w-auto sm:min-w-[320px] sm:flex-row sm:items-center sm:justify-between">
                 <div className="space-y-1 text-left">
                   <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Aktif dönem
+                    {t('fieldSales.plans.activePeriod')}
                   </p>
                   <p className="text-sm font-semibold sm:text-base">
                     {format(approvalRange.start, 'dd MMM yyyy')} –{' '}
@@ -571,14 +595,14 @@ export function FieldSalesPlansPage() {
                     size="sm"
                     onClick={() => navigateRange('prev')}
                   >
-                    Önceki
+                    {t('fieldSales.common.previous')}
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => navigateRange('next')}
                   >
-                    Sonraki
+                    {t('fieldSales.common.next')}
                   </Button>
                 </div>
               </div>
@@ -586,7 +610,7 @@ export function FieldSalesPlansPage() {
               {currentApprovalCode === 'revision_requested' ? (
                 <Button className="w-full sm:w-auto" onClick={resubmitRevision}>
                   <RefreshCcw className="mr-2 h-4 w-4" />
-                  Tekrar Onaya Gönder
+                  {t('fieldSales.plans.resubmitForApproval')}
                 </Button>
               ) : currentApproval || isOptimisticallyPending ? (
                 <Button
@@ -595,8 +619,8 @@ export function FieldSalesPlansPage() {
                   disabled
                 >
                   {effectiveCurrentApprovalCode === 'approved'
-                    ? 'Plan onaylandı'
-                    : 'Plan onay bekliyor'}
+                    ? t('fieldSales.plans.planApproved')
+                    : t('fieldSales.plans.planAwaitingApproval')}
                 </Button>
               ) : (
                 <Button
@@ -605,8 +629,8 @@ export function FieldSalesPlansPage() {
                 >
                   <Send className="mr-2 h-4 w-4" />
                   {approvalMode === 'monthly'
-                    ? 'Aylık Planı Onaya Gönder'
-                    : 'Haftalık Planı Onaya Gönder'}
+                    ? t('fieldSales.plans.submitForApprovalMonthly')
+                    : t('fieldSales.plans.submitForApprovalWeekly')}
                 </Button>
               )}
             </div>
@@ -634,23 +658,36 @@ export function FieldSalesPlansPage() {
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
               <Trash2 className="h-5 w-5" />
             </div>
-            <AlertDialogTitle>Plan silinsin mi?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t('fieldSales.plans.deleteConfirmTitle')}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              {pendingDeletePlan
-                ? `${pendingDeletePlan.subject || getRelationName(pendingDeletePlan.organization) || getRelationName(pendingDeletePlan.contact) || 'Seçili plan'} takvimden kaldırılacak.`
-                : 'Seçili plan takvimden kaldırılacak.'}
+              {(() => {
+                const planName =
+                  pendingDeletePlan &&
+                  (pendingDeletePlan.subject ||
+                    getRelationName(pendingDeletePlan.organization) ||
+                    getRelationName(pendingDeletePlan.contact))
+                return planName
+                  ? t('fieldSales.plans.deleteConfirmDescription', {
+                      name: planName,
+                    })
+                  : t('fieldSales.plans.deleteConfirmDescriptionDefault')
+              })()}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deletePlan.isPending}>
-              Vazgeç
+              {t('fieldSales.common.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               disabled={deletePlan.isPending}
               onClick={confirmDeletePlan}
             >
-              {deletePlan.isPending ? 'Siliniyor...' : 'Planı Sil'}
+              {deletePlan.isPending
+                ? t('fieldSales.common.deleting')
+                : t('fieldSales.plans.deleteButton')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

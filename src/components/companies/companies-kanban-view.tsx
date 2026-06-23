@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Building2 } from 'lucide-react'
 import type { UniqueIdentifier } from '@dnd-kit/core'
@@ -16,23 +17,26 @@ interface CompaniesKanbanViewProps {
   companies: Array<any>
 }
 
-function getStatusName(company: any): string {
-  if (!company.status) return 'No Status'
+function getStatusName(company: any, noStatusLabel: string): string {
+  if (!company.status) return noStatusLabel
   return typeof company.status === 'object'
-    ? company.status.name || 'No Status'
+    ? company.status.name || noStatusLabel
     : company.status
 }
 
 export function CompaniesKanbanView({ companies }: CompaniesKanbanViewProps) {
+  const { t } = useTranslation()
+  const noStatusLabel = t('companies.kanban.noStatus')
+
   const initialColumns = useMemo(() => {
     const grouped: Record<string, Array<any>> = {}
     for (const company of companies) {
-      const status = getStatusName(company)
+      const status = getStatusName(company, noStatusLabel)
       grouped[status] ??= []
       grouped[status].push(company)
     }
     return grouped
-  }, [companies])
+  }, [companies, noStatusLabel])
 
   const [columns, setColumns] =
     useState<Record<UniqueIdentifier, Array<any>>>(initialColumns)

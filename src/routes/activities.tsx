@@ -72,13 +72,16 @@ function getOperationLabel(operation: string, t: (key: string) => string) {
   return t('activities.operations.update')
 }
 
-function getUserDisplayName(user: AuditActivity['created_by_user']): string {
-  if (!user) return 'System'
+function getUserDisplayName(
+  user: AuditActivity['created_by_user'],
+  t: (key: string) => string,
+): string {
+  if (!user) return t('activities.systemUser')
   return (
     [user.firstname, user.lastname].filter(Boolean).join(' ') ||
     user.name ||
     user.email ||
-    'Unknown'
+    t('activities.unknownUser')
   )
 }
 
@@ -92,6 +95,7 @@ function getUserInitials(user: AuditActivity['created_by_user']): string {
 
 function groupActivitiesByDate(
   activities: Array<AuditActivity>,
+  t: (key: string) => string,
 ): Array<{ label: string; items: Array<AuditActivity> }> {
   const groups = new Map<string, Array<AuditActivity>>()
   const today = new Date()
@@ -103,14 +107,14 @@ function groupActivitiesByDate(
     const date = activity.created_on ? new Date(activity.created_on) : null
     let label: string
     if (!date) {
-      label = 'Unknown'
+      label = t('activities.unknownDate')
     } else {
       const d = new Date(date)
       d.setHours(0, 0, 0, 0)
       if (d.getTime() === today.getTime()) {
-        label = 'Today'
+        label = t('activities.today')
       } else if (d.getTime() === yesterday.getTime()) {
-        label = 'Yesterday'
+        label = t('activities.yesterday')
       } else {
         label =
           formatDate(date, { format: 'long' }).split(',')[0] || formatDate(date)
@@ -143,8 +147,8 @@ export function Activities() {
   })
 
   const groupedActivities = useMemo(
-    () => groupActivitiesByDate(activities),
-    [activities],
+    () => groupActivitiesByDate(activities, t),
+    [activities, t],
   )
 
   const hasMore = activities.length === PAGE_SIZE
@@ -237,7 +241,7 @@ export function Activities() {
                     size="sm"
                     onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
                   >
-                    Previous
+                    {t('activities.previous')}
                   </Button>
                 )}
                 {hasMore && (
@@ -261,7 +265,7 @@ export function Activities() {
 
 function ActivityItem({ activity }: { activity: AuditActivity }) {
   const { t } = useTranslation()
-  const userName = getUserDisplayName(activity.created_by_user)
+  const userName = getUserDisplayName(activity.created_by_user, t)
   const initials = getUserInitials(activity.created_by_user)
   const operationColor = getOperationColor(activity.operation)
   const operationIcon = getOperationIcon(activity.operation)

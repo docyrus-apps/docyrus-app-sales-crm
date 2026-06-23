@@ -7,6 +7,7 @@ import {
   Navigation,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { useCompanies } from '@/hooks/use-companies'
 import {
   useCreateFieldSalesPlan,
@@ -74,9 +75,12 @@ function formatElapsed(startedAtMs: number) {
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 }
 
-function formatDistance(distanceMeters: number) {
+function formatDistance(
+  distanceMeters: number,
+  noLocationLabel: string,
+) {
   if (!Number.isFinite(distanceMeters)) {
-    return 'Konum yok'
+    return noLocationLabel
   }
 
   if (distanceMeters >= 1000) {
@@ -87,6 +91,7 @@ function formatDistance(distanceMeters: number) {
 }
 
 export function FieldSalesLocationActions() {
+  const { t } = useTranslation()
   const { data: config } = useFieldSalesConfig()
   const { data: plans = [] } = useFieldSalesPlans()
   const { data: myInfo } = useMyInfo()
@@ -122,7 +127,7 @@ export function FieldSalesLocationActions() {
 
   const requestCurrentLocation = async () => {
     if (!navigator.geolocation) {
-      setLocationError('Bu cihazda konum servisi kullanılamıyor')
+      setLocationError(t('fieldSales.locationActions.geolocationUnavailable'))
       return
     }
 
@@ -149,7 +154,9 @@ export function FieldSalesLocationActions() {
         longitude: coords.longitude,
       })
     } catch (error: any) {
-      setLocationError(error?.message || 'Konum alınamadı')
+      setLocationError(
+        error?.message || t('fieldSales.locationActions.couldNotGetLocation'),
+      )
     } finally {
       setLocating(false)
     }
@@ -303,7 +310,7 @@ export function FieldSalesLocationActions() {
     setActiveVisit({
       source: 'company',
       organizationId: company.id,
-      organizationName: company.name || 'Firma',
+      organizationName: company.name || t('fieldSales.common.organization'),
       startedAtMs: Date.now() - 1000,
       checkInTimeIso: nowIso,
       checkInLocation,
@@ -360,7 +367,7 @@ export function FieldSalesLocationActions() {
     setVisitSheetOpen(false)
     setActiveVisit(null)
     setElapsedLabel('00:01')
-    toast.success('Ziyaret kaydedildi')
+    toast.success(t('fieldSales.messages.visitSaved'))
   }
 
   return (
@@ -370,7 +377,7 @@ export function FieldSalesLocationActions() {
           variant="default"
           size="sm"
           className="gap-2 bg-emerald-600 hover:bg-emerald-700"
-          aria-label="Aktif ziyaret"
+          aria-label={t('fieldSales.locationActions.activeVisit')}
           onClick={() => setCheckoutSheetOpen(true)}
         >
           <CheckCheck className="size-4" />
@@ -383,7 +390,7 @@ export function FieldSalesLocationActions() {
               variant="ghost"
               size="sm"
               className="gap-2"
-              aria-label="Konum ve ziyaret işlemleri"
+              aria-label={t('fieldSales.locationActions.locationAndVisit')}
             >
               {locating ? (
                 <Loader2 className="size-4 animate-spin" />
@@ -400,9 +407,11 @@ export function FieldSalesLocationActions() {
               <div className="border-b px-4 pt-4">
                 <div className="mb-3 flex items-center justify-between">
                   <div>
-                    <div className="font-semibold">Yakındaki kayıtlar</div>
+                    <div className="font-semibold">
+                      {t('fieldSales.scheduleBoard.nearbyRecords')}
+                    </div>
                     <div className="text-sm text-muted-foreground">
-                      Konumunuza göre ziyaret ve firma önerileri listelenir.
+                      {t('fieldSales.scheduleBoard.nearbyDescription')}
                     </div>
                   </div>
                   <Button
@@ -410,15 +419,15 @@ export function FieldSalesLocationActions() {
                     size="sm"
                     onClick={() => void requestCurrentLocation()}
                   >
-                    Yenile
+                    {t('fieldSales.common.refresh')}
                   </Button>
                 </div>
                 <TabsList className="h-auto w-full flex-wrap justify-start">
                   <TabsTrigger value="plans">
-                    Yakındaki Ziyaret Planları
+                    {t('fieldSales.scheduleBoard.nearbyPlans')}
                   </TabsTrigger>
                   <TabsTrigger value="companies">
-                    Yakındaki Firmalar
+                    {t('fieldSales.scheduleBoard.nearbyOrganizations')}
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -434,7 +443,7 @@ export function FieldSalesLocationActions() {
                   <div className="space-y-3">
                     {nearbyPlans.length === 0 ? (
                       <div className="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
-                        Yakınınızda bekleyen ziyaret planı bulunmuyor.
+                        {t('fieldSales.scheduleBoard.noNearbyPlans')}
                       </div>
                     ) : (
                       nearbyPlans.map(({ plan, organization, distance }) => (
@@ -446,7 +455,7 @@ export function FieldSalesLocationActions() {
                                   {plan.subject ||
                                     getRelationName(plan.organization) ||
                                     getRelationName(plan.contact) ||
-                                    'Planlı ziyaret'}
+                                    t('fieldSales.scheduleBoard.plannedVisit')}
                                 </div>
                                 <div className="mt-1 text-sm text-muted-foreground">
                                   {organization?.name ||
@@ -455,7 +464,10 @@ export function FieldSalesLocationActions() {
                                 </div>
                               </div>
                               <Badge variant="secondary">
-                                {formatDistance(distance)}
+                                {formatDistance(
+                                  distance,
+                                  t('fieldSales.locationActions.noLocation'),
+                                )}
                               </Badge>
                             </div>
                             <Button
@@ -465,7 +477,7 @@ export function FieldSalesLocationActions() {
                               }
                             >
                               <Navigation className="mr-2 h-4 w-4" />
-                              Check-in Yap
+                              {t('fieldSales.common.checkIn')}
                             </Button>
                           </CardContent>
                         </Card>
@@ -480,7 +492,7 @@ export function FieldSalesLocationActions() {
                   <div className="space-y-3">
                     {nearbyCompanies.length === 0 ? (
                       <div className="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
-                        Yakınınızda firma bulunmuyor.
+                        {t('fieldSales.scheduleBoard.noNearbyOrganizations')}
                       </div>
                     ) : (
                       nearbyCompanies.map(({ company, distance }) => (
@@ -495,11 +507,14 @@ export function FieldSalesLocationActions() {
                                   {company.address ||
                                     company.phone ||
                                     company.email ||
-                                    'Detay yok'}
+                                    t('fieldSales.scheduleBoard.noDetails')}
                                 </div>
                               </div>
                               <Badge variant="secondary">
-                                {formatDistance(distance)}
+                                {formatDistance(
+                                  distance,
+                                  t('fieldSales.locationActions.noLocation'),
+                                )}
                               </Badge>
                             </div>
                             <Button
@@ -507,7 +522,7 @@ export function FieldSalesLocationActions() {
                               onClick={() => startUnplannedVisit(company)}
                             >
                               <MapPin className="mr-2 h-4 w-4" />
-                              Check-in Yap
+                              {t('fieldSales.common.checkIn')}
                             </Button>
                           </CardContent>
                         </Card>
