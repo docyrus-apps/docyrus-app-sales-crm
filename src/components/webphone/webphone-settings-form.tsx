@@ -11,7 +11,6 @@ import type { WebphoneRuntimeSettings } from '@/lib/webphone/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,9 +30,6 @@ const TEXT_FIELDS: Array<{
   { key: 'pbxHost', labelKey: 'webphone.settings.pbxHost' },
   { key: 'realm', labelKey: 'webphone.settings.realm' },
   { key: 'registrarServer', labelKey: 'webphone.settings.registrarServer' },
-  { key: 'registerExpires', labelKey: 'webphone.settings.registerExpires' },
-  { key: 'noAnswerTimeout', labelKey: 'webphone.settings.noAnswerTimeout' },
-  { key: 'preferredAudioCodecs', labelKey: 'webphone.settings.audioCodecs' },
 ]
 
 /** Compact readiness banner: green when ready, amber with the missing items. */
@@ -76,6 +72,10 @@ interface WebphoneSettingsFormProps {
  * with an "authorized only" notice; a confirm step unlocks editing (the confirm
  * is not persisted — it only guards against accidental changes). Credential-free
  * — SIP username/password come from the agent telephony profile, never here.
+ *
+ * Register expiry, no-answer timeout, audio codec order and ICE/STUN are
+ * code-managed (pinned in `getWebphoneRuntimeSettings`) and intentionally not
+ * shown or editable here.
  */
 export function WebphoneSettingsForm({ onSaved }: WebphoneSettingsFormProps) {
   const { t } = useTranslation()
@@ -123,21 +123,6 @@ export function WebphoneSettingsForm({ onSaved }: WebphoneSettingsFormProps) {
             />
           </div>
         ))}
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="webphone-ice">
-          {t('webphone.settings.iceServers')}
-        </Label>
-        <Textarea
-          id="webphone-ice"
-          value={draft.iceServersJson}
-          disabled={!editing}
-          onChange={(event) =>
-            updateField('iceServersJson', event.target.value)
-          }
-          className="min-h-24 font-mono text-xs"
-        />
       </div>
 
       <div className="flex justify-end gap-2">

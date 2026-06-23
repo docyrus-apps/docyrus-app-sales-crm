@@ -33,6 +33,13 @@ export function getWebphoneRuntimeSettings(
   return {
     ...DEFAULT_VERIMOR_RUNTIME,
     ...(value ?? {}),
+    // Code-managed fields: hidden from the settings form and never
+    // tenant-overridable. They always take the DEFAULT_VERIMOR_RUNTIME value,
+    // even if a stale value is stored under `data.webrtc`. Edit them here.
+    registerExpires: DEFAULT_VERIMOR_RUNTIME.registerExpires,
+    noAnswerTimeout: DEFAULT_VERIMOR_RUNTIME.noAnswerTimeout,
+    preferredAudioCodecs: DEFAULT_VERIMOR_RUNTIME.preferredAudioCodecs,
+    iceServersJson: DEFAULT_VERIMOR_RUNTIME.iceServersJson,
   }
 }
 
