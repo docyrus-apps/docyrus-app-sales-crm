@@ -6,6 +6,7 @@ export const taskFormSchema = z.object({
   start_date: z.string().optional(),
   end_date: z.string().optional(),
   status: z.string().optional(),
+  priority: z.string().optional(),
   organization: z.string().optional(),
   deal: z.string().optional(),
   record_owner: z.string().optional(),

@@ -47,11 +47,14 @@ import { useDateFormat } from '@/lib/use-date-format'
  */
 export type TaskParentField = 'contact' | 'lead' | 'organization' | 'deal'
 
+type OptionValue = { id?: string; name?: string } | string | null | undefined
+
 interface RecordTask {
   id?: string
   subject?: string
   description?: string
-  status?: { id?: string; name?: string } | string | null
+  status?: OptionValue
+  priority?: OptionValue
   start_date?: string | null
   end_date?: string | null
 }
@@ -61,7 +64,7 @@ interface RecordTasksPanelProps {
   parentId: string | undefined
 }
 
-type SortKey = 'subject' | 'status' | 'end_date'
+type SortKey = 'subject' | 'status' | 'priority' | 'end_date'
 
 // Minimal field descriptor so the shared status renderer produces the same
 // chip used across the attribute panels.
@@ -72,7 +75,16 @@ const STATUS_FIELD: IField = {
   type: 'field-status',
 }
 
-function statusId(value: RecordTask['status']): string | null {
+// Priority is a field-select on base.task whose options carry icon+color, so
+// the status renderer produces the same chip treatment the guide asks for.
+const PRIORITY_FIELD: IField = {
+  id: 'priority',
+  slug: 'priority',
+  name: 'Priority',
+  type: 'field-status',
+}
+
+function optionId(value: OptionValue): string | null {
   if (!value) return null
   if (typeof value === 'object') return value.id ?? null
 
@@ -120,6 +132,31 @@ export function RecordTasksPanel({
     [statusEntities],
   )
 
+  const { data: priorityEntities = [] } = useEnumEntities('priority', {
+    appSlug: 'base',
+    dataSourceSlug: 'task',
+  })
+
+  const priorityOptions = useMemo<Array<EnumOption>>(
+    () =>
+      priorityEntities.map((entity) => ({
+        id: entity.id,
+        name: entity.name,
+        color: entity.color ?? undefined,
+        icon: entity.icon ?? undefined,
+      })),
+    [priorityEntities],
+  )
+
+  // Rank by the enum's configured order so the Priority column sorts sensibly
+  // (options come back already sorted by sortOrder).
+  const priorityRank = useMemo(() => {
+    const map = new Map<string, number>()
+    priorityOptions.forEach((option, index) => map.set(option.id, index))
+
+    return map
+  }, [priorityOptions])
+
   const listParams = useMemo(
     () => ({
       columns: [
@@ -127,6 +164,7 @@ export function RecordTasksPanel({
         'subject',
         'description',
         'status',
+        'priority',
         'start_date',
         'end_date',
         'organization(id,name)',
@@ -151,15 +189,23 @@ export function RecordTasksPanel({
       statusOptions.map((option) => [option.id, option.name]),
     )
 
-    return (task: RecordTask) => byId.get(statusId(task) ?? '') ?? ''
+    return (task: RecordTask) => byId.get(optionId(task.status) ?? '') ?? ''
   }, [statusOptions])
+
+  const priorityName = useMemo(() => {
+    const byId = new Map(
+      priorityOptions.map((option) => [option.id, option.name]),
+    )
+
+    return (task: RecordTask) => byId.get(optionId(task.priority) ?? '') ?? ''
+  }, [priorityOptions])
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase()
 
     const filtered = q
       ? tasks.filter((task) => {
-          const haystack = [task.subject, statusName(task)]
+          const haystack = [task.subject, statusName(task), priorityName(task)]
             .filter(Boolean)
             .join(' ')
             .toLowerCase()
@@ -168,6 +214,9 @@ export function RecordTasksPanel({
         })
       : tasks
 
+    const rankOf = (task: RecordTask) =>
+      priorityRank.get(optionId(task.priority) ?? '') ?? Number.MAX_SAFE_INTEGER
+
     return [...filtered].sort((a, b) => {
       let cmp = 0
 
@@ -175,6 +224,8 @@ export function RecordTasksPanel({
         cmp = (a.subject ?? '').localeCompare(b.subject ?? '')
       } else if (sortKey === 'status') {
         cmp = statusName(a).localeCompare(statusName(b))
+      } else if (sortKey === 'priority') {
+        cmp = rankOf(a) - rankOf(b)
       } else {
         const av = a.end_date ? new Date(a.end_date).getTime() : 0
         const bv = b.end_date ? new Date(b.end_date).getTime() : 0
@@ -184,7 +235,7 @@ export function RecordTasksPanel({
 
       return sortDesc ? -cmp : cmp
     })
-  }, [tasks, query, sortKey, sortDesc, statusName])
+  }, [tasks, query, sortKey, sortDesc, statusName, priorityName, priorityRank])
 
   const toggleSort = (key: SortKey) => {
     if (key === sortKey) {
@@ -211,8 +262,11 @@ export function RecordTasksPanel({
     setDeleteId(null)
   }
 
+  // Mobile shows Subject · Status · actions; Priority and Due reveal at md.
+  // The hidden cells use `display:none`, so they drop out of the grid flow and
+  // the visible cells line up with the matching track count at each breakpoint.
   const GRID =
-    'grid grid-cols-[minmax(0,2.2fr)_minmax(0,1.1fr)_minmax(0,1fr)_1.75rem] items-center gap-3'
+    'grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_1.75rem] md:grid-cols-[minmax(0,2.2fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)_1.75rem] items-center gap-3'
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -287,10 +341,18 @@ export function RecordTasksPanel({
             onClick={() => toggleSort('status')}
           />
           <SortHeader
+            label={t('tasks.columns.priority', { defaultValue: 'Priority' })}
+            active={sortKey === 'priority'}
+            desc={sortDesc}
+            onClick={() => toggleSort('priority')}
+            className="hidden md:inline-flex"
+          />
+          <SortHeader
             label={t('tasks.columns.dueDate', { defaultValue: 'Due' })}
             active={sortKey === 'end_date'}
             desc={sortDesc}
             onClick={() => toggleSort('end_date')}
+            className="hidden md:inline-flex"
           />
           <span />
         </div>
@@ -352,11 +414,23 @@ export function RecordTasksPanel({
                   </div>
 
                   <span className="min-w-0 truncate">
-                    {statusId(task) ? (
+                    {optionId(task.status) ? (
                       <DynamicValue
                         field={STATUS_FIELD}
-                        value={statusId(task)}
+                        value={optionId(task.status)}
                         enumOptions={statusOptions}
+                      />
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </span>
+
+                  <span className="hidden min-w-0 truncate md:block">
+                    {optionId(task.priority) ? (
+                      <DynamicValue
+                        field={PRIORITY_FIELD}
+                        value={optionId(task.priority)}
+                        enumOptions={priorityOptions}
                       />
                     ) : (
                       <span className="text-muted-foreground">—</span>
@@ -365,7 +439,7 @@ export function RecordTasksPanel({
 
                   <span
                     className={cn(
-                      'flex items-center gap-1 truncate text-muted-foreground',
+                      'hidden items-center gap-1 truncate text-muted-foreground md:flex',
                       overdue && 'font-medium text-destructive',
                     )}
                   >
@@ -470,11 +544,13 @@ function SortHeader({
   active,
   desc,
   onClick,
+  className,
 }: {
   label: string
   active: boolean
   desc: boolean
   onClick: () => void
+  className?: string
 }) {
   return (
     <button
@@ -483,6 +559,7 @@ function SortHeader({
       className={cn(
         'inline-flex items-center gap-1 text-left uppercase transition-colors hover:text-foreground',
         active && 'text-foreground',
+        className,
       )}
     >
       {label}

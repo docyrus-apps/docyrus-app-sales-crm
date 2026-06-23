@@ -69,7 +69,14 @@ export function TaskFormSheet({
   const updateTask = useUpdateTask()
   const { data: companies = [] } = useCompanies()
   const { data: users = [] } = useUsers()
-  const { options: statusOptions = [] } = useEnumOptions('status')
+  const { options: statusOptions = [] } = useEnumOptions('status', {
+    appSlug: 'base',
+    dataSourceSlug: 'task',
+  })
+  const { options: priorityOptions = [] } = useEnumOptions('priority', {
+    appSlug: 'base',
+    dataSourceSlug: 'task',
+  })
 
   const [startDate, setStartDate] = useState<Date | undefined>(
     task?.start_date ? new Date(task.start_date) : undefined,
@@ -86,6 +93,10 @@ export function TaskFormSheet({
       end_date: task?.end_date || undefined,
       status:
         typeof task?.status === 'object' ? task.status.id : task?.status || '',
+      priority:
+        typeof task?.priority === 'object'
+          ? task.priority.id
+          : task?.priority || '',
       organization:
         typeof task?.organization === 'object'
           ? task.organization.id
@@ -258,6 +269,44 @@ export function TaskFormSheet({
                   </SelectTrigger>
                   <SelectContent>
                     {statusOptions.map((option: any) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {field.state.meta.errors?.[0] && (
+                  <p className="text-sm text-destructive">
+                    {typeof field.state.meta.errors[0] === 'string'
+                      ? field.state.meta.errors[0]
+                      : field.state.meta.errors[0]?.message ||
+                        t('common.validationError')}
+                  </p>
+                )}
+              </Field>
+            )}
+          </form.Field>
+
+          {/* Priority Field */}
+          <form.Field name="priority">
+            {(field) => (
+              <Field>
+                <Label htmlFor={field.name}>
+                  {t('tasks.form.priorityLabel', { defaultValue: 'Priority' })}
+                </Label>
+                <Select
+                  value={field.state.value}
+                  onValueChange={field.handleChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={t('tasks.form.priorityPlaceholder', {
+                        defaultValue: 'Select priority',
+                      })}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {priorityOptions.map((option: any) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
                       </SelectItem>
