@@ -30,7 +30,6 @@ import { RecordTasksPanel } from '@/components/crm/record-tasks-panel'
 import { LocationField } from '@/components/crm/location-field'
 import { useDialer } from '@/components/dialer/dialer-widget'
 import { useWebphone } from '@/components/webphone/webphone-context'
-import { WebphoneCallButton } from '@/components/webphone/webphone-call-button'
 import { useLead, useUpdateLead } from '@/hooks/use-leads'
 import { useRecordActivities } from '@/hooks/use-record-activities'
 import { useEnumEntities } from '@/hooks/use-enums'
@@ -562,6 +561,28 @@ export function LeadDetail() {
     leadId,
   ])
 
+  // Open the webphone call composer with the lead's own number(s): the direct
+  // phone plus the company line when present, both linked back to this lead.
+  const openCallComposer = () =>
+    dialer.open({
+      recordLabel: leadName,
+      targets: [
+        { label: leadName, number: lead?.phone, leadId },
+        ...(lead?.company_phone
+          ? [
+              {
+                label: lead?.company_name_text || leadName,
+                sublabel: t('webphone.dialer.companyLine', {
+                  defaultValue: 'Company',
+                }),
+                number: lead.company_phone,
+                leadId,
+              },
+            ]
+          : []),
+      ],
+    })
+
   const attributeActions = (
     <>
       {!isConverted && (
@@ -627,22 +648,12 @@ export function LeadDetail() {
         >
           <MessageSquare className="size-3.5" />
         </Button>
-        {webphone.enabled ? (
-          <WebphoneCallButton
-            phone={lead?.phone}
-            leadId={leadId}
-            variant="ghost"
-            size="icon"
-            className="size-7 text-emerald-600"
-            label={t('contacts.actions.call', { defaultValue: 'Call' })}
-          />
-        ) : (
+        {webphone.enabled && (
           <Button
             variant="ghost"
             size="icon"
             className="size-7 text-emerald-600"
-            disabled={!lead?.phone}
-            onClick={() => dialer.open({ name: leadName, number: lead?.phone })}
+            onClick={openCallComposer}
             aria-label={t('contacts.actions.call', { defaultValue: 'Call' })}
             title={t('contacts.actions.call', { defaultValue: 'Call' })}
           >
@@ -698,25 +709,15 @@ export function LeadDetail() {
         readOnly={isConverted}
         dialerTrigger={
           webphone.enabled ? (
-            <WebphoneCallButton
-              phone={lead?.phone}
-              leadId={leadId}
-              size="icon"
-              variant="outline"
-              className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
-            />
-          ) : (
             <button
               type="button"
-              onClick={() =>
-                dialer.open({ name: leadName, number: lead?.phone })
-              }
+              onClick={openCallComposer}
               aria-label="Call lead"
               className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
             >
               <Phone className="size-4" />
             </button>
-          )
+          ) : undefined
         }
         tabs={tabs}
         activeTab={activeTab}

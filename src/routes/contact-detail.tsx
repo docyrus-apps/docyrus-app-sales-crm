@@ -436,6 +436,20 @@ export function ContactDetail() {
     webphone.enabled,
   ])
 
+  // Open the webphone call composer pre-filled with this contact's mobile.
+  const openCallComposer = () =>
+    dialer.open({
+      recordLabel: contactName,
+      targets: [
+        {
+          label: contactName,
+          sublabel: contact?.job_title || organizationName || undefined,
+          number: contact?.mobile,
+          contactId,
+        },
+      ],
+    })
+
   const attributeActions = (
     <>
       <Button
@@ -474,23 +488,12 @@ export function ContactDetail() {
         >
           <MessageSquare className="size-3.5" />
         </Button>
-        {webphone.enabled ? (
-          <WebphoneCallButton
-            phone={contact?.mobile}
-            contactId={contactId}
-            variant="ghost"
-            size="icon"
-            className="size-7 text-emerald-600"
-            label={t('contacts.actions.call', { defaultValue: 'Call' })}
-          />
-        ) : (
+        {webphone.enabled && (
           <Button
             variant="ghost"
             size="icon"
             className="size-7 text-emerald-600"
-            onClick={() =>
-              dialer.open({ name: contactName, number: contact?.mobile })
-            }
+            onClick={openCallComposer}
             aria-label={t('contacts.actions.call', { defaultValue: 'Call' })}
             title={t('contacts.actions.call', { defaultValue: 'Call' })}
           >
@@ -531,25 +534,15 @@ export function ContactDetail() {
         attributeActions={attributeActions}
         dialerTrigger={
           webphone.enabled ? (
-            <WebphoneCallButton
-              phone={contact?.mobile}
-              contactId={contactId}
-              size="icon"
-              variant="outline"
-              className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
-            />
-          ) : (
             <button
               type="button"
-              onClick={() =>
-                dialer.open({ name: contactName, number: contact?.mobile })
-              }
+              onClick={openCallComposer}
               aria-label="Call contact"
               className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
             >
               <Phone className="size-4" />
             </button>
-          )
+          ) : undefined
         }
         tabs={tabs}
         activeTab={activeTab}

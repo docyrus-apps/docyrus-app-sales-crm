@@ -822,17 +822,9 @@ export function RecordDetailLayout({
             current={currentTab}
             onSelect={changeTab}
           />
-          {!dialer.isOpen &&
-            (dialerTrigger ?? (
-              <button
-                type="button"
-                onClick={() => dialer.open()}
-                aria-label="Open dialer"
-                className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
-              >
-                <Phone className="size-4" />
-              </button>
-            ))}
+          {/* Dialer launcher — supplied by the page (webphone-gated). Pages omit
+              it when the webphone module is off, so no call affordance shows. */}
+          {!dialer.isOpen && dialerTrigger}
         </div>
 
         {/* Body — tab content + dialer column (content narrows when open) */}
@@ -865,10 +857,7 @@ export function RecordDetailLayout({
                 className="h-full shrink-0 overflow-hidden border-s"
               >
                 <div className="h-full w-[360px] overflow-auto p-3">
-                  <DialerPanel
-                    contact={dialer.contact}
-                    onClose={dialer.close}
-                  />
+                  <DialerPanel />
                 </div>
               </motion.div>
             )}

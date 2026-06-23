@@ -41,13 +41,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '@/components/animate-ui/components/radix/dropdown-menu'
-import {
   RecordDetailLayout,
   RecordKpiCard,
   RecordTabPlaceholder,
@@ -771,8 +764,18 @@ export function DealDetail() {
             onEmail={(c) => c.email && window.open(`mailto:${c.email}`)}
             onCall={(c) =>
               webphone.enabled
-                ? void webphone.dial(c.mobile, { contactId: c.id })
-                : dialer.open({ name: c.name, number: c.mobile })
+                ? dialer.open({
+                    recordLabel: c.name,
+                    targets: [
+                      {
+                        label: c.name ?? c.mobile ?? '',
+                        sublabel: c.job_title || undefined,
+                        number: c.mobile,
+                        contactId: c.id,
+                      },
+                    ],
+                  })
+                : c.mobile && window.open(`tel:${c.mobile}`)
             }
             onSms={(c) => c.mobile && window.open(`sms:${c.mobile}`)}
           />
@@ -989,45 +992,29 @@ export function DealDetail() {
     </>
   )
 
-  const dialerTrigger = (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          aria-label="Open dialer"
-          className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
-        >
-          <Phone className="size-4" />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>
-          {t('companies.callContact', { defaultValue: 'Call a contact' })}
-        </DropdownMenuLabel>
-        {contactsWithPhone.length === 0 ? (
-          <DropdownMenuItem disabled>
-            {t('companies.noContactPhones', {
-              defaultValue: 'No contact phone numbers',
-            })}
-          </DropdownMenuItem>
-        ) : (
-          contactsWithPhone.map((c: any) => (
-            <DropdownMenuItem
-              key={c.id}
-              onClick={() =>
-                webphone.enabled
-                  ? void webphone.dial(c.mobile, { contactId: c.id })
-                  : dialer.open({ name: c.name, number: c.mobile })
-              }
-            >
-              <Phone className="size-4 text-emerald-600" />
-              <span className="truncate">{c.name}</span>
-            </DropdownMenuItem>
-          ))
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
+  // Open the webphone call composer with the deal's related contacts (the deal
+  // itself has no number); the composer shows a picker / "no number" warning.
+  const openCallComposer = () =>
+    dialer.open({
+      recordLabel: dealTitle,
+      targets: contactsWithPhone.map((c: any) => ({
+        label: c.name,
+        sublabel: c.job_title || undefined,
+        number: c.mobile,
+        contactId: c.id,
+      })),
+    })
+
+  const dialerTrigger = webphone.enabled ? (
+    <button
+      type="button"
+      onClick={openCallComposer}
+      aria-label="Open dialer"
+      className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
+    >
+      <Phone className="size-4" />
+    </button>
+  ) : undefined
 
   return (
     <PageContainer className="flex h-full min-h-0 flex-col overflow-hidden pt-0 pb-0">

@@ -1180,6 +1180,17 @@
     "connect": "Connect",
     "dialing": "Dialing…",
     "ringing": "Ringing…",
+    "dialer": {
+      "title": "Call",
+      "selectNumber": "Choose a number",
+      "startCall": "Start Call",
+      "noNumber": "This record has no phone number to call.",
+      "noNumberShort": "No number",
+      "offline": "You're offline. Go online from the status menu in the header to place a call.",
+      "inProgress": "A call is already in progress. End it first.",
+      "mainLine": "Main line",
+      "companyLine": "Company"
+    },
     "dialpad": {
       "title": "Dialpad",
       "placeholder": "Enter a number",

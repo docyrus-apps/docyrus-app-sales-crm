@@ -1153,6 +1153,17 @@
     "connect": "Bağlan",
     "dialing": "Aranıyor…",
     "ringing": "Çalıyor…",
+    "dialer": {
+      "title": "Ara",
+      "selectNumber": "Numara seçin",
+      "startCall": "Aramayı Başlat",
+      "noNumber": "Bu kayıtta aranacak bir telefon numarası yok.",
+      "noNumberShort": "Numara yok",
+      "offline": "Çevrimdışısınız. Aramak için üstteki durum menüsünden çevrimiçi olun.",
+      "inProgress": "Şu anda bir görüşme sürüyor. Önce onu bitirin.",
+      "mainLine": "Ana hat",
+      "companyLine": "Şirket"
+    },
     "dialpad": {
       "title": "Tuş takımı",
       "placeholder": "Numara girin",
