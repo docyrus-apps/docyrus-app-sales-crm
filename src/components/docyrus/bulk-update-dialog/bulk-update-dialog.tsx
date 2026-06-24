@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { useCallback, useId, useMemo, useState } from 'react'
 
 import { useMutation } from '@tanstack/react-query'
@@ -25,7 +27,7 @@ import {
 import { cn } from '@/lib/utils'
 
 import { SchemaRepeater } from '@/components/docyrus/schema-repeater'
-import { useDocyrusFormView } from '@/hooks/use-docyrus-form-view'
+import { useDocyrusFormView } from '@/hooks/docyrus/use-docyrus-form-view'
 
 import { type BulkUpdateDialogProps, type BulkUpdateRecord } from './types'
 

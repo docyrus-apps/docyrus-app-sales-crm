@@ -6,7 +6,7 @@ export const eventFormSchema = z.object({
   start_date: z.string().optional(),
   end_date: z.string().optional(),
   calendar: z.string().optional(),
-  event_notes: z.record(z.any()).optional(),
+  event_notes: z.record(z.any()).optional()
 })
 
 export type EventFormData = z.infer<typeof eventFormSchema>

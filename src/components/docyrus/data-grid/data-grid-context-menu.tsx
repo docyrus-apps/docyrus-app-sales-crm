@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import {
   memo,
   useCallback,
@@ -22,7 +24,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useAsRef } from '@/hooks/use-as-ref'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 import { type CellUpdate, type ContextMenuState } from './types'
 import { parseCellKey } from './lib/data-grid'

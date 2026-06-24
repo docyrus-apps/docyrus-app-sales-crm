@@ -4,8 +4,9 @@ import {
   Building2,
   CheckCircle2,
   Plus,
-  UserRound,
+  UserRound
 } from 'lucide-react'
+
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
@@ -13,12 +14,12 @@ type ReuseTarget = 'company' | 'contact'
 type EntityCandidate = Record<string, any> & { id?: string; name?: string }
 
 interface LeadConvertReuseBannerProps {
-  target: ReuseTarget
-  candidates: Array<EntityCandidate>
-  selectedId: string | null
-  exactId: string | null
-  isWorking: boolean
-  onSelect: (id: string | null) => void
+  target: ReuseTarget;
+  candidates: Array<EntityCandidate>;
+  selectedId: string | null;
+  exactId: string | null;
+  isWorking: boolean;
+  onSelect: (id: string | null) => void;
 }
 
 export function LeadConvertReuseBanner({
@@ -27,7 +28,7 @@ export function LeadConvertReuseBanner({
   selectedId,
   exactId,
   isWorking,
-  onSelect,
+  onSelect
 }: LeadConvertReuseBannerProps) {
   const { t } = useTranslation()
 
@@ -53,7 +54,7 @@ export function LeadConvertReuseBanner({
           {t('leads.convert.reuse.headline', {
             count: candidates.length,
             entity,
-            defaultValue: '{{count}} existing {{entity}} found',
+            defaultValue: '{{count}} existing {{entity}} found'
           })}
         </p>
       </div>
@@ -67,21 +68,20 @@ export function LeadConvertReuseBanner({
             'flex flex-col items-start gap-1 rounded-md border bg-background p-2.5 text-left transition-colors',
             !isReuse
               ? 'border-primary ring-1 ring-primary'
-              : 'border-border hover:border-primary/40',
-          )}
-        >
+              : 'border-border hover:border-primary/40'
+          )}>
           <div className="flex items-center gap-1.5 text-xs font-medium">
             <Plus className="size-3.5" />
             <span>
               {t('leads.convert.reuse.createOption', {
                 entity,
-                defaultValue: 'Create new {{entity}}',
+                defaultValue: 'Create new {{entity}}'
               })}
             </span>
           </div>
           <p className="text-[11px] text-muted-foreground">
             {t('leads.convert.reuse.createHelp', {
-              defaultValue: 'A new record will be created from the lead data',
+              defaultValue: 'A new record will be created from the lead data'
             })}
           </p>
         </button>
@@ -91,28 +91,28 @@ export function LeadConvertReuseBanner({
           aria-pressed={isReuse}
           onClick={() => {
             const fallback = exactId ?? candidates[0]?.id ?? null
+
             onSelect(fallback)
           }}
           className={cn(
             'flex flex-col items-start gap-1 rounded-md border bg-background p-2.5 text-left transition-colors',
             isReuse
               ? 'border-primary ring-1 ring-primary'
-              : 'border-border hover:border-primary/40',
-          )}
-        >
+              : 'border-border hover:border-primary/40'
+          )}>
           <div className="flex items-center gap-1.5 text-xs font-medium">
             {targetIcon}
             <span>
               {t('leads.convert.reuse.reuseOption', {
                 entity,
-                defaultValue: 'Use existing {{entity}}',
+                defaultValue: 'Use existing {{entity}}'
               })}
             </span>
           </div>
           <p className="text-[11px] text-muted-foreground">
             {t('leads.convert.reuse.reuseHelp', {
               defaultValue:
-                'No new record is created — the existing one will be linked',
+                'No new record is created — the existing one will be linked'
             })}
           </p>
         </button>
@@ -122,20 +122,20 @@ export function LeadConvertReuseBanner({
           <div className="flex items-center justify-between gap-2">
             <p className="text-[10.5px] uppercase tracking-wide text-muted-foreground">
               {t('leads.convert.reuse.pickOne', {
-                defaultValue: 'Which one to use?',
+                defaultValue: 'Which one to use?'
               })}
             </p>
             {candidates.length > 4 ? (
               <span className="text-[10.5px] text-muted-foreground">
                 {t('leads.convert.reuse.candidateCount', {
                   count: candidates.length,
-                  defaultValue: '{{count}} options',
+                  defaultValue: '{{count}} options'
                 })}
               </span>
             ) : null}
           </div>
           <div className="max-h-52 space-y-1.5 overflow-y-auto pr-1">
-            {candidates.map((candidate) => (
+            {candidates.map(candidate => (
               <button
                 key={candidate.id}
                 type="button"
@@ -144,9 +144,8 @@ export function LeadConvertReuseBanner({
                 className={cn(
                   'flex w-full items-center justify-between gap-2 rounded-md border bg-background px-3 py-2 text-left text-xs transition-colors',
                   selectedId === candidate.id &&
-                    'border-primary ring-1 ring-primary',
-                )}
-              >
+                  'border-primary ring-1 ring-primary'
+                )}>
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
                     <span className="truncate font-medium">
@@ -155,7 +154,7 @@ export function LeadConvertReuseBanner({
                     {exactId === candidate.id ? (
                       <Badge variant="secondary" className="h-4 text-[10px]">
                         {t('leads.convert.reuse.exactMatchBadge', {
-                          defaultValue: 'Exact match',
+                          defaultValue: 'Exact match'
                         })}
                       </Badge>
                     ) : null}

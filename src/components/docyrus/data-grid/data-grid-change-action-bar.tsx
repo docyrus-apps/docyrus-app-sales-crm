@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { useCallback, useMemo, useState, type RefObject } from 'react'
 
 import { RotateCcw, Save } from 'lucide-react'
@@ -20,7 +22,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 interface ChangeMapEntry<TData> {
   originalRow: TData
@@ -51,15 +53,23 @@ export function DataGridChangeActionBar<TData>({
   const [popoverOpen, setPopoverOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
+  /*
+   * Depend on `getAllColumns()` (TanStack returns a fresh reference only when
+   * the column defs change), not the referentially stable `table` instance —
+   * otherwise late-loading data-source columns would freeze this map on a
+   * pre-load snapshot and labels would fall back to raw ids.
+   */
+  const allColumns = table.getAllColumns()
+
   const columnLabelMap = useMemo(() => {
     const map = new Map<string, string>()
 
-    for (const col of table.getAllColumns()) {
+    for (const col of allColumns) {
       map.set(col.id, col.columnDef.meta?.label ?? col.id)
     }
 
     return map
-  }, [table])
+  }, [allColumns])
 
   const onSaveClick = useCallback(async () => {
     setIsSaving(true)

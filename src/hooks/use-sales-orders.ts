@@ -1,6 +1,8 @@
+import type { ICollectionListParams } from '@/collections/types'
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import type { ICollectionListParams } from '@/collections/types'
+
 import { useBaseCrmSalesOrderCollection } from '@/collections'
 
 export function useSalesOrders(params?: ICollectionListParams) {
@@ -18,12 +20,13 @@ export function useSalesOrders(params?: ICollectionListParams) {
           'sub_total',
           'tax_total',
           'grand_total',
-          'created_on',
+          'created_on'
         ],
-        orderBy: params?.orderBy || 'created_on DESC',
+        orderBy: params?.orderBy || 'created_on DESC'
       })
+
       return response
-    },
+    }
   })
 }
 
@@ -34,6 +37,7 @@ export function useSalesOrder(orderId: string | undefined) {
     queryKey: ['sales-orders', orderId],
     queryFn: async () => {
       if (!orderId) throw new Error('Order ID is required')
+
       return await salesOrderCollection.get(orderId, {
         columns: [
           'id',
@@ -44,57 +48,55 @@ export function useSalesOrder(orderId: string | undefined) {
           'tax_total',
           'grand_total',
           'created_on',
-          'record_owner',
-        ],
+          'record_owner'
+        ]
       })
     },
-    enabled: !!orderId,
+    enabled: !!orderId
   })
 }
 
 export function useCreateSalesOrder() {
   const salesOrderCollection = useBaseCrmSalesOrderCollection()
   const queryClient = useQueryClient()
+
   return useMutation({
     mutationFn: async (data: any) => await salesOrderCollection.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sales-orders'] })
       toast.success('Sales order created successfully')
     },
-    onError: (error: any) =>
-      toast.error(error?.message || 'Failed to create sales order'),
+    onError: (error: any) => toast.error(error?.message || 'Failed to create sales order')
   })
 }
 
 export function useUpdateSalesOrder() {
   const salesOrderCollection = useBaseCrmSalesOrderCollection()
   const queryClient = useQueryClient()
+
   return useMutation({
-    mutationFn: async ({ orderId, data }: { orderId: string; data: any }) =>
-      await salesOrderCollection.update(orderId, data),
+    mutationFn: async ({ orderId, data }: { orderId: string; data: any }) => await salesOrderCollection.update(orderId, data),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['sales-orders'] })
       queryClient.invalidateQueries({
-        queryKey: ['sales-orders', variables.orderId],
+        queryKey: ['sales-orders', variables.orderId]
       })
       toast.success('Sales order updated successfully')
     },
-    onError: (error: any) =>
-      toast.error(error?.message || 'Failed to update sales order'),
+    onError: (error: any) => toast.error(error?.message || 'Failed to update sales order')
   })
 }
 
 export function useDeleteSalesOrder() {
   const salesOrderCollection = useBaseCrmSalesOrderCollection()
   const queryClient = useQueryClient()
+
   return useMutation({
-    mutationFn: async (orderId: string) =>
-      await salesOrderCollection.delete(orderId),
+    mutationFn: async (orderId: string) => await salesOrderCollection.delete(orderId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sales-orders'] })
       toast.success('Sales order deleted successfully')
     },
-    onError: (error: any) =>
-      toast.error(error?.message || 'Failed to delete sales order'),
+    onError: (error: any) => toast.error(error?.message || 'Failed to delete sales order')
   })
 }

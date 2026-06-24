@@ -1,3 +1,5 @@
+// @ts-nocheck
+/* eslint-disable */
 import {
   useCallback,
   useEffect,
@@ -30,7 +32,7 @@ import { useVirtualizer, type Virtualizer } from '@tanstack/react-virtual'
 import { toast } from 'sonner'
 
 import { useDirection } from '@/components/ui/direction'
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 import { useAsRef } from '@/hooks/use-as-ref'
 import { useIsomorphicLayoutEffect } from '@/hooks/use-isomorphic-layout-effect'
@@ -63,6 +65,7 @@ import {
   getRowHeightValue,
   getScrollDirection,
   matchSelectOption,
+  normalizeRowHeight,
   parseCellKey,
   scrollCellIntoView,
 } from '../lib/data-grid'
@@ -347,7 +350,7 @@ function useDataGrid<TData>({
     return {
       sorting: initialState?.sorting ?? [],
       columnFilters: initialState?.columnFilters ?? [],
-      rowHeight: rowHeightProp,
+      rowHeight: normalizeRowHeight(rowHeightProp),
       displayMode: displayModeProp,
       rowSelection: initialState?.rowSelection ?? {},
       selectionState: {
@@ -2497,14 +2500,25 @@ function useDataGrid<TData>({
   const onRowSelectionChange = useCallback(
     (updater: Updater<RowSelectionState>) => {
       const currentState = store.getState()
-      const newRowSelection =
+      const rawRowSelection =
         typeof updater === 'function'
           ? updater(currentState.rowSelection)
           : updater
 
-      const selectedRows = Object.keys(newRowSelection).filter(
-        (key) => newRowSelection[key],
+      /*
+       * Strip `false` entries instead of keeping them as keys. Deselecting a
+       * row sets `rowSelection[id] = false`; left in place, those keys inflate
+       * any `Object.keys(rowSelection).length` count and leak stale ids to
+       * consumers. Keep only the truthy (selected) ids.
+       */
+      const selectedRows = Object.keys(rawRowSelection).filter(
+        (key) => rawRowSelection[key],
       )
+      const newRowSelection: RowSelectionState = {}
+
+      for (const key of selectedRows) {
+        newRowSelection[key] = true
+      }
 
       const selectedCells = new Set<string>()
       const rows = tableRef.current?.getRowModel().rows ?? []
@@ -2590,10 +2604,11 @@ function useDataGrid<TData>({
   const onRowHeightChange = useCallback(
     (updater: Updater<RowHeightValue>) => {
       const currentState = store.getState()
-      const newRowHeight =
+      const newRowHeight = normalizeRowHeight(
         typeof updater === 'function'
           ? updater(currentState.rowHeight)
-          : updater
+          : updater,
+      )
 
       store.setState('rowHeight', newRowHeight)
       propsRef.current.onRowHeightChange?.(newRowHeight)
@@ -2648,6 +2663,17 @@ function useDataGrid<TData>({
     [],
   )
 
+  /*
+   * `columnOptions` is extracted from the current render's props (not from
+   * `propsRef.current`) so that `tableMeta` is recreated — and cells
+   * re-render — immediately when the user toggles e.g. "Show autonumber"
+   * from the column header dropdown.  Using `propsRef.current` here would
+   * lag by one render (the ref is updated in `useLayoutEffect`, after the
+   * render phase), so `DataGridRow`'s memo comparator would see the same
+   * reference both before and after the toggle and skip re-renders.
+   */
+  const externalColumnOptions = props.meta?.columnOptions
+
   const tableMeta = useMemo<TableMeta<TData>>(() => {
     return {
       ...propsRef.current.meta,
@@ -2679,6 +2705,13 @@ function useDataGrid<TData>({
       },
       get readOnly() {
         return propsRef.current.readOnly
+      },
+      columnOptions: externalColumnOptions,
+      get onColumnOptionsChange() {
+        return propsRef.current.meta?.onColumnOptionsChange
+      },
+      get onColumnOptionsReset() {
+        return propsRef.current.meta?.onColumnOptionsReset
       },
       getIsCellSelected,
       getIsCellCut,
@@ -2742,6 +2775,7 @@ function useDataGrid<TData>({
     onSelectionClear,
     onContextMenuOpenChange,
     onPasteDialogOpenChange,
+    externalColumnOptions,
   ])
 
   const getMemoizedCoreRowModel = useMemo(() => getCoreRowModel(), [])
@@ -3919,38 +3953,42 @@ function useDataGrid<TData>({
     }
   }, [dataGridRef, store, blurCell, onSelectionClear])
 
+  /*
+   * Mirror the store's `isSelecting` flag into local state so we can drive
+   * DOM event listeners with a normal useEffect (proper add/remove pairing).
+   */
+  const [isSelecting, setIsSelecting] = useState(
+    () => store.getState().selectionState.isSelecting,
+  )
+
   useEffect(() => {
-    function onSelectStart(event: Event) {
-      event.preventDefault()
-    }
+    queueMicrotask(() =>
+      setIsSelecting(store.getState().selectionState.isSelecting),
+    )
 
-    function onContextMenu(event: Event) {
-      event.preventDefault()
-    }
+    const unsubscribe = store.subscribe(() => {
+      setIsSelecting(store.getState().selectionState.isSelecting)
+    })
 
-    function onCleanup() {
+    return unsubscribe
+  }, [store])
+
+  useEffect(() => {
+    if (!isSelecting) return
+
+    const onSelectStart = (event: Event) => event.preventDefault()
+    const onContextMenu = (event: Event) => event.preventDefault()
+
+    document.addEventListener('selectstart', onSelectStart)
+    document.addEventListener('contextmenu', onContextMenu)
+    document.body.style.userSelect = 'none'
+
+    return () => {
       document.removeEventListener('selectstart', onSelectStart)
       document.removeEventListener('contextmenu', onContextMenu)
       document.body.style.userSelect = ''
     }
-
-    const onUnsubscribe = store.subscribe(() => {
-      const currentState = store.getState()
-
-      if (currentState.selectionState.isSelecting) {
-        document.addEventListener('selectstart', onSelectStart)
-        document.addEventListener('contextmenu', onContextMenu)
-        document.body.style.userSelect = 'none'
-      } else {
-        onCleanup()
-      }
-    })
-
-    return () => {
-      onCleanup()
-      onUnsubscribe()
-    }
-  }, [store])
+  }, [isSelecting])
 
   useIsomorphicLayoutEffect(() => {
     const rafId = requestAnimationFrame(() => {
@@ -4003,8 +4041,10 @@ function useDataGrid<TData>({
 
   useEffect(() => {
     if (compiledRowRules.length === 0 && compiledCellRules.length === 0) {
-      setRowColorMap(emptyRowColorMap)
-      setCellColorMap(emptyCellColorMap)
+      queueMicrotask(() => {
+        setRowColorMap(emptyRowColorMap)
+        setCellColorMap(emptyCellColorMap)
+      })
 
       return
     }
@@ -4040,6 +4080,24 @@ function useDataGrid<TData>({
     emptyCellColorMap,
   ])
 
+  /*
+   * Expose the current selection so a parent component can read it
+   * synchronously during render. `rowSelection` is a `useStore` subscription
+   * (above), so these recompute and re-render the consumer whenever the
+   * selection changes — no `useEffect`/ref workarounds, which run a tick
+   * behind and miss the latest state.
+   */
+  const selectedRowCount = useMemo(
+    () => Object.values(rowSelection).filter(Boolean).length,
+    [rowSelection],
+  )
+
+  const selectedRows = useMemo(() => {
+    void rowSelection
+
+    return table.getSelectedRowModel().rows.map((row) => row.original)
+  }, [table, rowSelection])
+
   return useMemo(
     () => ({
       dataGridRef,
@@ -4048,6 +4106,8 @@ function useDataGrid<TData>({
       footerRef,
       dir,
       table,
+      selectedRows,
+      selectedRowCount,
       tableMeta,
       virtualTotalSize,
       virtualItems,
@@ -4091,6 +4151,8 @@ function useDataGrid<TData>({
       propsRef,
       dir,
       table,
+      selectedRows,
+      selectedRowCount,
       tableMeta,
       virtualTotalSize,
       virtualItems,

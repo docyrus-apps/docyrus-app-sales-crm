@@ -21,7 +21,7 @@ export const ROUTES = {
   PRODUCTS: '/products',
   SALES_ORDERS: '/sales-orders',
   SALES_ORDER_DETAIL: '/sales-orders/:orderId',
-  SETTINGS: '/settings',
+  SETTINGS: '/settings'
 } as const
 
 /**
@@ -31,7 +31,7 @@ export const DATE_FORMATS = {
   SHORT: 'MMM dd, yyyy',
   LONG: 'MMMM dd, yyyy, hh:mm a',
   ISO: 'yyyy-MM-dd',
-  TIME: 'hh:mm a',
+  TIME: 'hh:mm a'
 } as const
 
 /**
@@ -42,12 +42,12 @@ export const QUERY_CONFIG = {
     ENUMS: 1000 * 60 * 60, // 1 hour - enums rarely change
     REFERENCE_DATA: 1000 * 60 * 30, // 30 minutes - countries, cities
     USER_DATA: 1000 * 60 * 5, // 5 minutes - user profile
-    LIST_DATA: 1000 * 60, // 1 minute - list views
+    LIST_DATA: 1000 * 60 // 1 minute - list views
   },
   RETRY: {
     DEFAULT: 3,
-    MUTATIONS: 1,
-  },
+    MUTATIONS: 1
+  }
 } as const
 
 /**
@@ -55,7 +55,12 @@ export const QUERY_CONFIG = {
  */
 export const PAGINATION = {
   DEFAULT_PAGE_SIZE: 20,
-  PAGE_SIZE_OPTIONS: [10, 20, 50, 100],
+  PAGE_SIZE_OPTIONS: [
+10,
+20,
+50,
+100
+]
 } as const
 
 /**
@@ -65,43 +70,43 @@ export const NAV_ITEMS = [
   {
     title: 'Home',
     href: ROUTES.HOME,
-    icon: 'Home',
+    icon: 'Home'
   },
   {
     title: 'Deals',
     href: ROUTES.DEALS,
     icon: 'DollarSign',
-    section: 'records',
+    section: 'records'
   },
   {
     title: 'Leads',
     href: ROUTES.LEADS,
     icon: 'Users',
-    section: 'records',
+    section: 'records'
   },
   {
     title: 'Companies',
     href: ROUTES.COMPANIES,
     icon: 'Building',
-    section: 'records',
+    section: 'records'
   },
   {
     title: 'Tasks',
     href: ROUTES.TASKS,
-    icon: 'CheckSquare',
+    icon: 'CheckSquare'
   },
   {
     title: 'Products',
     href: ROUTES.PRODUCTS,
     icon: 'Package',
-    section: 'records',
+    section: 'records'
   },
   {
     title: 'Sales Orders',
     href: ROUTES.SALES_ORDERS,
     icon: 'FileText',
-    section: 'records',
-  },
+    section: 'records'
+  }
 ] as const
 
 /**
@@ -115,5 +120,5 @@ export const CURRENCY_SYMBOLS: Record<string, string> = {
   CNY: '¥',
   INR: '₹',
   TRY: '₺',
-  default: '$',
+  default: '$'
 }

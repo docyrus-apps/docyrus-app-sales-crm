@@ -1,10 +1,15 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
+
+import type { ColumnDef } from '@tanstack/react-table'
+
+import { type RowChange } from '@/components/docyrus/data-grid'
+
 import { useTranslation } from 'react-i18next'
 import { useDocyrusClient } from '@docyrus/signin'
 import { Package, Pencil, Plus, Trash2, Upload } from 'lucide-react'
-import type { ColumnDef } from '@tanstack/react-table'
 
 import type { BaseCrmProductEntity } from '@/collections/base_crm-product.collection'
+
 import { useBaseCrmProductCollection } from '@/collections/base_crm-product.collection'
 import { Button as MotionButton } from '@/components/animate-ui/components/buttons/button'
 import { ProductFormDialog } from '@/components/products/product-form-dialog'
@@ -13,23 +18,23 @@ import {
   DataGridRowActions,
   DataGridSkeleton,
   DataGridSkeletonGrid,
-  getDataGridActionsColumn,
-  type RowChange,
+  getDataGridActionsColumn
 } from '@/components/docyrus/data-grid'
 import { RecordDeleteConfirmDialog } from '@/components/docyrus/record-delete-confirm-dialog'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ViewSwitcher, type ViewType } from '@/components/view-switcher'
 import { useUpdateProduct } from '@/hooks/use-products'
 import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
-import { useDocyrusDataGrid } from '@/hooks/use-docyrus-data-grid'
+import { useDocyrusDataGrid } from '@/hooks/docyrus/use-docyrus-data-grid'
 import { useSeedDefaultViews } from '@/hooks/use-seed-default-views'
 import { useDocyrusDataImportWizard } from '@/hooks/use-docyrus-data-import-wizard'
 import { saveGridChanges } from '@/lib/data-grid-record-utils'
-import { createSystemViews } from '@/lib/crm-system-views'
+import {
+  createSystemViews,
+  numberGreaterThanFilter
+} from '@/lib/crm-system-views'
 import { useDateFormat } from '@/lib/use-date-format'
 
 const APP_SLUG = 'base_crm'
@@ -40,8 +45,8 @@ type ProductFormMode = 'create' | 'edit'
 type ProductFormRecord = BaseCrmProductEntity | Record<string, unknown>
 
 interface ProductDialogState {
-  mode: ProductFormMode
-  product: ProductFormRecord | null
+  mode: ProductFormMode;
+  product: ProductFormRecord | null;
 }
 
 const PRODUCT_GRID_COLUMN_OVERRIDES: Record<
@@ -52,11 +57,11 @@ const PRODUCT_GRID_COLUMN_OVERRIDES: Record<
   category: { size: 180 },
   Unit: { size: 130 },
   unit_price: { size: 140 },
-  tax: { size: 110 },
+  tax: { size: 110 }
 }
 
 const PRODUCT_GRID_VISIBLE_FIELDS = new Set(
-  Object.keys(PRODUCT_GRID_COLUMN_OVERRIDES),
+  Object.keys(PRODUCT_GRID_COLUMN_OVERRIDES)
 )
 
 const PRODUCT_GRID_COLUMNS = Object.keys(PRODUCT_GRID_COLUMN_OVERRIDES)
@@ -66,8 +71,22 @@ const PRODUCT_GRID_SYSTEM_VIEWS = createSystemViews('base-crm-product', [
     id: 'all',
     name: 'All',
     columns: PRODUCT_GRID_COLUMNS,
-    sorting: [{ id: 'product_code', desc: false }],
+    sorting: [{ id: 'product_code', desc: false }]
   },
+  {
+    id: 'priced',
+    name: 'Priced',
+    columns: PRODUCT_GRID_COLUMNS,
+    sorting: [{ id: 'unit_price', desc: true }],
+    filterQuery: numberGreaterThanFilter('unit_price', 0)
+  },
+  {
+    id: 'taxed',
+    name: 'Taxed',
+    columns: PRODUCT_GRID_COLUMNS,
+    sorting: [{ id: 'tax', desc: true }],
+    filterQuery: numberGreaterThanFilter('tax', 0)
+  }
 ])
 
 export function Products() {
@@ -79,9 +98,9 @@ export function Products() {
 }
 
 function ProductsPageInner({
-  client,
+  client
 }: {
-  client: NonNullable<ReturnType<typeof useDocyrusClient>>
+  client: NonNullable<ReturnType<typeof useDocyrusClient>>;
 }) {
   const { t } = useTranslation()
   const collection = useBaseCrmProductCollection()
@@ -93,14 +112,13 @@ function ProductsPageInner({
     appSlug: APP_SLUG,
     dataSourceSlug: DATA_SOURCE_SLUG,
     templates: PRODUCT_GRID_SYSTEM_VIEWS,
-    pruneUnlisted: true,
+    pruneUnlisted: true
   })
 
   const [dialog, setDialog] = useState<ProductDialogState | null>(null)
   const [pendingDelete, setPendingDelete] =
     useState<BaseCrmProductEntity | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [viewType, setViewType] = useState<ViewType>('list')
 
   const onOpenCreate = useCallback(() => {
     setDialog({ mode: 'create', product: null })
@@ -121,8 +139,7 @@ function ProductsPageInner({
   }, [])
 
   const actionsColumn = useMemo<ColumnDef<BaseCrmProductEntity>>(
-    () =>
-      getDataGridActionsColumn<BaseCrmProductEntity>({
+    () => getDataGridActionsColumn<BaseCrmProductEntity>({
         actionCount: 2,
         cell: ({ row }) => (
           <DataGridRowActions
@@ -135,38 +152,35 @@ function ProductsPageInner({
                 key: 'edit',
                 label: t('common.edit', 'Edit'),
                 icon: <Pencil className="size-4" />,
-                onSelect: onOpenEdit,
+                onSelect: onOpenEdit
               },
               {
                 key: 'open',
                 label: t('common.openPage', 'Open page'),
                 icon: <DocyrusIcon icon="huge sidebar-right-01" size="sm" />,
-                onSelect: onOpenEdit,
+                onSelect: onOpenEdit
               },
               {
                 key: 'delete',
                 label: t('common.delete', 'Delete'),
                 icon: <Trash2 className="size-4" />,
                 destructive: true,
-                onSelect: onDelete,
-              },
-            ]}
-          />
-        ),
+                onSelect: onDelete
+              }
+            ]} />
+        )
       }),
-    [onDelete, onOpenEdit, t],
+    [onDelete, onOpenEdit, t]
   )
 
   const onChangesSave = useCallback(
     async (
       changes: Array<RowChange>,
-      gridData: Array<BaseCrmProductEntity>,
+      gridData: Array<BaseCrmProductEntity>
     ) => {
-      await saveGridChanges(changes, gridData, (id, data) =>
-        updateProduct.mutateAsync({ productId: id, data }),
-      )
+      await saveGridChanges(changes, gridData, (id, data) => updateProduct.mutateAsync({ productId: id, data }))
     },
-    [updateProduct],
+    [updateProduct]
   )
 
   const openWizardRef = useRef<() => void>(() => {})
@@ -178,13 +192,12 @@ function ProductsPageInner({
         variant="outline"
         size="sm"
         className="gap-1.5"
-        onClick={() => openWizardRef.current()}
-      >
+        onClick={() => openWizardRef.current()}>
         <Upload className="size-4" />
         {t('common.import', 'Import')}
       </Button>
     ),
-    [t],
+    [t]
   )
 
   const {
@@ -192,11 +205,10 @@ function ProductsPageInner({
     gridProps,
     pagingMode,
     toolbar,
-    items: products,
     reload,
     dataSource,
     isLoading,
-    error,
+    error
   } = useDocyrusDataGrid<BaseCrmProductEntity>({
     client,
     appSlug: APP_SLUG,
@@ -212,15 +224,15 @@ function ProductsPageInner({
     enableServerExportMenu: true,
     searchPlaceholder: t('common.search', 'Search...'),
     toolbarEndContent: importToolbarButton,
-    getRowLabel: (row) => row.product_code || row.id || t('products.title'),
+    getRowLabel: row => row.product_code || row.id || t('products.title'),
     mapColumn: (field, defaultColumn) => {
       if (!PRODUCT_GRID_VISIBLE_FIELDS.has(field.slug)) return null
 
       return {
         ...defaultColumn,
-        ...PRODUCT_GRID_COLUMN_OVERRIDES[field.slug],
+        ...PRODUCT_GRID_COLUMN_OVERRIDES[field.slug]
       }
-    },
+    }
   })
 
   const { openWizard, wizard } = useDocyrusDataImportWizard({
@@ -228,7 +240,7 @@ function ProductsPageInner({
     appSlug: APP_SLUG,
     dataSourceSlug: DATA_SOURCE_SLUG,
     fields: dataSource?.fields,
-    onImported: reload,
+    onImported: reload
   })
 
   openWizardRef.current = openWizard
@@ -253,20 +265,12 @@ function ProductsPageInner({
         title={t('products.title')}
         icon={<Package className="h-4 w-4 text-lime-600" />}
         actions={
-          <>
-            <ViewSwitcher
-              value={viewType}
-              onValueChange={setViewType}
-              options={['card', 'list']}
-            />
-            <MotionButton size="sm" onClick={onOpenCreate}>
-              <Plus className="mr-2 h-4 w-4" />
-              {t('products.newProduct')}
-            </MotionButton>
-          </>
-        }
-      />
-      <PageContainer>
+          <MotionButton size="sm" onClick={onOpenCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t('products.newProduct')}
+          </MotionButton>
+        } />
+      <PageContainer className="flex min-h-0 flex-1 max-w-full flex-col overflow-hidden pb-0">
         {dialog && (
           <ProductFormDialog
             open
@@ -275,19 +279,10 @@ function ProductsPageInner({
             }}
             mode={dialog.mode}
             product={dialog.product ?? undefined}
-            onSubmitSuccess={reload}
-          />
+            onSubmitSuccess={reload} />
         )}
 
-        {isLoading && viewType === 'card' && (
-          <div className="space-y-4">
-            <div className="h-32 w-full animate-pulse rounded-md bg-muted" />
-            <div className="h-32 w-full animate-pulse rounded-md bg-muted" />
-            <div className="h-32 w-full animate-pulse rounded-md bg-muted" />
-          </div>
-        )}
-
-        {isLoading && viewType === 'list' && (
+        {isLoading && (
           <DataGridSkeleton>
             <DataGridSkeletonGrid />
           </DataGridSkeleton>
@@ -306,83 +301,16 @@ function ProductsPageInner({
           </Card>
         )}
 
-        {!isLoading && !error && products.length === 0 && (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <Package className="mb-4 h-12 w-12 text-muted-foreground" />
-              <p className="text-lg font-medium">{t('products.emptyTitle')}</p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {t('products.emptyDescription')}
-              </p>
-              <MotionButton className="mt-4" onClick={onOpenCreate}>
-                <Plus className="mr-2 h-4 w-4" />
-                {t('products.createProduct')}
-              </MotionButton>
-            </CardContent>
-          </Card>
-        )}
-
-        {!isLoading && !error && products.length > 0 && viewType === 'card' && (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {products.map((product) => (
-              <Card
-                key={product.id}
-                className="cursor-pointer transition-all hover:shadow-md"
-                onClick={() => onOpenEdit(product)}
-              >
-                <CardHeader>
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                      <Package className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1">
-                      <CardTitle className="text-base">
-                        {product.product_code || t('products.title')}
-                      </CardTitle>
-                      {product.category && (
-                        <Badge variant="secondary" className="mt-1">
-                          {typeof product.category === 'object'
-                            ? product.category.name
-                            : product.category}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {product.Unit && (
-                    <p className="text-xs text-muted-foreground">
-                      {t('products.columns.unit')}:{' '}
-                      {typeof product.Unit === 'object'
-                        ? product.Unit.name
-                        : String(product.Unit)}
-                    </p>
-                  )}
-                  {typeof product.unit_price === 'number' && (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {t('products.columns.unitPrice')}: {product.unit_price}
-                    </p>
-                  )}
-                  {typeof product.tax === 'number' && (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {t('products.columns.tax')}: %{product.tax}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {!isLoading && !error && products.length > 0 && viewType === 'list' && (
-          <div className="space-y-4">
-            {toolbar}
-            <DataGrid
-              table={table}
-              {...gridProps}
-              pagingMode={pagingMode}
-              height={600}
-            />
+        {!isLoading && !error && (
+          <div className="flex min-h-0 flex-1 flex-col gap-4">
+            <div className="shrink-0">{toolbar}</div>
+            <div className="min-h-0 flex-1">
+              <DataGrid
+                table={table}
+                {...gridProps}
+                pagingMode={pagingMode}
+                height="auto" />
+            </div>
           </div>
         )}
 
@@ -393,8 +321,7 @@ function ProductsPageInner({
           }}
           recordCount={pendingDelete ? 1 : 0}
           onConfirm={onConfirmDelete}
-          isPending={isDeleting}
-        />
+          isPending={isDeleting} />
 
         {wizard}
       </PageContainer>

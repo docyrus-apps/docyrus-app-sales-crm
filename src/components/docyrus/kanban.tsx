@@ -1,12 +1,15 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import {
   type CSSProperties,
   type ComponentProps,
+  type MouseEvent,
   type ReactNode,
   createContext,
   useCallback,
-  useContext,
+  use,
   useId,
   useLayoutEffect,
   useMemo,
@@ -17,6 +20,12 @@ import {
 import {
   type AnimateLayoutChanges,
   type SortableContextProps,
+  SortableContext,
+  arrayMove,
+  defaultAnimateLayoutChanges,
+  horizontalListSortingStrategy,
+  useSortable,
+  verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 
 import * as ReactDOM from 'react-dom'
@@ -37,19 +46,6 @@ import {
   useDroppable,
   useSensor,
   useSensors,
-} from '@dnd-kit/core'
-import {
-  SortableContext,
-  arrayMove,
-  defaultAnimateLayoutChanges,
-  horizontalListSortingStrategy,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
-import { Slot } from '@radix-ui/react-slot'
-
-import {
   type Announcements,
   type CollisionDetection,
   type DndContextProps,
@@ -64,6 +60,8 @@ import {
   type KeyboardCoordinateGetter,
   type UniqueIdentifier,
 } from '@dnd-kit/core'
+import { CSS } from '@dnd-kit/utilities'
+import { Slot } from '@radix-ui/react-slot'
 
 import { useComposedRefs } from '@/lib/compose-refs'
 import { cn } from '@/lib/utils'
@@ -193,12 +191,13 @@ interface KanbanContextValue<T> {
   flatCursor: boolean
   finalColumnIds: Set<UniqueIdentifier>
   hoveredFinalColumn: UniqueIdentifier | null
+  onItemClick?: (value: UniqueIdentifier) => void
 }
 
 const KanbanContext = createContext<KanbanContextValue<unknown> | null>(null)
 
 function useKanbanContext(consumerName: string) {
-  const context = useContext(KanbanContext)
+  const context = use(KanbanContext)
 
   if (!context) {
     throw new Error(`\`${consumerName}\` must be used within \`${ROOT_NAME}\``)
@@ -219,6 +218,7 @@ type KanbanProps<T> = Omit<DndContextProps, 'collisionDetection'> &
       event: DragEndEvent & { activeIndex: number; overIndex: number },
     ) => void
     onFinalDrop?: (item: T, finalColumnId: UniqueIdentifier) => void
+    onItemClick?: (value: UniqueIdentifier) => void
     finalColumns?: Array<UniqueIdentifier>
     strategy?: SortableContextProps['strategy']
     orientation?: 'horizontal' | 'vertical'
@@ -230,6 +230,7 @@ function Kanban<T>(props: KanbanProps<T>) {
     value,
     onValueChange,
     onFinalDrop,
+    onItemClick,
     finalColumns,
     modifiers,
     strategy = verticalListSortingStrategy,
@@ -256,18 +257,11 @@ function Kanban<T>(props: KanbanProps<T>) {
   const lastOverIdRef = useRef<UniqueIdentifier | null>(null)
   const hasMovedRef = useRef(false)
   const sensors = useSensors(
-    /*
-     * Require a small pointer movement before a drag activates. Cards are
-     * draggable as a whole (`asHandle`), so without an activation constraint
-     * dnd-kit swallows plain clicks as drags — breaking card-level `onClick`
-     * (e.g. open detail page) and menu actions. The distance/delay let taps
-     * and clicks through while still enabling drag on intentional movement.
-     */
     useSensor(MouseSensor, {
-      activationConstraint: { distance: 8 },
+      activationConstraint: { distance: 5 },
     }),
     useSensor(TouchSensor, {
-      activationConstraint: { delay: 200, tolerance: 8 },
+      activationConstraint: { delay: 200, tolerance: 5 },
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter,
@@ -728,6 +722,7 @@ function Kanban<T>(props: KanbanProps<T>) {
       flatCursor,
       finalColumnIds,
       hoveredFinalColumn,
+      onItemClick,
     }),
     [
       id,
@@ -740,11 +735,12 @@ function Kanban<T>(props: KanbanProps<T>) {
       flatCursor,
       finalColumnIds,
       hoveredFinalColumn,
+      onItemClick,
     ],
   )
 
   return (
-    <KanbanContext.Provider value={contextValue as KanbanContextValue<unknown>}>
+    <KanbanContext value={contextValue as KanbanContextValue<unknown>}>
       <DndContext
         collisionDetection={collisionDetection}
         modifiers={modifiers}
@@ -772,7 +768,7 @@ function Kanban<T>(props: KanbanProps<T>) {
           ...accessibility,
         }}
       />
-    </KanbanContext.Provider>
+    </KanbanContext>
   )
 }
 
@@ -795,7 +791,7 @@ function KanbanBoard(props: KanbanBoardProps) {
   const BoardPrimitive = asChild ? Slot : 'div'
 
   return (
-    <KanbanBoardContext.Provider value>
+    <KanbanBoardContext value>
       <SortableContext
         items={columns}
         strategy={
@@ -817,7 +813,7 @@ function KanbanBoard(props: KanbanBoardProps) {
           )}
         />
       </SortableContext>
-    </KanbanBoardContext.Provider>
+    </KanbanBoardContext>
   )
 }
 
@@ -833,7 +829,7 @@ interface KanbanColumnContextValue {
 const KanbanColumnContext = createContext<KanbanColumnContextValue | null>(null)
 
 function useKanbanColumnContext(consumerName: string) {
-  const context = useContext(KanbanColumnContext)
+  const context = use(KanbanColumnContext)
 
   if (!context) {
     throw new Error(
@@ -869,8 +865,8 @@ function KanbanColumn(props: KanbanColumnProps) {
 
   const id = useId()
   const context = useKanbanContext(COLUMN_NAME)
-  const inBoard = useContext(KanbanBoardContext)
-  const inOverlay = useContext(KanbanOverlayContext)
+  const inBoard = use(KanbanBoardContext)
+  const inOverlay = use(KanbanOverlayContext)
 
   if (!inBoard && !inOverlay) {
     throw new Error(
@@ -932,7 +928,7 @@ function KanbanColumn(props: KanbanColumnProps) {
   const ColumnPrimitive = asChild ? Slot : 'div'
 
   return (
-    <KanbanColumnContext.Provider value={columnContext}>
+    <KanbanColumnContext value={columnContext}>
       <SortableContext
         items={items}
         strategy={
@@ -965,7 +961,7 @@ function KanbanColumn(props: KanbanColumnProps) {
           )}
         />
       </SortableContext>
-    </KanbanColumnContext.Provider>
+    </KanbanColumnContext>
   )
 }
 
@@ -1023,7 +1019,7 @@ interface KanbanItemContextValue {
 const KanbanItemContext = createContext<KanbanItemContextValue | null>(null)
 
 function useKanbanItemContext(consumerName: string) {
-  const context = useContext(KanbanItemContext)
+  const context = use(KanbanItemContext)
 
   if (!context) {
     throw new Error(`\`${consumerName}\` must be used within \`${ITEM_NAME}\``)
@@ -1053,8 +1049,8 @@ function KanbanItem(props: KanbanItemProps) {
 
   const id = useId()
   const context = useKanbanContext(ITEM_NAME)
-  const inBoard = useContext(KanbanBoardContext)
-  const inOverlay = useContext(KanbanOverlayContext)
+  const inBoard = use(KanbanBoardContext)
+  const inOverlay = use(KanbanOverlayContext)
 
   if (!inBoard && !inOverlay) {
     throw new Error(`\`${ITEM_NAME}\` must be used within \`${BOARD_NAME}\``)
@@ -1102,12 +1098,13 @@ function KanbanItem(props: KanbanItemProps) {
   const ItemPrimitive = asChild ? Slot : 'div'
 
   return (
-    <KanbanItemContext.Provider value={itemContext}>
+    <KanbanItemContext value={itemContext}>
       <ItemPrimitive
         id={id}
         data-disabled={disabled}
         data-dragging={isDragging ? '' : undefined}
         data-slot="kanban-item"
+        data-value={value}
         {...itemProps}
         {...(asHandle && !disabled ? attributes : {})}
         {...(asHandle && !disabled ? listeners : {})}
@@ -1126,7 +1123,7 @@ function KanbanItem(props: KanbanItemProps) {
           className,
         )}
       />
-    </KanbanItemContext.Provider>
+    </KanbanItemContext>
   )
 }
 
@@ -1168,6 +1165,79 @@ function KanbanItemHandle(props: KanbanItemHandleProps) {
         className,
       )}
       disabled={isDisabled}
+    />
+  )
+}
+
+interface KanbanItemTitleProps extends ComponentProps<'button'> {
+  asChild?: boolean
+}
+
+function KanbanItemTitle(props: KanbanItemTitleProps) {
+  const { asChild, className, ref, onClick, ...titleProps } = props
+
+  const context = useKanbanContext('KanbanItemTitle')
+  const itemContext = useKanbanItemContext('KanbanItemTitle')
+
+  const titleRef = useRef<HTMLButtonElement | null>(null)
+
+  useLayoutEffect(() => {
+    const node = titleRef.current
+
+    if (!node) return
+
+    const stop = (e: Event) => {
+      e.stopPropagation()
+    }
+
+    node.addEventListener('pointerdown', stop)
+    node.addEventListener('mousedown', stop)
+    node.addEventListener('touchstart', stop, { passive: true })
+
+    return () => {
+      node.removeEventListener('pointerdown', stop)
+      node.removeEventListener('mousedown', stop)
+      node.removeEventListener('touchstart', stop)
+    }
+  }, [])
+
+  const composedRef = useComposedRefs(ref, titleRef)
+
+  const { onItemClick } = context
+
+  const handleClick = useCallback(
+    (e: MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation()
+      onClick?.(e)
+
+      if (!e.defaultPrevented && onItemClick) {
+        const itemEl = (e.currentTarget as HTMLElement).closest(
+          '[data-slot="kanban-item"]',
+        )
+        const itemValue = itemEl?.getAttribute('data-value')
+
+        if (itemValue) {
+          onItemClick(itemValue)
+        }
+      }
+    },
+    [onClick, onItemClick],
+  )
+
+  const TitlePrimitive = asChild ? Slot : 'button'
+
+  return (
+    <TitlePrimitive
+      type="button"
+      data-slot="kanban-item-title"
+      data-dragging={itemContext.isDragging ? '' : undefined}
+      {...titleProps}
+      ref={composedRef}
+      onClick={handleClick}
+      className={cn(
+        'cursor-pointer text-left focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring',
+        className,
+      )}
     />
   )
 }
@@ -1269,7 +1339,9 @@ function KanbanOverlay(props: KanbanOverlayProps) {
 
   const [mounted, setMounted] = useState(false)
 
-  useLayoutEffect(() => setMounted(true), [])
+  useLayoutEffect(() => {
+    queueMicrotask(() => setMounted(true))
+  }, [])
 
   const container =
     containerProp ?? (mounted ? globalThis.document?.body : null)
@@ -1286,7 +1358,7 @@ function KanbanOverlay(props: KanbanOverlayProps) {
       className={cn(!context.flatCursor && 'cursor-grabbing')}
       {...overlayProps}
     >
-      <KanbanOverlayContext.Provider value>
+      <KanbanOverlayContext value>
         {context.activeId && children
           ? typeof children === 'function'
             ? children({
@@ -1295,7 +1367,7 @@ function KanbanOverlay(props: KanbanOverlayProps) {
               })
             : children
           : null}
-      </KanbanOverlayContext.Provider>
+      </KanbanOverlayContext>
     </DragOverlay>,
     container,
   )
@@ -1310,6 +1382,8 @@ export {
   KanbanFinalZone,
   KanbanItem,
   KanbanItemHandle,
+  KanbanItemTitle,
   KanbanOverlay,
+  type KanbanItemTitleProps,
   type KanbanProps,
 }

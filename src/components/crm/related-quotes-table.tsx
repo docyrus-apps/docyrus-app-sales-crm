@@ -9,18 +9,18 @@ import { Button } from '@/components/ui/button'
 import { useDateFormat } from '@/lib/use-date-format'
 
 export interface RelatedQuote {
-  id?: string
-  status?: { name?: string } | string
-  grand_total?: number
-  created_on?: string
+  id?: string;
+  status?: { name?: string } | string;
+  grand_total?: number;
+  created_on?: string;
 }
 
 export interface RelatedQuotesTableProps {
-  quotes: Array<RelatedQuote>
-  isLoading?: boolean
-  emptyLabel?: string
-  onOpenQuote: (id: string) => void
-  onNewQuote?: () => void
+  quotes: Array<RelatedQuote>;
+  isLoading?: boolean;
+  emptyLabel?: string;
+  onOpenQuote: (id: string) => void;
+  onNewQuote?: () => void;
 }
 
 const GRID_COLS =
@@ -37,7 +37,7 @@ export function RelatedQuotesTable({
   isLoading,
   emptyLabel,
   onOpenQuote,
-  onNewQuote,
+  onNewQuote
 }: RelatedQuotesTableProps) {
   const { t } = useTranslation()
   const { formatDate } = useDateFormat()
@@ -66,10 +66,9 @@ export function RelatedQuotesTable({
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={event => setQuery(event.target.value)}
             placeholder={t('common.search', 'Search…')}
-            className="h-8 border-none bg-muted/50 pl-8 text-[13px] shadow-none focus-visible:ring-1"
-          />
+            className="h-8 border-none bg-muted/50 pl-8 text-[13px] shadow-none focus-visible:ring-1" />
         </div>
         {onNewQuote && (
           <Button size="sm" className="h-8 gap-1.5" onClick={onNewQuote}>
@@ -83,9 +82,8 @@ export function RelatedQuotesTable({
       <div
         className={cn(
           GRID_COLS,
-          'px-4 pb-2 pt-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70',
-        )}
-      >
+          'px-4 pb-2 pt-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70'
+        )}>
         <span>{t('quotes.columnQuote', 'Quote')}</span>
         <span>{t('quotes.status', 'Status')}</span>
         <span>{t('quotes.total', 'Total')}</span>
@@ -99,8 +97,7 @@ export function RelatedQuotesTable({
             {Array.from({ length: 4 }).map((_, index) => (
               <div
                 key={index}
-                className="h-11 animate-pulse rounded-lg bg-muted/40"
-              />
+                className="h-11 animate-pulse rounded-lg bg-muted/40" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
@@ -142,9 +139,8 @@ export function RelatedQuotesTable({
                   }}
                   className={cn(
                     GRID_COLS,
-                    'group cursor-pointer rounded-lg px-2 py-2 text-sm transition-colors hover:bg-muted/60',
-                  )}
-                >
+                    'group cursor-pointer rounded-lg px-2 py-2 text-sm transition-colors hover:bg-muted/60'
+                  )}>
                   <div className="flex min-w-0 items-center gap-2.5">
                     <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
                       <FileText className="size-3.5" />

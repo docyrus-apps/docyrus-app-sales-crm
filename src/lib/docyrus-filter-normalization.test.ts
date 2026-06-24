@@ -12,14 +12,14 @@ describe('normalizeSavedViewFilterQuery', () => {
           field: 'lead_status',
           operator: 'is one of',
           value: ['status-new'],
-          valueSource: 'value',
+          valueSource: 'value'
         },
         {
           field: 'related_product',
           operator: '=',
-          value: 'product-1',
-        },
-      ],
+          value: 'product-1'
+        }
+      ]
     })
 
     expect(normalized).toEqual({
@@ -28,14 +28,14 @@ describe('normalizeSavedViewFilterQuery', () => {
         {
           operator: 'in',
           field: 'lead_status',
-          value: ['status-new'],
+          value: ['status-new']
         },
         {
           operator: '=',
           field: 'related_product',
-          value: 'product-1',
-        },
-      ],
+          value: 'product-1'
+        }
+      ]
     })
   })
 
@@ -52,11 +52,11 @@ describe('normalizeSavedViewFilterQuery', () => {
               field: 'category',
               operator: 'is none of',
               value: ['archived'],
-              valueSource: 'value',
-            },
-          ],
-        },
-      ],
+              valueSource: 'value'
+            }
+          ]
+        }
+      ]
     })
 
     expect(normalized).toEqual({
@@ -68,17 +68,17 @@ describe('normalizeSavedViewFilterQuery', () => {
             {
               operator: 'not in',
               field: 'category',
-              value: ['archived'],
-            },
-          ],
-        },
-      ],
+              value: ['archived']
+            }
+          ]
+        }
+      ]
     })
   })
 
   it('returns undefined for empty saved-view filters', () => {
     expect(
-      normalizeSavedViewFilterQuery({ combinator: 'and', rules: [] }),
+      normalizeSavedViewFilterQuery({ combinator: 'and', rules: [] })
     ).toBeUndefined()
   })
 })

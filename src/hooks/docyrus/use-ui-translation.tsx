@@ -1,10 +1,10 @@
-'use client';
+'use client'
 
 // @ts-nocheck
 /* eslint-disable */
-import { createContext, use, type ReactNode } from 'react';
+import { createContext, use, type ReactNode } from 'react'
 
-export type TranslateFn = (key: string, fallback: string) => string;
+export type TranslateFn = (key: string, fallback: string) => string
 
 /**
  * Context for UI component translations.
@@ -23,9 +23,11 @@ export type TranslateFn = (key: string, fallback: string) => string;
  * // No provider → English fallback (no crash)
  * ```
  */
-export const UiTranslationContext = createContext<{ t: TranslateFn } | null>(null);
+export const UiTranslationContext = createContext<{ t: TranslateFn } | null>(
+  null,
+)
 
-const fallbackT: TranslateFn = (_key, fallback) => fallback;
+const fallbackT: TranslateFn = (_key, fallback) => fallback
 
 /**
  * Safe i18n hook for Docyrus UI components.
@@ -37,16 +39,19 @@ const fallbackT: TranslateFn = (_key, fallback) => fallback;
  * Then:  `t('ui.calendar.addEvent', 'Add Event')`
  */
 export function useUiTranslation(): { t: TranslateFn } {
-  const ctx = use(UiTranslationContext);
+  const ctx = use(UiTranslationContext)
 
-  if (!ctx) return { t: fallbackT };
+  if (!ctx) return { t: fallbackT }
 
-  return ctx;
+  return ctx
 }
 
 interface UiTranslationProviderProps {
-  t: (key: string, fallbackOrParams?: string | Record<string, string | number>) => string;
-  children: ReactNode;
+  t: (
+    key: string,
+    fallbackOrParams?: string | Record<string, string | number>,
+  ) => string
+  children: ReactNode
 }
 
 /**
@@ -55,12 +60,11 @@ interface UiTranslationProviderProps {
  * Wrap your app with this provider and pass any `t` function.
  * Components will use it for translations, falling back to English when absent.
  */
-export function UiTranslationProvider({ t, children }: UiTranslationProviderProps) {
-  const value = { t: (key: string, fallback: string) => t(key, fallback) };
+export function UiTranslationProvider({
+  t,
+  children,
+}: UiTranslationProviderProps) {
+  const value = { t: (key: string, fallback: string) => t(key, fallback) }
 
-  return (
-    <UiTranslationContext value={value}>
-      {children}
-    </UiTranslationContext>
-  );
+  return <UiTranslationContext value={value}>{children}</UiTranslationContext>
 }

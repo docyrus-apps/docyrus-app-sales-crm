@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { ImageIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -59,7 +61,7 @@ export function ImageValue({ value, className }: DocyrusValueProps) {
     value === '' ||
     (Array.isArray(value) && value.length === 0)
   ) {
-    return <span className="text-muted-foreground">—</span>
+    return <span className="text-muted-foreground">–</span>
   }
 
   const images = normalizeImages(value)

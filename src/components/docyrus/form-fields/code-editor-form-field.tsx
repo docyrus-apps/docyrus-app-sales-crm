@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { useMemo } from 'react'
 
 import CodeMirror, { type BasicSetupOptions } from '@uiw/react-codemirror'
@@ -7,7 +9,7 @@ import {
   type LanguageName,
   loadLanguage,
 } from '@uiw/codemirror-extensions-langs'
-import { useDocyTheme } from '@/lib/theme'
+import { useDocyTheme } from '@/lib/docyrus/theme'
 
 import { Field, FieldError } from '@/components/ui/field'
 
@@ -62,9 +64,8 @@ export function CodeEditorFormField({
   )
 
   return (
-    <form.Field
-      name={fieldConfig.slug}
-      children={(field: any) => {
+    <form.Field name={fieldConfig.slug}>
+      {(field: any) => {
         const isInvalid =
           field.state.meta.isTouched && !field.state.meta.isValid
 
@@ -93,6 +94,6 @@ export function CodeEditorFormField({
           </Field>
         )
       }}
-    />
+    </form.Field>
   )
 }

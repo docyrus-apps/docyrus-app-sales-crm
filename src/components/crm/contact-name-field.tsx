@@ -1,4 +1,5 @@
 import { useState } from 'react'
+
 import { useTranslation } from 'react-i18next'
 
 import { Loader2 } from 'lucide-react'
@@ -8,12 +9,12 @@ import { Input } from '@/components/ui/input'
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
+  PopoverTrigger
 } from '@/components/ui/popover'
 
 interface ContactNameFieldProps {
-  name?: string
-  onSave: (name: string) => void | Promise<void>
+  name?: string;
+  onSave: (name: string) => void | Promise<void>;
 }
 
 function splitName(name: string): { first: string; last: string } {
@@ -58,13 +59,11 @@ export function ContactNameField({ name, onSave }: ContactNameFieldProps) {
           setFirst(reset.first)
           setLast(reset.last)
         }
-      }}
-    >
+      }}>
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="w-full truncate rounded-md px-1 py-0.5 text-left text-[13px] transition-colors hover:bg-muted/50"
-        >
+          className="w-full truncate rounded-md px-1 py-0.5 text-left text-[13px] transition-colors hover:bg-muted/50">
           {name?.trim() ? (
             name
           ) : (
@@ -75,7 +74,7 @@ export function ContactNameField({ name, onSave }: ContactNameFieldProps) {
       <PopoverContent align="start" className="w-64 space-y-2 p-2">
         <Input
           value={first}
-          onChange={(event) => setFirst(event.target.value)}
+          onChange={event => setFirst(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === 'Enter') {
               event.preventDefault()
@@ -84,11 +83,10 @@ export function ContactNameField({ name, onSave }: ContactNameFieldProps) {
           }}
           placeholder={t('contacts.firstName', { defaultValue: 'First name' })}
           className="h-8 text-[13px]"
-          autoFocus
-        />
+          autoFocus />
         <Input
           value={last}
-          onChange={(event) => setLast(event.target.value)}
+          onChange={event => setLast(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === 'Enter') {
               event.preventDefault()
@@ -96,16 +94,14 @@ export function ContactNameField({ name, onSave }: ContactNameFieldProps) {
             }
           }}
           placeholder={t('contacts.lastName', { defaultValue: 'Last name' })}
-          className="h-8 text-[13px]"
-        />
+          className="h-8 text-[13px]" />
         <div className="flex justify-end gap-1.5">
           <Button
             type="button"
             variant="ghost"
             size="sm"
             className="h-7"
-            onClick={() => setOpen(false)}
-          >
+            onClick={() => setOpen(false)}>
             {t('common.cancel', { defaultValue: 'Cancel' })}
           </Button>
           <Button
@@ -113,8 +109,7 @@ export function ContactNameField({ name, onSave }: ContactNameFieldProps) {
             size="sm"
             className="h-7 gap-1.5"
             disabled={saving}
-            onClick={() => void handleSave()}
-          >
+            onClick={() => void handleSave()}>
             {saving && <Loader2 className="size-3.5 animate-spin" />}
             {t('common.save', { defaultValue: 'Save' })}
           </Button>

@@ -1,5 +1,8 @@
 // @docyrus: [[features#Record Detail Redesign (Attio-style)]]
 import { useMemo, useState } from 'react'
+
+import type { EnumOption, IField } from '@/components/docyrus/form-fields/types'
+
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -11,7 +14,7 @@ import {
   Pencil,
   Plus,
   Search,
-  Trash2,
+  Trash2
 } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -21,7 +24,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/animate-ui/components/radix/dropdown-menu'
 import {
   AlertDialog,
@@ -31,11 +34,10 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogTitle
 } from '@/components/ui/alert-dialog'
 
 import { DynamicValue } from '@/components/docyrus/value-renderers/dynamic-value'
-import type { EnumOption, IField } from '@/components/docyrus/form-fields/types'
 import { TaskFormSheet } from '@/components/tasks/task-form-sheet'
 import { useDeleteTask, useTasks } from '@/hooks/use-tasks'
 import { useEnumEntities } from '@/hooks/use-enums'
@@ -50,18 +52,18 @@ export type TaskParentField = 'contact' | 'lead' | 'organization' | 'deal'
 type OptionValue = { id?: string; name?: string } | string | null | undefined
 
 interface RecordTask {
-  id?: string
-  subject?: string
-  description?: string
-  status?: OptionValue
-  priority?: OptionValue
-  start_date?: string | null
-  end_date?: string | null
+  id?: string;
+  subject?: string;
+  description?: string;
+  status?: OptionValue;
+  priority?: OptionValue;
+  start_date?: string | null;
+  end_date?: string | null;
 }
 
 interface RecordTasksPanelProps {
-  parentField: TaskParentField
-  parentId: string | undefined
+  parentField: TaskParentField;
+  parentId: string | undefined;
 }
 
 type SortKey = 'subject' | 'status' | 'priority' | 'end_date'
@@ -83,23 +85,25 @@ function isOverdue(task: RecordTask): boolean {
 
 export function RecordTasksPanel({
   parentField,
-  parentId,
+  parentId
 }: RecordTasksPanelProps) {
   const { t } = useTranslation()
   const { formatDate } = useDateFormat()
 
-  // Minimal field descriptors so the shared status renderer produces the same
-  // chip used across the attribute panels. Priority is a field-select on
-  // base.task whose options carry icon+color, so the status renderer produces
-  // the same chip treatment the guide asks for.
+  /*
+   * Minimal field descriptors so the shared status renderer produces the same
+   * chip used across the attribute panels. Priority is a field-select on
+   * base.task whose options carry icon+color, so the status renderer produces
+   * the same chip treatment the guide asks for.
+   */
   const statusField = useMemo<IField>(
     () => ({
       id: 'status',
       slug: 'status',
       name: t('recordDetail.tasks.status'),
-      type: 'field-status',
+      type: 'field-status'
     }),
-    [t],
+    [t]
   )
 
   const priorityField = useMemo<IField>(
@@ -107,9 +111,9 @@ export function RecordTasksPanel({
       id: 'priority',
       slug: 'priority',
       name: t('recordDetail.tasks.priority'),
-      type: 'field-status',
+      type: 'field-status'
     }),
-    [t],
+    [t]
   )
 
   const [query, setQuery] = useState('')
@@ -123,40 +127,41 @@ export function RecordTasksPanel({
 
   const { data: statusEntities = [] } = useEnumEntities('status', {
     appSlug: 'base',
-    dataSourceSlug: 'task',
+    dataSourceSlug: 'task'
   })
 
   const statusOptions = useMemo<Array<EnumOption>>(
-    () =>
-      statusEntities.map((entity) => ({
+    () => statusEntities.map(entity => ({
         id: entity.id,
         name: entity.name,
         color: entity.color ?? undefined,
-        icon: entity.icon ?? undefined,
+        icon: entity.icon ?? undefined
       })),
-    [statusEntities],
+    [statusEntities]
   )
 
   const { data: priorityEntities = [] } = useEnumEntities('priority', {
     appSlug: 'base',
-    dataSourceSlug: 'task',
+    dataSourceSlug: 'task'
   })
 
   const priorityOptions = useMemo<Array<EnumOption>>(
-    () =>
-      priorityEntities.map((entity) => ({
+    () => priorityEntities.map(entity => ({
         id: entity.id,
         name: entity.name,
         color: entity.color ?? undefined,
-        icon: entity.icon ?? undefined,
+        icon: entity.icon ?? undefined
       })),
-    [priorityEntities],
+    [priorityEntities]
   )
 
-  // Rank by the enum's configured order so the Priority column sorts sensibly
-  // (options come back already sorted by sortOrder).
+  /*
+   * Rank by the enum's configured order so the Priority column sorts sensibly
+   * (options come back already sorted by sortOrder).
+   */
   const priorityRank = useMemo(() => {
     const map = new Map<string, number>()
+
     priorityOptions.forEach((option, index) => map.set(option.id, index))
 
     return map
@@ -174,16 +179,18 @@ export function RecordTasksPanel({
         'end_date',
         'organization(id,name)',
         'record_owner',
-        'created_on',
+        'created_on'
       ],
-      // Empty value never matches a real parent → safely returns nothing
-      // until the record id is available.
+      /*
+       * Empty value never matches a real parent → safely returns nothing
+       * until the record id is available.
+       */
       filters: {
-        rules: [{ field: parentField, operator: '=', value: parentId ?? '' }],
+        rules: [{ field: parentField, operator: '=', value: parentId ?? '' }]
       },
-      orderBy: 'end_date DESC',
+      orderBy: 'end_date DESC'
     }),
-    [parentField, parentId],
+    [parentField, parentId]
   )
 
   const { data: tasksData = [], isLoading } = useTasks(listParams)
@@ -191,7 +198,7 @@ export function RecordTasksPanel({
 
   const statusName = useMemo(() => {
     const byId = new Map(
-      statusOptions.map((option) => [option.id, option.name]),
+      statusOptions.map(option => [option.id, option.name])
     )
 
     return (task: RecordTask) => byId.get(optionId(task.status) ?? '') ?? ''
@@ -199,7 +206,7 @@ export function RecordTasksPanel({
 
   const priorityName = useMemo(() => {
     const byId = new Map(
-      priorityOptions.map((option) => [option.id, option.name]),
+      priorityOptions.map(option => [option.id, option.name])
     )
 
     return (task: RecordTask) => byId.get(optionId(task.priority) ?? '') ?? ''
@@ -219,8 +226,7 @@ export function RecordTasksPanel({
         })
       : tasks
 
-    const rankOf = (task: RecordTask) =>
-      priorityRank.get(optionId(task.priority) ?? '') ?? Number.MAX_SAFE_INTEGER
+    const rankOf = (task: RecordTask) => priorityRank.get(optionId(task.priority) ?? '') ?? Number.MAX_SAFE_INTEGER
 
     return [...filtered].sort((a, b) => {
       let cmp = 0
@@ -240,11 +246,19 @@ export function RecordTasksPanel({
 
       return sortDesc ? -cmp : cmp
     })
-  }, [tasks, query, sortKey, sortDesc, statusName, priorityName, priorityRank])
+  }, [
+tasks,
+query,
+sortKey,
+sortDesc,
+statusName,
+priorityName,
+priorityRank
+])
 
   const toggleSort = (key: SortKey) => {
     if (key === sortKey) {
-      setSortDesc((value) => !value)
+      setSortDesc(value => !value)
     } else {
       setSortKey(key)
       setSortDesc(key === 'end_date')
@@ -258,9 +272,11 @@ export function RecordTasksPanel({
     setDeleteId(null)
   }
 
-  // Mobile shows Subject · Status · actions; Priority and Due reveal at md.
-  // The hidden cells use `display:none`, so they drop out of the grid flow and
-  // the visible cells line up with the matching track count at each breakpoint.
+  /*
+   * Mobile shows Subject · Status · actions; Priority and Due reveal at md.
+   * The hidden cells use `display:none`, so they drop out of the grid flow and
+   * the visible cells line up with the matching track count at each breakpoint.
+   */
   const GRID =
     'grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_1.75rem] md:grid-cols-[minmax(0,2.2fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)_1.75rem] items-center gap-3'
 
@@ -272,20 +288,18 @@ export function RecordTasksPanel({
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={event => setQuery(event.target.value)}
             placeholder={t('tasks.panel.search', {
-              defaultValue: 'Search tasks…',
+              defaultValue: 'Search tasks…'
             })}
-            className="h-8 border-none bg-muted/50 pl-8 text-[13px] shadow-none focus-visible:ring-1"
-          />
+            className="h-8 border-none bg-muted/50 pl-8 text-[13px] shadow-none focus-visible:ring-1" />
         </div>
         <Button
           id={`new-task-${parentField}`}
           size="sm"
           className="h-8 shrink-0 gap-1.5"
           disabled={!parentId}
-          onClick={() => setCreateOpen(true)}
-        >
+          onClick={() => setCreateOpen(true)}>
           <Plus className="size-3.5" />
           {t('tasks.panel.newTask', { defaultValue: 'New Task' })}
         </Button>
@@ -296,35 +310,30 @@ export function RecordTasksPanel({
         <div
           className={cn(
             GRID,
-            'px-4 pb-2 pt-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70',
-          )}
-        >
+            'px-4 pb-2 pt-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70'
+          )}>
           <SortHeader
             label={t('tasks.columns.subject', { defaultValue: 'Task' })}
             active={sortKey === 'subject'}
             desc={sortDesc}
-            onClick={() => toggleSort('subject')}
-          />
+            onClick={() => toggleSort('subject')} />
           <SortHeader
             label={t('tasks.columns.status', { defaultValue: 'Status' })}
             active={sortKey === 'status'}
             desc={sortDesc}
-            onClick={() => toggleSort('status')}
-          />
+            onClick={() => toggleSort('status')} />
           <SortHeader
             label={t('tasks.columns.priority', { defaultValue: 'Priority' })}
             active={sortKey === 'priority'}
             desc={sortDesc}
             onClick={() => toggleSort('priority')}
-            className="hidden md:inline-flex"
-          />
+            className="hidden md:inline-flex" />
           <SortHeader
             label={t('tasks.columns.dueDate', { defaultValue: 'Due' })}
             active={sortKey === 'end_date'}
             desc={sortDesc}
             onClick={() => toggleSort('end_date')}
-            className="hidden md:inline-flex"
-          />
+            className="hidden md:inline-flex" />
           <span />
         </div>
       )}
@@ -336,8 +345,7 @@ export function RecordTasksPanel({
             {Array.from({ length: 4 }).map((_, index) => (
               <div
                 key={index}
-                className="h-11 animate-pulse rounded-lg bg-muted/40"
-              />
+                className="h-11 animate-pulse rounded-lg bg-muted/40" />
             ))}
           </div>
         ) : visible.length === 0 ? (
@@ -348,10 +356,10 @@ export function RecordTasksPanel({
             <p className="text-[13px] text-muted-foreground">
               {query
                 ? t('tasks.panel.noMatch', {
-                    defaultValue: 'No tasks match your search.',
+                    defaultValue: 'No tasks match your search.'
                   })
                 : t('tasks.panel.empty', {
-                    defaultValue: 'No tasks yet',
+                    defaultValue: 'No tasks yet'
                   })}
             </p>
           </div>
@@ -372,9 +380,8 @@ export function RecordTasksPanel({
                   }}
                   className={cn(
                     GRID,
-                    'group cursor-pointer rounded-lg px-2 py-2 text-sm transition-colors hover:bg-muted/60',
-                  )}
-                >
+                    'group cursor-pointer rounded-lg px-2 py-2 text-sm transition-colors hover:bg-muted/60'
+                  )}>
                   <div className="flex min-w-0 items-center gap-2.5">
                     <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
                       <ListTodo className="size-3.5" />
@@ -389,8 +396,7 @@ export function RecordTasksPanel({
                       <DynamicValue
                         field={statusField}
                         value={optionId(task.status)}
-                        enumOptions={statusOptions}
-                      />
+                        enumOptions={statusOptions} />
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}
@@ -401,8 +407,7 @@ export function RecordTasksPanel({
                       <DynamicValue
                         field={priorityField}
                         value={optionId(task.priority)}
-                        enumOptions={priorityOptions}
-                      />
+                        enumOptions={priorityOptions} />
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}
@@ -411,9 +416,8 @@ export function RecordTasksPanel({
                   <span
                     className={cn(
                       'hidden items-center gap-1 truncate text-muted-foreground md:flex',
-                      overdue && 'font-medium text-destructive',
-                    )}
-                  >
+                      overdue && 'font-medium text-destructive'
+                    )}>
                     {due !== '—' && (
                       <CalendarClock className="size-3.5 shrink-0" />
                     )}
@@ -421,18 +425,16 @@ export function RecordTasksPanel({
                   </span>
 
                   <div
-                    onClick={(event) => event.stopPropagation()}
-                    className="flex items-center justify-center"
-                  >
+                    onClick={event => event.stopPropagation()}
+                    className="flex items-center justify-center">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
                           type="button"
                           aria-label={t('common.actions', {
-                            defaultValue: 'Actions',
+                            defaultValue: 'Actions'
                           })}
-                          className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground/60 opacity-0 transition-opacity hover:bg-background hover:text-foreground group-hover:opacity-100 data-[state=open]:opacity-100"
-                        >
+                          className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground/60 opacity-0 transition-opacity hover:bg-background hover:text-foreground group-hover:opacity-100 data-[state=open]:opacity-100">
                           <EllipsisVertical className="size-4" />
                         </button>
                       </DropdownMenuTrigger>
@@ -443,8 +445,7 @@ export function RecordTasksPanel({
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           variant="destructive"
-                          onClick={() => task.id && setDeleteId(task.id)}
-                        >
+                          onClick={() => task.id && setDeleteId(task.id)}>
                           <Trash2 className="size-4" />
                           {t('common.delete', { defaultValue: 'Delete' })}
                         </DropdownMenuItem>
@@ -466,8 +467,7 @@ export function RecordTasksPanel({
           parentId={parentId}
           onOpenChange={(open) => {
             if (!open) setCreateOpen(false)
-          }}
-        />
+          }} />
       )}
 
       {editTask && (
@@ -478,16 +478,14 @@ export function RecordTasksPanel({
           task={editTask}
           onOpenChange={(open) => {
             if (!open) setEditTask(null)
-          }}
-        />
+          }} />
       )}
 
       <AlertDialog
         open={!!deleteId}
         onOpenChange={(open) => {
           if (!open) setDeleteId(null)
-        }}
-      >
+        }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
@@ -495,7 +493,7 @@ export function RecordTasksPanel({
             </AlertDialogTitle>
             <AlertDialogDescription>
               {t('tasks.panel.deleteDescription', {
-                defaultValue: 'This task will be permanently removed.',
+                defaultValue: 'This task will be permanently removed.'
               })}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -508,8 +506,7 @@ export function RecordTasksPanel({
                 event.preventDefault()
                 void confirmDelete()
               }}
-              className="bg-destructive text-white hover:bg-destructive/90"
-            >
+              className="bg-destructive text-white hover:bg-destructive/90">
               {deleteTask.isPending && (
                 <Loader2 className="size-4 animate-spin" />
               )}
@@ -527,13 +524,13 @@ function SortHeader({
   active,
   desc,
   onClick,
-  className,
+  className
 }: {
-  label: string
-  active: boolean
-  desc: boolean
-  onClick: () => void
-  className?: string
+  label: string;
+  active: boolean;
+  desc: boolean;
+  onClick: () => void;
+  className?: string;
 }) {
   return (
     <button
@@ -542,14 +539,12 @@ function SortHeader({
       className={cn(
         'inline-flex items-center gap-1 text-left uppercase transition-colors hover:text-foreground',
         active && 'text-foreground',
-        className,
-      )}
-    >
+        className
+      )}>
       {label}
       {active && (
         <ChevronDown
-          className={cn('size-3 transition-transform', !desc && 'rotate-180')}
-        />
+          className={cn('size-3 transition-transform', !desc && 'rotate-180')} />
       )}
     </button>
   )

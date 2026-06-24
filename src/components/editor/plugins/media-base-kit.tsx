@@ -1,3 +1,4 @@
+/* eslint-disable */
 // @ts-nocheck
 import { BaseCaptionPlugin } from '@platejs/caption'
 import {

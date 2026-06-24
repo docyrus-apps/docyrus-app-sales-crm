@@ -1,10 +1,12 @@
+import type { ICollectionListParams } from '@/collections/types'
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import type { ICollectionListParams } from '@/collections/types'
+
 import { useBaseCrmLeadsCollection } from '@/collections'
 
 interface UseLeadsOptions {
-  enabled?: boolean
+  enabled?: boolean;
 }
 
 export const LEAD_LIST_COLUMNS = [
@@ -31,7 +33,7 @@ export const LEAD_LIST_COLUMNS = [
   'converted_on',
   'conversion_state',
   'conversion_mode',
-  'created_on',
+  'created_on'
 ]
 
 export const LEAD_DETAIL_COLUMNS = [
@@ -68,7 +70,7 @@ export const LEAD_DETAIL_COLUMNS = [
   'conversion_state',
   'conversion_mode',
   'conversion_error_message',
-  'created_on',
+  'created_on'
 ]
 
 /**
@@ -76,7 +78,7 @@ export const LEAD_DETAIL_COLUMNS = [
  */
 export function useLeads(
   params?: ICollectionListParams,
-  options: UseLeadsOptions = {},
+  options: UseLeadsOptions = {}
 ) {
   const leadsCollection = useBaseCrmLeadsCollection()
 
@@ -86,11 +88,12 @@ export function useLeads(
       const response = await leadsCollection.list({
         ...params,
         columns: params?.columns || LEAD_LIST_COLUMNS,
-        orderBy: params?.orderBy || 'created_on DESC',
+        orderBy: params?.orderBy || 'created_on DESC'
       })
+
       return response
     },
-    enabled: options.enabled,
+    enabled: options.enabled
   })
 }
 
@@ -107,11 +110,12 @@ export function useLead(leadId: string | undefined) {
         throw new Error('Lead ID is required')
       }
       const response = await leadsCollection.get(leadId, {
-        columns: LEAD_DETAIL_COLUMNS,
+        columns: LEAD_DETAIL_COLUMNS
       })
+
       return response
     },
-    enabled: !!leadId,
+    enabled: !!leadId
   })
 }
 
@@ -125,6 +129,7 @@ export function useCreateLead() {
   return useMutation({
     mutationFn: async (data: any) => {
       const response = await leadsCollection.create(data)
+
       return response
     },
     onSuccess: () => {
@@ -133,7 +138,7 @@ export function useCreateLead() {
     },
     onError: (error: any) => {
       toast.error(error?.message || 'Failed to create lead')
-    },
+    }
   })
 }
 
@@ -147,6 +152,7 @@ export function useUpdateLead() {
   return useMutation({
     mutationFn: async ({ leadId, data }: { leadId: string; data: any }) => {
       const response = await leadsCollection.update(leadId, data)
+
       return response
     },
     onSuccess: (_data, variables) => {
@@ -156,7 +162,7 @@ export function useUpdateLead() {
     },
     onError: (error: any) => {
       toast.error(error?.message || 'Failed to update lead')
-    },
+    }
   })
 }
 
@@ -177,7 +183,7 @@ export function useDeleteLead() {
     },
     onError: (error: any) => {
       toast.error(error?.message || 'Failed to delete lead')
-    },
+    }
   })
 }
 
@@ -198,6 +204,6 @@ export function useDeleteLeads() {
     },
     onError: (error: any) => {
       toast.error(error?.message || 'Failed to delete leads')
-    },
+    }
   })
 }

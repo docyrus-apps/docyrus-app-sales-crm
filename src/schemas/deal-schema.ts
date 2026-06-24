@@ -19,7 +19,7 @@ export const dealFormSchema = z.object({
   customer_type: z.string().optional(),
   country: z.string().optional(),
   hot_prospect: z.boolean().optional(),
-  record_owner: z.string().optional(),
+  record_owner: z.string().optional()
 })
 
 export type DealFormData = z.infer<typeof dealFormSchema>

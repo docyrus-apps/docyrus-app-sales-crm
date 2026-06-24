@@ -7,7 +7,7 @@ export const salesOrderItemFormSchema = z.object({
   discount: z.number().min(0).max(100).optional(),
   tax_rate: z.number().min(0).max(100).optional(),
   product: z.string().optional(),
-  related_sales_order: z.string().min(1, 'Related sales order is required'),
+  related_sales_order: z.string().min(1, 'Related sales order is required')
 })
 
 export type SalesOrderItemFormData = z.infer<typeof salesOrderItemFormSchema>

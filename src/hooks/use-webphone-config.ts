@@ -1,10 +1,12 @@
+import type { WebphoneRuntimeSettings } from '@/lib/webphone/types'
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useDocyrusClient } from '@docyrus/signin'
 import { createAppConfigClient } from '@docyrus/app-utils'
 import { toast } from 'sonner'
+
 import { APP_CONFIG_APP_ID } from '@/lib/app-config'
 import { getWebphoneRuntimeSettings } from '@/lib/webphone/runtime'
-import type { WebphoneRuntimeSettings } from '@/lib/webphone/types'
 
 /**
  * Webphone SIP/WebRTC runtime settings (credential-free) stored under
@@ -23,12 +25,13 @@ export function useWebphoneRuntimeSettings() {
     queryFn: async () => {
       const configClient = createAppConfigClient(client!, APP_CONFIG_APP_ID)
       const config = await configClient.get().catch(() => null)
+
       return getWebphoneRuntimeSettings(
         (config?.data?.webrtc as
-          | Partial<WebphoneRuntimeSettings>
-          | undefined) ?? undefined,
+        | Partial<WebphoneRuntimeSettings>
+        | undefined) ?? undefined
       )
-    },
+    }
   })
 }
 
@@ -42,19 +45,19 @@ export function useUpdateWebphoneRuntimeSettings() {
       const current = await configClient.get().catch(() => null)
       const merged = {
         ...(current?.data ?? {}),
-        webrtc: nextSettings,
+        webrtc: nextSettings
       }
 
       return configClient.upsert({ data: merged })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['webphone', 'runtime-settings'],
+        queryKey: ['webphone', 'runtime-settings']
       })
       toast.success('Webphone ayarları kaydedildi')
     },
     onError: (error: any) => {
       toast.error(error?.message || 'Webphone ayarları kaydedilemedi')
-    },
+    }
   })
 }

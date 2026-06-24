@@ -1,4 +1,4 @@
-import { useMemo, useState, type MouseEvent as ReactMouseEvent } from 'react'
+import { type MouseEvent as ReactMouseEvent, useMemo, useState } from 'react'
 
 import {
   CalendarPlus,
@@ -8,7 +8,7 @@ import {
   Phone,
   Plus,
   Search,
-  Users,
+  Users
 } from 'lucide-react'
 
 import { useTranslation } from 'react-i18next'
@@ -20,29 +20,29 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/animate-ui/components/radix/dropdown-menu'
 
 export interface RelatedContact {
-  id?: string
-  name?: string
-  email?: string
-  mobile?: string
-  job_title?: string
+  id?: string;
+  name?: string;
+  email?: string;
+  mobile?: string;
+  job_title?: string;
 }
 
 export interface RelatedContactsTableProps {
-  contacts: Array<RelatedContact>
-  isLoading?: boolean
-  addLabel?: string
-  searchPlaceholder?: string
-  emptyLabel?: string
-  onAddContact: () => void
-  onOpenContact: (id: string) => void
-  onEmail: (contact: RelatedContact) => void
-  onCall: (contact: RelatedContact) => void
-  onSms?: (contact: RelatedContact) => void
-  onMeeting?: (contact: RelatedContact) => void
+  contacts: Array<RelatedContact>;
+  isLoading?: boolean;
+  addLabel?: string;
+  searchPlaceholder?: string;
+  emptyLabel?: string;
+  onAddContact: () => void;
+  onOpenContact: (id: string) => void;
+  onEmail: (contact: RelatedContact) => void;
+  onCall: (contact: RelatedContact) => void;
+  onSms?: (contact: RelatedContact) => void;
+  onMeeting?: (contact: RelatedContact) => void;
 }
 
 const GRID_COLS =
@@ -55,7 +55,7 @@ function getInitials(name?: string): string {
     .split(' ')
     .filter(Boolean)
     .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
+    .map(part => part[0]?.toUpperCase() ?? '')
     .join('')
 }
 
@@ -74,7 +74,7 @@ export function RelatedContactsTable({
   onEmail,
   onCall,
   onSms,
-  onMeeting,
+  onMeeting
 }: RelatedContactsTableProps) {
   const { t } = useTranslation()
   const resolvedAddLabel = addLabel ?? t('relatedTables.contacts.add')
@@ -89,7 +89,12 @@ export function RelatedContactsTable({
     if (!q) return contacts
 
     return contacts.filter((c) => {
-      const haystack = [c.name, c.email, c.mobile, c.job_title]
+      const haystack = [
+c.name,
+c.email,
+c.mobile,
+c.job_title
+]
         .filter(Boolean)
         .join(' ')
         .toLowerCase()
@@ -106,17 +111,15 @@ export function RelatedContactsTable({
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={event => setQuery(event.target.value)}
             placeholder={resolvedSearchPlaceholder}
-            className="h-8 border-none bg-muted/50 pl-8 text-[13px] shadow-none focus-visible:ring-1"
-          />
+            className="h-8 border-none bg-muted/50 pl-8 text-[13px] shadow-none focus-visible:ring-1" />
         </div>
         <Button
           size="sm"
           variant="outline"
           className="h-8 shrink-0 gap-1.5"
-          onClick={onAddContact}
-        >
+          onClick={onAddContact}>
           <Plus className="size-3.5" />
           {resolvedAddLabel}
         </Button>
@@ -126,9 +129,8 @@ export function RelatedContactsTable({
       <div
         className={cn(
           GRID_COLS,
-          'px-4 pb-2 pt-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70',
-        )}
-      >
+          'px-4 pb-2 pt-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70'
+        )}>
         <span />
         <span>{t('relatedTables.contacts.name')}</span>
         <span>{t('relatedTables.contacts.email')}</span>
@@ -145,8 +147,7 @@ export function RelatedContactsTable({
             {Array.from({ length: 5 }).map((_, index) => (
               <div
                 key={index}
-                className="h-11 animate-pulse rounded-lg bg-muted/40"
-              />
+                className="h-11 animate-pulse rounded-lg bg-muted/40" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
@@ -155,17 +156,14 @@ export function RelatedContactsTable({
               <Users className="size-5" />
             </div>
             <p className="text-[13px] text-muted-foreground">
-              {query
-                ? t('relatedTables.contacts.noMatch')
-                : resolvedEmptyLabel}
+              {query ? t('relatedTables.contacts.noMatch') : resolvedEmptyLabel}
             </p>
             {!query && (
               <Button
                 size="sm"
                 variant="outline"
                 className="gap-1.5"
-                onClick={onAddContact}
-              >
+                onClick={onAddContact}>
                 <Plus className="size-3.5" />
                 {resolvedAddLabel}
               </Button>
@@ -173,7 +171,7 @@ export function RelatedContactsTable({
           </div>
         ) : (
           <div className="space-y-0.5">
-            {filtered.map((contact) => (
+            {filtered.map(contact => (
               <div
                 key={contact.id}
                 role="button"
@@ -185,30 +183,26 @@ export function RelatedContactsTable({
                 }}
                 className={cn(
                   GRID_COLS,
-                  'group cursor-pointer rounded-lg px-2 py-2 text-sm transition-colors hover:bg-muted/60',
-                )}
-              >
+                  'group cursor-pointer rounded-lg px-2 py-2 text-sm transition-colors hover:bg-muted/60'
+                )}>
                 {/* Action menu — leading */}
                 <div
                   onClick={stop}
-                  className="flex items-center justify-center"
-                >
+                  className="flex items-center justify-center">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
                         type="button"
                         onClick={stop}
                         aria-label={t('relatedTables.contacts.actions')}
-                        className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground/60 transition-colors hover:bg-background hover:text-foreground hover:shadow-sm data-[state=open]:bg-background data-[state=open]:text-foreground data-[state=open]:shadow-sm"
-                      >
+                        className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground/60 transition-colors hover:bg-background hover:text-foreground hover:shadow-sm data-[state=open]:bg-background data-[state=open]:text-foreground data-[state=open]:shadow-sm">
                         <EllipsisVertical className="size-4" />
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
                       align="start"
                       className="w-44"
-                      onClick={stop}
-                    >
+                      onClick={stop}>
                       <DropdownMenuItem onClick={() => onEmail(contact)}>
                         <Mail className="size-4 text-blue-500" />
                         {t('relatedTables.contacts.sendEmail')}

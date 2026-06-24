@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { Link } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -8,7 +10,7 @@ import { type DocyrusValueProps } from './types'
 
 export function UrlValue({ value, className }: DocyrusValueProps) {
   if (value == null || value === '') {
-    return <span className="text-muted-foreground">—</span>
+    return <span className="text-muted-foreground">–</span>
   }
 
   const url = String(value)
@@ -28,7 +30,7 @@ export function UrlValue({ value, className }: DocyrusValueProps) {
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        'inline-flex items-center gap-1 text-primary underline-offset-4 hover:underline truncate',
+        'inline-flex min-w-0 max-w-full items-center gap-1 text-primary underline-offset-4 hover:underline',
         className,
       )}
     >

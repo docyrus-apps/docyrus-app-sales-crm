@@ -1,5 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { useMemo, useState } from 'react'
+
+import type { EnumOption, IField } from '@/components/docyrus/form-fields/types'
+
+import { type RecordDetailTab } from '@/components/crm/record-detail-layout'
+
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import {
@@ -13,16 +17,16 @@ import {
   MessageSquare,
   Phone,
   StickyNote,
-  Users,
+  Users
 } from 'lucide-react'
+
 import { PageContainer } from '@/components/layout/page-container'
 import { Button } from '@/components/ui/button'
 import { CompanyLogoAvatar } from '@/components/companies/company-logo-avatar'
 import {
   RecordDetailLayout,
   RecordKpiCard,
-  RecordTabPlaceholder,
-  type RecordDetailTab,
+  RecordTabPlaceholder
 } from '@/components/crm/record-detail-layout'
 import { RelatedContactsTable } from '@/components/crm/related-contacts-table'
 import { RelatedDealsTable } from '@/components/crm/related-deals-table'
@@ -43,11 +47,11 @@ import { useRecordActivities } from '@/hooks/use-record-activities'
 import { ContactFormDialog } from '@/components/contacts/contact-form-dialog'
 import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
+
 import {
   type FieldChange,
-  type RecordDetailField,
+  type RecordDetailField
 } from '@/components/docyrus/editable-record-detail'
-import type { EnumOption, IField } from '@/components/docyrus/form-fields/types'
 
 const FIELD_SLUGS = [
   'name',
@@ -62,20 +66,25 @@ const FIELD_SLUGS = [
   'address',
   'location',
   'district',
-  'tax_number',
+  'tax_number'
 ]
 
 function makeField(
   slug: string,
   name: string,
-  type: IField['type'] = 'field-text',
+  type: IField['type'] = 'field-text'
 ): IField {
-  return { id: slug, name, slug, type }
+  return {
+    id: slug,
+    name,
+    slug,
+    type
+  }
 }
 
 function extractName(value: unknown): string {
   if (value && typeof value === 'object' && 'name' in value)
-    return ((value as { name?: string }).name ?? '') as string
+    return (value as { name?: string }).name ?? ''
   if (typeof value === 'string') return value
 
   return ''
@@ -91,17 +100,17 @@ function fieldId(value: unknown): string | null {
 
 function toOptions(
   items: Array<{
-    id: string
-    name: string
-    color?: string | null
-    icon?: string | null
-  }>,
+    id: string;
+    name: string;
+    color?: string | null;
+    icon?: string | null;
+  }>
 ): Array<EnumOption> {
-  return items.map((item) => ({
+  return items.map(item => ({
     id: item.id,
     name: item.name,
     color: item.color ?? undefined,
-    icon: item.icon ?? undefined,
+    icon: item.icon ?? undefined
   }))
 }
 
@@ -128,19 +137,25 @@ export function CompanyDetail() {
   const { data: industryEntities = [] } = useEnumEntities('industry', enumOpts)
   const { data: lifecycleEntities = [] } = useEnumEntities(
     'lifecycle_stage',
-    enumOpts,
+    enumOpts
   )
 
   const { data: contacts = [], isLoading: contactsLoading } = useContacts(
     companyId
       ? {
-          columns: ['id', 'name', 'job_title', 'email', 'mobile'],
+          columns: [
+'id',
+'name',
+'job_title',
+'email',
+'mobile'
+],
           filters: {
-            rules: [{ field: 'organization', operator: '=', value: companyId }],
+            rules: [{ field: 'organization', operator: '=', value: companyId }]
           },
-          orderBy: 'created_on desc',
+          orderBy: 'created_on desc'
         }
-      : undefined,
+      : undefined
   )
 
   const { data: deals = [], isLoading: dealsLoading } = useDeals(
@@ -152,44 +167,55 @@ export function CompanyDetail() {
             'stage',
             'deal_value',
             'expected_closing_date',
-            'close_probability',
+            'close_probability'
           ],
           filters: {
-            rules: [{ field: 'organization', operator: '=', value: companyId }],
+            rules: [{ field: 'organization', operator: '=', value: companyId }]
           },
-          orderBy: 'created_on desc',
+          orderBy: 'created_on desc'
         }
-      : undefined,
+      : undefined
   )
 
   const { data: companyQuotes = [], isLoading: quotesLoading } = useSalesOrders(
     companyId
       ? {
-          columns: ['id', 'status', 'grand_total', 'created_on'],
+          columns: [
+'id',
+'status',
+'grand_total',
+'created_on'
+],
           filters: {
-            rules: [{ field: 'organization', operator: '=', value: companyId }],
+            rules: [{ field: 'organization', operator: '=', value: companyId }]
           },
-          orderBy: 'created_on DESC',
+          orderBy: 'created_on DESC'
         }
-      : undefined,
+      : undefined
   )
 
   const { data: leads = [], isLoading: leadsLoading } = useLeads(
     companyId
       ? {
-          columns: ['id', 'name', 'email', 'phone', 'lead_status'],
+          columns: [
+'id',
+'name',
+'email',
+'phone',
+'lead_status'
+],
           filters: {
             rules: [
               {
                 field: 'converted_organization',
                 operator: '=',
-                value: companyId,
-              },
-            ],
+                value: companyId
+              }
+            ]
           },
-          orderBy: 'created_on desc',
+          orderBy: 'created_on desc'
         }
-      : undefined,
+      : undefined
   )
 
   const { data: activities = [], isLoading: activitiesLoading } =
@@ -206,44 +232,44 @@ export function CompanyDetail() {
       {
         field: makeField(
           'commercial_title',
-          t('companies.commercialTitle', { defaultValue: 'Commercial Title' }),
-        ),
+          t('companies.commercialTitle', { defaultValue: 'Commercial Title' })
+        )
       },
       {
         field: makeField(
           'industry',
           t('companies.industry'),
-          industryEditable ? 'field-select' : 'field-text',
+          industryEditable ? 'field-select' : 'field-text'
         ),
         enumOptions: toOptions(industryEntities),
-        readOnly: !industryEditable,
+        readOnly: !industryEditable
       },
       {
         field: makeField(
           'type',
           t('companies.type'),
-          typeEditable ? 'field-select' : 'field-text',
+          typeEditable ? 'field-select' : 'field-text'
         ),
         enumOptions: toOptions(typeEntities),
-        readOnly: !typeEditable,
+        readOnly: !typeEditable
       },
       {
         field: makeField(
           'status',
           t('companies.status'),
-          statusEditable ? 'field-status' : 'field-text',
+          statusEditable ? 'field-status' : 'field-text'
         ),
         enumOptions: toOptions(statusEntities),
-        readOnly: !statusEditable,
+        readOnly: !statusEditable
       },
       {
         field: makeField(
           'lifecycle_stage',
           t('companies.lifecycleStage', { defaultValue: 'Lifecycle Stage' }),
-          lifecycleEditable ? 'field-select' : 'field-text',
+          lifecycleEditable ? 'field-select' : 'field-text'
         ),
         enumOptions: toOptions(lifecycleEntities),
-        readOnly: !lifecycleEditable,
+        readOnly: !lifecycleEditable
       },
       { field: makeField('email', t('companies.email'), 'field-email') },
       { field: makeField('phone', t('companies.phone'), 'field-phone') },
@@ -253,11 +279,11 @@ export function CompanyDetail() {
         field: makeField(
           'location',
           t('companies.location', { defaultValue: 'Location' }),
-          'field-locationSelect',
-        ),
+          'field-locationSelect'
+        )
       },
       { field: makeField('district', t('companies.district')) },
-      { field: makeField('tax_number', t('companies.taxNumber')) },
+      { field: makeField('tax_number', t('companies.taxNumber')) }
     ],
     [
       t,
@@ -268,8 +294,8 @@ export function CompanyDetail() {
       statusEntities,
       typeEntities,
       industryEntities,
-      lifecycleEntities,
-    ],
+      lifecycleEntities
+    ]
   )
 
   const flatRecord = useMemo<Record<string, unknown>>(() => {
@@ -295,27 +321,24 @@ export function CompanyDetail() {
       country: company.country ?? null,
       city: extractName(company.city),
       district: company.district ?? '',
-      tax_number: company.tax_number ?? '',
+      tax_number: company.tax_number ?? ''
     }
   }, [
     company,
     statusEditable,
     typeEditable,
     industryEditable,
-    lifecycleEditable,
+    lifecycleEditable
   ])
 
   const handleInlineSave = async (
     changes: Array<FieldChange>,
-    _values: Record<string, unknown>,
+    _values: Record<string, unknown>
   ) => {
     if (!companyId || changes.length === 0) return
 
     const payload = Object.fromEntries(
-      changes.map((change) => [
-        change.fieldSlug,
-        change.newValue === '' ? null : change.newValue,
-      ]),
+      changes.map(change => [change.fieldSlug, change.newValue === '' ? null : change.newValue])
     )
 
     await updateCompany.mutateAsync({ companyId, data: payload })
@@ -335,14 +358,13 @@ export function CompanyDetail() {
       : undefined
   const contactsWithPhone = useMemo(
     () => contacts.filter((c: any) => c.mobile),
-    [contacts],
+    [contacts]
   )
 
-  const openContact = (id: string) =>
-    navigate({
+  const openContact = (id: string) => navigate({
       to: '/contacts/$contactId',
       params: { contactId: id },
-      search: { tab: 'overview' },
+      search: { tab: 'overview' }
     })
 
   const tabs = useMemo<Array<RecordDetailTab>>(() => {
@@ -357,41 +379,36 @@ export function CompanyDetail() {
               <RecordKpiCard
                 label={t('companies.tabs.contacts')}
                 value={contacts.length}
-                icon={<Users className="size-3.5" />}
-              />
+                icon={<Users className="size-3.5" />} />
               <RecordKpiCard
                 label={t('companies.tabs.deals')}
                 value={deals.length}
-                icon={<Briefcase className="size-3.5" />}
-              />
+                icon={<Briefcase className="size-3.5" />} />
               <RecordKpiCard
                 label={t('companies.industry')}
-                value={extractName(company?.industry) || '—'}
-              />
+                value={extractName(company?.industry) || '—'} />
             </div>
 
             <div className="rounded-xl border p-3">
               <div className="mb-2 flex items-center justify-between">
                 <h3 className="text-[13px] font-semibold">
                   {t('contacts.recentActivity', {
-                    defaultValue: 'Recent activity',
+                    defaultValue: 'Recent activity'
                   })}
                 </h3>
                 <button
                   type="button"
                   onClick={() => handleTabChange('activity')}
-                  className="text-xs font-medium text-muted-foreground hover:text-foreground"
-                >
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground">
                   {t('common.viewAll', { defaultValue: 'View all' })}
                 </button>
               </div>
               <RecordActivityPanel
                 activities={activities.slice(0, 2)}
-                isLoading={activitiesLoading}
-              />
+                isLoading={activitiesLoading} />
             </div>
           </div>
-        ),
+        )
       },
       {
         value: 'activity',
@@ -401,9 +418,8 @@ export function CompanyDetail() {
           <RecordActivityPanel
             activities={activities}
             isLoading={activitiesLoading}
-            filterable
-          />
-        ),
+            filterable />
+        )
       },
       {
         value: 'contacts',
@@ -413,15 +429,14 @@ export function CompanyDetail() {
         bare: true,
         content: (
           <RelatedContactsTable
-            contacts={contacts as any}
+            contacts={contacts}
             isLoading={contactsLoading}
             addLabel={t('contacts.new', { defaultValue: 'New Contact' })}
             emptyLabel={t('companies.contacts.empty')}
             onAddContact={() => setAddContactOpen(true)}
             onOpenContact={openContact}
-            onEmail={(c) => c.email && window.open(`mailto:${c.email}`)}
-            onCall={(c) =>
-              webphone.enabled
+            onEmail={c => c.email && window.open(`mailto:${c.email}`)}
+            onCall={c => webphone.enabled
                 ? dialer.open({
                     recordLabel: c.name,
                     targets: [
@@ -429,15 +444,13 @@ export function CompanyDetail() {
                         label: c.name ?? c.mobile ?? '',
                         sublabel: c.job_title || undefined,
                         number: c.mobile,
-                        contactId: c.id,
-                      },
-                    ],
+                        contactId: c.id
+                      }
+                    ]
                   })
-                : c.mobile && window.open(`tel:${c.mobile}`)
-            }
-            onSms={(c) => c.mobile && window.open(`sms:${c.mobile}`)}
-          />
-        ),
+                : c.mobile && window.open(`tel:${c.mobile}`)}
+            onSms={c => c.mobile && window.open(`sms:${c.mobile}`)} />
+        )
       },
       {
         value: 'deals',
@@ -447,18 +460,15 @@ export function CompanyDetail() {
         bare: true,
         content: (
           <RelatedDealsTable
-            deals={deals as any}
+            deals={deals}
             isLoading={dealsLoading}
             emptyLabel={t('companies.deals.empty')}
-            onOpenDeal={(id) =>
-              navigate({
+            onOpenDeal={id => navigate({
                 to: '/deals/$dealId',
                 params: { dealId: id },
-                search: { tab: 'activity' },
-              })
-            }
-          />
-        ),
+                search: { tab: 'activity' }
+              })} />
+        )
       },
       {
         value: 'quotes',
@@ -468,22 +478,17 @@ export function CompanyDetail() {
         bare: true,
         content: (
           <RelatedQuotesTable
-            quotes={companyQuotes as any}
+            quotes={companyQuotes}
             isLoading={quotesLoading}
-            onOpenQuote={(id) =>
-              navigate({ to: '/quotes/$quoteId', params: { quoteId: id } })
-            }
-            onNewQuote={() =>
-              navigate({
+            onOpenQuote={id => navigate({ to: '/quotes/$quoteId', params: { quoteId: id } })}
+            onNewQuote={() => navigate({
                 to: '/quotes/new',
                 search: {
                   organization: companyId,
-                  organizationName: company?.name,
-                },
-              })
-            }
-          />
-        ),
+                  organizationName: company?.name
+                }
+              })} />
+        )
       },
       {
         value: 'leads',
@@ -506,23 +511,20 @@ export function CompanyDetail() {
                 key={lead.id}
                 role="button"
                 tabIndex={0}
-                onClick={() =>
-                  navigate({
+                onClick={() => navigate({
                     to: '/leads/$leadId',
                     params: { leadId: lead.id },
-                    search: { tab: 'overview' },
-                  })
-                }
+                    search: { tab: 'overview' }
+                  })}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter')
                     navigate({
                       to: '/leads/$leadId',
                       params: { leadId: lead.id },
-                      search: { tab: 'overview' },
+                      search: { tab: 'overview' }
                     })
                 }}
-                className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted/60"
-              >
+                className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted/60">
                 <span className="truncate font-medium">
                   {lead.name || t('leads.untitledLead')}
                 </span>
@@ -532,7 +534,7 @@ export function CompanyDetail() {
               </li>
             ))}
           </ul>
-        ),
+        )
       },
       {
         value: 'comments',
@@ -544,10 +546,9 @@ export function CompanyDetail() {
             <CommentsPanel
               appSlug="base"
               dataSource="organization"
-              recordId={companyId!}
-            />
+              recordId={companyId!} />
           </div>
-        ),
+        )
       },
       {
         value: 'notes',
@@ -558,10 +559,9 @@ export function CompanyDetail() {
             icon={<StickyNote className="size-5" />}
             title={t('common.comingSoon', { defaultValue: 'Coming soon' })}
             description={t('common.notesComingSoon', {
-              defaultValue: 'Notes will be available here soon.',
-            })}
-          />
-        ),
+              defaultValue: 'Notes will be available here soon.'
+            })} />
+        )
       },
       {
         value: 'tasks',
@@ -570,7 +570,7 @@ export function CompanyDetail() {
         bare: true,
         content: (
           <RecordTasksPanel parentField="organization" parentId={companyId} />
-        ),
+        )
       },
       {
         value: 'files',
@@ -582,13 +582,11 @@ export function CompanyDetail() {
             <FileAttachments
               appSlug="base"
               dataSource="organization"
-              recordId={companyId!}
-            />
+              recordId={companyId!} />
           </div>
-        ),
-      },
+        )
+      }
     ]
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     t,
     company?.industry,
@@ -603,13 +601,14 @@ export function CompanyDetail() {
     leadsLoading,
     activities,
     activitiesLoading,
-    companyId,
+    companyId
   ])
 
-  // Open the webphone call composer with the company's main line plus any
-  // related contacts that have a number; the composer handles the picker.
-  const openCallComposer = () =>
-    dialer.open({
+  /*
+   * Open the webphone call composer with the company's main line plus any
+   * related contacts that have a number; the composer handles the picker.
+   */
+  const openCallComposer = () => dialer.open({
       recordLabel: companyName,
       targets: [
         ...(company?.phone
@@ -617,19 +616,19 @@ export function CompanyDetail() {
               {
                 label: companyName,
                 sublabel: t('webphone.dialer.mainLine', {
-                  defaultValue: 'Main line',
+                  defaultValue: 'Main line'
                 }),
-                number: company.phone,
-              },
+                number: company.phone
+              }
             ]
           : []),
         ...contactsWithPhone.map((c: any) => ({
           label: c.name,
           sublabel: c.job_title || undefined,
           number: c.mobile,
-          contactId: c.id,
-        })),
-      ],
+          contactId: c.id
+        }))
+      ]
     })
 
   const attributeActions = (
@@ -638,8 +637,7 @@ export function CompanyDetail() {
         variant="ghost"
         size="sm"
         className="h-7 gap-1.5 text-[13px]"
-        onClick={() => handleTabChange('notes')}
-      >
+        onClick={() => handleTabChange('notes')}>
         <StickyNote className="size-3.5" />
         {t('contacts.actions.note', { defaultValue: 'Note' })}
       </Button>
@@ -649,12 +647,9 @@ export function CompanyDetail() {
           size="icon"
           className="size-7"
           disabled={!company?.email}
-          onClick={() =>
-            company?.email && window.open(`mailto:${company.email}`)
-          }
+          onClick={() => company?.email && window.open(`mailto:${company.email}`)}
           aria-label={t('contacts.actions.email', { defaultValue: 'Email' })}
-          title={t('contacts.actions.email', { defaultValue: 'Email' })}
-        >
+          title={t('contacts.actions.email', { defaultValue: 'Email' })}>
           <Mail className="size-3.5" />
         </Button>
         <Button
@@ -664,8 +659,7 @@ export function CompanyDetail() {
           disabled={!company?.phone}
           onClick={() => company?.phone && window.open(`sms:${company.phone}`)}
           aria-label={t('contacts.actions.sms', { defaultValue: 'SMS' })}
-          title={t('contacts.actions.sms', { defaultValue: 'SMS' })}
-        >
+          title={t('contacts.actions.sms', { defaultValue: 'SMS' })}>
           <MessageSquare className="size-3.5" />
         </Button>
         {webphone.enabled && (
@@ -675,8 +669,7 @@ export function CompanyDetail() {
             className="size-7 text-emerald-600"
             onClick={openCallComposer}
             aria-label={t('contacts.actions.call', { defaultValue: 'Call' })}
-            title={t('contacts.actions.call', { defaultValue: 'Call' })}
-          >
+            title={t('contacts.actions.call', { defaultValue: 'Call' })}>
             <Phone className="size-3.5" />
           </Button>
         )}
@@ -689,8 +682,7 @@ export function CompanyDetail() {
       type="button"
       onClick={openCallComposer}
       aria-label={t('common.openDialer')}
-      className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
-    >
+      className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30">
       <Phone className="size-4" />
     </button>
   ) : undefined
@@ -703,8 +695,7 @@ export function CompanyDetail() {
           <CompanyLogoAvatar
             companyId={companyId}
             name={company?.name}
-            logoUrl={companyLogoUrl}
-          />
+            logoUrl={companyLogoUrl} />
         }
         title={companyName}
         subtitle={statusName || extractName(company?.industry)}
@@ -717,21 +708,19 @@ export function CompanyDetail() {
         fieldRenderers={{
           location: ({ record, save }) => (
             <LocationField record={record} onSave={save} />
-          ),
+          )
         }}
         attributeActions={attributeActions}
         dialerTrigger={dialerTrigger}
         tabs={tabs}
         activeTab={activeTab}
-        onTabChange={handleTabChange}
-      />
+        onTabChange={handleTabChange} />
 
       <ContactFormDialog
         open={addContactOpen}
         onOpenChange={setAddContactOpen}
         contact={{ organization: company }}
-        mode="create"
-      />
+        mode="create" />
     </PageContainer>
   )
 }

@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { Clock } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -10,13 +12,13 @@ import { formatTime } from './utils'
 
 export function TimeValue({ value, className }: DocyrusValueProps) {
   if (value == null || value === '') {
-    return <span className="text-muted-foreground">—</span>
+    return <span className="text-muted-foreground">–</span>
   }
 
   const formatted = formatTime(String(value))
 
   if (!formatted) {
-    return <span className="text-muted-foreground">—</span>
+    return <span className="text-muted-foreground">–</span>
   }
 
   return (

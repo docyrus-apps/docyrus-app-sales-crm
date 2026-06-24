@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { CalendarIcon, Check, ChevronRight, ChevronsUpDown } from 'lucide-react'
@@ -32,8 +34,8 @@ import {
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
-import { useDateFormat } from '@/lib/use-date-format'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
+import { useDateFormat } from '@/hooks/docyrus/use-date-format'
 
 import { FormFieldLabel } from './form-field-label'
 import {
@@ -61,6 +63,8 @@ function formatCompactDate(iso: string): { line1: string; line2: string } {
   }
 }
 
+const EMPTY_ENUM_OPTIONS: EnumOption[] = []
+
 interface StatusDraft {
   status: string
   secondary: string
@@ -74,7 +78,7 @@ export function StatusFormField({
   disabled,
   required,
   className,
-  enumOptions = [],
+  enumOptions = EMPTY_ENUM_OPTIONS,
 }: DocyrusFormFieldProps) {
   const secondarySlug = getCompanionFieldSlug(fieldConfig.slug, 'secondary')
   const descriptionSlug = getCompanionFieldSlug(fieldConfig.slug, 'description')
@@ -84,9 +88,8 @@ export function StatusFormField({
   )
 
   return (
-    <form.Field
-      name={fieldConfig.slug}
-      children={(field: any) => (
+    <form.Field name={fieldConfig.slug}>
+      {(field: any) => (
         <StatusFormFieldInner
           field={field}
           fieldConfig={fieldConfig}
@@ -100,7 +103,7 @@ export function StatusFormField({
           followupDateSlug={followupDateSlug}
         />
       )}
-    />
+    </form.Field>
   )
 }
 
@@ -255,30 +258,27 @@ function StatusFormFieldInner({
       </FormFieldLabel>
 
       {/* Hidden companion fields to sync with form */}
-      <form.Field
-        name={secondarySlug}
-        children={(f: any) => {
+      <form.Field name={secondarySlug}>
+        {(f: any) => {
           secondaryRef.current = f
 
           return null
         }}
-      />
-      <form.Field
-        name={descriptionSlug}
-        children={(f: any) => {
+      </form.Field>
+      <form.Field name={descriptionSlug}>
+        {(f: any) => {
           descriptionRef.current = f
 
           return null
         }}
-      />
-      <form.Field
-        name={followupDateSlug}
-        children={(f: any) => {
+      </form.Field>
+      <form.Field name={followupDateSlug}>
+        {(f: any) => {
           followupRef.current = f
 
           return null
         }}
-      />
+      </form.Field>
 
       <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
@@ -355,7 +355,7 @@ function StatusFormFieldInner({
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-(--radix-popover-trigger-width) min-w-[18rem] p-0"
+          className="w-(--radix-popover-trigger-width) p-0"
           align="start"
         >
           <div className="flex flex-col">

@@ -1,14 +1,20 @@
 'use client'
 
-import { useMemo, type ComponentType } from 'react'
+import { type ComponentType, useMemo } from 'react'
 
 import {
   type DocyrusFormFieldProps,
   type DocyrusValueProps,
   type EnumOption,
   type IField,
-  type IFieldType,
+  type IFieldType
 } from '@/components/docyrus/form-fields/types'
+
+import type {
+  CellOpts,
+  CellUserOption,
+  DataGridCellProps
+} from '@/components/docyrus/data-grid/types'
 
 import { ApprovalStatusFormField } from '@/components/docyrus/form-fields/approval-status-form-field'
 import { AvatarField } from '@/components/docyrus/form-fields/avatar-field'
@@ -123,13 +129,9 @@ import {
   UrlCell,
   UserCell,
   UserMultiSelectCell,
-  UuidCell,
+  UuidCell
 } from '@/components/docyrus/data-grid/data-grid-cell-variants'
-import {
-  type CellOpts,
-  type CellUserOption,
-  type DataGridCellProps,
-} from '@/components/docyrus/data-grid/types'
+
 import { type ColumnDef } from '@/components/docyrus/data-grid'
 
 import { EditableValue } from '@/components/docyrus/editable-value'
@@ -184,7 +186,7 @@ export const FORM_FIELD_MAP: Partial<
   'field-locationSelect': LocationSelectFormField,
   'field-approvalStatus': ApprovalStatusFormField,
   'field-queryBuilder': QueryBuilderFormField,
-  'field-schemaRepeater': SchemaRepeaterFormField,
+  'field-schemaRepeater': SchemaRepeaterFormField
 }
 
 /** Single source of truth: field type → read-only value renderer. */
@@ -252,7 +254,7 @@ export const VALUE_RENDERER_MAP: Partial<
   'field-autonumber': IdentityValue,
   'field-button': ButtonValue,
   'field-conversationChannel': ConversationChannelValue,
-  'field-fileStorageFolder': FileStorageFolderValue,
+  'field-fileStorageFolder': FileStorageFolderValue
 }
 
 type CellComponent = ComponentType<DataGridCellProps<unknown>>
@@ -294,7 +296,7 @@ export const CELL_COMPONENT_MAP: Partial<Record<IFieldType, CellComponent>> = {
   'field-userMultiSelect': UserMultiSelectCell as CellComponent,
   'field-relation': RelationCell as CellComponent,
   'field-file': FileCell as CellComponent,
-  'field-image': ImageCell as CellComponent,
+  'field-image': ImageCell as CellComponent
 }
 
 /* ------------------------------------------------------------------ */
@@ -321,7 +323,7 @@ export const GROUPABLE_FIELD_TYPES = new Set<IFieldType>([
   'field-userMultiSelect',
   'field-date',
   'field-dateRange',
-  'field-dateTime',
+  'field-dateTime'
 ])
 
 const ENUM_LIKE_TYPES = new Set<IFieldType>([
@@ -329,20 +331,12 @@ const ENUM_LIKE_TYPES = new Set<IFieldType>([
   'field-enum',
   'field-systemEnum',
   'field-select',
-  'field-radioGroup',
+  'field-radioGroup'
 ])
 
-const MULTI_LIKE_TYPES = new Set<IFieldType>([
-  'field-multiSelect',
-  'field-tagSelect',
-  'field-userMultiSelect',
-])
+const MULTI_LIKE_TYPES = new Set<IFieldType>(['field-multiSelect', 'field-tagSelect', 'field-userMultiSelect'])
 
-const RELATION_LIKE_TYPES = new Set<IFieldType>([
-  'field-relation',
-  'field-relatedField',
-  'field-userSelect',
-])
+const RELATION_LIKE_TYPES = new Set<IFieldType>(['field-relation', 'field-relatedField', 'field-userSelect'])
 
 /**
  * Loose field shape accepted by `buildTanstackColumnDef` and friends.
@@ -351,25 +345,25 @@ const RELATION_LIKE_TYPES = new Set<IFieldType>([
  * select-like cells.
  */
 export interface DocyrusFieldLike {
-  id?: string
-  slug: string
-  name: string
+  id?: string;
+  slug: string;
+  name: string;
   /** Accepts `IFieldType` or a plain `string` (e.g. from `DataSourceField`); the builder casts internally. */
-  type: IFieldType | (string & {})
-  options?: unknown
-  enums?: unknown
-  [key: string]: unknown
+  type: IFieldType | (string & {});
+  options?: unknown;
+  enums?: unknown;
+  [key: string]: unknown;
 }
 
 interface CellSelectOption {
-  value: string
-  label: string
-  color?: string
-  iconStr?: string
+  value: string;
+  label: string;
+  color?: string;
+  iconStr?: string;
 }
 
 function extractSelectOptions(
-  field: DocyrusFieldLike,
+  field: DocyrusFieldLike
 ): Array<CellSelectOption> {
   const raw = field as Record<string, unknown>
   const source = Array.isArray(raw.enums)
@@ -477,7 +471,7 @@ export function toIField(field: DocyrusFieldLike): IField {
         ? raw.relation_data_source_id
         : typeof raw.relationDataSourceId === 'string'
           ? raw.relationDataSourceId
-          : null,
+          : null
   }
 }
 
@@ -507,7 +501,7 @@ function extractObjectLabel(value: unknown): string | undefined {
     obj.title,
     obj.address,
     obj.details,
-    obj.description,
+    obj.description
   ]
 
   for (const candidate of candidates) {
@@ -534,7 +528,7 @@ function normalizeFieldValue(value: unknown, fieldType: IFieldType): unknown {
 
   if (MULTI_LIKE_TYPES.has(fieldType)) {
     if (Array.isArray(value)) {
-      return value.map((item) => extractObjectId(item) ?? item)
+      return value.map(item => extractObjectId(item) ?? item)
     }
 
     return value
@@ -564,16 +558,16 @@ function normalizeFieldValue(value: unknown, fieldType: IFieldType): unknown {
 export function getCellOpts(
   field: DocyrusFieldLike,
   options: {
-    appSlug?: string
-    dataSourceSlug?: string
+    appSlug?: string;
+    dataSourceSlug?: string;
     /**
      * Tenant-wide users list shared across cells. When supplied, user-select
      * and user-multi-select cells use this as their static option list so
      * avatars + labels render without each cell hitting the network.
      * `useDocyrusDataGrid` accepts a `users` option that flows through here.
      */
-    users?: ReadonlyArray<CellUserOption>
-  } = {},
+    users?: ReadonlyArray<CellUserOption>;
+  } = {}
 ): CellOpts {
   const { appSlug = '', dataSourceSlug = '', users = [] } = options
   const userOptions = Array.from(users)
@@ -660,7 +654,7 @@ export function getCellOpts(
         appSlug,
         dataSourceSlug,
         fieldSlug: field.slug,
-        options: extractSelectOptions(field),
+        options: extractSelectOptions(field)
       }
 
     case 'field-select':
@@ -707,7 +701,7 @@ export function getCellOpts(
         variant: 'relation',
         dataSourceId: relationDataSourceId,
         ...(relationAppSlug ? { relationAppSlug } : {}),
-        ...(relationDataSourceSlug ? { relationDataSourceSlug } : {}),
+        ...(relationDataSourceSlug ? { relationDataSourceSlug } : {})
       }
     }
 
@@ -723,10 +717,10 @@ export function getCellOpts(
 }
 
 interface FieldGroupValueProps {
-  field: IField
-  value: unknown
-  record?: Record<string, unknown>
-  enumOptions?: Array<EnumOption>
+  field: IField;
+  value: unknown;
+  record?: Record<string, unknown>;
+  enumOptions?: Array<EnumOption>;
 }
 
 /**
@@ -737,7 +731,7 @@ function FieldGroupValue({
   field,
   value,
   record,
-  enumOptions,
+  enumOptions
 }: FieldGroupValueProps) {
   const ValueRenderer = useDocyrusFieldComponent(field.type, 'value-renderer')
 
@@ -746,24 +740,23 @@ function FieldGroupValue({
       field={field}
       value={value}
       record={record}
-      enumOptions={enumOptions}
-    />
+      enumOptions={enumOptions} />
   )
 }
 
 export interface BuildTanstackColumnDefOptions {
   /** Field metadata. Accepts both `IField` and `@docyrus/app-utils`'s `DataSourceField`. */
-  field: DocyrusFieldLike
+  field: DocyrusFieldLike;
   /** App slug — wired into `enum` cell meta for dynamic option loading. */
-  appSlug?: string
+  appSlug?: string;
   /** Data source slug — wired into `enum` cell meta for dynamic option loading. */
-  dataSourceSlug?: string
+  dataSourceSlug?: string;
   /** Shared users list for `field-userSelect` / `field-userMultiSelect` cell options. */
-  users?: ReadonlyArray<CellUserOption>
+  users?: ReadonlyArray<CellUserOption>;
 }
 
 export type TanstackColumnDefBuilder = <TData = unknown>(
-  options: BuildTanstackColumnDefOptions,
+  options: BuildTanstackColumnDefOptions
 ) => ColumnDef<TData>
 
 /**
@@ -775,9 +768,9 @@ export type TanstackColumnDefBuilder = <TData = unknown>(
  * locks the column width even when resizing is otherwise enabled.
  */
 function getColumnSizing(cell: CellOpts): {
-  size?: number
-  minSize?: number
-  maxSize?: number
+  size?: number;
+  minSize?: number;
+  maxSize?: number;
 } {
   if (cell.variant === 'uuid') {
     const showCopyButton = cell.showCopyButton !== false
@@ -804,7 +797,7 @@ function getColumnSizing(cell: CellOpts): {
  *   value renderer for the field type
  */
 export function buildTanstackColumnDef<TData = unknown>(
-  options: BuildTanstackColumnDefOptions,
+  options: BuildTanstackColumnDefOptions
 ): ColumnDef<TData> {
   const { field, appSlug, dataSourceSlug, users } = options
   const fieldType = field.type as IFieldType
@@ -815,8 +808,7 @@ export function buildTanstackColumnDef<TData = unknown>(
 
   return {
     id: field.slug,
-    accessorFn: (row: unknown) =>
-      normalizeFieldValue(getFieldValue(row, field.slug), fieldType),
+    accessorFn: (row: unknown) => normalizeFieldValue(getFieldValue(row, field.slug), fieldType),
     header: field.name,
     ...sizing,
     meta: {
@@ -828,11 +820,10 @@ export function buildTanstackColumnDef<TData = unknown>(
           field={ifield}
           value={value}
           record={record as Record<string, unknown> | undefined}
-          enumOptions={enumOptions}
-        />
-      ),
-    },
-  } as ColumnDef<TData>
+          enumOptions={enumOptions} />
+      )
+    }
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -892,7 +883,7 @@ export type DocyrusFieldComponentResult<K extends DocyrusFieldComponentKind> =
  */
 export function useDocyrusFieldComponent<K extends DocyrusFieldComponentKind>(
   fieldType: IFieldType,
-  kind: K,
+  kind: K
 ): DocyrusFieldComponentResult<K> {
   return useMemo<DocyrusFieldComponentResult<K>>(() => {
     switch (kind) {

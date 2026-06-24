@@ -1,7 +1,7 @@
 import { useRouter } from '@tanstack/react-router'
 import {
   useDocyrusHostNavigation,
-  useDocyrusHostNotification,
+  useDocyrusHostNotification
 } from '@docyrus/signin'
 import { toast } from 'sonner'
 
@@ -25,12 +25,15 @@ export function useHostBridge() {
   useDocyrusHostNavigation(({ url }) => {
     if (!url) return
 
-    // The host may send an absolute URL or a relative path. Resolve against the
-    // current origin and push the relative portion so TanStack Router handles it
-    // regardless of the route's search/hash shape.
+    /*
+     * The host may send an absolute URL or a relative path. Resolve against the
+     * current origin and push the relative portion so TanStack Router handles it
+     * regardless of the route's search/hash shape.
+     */
     try {
       const resolved = new URL(url, window.location.origin)
       const relative = `${resolved.pathname}${resolved.search}${resolved.hash}`
+
       router.history.push(relative)
     } catch {
       // Fall back to pushing the raw value if it isn't a parseable URL.
@@ -40,7 +43,7 @@ export function useHostBridge() {
 
   useDocyrusHostNotification((notification) => {
     toast(notification.subject, {
-      description: notification.message,
+      description: notification.message
     })
   })
 }

@@ -17,6 +17,7 @@ export type EnumCatalog = Record<
 
 export function normalizeEnumToken(value: unknown): string {
   if (value === null || value === undefined) return ''
+
   return String(value)
     .trim()
     .toLowerCase()
@@ -26,15 +27,16 @@ export function normalizeEnumToken(value: unknown): string {
 export type ResolveWebphoneEnum = (
   dataSourceSlug: string,
   fieldSlug: string,
-  token: unknown,
+  token: unknown
 ) => string | undefined
 
 export function createWebphoneEnumResolver(
   catalog: EnumCatalog | undefined,
-  appSlug = 'base_callcenter',
+  appSlug = 'base_callcenter'
 ): ResolveWebphoneEnum {
   return function resolveEnum(dataSourceSlug, fieldSlug, token) {
     const expected = normalizeEnumToken(token)
+
     if (!expected) return undefined
 
     const options = catalog?.[appSlug]?.[dataSourceSlug]?.[fieldSlug] ?? []

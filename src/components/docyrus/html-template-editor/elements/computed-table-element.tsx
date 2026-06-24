@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 // @ts-nocheck
 /* eslint-disable */
@@ -8,27 +8,27 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useState
-} from 'react';
+  useState,
+} from 'react'
 
 import {
   GripVerticalIcon,
   MoreVerticalIcon,
   PencilIcon,
   PlusIcon,
-  Trash2Icon
-} from 'lucide-react';
+  Trash2Icon,
+} from 'lucide-react'
 import {
   PlateElement,
   type PlateElementProps,
   useEditorRef,
   useFocused,
   useReadOnly,
-  useSelected
-} from 'platejs/react';
+  useSelected,
+} from 'platejs/react'
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -36,13 +36,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/utils';
-import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation';
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { cn } from '@/lib/utils'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
-import { TableConfigurationDialog } from '../components/table-configuration-dialog';
-import { useHbsContext } from '../lib/hbs-context';
+import { TableConfigurationDialog } from '../components/table-configuration-dialog'
+import { useHbsContext } from '../lib/hbs-context'
 import {
   type ComputedColumn,
   type ComputedColumnConfig,
@@ -52,77 +52,95 @@ import {
   type ComputedFooterConfig,
   type ComputedRow,
   type ComputedTableSchema,
-  type TComputedTableElement
-} from '../types';
+  type TComputedTableElement,
+} from '../types'
 
 /* ── Tiny formatters — used when a column doesn't provide a `format` override ── */
 
 function defaultCurrencyLocale(currency: string): string {
-  if (currency === 'TRY') return 'tr-TR';
-  if (currency === 'EUR') return 'de-DE';
-  if (currency === 'GBP') return 'en-GB';
+  if (currency === 'TRY') return 'tr-TR'
+  if (currency === 'EUR') return 'de-DE'
+  if (currency === 'GBP') return 'en-GB'
 
-  return 'en-US';
+  return 'en-US'
 }
 
 function formatMoney(value: unknown, currency: string, locale: string): string {
-  const n = Number(value);
+  const n = Number(value)
 
-  if (!Number.isFinite(n)) return '';
+  if (!Number.isFinite(n)) return ''
   try {
     return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency,
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(n);
+      maximumFractionDigits: 2,
+    }).format(n)
   } catch {
-    return n.toFixed(2);
+    return n.toFixed(2)
   }
 }
 
 function formatPercentDisplay(value: unknown): string {
-  const n = Number(value);
+  const n = Number(value)
 
-  if (!Number.isFinite(n)) return '';
+  if (!Number.isFinite(n)) return ''
 
-  return `%${n % 1 === 0 ? n.toString() : n.toFixed(2)}`;
+  return `%${n % 1 === 0 ? n.toString() : n.toFixed(2)}`
 }
 
 function formatNumberDisplay(value: unknown, locale: string): string {
-  const n = Number(value);
+  const n = Number(value)
 
-  if (!Number.isFinite(n)) return '';
+  if (!Number.isFinite(n)) return ''
 
-  return new Intl.NumberFormat(locale, { maximumFractionDigits: 4 }).format(n);
+  return new Intl.NumberFormat(locale, { maximumFractionDigits: 4 }).format(n)
 }
 
 /* ── Per-column cell renderer — switches on column.type ── */
 
 interface CellProps {
-  column: ComputedColumn;
-  row: ComputedRow;
-  ctx: ComputedColumnContext;
-  readOnly: boolean;
-  onCommit: (next: unknown) => void;
+  column: ComputedColumn
+  row: ComputedRow
+  ctx: ComputedColumnContext
+  readOnly: boolean
+  onCommit: (next: unknown) => void
 }
 
-function Cell({
-  column, row, ctx, readOnly, onCommit
-}: CellProps) {
-  const rawValue = column.type === 'computed' && column.compute ? column.compute(row, ctx) : (row[column.key] as unknown);
+function Cell({ column, row, ctx, readOnly, onCommit }: CellProps) {
+  const rawValue =
+    column.type === 'computed' && column.compute
+      ? column.compute(row, ctx)
+      : (row[column.key] as unknown)
 
-  const formatted = column.format ? column.format(rawValue, row, ctx) : column.type === 'currency' ? formatMoney(rawValue, ctx.currency, ctx.locale) : column.type === 'percent' ? formatPercentDisplay(rawValue) : column.type === 'number' ? formatNumberDisplay(rawValue, ctx.locale) : String(rawValue ?? '');
+  const formatted = column.format
+    ? column.format(rawValue, row, ctx)
+    : column.type === 'currency'
+      ? formatMoney(rawValue, ctx.currency, ctx.locale)
+      : column.type === 'percent'
+        ? formatPercentDisplay(rawValue)
+        : column.type === 'number'
+          ? formatNumberDisplay(rawValue, ctx.locale)
+          : String(rawValue ?? '')
 
   if (readOnly || column.type === 'computed') {
     return (
-      <span className={cn('block tabular-nums', column.align === 'right' && 'text-right')}>
+      <span
+        className={cn(
+          'block tabular-nums',
+          column.align === 'right' && 'text-right',
+        )}
+      >
         {formatted}
       </span>
-    );
+    )
   }
 
-  if (column.type === 'number' || column.type === 'currency' || column.type === 'percent') {
+  if (
+    column.type === 'number' ||
+    column.type === 'currency' ||
+    column.type === 'percent'
+  ) {
     return (
       <NumericCellInput
         value={Number(rawValue) || 0}
@@ -130,51 +148,58 @@ function Cell({
         min={column.min}
         max={column.max}
         align={column.align ?? 'right'}
-        onCommit={onCommit} />
-    );
+        onCommit={onCommit}
+      />
+    )
   }
 
   return (
     <TextCellInput
       value={String(rawValue ?? '')}
       onCommit={onCommit}
-      align={column.align} />
-  );
+      align={column.align}
+    />
+  )
 }
 
 interface NumericCellInputProps {
-  value: number;
-  step?: number;
-  min?: number;
-  max?: number;
-  align?: 'left' | 'right' | 'center';
-  onCommit: (next: number) => void;
+  value: number
+  step?: number
+  min?: number
+  max?: number
+  align?: 'left' | 'right' | 'center'
+  onCommit: (next: number) => void
 }
 
 function NumericCellInput({
-  value, step, min, max, align, onCommit
+  value,
+  step,
+  min,
+  max,
+  align,
+  onCommit,
 }: NumericCellInputProps) {
-  const [draft, setDraft] = useState(String(value));
-  const lastRef = useRef(value);
+  const [draft, setDraft] = useState(String(value))
+  const lastRef = useRef(value)
 
   useEffect(() => {
     if (value !== lastRef.current) {
-      setDraft(String(value));
-      lastRef.current = value;
+      setDraft(String(value))
+      lastRef.current = value
     }
-  }, [value]);
+  }, [value])
 
   const commit = useCallback(() => {
-    const n = Number(draft);
+    const n = Number(draft)
 
     if (!Number.isFinite(n) || n === value) {
-      setDraft(String(value));
+      setDraft(String(value))
 
-      return;
+      return
     }
-    lastRef.current = n;
-    onCommit(n);
-  }, [draft, value, onCommit]);
+    lastRef.current = n
+    onCommit(n)
+  }, [draft, value, onCommit])
 
   return (
     <Input
@@ -183,91 +208,91 @@ function NumericCellInput({
       step={step}
       min={min}
       max={max}
-      onChange={e => setDraft(e.target.value)}
+      onChange={(e) => setDraft(e.target.value)}
       onBlur={commit}
       onKeyDown={(e) => {
         if (e.key === 'Enter') {
-          e.preventDefault();
-          (e.currentTarget as HTMLInputElement).blur();
+          e.preventDefault()
+          ;(e.currentTarget as HTMLInputElement).blur()
         }
       }}
       className={cn(
         'h-8 w-full border-transparent bg-transparent px-1.5 py-0 tabular-nums shadow-none focus-visible:border-input focus-visible:bg-background',
         align === 'right' && 'text-right',
-        align === 'center' && 'text-center'
-      )} />
-  );
+        align === 'center' && 'text-center',
+      )}
+    />
+  )
 }
 
 interface TextCellInputProps {
-  value: string;
-  onCommit: (next: string) => void;
-  align?: 'left' | 'right' | 'center';
+  value: string
+  onCommit: (next: string) => void
+  align?: 'left' | 'right' | 'center'
 }
 
-function TextCellInput({
-  value, onCommit, align
-}: TextCellInputProps) {
-  const [draft, setDraft] = useState(value);
-  const lastRef = useRef(value);
+function TextCellInput({ value, onCommit, align }: TextCellInputProps) {
+  const [draft, setDraft] = useState(value)
+  const lastRef = useRef(value)
 
   useEffect(() => {
     if (value !== lastRef.current) {
-      setDraft(value);
-      lastRef.current = value;
+      setDraft(value)
+      lastRef.current = value
     }
-  }, [value]);
+  }, [value])
 
   const commit = useCallback(() => {
-    if (draft === value) return;
-    lastRef.current = draft;
-    onCommit(draft);
-  }, [draft, value, onCommit]);
+    if (draft === value) return
+    lastRef.current = draft
+    onCommit(draft)
+  }, [draft, value, onCommit])
 
   return (
     <Input
       value={draft}
-      onChange={e => setDraft(e.target.value)}
+      onChange={(e) => setDraft(e.target.value)}
       onBlur={commit}
       onKeyDown={(e) => {
         if (e.key === 'Enter') {
-          e.preventDefault();
-          (e.currentTarget as HTMLInputElement).blur();
+          e.preventDefault()
+          ;(e.currentTarget as HTMLInputElement).blur()
         }
       }}
       className={cn(
         'h-8 w-full border-transparent bg-transparent px-1.5 py-0 shadow-none focus-visible:border-input focus-visible:bg-background',
         align === 'right' && 'text-right',
-        align === 'center' && 'text-center'
-      )} />
-  );
+        align === 'center' && 'text-center',
+      )}
+    />
+  )
 }
 
 /* ── Helpers for new-row id + initial values ── */
 
 function makeRowId(): string {
-  return `row_${Math.random().toString(36).slice(2, 10)}`;
+  return `row_${Math.random().toString(36).slice(2, 10)}`
 }
 
 function blankRow(schema: ComputedTableSchema): ComputedRow {
-  const row: ComputedRow = { id: makeRowId() };
+  const row: ComputedRow = { id: makeRowId() }
 
   for (const col of schema.columns) {
-    if (col.type === 'computed') continue;
-    if (col.defaultValue !== undefined) row[col.key] = col.defaultValue;
+    if (col.type === 'computed') continue
+    if (col.defaultValue !== undefined) row[col.key] = col.defaultValue
   }
 
-  return row;
+  return row
 }
 
 function effectiveVisibility(
   override: Record<string, boolean> | undefined,
-  col: ComputedColumn
+  col: ComputedColumn,
 ): boolean {
-  if (override && col.key in override) return override[col.key] === true;
-  if (col.defaultVisible === false) return false;
+  if (override && col.key in override) return override[col.key] === true
+  if (col.defaultVisible === false) return false
 
-  return true;
+  return true
 }
 
 /*
@@ -277,18 +302,24 @@ function effectiveVisibility(
  * ──
  */
 function buildMissingSchemaFallback(
-  t: (key: string, fallback: string) => string
+  t: (key: string, fallback: string) => string,
 ): ComputedTableSchema {
   return {
     id: '__missing__',
     label: t('ui.htmlTemplateEditor.tableMissingSchemaLabel', 'Missing schema'),
     columns: [{ key: 'value', label: 'Value', type: 'text' }],
     labels: {
-      title: t('ui.htmlTemplateEditor.tableMissingSchemaTitle', 'Schema not found'),
+      title: t(
+        'ui.htmlTemplateEditor.tableMissingSchemaTitle',
+        'Schema not found',
+      ),
       addRow: t('ui.htmlTemplateEditor.tableAddRow', '+ Add row'),
-      emptyState: t('ui.htmlTemplateEditor.tableMissingSchemaEmpty', '— this table\'s `schemaId` is not registered in editor.tableSchemas —')
-    }
-  };
+      emptyState: t(
+        'ui.htmlTemplateEditor.tableMissingSchemaEmpty',
+        "— this table's `schemaId` is not registered in editor.tableSchemas —",
+      ),
+    },
+  }
 }
 
 /* ── Ad-hoc mode helpers ───────────────────────────────────────────────── */
@@ -298,15 +329,15 @@ const FONT_SIZE_CLASS: Record<ComputedFontSize, string> = {
   sm: 'text-xs',
   base: 'text-sm',
   lg: 'text-base',
-  xl: 'text-lg'
-};
+  xl: 'text-lg',
+}
 
 function fontWeightClass(weight?: ComputedFontWeight): string {
-  return weight === 'bold' ? 'font-semibold' : 'font-normal';
+  return weight === 'bold' ? 'font-semibold' : 'font-normal'
 }
 
 function isPlainObject(v: unknown): v is Record<string, unknown> {
-  return typeof v === 'object' && v !== null && !Array.isArray(v);
+  return typeof v === 'object' && v !== null && !Array.isArray(v)
 }
 
 /**
@@ -315,32 +346,32 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
  * resolve to an array of objects.
  */
 function readAdhocRows(data: unknown, path: string | undefined): ComputedRow[] {
-  if (!path) return [];
-  const segments = path.split('.');
-  let cur: unknown = data;
+  if (!path) return []
+  const segments = path.split('.')
+  let cur: unknown = data
 
   for (const seg of segments) {
-    if (cur === null || cur === undefined) return [];
+    if (cur === null || cur === undefined) return []
     if (Array.isArray(cur)) {
-      const idx = Number(seg);
+      const idx = Number(seg)
 
-      if (!Number.isInteger(idx)) return [];
-      cur = cur[idx];
+      if (!Number.isInteger(idx)) return []
+      cur = cur[idx]
     } else if (isPlainObject(cur)) {
-      cur = cur[seg];
+      cur = cur[seg]
     } else {
-      return [];
+      return []
     }
   }
-  if (!Array.isArray(cur)) return [];
+  if (!Array.isArray(cur)) return []
 
   return cur.map((row, i) => {
     if (isPlainObject(row)) {
-      return { id: `adhoc-${i}`, ...row };
+      return { id: `adhoc-${i}`, ...row }
     }
 
-    return { id: `adhoc-${i}`, value: row };
-  });
+    return { id: `adhoc-${i}`, value: row }
+  })
 }
 
 /**
@@ -349,21 +380,21 @@ function readAdhocRows(data: unknown, path: string | undefined): ComputedRow[] {
  * the editor preview (full formatting kicks in during serialize / preview tab).
  */
 function configToColumn(cfg: ComputedColumnConfig): ComputedColumn {
-  const type: ComputedColumn['type']
-    = cfg.format === 'date' || cfg.format === 'computed' ? 'text' : cfg.format;
+  const type: ComputedColumn['type'] =
+    cfg.format === 'date' || cfg.format === 'computed' ? 'text' : cfg.format
 
   return {
     key: cfg.key,
     label: cfg.label,
     type,
     align: cfg.align,
-    width: cfg.width
-  };
+    width: cfg.width,
+  }
 }
 
 function adhocSchemaFrom(
   el: TComputedTableElement,
-  t: (key: string, fallback: string) => string
+  t: (key: string, fallback: string) => string,
 ): ComputedTableSchema {
   /*
    * Only include columns the user has marked visible — ad-hoc tables don't
@@ -371,11 +402,12 @@ function adhocSchemaFrom(
    * into `visibleColumns` at the schema level either.
    */
   const columns = (el.columns ?? [])
-    .filter(c => c.visible !== false)
-    .map(configToColumn);
-  const title = el.label?.trim()
-    || el.dataPath
-    || t('ui.htmlTemplateEditor.tableDefaultTitle', 'Table');
+    .filter((c) => c.visible !== false)
+    .map(configToColumn)
+  const title =
+    el.label?.trim() ||
+    el.dataPath ||
+    t('ui.htmlTemplateEditor.tableDefaultTitle', 'Table')
 
   return {
     id: el.schemaId,
@@ -383,149 +415,172 @@ function adhocSchemaFrom(
     columns,
     labels: {
       title,
-      emptyState: t('ui.htmlTemplateEditor.tableAdhocEmpty', '— bound data path is empty or not found —')
-    }
-  };
+      emptyState: t(
+        'ui.htmlTemplateEditor.tableAdhocEmpty',
+        '— bound data path is empty or not found —',
+      ),
+    },
+  }
 }
 
 /* ── Element ── */
 
 export function ComputedTableElement(
-  props: PlateElementProps<TComputedTableElement>
+  props: PlateElementProps<TComputedTableElement>,
 ) {
-  const { element, children } = props;
-  const editor = useEditorRef();
-  const selected = useSelected();
-  const focused = useFocused();
-  const editorReadOnly = useReadOnly();
-  const { tableSchemas, data, defaultCurrency } = useHbsContext();
-  const { t } = useUiTranslation();
+  const { element, children } = props
+  const editor = useEditorRef()
+  const selected = useSelected()
+  const focused = useFocused()
+  const editorReadOnly = useReadOnly()
+  const { tableSchemas, data, defaultCurrency } = useHbsContext()
+  const { t } = useUiTranslation()
 
   /*
    * Ad-hoc mode = node carries its own column configs. Editor row editing is
    * disabled in this mode — rows are projected from the bound JSON data.
    */
-  const adhocColumns = element.columns;
-  const isAdhoc = Array.isArray(adhocColumns) && adhocColumns.length > 0;
+  const adhocColumns = element.columns
+  const isAdhoc = Array.isArray(adhocColumns) && adhocColumns.length > 0
   const adhocColumnMap = useMemo(() => {
-    const map = new Map<string, ComputedColumnConfig>();
+    const map = new Map<string, ComputedColumnConfig>()
 
     if (adhocColumns) {
-      for (const c of adhocColumns) map.set(c.key, c);
+      for (const c of adhocColumns) map.set(c.key, c)
     }
 
-    return map;
-  }, [adhocColumns]);
+    return map
+  }, [adhocColumns])
 
-  const schema: ComputedTableSchema = isAdhoc ? adhocSchemaFrom(element, t) : tableSchemas[element.schemaId] ?? buildMissingSchemaFallback(t);
+  const schema: ComputedTableSchema = isAdhoc
+    ? adhocSchemaFrom(element, t)
+    : (tableSchemas[element.schemaId] ?? buildMissingSchemaFallback(t))
 
-  const readOnly = editorReadOnly || isAdhoc;
+  const readOnly = editorReadOnly || isAdhoc
 
-  const rawRows = element.rows;
+  const rawRows = element.rows
   const adhocRows = useMemo(
     () => (isAdhoc ? readAdhocRows(data, element.dataPath) : []),
-    [isAdhoc, data, element.dataPath]
-  );
+    [isAdhoc, data, element.dataPath],
+  )
   const rows = useMemo<ComputedRow[]>(
-    () => (isAdhoc ? adhocRows : rawRows ?? []),
-    [isAdhoc, adhocRows, rawRows]
-  );
-  const currency = element.currency ?? schema.defaultCurrency ?? defaultCurrency;
-  const locale = element.locale ?? schema.defaultLocale ?? defaultCurrencyLocale(currency);
-  const { columnVisibility } = element;
+    () => (isAdhoc ? adhocRows : (rawRows ?? [])),
+    [isAdhoc, adhocRows, rawRows],
+  )
+  const currency = element.currency ?? schema.defaultCurrency ?? defaultCurrency
+  const locale =
+    element.locale ?? schema.defaultLocale ?? defaultCurrencyLocale(currency)
+  const { columnVisibility } = element
 
   const visibleColumns = useMemo(
-    () => schema.columns.filter(col => effectiveVisibility(columnVisibility, col)),
-    [schema, columnVisibility]
-  );
+    () =>
+      schema.columns.filter((col) =>
+        effectiveVisibility(columnVisibility, col),
+      ),
+    [schema, columnVisibility],
+  )
 
-  const labels = schema.labels ?? {};
-  const titleLabel = labels.title ?? schema.label;
-  const addRowLabel = labels.addRow ?? t('ui.htmlTemplateEditor.tableAddRow', '+ Add row');
-  const emptyLabel = labels.emptyState ?? t('ui.htmlTemplateEditor.tableEmptyState', 'No rows yet.');
+  const labels = schema.labels ?? {}
+  const titleLabel = labels.title ?? schema.label
+  const addRowLabel =
+    labels.addRow ?? t('ui.htmlTemplateEditor.tableAddRow', '+ Add row')
+  const emptyLabel =
+    labels.emptyState ??
+    t('ui.htmlTemplateEditor.tableEmptyState', 'No rows yet.')
 
   /* ── Patch helpers ── */
 
   const patch = useCallback(
     (next: Partial<TComputedTableElement>) => {
-      editor.tf.setNodes(next, { at: [], match: n => n === element });
+      editor.tf.setNodes(next, { at: [], match: (n) => n === element })
     },
-    [editor, element]
-  );
+    [editor, element],
+  )
 
   const updateRow = useCallback(
     (id: string, changes: Partial<ComputedRow>) => {
       patch({
-        rows: rows.map(r => (r.id === id ? { ...r, ...changes } : r))
-      });
+        rows: rows.map((r) => (r.id === id ? { ...r, ...changes } : r)),
+      })
     },
-    [rows, patch]
-  );
+    [rows, patch],
+  )
 
   const removeRow = useCallback(
     (id: string) => {
-      patch({ rows: rows.filter(r => r.id !== id) });
+      patch({ rows: rows.filter((r) => r.id !== id) })
     },
-    [rows, patch]
-  );
+    [rows, patch],
+  )
 
   const addRow = useCallback(() => {
-    patch({ rows: [...rows, blankRow(schema)] });
-  }, [rows, patch, schema]);
+    patch({ rows: [...rows, blankRow(schema)] })
+  }, [rows, patch, schema])
 
   const toggleColumn = useCallback(
     (key: string, visible: boolean) => {
-      patch({ columnVisibility: { ...columnVisibility, [key]: visible } });
+      patch({ columnVisibility: { ...columnVisibility, [key]: visible } })
     },
-    [columnVisibility, patch]
-  );
+    [columnVisibility, patch],
+  )
 
   /* ── Drag reorder ── */
 
-  const dragIdRef = useRef<string | null>(null);
-  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const dragIdRef = useRef<string | null>(null)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
 
-  const onDragStart = useCallback((id: string) => (e: DragEvent) => {
-    dragIdRef.current = id;
-    e.dataTransfer.effectAllowed = 'move';
-    e.stopPropagation();
-  }, []);
+  const onDragStart = useCallback(
+    (id: string) => (e: DragEvent) => {
+      dragIdRef.current = id
+      e.dataTransfer.effectAllowed = 'move'
+      e.stopPropagation()
+    },
+    [],
+  )
 
-  const onDragOver = useCallback((id: string) => (e: DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    if (dragOverId !== id) setDragOverId(id);
-  }, [dragOverId]);
+  const onDragOver = useCallback(
+    (id: string) => (e: DragEvent) => {
+      e.preventDefault()
+      e.dataTransfer.dropEffect = 'move'
+      if (dragOverId !== id) setDragOverId(id)
+    },
+    [dragOverId],
+  )
 
   const onDragEnd = useCallback(() => {
-    dragIdRef.current = null;
-    setDragOverId(null);
-  }, []);
+    dragIdRef.current = null
+    setDragOverId(null)
+  }, [])
 
-  const onDrop = useCallback((id: string) => (e: DragEvent) => {
-    e.preventDefault();
-    const draggedId = dragIdRef.current;
+  const onDrop = useCallback(
+    (id: string) => (e: DragEvent) => {
+      e.preventDefault()
+      const draggedId = dragIdRef.current
 
-    dragIdRef.current = null;
-    setDragOverId(null);
-    if (!draggedId || draggedId === id) return;
-    const from = rows.findIndex(r => r.id === draggedId);
-    const to = rows.findIndex(r => r.id === id);
+      dragIdRef.current = null
+      setDragOverId(null)
+      if (!draggedId || draggedId === id) return
+      const from = rows.findIndex((r) => r.id === draggedId)
+      const to = rows.findIndex((r) => r.id === id)
 
-    if (from < 0 || to < 0) return;
-    const next = [...rows];
-    const [moved] = next.splice(from, 1);
+      if (from < 0 || to < 0) return
+      const next = [...rows]
+      const [moved] = next.splice(from, 1)
 
-    if (!moved) return;
-    next.splice(to, 0, moved);
-    patch({ rows: next });
-  }, [rows, patch]);
+      if (!moved) return
+      next.splice(to, 0, moved)
+      patch({ rows: next })
+    },
+    [rows, patch],
+  )
 
   /* ── Currency picker ── */
 
-  const currencyOptions = schema.currencyOptions ?? [];
-  const showCurrencyPicker = currencyOptions.length > 0;
-  const activeCurrencyOption = currencyOptions.find(opt => opt.code === currency);
+  const currencyOptions = schema.currencyOptions ?? []
+  const showCurrencyPicker = currencyOptions.length > 0
+  const activeCurrencyOption = currencyOptions.find(
+    (opt) => opt.code === currency,
+  )
 
   /* ── Footer aggregates ── */
 
@@ -536,46 +591,53 @@ export function ComputedTableElement(
 
   /* ── Column toggle menu items ── */
 
-  const toggleableColumns = schema.columns.filter(c => c.toggleable);
-  const showColumnsMenu = !readOnly && toggleableColumns.length > 0;
+  const toggleableColumns = schema.columns.filter((c) => c.toggleable)
+  const showColumnsMenu = !readOnly && toggleableColumns.length > 0
 
   /* ── Ad-hoc edit-in-place dialog ── */
 
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const initialEditConfig = isAdhoc && element.dataPath ? {
-    dataPath: element.dataPath,
-    label: element.label,
-    columns: element.columns ?? [],
-    footer: element.footer ?? []
-  } : undefined;
-  const handleEditConfirm = useCallback((next: {
-    dataPath: string;
-    label?: string;
-    columns: ComputedColumnConfig[];
-    footer: ComputedFooterConfig[];
-  }) => {
-    setEditDialogOpen(false);
-    patch({
-      dataPath: next.dataPath,
-      label: next.label,
-      columns: next.columns,
-      footer: next.footer
-    });
-  }, [patch]);
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const initialEditConfig =
+    isAdhoc && element.dataPath
+      ? {
+          dataPath: element.dataPath,
+          label: element.label,
+          columns: element.columns ?? [],
+          footer: element.footer ?? [],
+        }
+      : undefined
+  const handleEditConfirm = useCallback(
+    (next: {
+      dataPath: string
+      label?: string
+      columns: ComputedColumnConfig[]
+      footer: ComputedFooterConfig[]
+    }) => {
+      setEditDialogOpen(false)
+      patch({
+        dataPath: next.dataPath,
+        label: next.label,
+        columns: next.columns,
+        footer: next.footer,
+      })
+    },
+    [patch],
+  )
 
-  const colSpan = visibleColumns.length + (readOnly ? 0 : 1); // +1 for actions column
+  const colSpan = visibleColumns.length + (readOnly ? 0 : 1) // +1 for actions column
 
   return (
     <PlateElement
       {...props}
       className={cn(
         'my-3 rounded-lg border bg-card',
-        selected && focused && 'ring-2 ring-ring ring-offset-2'
+        selected && focused && 'ring-2 ring-ring ring-offset-2',
       )}
       attributes={{
         ...props.attributes,
-        contentEditable: false
-      }}>
+        contentEditable: false,
+      }}
+    >
       <div className="hidden">{children}</div>
 
       {/* Header */}
@@ -602,16 +664,19 @@ export function ComputedTableElement(
                  * by a frame so the deselect-driven blur flushes first.
                  */
                 try {
-                  (editor as { deselect?: () => void }).deselect?.();
+                  ;(editor as { deselect?: () => void }).deselect?.()
                 } catch {
                   /* swallow */
                 }
-                const slateEl = document.querySelector('[data-slate-editor="true"]') as HTMLElement | null;
+                const slateEl = document.querySelector(
+                  '[data-slate-editor="true"]',
+                ) as HTMLElement | null
 
-                slateEl?.blur();
-                (document.activeElement as HTMLElement | null)?.blur?.();
-                requestAnimationFrame(() => setEditDialogOpen(true));
-              }}>
+                slateEl?.blur()
+                ;(document.activeElement as HTMLElement | null)?.blur?.()
+                requestAnimationFrame(() => setEditDialogOpen(true))
+              }}
+            >
               <PencilIcon className="size-3.5" />
               {t('ui.htmlTemplateEditor.tableEditButton', 'Edit')}
             </Button>
@@ -619,27 +684,33 @@ export function ComputedTableElement(
           {!readOnly && showCurrencyPicker && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="ghost" className="h-7 gap-1 px-2 text-xs">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 gap-1 px-2 text-xs"
+                >
                   {activeCurrencyOption?.label ?? currency}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuLabel>
-                  {labels.currencyLabel ?? t('ui.htmlTemplateEditor.tableCurrencyLabel', 'Currency')}
+                  {labels.currencyLabel ??
+                    t('ui.htmlTemplateEditor.tableCurrencyLabel', 'Currency')}
                 </DropdownMenuLabel>
                 <DropdownMenuRadioGroup
                   value={currency}
                   onValueChange={(val) => {
-                    const next = currencyOptions.find(c => c.code === val);
+                    const next = currencyOptions.find((c) => c.code === val)
 
                     if (next) {
                       patch({
                         currency: next.code,
-                        locale: next.locale ?? defaultCurrencyLocale(next.code)
-                      });
+                        locale: next.locale ?? defaultCurrencyLocale(next.code),
+                      })
                     }
-                  }}>
-                  {currencyOptions.map(opt => (
+                  }}
+                >
+                  {currencyOptions.map((opt) => (
                     <DropdownMenuRadioItem key={opt.code} value={opt.code}>
                       {opt.label}
                     </DropdownMenuRadioItem>
@@ -657,18 +728,21 @@ export function ComputedTableElement(
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuLabel>{t('ui.htmlTemplateEditor.tableColumns', 'Columns')}</DropdownMenuLabel>
+                <DropdownMenuLabel>
+                  {t('ui.htmlTemplateEditor.tableColumns', 'Columns')}
+                </DropdownMenuLabel>
                 {toggleableColumns.map((col) => {
-                  const visible = effectiveVisibility(columnVisibility, col);
+                  const visible = effectiveVisibility(columnVisibility, col)
 
                   return (
                     <DropdownMenuCheckboxItem
                       key={col.key}
                       checked={visible}
-                      onCheckedChange={v => toggleColumn(col.key, v)}>
+                      onCheckedChange={(v) => toggleColumn(col.key, v)}
+                    >
                       {col.label}
                     </DropdownMenuCheckboxItem>
-                  );
+                  )
                 })}
               </DropdownMenuContent>
             </DropdownMenu>
@@ -682,11 +756,12 @@ export function ComputedTableElement(
           <thead>
             <tr className="border-b bg-muted/50 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               {visibleColumns.map((col) => {
-                const cfg = adhocColumnMap.get(col.key);
-                const style: Record<string, string | undefined> = {};
+                const cfg = adhocColumnMap.get(col.key)
+                const style: Record<string, string | undefined> = {}
 
-                if (col.width) style.width = col.width;
-                if (cfg?.backgroundColor) style.backgroundColor = cfg.backgroundColor;
+                if (col.width) style.width = col.width
+                if (cfg?.backgroundColor)
+                  style.backgroundColor = cfg.backgroundColor
 
                 return (
                   <th
@@ -695,29 +770,38 @@ export function ComputedTableElement(
                       'px-2 py-1.5',
                       col.align === 'right' && 'text-right',
                       col.align === 'center' && 'text-center',
-                      (col.align ?? 'left') === 'left' && 'text-left'
+                      (col.align ?? 'left') === 'left' && 'text-left',
                     )}
-                    style={style}>
+                    style={style}
+                  >
                     {col.label}
                   </th>
-                );
+                )
               })}
-              {!readOnly && <th className="w-8 px-1 py-1.5" aria-label="actions" />}
+              {!readOnly && (
+                <th className="w-8 px-1 py-1.5" aria-label="actions" />
+              )}
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={colSpan} className="px-3 py-6 text-center text-muted-foreground">
+                <td
+                  colSpan={colSpan}
+                  className="px-3 py-6 text-center text-muted-foreground"
+                >
                   {emptyLabel}
                 </td>
               </tr>
             ) : (
               rows.map((row, i) => {
                 const ctx: ComputedColumnContext = {
-                  currency, locale, rows, index: i
-                };
-                const isDragOver = dragOverId === row.id;
+                  currency,
+                  locale,
+                  rows,
+                  index: i,
+                }
+                const isDragOver = dragOverId === row.id
 
                 return (
                   <tr
@@ -729,19 +813,26 @@ export function ComputedTableElement(
                     onDrop={onDrop(row.id)}
                     className={cn(
                       'group border-b transition-colors last:border-b-0',
-                      isDragOver && 'bg-primary/5 outline outline-1 -outline-offset-1 outline-primary/40'
-                    )}>
+                      isDragOver &&
+                        'bg-primary/5 outline outline-1 -outline-offset-1 outline-primary/40',
+                    )}
+                  >
                     {visibleColumns.map((col) => {
-                      const cfg = adhocColumnMap.get(col.key);
-                      const tdStyle: Record<string, string | undefined> = {};
+                      const cfg = adhocColumnMap.get(col.key)
+                      const tdStyle: Record<string, string | undefined> = {}
 
-                      if (cfg?.backgroundColor) tdStyle.backgroundColor = cfg.backgroundColor;
+                      if (cfg?.backgroundColor)
+                        tdStyle.backgroundColor = cfg.backgroundColor
 
-                      const cellTextClass = cfg ? cn(
-                        FONT_SIZE_CLASS[cfg.fontSize ?? 'sm'],
-                        fontWeightClass(cfg.fontWeight)
-                      ) : undefined;
-                      const cellTextStyle = cfg?.textColor ? { color: cfg.textColor } : undefined;
+                      const cellTextClass = cfg
+                        ? cn(
+                            FONT_SIZE_CLASS[cfg.fontSize ?? 'sm'],
+                            fontWeightClass(cfg.fontWeight),
+                          )
+                        : undefined
+                      const cellTextStyle = cfg?.textColor
+                        ? { color: cfg.textColor }
+                        : undefined
 
                       return (
                         <td
@@ -749,27 +840,31 @@ export function ComputedTableElement(
                           className={cn(
                             'px-1 py-1 align-top',
                             col.align === 'right' && 'text-right',
-                            col.align === 'center' && 'text-center'
+                            col.align === 'center' && 'text-center',
                           )}
-                          style={tdStyle}>
+                          style={tdStyle}
+                        >
                           <div className="flex items-start gap-1">
                             {col === visibleColumns[0] && !readOnly && (
-                              <GripVerticalIcon
-                                className="mt-1 size-3 shrink-0 cursor-grab text-muted-foreground/50 opacity-0 transition-opacity group-hover:opacity-100" />
+                              <GripVerticalIcon className="mt-1 size-3 shrink-0 cursor-grab text-muted-foreground/50 opacity-0 transition-opacity group-hover:opacity-100" />
                             )}
                             <div
                               className={cn('min-w-0 flex-1', cellTextClass)}
-                              style={cellTextStyle}>
+                              style={cellTextStyle}
+                            >
                               <Cell
                                 column={col}
                                 row={row}
                                 ctx={ctx}
                                 readOnly={readOnly}
-                                onCommit={v => updateRow(row.id, { [col.key]: v })} />
+                                onCommit={(v) =>
+                                  updateRow(row.id, { [col.key]: v })
+                                }
+                              />
                             </div>
                           </div>
                         </td>
-                      );
+                      )
                     })}
                     {!readOnly && (
                       <td className="px-1 py-1 align-top">
@@ -778,13 +873,17 @@ export function ComputedTableElement(
                           variant="ghost"
                           className="size-7 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-destructive"
                           onClick={() => removeRow(row.id)}
-                          aria-label={t('ui.htmlTemplateEditor.tableRemoveRow', 'Remove row')}>
+                          aria-label={t(
+                            'ui.htmlTemplateEditor.tableRemoveRow',
+                            'Remove row',
+                          )}
+                        >
                           <Trash2Icon className="size-3.5" />
                         </Button>
                       </td>
                     )}
                   </tr>
-                );
+                )
               })
             )}
           </tbody>
@@ -802,7 +901,8 @@ export function ComputedTableElement(
             size="sm"
             variant="ghost"
             onClick={addRow}
-            className="h-7 gap-1.5 text-xs">
+            className="h-7 gap-1.5 text-xs"
+          >
             <PlusIcon className="size-3.5" />
             {addRowLabel}
           </Button>
@@ -815,8 +915,9 @@ export function ComputedTableElement(
           onOpenChange={setEditDialogOpen}
           data={data}
           initialConfig={initialEditConfig}
-          onConfirm={handleEditConfirm} />
+          onConfirm={handleEditConfirm}
+        />
       )}
     </PlateElement>
-  );
+  )
 }

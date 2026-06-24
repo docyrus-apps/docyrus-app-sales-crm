@@ -1,14 +1,15 @@
 // @docyrus: [[architecture#Shared Record Detail Layout]]
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
   type ComponentType,
   type MouseEvent as ReactMouseEvent,
-  type ReactNode,
+  type ReactNode
 } from 'react'
+
+import type {
+  FieldChange,
+  RecordDetailField
+} from '@/components/docyrus/editable-record-detail'
 
 import {
   AlignLeft,
@@ -29,7 +30,7 @@ import {
   Rows3,
   Search,
   Tag,
-  Type,
+  Type
 } from 'lucide-react'
 
 import { AnimatePresence, motion } from 'motion/react'
@@ -45,20 +46,18 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 
 import {
-  type FieldChange,
-  type RecordDetailField,
   EditableRecordDetail,
-  EditableRecordDetailField,
+  EditableRecordDetailField
 } from '@/components/docyrus/editable-record-detail'
 import { DialerPanel, useDialer } from '@/components/dialer/dialer-widget'
 
@@ -88,7 +87,7 @@ const FIELD_TYPE_ICONS: Record<
   'field-percent': Hash,
   'field-date': CalendarClock,
   'field-datetime': CalendarClock,
-  'field-locationSelect': MapPin,
+  'field-locationSelect': MapPin
 }
 
 /**
@@ -97,10 +96,10 @@ const FIELD_TYPE_ICONS: Record<
  * `onInlineSave` (building the `FieldChange[]` for the changed slugs).
  */
 export interface FieldRenderContext {
-  record: Record<string, unknown>
-  save: (patch: Record<string, unknown>) => void | Promise<void>
+  record: Record<string, unknown>;
+  save: (patch: Record<string, unknown>) => void | Promise<void>;
   /** True when the attribute panel is display-only */
-  readOnly: boolean
+  readOnly: boolean;
 }
 
 type FieldRendererMap = Record<string, (ctx: FieldRenderContext) => ReactNode>
@@ -119,7 +118,7 @@ function getFieldIcon(type?: string): ComponentType<{ className?: string }> {
 function useRecordVersion(record: unknown): number {
   const stateRef = useRef<{ last: unknown; version: number }>({
     last: record,
-    version: 0,
+    version: 0
   })
 
   if (stateRef.current.last !== record) {
@@ -133,9 +132,8 @@ function useRecordVersion(record: unknown): number {
 /** True when the viewport is wide enough for the side-by-side resizable layout. */
 function useIsWideViewport(): boolean {
   const [wide, setWide] = useState(
-    () =>
-      typeof window !== 'undefined' &&
-      window.matchMedia('(min-width: 1024px)').matches,
+    () => typeof window !== 'undefined' &&
+      window.matchMedia('(min-width: 1024px)').matches
   )
 
   useEffect(() => {
@@ -153,32 +151,32 @@ function useIsWideViewport(): boolean {
 // ─── Tab definition ───────────────────────────────────────────────────────────
 export interface RecordDetailTab {
   /** Unique tab key */
-  value: string
+  value: string;
   /** Tab label */
-  label: ReactNode
+  label: ReactNode;
   /** Optional count badge shown next to the label */
-  count?: number | null
+  count?: number | null;
   /** Optional leading icon */
-  icon?: ReactNode
+  icon?: ReactNode;
   /** Tab body */
-  content: ReactNode
+  content: ReactNode;
   /** Removes default padding/scroll wrapper (e.g. for grids that manage it) */
-  bare?: boolean
+  bare?: boolean;
 }
 
 // ─── KPI card (Overview highlights) ─────────────────────────────────────────────
 export interface RecordKpiCardProps {
-  label: ReactNode
-  value: ReactNode
-  hint?: ReactNode
-  icon?: ReactNode
+  label: ReactNode;
+  value: ReactNode;
+  hint?: ReactNode;
+  icon?: ReactNode;
 }
 
 export function RecordKpiCard({
   label,
   value,
   hint,
-  icon,
+  icon
 }: RecordKpiCardProps) {
   return (
     <div className="rounded-xl border bg-card/60 px-3.5 py-3">
@@ -202,27 +200,27 @@ export function RecordKpiCard({
 
 // ─── Attribute panel (left card: header + actions + search + fields) ────────────
 interface RecordAttributePanelProps {
-  avatar?: ReactNode
-  title: ReactNode
-  subtitle?: ReactNode
-  onBack?: () => void
-  detailFields: Array<RecordDetailField>
-  fieldSlugs: Array<string>
-  record: Record<string, unknown>
-  recordVersion: number
+  avatar?: ReactNode;
+  title: ReactNode;
+  subtitle?: ReactNode;
+  onBack?: () => void;
+  detailFields: Array<RecordDetailField>;
+  fieldSlugs: Array<string>;
+  record: Record<string, unknown>;
+  recordVersion: number;
   onSave: (
     changes: Array<FieldChange>,
-    values: Record<string, unknown>,
-  ) => void | Promise<void>
-  editTitle?: ReactNode
+    values: Record<string, unknown>
+  ) => void | Promise<void>;
+  editTitle?: ReactNode;
   /** Quick-action buttons rendered above the search bar (note, email, …) */
-  actions?: ReactNode
+  actions?: ReactNode;
   /** Soft banner shown above the attribute fields (e.g. read-only notice) */
-  notice?: ReactNode
+  notice?: ReactNode;
   /** Render fields display-only (no inline edit / no edit-all modal) */
-  readOnly?: boolean
+  readOnly?: boolean;
   /** Per-slug custom renderers that replace the default inline editor */
-  fieldRenderers?: FieldRendererMap
+  fieldRenderers?: FieldRendererMap;
 }
 
 function RecordAttributePanel({
@@ -239,7 +237,7 @@ function RecordAttributePanel({
   readOnly,
   actions,
   notice,
-  fieldRenderers,
+  fieldRenderers
 }: RecordAttributePanelProps) {
   const { t } = useTranslation()
   const [query, setQuery] = useState('')
@@ -280,7 +278,7 @@ function RecordAttributePanel({
 
   const handleModalSave = async (
     changes: Array<FieldChange>,
-    values: Record<string, unknown>,
+    values: Record<string, unknown>
   ) => {
     await onSave(changes, values)
     setEditOpen(false)
@@ -288,24 +286,24 @@ function RecordAttributePanel({
 
   // Persist a partial patch coming from a custom field renderer.
   const handleFieldSave = useCallback(
-    (patch: Record<string, unknown>) =>
-      onSave(
+    (patch: Record<string, unknown>) => onSave(
         Object.entries(patch).map(([fieldSlug, newValue]) => ({
           fieldSlug,
           fieldName: fieldBySlug.get(fieldSlug)?.field.name ?? fieldSlug,
           originalValue: record[fieldSlug],
-          newValue,
+          newValue
         })),
-        { ...record, ...patch },
+        { ...record, ...patch }
       ),
-    [fieldBySlug, onSave, record],
+    [fieldBySlug, onSave, record]
   )
 
   return (
     <div className="crm-attribute-panel flex h-full min-h-0 flex-col overflow-hidden">
       {/* Keep the inline editor at the same compact height as the display row
           so clicking a field to edit it doesn't visibly grow / overlap. */}
-      <style>{`
+      <style>
+        {`
         .crm-attribute-panel [data-editing] :is(
           [data-slot="input"],
           [data-slot="mask-input"],
@@ -327,7 +325,8 @@ function RecordAttributePanel({
         .crm-attribute-panel [data-slot="editable-value"] :is(span, p, a, div, button) {
           font-size: inherit;
         }
-      `}</style>
+      `}
+      </style>
 
       {/* Record header — logo + title, aligned with the tabs card. The
           edit-all pencil sits on the title's line, flush right. */}
@@ -337,8 +336,7 @@ function RecordAttributePanel({
             type="button"
             onClick={onBack}
             aria-label={t('common.back')}
-            className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
+            className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
             <ArrowLeft className="size-4" />
           </button>
         )}
@@ -355,8 +353,7 @@ function RecordAttributePanel({
                 size="icon"
                 className="-my-1 size-7 shrink-0 text-muted-foreground"
                 onClick={() => setEditOpen(true)}
-                aria-label={t('recordDetail.editAllAttributes')}
-              >
+                aria-label={t('recordDetail.editAllAttributes')}>
                 <Pencil className="size-3.5" />
               </Button>
             )}
@@ -383,10 +380,9 @@ function RecordAttributePanel({
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={event => setQuery(event.target.value)}
             placeholder={t('recordDetail.searchAttributes')}
-            className="h-7 border-none bg-transparent pl-8 text-[13px] shadow-none focus-visible:ring-0"
-          />
+            className="h-7 border-none bg-transparent pl-8 text-[13px] shadow-none focus-visible:ring-0" />
         </div>
       </div>
 
@@ -403,8 +399,7 @@ function RecordAttributePanel({
           record={record}
           readOnly={readOnly ?? false}
           trackChanges
-          onSave={onSave}
-        >
+          onSave={onSave}>
           <div className="space-y-px">
             {displayedSlugs.map((slug) => {
               const entry = fieldBySlug.get(slug)
@@ -416,8 +411,7 @@ function RecordAttributePanel({
               return (
                 <div
                   key={slug}
-                  className="group flex items-center gap-2 rounded-md py-0.5 pl-1.5 pr-0.5 transition-colors hover:bg-muted/40"
-                >
+                  className="group flex items-center gap-2 rounded-md py-0.5 pl-1.5 pr-0.5 transition-colors hover:bg-muted/40">
                   <Icon className="size-3.5 shrink-0 text-muted-foreground/60" />
                   <span className="w-24 shrink-0 break-words text-[13px] leading-tight text-muted-foreground">
                     {entry.field.name}
@@ -427,15 +421,14 @@ function RecordAttributePanel({
                       fieldRenderers[slug]({
                         record,
                         save: handleFieldSave,
-                        readOnly: readOnly ?? false,
+                        readOnly: readOnly ?? false
                       })
                     ) : (
                       <EditableRecordDetailField
                         slug={slug}
                         showLabel={false}
                         editHint="progressive"
-                        size="sm"
-                      />
+                        size="sm" />
                     )}
                   </div>
                 </div>
@@ -453,15 +446,13 @@ function RecordAttributePanel({
         {!isSearching && hiddenCount > 0 && (
           <button
             type="button"
-            onClick={() => setExpanded((value) => !value)}
-            className="mt-1 flex w-full items-center justify-center gap-1 rounded-md py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
-          >
+            onClick={() => setExpanded(value => !value)}
+            className="mt-1 flex w-full items-center justify-center gap-1 rounded-md py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground">
             <ChevronDown
               className={cn(
                 'size-3.5 transition-transform',
-                expanded && 'rotate-180',
-              )}
-            />
+                expanded && 'rotate-180'
+              )} />
             {expanded
               ? t('recordDetail.showLess')
               : t('recordDetail.showMore', { count: hiddenCount })}
@@ -484,11 +475,9 @@ function RecordAttributePanel({
                 readOnly={false}
                 trackChanges
                 actionBarSideOffset={8}
-                onSave={handleModalSave}
-              >
+                onSave={handleModalSave}>
                 <div className="space-y-0.5">
-                  {fieldSlugs.map((slug) =>
-                    fieldRenderers?.[slug] ? (
+                  {fieldSlugs.map(slug => fieldRenderers?.[slug] ? (
                       <div key={slug} className="space-y-1 py-1">
                         <div className="text-[13px] font-medium text-muted-foreground">
                           {fieldBySlug.get(slug)?.field.name}
@@ -496,13 +485,12 @@ function RecordAttributePanel({
                         {fieldRenderers[slug]({
                           record,
                           save: handleFieldSave,
-                          readOnly: readOnly ?? false,
+                          readOnly: readOnly ?? false
                         })}
                       </div>
                     ) : (
                       <EditableRecordDetailField key={slug} slug={slug} />
-                    ),
-                  )}
+                    ))}
                 </div>
               </EditableRecordDetail>
             </div>
@@ -522,11 +510,11 @@ function RecordAttributePanel({
 function RecordDetailTabBar({
   tabs,
   current,
-  onSelect,
+  onSelect
 }: {
-  tabs: Array<RecordDetailTab>
-  current: string
-  onSelect: (value: string) => void
+  tabs: Array<RecordDetailTab>;
+  current: string;
+  onSelect: (value: string) => void;
 }) {
   const { t } = useTranslation()
   const rowRef = useRef<HTMLDivElement>(null)
@@ -534,7 +522,7 @@ function RecordDetailTabBar({
   const widthsRef = useRef<Array<number>>([])
   const [visibleCount, setVisibleCount] = useState(tabs.length)
 
-  const signal = tabs.map((tab) => `${tab.value}:${tab.count ?? ''}`).join('|')
+  const signal = tabs.map(tab => `${tab.value}:${tab.count ?? ''}`).join('|')
 
   const recompute = useCallback(() => {
     const row = rowRef.current
@@ -575,10 +563,9 @@ function RecordDetailTabBar({
     if (!node) return
 
     widthsRef.current = Array.from(node.children).map(
-      (child) => (child as HTMLElement).offsetWidth,
+      child => (child as HTMLElement).offsetWidth
     )
     recompute()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signal, recompute])
 
   // Recompute on container resize.
@@ -596,7 +583,7 @@ function RecordDetailTabBar({
 
   const visible = tabs.slice(0, visibleCount)
   const overflow = tabs.slice(visibleCount)
-  const activeHidden = overflow.some((tab) => tab.value === current)
+  const activeHidden = overflow.some(tab => tab.value === current)
 
   return (
     <div ref={rowRef} className="relative min-w-0 flex-1 overflow-hidden">
@@ -604,13 +591,11 @@ function RecordDetailTabBar({
       <div
         ref={measureRef}
         aria-hidden
-        className="pointer-events-none invisible absolute left-0 top-0 flex gap-0.5 whitespace-nowrap"
-      >
-        {tabs.map((tab) => (
+        className="pointer-events-none invisible absolute left-0 top-0 flex gap-0.5 whitespace-nowrap">
+        {tabs.map(tab => (
           <span
             key={tab.value}
-            className="inline-flex items-center gap-1.5 px-2.5 text-[13px]"
-          >
+            className="inline-flex items-center gap-1.5 px-2.5 text-[13px]">
             {tab.icon}
             {tab.label}
             {tab.count != null && (
@@ -623,12 +608,11 @@ function RecordDetailTabBar({
       </div>
 
       <TabsList className="w-max gap-0.5">
-        {visible.map((tab) => (
+        {visible.map(tab => (
           <TabsTrigger
             key={tab.value}
             value={tab.value}
-            className="gap-1.5 px-2.5 text-[13px]"
-          >
+            className="gap-1.5 px-2.5 text-[13px]">
             {tab.icon}
             {tab.label}
             {tab.count != null && (
@@ -646,23 +630,21 @@ function RecordDetailTabBar({
                 type="button"
                 className={cn(
                   'inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground',
-                  activeHidden && 'bg-muted text-foreground',
-                )}
-              >
+                  activeHidden && 'bg-muted text-foreground'
+                )}>
                 <MoreHorizontal className="size-3.5" />
                 {t('recordDetail.more', { count: overflow.length })}
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-44">
-              {overflow.map((tab) => (
+              {overflow.map(tab => (
                 <DropdownMenuItem
                   key={tab.value}
                   onSelect={() => onSelect(tab.value)}
                   className={cn(
                     'gap-2 text-[13px]',
-                    tab.value === current && 'bg-accent',
-                  )}
-                >
+                    tab.value === current && 'bg-accent'
+                  )}>
                   {tab.icon}
                   <span className="flex-1">{tab.label}</span>
                   {tab.count != null && (
@@ -682,42 +664,42 @@ function RecordDetailTabBar({
 
 // ─── Layout ───────────────────────────────────────────────────────────────────
 export interface RecordDetailLayoutProps {
-  isLoading?: boolean
+  isLoading?: boolean;
   /** Leading avatar/logo element */
-  avatar?: ReactNode
-  title: ReactNode
-  subtitle?: ReactNode
+  avatar?: ReactNode;
+  title: ReactNode;
+  subtitle?: ReactNode;
   /** Back navigation handler — renders a back button when provided */
-  onBack?: () => void
+  onBack?: () => void;
   /** Field metadata for the attribute panel */
-  detailFields: Array<RecordDetailField>
+  detailFields: Array<RecordDetailField>;
   /** Ordered slugs to render in the attribute panel */
-  fieldSlugs: Array<string>
+  fieldSlugs: Array<string>;
   /** Current record values keyed by slug */
-  record: Record<string, unknown>
+  record: Record<string, unknown>;
   /** Persist inline / modal edits */
   onInlineSave: (
     changes: Array<FieldChange>,
-    values: Record<string, unknown>,
-  ) => void | Promise<void>
+    values: Record<string, unknown>
+  ) => void | Promise<void>;
   /** Title for the "edit all" modal */
-  editTitle?: ReactNode
+  editTitle?: ReactNode;
   /** Quick-action buttons above the attribute panel (note, email, sms, call) */
-  attributeActions?: ReactNode
+  attributeActions?: ReactNode;
   /** Soft banner above the attribute fields (e.g. converted/read-only notice) */
-  attributeNotice?: ReactNode
+  attributeNotice?: ReactNode;
   /** Render the attribute panel display-only (e.g. converted/locked records) */
-  readOnly?: boolean
+  readOnly?: boolean;
   /** Per-slug custom renderers that replace the default inline editor */
-  fieldRenderers?: FieldRendererMap
+  fieldRenderers?: FieldRendererMap;
   /** Custom dialer launcher in the tab bar (overrides the default phone button) */
-  dialerTrigger?: ReactNode
+  dialerTrigger?: ReactNode;
   /** Right-side tab definitions */
-  tabs: Array<RecordDetailTab>
-  defaultTab?: string
+  tabs: Array<RecordDetailTab>;
+  defaultTab?: string;
   /** Controlled active tab (pair with onTabChange) */
-  activeTab?: string
-  onTabChange?: (value: string) => void
+  activeTab?: string;
+  onTabChange?: (value: string) => void;
 }
 
 export function RecordDetailLayout({
@@ -739,16 +721,18 @@ export function RecordDetailLayout({
   tabs,
   defaultTab,
   activeTab,
-  onTabChange,
+  onTabChange
 }: RecordDetailLayoutProps) {
   const recordVersion = useRecordVersion(record)
   const isWide = useIsWideViewport()
   const dialer = useDialer()
 
-  // Unify controlled (activeTab) and uncontrolled (defaultTab) modes so the
-  // overflow "+N more" menu can switch tabs in both cases.
+  /*
+   * Unify controlled (activeTab) and uncontrolled (defaultTab) modes so the
+   * overflow "+N more" menu can switch tabs in both cases.
+   */
   const [internalTab, setInternalTab] = useState(
-    defaultTab ?? tabs[0]?.value ?? '',
+    defaultTab ?? tabs[0]?.value ?? ''
   )
   const currentTab = activeTab ?? internalTab
   const changeTab = useCallback(
@@ -756,7 +740,7 @@ export function RecordDetailLayout({
       onTabChange?.(value)
       if (activeTab == null) setInternalTab(value)
     },
-    [activeTab, onTabChange],
+    [activeTab, onTabChange]
   )
 
   const containerRef = useRef<HTMLDivElement>(null)
@@ -766,11 +750,8 @@ export function RecordDetailLayout({
     event.preventDefault()
     const startX = event.clientX
     const startWidth = containerRef.current
-      ? ((
-          containerRef.current.querySelector(
-            '[data-slot="record-attr-pane"]',
-          ) as HTMLElement | null
-        )?.offsetWidth ?? PANEL_DEFAULT_WIDTH)
+      ? (containerRef.current.querySelector('[data-slot="record-attr-pane"]')
+          ?.offsetWidth ?? PANEL_DEFAULT_WIDTH)
       : PANEL_DEFAULT_WIDTH
 
     document.body.style.userSelect = 'none'
@@ -812,8 +793,7 @@ export function RecordDetailLayout({
       actions={attributeActions}
       notice={attributeNotice}
       readOnly={readOnly}
-      fieldRenderers={fieldRenderers}
-    />
+      fieldRenderers={fieldRenderers} />
   )
 
   const tabsPane = (
@@ -821,15 +801,13 @@ export function RecordDetailLayout({
       <Tabs
         value={currentTab}
         onValueChange={changeTab}
-        className="flex min-h-0 min-w-0 flex-1 flex-col"
-      >
+        className="flex min-h-0 min-w-0 flex-1 flex-col">
         {/* Tab bar — tabs left (overflow into "+N more"), dialer toggle right */}
         <div className="flex items-center gap-2 border-b px-4 py-2.5">
           <RecordDetailTabBar
             tabs={tabs}
             current={currentTab}
-            onSelect={changeTab}
-          />
+            onSelect={changeTab} />
           {/* Dialer launcher — supplied by the page (webphone-gated). Pages omit
               it when the webphone module is off, so no call affordance shows. */}
           {!dialer.isOpen && dialerTrigger}
@@ -838,7 +816,7 @@ export function RecordDetailLayout({
         {/* Body — tab content + dialer column (content narrows when open) */}
         <div className="flex min-h-0 min-w-0 flex-1">
           <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-            {tabs.map((tab) => (
+            {tabs.map(tab => (
               <TabsContent
                 key={tab.value}
                 value={tab.value}
@@ -846,9 +824,8 @@ export function RecordDetailLayout({
                   'min-h-0 flex-1',
                   tab.bare
                     ? 'flex-col data-[state=active]:flex'
-                    : 'overflow-auto p-4',
-                )}
-              >
+                    : 'overflow-auto p-4'
+                )}>
                 {tab.content}
               </TabsContent>
             ))}
@@ -862,8 +839,7 @@ export function RecordDetailLayout({
                 animate={{ width: 360, opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
                 transition={{ type: 'spring', stiffness: 320, damping: 34 }}
-                className="h-full shrink-0 overflow-hidden border-s"
-              >
+                className="h-full shrink-0 overflow-hidden border-s">
                 <div className="h-full w-[360px] overflow-auto p-3">
                   <DialerPanel />
                 </div>
@@ -878,14 +854,12 @@ export function RecordDetailLayout({
   return (
     <div
       ref={containerRef}
-      className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border bg-card/80 shadow-sm lg:flex-row"
-    >
+      className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border bg-card/80 shadow-sm lg:flex-row">
       {/* Left: attribute pane (fixed-but-resizable width on wide screens) */}
       <div
         data-slot="record-attr-pane"
         className="flex min-h-0 flex-col max-lg:border-b lg:h-full lg:shrink-0"
-        style={isWide ? { width: panelWidth } : undefined}
-      >
+        style={isWide ? { width: panelWidth } : undefined}>
         {attributePane}
       </div>
 
@@ -894,8 +868,7 @@ export function RecordDetailLayout({
         role="separator"
         aria-orientation="vertical"
         onMouseDown={handleResizeStart}
-        className="group relative z-10 hidden w-px shrink-0 cursor-col-resize bg-border transition-colors hover:bg-primary/50 lg:block"
-      >
+        className="group relative z-10 hidden w-px shrink-0 cursor-col-resize bg-border transition-colors hover:bg-primary/50 lg:block">
         {/* Wider invisible hit area so the 1px line is easy to grab */}
         <span className="absolute inset-y-0 -left-1.5 -right-1.5" />
       </div>
@@ -909,17 +882,17 @@ export function RecordDetailLayout({
 
 // ─── Empty / unavailable tab placeholder ───────────────────────────────────────
 export interface RecordTabPlaceholderProps {
-  icon?: ReactNode
-  title: ReactNode
-  description?: ReactNode
-  action?: ReactNode
+  icon?: ReactNode;
+  title: ReactNode;
+  description?: ReactNode;
+  action?: ReactNode;
 }
 
 export function RecordTabPlaceholder({
   icon,
   title,
   description,
-  action,
+  action
 }: RecordTabPlaceholderProps) {
   return (
     <div className="flex h-full min-h-48 flex-col items-center justify-center gap-3 px-6 py-12 text-center">

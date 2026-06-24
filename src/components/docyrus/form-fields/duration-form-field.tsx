@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { Field, FieldError } from '@/components/ui/field'
 import { DurationSelect } from '@/components/docyrus/duration-select'
 
@@ -22,9 +24,8 @@ export function DurationFormField({
     : 8
 
   return (
-    <form.Field
-      name={fieldConfig.slug}
-      children={(field: any) => {
+    <form.Field name={fieldConfig.slug}>
+      {(field: any) => {
         const isInvalid =
           field.state.meta.isTouched && !field.state.meta.isValid
         const isDisabled = disabled || fieldConfig.readOnly === true
@@ -47,6 +48,6 @@ export function DurationFormField({
           </Field>
         )
       }}
-    />
+    </form.Field>
   )
 }

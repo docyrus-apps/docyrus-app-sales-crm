@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
+
 import { Check, Loader2, Phone, SlidersHorizontal } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+
 import { useWebphone } from './webphone-context'
 import { WebphoneExtensionDialog } from './webphone-extension-dialog'
+
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 
@@ -29,7 +32,7 @@ export function WebphoneStatusBadge() {
     microphoneStatus,
     lastError,
     connect,
-    disconnect,
+    disconnect
   } = useWebphone()
 
   const [extensionOpen, setExtensionOpen] = useState(false)
@@ -42,20 +45,23 @@ export function WebphoneStatusBadge() {
     if (!ready) {
       return {
         dot: 'bg-muted-foreground/40',
-        labelKey: 'webphone.status.missingSettings',
+        labelKey: 'webphone.status.missingSettings'
       }
     }
     switch (registrationStatus) {
       case 'registered':
         return { dot: 'bg-emerald-500', labelKey: 'webphone.status.ready' }
+
       case 'registering':
         return { dot: 'bg-amber-500', labelKey: 'webphone.status.connecting' }
+
       case 'failed':
         return { dot: 'bg-red-500', labelKey: 'webphone.status.failed' }
+
       default:
         return {
           dot: 'bg-muted-foreground/40',
-          labelKey: 'webphone.status.offline',
+          labelKey: 'webphone.status.offline'
         }
     }
   })()
@@ -65,7 +71,7 @@ export function WebphoneStatusBadge() {
   const isOnline = registrationStatus === 'registered'
   const errorMessage = lastError
     ? t(`webphone.errors.${lastError}`, {
-        defaultValue: t('webphone.errors.connection_problem'),
+        defaultValue: t('webphone.errors.connection_problem')
       })
     : null
 
@@ -74,8 +80,8 @@ export function WebphoneStatusBadge() {
     lastToastRef.current = lastError
     toast.error(
       t(`webphone.errors.${lastError}`, {
-        defaultValue: t('webphone.errors.connection_problem'),
-      }),
+        defaultValue: t('webphone.errors.connection_problem')
+      })
     )
   }, [enabled, lastError, t])
 
@@ -86,8 +92,7 @@ export function WebphoneStatusBadge() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-accent"
-        >
+          className="flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-accent">
           {connecting ? (
             <Loader2 className="size-3 animate-spin text-muted-foreground" />
           ) : (
@@ -110,8 +115,7 @@ export function WebphoneStatusBadge() {
         <DropdownMenuItem
           className="gap-2"
           disabled={!ready || connecting || isOnline}
-          onSelect={() => connect()}
-        >
+          onSelect={() => connect()}>
           <span className="size-2 rounded-full bg-emerald-500" />
           {t('webphone.statusMenu.online')}
           {isOnline && <Check className="ml-auto size-4" />}
@@ -119,8 +123,7 @@ export function WebphoneStatusBadge() {
         <DropdownMenuItem
           className="gap-2"
           disabled={!isOnline && !connecting}
-          onSelect={() => disconnect()}
-        >
+          onSelect={() => disconnect()}>
           <span className="size-2 rounded-full bg-muted-foreground/40" />
           {t('webphone.statusMenu.offline')}
           {!isOnline && !connecting && <Check className="ml-auto size-4" />}
@@ -128,8 +131,7 @@ export function WebphoneStatusBadge() {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="gap-2"
-          onSelect={() => setExtensionOpen(true)}
-        >
+          onSelect={() => setExtensionOpen(true)}>
           <SlidersHorizontal className="size-4 text-muted-foreground" />
           {t('webphone.statusMenu.extension')}
         </DropdownMenuItem>
@@ -137,8 +139,7 @@ export function WebphoneStatusBadge() {
 
       <WebphoneExtensionDialog
         open={extensionOpen}
-        onOpenChange={setExtensionOpen}
-      />
+        onOpenChange={setExtensionOpen} />
     </DropdownMenu>
   )
 }

@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { memo } from 'react'
 
 import { type ActionProps } from 'react-querybuilder'

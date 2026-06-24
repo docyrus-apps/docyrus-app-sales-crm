@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { CalendarDays, User } from 'lucide-react'
 
 import {
@@ -13,13 +15,39 @@ import {
   hasApprovalWorkflowShape,
   normalizeApprovalValue,
   toApprovalStatusCode,
-} from '@/lib/approval-status'
+} from '@/lib/docyrus/approval-status'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { useDateFormat } from '@/lib/use-date-format'
+import {
+  isDefaultDateFormatContext,
+  useDateFormat,
+} from '@/hooks/docyrus/use-date-format'
 
 import { type DocyrusValueProps } from './types'
+
+const fallbackDateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+  year: 'numeric',
+  month: 'short',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+})
+
+function resolveFormatDateTime(ctx: ReturnType<typeof useDateFormat>) {
+  if (isDefaultDateFormatContext(ctx)) {
+    return (value: unknown) => {
+      if (value instanceof Date) return fallbackDateTimeFormatter.format(value)
+      if (value == null) return ''
+
+      return fallbackDateTimeFormatter.format(
+        new Date(value as string | number),
+      )
+    }
+  }
+
+  return ctx.formatDateTime
+}
 
 interface LegacyApprovalStep extends ApprovalStepValue {
   user_id?: string
@@ -41,7 +69,7 @@ function ApprovalSummary({
   respondedByUser?: ApprovalStepValue['respondedByUser']
   comments?: string | null
 }) {
-  const { formatDateTime } = useDateFormat()
+  const formatDateTime = resolveFormatDateTime(useDateFormat())
   const actorName = getApprovalUserName(
     respondedByUser ?? null,
     respondedBy ?? null,
@@ -53,7 +81,7 @@ function ApprovalSummary({
   if (!hasMeta) return null
 
   return (
-    <div className="flex w-fit max-w-full items-start gap-2 rounded-md bg-slate-100 px-2 py-2 dark:bg-slate-900/50">
+    <div className="flex w-fit max-w-full items-start gap-2 rounded-md bg-zinc-100 p-2 dark:bg-zinc-900/50">
       <Avatar size="sm">
         {avatarUrl && <AvatarImage src={avatarUrl} alt={actorName} />}
         <AvatarFallback>{getApprovalUserInitials(actorName)}</AvatarFallback>
@@ -79,7 +107,7 @@ function ApprovalSummary({
 }
 
 function ApprovalHistory({ steps }: { steps: Array<ApprovalStepValue> }) {
-  const { formatDateTime } = useDateFormat()
+  const formatDateTime = resolveFormatDateTime(useDateFormat())
 
   if (!steps.length) return null
 
@@ -113,7 +141,7 @@ function ApprovalHistory({ steps }: { steps: Array<ApprovalStepValue> }) {
             {(step.respondedBy || step.respondedByUser) && (
               <>
                 <span className="text-muted-foreground">by</span>
-                <span className="rounded bg-slate-100 px-1.5 py-0.5 dark:bg-slate-900/50">
+                <span className="rounded bg-zinc-100 px-1.5 py-0.5 dark:bg-zinc-900/50">
                   {actorName}
                 </span>
               </>
@@ -130,7 +158,7 @@ function ApprovalHistory({ steps }: { steps: Array<ApprovalStepValue> }) {
 
 export function ApprovalStatusValue({ value, className }: DocyrusValueProps) {
   if (value == null || (Array.isArray(value) && value.length === 0)) {
-    return <span className="text-muted-foreground">—</span>
+    return <span className="text-muted-foreground">–</span>
   }
 
   if (typeof value === 'string') {

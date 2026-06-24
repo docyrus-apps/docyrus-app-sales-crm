@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
+
 import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
@@ -11,12 +12,12 @@ import {
   LayoutTemplate,
   Loader2,
   Mail,
-  Package,
+  Package
 } from 'lucide-react'
 
 import {
   HtmlTemplateEditor,
-  numberToWordsTR,
+  numberToWordsTR
 } from '@/components/docyrus/html-template-editor'
 import { QuoteLineItems } from '@/components/quotes/quote-line-items'
 import { QuoteEmailDialog } from '@/components/quotes/quote-email-dialog'
@@ -27,13 +28,13 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import {
   Command,
@@ -41,12 +42,12 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
-  CommandList,
+  CommandList
 } from '@/components/ui/command'
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
+  PopoverTrigger
 } from '@/components/ui/popover'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -62,13 +63,13 @@ import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
 import {
   DEFAULT_TEMPLATE,
   MINIMAL_TEMPLATE,
-  QUOTE_VARIABLES,
+  QUOTE_VARIABLES
 } from '@/components/quotes/quote-templates'
 
 const DEFAULT_CURRENCY = 'TRY'
 
 function getRelationName(
-  value?: { name?: string } | string | null,
+  value?: { name?: string } | string | null
 ): string | undefined {
   if (!value) return undefined
   if (typeof value === 'object') return value.name
@@ -83,12 +84,12 @@ function getRelationId(value?: { id?: string } | string | null): string | null {
 }
 
 interface QuoteDocFields {
-  docTitle: string
-  validUntil: string
-  billingEmail: string
-  billingAddress: string
-  intro: string
-  terms: string
+  docTitle: string;
+  validUntil: string;
+  billingEmail: string;
+  billingAddress: string;
+  intro: string;
+  terms: string;
 }
 
 const EMPTY_DOC: QuoteDocFields = {
@@ -97,13 +98,14 @@ const EMPTY_DOC: QuoteDocFields = {
   billingEmail: '',
   billingAddress: '',
   intro: '',
-  terms: '',
+  terms: ''
 }
 
 function readStored<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback
   try {
     const raw = window.localStorage.getItem(key)
+
     return raw ? { ...fallback, ...JSON.parse(raw) } : fallback
   } catch {
     return fallback
@@ -114,6 +116,7 @@ function moveStored(fromKey: string, toKey: string) {
   if (typeof window === 'undefined') return
   try {
     const v = window.localStorage.getItem(fromKey)
+
     if (v != null) {
       window.localStorage.setItem(toKey, v)
       window.localStorage.removeItem(fromKey)
@@ -129,27 +132,26 @@ function CustomerPicker({
   value,
   selectedName,
   onSelect,
-  invalid,
+  invalid
 }: {
-  value: string | null
-  selectedName: string | null
-  onSelect: (customer: CustomerOption) => void
-  invalid?: boolean
+  value: string | null;
+  selectedName: string | null;
+  onSelect: (customer: CustomerOption) => void;
+  invalid?: boolean;
 }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const { data: companies } = useCompanies({ columns: ['id', 'name'] })
 
   const options = useMemo<Array<CustomerOption>>(
-    () =>
-      (companies ?? [])
+    () => (companies ?? [])
         .filter((c: any) => c.id)
         .map((c: any) => ({ id: String(c.id), name: c.name || String(c.id) })),
-    [companies],
+    [companies]
   )
 
   const label =
-    selectedName ?? options.find((o) => o.id === value)?.name ?? null
+    selectedName ?? options.find(o => o.id === value)?.name ?? null
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -160,9 +162,8 @@ function CustomerPicker({
           aria-invalid={invalid}
           className={cn(
             'w-full justify-between font-normal',
-            invalid && 'border-destructive text-destructive',
-          )}
-        >
+            invalid && 'border-destructive text-destructive'
+          )}>
           <span className="flex min-w-0 items-center gap-2">
             <Building2 className="size-4 shrink-0 opacity-60" />
             <span className={cn('truncate', !label && 'text-muted-foreground')}>
@@ -175,34 +176,30 @@ function CustomerPicker({
       </PopoverTrigger>
       <PopoverContent
         className="w-[--radix-popover-trigger-width] p-0"
-        align="start"
-      >
+        align="start">
         <Command>
           <CommandInput
             placeholder={t('quotes.searchCustomer', {
-              defaultValue: 'Search customers…',
-            })}
-          />
+              defaultValue: 'Search customers…'
+            })} />
           <CommandList>
             <CommandEmpty>
               {t('quotes.noCustomers', { defaultValue: 'No customers found' })}
             </CommandEmpty>
             <CommandGroup>
-              {options.map((o) => (
+              {options.map(o => (
                 <CommandItem
                   key={o.id}
                   value={o.name}
                   onSelect={() => {
                     onSelect(o)
                     setOpen(false)
-                  }}
-                >
+                  }}>
                   <Check
                     className={cn(
                       'mr-2 size-3.5',
-                      value === o.id ? 'opacity-100' : 'opacity-0',
-                    )}
-                  />
+                      value === o.id ? 'opacity-100' : 'opacity-0'
+                    )} />
                   <span className="truncate">{o.name}</span>
                 </CommandItem>
               ))}
@@ -237,22 +234,18 @@ export function QuoteBuild() {
       {
         id: 'standard',
         name: t('quotes.templateNames.standard'),
-        body: DEFAULT_TEMPLATE,
+        body: DEFAULT_TEMPLATE
       },
       {
         id: 'minimal',
         name: t('quotes.templateNames.minimal'),
-        body: MINIMAL_TEMPLATE,
-      },
+        body: MINIMAL_TEMPLATE
+      }
     ],
-    [t],
+    [t]
   )
   const salesOrderCollection = useBaseCrmSalesOrderCollection()
-  const search = useSearch({ strict: false }) as {
-    organization?: string
-    organizationName?: string
-    deal?: string
-  }
+  const search = useSearch({ strict: false })
 
   const { data: order, isLoading: orderLoading } = useSalesOrder(quoteId)
   const { data: items } = useSalesOrderItems(
@@ -267,16 +260,14 @@ export function QuoteBuild() {
             'tax_rate',
             'total',
             'gross_total',
-            'net_total',
+            'net_total'
           ],
           filters: {
-            rules: [
-              { field: 'related_sales_order', operator: '=', value: quoteId },
-            ],
+            rules: [{ field: 'related_sales_order', operator: '=', value: quoteId }]
           },
-          orderBy: 'created_on asc',
+          orderBy: 'created_on asc'
         }
-      : undefined,
+      : undefined
   )
 
   const [customerId, setCustomerId] = useState<string | null>(null)
@@ -297,18 +288,18 @@ export function QuoteBuild() {
 
   const { data: company } = useCompany(customerId ?? undefined)
 
-  const [doc, setDoc] = useState<QuoteDocFields>(() =>
-    readStored(`quote-doc:${storageId}`, EMPTY_DOC),
-  )
+  const [doc, setDoc] = useState<QuoteDocFields>(() => readStored(`quote-doc:${storageId}`, EMPTY_DOC))
 
   const quoteTitle =
     doc.docTitle.trim() ||
     (isNew
       ? t('quotes.newQuote', { defaultValue: 'New quote' })
       : t('quotes.untitledQuote', { defaultValue: 'Teklif' }))
+
   useSetDetailBreadcrumbTitle(quoteTitle)
   const [template, setTemplate] = useState<string>(() => {
     if (typeof window === 'undefined') return DEFAULT_TEMPLATE
+
     return (
       window.localStorage.getItem(`quote-template:${storageId}`) ||
       DEFAULT_TEMPLATE
@@ -337,8 +328,7 @@ export function QuoteBuild() {
     }
   }, [template, storageId])
 
-  const setField = (key: keyof QuoteDocFields) => (value: string) =>
-    setDoc((prev) => ({ ...prev, [key]: value }))
+  const setField = (key: keyof QuoteDocFields) => (value: string) => setDoc(prev => ({ ...prev, [key]: value }))
 
   const customerEmail = doc.billingEmail || (company as any)?.email || ''
 
@@ -350,7 +340,7 @@ export function QuoteBuild() {
       discount: Number(item.discount ?? 0),
       taxRate: Number(item.tax_rate ?? 0),
       net: Number(item.net_total ?? 0),
-      gross: Number(item.gross_total ?? item.total ?? 0),
+      gross: Number(item.gross_total ?? item.total ?? 0)
     }))
 
     return JSON.stringify(
@@ -359,14 +349,14 @@ export function QuoteBuild() {
           title: doc.docTitle || quoteTitle,
           no: '',
           date: formatDate(new Date().toISOString()),
-          validUntil: doc.validUntil,
+          validUntil: doc.validUntil
         },
         customer: {
           name: customerName ?? '',
           address: doc.billingAddress || (company as any)?.address || '',
           taxNumber: (company as any)?.tax_number ?? '',
           email: customerEmail,
-          phone: (company as any)?.phone ?? '',
+          phone: (company as any)?.phone ?? ''
         },
         intro: doc.intro,
         terms: doc.terms,
@@ -375,11 +365,11 @@ export function QuoteBuild() {
         totals: {
           subtotal: Number(order?.sub_total ?? 0),
           tax: Number(order?.tax_total ?? 0),
-          grandTotal: Number(order?.grand_total ?? 0),
-        },
+          grandTotal: Number(order?.grand_total ?? 0)
+        }
       },
       null,
-      2,
+      2
     )
   }, [
     items,
@@ -390,16 +380,17 @@ export function QuoteBuild() {
     quoteTitle,
     id,
     formatDate,
-    doc,
+    doc
   ])
 
   const handleSave = async () => {
     if (!customerId) {
       toast.error(
         t('quotes.customerRequired', {
-          defaultValue: 'Please select a customer first',
-        }),
+          defaultValue: 'Please select a customer first'
+        })
       )
+
       return
     }
     if (saving) return
@@ -408,9 +399,10 @@ export function QuoteBuild() {
       if (isNew) {
         const created = await salesOrderCollection.create({
           organization: customerId,
-          ...(search.deal ? { deal: search.deal } : {}),
+          ...(search.deal ? { deal: search.deal } : {})
         })
         const newId = String(created.id)
+
         moveStored(`quote-doc:new`, `quote-doc:${newId}`)
         moveStored(`quote-template:new`, `quote-template:${newId}`)
         queryClient.invalidateQueries({ queryKey: ['sales-orders'] })
@@ -418,7 +410,7 @@ export function QuoteBuild() {
         setJustSaved(true)
         void navigate({
           to: '/quotes/$quoteId/build',
-          params: { quoteId: newId },
+          params: { quoteId: newId }
         })
       } else {
         await salesOrderCollection.update(id, { organization: customerId })
@@ -431,7 +423,7 @@ export function QuoteBuild() {
     } catch (error: any) {
       toast.error(
         error?.message ||
-          t('quotes.saveFailed', { defaultValue: 'Failed to save quote' }),
+        t('quotes.saveFailed', { defaultValue: 'Failed to save quote' })
       )
     } finally {
       setSaving(false)
@@ -449,8 +441,7 @@ export function QuoteBuild() {
         <div className="flex min-w-0 items-center gap-2">
           <Link
             to={isNew ? '/sales-orders' : '/quotes/$quoteId'}
-            params={{ quoteId: id }}
-          >
+            params={{ quoteId: id }}>
             <Button variant="ghost" size="sm">
               <ArrowLeft className="mr-2 size-4" />
               {t('common.back', { defaultValue: 'Back' })}
@@ -468,11 +459,10 @@ export function QuoteBuild() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {TEMPLATE_PRESETS.map((preset) => (
+              {TEMPLATE_PRESETS.map(preset => (
                 <DropdownMenuItem
                   key={preset.id}
-                  onSelect={() => setTemplate(preset.body)}
-                >
+                  onSelect={() => setTemplate(preset.body)}>
                   {preset.name}
                 </DropdownMenuItem>
               ))}
@@ -482,8 +472,7 @@ export function QuoteBuild() {
           <Button
             onClick={handleSave}
             disabled={saving}
-            className={cn(justSaved && 'bg-emerald-600 hover:bg-emerald-600')}
-          >
+            className={cn(justSaved && 'bg-emerald-600 hover:bg-emerald-600')}>
             {saving ? (
               <Loader2 className="mr-2 size-4 animate-spin" />
             ) : justSaved ? (
@@ -502,11 +491,10 @@ export function QuoteBuild() {
               canMail
                 ? t('quotes.sendMail', { defaultValue: 'Send mail' })
                 : t('quotes.saveBeforeMail', {
-                    defaultValue: 'Create the quote to send mail',
+                    defaultValue: 'Create the quote to send mail'
                   })
             }
-            onClick={() => setMailOpen(true)}
-          >
+            onClick={() => setMailOpen(true)}>
             <Mail className="size-4" />
           </Button>
         </div>
@@ -530,8 +518,7 @@ export function QuoteBuild() {
                   onSelect={(c) => {
                     setCustomerId(c.id)
                     setCustomerName(c.name)
-                  }}
-                />
+                  }} />
               </CardContent>
             </Card>
 
@@ -544,7 +531,7 @@ export function QuoteBuild() {
                   {t('quotes.lineItemsSummary', {
                     defaultValue: '{{count}} item(s) · {{total}}',
                     count: itemCount,
-                    total: `${grandTotal.toLocaleString()} ${DEFAULT_CURRENCY}`,
+                    total: `${grandTotal.toLocaleString()} ${DEFAULT_CURRENCY}`
                   })}
                 </p>
                 <Button
@@ -555,15 +542,14 @@ export function QuoteBuild() {
                   title={
                     isNew
                       ? t('quotes.createBeforeLineItems', {
-                          defaultValue: 'Create the quote first',
+                          defaultValue: 'Create the quote first'
                         })
                       : undefined
                   }
-                  onClick={() => setLineItemsOpen(true)}
-                >
+                  onClick={() => setLineItemsOpen(true)}>
                   <Package className="size-4" />
                   {t('quotes.editLineItems', {
-                    defaultValue: 'Edit line items',
+                    defaultValue: 'Edit line items'
                   })}
                 </Button>
               </CardContent>
@@ -576,48 +562,40 @@ export function QuoteBuild() {
                 </div>
                 <Field
                   label={t('quotes.docTitle', {
-                    defaultValue: 'Document title',
-                  })}
-                >
+                    defaultValue: 'Document title'
+                  })}>
                   <Input
                     value={doc.docTitle}
-                    onChange={(e) => setField('docTitle')(e.target.value)}
-                    placeholder={quoteTitle}
-                  />
+                    onChange={e => setField('docTitle')(e.target.value)}
+                    placeholder={quoteTitle} />
                 </Field>
                 <Field
                   label={t('quotes.validUntil', {
-                    defaultValue: 'Valid until',
-                  })}
-                >
+                    defaultValue: 'Valid until'
+                  })}>
                   <Input
                     type="date"
                     value={doc.validUntil}
-                    onChange={(e) => setField('validUntil')(e.target.value)}
-                  />
+                    onChange={e => setField('validUntil')(e.target.value)} />
                 </Field>
                 <Field
                   label={t('quotes.billingEmail', {
-                    defaultValue: 'Billing email',
-                  })}
-                >
+                    defaultValue: 'Billing email'
+                  })}>
                   <Input
                     value={doc.billingEmail}
-                    onChange={(e) => setField('billingEmail')(e.target.value)}
-                    placeholder={(company as any)?.email ?? ''}
-                  />
+                    onChange={e => setField('billingEmail')(e.target.value)}
+                    placeholder={(company as any)?.email ?? ''} />
                 </Field>
                 <Field
                   label={t('quotes.billingAddress', {
-                    defaultValue: 'Billing address',
-                  })}
-                >
+                    defaultValue: 'Billing address'
+                  })}>
                   <Textarea
                     value={doc.billingAddress}
-                    onChange={(e) => setField('billingAddress')(e.target.value)}
+                    onChange={e => setField('billingAddress')(e.target.value)}
                     placeholder={(company as any)?.address ?? ''}
-                    rows={2}
-                  />
+                    rows={2} />
                 </Field>
               </CardContent>
             </Card>
@@ -629,25 +607,21 @@ export function QuoteBuild() {
                 </div>
                 <Field
                   label={t('quotes.introNote', {
-                    defaultValue: 'Intro / header note',
-                  })}
-                >
+                    defaultValue: 'Intro / header note'
+                  })}>
                   <Textarea
                     value={doc.intro}
-                    onChange={(e) => setField('intro')(e.target.value)}
-                    rows={3}
-                  />
+                    onChange={e => setField('intro')(e.target.value)}
+                    rows={3} />
                 </Field>
                 <Field
                   label={t('quotes.termsNote', {
-                    defaultValue: 'Terms & conditions',
-                  })}
-                >
+                    defaultValue: 'Terms & conditions'
+                  })}>
                   <Textarea
                     value={doc.terms}
-                    onChange={(e) => setField('terms')(e.target.value)}
-                    rows={3}
-                  />
+                    onChange={e => setField('terms')(e.target.value)}
+                    rows={3} />
                 </Field>
               </CardContent>
             </Card>
@@ -665,8 +639,7 @@ export function QuoteBuild() {
               defaultCurrency={DEFAULT_CURRENCY}
               defaultTab="preview"
               className="h-full"
-              minHeight="100%"
-            />
+              minHeight="100%" />
           </div>
         </div>
       )}
@@ -680,8 +653,7 @@ export function QuoteBuild() {
             queryClient.invalidateQueries({ queryKey: ['sales-order-items'] })
             queryClient.invalidateQueries({ queryKey: ['sales-orders'] })
           }
-        }}
-      >
+        }}>
         <DialogContent className="flex h-[92vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden p-4 sm:max-w-[1400px]">
           <DialogHeader>
             <DialogTitle>
@@ -699,8 +671,7 @@ export function QuoteBuild() {
         onOpenChange={setMailOpen}
         to={customerEmail}
         subject={doc.docTitle || quoteTitle}
-        body={doc.intro}
-      />
+        body={doc.intro} />
     </PageContainer>
   )
 }

@@ -8,7 +8,7 @@ import { type RuleGroupType } from 'react-querybuilder'
  */
 const QUERY_BUILDER_OPERATOR_TO_BACKEND: Record<string, string> = {
   'is one of': 'in',
-  'is none of': 'not in',
+  'is none of': 'not in'
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -24,7 +24,7 @@ function isRuleGroup(value: unknown): value is RuleGroupType {
  * backend filter-group shape. Returns `undefined` for empty/non-group values.
  */
 export function normalizeSavedViewFilterQuery(
-  filterQuery: unknown,
+  filterQuery: unknown
 ): RuleGroupType | undefined {
   if (!isRuleGroup(filterQuery) || filterQuery.rules.length === 0) {
     return undefined
@@ -48,7 +48,12 @@ function normalizeSavedViewFilterGroup(group: RuleGroupType): RuleGroupType {
 
     const cleaned: Record<string, unknown> = { operator }
 
-    for (const key of ['field', 'value', 'valueField', 'filterType'] as const) {
+    for (const key of [
+'field',
+'value',
+'valueField',
+'filterType'
+] as const) {
       if (key in source) cleaned[key] = source[key]
     }
 
@@ -57,7 +62,7 @@ function normalizeSavedViewFilterGroup(group: RuleGroupType): RuleGroupType {
 
   const result: Record<string, unknown> = {
     combinator: group.combinator,
-    rules: normalizedRules,
+    rules: normalizedRules
   }
 
   if ('not' in group) {

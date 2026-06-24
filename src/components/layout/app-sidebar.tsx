@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useMatchRoute } from '@tanstack/react-router'
+
+import type { UserEntity } from '@/collections/users.collection'
+
+import { type LucideIcon } from 'lucide-react'
+
 import {
   Activity,
   BadgeCheck,
@@ -16,7 +20,6 @@ import {
   FileText,
   LayoutDashboard,
   LogOut,
-  type LucideIcon,
   Map,
   MapPinned,
   Package,
@@ -26,11 +29,12 @@ import {
   Settings,
   SlidersHorizontal,
   UserRoundSearch,
-  Zap,
+  Zap
 } from 'lucide-react'
+import { Link, useMatchRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useDocyrusAuth } from '@docyrus/signin'
-import type { UserEntity } from '@/collections/users.collection'
+
 import {
   Sidebar,
   SidebarContent,
@@ -43,12 +47,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-  useSidebar,
+  useSidebar
 } from '@/components/animate-ui/components/radix/sidebar'
 import {
   Collapsible,
   CollapsibleContent,
-  CollapsibleTrigger,
+  CollapsibleTrigger
 } from '@/components/ui/collapsible'
 import {
   DropdownMenu,
@@ -57,7 +61,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/animate-ui/components/radix/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useUsersCollection } from '@/collections/users.collection'
@@ -70,15 +74,15 @@ import { useAppModules } from '@/hooks/use-app-config'
 import { isModuleEnabled } from '@/lib/app-config'
 
 type NavItem = {
-  titleKey: string
-  url: string
-  icon: LucideIcon
+  titleKey: string;
+  url: string;
+  icon: LucideIcon;
 }
 
 const DASHBOARD_NAV: NavItem = {
   titleKey: 'nav.dashboard',
   url: '/',
-  icon: LayoutDashboard,
+  icon: LayoutDashboard
 }
 
 const CRM_NAV_KEYS: Array<NavItem> = [
@@ -87,37 +91,37 @@ const CRM_NAV_KEYS: Array<NavItem> = [
   { titleKey: 'quotes.title', url: '/sales-orders', icon: FileText },
   { titleKey: 'contacts.title', url: '/contacts', icon: Contact },
   { titleKey: 'companies.title', url: '/companies', icon: Building2 },
-  { titleKey: 'products.title', url: '/products', icon: Package },
+  { titleKey: 'products.title', url: '/products', icon: Package }
 ]
 
 const WEBPHONE_CALLS_ITEM: NavItem = {
   titleKey: 'webphone.calls.navTitle',
   url: '/calls',
-  icon: PhoneCall,
+  icon: PhoneCall
 }
 
 const FIELD_SALES_NAV_KEYS: Array<NavItem> = [
   {
     titleKey: 'fieldSales.plans.title',
     url: '/field-sales/plans',
-    icon: Route,
+    icon: Route
   },
   {
     titleKey: 'fieldSales.approvals.title',
     url: '/field-sales/approvals',
-    icon: CalendarCheck2,
+    icon: CalendarCheck2
   },
   {
     titleKey: 'fieldSales.calendar.title',
     url: '/field-sales/calendar',
-    icon: MapPinned,
-  },
+    icon: MapPinned
+  }
 ]
 
 const APP_CONFIG_NAV: NavItem = {
   titleKey: 'appConfig.navTitle',
   url: '/app-config',
-  icon: SlidersHorizontal,
+  icon: SlidersHorizontal
 }
 
 function useGroupOpen(groupId: string, hasActive: boolean) {
@@ -125,7 +129,9 @@ function useGroupOpen(groupId: string, hasActive: boolean) {
   const [open, setOpen] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true
     const stored = window.localStorage.getItem(storageKey)
+
     if (stored !== null) return stored === '1'
+
     return true
   })
   const prevActive = useRef(false)
@@ -156,19 +162,19 @@ function CollapsibleNavGroup({
   icon: Icon,
   items,
   matchRoute,
-  t,
+  t
 }: {
-  groupId: string
-  label: string
-  icon: LucideIcon
-  items: Array<NavItem>
-  matchRoute: ReturnType<typeof useMatchRoute>
-  t: (key: string) => string
+  groupId: string;
+  label: string;
+  icon: LucideIcon;
+  items: Array<NavItem>;
+  matchRoute: ReturnType<typeof useMatchRoute>;
+  t: (key: string) => string;
 }) {
   const { state } = useSidebar()
   const isIconMode = state === 'collapsed'
   const hasActive = items.some(
-    (item) => !!matchRoute({ to: item.url, fuzzy: true }),
+    item => !!matchRoute({ to: item.url, fuzzy: true })
   )
   const { open, onOpenChange } = useGroupOpen(groupId, hasActive)
   // In icon (rail) mode group labels are hidden, so keep items reachable.
@@ -178,13 +184,11 @@ function CollapsibleNavGroup({
     <Collapsible
       open={effectiveOpen}
       onOpenChange={onOpenChange}
-      className="group/collapsible"
-    >
+      className="group/collapsible">
       <SidebarGroup className="py-0.5">
         <SidebarGroupLabel
           asChild
-          className="w-full cursor-pointer gap-2 text-[11px] font-semibold tracking-wider uppercase text-sidebar-foreground/55 transition-colors hover:text-sidebar-foreground"
-        >
+          className="w-full cursor-pointer gap-2 text-[11px] font-semibold tracking-wider uppercase text-sidebar-foreground/55 transition-colors hover:text-sidebar-foreground">
           <CollapsibleTrigger>
             <Icon className="size-4 shrink-0" />
             <span className="flex-1 text-left">{label}</span>
@@ -197,13 +201,13 @@ function CollapsibleNavGroup({
               {items.map((item) => {
                 const isActive = matchRoute({ to: item.url, fuzzy: true })
                 const title = t(item.titleKey)
+
                 return (
                   <SidebarMenuItem key={item.titleKey}>
                     <SidebarMenuButton
                       asChild
                       isActive={!!isActive}
-                      tooltip={title}
-                    >
+                      tooltip={title}>
                       <Link to={item.url}>
                         <item.icon />
                         <span>{title}</span>
@@ -233,7 +237,7 @@ export function AppSidebar() {
     { titleKey: 'activities.title', url: '/activities', icon: Zap },
     { titleKey: 'calendar.title', url: '/calendar', icon: CalendarDays },
     ...(webphoneEnabled ? [WEBPHONE_CALLS_ITEM] : []),
-    { titleKey: 'reports.title', url: '/reports', icon: BarChart3 },
+    { titleKey: 'reports.title', url: '/reports', icon: BarChart3 }
   ]
   const usersCollection = useUsersCollection()
   const [userProfile, setUserProfile] = useState<
@@ -253,7 +257,7 @@ export function AppSidebar() {
 
   const displayName = userProfile
     ? [userProfile.firstname, userProfile.lastname].filter(Boolean).join(' ') ||
-      userProfile.email
+    userProfile.email
     : t('common.loading')
 
   const tenantName = userProfile?.tenant?.name ?? userProfile?.name ?? ''
@@ -261,7 +265,7 @@ export function AppSidebar() {
   const tenantInitials = tenantName
     .split(' ')
     .slice(0, 2)
-    .map((w) => w.charAt(0).toUpperCase())
+    .map(w => w.charAt(0).toUpperCase())
     .join('')
 
   const isCollapsed = state === 'collapsed'
@@ -271,8 +275,8 @@ export function AppSidebar() {
       new KeyboardEvent('keydown', {
         key: 'k',
         metaKey: true,
-        bubbles: true,
-      }),
+        bubbles: true
+      })
     )
   }
 
@@ -285,8 +289,7 @@ export function AppSidebar() {
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
                   size="lg"
-                  className="cursor-pointer rounded-lg bg-card shadow-sm data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                >
+                  className="cursor-pointer rounded-lg bg-card shadow-sm data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
                   <Avatar className="h-8 w-8 rounded-lg">
                     {userProfile?.photo && (
                       <AvatarImage src={userProfile.photo} alt={displayName} />
@@ -304,8 +307,7 @@ export function AppSidebar() {
                         <img
                           src={tenantLogoUrl}
                           alt={tenantName}
-                          className="h-4 w-4 shrink-0 rounded object-contain"
-                        />
+                          className="h-4 w-4 shrink-0 rounded object-contain" />
                       ) : tenantInitials ? (
                         <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded bg-primary/10 text-[10px] font-medium text-primary">
                           {tenantInitials}
@@ -321,16 +323,14 @@ export function AppSidebar() {
                 className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
                 side="right"
                 align="start"
-                sideOffset={4}
-              >
+                sideOffset={4}>
                 <DropdownMenuLabel className="p-0 font-normal">
                   <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                     <Avatar className="h-8 w-8 rounded-lg">
                       {userProfile?.photo && (
                         <AvatarImage
                           src={userProfile.photo}
-                          alt={displayName}
-                        />
+                          alt={displayName} />
                       )}
                       <AvatarFallback className="rounded-lg">
                         {initials}
@@ -353,8 +353,7 @@ export function AppSidebar() {
                     {t('sidebar.myProfile')}
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => setChangePasswordDialogOpen(true)}
-                  >
+                    onClick={() => setChangePasswordDialogOpen(true)}>
                     <Settings />
                     {t('sidebar.changePassword')}
                   </DropdownMenuItem>
@@ -395,8 +394,7 @@ export function AppSidebar() {
               <SidebarMenuButton
                 tooltip={t('nav.searchTooltip')}
                 onClick={openCommandPalette}
-                className="cursor-pointer rounded-lg bg-card text-muted-foreground shadow-sm"
-              >
+                className="cursor-pointer rounded-lg bg-card text-muted-foreground shadow-sm">
                 <Search />
                 {!isCollapsed && (
                   <>
@@ -421,8 +419,7 @@ export function AppSidebar() {
                 asChild
                 isActive={!!matchRoute({ to: DASHBOARD_NAV.url })}
                 tooltip={t(DASHBOARD_NAV.titleKey)}
-                className="text-[11px] font-semibold tracking-wider uppercase text-sidebar-foreground/55"
-              >
+                className="text-[11px] font-semibold tracking-wider uppercase text-sidebar-foreground/55">
                 <Link to={DASHBOARD_NAV.url}>
                   <DASHBOARD_NAV.icon />
                   <span>{t(DASHBOARD_NAV.titleKey)}</span>
@@ -438,16 +435,14 @@ export function AppSidebar() {
           icon={Briefcase}
           items={CRM_NAV_KEYS}
           matchRoute={matchRoute}
-          t={t}
-        />
+          t={t} />
         <CollapsibleNavGroup
           groupId="operations"
           label={t('nav.operations', 'Operasyon')}
           icon={Activity}
           items={operationsItems}
           matchRoute={matchRoute}
-          t={t}
-        />
+          t={t} />
         {fieldSalesEnabled && (
           <CollapsibleNavGroup
             groupId="fieldSales"
@@ -455,8 +450,7 @@ export function AppSidebar() {
             icon={Map}
             items={FIELD_SALES_NAV_KEYS}
             matchRoute={matchRoute}
-            t={t}
-          />
+            t={t} />
         )}
 
         {/* App Config (pinned, bottom) */}
@@ -466,8 +460,7 @@ export function AppSidebar() {
               <SidebarMenuButton
                 asChild
                 isActive={!!matchRoute({ to: APP_CONFIG_NAV.url, fuzzy: true })}
-                tooltip={t(APP_CONFIG_NAV.titleKey)}
-              >
+                tooltip={t(APP_CONFIG_NAV.titleKey)}>
                 <Link to={APP_CONFIG_NAV.url}>
                   <APP_CONFIG_NAV.icon />
                   <span>{t(APP_CONFIG_NAV.titleKey)}</span>
@@ -484,13 +477,11 @@ export function AppSidebar() {
             <SidebarMenuButton
               size="lg"
               tooltip={t('sidebar.appName')}
-              className="cursor-default"
-            >
+              className="cursor-default">
               <img
                 src="/logo.svg"
                 alt="Docyrus"
-                className="h-8 w-8 shrink-0 rounded-lg object-contain"
-              />
+                className="h-8 w-8 shrink-0 rounded-lg object-contain" />
               <span className="flex items-baseline gap-1 truncate">
                 <span className="text-sm font-semibold">
                   {t('sidebar.appName')}
@@ -506,12 +497,10 @@ export function AppSidebar() {
       <SidebarRail />
       <ProfileDialog
         open={profileDialogOpen}
-        onOpenChange={setProfileDialogOpen}
-      />
+        onOpenChange={setProfileDialogOpen} />
       <ChangePasswordDialog
         open={changePasswordDialogOpen}
-        onOpenChange={setChangePasswordDialogOpen}
-      />
+        onOpenChange={setChangePasswordDialogOpen} />
     </Sidebar>
   )
 }

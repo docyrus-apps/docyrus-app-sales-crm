@@ -1,12 +1,14 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { cn } from '@/lib/utils'
 
 import { type DocyrusValueProps } from './types'
 
 export function TextValue({ field, value, className }: DocyrusValueProps) {
   if (value == null || value === '') {
-    return <span className="text-muted-foreground">—</span>
+    return <span className="text-muted-foreground">–</span>
   }
 
   const isMultiline =
@@ -15,7 +17,8 @@ export function TextValue({ field, value, className }: DocyrusValueProps) {
   return (
     <span
       className={cn(
-        isMultiline ? 'block whitespace-pre-wrap' : 'block truncate',
+        'block',
+        isMultiline ? 'whitespace-pre-wrap' : 'truncate',
         className,
       )}
     >

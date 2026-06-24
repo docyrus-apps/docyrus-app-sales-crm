@@ -1,36 +1,36 @@
 'use client'
 
 import {
-  useCallback,
-  useRef,
-  useState,
   type ReactNode,
   type RefObject,
+  useCallback,
+  useRef,
+  useState
 } from 'react'
+
+import type {
+  DocyrusFormViewField,
+  LocalFormShape
+} from '../use-docyrus-form-view'
 
 import {
   Field,
   FieldContent,
   FieldDescription,
-  FieldLabel,
+  FieldLabel
 } from '@/components/ui/field'
 import { cn } from '@/lib/utils'
 
 import { useDocyrusFieldComponent } from '@/hooks/use-docyrus-field-component'
 
-import {
-  type DocyrusFormViewField,
-  type LocalFormShape,
-} from '../use-docyrus-form-view'
-
 interface MacroFormFieldProps {
-  slug: string
-  valuesRef: RefObject<Record<string, unknown>>
-  resetSignal: number
-  onFieldChange: RefObject<(slug: string, value: unknown) => void>
-  validationErrors: RefObject<Map<string, string>>
-  valuesVersion: number
-  children: (field: any) => ReactNode
+  slug: string;
+  valuesRef: RefObject<Record<string, unknown>>;
+  resetSignal: number;
+  onFieldChange: RefObject<(slug: string, value: unknown) => void>;
+  validationErrors: RefObject<Map<string, string>>;
+  valuesVersion: number;
+  children: (field: any) => ReactNode;
 }
 
 export function MacroFormField({
@@ -40,10 +40,10 @@ export function MacroFormField({
   onFieldChange,
   validationErrors,
   valuesVersion,
-  children,
+  children
 }: MacroFormFieldProps) {
   const [localValue, setLocalValue] = useState<unknown>(
-    () => valuesRef.current[slug],
+    () => valuesRef.current[slug]
   )
   const [touched, setTouched] = useState(false)
   const lastResetRef = useRef(resetSignal)
@@ -61,7 +61,7 @@ export function MacroFormField({
       valuesRef.current[slug] = value
       onFieldChange.current(slug, value)
     },
-    [onFieldChange, slug, valuesRef],
+    [onFieldChange, slug, valuesRef]
   )
 
   const handleBlur = useCallback(() => {
@@ -81,22 +81,22 @@ export function MacroFormField({
           meta: {
             isTouched: touched || hasError,
             isValid: !hasError,
-            errors: hasError ? [{ message: error }] : [],
-          },
+            errors: hasError ? [{ message: error }] : []
+          }
         },
         handleChange,
-        handleBlur,
+        handleBlur
       })}
     </>
   )
 }
 
 interface DocyrusFormViewMappedFormFieldProps {
-  resolvedField: DocyrusFormViewField
-  form: LocalFormShape
-  appSlug: string
-  dataSourceSlug: string
-  className?: string
+  resolvedField: DocyrusFormViewField;
+  form: LocalFormShape;
+  appSlug: string;
+  dataSourceSlug: string;
+  className?: string;
 }
 
 export function DocyrusFormViewMappedFormField({
@@ -104,11 +104,11 @@ export function DocyrusFormViewMappedFormField({
   form,
   appSlug,
   dataSourceSlug,
-  className,
+  className
 }: DocyrusFormViewMappedFormFieldProps) {
   const Component = useDocyrusFieldComponent(
     resolvedField.field.type,
-    'form-field',
+    'form-field'
   )
 
   if (!Component) {
@@ -128,19 +128,18 @@ export function DocyrusFormViewMappedFormField({
       className={cn(
         resolvedField.className,
         resolvedField.fieldProps?.className,
-        className,
-      )}
-    />
+        className
+      )} />
   )
 }
 
 interface DocyrusFormViewMappedValueFieldProps {
-  resolvedField: DocyrusFormViewField
-  values: Record<string, unknown>
-  wrapperClassName?: string
-  className?: string
-  label?: ReactNode
-  description?: ReactNode
+  resolvedField: DocyrusFormViewField;
+  values: Record<string, unknown>;
+  wrapperClassName?: string;
+  className?: string;
+  label?: ReactNode;
+  description?: ReactNode;
 }
 
 export function DocyrusFormViewMappedValueField({
@@ -149,11 +148,11 @@ export function DocyrusFormViewMappedValueField({
   wrapperClassName,
   className,
   label,
-  description,
+  description
 }: DocyrusFormViewMappedValueFieldProps) {
   const Component = useDocyrusFieldComponent(
     resolvedField.field.type,
-    'value-renderer',
+    'value-renderer'
   )
 
   return (
@@ -170,8 +169,7 @@ export function DocyrusFormViewMappedValueField({
             value={values[resolvedField.slug]}
             record={values}
             enumOptions={resolvedField.enumOptions}
-            className={cn(resolvedField.valueProps?.className, className)}
-          />
+            className={cn(resolvedField.valueProps?.className, className)} />
         </div>
         {(description ?? resolvedField.description) && (
           <FieldDescription>

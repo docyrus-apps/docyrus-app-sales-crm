@@ -3,16 +3,16 @@
 import * as React from 'react'
 
 type AutoHeightOptions = {
-  includeParentBox?: boolean
-  includeSelfBox?: boolean
+  includeParentBox?: boolean;
+  includeSelfBox?: boolean;
 }
 
 export function useAutoHeight<T extends HTMLElement = HTMLDivElement>(
   deps: React.DependencyList = [],
   options: AutoHeightOptions = {
     includeParentBox: true,
-    includeSelfBox: false,
-  },
+    includeSelfBox: false
+  }
 ) {
   const ref = React.useRef<T | null>(null)
   const roRef = React.useRef<ResizeObserver | null>(null)
@@ -20,6 +20,7 @@ export function useAutoHeight<T extends HTMLElement = HTMLDivElement>(
 
   const measure = React.useCallback(() => {
     const el = ref.current
+
     if (!el) return 0
 
     const base = el.getBoundingClientRect().height || 0
@@ -35,6 +36,7 @@ export function useAutoHeight<T extends HTMLElement = HTMLDivElement>(
         (parseFloat(cs.borderTopWidth || '0') || 0) +
         (parseFloat(cs.borderBottomWidth || '0') || 0)
       const isBorderBox = cs.boxSizing === 'border-box'
+
       if (isBorderBox) {
         extra += paddingY + borderY
       }
@@ -49,6 +51,7 @@ export function useAutoHeight<T extends HTMLElement = HTMLDivElement>(
         (parseFloat(cs.borderTopWidth || '0') || 0) +
         (parseFloat(cs.borderBottomWidth || '0') || 0)
       const isBorderBox = cs.boxSizing === 'border-box'
+
       if (isBorderBox) {
         extra += paddingY + borderY
       }
@@ -62,6 +65,7 @@ export function useAutoHeight<T extends HTMLElement = HTMLDivElement>(
 
   React.useLayoutEffect(() => {
     const el = ref.current
+
     if (!el) return
 
     setHeight(measure())
@@ -73,6 +77,7 @@ export function useAutoHeight<T extends HTMLElement = HTMLDivElement>(
 
     const ro = new ResizeObserver(() => {
       const next = measure()
+
       requestAnimationFrame(() => setHeight(next))
     })
 
@@ -87,12 +92,12 @@ export function useAutoHeight<T extends HTMLElement = HTMLDivElement>(
       ro.disconnect()
       roRef.current = null
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 
   React.useLayoutEffect(() => {
     if (height === 0) {
       const next = measure()
+
       if (next !== 0) setHeight(next)
     }
   }, [height, measure])

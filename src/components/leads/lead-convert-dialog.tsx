@@ -1,40 +1,42 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { useEffect, useMemo, useRef, useState } from 'react'
+
+import type {
+  LeadConvertStepDetail,
+  LeadConvertStepState
+} from '@/components/leads/lead-convert-utils'
+
+import {
+  type FieldKind,
+  type SelectOption
+} from '@/components/leads/field-mapping-row'
+
 import { useNavigate } from '@tanstack/react-router'
 import { useDocyrusClient } from '@docyrus/signin'
 import { useTranslation } from 'react-i18next'
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
+
+import { createDataSourceClient } from '@docyrus/app-utils'
+
 import { Button } from '@/components/animate-ui/components/buttons/button'
 import { AwesomeDialog } from '@/components/docyrus/awesome-dialog/awesome-dialog'
 import { AwesomeDialogBody } from '@/components/docyrus/awesome-dialog/awesome-dialog-body'
 import { AwesomeDialogFooter } from '@/components/docyrus/awesome-dialog/awesome-dialog-footer'
 import { AwesomeDialogHeader } from '@/components/docyrus/awesome-dialog/awesome-dialog-header'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import {
-  type FieldKind,
-  type SelectOption,
-} from '@/components/leads/field-mapping-row'
 import { LeadConvertModeSelector } from '@/components/leads/lead-convert-mode-selector'
-import {
-  LeadConvertChangeConfirmDialog,
-  type LeadConvertPendingChange,
-} from '@/components/leads/lead-convert-change-confirm-dialog'
+import { LeadConvertChangeConfirmDialog } from '@/components/leads/lead-convert-change-confirm-dialog'
+import type { LeadConvertPendingChange } from '@/components/leads/lead-convert-change-confirm-dialog'
 import { LeadConvertProgress } from '@/components/leads/lead-convert-progress'
 import { LeadConvertTabs } from '@/components/leads/lead-convert-tabs'
-import { createDataSourceClient } from '@docyrus/app-utils'
 import { useLeadConvertEnumMappings } from '@/components/leads/use-lead-convert-enum-mappings'
 import { useLeadConvertForm } from '@/components/leads/use-lead-convert-form'
 import { useLeadConvertDuplicates } from '@/components/leads/use-lead-convert-duplicates'
 import { useLeadConvertConversion } from '@/components/leads/use-lead-convert-conversion'
-import type {
-  LeadConvertStepDetail,
-  LeadConvertStepState,
-} from '@/components/leads/lead-convert-utils'
 import {
   getRelationId,
   getRelationName,
   isLeadConvertedRecord,
-  normalizeConversionKey,
+  normalizeConversionKey
 } from '@/lib/lead-conversion'
 
 type ConversionMode = 'company_contact_deal' | 'contact_deal'
@@ -54,7 +56,7 @@ const KNOWN_FIELDS: Record<ConvertTarget, Array<string>> = {
     'company_size',
     'country',
     'source_lead',
-    'record_owner',
+    'record_owner'
   ],
   contact: [
     'name',
@@ -63,7 +65,7 @@ const KNOWN_FIELDS: Record<ConvertTarget, Array<string>> = {
     'mobile',
     'organization',
     'source_lead',
-    'record_owner',
+    'record_owner'
   ],
   deal: [
     'name',
@@ -76,8 +78,8 @@ const KNOWN_FIELDS: Record<ConvertTarget, Array<string>> = {
     'record_owner',
     'organization',
     'contact_person',
-    'source_lead',
-  ],
+    'source_lead'
+  ]
 }
 
 const SYSTEM_HIDDEN_FIELDS = new Set([
@@ -88,31 +90,31 @@ const SYSTEM_HIDDEN_FIELDS = new Set([
   'last_modified_by',
   'last_modified_on',
   'followers',
-  'status',
+  'status'
 ])
 
 interface LeadConvertDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  lead: any
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  lead: any;
 }
 
 function useModeLabels(
-  t: (key: string) => string,
+  t: (key: string) => string
 ): Record<ConversionMode, string> {
   return {
     company_contact_deal: t('leads.convert.mode.company_contact_deal'),
-    contact_deal: t('leads.convert.mode.contact_deal'),
+    contact_deal: t('leads.convert.mode.contact_deal')
   }
 }
 
 function useTargetLabels(
-  t: (key: string) => string,
+  t: (key: string) => string
 ): Record<'company' | 'contact' | 'deal', string> {
   return {
     company: t('leads.convert.target.company'),
     contact: t('leads.convert.target.contact'),
-    deal: t('leads.convert.target.deal'),
+    deal: t('leads.convert.target.deal')
   }
 }
 
@@ -123,28 +125,28 @@ function useStepLabels(t: (key: string) => string): Record<string, string> {
     contact: t('leads.convert.step.contact'),
     deal: t('leads.convert.step.deal'),
     activity: t('leads.convert.step.activity'),
-    lead: t('leads.convert.step.lead'),
+    lead: t('leads.convert.step.lead')
   }
 }
 
 export function LeadConvertDialog({
   open,
   onOpenChange,
-  lead,
+  lead
 }: LeadConvertDialogProps) {
   const { t } = useTranslation()
   const client = useDocyrusClient()
   const navigate = useNavigate()
-  const MODE_LABELS = useModeLabels((key) => t(key))
-  const TARGET_LABEL = useTargetLabels((key) => t(key))
-  const STEP_LABELS = useStepLabels((key) => t(key))
+  const MODE_LABELS = useModeLabels(key => t(key))
+  const TARGET_LABEL = useTargetLabels(key => t(key))
+  const STEP_LABELS = useStepLabels(key => t(key))
   const [isWorking, setIsWorking] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(
-    getRelationId(lead?.converted_organization) ?? null,
+    getRelationId(lead?.converted_organization) ?? null
   )
   const [selectedContactId, setSelectedContactId] = useState<string | null>(
-    getRelationId(lead?.converted_contact) ?? null,
+    getRelationId(lead?.converted_contact) ?? null
   )
   const [pendingChanges, setPendingChanges] =
     useState<Array<LeadConvertPendingChange> | null>(null)
@@ -152,6 +154,7 @@ export function LeadConvertDialog({
   const progressSectionRef = useRef<HTMLDivElement | null>(null)
   const [mode, setMode] = useState<ConversionMode>(() => {
     const savedMode = getRelationName(lead?.conversion_mode)
+
     if (savedMode === 'contact_deal') {
       return savedMode
     }
@@ -174,18 +177,20 @@ export function LeadConvertDialog({
       contact: hasContact ? 'done' : 'pending',
       deal: hasDeal ? 'done' : 'pending',
       activity: isCompleted ? 'done' : 'pending',
-      lead: isCompleted ? 'done' : 'pending',
+      lead: isCompleted ? 'done' : 'pending'
     }
 
     const hasAny = hasOrg || hasContact || hasDeal
+
     if (isFailedOrPartial && hasAny) {
       const sequence: Array<keyof typeof steps> = [
         'precheck',
         'organization',
         'contact',
-        'deal',
+        'deal'
       ]
-      const firstPending = sequence.find((key) => steps[key] === 'pending')
+      const firstPending = sequence.find(key => steps[key] === 'pending')
+
       if (firstPending) steps[firstPending] = 'failed'
     }
     const details: Record<string, Array<StepDetail>> = {
@@ -195,10 +200,10 @@ export function LeadConvertDialog({
             {
               tone: 'success',
               label: t('leads.convert.result.existing', {
-                name: getRelationName(lead?.converted_organization) ?? '—',
-              }),
+                name: getRelationName(lead?.converted_organization) ?? '—'
+              })
             },
-            { tone: 'info', label: t('leads.convert.result.willSkip') },
+            { tone: 'info', label: t('leads.convert.result.willSkip') }
           ]
         : [],
       contact: hasContact
@@ -206,10 +211,10 @@ export function LeadConvertDialog({
             {
               tone: 'success',
               label: t('leads.convert.result.existing', {
-                name: getRelationName(lead?.converted_contact) ?? '—',
-              }),
+                name: getRelationName(lead?.converted_contact) ?? '—'
+              })
             },
-            { tone: 'info', label: t('leads.convert.result.willSkip') },
+            { tone: 'info', label: t('leads.convert.result.willSkip') }
           ]
         : [],
       deal: hasDeal
@@ -217,14 +222,14 @@ export function LeadConvertDialog({
             {
               tone: 'success',
               label: t('leads.convert.result.existing', {
-                name: getRelationName(lead?.converted_deal) ?? '—',
-              }),
+                name: getRelationName(lead?.converted_deal) ?? '—'
+              })
             },
-            { tone: 'info', label: t('leads.convert.result.willSkip') },
+            { tone: 'info', label: t('leads.convert.result.willSkip') }
           ]
         : [],
       activity: [],
-      lead: [],
+      lead: []
     }
 
     if (isFailedOrPartial) {
@@ -233,18 +238,19 @@ export function LeadConvertDialog({
         lead.conversion_error_message
           ? lead.conversion_error_message
           : null
-      const failedKey = (Object.keys(steps) as Array<keyof typeof steps>).find(
-        (key) => steps[key] === 'failed',
+      const failedKey = Object.keys(steps).find(
+        key => steps[key] === 'failed'
       )
+
       if (failedKey && errorMessage) {
         details[failedKey] = [
           {
             tone: 'error',
             label: t('leads.convert.result.previousError', {
-              message: errorMessage,
-            }),
+              message: errorMessage
+            })
           },
-          { tone: 'info', label: t('leads.convert.result.willRetry') },
+          { tone: 'info', label: t('leads.convert.result.willRetry') }
         ]
       }
     }
@@ -253,7 +259,7 @@ export function LeadConvertDialog({
   }, [lead, t])
 
   const [steps, setSteps] = useState<Record<string, StepState>>(
-    () => initialStepState.steps,
+    () => initialStepState.steps
   )
   const [stepDetails, setStepDetails] = useState<
     Record<string, Array<StepDetail>>
@@ -267,48 +273,51 @@ export function LeadConvertDialog({
     precheckSummary,
     duplicatesChecked,
     setDuplicatesChecked,
-    findDuplicates,
+    findDuplicates
   } = useLeadConvertDuplicates({
     client,
     lead,
     t,
     setIsWorking,
-    setStep: (key, state) =>
-      setSteps((current) => ({ ...current, [key]: state })),
-    setStepDetail: (key, details) =>
-      setStepDetails((current) => ({ ...current, [key]: details })),
+    setStep: (key, state) => setSteps(current => ({ ...current, [key]: state })),
+    setStepDetail: (key, details) => setStepDetails(current => ({ ...current, [key]: details })),
     setErrorMessage,
     onExactCompanyMatch: setSelectedCompanyId,
-    onExactContactMatch: setSelectedContactId,
+    onExactContactMatch: setSelectedContactId
   })
   const { form, updateForm, sourceDealName } = useLeadConvertForm({
     lead,
     t,
     open,
-    onSearchRelevantChange: () => setDuplicatesChecked(false),
+    onSearchRelevantChange: () => setDuplicatesChecked(false)
   })
   const [extraFields, setExtraFields] = useState<{
     company: Array<{
-      slug: string
-      label: string
-      kind: FieldKind
-      value: string
-    }>
+      slug: string;
+      label: string;
+      kind: FieldKind;
+      value: string;
+    }>;
     contact: Array<{
-      slug: string
-      label: string
-      kind: FieldKind
-      value: string
-    }>
-    deal: Array<{ slug: string; label: string; kind: FieldKind; value: string }>
+      slug: string;
+      label: string;
+      kind: FieldKind;
+      value: string;
+    }>;
+    deal: Array<{
+      slug: string;
+      label: string;
+      kind: FieldKind;
+      value: string;
+    }>;
   }>({ company: [], contact: [], deal: [] })
   const [targetFields, setTargetFields] = useState<{
-    company: Array<{ slug: string; name: string; type: string }>
-    contact: Array<{ slug: string; name: string; type: string }>
-    deal: Array<{ slug: string; name: string; type: string }>
+    company: Array<{ slug: string; name: string; type: string }>;
+    contact: Array<{ slug: string; name: string; type: string }>;
+    deal: Array<{ slug: string; name: string; type: string }>;
   }>({ company: [], contact: [], deal: [] })
   const [activeTab, setActiveTab] = useState<'company' | 'contact' | 'deal'>(
-    'deal',
+    'deal'
   )
 
   const {
@@ -330,7 +339,7 @@ export function LeadConvertDialog({
     effectiveLeadSourceId,
     effectiveCustomerTypeId,
     effectiveCompanyIndustryId,
-    effectiveCompanySizeId,
+    effectiveCompanySizeId
   } = useLeadConvertEnumMappings(lead, form)
 
   useEffect(() => {
@@ -355,26 +364,27 @@ export function LeadConvertDialog({
           .catch(() => null),
         dataSources
           .getBySlug('base_crm', 'deal', { expand: 'fields' })
-          .catch(() => null),
+          .catch(() => null)
       ])
+
       if (cancelled) return
       const mapFields = (
         ds: {
-          fields?: Array<{ slug?: string; name?: string; type?: string }>
-        } | null,
-      ) =>
-        (ds?.fields ?? [])
-          .filter((f): f is { slug: string; name: string; type: string } =>
-            Boolean(f?.slug && f?.name && f?.type),
-          )
-          .map((f) => ({ slug: f.slug, name: f.name, type: f.type }))
+          fields?: Array<{ slug?: string; name?: string; type?: string }>;
+        } | null
+      ) => (ds?.fields ?? [])
+          .filter((f): f is { slug: string; name: string; type: string } => Boolean(f?.slug && f?.name && f?.type))
+          .map(f => ({ slug: f.slug, name: f.name, type: f.type }))
+
       setTargetFields({
         company: mapFields(org),
         contact: mapFields(contact),
-        deal: mapFields(deal),
+        deal: mapFields(deal)
       })
     }
+
     void load()
+
     return () => {
       cancelled = true
     }
@@ -385,26 +395,28 @@ export function LeadConvertDialog({
       'precheck',
       ...(mode === 'company_contact_deal' ? ['organization'] : []),
       'contact',
-      'deal',
+      'deal'
     ],
-    [mode],
+    [mode]
   )
   const visibleStepLabels = useMemo(() => {
     const labels: Record<string, string> = {}
-    const stepLabelsByKey = STEP_LABELS as Record<string, string>
+    const stepLabelsByKey = STEP_LABELS
+
     for (const key of visibleProgressStepKeys) {
       labels[key] = stepLabelsByKey[key] ?? key
     }
+
     return labels
   }, [STEP_LABELS, visibleProgressStepKeys])
   const isAlreadyCompleted = isLeadConvertedRecord(lead)
   const hasAnyCreated = Boolean(
     lead?.converted_organization ||
     lead?.converted_contact ||
-    lead?.converted_deal,
+    lead?.converted_deal
   )
   const conversionStateName = normalizeConversionKey(
-    getRelationName(lead?.conversion_state),
+    getRelationName(lead?.conversion_state)
   )
   const hasPartialState = !isAlreadyCompleted && hasAnyCreated
   const hasFailedAttempt =
@@ -413,27 +425,28 @@ export function LeadConvertDialog({
     conversionStateName === normalizeConversionKey('failed')
 
   const setStep = (key: string, state: StepState) => {
-    setSteps((current) => ({ ...current, [key]: state }))
+    setSteps(current => ({ ...current, [key]: state }))
   }
 
   const setStepDetail = (key: string, details: Array<StepDetail>) => {
-    setStepDetails((current) => ({ ...current, [key]: details }))
+    setStepDetails(current => ({ ...current, [key]: details }))
   }
 
   const addStepDetail = (key: string, detail: StepDetail) => {
-    setStepDetails((current) => ({
+    setStepDetails(current => ({
       ...current,
-      [key]: [...(current[key] ?? []), detail],
+      [key]: [...(current[key] ?? []), detail]
     }))
   }
 
   const focusMissingField = (
     tab: 'company' | 'contact' | 'deal',
-    fieldKey: string,
+    fieldKey: string
   ) => {
     setActiveTab(tab)
     window.setTimeout(() => {
       const node = document.querySelector(`[data-field-key="${fieldKey}"]`)
+
       if (node instanceof HTMLElement) {
         node.scrollIntoView({ behavior: 'smooth', block: 'center' })
         node.classList.add('lead-convert-field-attention')
@@ -445,9 +458,9 @@ export function LeadConvertDialog({
   }
 
   type MissingField = {
-    tab: 'company' | 'contact' | 'deal'
-    fieldKey: string
-    label: string
+    tab: 'company' | 'contact' | 'deal';
+    fieldKey: string;
+    label: string;
   }
 
   const findMissingField = (): MissingField | null => {
@@ -455,9 +468,10 @@ export function LeadConvertDialog({
       tab: 'company' | 'contact' | 'deal',
       slug: string,
       label: string,
-      value: string,
+      value: string
     ): MissingField | null => {
       if (value.trim()) return null
+
       return { tab, fieldKey: `${tab}:${slug}`, label }
     }
 
@@ -467,7 +481,7 @@ export function LeadConvertDialog({
           'company',
           'name',
           t('leads.convert.field.companyName'),
-          form.companyName,
+          form.companyName
         ),
         ...(leadCompanyIndustryName && !effectiveCompanyIndustryId
           ? [
@@ -475,26 +489,27 @@ export function LeadConvertDialog({
                 'company',
                 'industry',
                 t('leads.convert.field.industry'),
-                effectiveCompanyIndustryId,
-              ),
+                effectiveCompanyIndustryId
+              )
             ]
           : []),
         ...(leadCompanySizeName &&
-        companySizeSelectOptions.length > 0 &&
-        !effectiveCompanySizeId
+          companySizeSelectOptions.length > 0 &&
+          !effectiveCompanySizeId
           ? [
               checkRow(
                 'company',
                 'company_size',
                 t('leads.convert.field.companySize'),
-                effectiveCompanySizeId,
-              ),
+                effectiveCompanySizeId
+              )
             ]
-          : []),
+          : [])
       ]
       const firstCompany = companyChecks.find(
-        (c): c is MissingField => c !== null,
+        (c): c is MissingField => c !== null
       )
+
       if (firstCompany) return firstCompany
     }
 
@@ -504,12 +519,13 @@ export function LeadConvertDialog({
           'contact',
           'name',
           t('leads.convert.field.contactName'),
-          form.contactName,
-        ),
+          form.contactName
+        )
       ]
       const firstContact = contactChecks.find(
-        (c): c is MissingField => c !== null,
+        (c): c is MissingField => c !== null
       )
+
       if (firstContact) return firstContact
     }
 
@@ -518,13 +534,13 @@ export function LeadConvertDialog({
         'deal',
         'name',
         t('leads.convert.field.dealName'),
-        form.dealName,
+        form.dealName
       ),
       checkRow(
         'deal',
         'stage',
         t('leads.convert.field.stage'),
-        effectiveStageId,
+        effectiveStageId
       ),
       ...(leadSourceName && !effectiveLeadSourceId
         ? [
@@ -532,8 +548,8 @@ export function LeadConvertDialog({
               'deal',
               'lead_source',
               t('leads.convert.field.leadSource'),
-              effectiveLeadSourceId,
-            ),
+              effectiveLeadSourceId
+            )
           ]
         : []),
       ...(leadTypeName && !effectiveCustomerTypeId
@@ -542,12 +558,13 @@ export function LeadConvertDialog({
               'deal',
               'customer_type',
               t('leads.convert.field.customerType'),
-              effectiveCustomerTypeId,
-            ),
+              effectiveCustomerTypeId
+            )
           ]
-        : []),
+        : [])
     ]
     const firstDeal = dealChecks.find((c): c is MissingField => c !== null)
+
     if (firstDeal) return firstDeal
 
     return null
@@ -555,8 +572,8 @@ export function LeadConvertDialog({
 
   const lookupOptionLabel = (
     options: Array<SelectOption>,
-    id: string,
-  ): string => options.find((o) => o.value === id)?.label ?? ''
+    id: string
+  ): string => options.find(o => o.value === id)?.label ?? ''
 
   const findChangedFromLead = () => {
     const changes: Array<LeadConvertPendingChange> = []
@@ -565,12 +582,19 @@ export function LeadConvertDialog({
       label: string,
       sourceText: string,
       targetText: string,
-      restore: () => void,
+      restore: () => void
     ) => {
       const src = (sourceText || '').trim()
       const tgt = (targetText || '').trim()
+
       if (src && src !== tgt) {
-        changes.push({ tab, label, sourceText: src, targetText: tgt, restore })
+        changes.push({
+          tab,
+          label,
+          sourceText: src,
+          targetText: tgt,
+          restore
+        })
       }
     }
 
@@ -580,49 +604,49 @@ export function LeadConvertDialog({
         t('leads.convert.field.companyName'),
         lead?.company_name_text || '',
         form.companyName,
-        () => updateForm('companyName', lead?.company_name_text || ''),
+        () => updateForm('companyName', lead?.company_name_text || '')
       )
       push(
         'company',
         t('leads.convert.field.companyEmail'),
         lead?.company_email || '',
         form.companyEmail,
-        () => updateForm('companyEmail', lead?.company_email || ''),
+        () => updateForm('companyEmail', lead?.company_email || '')
       )
       push(
         'company',
         t('leads.convert.field.companyPhone'),
         lead?.company_phone || '',
         form.companyPhone,
-        () => updateForm('companyPhone', lead?.company_phone || ''),
+        () => updateForm('companyPhone', lead?.company_phone || '')
       )
       push(
         'company',
         t('leads.convert.field.website'),
         lead?.website || '',
         form.companyWebsite,
-        () => updateForm('companyWebsite', lead?.website || ''),
+        () => updateForm('companyWebsite', lead?.website || '')
       )
       push(
         'company',
         t('leads.convert.field.address'),
         lead?.address || '',
         form.companyAddress,
-        () => updateForm('companyAddress', lead?.address || ''),
+        () => updateForm('companyAddress', lead?.address || '')
       )
       push(
         'company',
         t('leads.convert.field.city'),
         lead?.city || '',
         form.companyCity,
-        () => updateForm('companyCity', lead?.city || ''),
+        () => updateForm('companyCity', lead?.city || '')
       )
       push(
         'company',
         t('leads.convert.field.industry'),
         leadCompanyIndustryName,
         lookupOptionLabel(industrySelectOptions, effectiveCompanyIndustryId),
-        () => updateForm('companyIndustry', mappedCompanyIndustryId || ''),
+        () => updateForm('companyIndustry', mappedCompanyIndustryId || '')
       )
       if (companySizeSelectOptions.length > 0) {
         push(
@@ -630,7 +654,7 @@ export function LeadConvertDialog({
           t('leads.convert.field.companySize'),
           leadCompanySizeName,
           lookupOptionLabel(companySizeSelectOptions, effectiveCompanySizeId),
-          () => updateForm('companySize', mappedCompanySizeId || ''),
+          () => updateForm('companySize', mappedCompanySizeId || '')
         )
       }
     }
@@ -640,28 +664,28 @@ export function LeadConvertDialog({
         t('leads.convert.field.contactName'),
         lead?.name || '',
         form.contactName,
-        () => updateForm('contactName', lead?.name || ''),
+        () => updateForm('contactName', lead?.name || '')
       )
       push(
         'contact',
         t('leads.convert.field.jobTitle'),
         lead?.contact_job_title || '',
         form.contactJobTitle,
-        () => updateForm('contactJobTitle', lead?.contact_job_title || ''),
+        () => updateForm('contactJobTitle', lead?.contact_job_title || '')
       )
       push(
         'contact',
         t('leads.convert.field.email'),
         lead?.email || '',
         form.contactEmail,
-        () => updateForm('contactEmail', lead?.email || ''),
+        () => updateForm('contactEmail', lead?.email || '')
       )
       push(
         'contact',
         t('leads.convert.field.phone'),
         lead?.phone || '',
         form.contactPhone,
-        () => updateForm('contactPhone', lead?.phone || ''),
+        () => updateForm('contactPhone', lead?.phone || '')
       )
     }
     push(
@@ -669,26 +693,26 @@ export function LeadConvertDialog({
       t('leads.convert.field.estimatedValue'),
       lead?.deal_value ? String(lead.deal_value) : '',
       form.dealValue,
-      () =>
-        updateForm(
+      () => updateForm(
           'dealValue',
-          lead?.deal_value ? String(lead.deal_value) : '',
-        ),
+          lead?.deal_value ? String(lead.deal_value) : ''
+        )
     )
     push(
       'deal',
       t('leads.convert.field.description'),
       lead?.contact_message || '',
       form.notes,
-      () => updateForm('notes', lead?.contact_message || ''),
+      () => updateForm('notes', lead?.contact_message || '')
     )
     push(
       'deal',
       t('leads.convert.field.leadSource'),
       leadSourceName,
       lookupOptionLabel(leadSourceSelectOptions, effectiveLeadSourceId),
-      () => updateForm('dealLeadSourceId', mappedDealLeadSourceId || ''),
+      () => updateForm('dealLeadSourceId', mappedDealLeadSourceId || '')
     )
+
     return changes
   }
 
@@ -723,17 +747,17 @@ export function LeadConvertDialog({
     findMissingField,
     focusMissingField,
     findChangedFromLead,
-    scrollProgressIntoView: () =>
-      progressSectionRef.current?.scrollIntoView({
+    scrollProgressIntoView: () => progressSectionRef.current?.scrollIntoView({
         behavior: 'smooth',
-        block: 'start',
+        block: 'start'
       }),
-    createDataSourceClient,
+    createDataSourceClient
   })
 
   const formDisabled = isWorking || isAlreadyCompleted
   const currentProgressStepKey = useMemo(() => {
     const entries = Object.entries(steps)
+
     return (
       entries.find(([, state]) => state === 'running')?.[0] ??
       entries.find(([, state]) => state === 'failed')?.[0] ??
@@ -751,34 +775,39 @@ export function LeadConvertDialog({
       form.companyCity.trim() ||
       form.companyIndustry ||
       form.companySize ||
-      extraFields.company.length,
+      extraFields.company.length
     )
+
     if (mode !== 'company_contact_deal' && hasCompanyDraft) {
       skipped.push(TARGET_LABEL.company)
     }
+
     return skipped
-  }, [TARGET_LABEL, extraFields.company.length, form, mode])
+  }, [
+TARGET_LABEL,
+extraFields.company.length,
+form,
+mode
+])
 
   const setExtraValue = (
     target: 'company' | 'contact' | 'deal',
     slug: string,
-    value: string,
+    value: string
   ) => {
-    setExtraFields((current) => ({
+    setExtraFields(current => ({
       ...current,
-      [target]: current[target].map((field) =>
-        field.slug === slug ? { ...field, value } : field,
-      ),
+      [target]: current[target].map(field => field.slug === slug ? { ...field, value } : field)
     }))
   }
 
   const removeExtraField = (
     target: 'company' | 'contact' | 'deal',
-    slug: string,
+    slug: string
   ) => {
-    setExtraFields((current) => ({
+    setExtraFields(current => ({
       ...current,
-      [target]: current[target].filter((field) => field.slug !== slug),
+      [target]: current[target].filter(field => field.slug !== slug)
     }))
   }
 
@@ -789,6 +818,7 @@ export function LeadConvertDialog({
     if (type === 'field-email') return 'email'
     if (type === 'field-phone') return 'phone'
     if (type === 'field-url') return 'url'
+
     return 'text'
   }
 
@@ -796,31 +826,30 @@ export function LeadConvertDialog({
     const build = (target: ConvertTarget) => {
       const known = new Set(KNOWN_FIELDS[target])
       const alreadyAdded = new Set(
-        extraFields[target].map((field) => field.slug),
+        extraFields[target].map(field => field.slug)
       )
+
       return targetFields[target].filter(
-        (field) =>
-          !known.has(field.slug) &&
+        field => !known.has(field.slug) &&
           !SYSTEM_HIDDEN_FIELDS.has(field.slug) &&
-          !alreadyAdded.has(field.slug),
+          !alreadyAdded.has(field.slug)
       )
     }
 
     return {
       company: build('company'),
       contact: build('contact'),
-      deal: build('deal'),
+      deal: build('deal')
     }
   }, [extraFields, targetFields])
 
-  const availableExtraFields = (target: ConvertTarget) =>
-    availableExtraFieldsByTarget[target]
+  const availableExtraFields = (target: ConvertTarget) => availableExtraFieldsByTarget[target]
 
   const addExtraField = (
     target: ConvertTarget,
-    field: { slug: string; name: string; type: string },
+    field: { slug: string; name: string; type: string }
   ) => {
-    setExtraFields((current) => ({
+    setExtraFields(current => ({
       ...current,
       [target]: [
         ...current[target],
@@ -828,14 +857,15 @@ export function LeadConvertDialog({
           slug: field.slug,
           label: field.name,
           kind: inferKindFromType(field.type),
-          value: '',
-        },
-      ],
+          value: ''
+        }
+      ]
     }))
     requestAnimationFrame(() => {
       const node = document.querySelector(
-        `[data-field-key="${target}:${field.slug}"]`,
+        `[data-field-key="${target}:${field.slug}"]`
       )
+
       if (node instanceof HTMLElement) {
         node.scrollIntoView({ behavior: 'smooth', block: 'center' })
         node.classList.add('ring-2', 'ring-primary/60')
@@ -854,12 +884,10 @@ export function LeadConvertDialog({
         onOpenChange(nextOpen)
       }}
       container="modal"
-      size="xl"
-    >
+      size="xl">
       <AwesomeDialogHeader
         title={t('leads.convert.title')}
-        description={t('leads.convert.description')}
-      />
+        description={t('leads.convert.description')} />
 
       <AwesomeDialogBody className="pt-0">
         <div className="space-y-5 pt-4">
@@ -882,10 +910,10 @@ export function LeadConvertDialog({
               <AlertDescription>
                 {t('leads.convert.alert.partialDescription')}
                 {typeof lead?.conversion_error_message === 'string' &&
-                lead.conversion_error_message ? (
+                  lead.conversion_error_message ? (
                   <span className="mt-1 block text-xs">
                     {t('leads.convert.result.previousError', {
-                      message: lead.conversion_error_message,
+                      message: lead.conversion_error_message
                     })}
                   </span>
                 ) : null}
@@ -900,10 +928,10 @@ export function LeadConvertDialog({
               <AlertDescription>
                 {t('leads.convert.alert.failedDescription')}
                 {typeof lead?.conversion_error_message === 'string' &&
-                lead.conversion_error_message ? (
+                  lead.conversion_error_message ? (
                   <span className="mt-1 block text-xs">
                     {t('leads.convert.result.previousError', {
-                      message: lead.conversion_error_message,
+                      message: lead.conversion_error_message
                     })}
                   </span>
                 ) : null}
@@ -926,8 +954,7 @@ export function LeadConvertDialog({
             onModeChange={(nextMode) => {
               setMode(nextMode)
               setDuplicatesChecked(false)
-            }}
-          />
+            }} />
 
           <div ref={progressSectionRef}>
             <LeadConvertProgress
@@ -936,8 +963,7 @@ export function LeadConvertDialog({
               stepLabels={visibleStepLabels}
               currentStepKey={currentProgressStepKey}
               duplicatesChecked={duplicatesChecked}
-              precheckSummary={precheckSummary}
-            />
+              precheckSummary={precheckSummary} />
           </div>
 
           <LeadConvertTabs
@@ -983,8 +1009,7 @@ export function LeadConvertDialog({
             availableExtraFields={availableExtraFields}
             addExtraField={addExtraField}
             setExtraValue={setExtraValue}
-            removeExtraField={removeExtraField}
-          />
+            removeExtraField={removeExtraField} />
         </div>
       </AwesomeDialogBody>
 
@@ -993,8 +1018,7 @@ export function LeadConvertDialog({
           type="button"
           variant="outline"
           disabled={isWorking}
-          onClick={() => onOpenChange(false)}
-        >
+          onClick={() => onOpenChange(false)}>
           {t('leads.convert.footer.close')}
         </Button>
         {isAlreadyCompleted && getRelationId(lead?.converted_deal) ? (
@@ -1002,10 +1026,10 @@ export function LeadConvertDialog({
             type="button"
             onClick={() => {
               const dealId = getRelationId(lead.converted_deal)
+
               if (!dealId) return
               void navigate({ to: '/deals/$dealId', params: { dealId } })
-            }}
-          >
+            }}>
             {t('leads.convert.footer.openDeal')}
           </Button>
         ) : (
@@ -1024,8 +1048,9 @@ export function LeadConvertDialog({
         onRestoreChange={(index) => {
           setPendingChanges((current) => {
             const nextChanges = (current ?? []).filter(
-              (_, changeIndex) => changeIndex !== index,
+              (_, changeIndex) => changeIndex !== index
             )
+
             return nextChanges.length > 0 ? nextChanges : null
           })
         }}
@@ -1033,8 +1058,7 @@ export function LeadConvertDialog({
           setPendingChanges(null)
           setChangesConfirmed(true)
           void runConversion({ skipChangeCheck: true })
-        }}
-      />
+        }} />
     </AwesomeDialog>
   )
 }

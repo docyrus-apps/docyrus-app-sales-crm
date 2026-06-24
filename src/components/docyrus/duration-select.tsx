@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { useMemo, useState, type ReactNode } from 'react'
 
 import { Clock } from 'lucide-react'
@@ -13,27 +15,9 @@ import {
 
 import { cn } from '@/lib/utils'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 export type DurationFormat = 'HH:MM' | 'compact' | 'decimal'
-
-export interface DurationSelectProps {
-  /** Duration value in seconds */
-  value: number | null | undefined
-  /** Called with seconds when a duration is selected, or null when cleared */
-  onChange: (seconds: number | null) => void
-  /** Display format for the trigger label */
-  format?: DurationFormat
-  /** Minute increment for grid columns (e.g. 5, 6, 10) */
-  minuteIncrement?: number
-  /** Maximum hours shown in the grid */
-  maxHours?: number
-  disabled?: boolean
-  /** Whether the field is in an invalid/error state */
-  invalid?: boolean
-  placeholder?: string
-  className?: string
-}
 
 function formatHHMM(totalSeconds: number): string {
   const h = Math.floor(totalSeconds / 3600)
@@ -57,7 +41,7 @@ function formatDecimal(totalSeconds: number): string {
   return `${(totalSeconds / 3600).toFixed(2)}h`
 }
 
-export function formatDurationDisplay(
+function formatDurationDisplay(
   totalSeconds: number,
   fmt: DurationFormat,
 ): string {
@@ -73,6 +57,23 @@ export function formatDurationDisplay(
     default:
       return formatHHMM(totalSeconds)
   }
+}
+export interface DurationSelectProps {
+  /** Duration value in seconds */
+  value: number | null | undefined
+  /** Called with seconds when a duration is selected, or null when cleared */
+  onChange: (seconds: number | null) => void
+  /** Display format for the trigger label */
+  format?: DurationFormat
+  /** Minute increment for grid columns (e.g. 5, 6, 10) */
+  minuteIncrement?: number
+  /** Maximum hours shown in the grid */
+  maxHours?: number
+  disabled?: boolean
+  /** Whether the field is in an invalid/error state */
+  invalid?: boolean
+  placeholder?: string
+  className?: string
 }
 
 function buildMinuteColumns(increment: number): Array<number> {

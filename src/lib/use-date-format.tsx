@@ -1,13 +1,13 @@
 'use client'
 
-import { createContext, use, type ReactNode } from 'react'
+import { type ReactNode, createContext, use } from 'react'
 
 export type DateFormatFn = (value: unknown) => string
 
 export interface DateFormatContextValue {
-  formatDate: DateFormatFn
-  formatDateTime: DateFormatFn
-  formatTime: DateFormatFn
+  formatDate: DateFormatFn;
+  formatDateTime: DateFormatFn;
+  formatTime: DateFormatFn;
 }
 
 /**
@@ -33,7 +33,7 @@ export interface DateFormatContextValue {
  * ```
  */
 export const DateFormatContext = createContext<DateFormatContextValue | null>(
-  null,
+  null
 )
 
 const rawString: DateFormatFn = (value) => {
@@ -46,7 +46,7 @@ const rawString: DateFormatFn = (value) => {
 const fallback: DateFormatContextValue = {
   formatDate: rawString,
   formatDateTime: rawString,
-  formatTime: rawString,
+  formatTime: rawString
 }
 
 /**
@@ -67,10 +67,10 @@ export function useDateFormat(): DateFormatContextValue {
 }
 
 interface DateFormatProviderProps {
-  formatDate: DateFormatFn
-  formatDateTime: DateFormatFn
-  formatTime: DateFormatFn
-  children: ReactNode
+  formatDate: DateFormatFn;
+  formatDateTime: DateFormatFn;
+  formatTime: DateFormatFn;
+  children: ReactNode;
 }
 
 /**
@@ -92,7 +92,7 @@ export function DateFormatProvider({
   formatDate,
   formatDateTime,
   formatTime,
-  children,
+  children
 }: DateFormatProviderProps) {
   return (
     <DateFormatContext value={{ formatDate, formatDateTime, formatTime }}>

@@ -1,3 +1,4 @@
+/* eslint-disable */
 // @ts-nocheck
 import { BaseListPlugin } from '@platejs/list'
 import { KEYS } from 'platejs'

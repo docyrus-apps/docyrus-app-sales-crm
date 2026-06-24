@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { useMemo, useState } from 'react'
 
 import { ChevronsLeft, ChevronsRight } from 'lucide-react'
@@ -12,7 +14,7 @@ import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 import { FormFieldLabel } from './form-field-label'
 import {
@@ -22,20 +24,21 @@ import {
 } from './lib/utils'
 import { type DocyrusFormFieldProps } from './types'
 
+const EMPTY_ENUM_OPTIONS: never[] = []
+
 export function MultiSelectFormField({
   field: fieldConfig,
   form,
   disabled,
   required,
   className,
-  enumOptions = [],
+  enumOptions = EMPTY_ENUM_OPTIONS,
 }: DocyrusFormFieldProps) {
   const { t } = useUiTranslation()
 
   return (
-    <form.Field
-      name={fieldConfig.slug}
-      children={(field: any) => (
+    <form.Field name={fieldConfig.slug}>
+      {(field: any) => (
         <MultiSelectFieldInner
           field={field}
           fieldConfig={fieldConfig}
@@ -46,7 +49,7 @@ export function MultiSelectFormField({
           t={t}
         />
       )}
-    />
+    </form.Field>
   )
 }
 
@@ -56,7 +59,7 @@ function MultiSelectFieldInner({
   disabled,
   required,
   className,
-  enumOptions = [],
+  enumOptions = EMPTY_ENUM_OPTIONS,
   t,
 }: {
   field: any
@@ -68,9 +71,11 @@ function MultiSelectFieldInner({
   t: (key: string, fallback: string) => string
 }) {
   const [checkedAvailable, setCheckedAvailable] = useState<Set<string>>(
-    new Set(),
+    () => new Set(),
   )
-  const [checkedSelected, setCheckedSelected] = useState<Set<string>>(new Set())
+  const [checkedSelected, setCheckedSelected] = useState<Set<string>>(
+    () => new Set(),
+  )
   const [searchAvailable, setSearchAvailable] = useState('')
   const [searchSelected, setSearchSelected] = useState('')
 

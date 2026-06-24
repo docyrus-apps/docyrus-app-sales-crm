@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { type ComponentProps } from 'react'
 
 import { FieldLabel } from '@/components/ui/field'

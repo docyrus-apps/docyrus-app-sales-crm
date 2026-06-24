@@ -1,17 +1,22 @@
 import { useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { useEnumsCollection } from '@/collections'
+
 import type { EnumEntity } from '@/collections/enums.collection'
-import type { CellSelectOption } from '@/components/docyrus/data-grid/types'
+
+import { useQuery } from '@tanstack/react-query'
+
+import { useEnumsCollection } from '@/collections'
+
+import { type CellSelectOption } from '@/components/docyrus/data-grid/types'
+
 import { QUERY_CONFIG } from '@/lib/constants'
 
 interface UseEnumsOptions {
-  enabled?: boolean
+  enabled?: boolean;
 }
 
 interface UseEnumEntitiesOptions extends UseEnumsOptions {
-  appSlug?: string
-  dataSourceSlug?: string
+  appSlug?: string;
+  dataSourceSlug?: string;
 }
 
 /**
@@ -25,10 +30,11 @@ export function useEnums(options: UseEnumsOptions = {}) {
     queryKey: ['enums'],
     queryFn: async () => {
       const response = await enumsCollection.getEnums()
+
       return response
     },
     enabled: options.enabled,
-    staleTime: QUERY_CONFIG.STALE_TIME.ENUMS,
+    staleTime: QUERY_CONFIG.STALE_TIME.ENUMS
   })
 }
 
@@ -49,14 +55,14 @@ function sortEnums(left: EnumEntity, right: EnumEntity) {
 
 export function useEnumEntities(
   fieldName: string,
-  options: UseEnumEntitiesOptions = {},
+  options: UseEnumEntitiesOptions = {}
 ) {
   const {
     data: enums,
     isLoading,
-    error,
+    error
   } = useEnums({
-    enabled: options.enabled,
+    enabled: options.enabled
   })
 
   const entities = useMemo(() => {
@@ -84,12 +90,17 @@ export function useEnumEntities(
     }
 
     return [...matches].sort(sortEnums)
-  }, [enums, fieldName, options.appSlug, options.dataSourceSlug])
+  }, [
+enums,
+fieldName,
+options.appSlug,
+options.dataSourceSlug
+])
 
   return {
     data: entities,
     isLoading,
-    error,
+    error
   }
 }
 
@@ -99,37 +110,36 @@ export function useEnumEntities(
  */
 export function useEnumOptions(
   fieldName: string,
-  options: UseEnumEntitiesOptions = {},
+  options: UseEnumEntitiesOptions = {}
 ) {
   const {
     data: entities,
     isLoading,
-    error,
+    error
   } = useEnumEntities(fieldName, options)
 
   const enumOptions = useMemo(
-    () =>
-      entities.map((option) => ({
+    () => entities.map(option => ({
         label: option.name,
-        value: option.id,
+        value: option.id
       })),
-    [entities],
+    [entities]
   )
 
   return {
     options: enumOptions,
     isLoading,
-    error,
+    error
   }
 }
 
 export function mapEnumEntitiesToCellOptions(
-  entities: Array<EnumEntity>,
+  entities: Array<EnumEntity>
 ): Array<CellSelectOption> {
-  return entities.map((option) => ({
+  return entities.map(option => ({
     label: option.name,
     value: option.id,
     color: option.color ?? undefined,
-    iconStr: option.icon ?? undefined,
+    iconStr: option.icon ?? undefined
   }))
 }

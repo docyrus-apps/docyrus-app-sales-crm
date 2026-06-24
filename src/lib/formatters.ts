@@ -8,7 +8,7 @@
 export function formatCurrency(
   value: number | null | undefined,
   currencySymbol: string = '$',
-  locale: string = 'en-US',
+  locale: string = 'en-US'
 ): string {
   if (value === null || value === undefined) {
     return `${currencySymbol}0`
@@ -16,7 +16,7 @@ export function formatCurrency(
 
   const formatted = new Intl.NumberFormat(locale, {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 2
   }).format(value)
 
   return `${currencySymbol}${formatted}`
@@ -28,9 +28,9 @@ export function formatCurrency(
 export function formatDate(
   date: string | Date | null | undefined,
   options: {
-    format?: 'short' | 'long' | 'relative'
-    locale?: string
-  } = {},
+    format?: 'short' | 'long' | 'relative';
+    locale?: string;
+  } = {}
 ): string {
   if (!date) {
     return '-'
@@ -51,13 +51,17 @@ export function formatDate(
 
     if (diffInDays === 0) {
       const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60))
+
       if (diffInHours === 0) {
         const diffInMinutes = Math.floor(diffInMs / (1000 * 60))
+
         if (diffInMinutes === 0) {
           return 'Just now'
         }
+
         return `${diffInMinutes} minute${diffInMinutes === 1 ? '' : 's'} ago`
       }
+
       return `${diffInHours} hour${diffInHours === 1 ? '' : 's'} ago`
     } else if (diffInDays < 7) {
       return `${diffInDays} day${diffInDays === 1 ? '' : 's'} ago`
@@ -72,12 +76,12 @@ export function formatDate(
           month: 'long',
           day: 'numeric',
           hour: '2-digit',
-          minute: '2-digit',
+          minute: '2-digit'
         }
       : {
           year: 'numeric',
           month: 'short',
-          day: 'numeric',
+          day: 'numeric'
         }
 
   return new Intl.DateTimeFormat(locale, formatOptions).format(dateObj)
@@ -88,7 +92,7 @@ export function formatDate(
  */
 export function formatPercentage(
   value: number | null | undefined,
-  decimals: number = 0,
+  decimals: number = 0
 ): string {
   if (value === null || value === undefined) {
     return '0%'
@@ -116,6 +120,7 @@ export function formatPhoneNumber(phone: string | null | undefined): string {
     // International format: +X XXX XXX XXXX
     const countryCode = cleaned.slice(0, cleaned.length - 10)
     const rest = cleaned.slice(-10)
+
     return `+${countryCode} ${rest.slice(0, 3)} ${rest.slice(3, 6)} ${rest.slice(6)}`
   }
 
@@ -134,7 +139,7 @@ export function formatCompactNumber(value: number | null | undefined): string {
   const formatter = new Intl.NumberFormat('en-US', {
     notation: 'compact',
     compactDisplay: 'short',
-    maximumFractionDigits: 1,
+    maximumFractionDigits: 1
   })
 
   return formatter.format(value)

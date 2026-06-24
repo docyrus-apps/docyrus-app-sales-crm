@@ -1,12 +1,22 @@
-'use client';
+'use client'
 
 // @ts-nocheck
 /* eslint-disable */
 import {
-  useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ClipboardEvent, type HTMLAttributes, type KeyboardEvent, type ReactNode, type Ref
-} from 'react';
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ClipboardEvent,
+  type HTMLAttributes,
+  type KeyboardEvent,
+  type ReactNode,
+  type Ref,
+} from 'react'
 
-import { cva, type VariantProps } from 'class-variance-authority';
+import { cva, type VariantProps } from 'class-variance-authority'
 
 import {
   Bold,
@@ -23,31 +33,31 @@ import {
   Send,
   Strikethrough,
   Underline,
-  X
-} from 'lucide-react';
+  X,
+} from 'lucide-react'
 
-import { DocyrusIcon } from '@/components/docyrus/docyrus-icon';
-import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
+import { cn } from '@/lib/utils'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
-import { Separator } from '@/components/ui/separator';
-import { Toggle } from '@/components/ui/toggle';
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Separator } from '@/components/ui/separator'
+import { Toggle } from '@/components/ui/toggle'
 
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger
-} from '@/components/ui/tooltip';
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
-import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation';
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 const emailComposerVariants = cva(
   'flex flex-col overflow-hidden rounded-lg border bg-background',
   {
@@ -55,129 +65,134 @@ const emailComposerVariants = cva(
       variant: {
         default: 'border-input shadow-sm',
         outline: 'border-border',
-        minimal: 'border-transparent shadow-none'
+        minimal: 'border-transparent shadow-none',
       },
       size: {
         sm: 'text-xs',
         default: 'text-sm',
-        lg: 'text-base'
-      }
+        lg: 'text-base',
+      },
     },
     defaultVariants: {
       variant: 'default',
-      size: 'default'
-    }
-  }
-);
+      size: 'default',
+    },
+  },
+)
 
-export type EmailComposerVariant = 'default' | 'outline' | 'minimal';
-export type EmailComposerSize = 'sm' | 'default' | 'lg';
+export type EmailComposerVariant = 'default' | 'outline' | 'minimal'
+export type EmailComposerSize = 'sm' | 'default' | 'lg'
 
 export interface EmailAttachment {
-  name: string;
-  size: number;
+  name: string
+  size: number
 }
 
 export interface EmailComposerAccount {
   /** Stable account id (used by `selectedAccountId`). */
-  id: string;
+  id: string
   /** Account display name (e.g. "Sales Outbound" or provider name for user mailboxes). */
-  name: string | null;
+  name: string | null
   /** Sender address shown in the From row. */
-  senderEmail: string | null;
+  senderEmail: string | null
   /** Sender display name (falls back to `name` when omitted). */
-  senderName?: string | null;
+  senderName?: string | null
   /** Shared tenant account vs. the caller's own connected mailbox. */
-  kind?: 'tenant' | 'user';
+  kind?: 'tenant' | 'user'
   /**
    * Sending provider (e.g. `gmail`, `microsoft-graph`, `aws`, `smtp`). Drives the
    * brand icon shown in the From list — Google / Microsoft / AWS get their brand
    * mark, every other provider falls back to a generic mail icon.
    */
-  provider?: string | null;
+  provider?: string | null
   /** When `false`, the account is hidden from the From list. */
-  isUserAccessible?: boolean;
+  isUserAccessible?: boolean
 }
 
 export interface EmailComposerProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, 'onChange'>,
-  VariantProps<typeof emailComposerVariants> {
-  ref?: Ref<HTMLDivElement>;
+  extends
+    Omit<HTMLAttributes<HTMLDivElement>, 'onChange'>,
+    VariantProps<typeof emailComposerVariants> {
+  ref?: Ref<HTMLDivElement>
   /** Sender accounts the user can pick between. When omitted, the From row is hidden. */
-  accounts?: EmailComposerAccount[];
+  accounts?: EmailComposerAccount[]
   /** Currently selected account id. */
-  selectedAccountId?: string | null;
+  selectedAccountId?: string | null
   /** Called when the user picks an account from the From dropdown. */
-  onSelectedAccountChange?: (accountId: string) => void;
+  onSelectedAccountChange?: (accountId: string) => void
   /** Recipient email addresses in the "To" field. */
-  to: string[];
+  to: string[]
   /** Called when the "To" recipients change. */
-  onToChange: (to: string[]) => void;
+  onToChange: (to: string[]) => void
   /** Recipient email addresses in the "Cc" field. */
-  cc?: string[];
+  cc?: string[]
   /** Called when the "Cc" recipients change. */
-  onCcChange?: (cc: string[]) => void;
+  onCcChange?: (cc: string[]) => void
   /** Recipient email addresses in the "Bcc" field. */
-  bcc?: string[];
+  bcc?: string[]
   /** Called when the "Bcc" recipients change. */
-  onBccChange?: (bcc: string[]) => void;
+  onBccChange?: (bcc: string[]) => void
   /** Email subject line. */
-  subject: string;
+  subject: string
   /** Called when the subject line changes. */
-  onSubjectChange: (subject: string) => void;
+  onSubjectChange: (subject: string) => void
   /** Email body text. */
-  body: string;
+  body: string
   /** Called when the body text changes. */
-  onBodyChange: (body: string) => void;
+  onBodyChange: (body: string) => void
   /** Called when the user clicks send. */
-  onSend?: () => void;
+  onSend?: () => void
   /** Called when the user clicks attach. */
-  onAttach?: () => void;
+  onAttach?: () => void
   /** Called when the user clicks discard. */
-  onDiscard?: () => void;
+  onDiscard?: () => void
   /** Whether the email is currently being sent. */
-  sending?: boolean;
+  sending?: boolean
   /** Disables all interactions. */
-  disabled?: boolean;
+  disabled?: boolean
   /** List of attached files to display. */
-  attachments?: EmailAttachment[];
+  attachments?: EmailAttachment[]
   /** Called when an attachment is removed. */
-  onRemoveAttachment?: (index: number) => void;
+  onRemoveAttachment?: (index: number) => void
   /** Whether to show the formatting toolbar. */
-  showToolbar?: boolean;
+  showToolbar?: boolean
   /** HTML content of the email signature. */
-  signature?: string;
+  signature?: string
   /** Called when the signature content changes. When provided, the signature area becomes editable. */
-  onSignatureChange?: (signature: string) => void;
+  onSignatureChange?: (signature: string) => void
   /** Whether the signature is visible. Defaults to true when signature is provided. */
-  signatureVisible?: boolean;
+  signatureVisible?: boolean
   /** Called when the user toggles signature visibility. */
-  onSignatureVisibleChange?: (visible: boolean) => void;
+  onSignatureVisibleChange?: (visible: boolean) => void
 }
 
 function isValidEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
 }
 
 function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
 
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 function getAccountInitials(account: EmailComposerAccount): string {
-  const source = account.senderName?.trim() || account.name?.trim() || account.senderEmail?.trim() || '';
+  const source =
+    account.senderName?.trim() ||
+    account.name?.trim() ||
+    account.senderEmail?.trim() ||
+    ''
 
-  if (!source) return '?';
+  if (!source) return '?'
 
-  const parts = source.split(/\s+/).filter(Boolean);
-  const first = parts[0] ?? source;
-  const last = parts.length > 1 ? parts[parts.length - 1] ?? '' : '';
+  const parts = source.split(/\s+/).filter(Boolean)
+  const first = parts[0] ?? source
+  const last = parts.length > 1 ? (parts[parts.length - 1] ?? '') : ''
 
-  if (!last) return first.slice(0, 2).toUpperCase();
+  if (!last) return first.slice(0, 2).toUpperCase()
 
-  return (first.charAt(0) + last.charAt(0)).toUpperCase();
+  return (first.charAt(0) + last.charAt(0)).toUpperCase()
 }
 
 /** Maps known sending providers to their Font Awesome brand icon. */
@@ -188,27 +203,43 @@ const PROVIDER_BRAND_ICONS: Record<string, string> = {
   microsoft: 'fab microsoft',
   outlook: 'fab microsoft',
   aws: 'fab aws',
-  ses: 'fab aws'
-};
+  ses: 'fab aws',
+}
 
-function AccountProviderIcon({ provider, className }: { provider?: string | null; className?: string }) {
-  const brand = provider ? PROVIDER_BRAND_ICONS[provider.toLowerCase().trim()] : undefined;
+function AccountProviderIcon({
+  provider,
+  className,
+}: {
+  provider?: string | null
+  className?: string
+}) {
+  const brand = provider
+    ? PROVIDER_BRAND_ICONS[provider.toLowerCase().trim()]
+    : undefined
 
   if (brand) {
-    return <DocyrusIcon icon={brand} size="xs" className={cn('shrink-0', className)} />;
+    return (
+      <DocyrusIcon
+        icon={brand}
+        size="xs"
+        className={cn('shrink-0', className)}
+      />
+    )
   }
 
-  return <Mail className={cn('size-3 shrink-0 text-muted-foreground', className)} />;
+  return (
+    <Mail className={cn('size-3 shrink-0 text-muted-foreground', className)} />
+  )
 }
 
 interface FromFieldProps {
-  label: string;
-  accounts: EmailComposerAccount[];
-  selectedAccountId: string | null | undefined;
-  onSelectedAccountChange: ((accountId: string) => void) | undefined;
-  placeholder: string;
-  disabled: boolean;
-  size: EmailComposerSize | null | undefined;
+  label: string
+  accounts: EmailComposerAccount[]
+  selectedAccountId: string | null | undefined
+  onSelectedAccountChange: ((accountId: string) => void) | undefined
+  placeholder: string
+  disabled: boolean
+  size: EmailComposerSize | null | undefined
 }
 
 function FromField({
@@ -218,13 +249,15 @@ function FromField({
   onSelectedAccountChange,
   placeholder,
   disabled,
-  size
+  size,
 }: FromFieldProps) {
-  const selectedAccount = accounts.find(account => account.id === selectedAccountId) ?? null;
-  const inputSizeClass
-    = size === 'sm' ? 'text-xs' : size === 'lg' ? 'text-base' : 'text-sm';
-  const hasMultipleAccounts = accounts.length > 1;
-  const isInteractive = !disabled && hasMultipleAccounts && Boolean(onSelectedAccountChange);
+  const selectedAccount =
+    accounts.find((account) => account.id === selectedAccountId) ?? null
+  const inputSizeClass =
+    size === 'sm' ? 'text-xs' : size === 'lg' ? 'text-base' : 'text-sm'
+  const hasMultipleAccounts = accounts.length > 1
+  const isInteractive =
+    !disabled && hasMultipleAccounts && Boolean(onSelectedAccountChange)
 
   const trigger = (
     <button
@@ -232,9 +265,11 @@ function FromField({
       disabled={!isInteractive}
       className={cn(
         'group flex min-w-0 flex-1 items-center gap-2 rounded-md px-1.5 py-0.5 outline-none transition-colors',
-        isInteractive && 'hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring',
-        !isInteractive && 'cursor-default'
-      )}>
+        isInteractive &&
+          'hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring',
+        !isInteractive && 'cursor-default',
+      )}
+    >
       {selectedAccount ? (
         <>
           <Avatar size="sm" className="size-5">
@@ -244,26 +279,37 @@ function FromField({
           </Avatar>
           <AccountProviderIcon provider={selectedAccount.provider} />
           <span className={cn('min-w-0 truncate font-medium', inputSizeClass)}>
-            {selectedAccount.senderName || selectedAccount.name || selectedAccount.senderEmail || '—'}
+            {selectedAccount.senderName ||
+              selectedAccount.name ||
+              selectedAccount.senderEmail ||
+              '—'}
           </span>
           {selectedAccount.senderEmail && (
-            <span className={cn('min-w-0 truncate text-muted-foreground', inputSizeClass)}>
+            <span
+              className={cn(
+                'min-w-0 truncate text-muted-foreground',
+                inputSizeClass,
+              )}
+            >
               {`<${selectedAccount.senderEmail}>`}
             </span>
           )}
         </>
       ) : (
-        <span className={cn('text-muted-foreground', inputSizeClass)}>{placeholder}</span>
+        <span className={cn('text-muted-foreground', inputSizeClass)}>
+          {placeholder}
+        </span>
       )}
       {hasMultipleAccounts && (
         <ChevronDown
           className={cn(
             'ml-auto size-3.5 shrink-0 text-muted-foreground transition-transform',
-            isInteractive && 'group-data-[state=open]:rotate-180'
-          )} />
+            isInteractive && 'group-data-[state=open]:rotate-180',
+          )}
+        />
       )}
     </button>
-  );
+  )
 
   return (
     <div className="flex min-h-9 items-start gap-2 px-3 py-1.5">
@@ -275,11 +321,12 @@ function FromField({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="min-w-[280px]">
-              {accounts.map(account => (
+              {accounts.map((account) => (
                 <DropdownMenuItem
                   key={account.id}
                   onSelect={() => onSelectedAccountChange?.(account.id)}
-                  className="flex items-start gap-2 py-2">
+                  className="flex items-start gap-2 py-2"
+                >
                   <Avatar size="sm" className="mt-0.5 size-6">
                     <AvatarFallback className="text-[10px]">
                       {getAccountInitials(account)}
@@ -289,7 +336,10 @@ function FromField({
                     <div className="flex items-center gap-1.5">
                       <AccountProviderIcon provider={account.provider} />
                       <span className="truncate text-sm font-medium">
-                        {account.senderName || account.name || account.senderEmail || '—'}
+                        {account.senderName ||
+                          account.name ||
+                          account.senderEmail ||
+                          '—'}
                       </span>
                     </div>
                     {account.senderEmail && (
@@ -307,17 +357,17 @@ function FromField({
         )}
       </div>
     </div>
-  );
+  )
 }
 
 interface RecipientFieldProps {
-  label: string;
-  recipients: string[];
-  onRecipientsChange: (recipients: string[]) => void;
-  placeholder: string;
-  disabled: boolean;
-  size: EmailComposerSize | null | undefined;
-  suffix?: ReactNode;
+  label: string
+  recipients: string[]
+  onRecipientsChange: (recipients: string[]) => void
+  placeholder: string
+  disabled: boolean
+  size: EmailComposerSize | null | undefined
+  suffix?: ReactNode
 }
 
 function RecipientField({
@@ -327,81 +377,82 @@ function RecipientField({
   placeholder,
   disabled,
   size,
-  suffix
+  suffix,
 }: RecipientFieldProps) {
-  const [inputValue, setInputValue] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [inputValue, setInputValue] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const addRecipient = useCallback(
     (value: string) => {
-      const trimmed = value.trim();
+      const trimmed = value.trim()
 
       if (trimmed && !recipients.includes(trimmed)) {
-        onRecipientsChange([...recipients, trimmed]);
+        onRecipientsChange([...recipients, trimmed])
       }
     },
-    [recipients, onRecipientsChange]
-  );
+    [recipients, onRecipientsChange],
+  )
 
   const removeRecipient = useCallback(
     (index: number) => {
-      onRecipientsChange(recipients.filter((_, i) => i !== index));
+      onRecipientsChange(recipients.filter((_, i) => i !== index))
     },
-    [recipients, onRecipientsChange]
-  );
+    [recipients, onRecipientsChange],
+  )
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
       if (
-        (e.key === 'Enter' || e.key === 'Tab' || e.key === ',')
-        && inputValue.trim()
+        (e.key === 'Enter' || e.key === 'Tab' || e.key === ',') &&
+        inputValue.trim()
       ) {
-        e.preventDefault();
-        addRecipient(inputValue);
-        setInputValue('');
+        e.preventDefault()
+        addRecipient(inputValue)
+        setInputValue('')
       }
 
       if (e.key === 'Backspace' && !inputValue && recipients.length > 0) {
-        removeRecipient(recipients.length - 1);
+        removeRecipient(recipients.length - 1)
       }
     },
-    [
-      inputValue,
-      recipients,
-      addRecipient,
-      removeRecipient
-    ]
-  );
+    [inputValue, recipients, addRecipient, removeRecipient],
+  )
 
   const handleBlur = useCallback(() => {
     if (inputValue.trim()) {
-      addRecipient(inputValue);
-      setInputValue('');
+      addRecipient(inputValue)
+      setInputValue('')
     }
-  }, [inputValue, addRecipient]);
+  }, [inputValue, addRecipient])
 
   const handlePaste = useCallback(
     (e: ClipboardEvent<HTMLInputElement>) => {
-      const pasted = e.clipboardData.getData('text');
-      const emails = pasted.split(/[,;\s]+/).filter(Boolean);
+      const pasted = e.clipboardData.getData('text')
+      const emails = pasted.split(/[,;\s]+/).filter(Boolean)
 
       if (emails.length > 1) {
-        e.preventDefault();
-        const unique = emails.filter(email => !recipients.includes(email.trim()));
+        e.preventDefault()
+        const unique = emails.filter(
+          (email) => !recipients.includes(email.trim()),
+        )
 
-        onRecipientsChange([...recipients, ...unique.map(addr => addr.trim())]);
+        onRecipientsChange([
+          ...recipients,
+          ...unique.map((addr) => addr.trim()),
+        ])
       }
     },
-    [recipients, onRecipientsChange]
-  );
+    [recipients, onRecipientsChange],
+  )
 
-  const inputSizeClass
-    = size === 'sm' ? 'text-xs' : size === 'lg' ? 'text-base' : 'text-sm';
+  const inputSizeClass =
+    size === 'sm' ? 'text-xs' : size === 'lg' ? 'text-base' : 'text-sm'
 
   return (
     <div
       className="group flex min-h-9 items-start gap-2 px-3 py-1.5"
-      onClick={() => inputRef.current?.focus()}>
+      onClick={() => inputRef.current?.focus()}
+    >
       <span className="shrink-0 pt-1 text-xs font-medium text-muted-foreground">
         {label}
       </span>
@@ -410,16 +461,18 @@ function RecipientField({
           <Badge
             key={recipient}
             variant={isValidEmail(recipient) ? 'secondary' : 'destructive'}
-            className="gap-1 pl-2 pr-1">
+            className="gap-1 pl-2 pr-1"
+          >
             <span className="max-w-45 truncate">{recipient}</span>
             {!disabled && (
               <button
                 type="button"
                 className="shrink-0 rounded-sm opacity-70 transition-opacity hover:opacity-100"
                 onClick={(e) => {
-                  e.stopPropagation();
-                  removeRecipient(index);
-                }}>
+                  e.stopPropagation()
+                  removeRecipient(index)
+                }}
+              >
                 <X className="size-3" />
               </button>
             )}
@@ -429,7 +482,7 @@ function RecipientField({
           ref={inputRef}
           type="text"
           value={inputValue}
-          onChange={e => setInputValue(e.target.value)}
+          onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={handleBlur}
           onPaste={handlePaste}
@@ -437,12 +490,13 @@ function RecipientField({
           disabled={disabled}
           className={cn(
             'min-w-30 flex-1 bg-transparent py-0.5 outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed',
-            inputSizeClass
-          )} />
+            inputSizeClass,
+          )}
+        />
       </div>
       {suffix}
     </div>
-  );
+  )
 }
 
 function EmailComposer({
@@ -473,216 +527,248 @@ function EmailComposer({
   signature,
   onSignatureChange,
   signatureVisible,
-  onSignatureVisibleChange, ref, ...props
+  onSignatureVisibleChange,
+  ref,
+  ...props
 }: EmailComposerProps) {
-  const { t } = useUiTranslation();
-  const [showCc, setShowCc] = useState(() => (cc?.length ?? 0) > 0);
-  const [showBcc, setShowBcc] = useState(() => (bcc?.length ?? 0) > 0);
-  const bodyRef = useRef<HTMLDivElement>(null);
-  const signatureRef = useRef<HTMLDivElement>(null);
-  const lastHtmlRef = useRef(body);
-  const lastSignatureHtmlRef = useRef(signature ?? '');
-  const lastActiveEditorRef = useRef<HTMLDivElement | null>(null);
-  const signatureImageInputRef = useRef<HTMLInputElement>(null);
-  const savedSignatureRangeRef = useRef<Range | null>(null);
+  const { t } = useUiTranslation()
+  const [showCc, setShowCc] = useState(() => (cc?.length ?? 0) > 0)
+  const [showBcc, setShowBcc] = useState(() => (bcc?.length ?? 0) > 0)
+  const bodyRef = useRef<HTMLDivElement>(null)
+  const signatureRef = useRef<HTMLDivElement>(null)
+  const lastHtmlRef = useRef(body)
+  const lastSignatureHtmlRef = useRef(signature ?? '')
+  const lastActiveEditorRef = useRef<HTMLDivElement | null>(null)
+  const signatureImageInputRef = useRef<HTMLInputElement>(null)
+  const savedSignatureRangeRef = useRef<Range | null>(null)
 
-  const isDisabled = disabled || sending;
-  const isSignatureVisible = signatureVisible !== false;
+  const isDisabled = disabled || sending
+  const isSignatureVisible = signatureVisible !== false
 
   const visibleAccounts = useMemo(
-    () => accounts?.filter(account => account.isUserAccessible !== false) ?? [],
-    [accounts]
-  );
+    () =>
+      accounts?.filter((account) => account.isUserAccessible !== false) ?? [],
+    [accounts],
+  )
 
-  const [activeFormats, setActiveFormats] = useState<Set<string>>(() => new Set());
+  const [activeFormats, setActiveFormats] = useState<Set<string>>(
+    () => new Set(),
+  )
 
   const updateActiveFormats = useCallback(() => {
-    const formats = new Set<string>();
+    const formats = new Set<string>()
 
-    if (document.queryCommandState('bold')) formats.add('bold');
-    if (document.queryCommandState('italic')) formats.add('italic');
-    if (document.queryCommandState('underline')) formats.add('underline');
-    if (document.queryCommandState('strikeThrough')) formats.add('strikeThrough');
-    if (document.queryCommandState('insertUnorderedList')) formats.add('insertUnorderedList');
-    if (document.queryCommandState('insertOrderedList')) formats.add('insertOrderedList');
+    if (document.queryCommandState('bold')) formats.add('bold')
+    if (document.queryCommandState('italic')) formats.add('italic')
+    if (document.queryCommandState('underline')) formats.add('underline')
+    if (document.queryCommandState('strikeThrough'))
+      formats.add('strikeThrough')
+    if (document.queryCommandState('insertUnorderedList'))
+      formats.add('insertUnorderedList')
+    if (document.queryCommandState('insertOrderedList'))
+      formats.add('insertOrderedList')
 
-    setActiveFormats(formats);
-  }, []);
+    setActiveFormats(formats)
+  }, [])
 
-  const execFormat = useCallback((command: string, value?: string) => {
-    const target = lastActiveEditorRef.current ?? bodyRef.current;
+  const execFormat = useCallback(
+    (command: string, value?: string) => {
+      const target = lastActiveEditorRef.current ?? bodyRef.current
 
-    target?.focus();
-    document.execCommand(command, false, value);
-    updateActiveFormats();
-  }, [updateActiveFormats]);
+      target?.focus()
+      document.execCommand(command, false, value)
+      updateActiveFormats()
+    },
+    [updateActiveFormats],
+  )
 
-  const savedRangeRef = useRef<Range | null>(null);
-  const [linkInputVisible, setLinkInputVisible] = useState(false);
-  const [linkUrl, setLinkUrl] = useState('');
+  const savedRangeRef = useRef<Range | null>(null)
+  const [linkInputVisible, setLinkInputVisible] = useState(false)
+  const [linkUrl, setLinkUrl] = useState('')
 
   const handleInsertLink = useCallback(() => {
-    const selection = window.getSelection();
+    const selection = window.getSelection()
 
     if (selection && selection.rangeCount > 0) {
-      savedRangeRef.current = selection.getRangeAt(0).cloneRange();
+      savedRangeRef.current = selection.getRangeAt(0).cloneRange()
     }
 
-    setLinkUrl('https://');
-    setLinkInputVisible(true);
-  }, []);
+    setLinkUrl('https://')
+    setLinkInputVisible(true)
+  }, [])
 
   const confirmLink = useCallback(() => {
     if (!linkUrl.trim()) {
-      setLinkInputVisible(false);
+      setLinkInputVisible(false)
 
-      return;
+      return
     }
 
-    const target = lastActiveEditorRef.current ?? bodyRef.current;
+    const target = lastActiveEditorRef.current ?? bodyRef.current
 
-    target?.focus();
+    target?.focus()
 
     if (savedRangeRef.current) {
-      const selection = window.getSelection();
+      const selection = window.getSelection()
 
-      selection?.removeAllRanges();
-      selection?.addRange(savedRangeRef.current);
+      selection?.removeAllRanges()
+      selection?.addRange(savedRangeRef.current)
     }
 
-    document.execCommand('createLink', false, linkUrl);
-    setLinkInputVisible(false);
-    setLinkUrl('');
-    savedRangeRef.current = null;
-  }, [linkUrl]);
+    document.execCommand('createLink', false, linkUrl)
+    setLinkInputVisible(false)
+    setLinkUrl('')
+    savedRangeRef.current = null
+  }, [linkUrl])
 
   const handleBodyInput = useCallback(() => {
-    const currentHtml = bodyRef.current?.innerHTML ?? '';
+    const currentHtml = bodyRef.current?.innerHTML ?? ''
 
     if (currentHtml !== lastHtmlRef.current) {
-      lastHtmlRef.current = currentHtml;
-      onBodyChange(currentHtml);
+      lastHtmlRef.current = currentHtml
+      onBodyChange(currentHtml)
     }
 
-    updateActiveFormats();
-  }, [onBodyChange, updateActiveFormats]);
+    updateActiveFormats()
+  }, [onBodyChange, updateActiveFormats])
 
   useEffect(() => {
-    if (!bodyRef.current || body === lastHtmlRef.current) return;
+    if (!bodyRef.current || body === lastHtmlRef.current) return
 
-    lastHtmlRef.current = body;
-    bodyRef.current.textContent = '';
+    lastHtmlRef.current = body
+    bodyRef.current.textContent = ''
 
-    const doc = new DOMParser().parseFromString(body, 'text/html');
-    const fragment = document.createDocumentFragment();
+    const doc = new DOMParser().parseFromString(body, 'text/html')
+    const fragment = document.createDocumentFragment()
 
     while (doc.body.firstChild) {
-      fragment.appendChild(doc.body.firstChild);
+      fragment.appendChild(doc.body.firstChild)
     }
 
-    bodyRef.current.appendChild(fragment);
-  }, [body]);
+    bodyRef.current.appendChild(fragment)
+  }, [body])
 
   useEffect(() => {
-    if (!signatureRef.current || (signature ?? '') === lastSignatureHtmlRef.current) return;
+    if (
+      !signatureRef.current ||
+      (signature ?? '') === lastSignatureHtmlRef.current
+    )
+      return
 
-    lastSignatureHtmlRef.current = signature ?? '';
-    signatureRef.current.textContent = '';
+    lastSignatureHtmlRef.current = signature ?? ''
+    signatureRef.current.textContent = ''
 
     if (signature) {
-      const doc = new DOMParser().parseFromString(signature, 'text/html');
-      const fragment = document.createDocumentFragment();
+      const doc = new DOMParser().parseFromString(signature, 'text/html')
+      const fragment = document.createDocumentFragment()
 
       while (doc.body.firstChild) {
-        fragment.appendChild(doc.body.firstChild);
+        fragment.appendChild(doc.body.firstChild)
       }
 
-      signatureRef.current.appendChild(fragment);
+      signatureRef.current.appendChild(fragment)
     }
-  }, [signature]);
+  }, [signature])
 
   const handleSignatureInput = useCallback(() => {
-    if (!onSignatureChange) return;
+    if (!onSignatureChange) return
 
-    const currentHtml = signatureRef.current?.innerHTML ?? '';
+    const currentHtml = signatureRef.current?.innerHTML ?? ''
 
     if (currentHtml !== lastSignatureHtmlRef.current) {
-      lastSignatureHtmlRef.current = currentHtml;
-      onSignatureChange(currentHtml);
+      lastSignatureHtmlRef.current = currentHtml
+      onSignatureChange(currentHtml)
     }
-  }, [onSignatureChange]);
+  }, [onSignatureChange])
 
   const saveSignatureSelection = useCallback(() => {
-    const sel = window.getSelection();
+    const sel = window.getSelection()
 
-    if (sel && sel.rangeCount > 0 && signatureRef.current?.contains(sel.getRangeAt(0).startContainer)) {
-      savedSignatureRangeRef.current = sel.getRangeAt(0).cloneRange();
+    if (
+      sel &&
+      sel.rangeCount > 0 &&
+      signatureRef.current?.contains(sel.getRangeAt(0).startContainer)
+    ) {
+      savedSignatureRangeRef.current = sel.getRangeAt(0).cloneRange()
     }
-  }, []);
+  }, [])
 
-  const handleSignatureImage = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleSignatureImage = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
 
-    if (!file || !signatureRef.current) return;
+      if (!file || !signatureRef.current) return
 
-    const reader = new FileReader();
+      const reader = new FileReader()
 
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      const img = document.createElement('img');
+      reader.onload = () => {
+        const dataUrl = reader.result as string
+        const img = document.createElement('img')
 
-      img.src = dataUrl;
-      img.alt = file.name;
+        img.src = dataUrl
+        img.alt = file.name
 
-      signatureRef.current?.focus();
+        signatureRef.current?.focus()
 
-      if (savedSignatureRangeRef.current) {
-        const selection = window.getSelection();
+        if (savedSignatureRangeRef.current) {
+          const selection = window.getSelection()
 
-        selection?.removeAllRanges();
-        selection?.addRange(savedSignatureRangeRef.current);
+          selection?.removeAllRanges()
+          selection?.addRange(savedSignatureRangeRef.current)
 
-        const range = savedSignatureRangeRef.current;
+          const range = savedSignatureRangeRef.current
 
-        range.deleteContents();
-        range.insertNode(img);
-        range.collapse(false);
-        savedSignatureRangeRef.current = null;
-      } else {
-        signatureRef.current?.appendChild(img);
+          range.deleteContents()
+          range.insertNode(img)
+          range.collapse(false)
+          savedSignatureRangeRef.current = null
+        } else {
+          signatureRef.current?.appendChild(img)
+        }
+
+        handleSignatureInput()
       }
 
-      handleSignatureInput();
-    };
-
-    reader.readAsDataURL(file);
-    e.target.value = '';
-  }, [handleSignatureInput]);
+      reader.readAsDataURL(file)
+      e.target.value = ''
+    },
+    [handleSignatureInput],
+  )
 
   const handleSend = useCallback(() => {
     if (!isDisabled && onSend) {
-      onSend();
+      onSend()
     }
-  }, [isDisabled, onSend]);
+  }, [isDisabled, onSend])
 
   const canSend = useMemo(
     () => to.length > 0 && subject.trim().length > 0,
-    [to, subject]
-  );
+    [to, subject],
+  )
 
-  const inputSizeClass
-    = size === 'sm' ? 'text-xs' : size === 'lg' ? 'text-base' : 'text-sm';
+  const inputSizeClass =
+    size === 'sm' ? 'text-xs' : size === 'lg' ? 'text-base' : 'text-sm'
 
-  const bodySizeClass
-    = size === 'sm' ? 'min-h-25 text-xs' : size === 'lg' ? 'min-h-50 text-base' : 'min-h-[150px] text-sm';
+  const bodySizeClass =
+    size === 'sm'
+      ? 'min-h-25 text-xs'
+      : size === 'lg'
+        ? 'min-h-50 text-base'
+        : 'min-h-[150px] text-sm'
 
-  const buttonSize = size === 'sm' ? 'xs' as const : size === 'lg' ? 'default' as const : 'sm' as const;
+  const buttonSize =
+    size === 'sm'
+      ? ('xs' as const)
+      : size === 'lg'
+        ? ('default' as const)
+        : ('sm' as const)
 
   return (
     <div
       ref={ref}
       className={cn(emailComposerVariants({ variant, size }), className)}
-      {...props}>
+      {...props}
+    >
       {/* From field */}
       {visibleAccounts.length > 0 && (
         <>
@@ -691,9 +777,13 @@ function EmailComposer({
             accounts={visibleAccounts}
             selectedAccountId={selectedAccountId}
             onSelectedAccountChange={onSelectedAccountChange}
-            placeholder={t('ui.emailComposer.selectAccount', 'Select an account...')}
+            placeholder={t(
+              'ui.emailComposer.selectAccount',
+              'Select an account...',
+            )}
             disabled={isDisabled}
-            size={size} />
+            size={size}
+          />
           <Separator />
         </>
       )}
@@ -703,18 +793,22 @@ function EmailComposer({
         label={t('ui.emailComposer.to', 'To')}
         recipients={to}
         onRecipientsChange={onToChange}
-        placeholder={t('ui.emailComposer.recipientPlaceholder', 'Add recipients...')}
+        placeholder={t(
+          'ui.emailComposer.recipientPlaceholder',
+          'Add recipients...',
+        )}
         disabled={isDisabled}
         size={size}
         suffix={
-          (!showCc || !showBcc) ? (
+          !showCc || !showBcc ? (
             <div className="flex shrink-0 items-center gap-1 pt-0.5">
               {!showCc && onCcChange && (
                 <button
                   type="button"
                   className="text-xs font-medium text-muted-foreground hover:text-foreground"
                   onClick={() => setShowCc(true)}
-                  disabled={isDisabled}>
+                  disabled={isDisabled}
+                >
                   {t('ui.emailComposer.cc', 'Cc')}
                 </button>
               )}
@@ -723,13 +817,15 @@ function EmailComposer({
                   type="button"
                   className="text-xs font-medium text-muted-foreground hover:text-foreground"
                   onClick={() => setShowBcc(true)}
-                  disabled={isDisabled}>
+                  disabled={isDisabled}
+                >
                   {t('ui.emailComposer.bcc', 'Bcc')}
                 </button>
               )}
             </div>
           ) : undefined
-        } />
+        }
+      />
 
       {/* Cc field */}
       {showCc && cc && onCcChange && (
@@ -737,9 +833,13 @@ function EmailComposer({
           label={t('ui.emailComposer.cc', 'Cc')}
           recipients={cc}
           onRecipientsChange={onCcChange}
-          placeholder={t('ui.emailComposer.recipientPlaceholder', 'Add recipients...')}
+          placeholder={t(
+            'ui.emailComposer.recipientPlaceholder',
+            'Add recipients...',
+          )}
           disabled={isDisabled}
-          size={size} />
+          size={size}
+        />
       )}
 
       {/* Bcc field */}
@@ -748,9 +848,13 @@ function EmailComposer({
           label={t('ui.emailComposer.bcc', 'Bcc')}
           recipients={bcc}
           onRecipientsChange={onBccChange}
-          placeholder={t('ui.emailComposer.recipientPlaceholder', 'Add recipients...')}
+          placeholder={t(
+            'ui.emailComposer.recipientPlaceholder',
+            'Add recipients...',
+          )}
           disabled={isDisabled}
-          size={size} />
+          size={size}
+        />
       )}
 
       <Separator />
@@ -760,13 +864,17 @@ function EmailComposer({
         <input
           type="text"
           value={subject}
-          onChange={e => onSubjectChange(e.target.value)}
-          placeholder={t('ui.emailComposer.subjectPlaceholder', 'Enter subject...')}
+          onChange={(e) => onSubjectChange(e.target.value)}
+          placeholder={t(
+            'ui.emailComposer.subjectPlaceholder',
+            'Enter subject...',
+          )}
           disabled={isDisabled}
           className={cn(
             'w-full bg-transparent font-medium outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed',
-            inputSizeClass
-          )} />
+            inputSizeClass,
+          )}
+        />
       </div>
 
       <Separator />
@@ -783,11 +891,14 @@ function EmailComposer({
                     aria-label={t('ui.emailComposer.bold', 'Bold')}
                     disabled={isDisabled}
                     pressed={activeFormats.has('bold')}
-                    onPressedChange={() => execFormat('bold')}>
+                    onPressedChange={() => execFormat('bold')}
+                  >
                     <Bold className="size-4" />
                   </Toggle>
                 </TooltipTrigger>
-                <TooltipContent>{t('ui.emailComposer.bold', 'Bold')}</TooltipContent>
+                <TooltipContent>
+                  {t('ui.emailComposer.bold', 'Bold')}
+                </TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -796,11 +907,14 @@ function EmailComposer({
                     aria-label={t('ui.emailComposer.italic', 'Italic')}
                     disabled={isDisabled}
                     pressed={activeFormats.has('italic')}
-                    onPressedChange={() => execFormat('italic')}>
+                    onPressedChange={() => execFormat('italic')}
+                  >
                     <Italic className="size-4" />
                   </Toggle>
                 </TooltipTrigger>
-                <TooltipContent>{t('ui.emailComposer.italic', 'Italic')}</TooltipContent>
+                <TooltipContent>
+                  {t('ui.emailComposer.italic', 'Italic')}
+                </TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -809,24 +923,33 @@ function EmailComposer({
                     aria-label={t('ui.emailComposer.underline', 'Underline')}
                     disabled={isDisabled}
                     pressed={activeFormats.has('underline')}
-                    onPressedChange={() => execFormat('underline')}>
+                    onPressedChange={() => execFormat('underline')}
+                  >
                     <Underline className="size-4" />
                   </Toggle>
                 </TooltipTrigger>
-                <TooltipContent>{t('ui.emailComposer.underline', 'Underline')}</TooltipContent>
+                <TooltipContent>
+                  {t('ui.emailComposer.underline', 'Underline')}
+                </TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Toggle
                     size="sm"
-                    aria-label={t('ui.emailComposer.strikethrough', 'Strikethrough')}
+                    aria-label={t(
+                      'ui.emailComposer.strikethrough',
+                      'Strikethrough',
+                    )}
                     disabled={isDisabled}
                     pressed={activeFormats.has('strikeThrough')}
-                    onPressedChange={() => execFormat('strikeThrough')}>
+                    onPressedChange={() => execFormat('strikeThrough')}
+                  >
                     <Strikethrough className="size-4" />
                   </Toggle>
                 </TooltipTrigger>
-                <TooltipContent>{t('ui.emailComposer.strikethrough', 'Strikethrough')}</TooltipContent>
+                <TooltipContent>
+                  {t('ui.emailComposer.strikethrough', 'Strikethrough')}
+                </TooltipContent>
               </Tooltip>
 
               <Separator orientation="vertical" className="mx-1 h-5" />
@@ -835,27 +958,39 @@ function EmailComposer({
                 <TooltipTrigger asChild>
                   <Toggle
                     size="sm"
-                    aria-label={t('ui.emailComposer.bulletedList', 'Bulleted list')}
+                    aria-label={t(
+                      'ui.emailComposer.bulletedList',
+                      'Bulleted list',
+                    )}
                     disabled={isDisabled}
                     pressed={activeFormats.has('insertUnorderedList')}
-                    onPressedChange={() => execFormat('insertUnorderedList')}>
+                    onPressedChange={() => execFormat('insertUnorderedList')}
+                  >
                     <List className="size-4" />
                   </Toggle>
                 </TooltipTrigger>
-                <TooltipContent>{t('ui.emailComposer.bulletedList', 'Bulleted list')}</TooltipContent>
+                <TooltipContent>
+                  {t('ui.emailComposer.bulletedList', 'Bulleted list')}
+                </TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Toggle
                     size="sm"
-                    aria-label={t('ui.emailComposer.orderedList', 'Numbered list')}
+                    aria-label={t(
+                      'ui.emailComposer.orderedList',
+                      'Numbered list',
+                    )}
                     disabled={isDisabled}
                     pressed={activeFormats.has('insertOrderedList')}
-                    onPressedChange={() => execFormat('insertOrderedList')}>
+                    onPressedChange={() => execFormat('insertOrderedList')}
+                  >
                     <ListOrdered className="size-4" />
                   </Toggle>
                 </TooltipTrigger>
-                <TooltipContent>{t('ui.emailComposer.orderedList', 'Numbered list')}</TooltipContent>
+                <TooltipContent>
+                  {t('ui.emailComposer.orderedList', 'Numbered list')}
+                </TooltipContent>
               </Tooltip>
 
               <Separator orientation="vertical" className="mx-1 h-5" />
@@ -867,11 +1002,14 @@ function EmailComposer({
                     aria-label={t('ui.emailComposer.insertLink', 'Insert link')}
                     disabled={isDisabled}
                     pressed={linkInputVisible}
-                    onPressedChange={handleInsertLink}>
+                    onPressedChange={handleInsertLink}
+                  >
                     <Link2 className="size-4" />
                   </Toggle>
                 </TooltipTrigger>
-                <TooltipContent>{t('ui.emailComposer.insertLink', 'Insert link')}</TooltipContent>
+                <TooltipContent>
+                  {t('ui.emailComposer.insertLink', 'Insert link')}
+                </TooltipContent>
               </Tooltip>
             </div>
           </TooltipProvider>
@@ -881,35 +1019,34 @@ function EmailComposer({
               <input
                 type="url"
                 value={linkUrl}
-                onChange={e => setLinkUrl(e.target.value)}
+                onChange={(e) => setLinkUrl(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
-                    e.preventDefault();
-                    confirmLink();
+                    e.preventDefault()
+                    confirmLink()
                   }
                   if (e.key === 'Escape') {
-                    setLinkInputVisible(false);
-                    setLinkUrl('');
+                    setLinkInputVisible(false)
+                    setLinkUrl('')
                   }
                 }}
                 placeholder="https://example.com"
                 className={cn(
                   'min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground',
-                  inputSizeClass
-                )} />
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={confirmLink}>
+                  inputSizeClass,
+                )}
+              />
+              <Button variant="ghost" size="icon-sm" onClick={confirmLink}>
                 <Send className="size-3" />
               </Button>
               <Button
                 variant="ghost"
                 size="icon-sm"
                 onClick={() => {
-                  setLinkInputVisible(false);
-                  setLinkUrl('');
-                }}>
+                  setLinkInputVisible(false)
+                  setLinkUrl('')
+                }}
+              >
                 <X className="size-3" />
               </Button>
             </div>
@@ -926,17 +1063,26 @@ function EmailComposer({
           suppressContentEditableWarning
           role="textbox"
           aria-multiline="true"
-          aria-placeholder={t('ui.emailComposer.bodyPlaceholder', 'Compose your email...')}
+          aria-placeholder={t(
+            'ui.emailComposer.bodyPlaceholder',
+            'Compose your email...',
+          )}
           onInput={handleBodyInput}
-          onFocus={() => { lastActiveEditorRef.current = bodyRef.current; }}
+          onFocus={() => {
+            lastActiveEditorRef.current = bodyRef.current
+          }}
           onKeyUp={updateActiveFormats}
           onMouseUp={updateActiveFormats}
-          data-placeholder={t('ui.emailComposer.bodyPlaceholder', 'Compose your email...')}
+          data-placeholder={t(
+            'ui.emailComposer.bodyPlaceholder',
+            'Compose your email...',
+          )}
           className={cn(
             'w-full bg-transparent outline-none empty:before:text-muted-foreground empty:before:content-[attr(data-placeholder)] [&_a]:text-primary [&_a]:underline',
             isDisabled && 'cursor-not-allowed opacity-50',
-            bodySizeClass
-          )} />
+            bodySizeClass,
+          )}
+        />
       </div>
 
       {/* Signature */}
@@ -948,17 +1094,24 @@ function EmailComposer({
             contentEditable={!isDisabled && !!onSignatureChange}
             suppressContentEditableWarning
             onInput={handleSignatureInput}
-            onFocus={() => { lastActiveEditorRef.current = signatureRef.current; }}
+            onFocus={() => {
+              lastActiveEditorRef.current = signatureRef.current
+            }}
             onBlur={saveSignatureSelection}
             onKeyUp={saveSignatureSelection}
             onMouseUp={saveSignatureSelection}
-            data-placeholder={t('ui.emailComposer.signaturePlaceholder', 'Write your signature...')}
+            data-placeholder={t(
+              'ui.emailComposer.signaturePlaceholder',
+              'Write your signature...',
+            )}
             className={cn(
               'min-h-6 text-muted-foreground [&_a]:text-primary [&_a]:underline [&_img]:my-1 [&_img]:max-h-20 [&_img]:max-w-60',
-              onSignatureChange && 'empty:before:text-muted-foreground/50 empty:before:content-[attr(data-placeholder)]',
+              onSignatureChange &&
+                'empty:before:text-muted-foreground/50 empty:before:content-[attr(data-placeholder)]',
               isDisabled && 'cursor-not-allowed opacity-50',
-              inputSizeClass
-            )} />
+              inputSizeClass,
+            )}
+          />
           {onSignatureChange && !isDisabled && (
             <div className="mt-1.5 flex items-center gap-1">
               <input
@@ -966,7 +1119,8 @@ function EmailComposer({
                 type="file"
                 accept="image/*"
                 onChange={handleSignatureImage}
-                className="hidden" />
+                className="hidden"
+              />
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -975,11 +1129,14 @@ function EmailComposer({
                       size="icon-sm"
                       onMouseDown={saveSignatureSelection}
                       onClick={() => signatureImageInputRef.current?.click()}
-                      className="size-6 text-muted-foreground hover:text-foreground">
+                      className="size-6 text-muted-foreground hover:text-foreground"
+                    >
                       <ImagePlus className="size-3.5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>{t('ui.emailComposer.insertImage', 'Insert image')}</TooltipContent>
+                  <TooltipContent>
+                    {t('ui.emailComposer.insertImage', 'Insert image')}
+                  </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
@@ -996,9 +1153,12 @@ function EmailComposer({
               <Badge
                 key={`${attachment.name}-${attachment.size}`}
                 variant="outline"
-                className="gap-1.5 py-1 pl-2 pr-1">
+                className="gap-1.5 py-1 pl-2 pr-1"
+              >
                 <Paperclip className="size-3 shrink-0" />
-                <span className="max-w-[150px] truncate">{attachment.name}</span>
+                <span className="max-w-[150px] truncate">
+                  {attachment.name}
+                </span>
                 <span className="text-muted-foreground">
                   ({formatFileSize(attachment.size)})
                 </span>
@@ -1006,7 +1166,8 @@ function EmailComposer({
                   <button
                     type="button"
                     className="shrink-0 rounded-sm opacity-70 transition-opacity hover:opacity-100"
-                    onClick={() => onRemoveAttachment(index)}>
+                    onClick={() => onRemoveAttachment(index)}
+                  >
                     <X className="size-3" />
                   </button>
                 )}
@@ -1030,11 +1191,14 @@ function EmailComposer({
                     size="icon-sm"
                     onClick={onAttach}
                     disabled={isDisabled}
-                    aria-label={t('ui.emailComposer.attach', 'Attach file')}>
+                    aria-label={t('ui.emailComposer.attach', 'Attach file')}
+                  >
                     <Paperclip className="size-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{t('ui.emailComposer.attach', 'Attach file')}</TooltipContent>
+                <TooltipContent>
+                  {t('ui.emailComposer.attach', 'Attach file')}
+                </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           )}
@@ -1045,14 +1209,22 @@ function EmailComposer({
                   <Button
                     variant={isSignatureVisible ? 'secondary' : 'ghost'}
                     size="icon-sm"
-                    onClick={() => onSignatureVisibleChange(!isSignatureVisible)}
+                    onClick={() =>
+                      onSignatureVisibleChange(!isSignatureVisible)
+                    }
                     disabled={isDisabled}
-                    aria-label={t('ui.emailComposer.toggleSignature', 'Toggle signature')}>
+                    aria-label={t(
+                      'ui.emailComposer.toggleSignature',
+                      'Toggle signature',
+                    )}
+                  >
                     <FileSignature className="size-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  {isSignatureVisible ? t('ui.emailComposer.removeSignature', 'Remove signature') : t('ui.emailComposer.insertSignature', 'Insert signature')}
+                  {isSignatureVisible
+                    ? t('ui.emailComposer.removeSignature', 'Remove signature')
+                    : t('ui.emailComposer.insertSignature', 'Insert signature')}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -1064,25 +1236,29 @@ function EmailComposer({
               variant="ghost"
               size={buttonSize}
               onClick={onDiscard}
-              disabled={isDisabled}>
+              disabled={isDisabled}
+            >
               {t('ui.emailComposer.cancel', 'Cancel')}
             </Button>
           )}
           <Button
             size={buttonSize}
             onClick={handleSend}
-            disabled={isDisabled || !canSend}>
+            disabled={isDisabled || !canSend}
+          >
             {sending ? (
               <Loader2 className="size-4 animate-spin" />
             ) : (
               <Send className="size-4" />
             )}
-            {sending ? t('ui.emailComposer.sending', 'Sending...') : t('ui.emailComposer.send', 'Send')}
+            {sending
+              ? t('ui.emailComposer.sending', 'Sending...')
+              : t('ui.emailComposer.send', 'Send')}
           </Button>
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export { EmailComposer };
+export { EmailComposer }

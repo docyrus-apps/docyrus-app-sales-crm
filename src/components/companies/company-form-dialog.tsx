@@ -1,10 +1,13 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
+import { useEffect, useMemo } from 'react'
+
+import type { CompanyFormData } from '@/schemas/company-schema'
+
 import { useTranslation } from 'react-i18next'
 import { useForm } from '@tanstack/react-form'
 import { useQuery } from '@tanstack/react-query'
 import { zodValidator } from '@tanstack/zod-form-adapter'
 import { Loader2 } from 'lucide-react'
-import type { CompanyFormData } from '@/schemas/company-schema'
+
 import { Button } from '@/components/animate-ui/components/buttons/button'
 import { AwesomeDialog } from '@/components/docyrus/awesome-dialog'
 import { AwesomeDialogHeader } from '@/components/docyrus/awesome-dialog/awesome-dialog-header'
@@ -18,7 +21,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
 import { Combobox } from '@/components/ui/combobox-simple'
 import { companyFormSchema } from '@/schemas/company-schema'
@@ -27,11 +30,17 @@ import { useCreateCompany, useUpdateCompany } from '@/hooks/use-companies'
 import { useEnumOptions } from '@/hooks/use-enums'
 
 interface CompanyFormDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  company?: any
-  mode: 'create' | 'edit'
-  onSubmitSuccess?: () => void | Promise<void>
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  company?: any;
+  mode: 'create' | 'edit';
+  onSubmitSuccess?: () => void | Promise<void>;
+}
+
+function getRelationValue(value: any): string {
+  if (value && typeof value === 'object') return value.id || ''
+
+  return value || ''
 }
 
 export function CompanyFormDialog({
@@ -39,70 +48,60 @@ export function CompanyFormDialog({
   onOpenChange,
   company,
   mode,
-  onSubmitSuccess,
+  onSubmitSuccess
 }: CompanyFormDialogProps) {
   const { t } = useTranslation()
   const createCompany = useCreateCompany()
   const updateCompany = useUpdateCompany()
-  const { options: industryOptions = [] } = useEnumOptions('industry')
-  const { options: statusOptions = [] } = useEnumOptions('status')
-  const { options: typeOptions = [] } = useEnumOptions('type')
+  const enumOptions = { appSlug: 'base', dataSourceSlug: 'organization' }
+  const { options: industryOptions = [] } = useEnumOptions(
+    'industry',
+    enumOptions
+  )
+  const { options: statusOptions = [] } = useEnumOptions('status', enumOptions)
+  const { options: typeOptions = [] } = useEnumOptions('type', enumOptions)
   const countriesCollection = useBaseCountryCollection()
   const { data: countries = [] } = useQuery({
     queryKey: ['base-country-options'],
-    queryFn: () =>
-      countriesCollection.list({
+    queryFn: () => countriesCollection.list({
         columns: ['id', 'name'],
         orderBy: 'name ASC',
-        limit: 300,
-      }),
+        limit: 300
+      })
   })
-  const countryOptions = countries.map((country) => ({
+  const countryOptions = countries.map(country => ({
     label: country.name,
-    value: country.id ?? '',
+    value: country.id ?? ''
   }))
-
-  const form = useForm<CompanyFormData>({
-    defaultValues: {
+  const initialValues = useMemo<CompanyFormData>(
+    () => ({
       name: company?.name || '',
-      industry:
-        company?.industry && typeof company.industry === 'object'
-          ? company.industry.id
-          : company?.industry || '',
+      industry: getRelationValue(company?.industry),
       phone: company?.phone || '',
       email: company?.email || '',
       website: company?.website || '',
-      country:
-        company?.country && typeof company.country === 'object'
-          ? company.country.id
-          : company?.country || '',
-      city:
-        company?.city && typeof company.city === 'object'
-          ? company.city.id
-          : company?.city || '',
-      status:
-        company?.status && typeof company.status === 'object'
-          ? company.status.id
-          : company?.status || '',
-      type:
-        company?.type && typeof company.type === 'object'
-          ? company.type.id
-          : company?.type || '',
+      country: getRelationValue(company?.country),
+      city: getRelationValue(company?.city),
+      status: getRelationValue(company?.status),
+      type: getRelationValue(company?.type),
       address: company?.address || '',
       tax_number: company?.tax_number || '',
-      district: company?.district || '',
-    },
+      district: company?.district || ''
+    }),
+    [company]
+  )
+
+  const form = useForm<CompanyFormData>({
+    formId: `company-form-${mode}-${company?.id ?? 'new'}`,
+    defaultValues: initialValues,
     validatorAdapter: zodValidator(),
     validators: {
-      onChange: companyFormSchema,
+      onChange: companyFormSchema
     },
     onSubmit: async ({ value }) => {
       // Clean up empty strings (convert to undefined for UUID fields)
       const cleanedData = Object.fromEntries(
-        Object.entries(value).map(([key, val]) => [
-          key,
-          val === '' ? undefined : val,
-        ]),
+        Object.entries(value).map(([key, val]) => [key, val === '' ? undefined : val])
       )
 
       if (mode === 'create') {
@@ -110,14 +109,24 @@ export function CompanyFormDialog({
       } else if (company?.id) {
         await updateCompany.mutateAsync({
           companyId: company.id,
-          data: cleanedData,
+          data: cleanedData
         })
       }
 
       await onSubmitSuccess?.()
       onOpenChange(false)
-    },
+    }
   })
+
+  useEffect(() => {
+    if (!open) return
+    form.reset(initialValues)
+  }, [
+form,
+initialValues,
+open,
+mode
+])
 
   const isSubmitting = createCompany.isPending || updateCompany.isPending
 
@@ -126,16 +135,14 @@ export function CompanyFormDialog({
       open={open}
       onOpenChange={onOpenChange}
       container="modal"
-      size="lg"
-    >
+      size="lg">
       <form
         onSubmit={(e) => {
           e.preventDefault()
           e.stopPropagation()
           form.handleSubmit()
         }}
-        className="flex flex-col flex-1 overflow-hidden"
-      >
+        className="flex flex-col flex-1 overflow-hidden">
         <AwesomeDialogHeader
           title={
             mode === 'create'
@@ -146,14 +153,13 @@ export function CompanyFormDialog({
             mode === 'create'
               ? t('companies.form.createDescription')
               : t('companies.form.editDescription')
-          }
-        />
+          } />
 
         <AwesomeDialogBody className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             {/* Name Field */}
             <form.Field name="name">
-              {(field) => (
+              {field => (
                 <Field className="col-span-2">
                   <Label htmlFor={field.name}>
                     {t('companies.form.companyNameLabel')}{' '}
@@ -162,9 +168,8 @@ export function CompanyFormDialog({
                   <Input
                     id={field.name}
                     value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder={t('companies.form.companyNamePlaceholder')}
-                  />
+                    onChange={e => field.handleChange(e.target.value)}
+                    placeholder={t('companies.form.companyNamePlaceholder')} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
                       {typeof field.state.meta.errors[0] === 'string'
@@ -179,19 +184,17 @@ export function CompanyFormDialog({
 
             {/* Industry Field */}
             <form.Field name="industry">
-              {(field) => (
+              {field => (
                 <Field>
                   <Label htmlFor={field.name}>
                     {t('companies.form.industryLabel')}
                   </Label>
                   <Select
                     value={field.state.value}
-                    onValueChange={field.handleChange}
-                  >
+                    onValueChange={field.handleChange}>
                     <SelectTrigger>
                       <SelectValue
-                        placeholder={t('companies.form.industryPlaceholder')}
-                      />
+                        placeholder={t('companies.form.industryPlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
                       {industryOptions.map((option: any) => (
@@ -215,19 +218,17 @@ export function CompanyFormDialog({
 
             {/* Type Field */}
             <form.Field name="type">
-              {(field) => (
+              {field => (
                 <Field>
                   <Label htmlFor={field.name}>
                     {t('companies.form.typeLabel')}
                   </Label>
                   <Select
                     value={field.state.value}
-                    onValueChange={field.handleChange}
-                  >
+                    onValueChange={field.handleChange}>
                     <SelectTrigger>
                       <SelectValue
-                        placeholder={t('companies.form.typePlaceholder')}
-                      />
+                        placeholder={t('companies.form.typePlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
                       {typeOptions.map((option: any) => (
@@ -251,19 +252,17 @@ export function CompanyFormDialog({
 
             {/* Status Field */}
             <form.Field name="status">
-              {(field) => (
+              {field => (
                 <Field>
                   <Label htmlFor={field.name}>
                     {t('companies.form.statusLabel')}
                   </Label>
                   <Select
                     value={field.state.value}
-                    onValueChange={field.handleChange}
-                  >
+                    onValueChange={field.handleChange}>
                     <SelectTrigger>
                       <SelectValue
-                        placeholder={t('companies.form.statusPlaceholder')}
-                      />
+                        placeholder={t('companies.form.statusPlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
                       {statusOptions.map((option: any) => (
@@ -287,7 +286,7 @@ export function CompanyFormDialog({
 
             {/* Email Field */}
             <form.Field name="email">
-              {(field) => (
+              {field => (
                 <Field>
                   <Label htmlFor={field.name}>
                     {t('companies.form.emailLabel')}
@@ -296,9 +295,8 @@ export function CompanyFormDialog({
                     id={field.name}
                     type="email"
                     value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder={t('companies.form.emailPlaceholder')}
-                  />
+                    onChange={e => field.handleChange(e.target.value)}
+                    placeholder={t('companies.form.emailPlaceholder')} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
                       {typeof field.state.meta.errors[0] === 'string'
@@ -313,7 +311,7 @@ export function CompanyFormDialog({
 
             {/* Phone Field */}
             <form.Field name="phone">
-              {(field) => (
+              {field => (
                 <Field>
                   <Label htmlFor={field.name}>
                     {t('companies.form.phoneLabel')}
@@ -321,9 +319,8 @@ export function CompanyFormDialog({
                   <Input
                     id={field.name}
                     value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder={t('companies.form.phonePlaceholder')}
-                  />
+                    onChange={e => field.handleChange(e.target.value)}
+                    placeholder={t('companies.form.phonePlaceholder')} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
                       {typeof field.state.meta.errors[0] === 'string'
@@ -338,7 +335,7 @@ export function CompanyFormDialog({
 
             {/* Website Field */}
             <form.Field name="website">
-              {(field) => (
+              {field => (
                 <Field className="col-span-2">
                   <Label htmlFor={field.name}>
                     {t('companies.form.websiteLabel')}
@@ -347,9 +344,8 @@ export function CompanyFormDialog({
                     id={field.name}
                     type="url"
                     value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder={t('companies.form.websitePlaceholder')}
-                  />
+                    onChange={e => field.handleChange(e.target.value)}
+                    placeholder={t('companies.form.websitePlaceholder')} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
                       {typeof field.state.meta.errors[0] === 'string'
@@ -364,7 +360,7 @@ export function CompanyFormDialog({
 
             {/* Address Field */}
             <form.Field name="address">
-              {(field) => (
+              {field => (
                 <Field className="col-span-2">
                   <Label htmlFor={field.name}>
                     {t('companies.form.addressLabel')}
@@ -372,9 +368,8 @@ export function CompanyFormDialog({
                   <Input
                     id={field.name}
                     value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder={t('companies.form.addressPlaceholder')}
-                  />
+                    onChange={e => field.handleChange(e.target.value)}
+                    placeholder={t('companies.form.addressPlaceholder')} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
                       {typeof field.state.meta.errors[0] === 'string'
@@ -389,7 +384,7 @@ export function CompanyFormDialog({
 
             {/* Country Field */}
             <form.Field name="country">
-              {(field) => (
+              {field => (
                 <Field>
                   <Label htmlFor={field.name}>
                     {t('companies.form.countryLabel')}
@@ -397,12 +392,11 @@ export function CompanyFormDialog({
                   <Combobox
                     options={countryOptions}
                     value={field.state.value}
-                    onValueChange={(value) => field.handleChange(value)}
+                    onValueChange={value => field.handleChange(value)}
                     placeholder={t('companies.form.countryPlaceholder')}
                     emptyText={t('common.noResults', {
-                      defaultValue: 'No results',
-                    })}
-                  />
+                      defaultValue: 'No results'
+                    })} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
                       {typeof field.state.meta.errors[0] === 'string'
@@ -417,7 +411,7 @@ export function CompanyFormDialog({
 
             {/* City Field */}
             <form.Field name="city">
-              {(field) => (
+              {field => (
                 <Field>
                   <Label htmlFor={field.name}>
                     {t('companies.form.cityLabel')}
@@ -425,9 +419,8 @@ export function CompanyFormDialog({
                   <Input
                     id={field.name}
                     value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder={t('companies.form.cityPlaceholder')}
-                  />
+                    onChange={e => field.handleChange(e.target.value)}
+                    placeholder={t('companies.form.cityPlaceholder')} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
                       {typeof field.state.meta.errors[0] === 'string'
@@ -442,7 +435,7 @@ export function CompanyFormDialog({
 
             {/* District Field */}
             <form.Field name="district">
-              {(field) => (
+              {field => (
                 <Field>
                   <Label htmlFor={field.name}>
                     {t('companies.form.districtLabel')}
@@ -450,9 +443,8 @@ export function CompanyFormDialog({
                   <Input
                     id={field.name}
                     value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder={t('companies.form.districtPlaceholder')}
-                  />
+                    onChange={e => field.handleChange(e.target.value)}
+                    placeholder={t('companies.form.districtPlaceholder')} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
                       {typeof field.state.meta.errors[0] === 'string'
@@ -467,7 +459,7 @@ export function CompanyFormDialog({
 
             {/* Tax Number Field */}
             <form.Field name="tax_number">
-              {(field) => (
+              {field => (
                 <Field>
                   <Label htmlFor={field.name}>
                     {t('companies.form.taxNumberLabel')}
@@ -475,9 +467,8 @@ export function CompanyFormDialog({
                   <Input
                     id={field.name}
                     value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder={t('companies.form.taxNumberPlaceholder')}
-                  />
+                    onChange={e => field.handleChange(e.target.value)}
+                    placeholder={t('companies.form.taxNumberPlaceholder')} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
                       {typeof field.state.meta.errors[0] === 'string'
@@ -497,8 +488,7 @@ export function CompanyFormDialog({
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
-          >
+            disabled={isSubmitting}>
             {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={isSubmitting}>

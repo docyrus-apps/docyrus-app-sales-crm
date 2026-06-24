@@ -1,39 +1,44 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
+
+import { type ColumnDef } from '@tanstack/react-table'
+
+import type { CellUserOption, RowChange } from '@/components/docyrus/data-grid'
+
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { useDocyrusClient } from '@docyrus/signin'
 import { Building2, Pencil, Plus, Trash2, Upload } from 'lucide-react'
-import type { ColumnDef } from '@tanstack/react-table'
 
-import type { BaseOrganizationEntity } from '@/collections/base-organization.collection'
+import { type BaseOrganizationEntity } from '@/collections/base-organization.collection'
+
 import { useBaseOrganizationCollection } from '@/collections/base-organization.collection'
 import { CompanyFormDialog } from '@/components/companies/company-form-dialog'
-import { CompaniesKanbanView } from '@/components/companies/companies-kanban-view'
 import {
   DataGrid,
   DataGridRowActions,
   DataGridSkeleton,
   DataGridSkeletonGrid,
-  getDataGridActionsColumn,
-  type CellUserOption,
-  type RowChange,
+  getDataGridActionsColumn
 } from '@/components/docyrus/data-grid'
 import { Button as MotionButton } from '@/components/animate-ui/components/buttons/button'
 import { RecordDeleteConfirmDialog } from '@/components/docyrus/record-delete-confirm-dialog'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ViewSwitcher, type ViewType } from '@/components/view-switcher'
 import { useUpdateCompany } from '@/hooks/use-companies'
 import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
-import { useDocyrusDataGrid } from '@/hooks/use-docyrus-data-grid'
+import { useDocyrusDataGrid } from '@/hooks/docyrus/use-docyrus-data-grid'
 import { useSeedDefaultViews } from '@/hooks/use-seed-default-views'
 import { useDocyrusDataImportWizard } from '@/hooks/use-docyrus-data-import-wizard'
+import { useEnumEntities } from '@/hooks/use-enums'
 import { useUsers } from '@/hooks/use-users'
 import { saveGridChanges } from '@/lib/data-grid-record-utils'
-import { createSystemViews } from '@/lib/crm-system-views'
+import {
+  createSystemViews,
+  equalsFilter,
+  findEnumIdByName
+} from '@/lib/crm-system-views'
 import { useDateFormat } from '@/lib/use-date-format'
 
 const APP_SLUG = 'base'
@@ -44,8 +49,8 @@ type CompanyFormMode = 'create' | 'edit'
 type CompanyFormRecord = BaseOrganizationEntity | Record<string, unknown>
 
 interface CompanyDialogState {
-  mode: CompanyFormMode
-  company: CompanyFormRecord | null
+  mode: CompanyFormMode;
+  company: CompanyFormRecord | null;
 }
 
 const COMPANY_GRID_COLUMN_OVERRIDES: Record<
@@ -58,23 +63,14 @@ const COMPANY_GRID_COLUMN_OVERRIDES: Record<
   email: { size: 220 },
   phone: { size: 160 },
   city: { size: 160 },
-  created_on: { size: 150 },
+  created_on: { size: 150 }
 }
 
 const COMPANY_GRID_VISIBLE_FIELDS = new Set(
-  Object.keys(COMPANY_GRID_COLUMN_OVERRIDES),
+  Object.keys(COMPANY_GRID_COLUMN_OVERRIDES)
 )
 
 const COMPANY_GRID_COLUMNS = Object.keys(COMPANY_GRID_COLUMN_OVERRIDES)
-
-const COMPANY_GRID_SYSTEM_VIEWS = createSystemViews('base-organization', [
-  {
-    id: 'all',
-    name: 'All',
-    columns: COMPANY_GRID_COLUMNS,
-    sorting: [{ id: 'created_on', desc: true }],
-  },
-])
 
 export function Companies() {
   const client = useDocyrusClient()
@@ -85,9 +81,9 @@ export function Companies() {
 }
 
 function CompaniesPageInner({
-  client,
+  client
 }: {
-  client: NonNullable<ReturnType<typeof useDocyrusClient>>
+  client: NonNullable<ReturnType<typeof useDocyrusClient>>;
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -95,26 +91,58 @@ function CompaniesPageInner({
   const updateCompany = useUpdateCompany()
   const { data: users = [] } = useUsers()
   const { formatDate, formatDateTime } = useDateFormat()
+  const { data: companyStatuses = [], isLoading: areCompanyStatusesLoading } =
+    useEnumEntities('status', {
+      appSlug: APP_SLUG,
+      dataSourceSlug: DATA_SOURCE_SLUG
+    })
+  const companyGridViews = useMemo(() => {
+    const activeStatusId = findEnumIdByName(companyStatuses, ['Active'])
+    const inactiveStatusId = findEnumIdByName(companyStatuses, ['Inactive', 'Passive', 'Archived'])
+
+    return createSystemViews('base-organization', [
+      {
+        id: 'all',
+        name: 'All',
+        columns: COMPANY_GRID_COLUMNS,
+        sorting: [{ id: 'created_on', desc: true }]
+      },
+      {
+        id: 'active',
+        name: 'Active',
+        columns: COMPANY_GRID_COLUMNS,
+        sorting: [{ id: 'name', desc: false }],
+        filterQuery: equalsFilter('status', activeStatusId)
+      },
+      {
+        id: 'inactive',
+        name: 'Inactive',
+        columns: COMPANY_GRID_COLUMNS,
+        sorting: [{ id: 'last_modified_on', desc: true }],
+        filterQuery: equalsFilter('status', inactiveStatusId)
+      }
+    ])
+  }, [companyStatuses])
 
   useSeedDefaultViews({
     client,
     appSlug: APP_SLUG,
     dataSourceSlug: DATA_SOURCE_SLUG,
-    templates: COMPANY_GRID_SYSTEM_VIEWS,
-    pruneUnlisted: true,
+    templates: companyGridViews,
+    enabled: !areCompanyStatusesLoading,
+    pruneUnlisted: true
   })
 
   const [dialog, setDialog] = useState<CompanyDialogState | null>(null)
   const [pendingDelete, setPendingDelete] =
     useState<BaseOrganizationEntity | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [viewType, setViewType] = useState<ViewType>('list')
 
   const companyUserOptions = useMemo<Array<CellUserOption>>(
-    () =>
-      users
+    () => users
         .map((user) => {
           const value = user.id || user.email
+
           if (!value) return null
 
           const label =
@@ -126,7 +154,7 @@ function CompaniesPageInner({
 
           const initials =
             [user.firstname, user.lastname]
-              .map((part) => part?.charAt(0) || '')
+              .map(part => part?.charAt(0) || '')
               .join('')
               .slice(0, 2)
               .toUpperCase() || label.slice(0, 2).toUpperCase()
@@ -134,11 +162,11 @@ function CompaniesPageInner({
           return {
             value,
             label,
-            initials,
+            initials
           }
         })
         .filter((option): option is CellUserOption => option !== null),
-    [users],
+    [users]
   )
 
   const onOpenCreate = useCallback(() => {
@@ -160,10 +188,10 @@ function CompaniesPageInner({
       void navigate({
         to: '/companies/$companyId',
         params: { companyId: company.id },
-        search: { tab: 'overview' },
+        search: { tab: 'overview' }
       })
     },
-    [navigate],
+    [navigate]
   )
 
   const onDelete = useCallback((company: BaseOrganizationEntity) => {
@@ -173,8 +201,7 @@ function CompaniesPageInner({
   }, [])
 
   const actionsColumn = useMemo<ColumnDef<BaseOrganizationEntity>>(
-    () =>
-      getDataGridActionsColumn<BaseOrganizationEntity>({
+    () => getDataGridActionsColumn<BaseOrganizationEntity>({
         actionCount: 2,
         cell: ({ row }) => (
           <DataGridRowActions
@@ -187,38 +214,40 @@ function CompaniesPageInner({
                 key: 'edit',
                 label: t('common.edit', 'Edit'),
                 icon: <Pencil className="size-4" />,
-                onSelect: onOpenEdit,
+                onSelect: onOpenEdit
               },
               {
                 key: 'open',
                 label: t('common.openPage', 'Open page'),
                 icon: <DocyrusIcon icon="huge sidebar-right-01" size="sm" />,
-                onSelect: onView,
+                onSelect: onView
               },
               {
                 key: 'delete',
                 label: t('common.delete', 'Delete'),
                 icon: <Trash2 className="size-4" />,
                 destructive: true,
-                onSelect: onDelete,
-              },
-            ]}
-          />
-        ),
+                onSelect: onDelete
+              }
+            ]} />
+        )
       }),
-    [onDelete, onOpenEdit, onView, t],
+    [
+onDelete,
+onOpenEdit,
+onView,
+t
+]
   )
 
   const onChangesSave = useCallback(
     async (
       changes: Array<RowChange>,
-      gridData: Array<BaseOrganizationEntity>,
+      gridData: Array<BaseOrganizationEntity>
     ) => {
-      await saveGridChanges(changes, gridData, (id, data) =>
-        updateCompany.mutateAsync({ companyId: id, data }),
-      )
+      await saveGridChanges(changes, gridData, (id, data) => updateCompany.mutateAsync({ companyId: id, data }))
     },
-    [updateCompany],
+    [updateCompany]
   )
 
   const openWizardRef = useRef<() => void>(() => {})
@@ -230,13 +259,12 @@ function CompaniesPageInner({
         variant="outline"
         size="sm"
         className="gap-1.5"
-        onClick={() => openWizardRef.current()}
-      >
+        onClick={() => openWizardRef.current()}>
         <Upload className="size-4" />
         {t('common.import', 'Import')}
       </Button>
     ),
-    [t],
+    [t]
   )
 
   const {
@@ -244,11 +272,10 @@ function CompaniesPageInner({
     gridProps,
     pagingMode,
     toolbar,
-    items: companies,
     reload,
     dataSource,
     isLoading,
-    error,
+    error
   } = useDocyrusDataGrid<BaseOrganizationEntity>({
     client,
     appSlug: APP_SLUG,
@@ -265,15 +292,15 @@ function CompaniesPageInner({
     enableServerExportMenu: true,
     searchPlaceholder: t('common.search', 'Search...'),
     toolbarEndContent: importToolbarButton,
-    getRowLabel: (row) => row.name || row.id || t('companies.title'),
+    getRowLabel: row => row.name || row.id || t('companies.title'),
     mapColumn: (field, defaultColumn) => {
       if (!COMPANY_GRID_VISIBLE_FIELDS.has(field.slug)) return null
 
       return {
         ...defaultColumn,
-        ...COMPANY_GRID_COLUMN_OVERRIDES[field.slug],
+        ...COMPANY_GRID_COLUMN_OVERRIDES[field.slug]
       }
-    },
+    }
   })
 
   const { openWizard, wizard } = useDocyrusDataImportWizard({
@@ -281,7 +308,7 @@ function CompaniesPageInner({
     appSlug: APP_SLUG,
     dataSourceSlug: DATA_SOURCE_SLUG,
     fields: dataSource?.fields,
-    onImported: reload,
+    onImported: reload
   })
 
   openWizardRef.current = openWizard
@@ -306,18 +333,12 @@ function CompaniesPageInner({
         title={t('companies.title')}
         icon={<Building2 className="h-4 w-4 text-teal-500" />}
         actions={
-          <>
-            <ViewSwitcher value={viewType} onValueChange={setViewType} />
-            <MotionButton size="sm" onClick={onOpenCreate}>
-              <Plus className="mr-2 h-4 w-4" />
-              {t('companies.newCompany')}
-            </MotionButton>
-          </>
-        }
-      />
-      <PageContainer
-        className={viewType === 'kanban' ? 'max-w-full overflow-x-auto' : ''}
-      >
+          <MotionButton size="sm" onClick={onOpenCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t('companies.newCompany')}
+          </MotionButton>
+        } />
+      <PageContainer className="flex min-h-0 flex-1 max-w-full flex-col overflow-hidden pb-0">
         {dialog && (
           <CompanyFormDialog
             open
@@ -326,33 +347,13 @@ function CompaniesPageInner({
             }}
             company={dialog.company ?? undefined}
             mode={dialog.mode}
-            onSubmitSuccess={reload}
-          />
+            onSubmitSuccess={reload} />
         )}
 
-        {isLoading && viewType === 'card' && (
-          <div className="space-y-4">
-            <div className="h-32 w-full animate-pulse rounded-md bg-muted" />
-            <div className="h-32 w-full animate-pulse rounded-md bg-muted" />
-            <div className="h-32 w-full animate-pulse rounded-md bg-muted" />
-          </div>
-        )}
-
-        {isLoading && viewType === 'list' && (
+        {isLoading && (
           <DataGridSkeleton>
             <DataGridSkeletonGrid />
           </DataGridSkeleton>
-        )}
-
-        {isLoading && viewType === 'kanban' && (
-          <div className="flex gap-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-96 w-80 shrink-0 animate-pulse rounded-md bg-muted"
-              />
-            ))}
-          </div>
         )}
 
         {error && (
@@ -368,97 +369,18 @@ function CompaniesPageInner({
           </Card>
         )}
 
-        {!isLoading && !error && companies.length === 0 && (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-lg font-medium">{t('companies.emptyTitle')}</p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {t('companies.emptyDescription')}
-              </p>
-              <MotionButton className="mt-4" onClick={onOpenCreate}>
-                <Plus className="mr-2 h-4 w-4" />
-                {t('companies.createCompany')}
-              </MotionButton>
-            </CardContent>
-          </Card>
-        )}
-
-        {!isLoading &&
-          !error &&
-          companies.length > 0 &&
-          viewType === 'card' && (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {companies.map((company) => (
-                <Link
-                  key={company.id}
-                  to="/companies/$companyId"
-                  params={{ companyId: company.id! }}
-                  search={{ tab: 'overview' }}
-                >
-                  <Card className="cursor-pointer transition-all hover:shadow-md">
-                    <CardHeader>
-                      <div className="flex items-start gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                          <Building2 className="h-5 w-5" />
-                        </div>
-                        <div className="flex-1">
-                          <CardTitle className="text-base">
-                            {company.name}
-                          </CardTitle>
-                          {company.industry && (
-                            <Badge variant="secondary" className="mt-1">
-                              {typeof company.industry === 'object'
-                                ? company.industry.name
-                                : company.industry}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      {company.status && (
-                        <Badge variant="outline" className="mb-2">
-                          {typeof company.status === 'object'
-                            ? company.status.name
-                            : company.status}
-                        </Badge>
-                      )}
-                      {company.email && (
-                        <p className="text-xs text-muted-foreground">
-                          {company.email}
-                        </p>
-                      )}
-                      {company.phone && (
-                        <p className="text-xs text-muted-foreground">
-                          {company.phone}
-                        </p>
-                      )}
-                      {company.city && typeof company.city === 'object' && (
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {company.city.name}
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          )}
-
-        {!isLoading &&
-          !error &&
-          companies.length > 0 &&
-          viewType === 'list' && (
-            <div className="space-y-4">
-              {toolbar}
+        {!isLoading && !error && (
+          <div className="flex min-h-0 flex-1 flex-col gap-4">
+            <div className="shrink-0">{toolbar}</div>
+            <div className="min-h-0 flex-1">
               <DataGrid
                 table={table}
                 {...gridProps}
                 pagingMode={pagingMode}
-                height={600}
-              />
+                height="auto" />
             </div>
-          )}
+          </div>
+        )}
 
         <RecordDeleteConfirmDialog
           open={pendingDelete !== null}
@@ -467,17 +389,9 @@ function CompaniesPageInner({
           }}
           recordCount={pendingDelete ? 1 : 0}
           onConfirm={onConfirmDelete}
-          isPending={isDeleting}
-        />
+          isPending={isDeleting} />
 
         {wizard}
-
-        {!isLoading &&
-          !error &&
-          companies.length > 0 &&
-          viewType === 'kanban' && (
-            <CompaniesKanbanView companies={companies} />
-          )}
       </PageContainer>
     </>
   )

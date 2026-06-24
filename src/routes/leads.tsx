@@ -1,4 +1,9 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
+
+import type { ColumnDef } from '@tanstack/react-table'
+
+import { type RowChange } from '@/components/docyrus/data-grid'
+
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useDocyrusClient } from '@docyrus/signin'
@@ -9,11 +14,11 @@ import {
   Plus,
   Trash2,
   Upload,
-  UserRoundSearch,
+  UserRoundSearch
 } from 'lucide-react'
-import type { ColumnDef } from '@tanstack/react-table'
 
 import type { BaseCrmLeadsEntity } from '@/collections/base_crm-leads.collection'
+
 import { useBaseCrmLeadsCollection } from '@/collections/base_crm-leads.collection'
 import { Button as MotionButton } from '@/components/animate-ui/components/buttons/button'
 import {
@@ -21,8 +26,7 @@ import {
   DataGridRowActions,
   DataGridSkeleton,
   DataGridSkeletonGrid,
-  getDataGridActionsColumn,
-  type RowChange,
+  getDataGridActionsColumn
 } from '@/components/docyrus/data-grid'
 import { RecordDeleteConfirmDialog } from '@/components/docyrus/record-delete-confirm-dialog'
 import { LeadFormDialog } from '@/components/leads/lead-form-dialog'
@@ -33,19 +37,23 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   mapEnumEntitiesToCellOptions,
-  useEnumEntities,
+  useEnumEntities
 } from '@/hooks/use-enums'
 import {
   LEAD_DETAIL_COLUMNS,
   useDeleteLead,
-  useUpdateLead,
+  useUpdateLead
 } from '@/hooks/use-leads'
 import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
-import { useDocyrusDataGrid } from '@/hooks/use-docyrus-data-grid'
+import { useDocyrusDataGrid } from '@/hooks/docyrus/use-docyrus-data-grid'
 import { useSeedDefaultViews } from '@/hooks/use-seed-default-views'
 import { useDocyrusDataImportWizard } from '@/hooks/use-docyrus-data-import-wizard'
 import { saveGridChanges } from '@/lib/data-grid-record-utils'
-import { createSystemViews } from '@/lib/crm-system-views'
+import {
+  createSystemViews,
+  equalsFilter,
+  findEnumIdByName
+} from '@/lib/crm-system-views'
 import { isLeadConvertedRecord } from '@/lib/lead-conversion'
 import { useDateFormat } from '@/lib/use-date-format'
 
@@ -54,8 +62,8 @@ type LeadFormMode = 'create' | 'edit'
 type LeadFormRecord = BaseCrmLeadsEntity | Record<string, unknown>
 
 interface LeadDialogState {
-  mode: LeadFormMode
-  lead: LeadFormRecord | null
+  mode: LeadFormMode;
+  lead: LeadFormRecord | null;
 }
 
 function isLeadConverted(lead: BaseCrmLeadsEntity | Record<string, unknown>) {
@@ -69,33 +77,24 @@ const LEAD_GRID_COLUMN_OVERRIDES: Record<
   string,
   Partial<ColumnDef<BaseCrmLeadsEntity>>
 > = {
-  title: { size: 240 },
+  name: { size: 220 },
   company_name_text: { size: 200 },
   lead_status: { size: 150 },
   lead_source: { size: 160 },
   email: { size: 220 },
   phone: { size: 170 },
-  created_on: { size: 180 },
+  created_on: { size: 180 }
 }
 
 const LEAD_GRID_VISIBLE_FIELDS = new Set(
-  Object.keys(LEAD_GRID_COLUMN_OVERRIDES),
+  Object.keys(LEAD_GRID_COLUMN_OVERRIDES)
 )
 
 const LEAD_GRID_COLUMNS = Object.keys(LEAD_GRID_COLUMN_OVERRIDES)
 
-const LEAD_GRID_SYSTEM_VIEWS = createSystemViews('base-crm-leads', [
-  {
-    id: 'all',
-    name: 'All',
-    columns: LEAD_GRID_COLUMNS,
-    sorting: [{ id: 'created_on', desc: true }],
-  },
-])
-
 const LEAD_GRID_LIST_COLUMNS = [
   'id',
-  'title',
+  'name',
   'company_name_text',
   'lead_status(id,name)',
   'lead_source(id,name)',
@@ -104,7 +103,7 @@ const LEAD_GRID_LIST_COLUMNS = [
   'created_on',
   'converted_deal(id,name)',
   'conversion_state(id,name)',
-  'converted_on',
+  'converted_on'
 ].join(', ')
 
 export function Leads() {
@@ -116,9 +115,9 @@ export function Leads() {
 }
 
 function LeadsPageInner({
-  client,
+  client
 }: {
-  client: NonNullable<ReturnType<typeof useDocyrusClient>>
+  client: NonNullable<ReturnType<typeof useDocyrusClient>>;
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -127,32 +126,61 @@ function LeadsPageInner({
   const updateLead = useUpdateLead()
   const { formatDate, formatDateTime } = useDateFormat()
 
+  const [dialog, setDialog] = useState<LeadDialogState | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<BaseCrmLeadsEntity | null>(
+    null
+  )
+  const [convertLead, setConvertLead] = useState<BaseCrmLeadsEntity | null>(
+    null
+  )
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const { data: leadStatuses = [], isLoading: areLeadStatusesLoading } =
+    useEnumEntities('lead_status', {
+      appSlug: APP_SLUG,
+      dataSourceSlug: DATA_SOURCE_SLUG
+    })
+
+  const leadStatusOptions = useMemo(
+    () => mapEnumEntitiesToCellOptions(leadStatuses),
+    [leadStatuses]
+  )
+  const leadGridViews = useMemo(() => {
+    const newStatusId = findEnumIdByName(leadStatuses, ['New', 'New Leads'])
+    const convertedStatusId = findEnumIdByName(leadStatuses, ['Converted'])
+
+    return createSystemViews('base-crm-leads', [
+      {
+        id: 'all',
+        name: 'All',
+        columns: LEAD_GRID_COLUMNS,
+        sorting: [{ id: 'created_on', desc: true }]
+      },
+      {
+        id: 'new',
+        name: 'New',
+        columns: LEAD_GRID_COLUMNS,
+        sorting: [{ id: 'created_on', desc: true }],
+        filterQuery: equalsFilter('lead_status', newStatusId)
+      },
+      {
+        id: 'converted',
+        name: 'Converted',
+        columns: LEAD_GRID_COLUMNS,
+        sorting: [{ id: 'converted_on', desc: true }],
+        filterQuery: equalsFilter('lead_status', convertedStatusId)
+      }
+    ])
+  }, [leadStatuses])
+
   useSeedDefaultViews({
     client,
     appSlug: APP_SLUG,
     dataSourceSlug: DATA_SOURCE_SLUG,
-    templates: LEAD_GRID_SYSTEM_VIEWS,
-    pruneUnlisted: true,
+    templates: leadGridViews,
+    enabled: !areLeadStatusesLoading,
+    pruneUnlisted: true
   })
-
-  const [dialog, setDialog] = useState<LeadDialogState | null>(null)
-  const [pendingDelete, setPendingDelete] = useState<BaseCrmLeadsEntity | null>(
-    null,
-  )
-  const [convertLead, setConvertLead] = useState<BaseCrmLeadsEntity | null>(
-    null,
-  )
-  const [isDeleting, setIsDeleting] = useState(false)
-
-  const { data: leadStatuses = [] } = useEnumEntities('lead_status', {
-    appSlug: APP_SLUG,
-    dataSourceSlug: DATA_SOURCE_SLUG,
-  })
-
-  const leadStatusOptions = useMemo(
-    () => mapEnumEntitiesToCellOptions(leadStatuses),
-    [leadStatuses],
-  )
 
   const onOpenCreate = useCallback(() => {
     setDialog({ mode: 'create', lead: null })
@@ -162,48 +190,54 @@ function LeadsPageInner({
     async (lead: BaseCrmLeadsEntity) => {
       if (isLeadConverted(lead)) {
         toast.error(t('leads.convert.readOnlyDescription'))
+
         return
       }
 
       if (!lead.id) {
         setDialog({ mode: 'edit', lead })
+
         return
       }
 
       try {
         const fullLead = await collection.get(lead.id, {
-          columns: LEAD_DETAIL_COLUMNS,
+          columns: LEAD_DETAIL_COLUMNS
         })
+
         setDialog({ mode: 'edit', lead: fullLead })
       } catch {
         setDialog({ mode: 'edit', lead })
       }
     },
-    [collection, t],
+    [collection, t]
   )
 
   const onOpenConvert = useCallback(
     async (lead: BaseCrmLeadsEntity) => {
       if (isLeadConverted(lead)) {
         toast.error(t('leads.convert.readOnlyDescription'))
+
         return
       }
 
       if (!lead.id) {
         setConvertLead(lead)
+
         return
       }
 
       try {
         const fullLead = await collection.get(lead.id, {
-          columns: LEAD_DETAIL_COLUMNS,
+          columns: LEAD_DETAIL_COLUMNS
         })
+
         setConvertLead(fullLead)
       } catch {
         setConvertLead(lead)
       }
     },
-    [collection, t],
+    [collection, t]
   )
 
   const onCloseDialog = useCallback(() => {
@@ -217,10 +251,10 @@ function LeadsPageInner({
       void navigate({
         to: '/leads/$leadId',
         params: { leadId: lead.id },
-        search: { tab: 'overview' },
+        search: { tab: 'overview' }
       })
     },
-    [navigate],
+    [navigate]
   )
 
   const onDelete = useCallback(
@@ -228,17 +262,17 @@ function LeadsPageInner({
       if (!lead.id) return
       if (isLeadConverted(lead)) {
         toast.error(t('leads.convert.readOnlyDescription'))
+
         return
       }
 
       setPendingDelete(lead)
     },
-    [t],
+    [t]
   )
 
   const actionsColumn = useMemo<ColumnDef<BaseCrmLeadsEntity>>(
-    () =>
-      getDataGridActionsColumn<BaseCrmLeadsEntity>({
+    () => getDataGridActionsColumn<BaseCrmLeadsEntity>({
         actionCount: 2,
         cell: ({ row }) => (
           <DataGridRowActions
@@ -252,20 +286,20 @@ function LeadsPageInner({
                 label: t('common.edit', 'Edit'),
                 icon: <Pencil className="size-4" />,
                 hidden: isLeadConverted(row.original),
-                onSelect: onOpenEdit,
+                onSelect: onOpenEdit
               },
               {
                 key: 'convert',
                 label: t('leads.convert.convertButton'),
                 icon: <CheckCircle2 className="size-4" />,
                 hidden: isLeadConverted(row.original),
-                onSelect: onOpenConvert,
+                onSelect: onOpenConvert
               },
               {
                 key: 'open',
                 label: t('common.openPage', 'Open page'),
                 icon: <DocyrusIcon icon="huge sidebar-right-01" size="sm" />,
-                onSelect: onView,
+                onSelect: onView
               },
               {
                 key: 'delete',
@@ -273,13 +307,18 @@ function LeadsPageInner({
                 icon: <Trash2 className="size-4" />,
                 destructive: true,
                 hidden: isLeadConverted(row.original),
-                onSelect: onDelete,
-              },
-            ]}
-          />
-        ),
+                onSelect: onDelete
+              }
+            ]} />
+        )
       }),
-    [onDelete, onOpenConvert, onOpenEdit, onView, t],
+    [
+onDelete,
+onOpenConvert,
+onOpenEdit,
+onView,
+t
+]
   )
 
   const openWizardRef = useRef<() => void>(() => {})
@@ -291,7 +330,7 @@ function LeadsPageInner({
       const allowedChanges = changes.filter((change) => {
         const currentRow = gridData[change.rowIndex]
         const originalRow =
-          listLeadsRef.current.find((row) => row.id === change.rowId) ??
+          listLeadsRef.current.find(row => row.id === change.rowId) ??
           currentRow
 
         return (
@@ -308,18 +347,17 @@ function LeadsPageInner({
 
       if (allowedChanges.length === 0) {
         reloadListRef.current()
+
         return
       }
 
-      await saveGridChanges(allowedChanges, gridData, (id, data) =>
-        updateLead.mutateAsync({ leadId: id, data }),
-      )
+      await saveGridChanges(allowedChanges, gridData, (id, data) => updateLead.mutateAsync({ leadId: id, data }))
 
       if (blockedCount > 0) {
         reloadListRef.current()
       }
     },
-    [t, updateLead],
+    [t, updateLead]
   )
 
   const importToolbarButton = useMemo(
@@ -329,13 +367,12 @@ function LeadsPageInner({
         variant="outline"
         size="sm"
         className="gap-1.5"
-        onClick={() => openWizardRef.current()}
-      >
+        onClick={() => openWizardRef.current()}>
         <Upload className="size-4" />
         {t('common.import', 'Import')}
       </Button>
     ),
-    [t],
+    [t]
   )
 
   const {
@@ -347,7 +384,7 @@ function LeadsPageInner({
     reload: reloadList,
     dataSource: listDataSource,
     isLoading: isListLoading,
-    error: listError,
+    error: listError
   } = useDocyrusDataGrid<BaseCrmLeadsEntity>({
     client,
     appSlug: APP_SLUG,
@@ -362,12 +399,12 @@ function LeadsPageInner({
     bulkActions: ['delete'],
     enableItemsQuery: true,
     listParams: {
-      columns: LEAD_GRID_LIST_COLUMNS,
+      columns: LEAD_GRID_LIST_COLUMNS
     },
     enableServerExportMenu: true,
     searchPlaceholder: t('common.search', 'Search...'),
     toolbarEndContent: importToolbarButton,
-    getRowLabel: (row) => row.title || row.id || t('leads.title'),
+    getRowLabel: row => (row as { name?: string }).name || row.id || t('leads.title'),
     mapColumn: (field, defaultColumn) => {
       if (!LEAD_GRID_VISIBLE_FIELDS.has(field.slug)) return null
 
@@ -379,17 +416,17 @@ function LeadsPageInner({
             ...defaultColumn.meta,
             cell: {
               ...(defaultColumn.meta?.cell ?? {}),
-              options: leadStatusOptions,
-            },
-          },
+              options: leadStatusOptions
+            }
+          }
         }
       }
 
       return {
         ...defaultColumn,
-        ...LEAD_GRID_COLUMN_OVERRIDES[field.slug],
+        ...LEAD_GRID_COLUMN_OVERRIDES[field.slug]
       }
-    },
+    }
   })
 
   listLeadsRef.current = listLeads
@@ -404,7 +441,7 @@ function LeadsPageInner({
     appSlug: APP_SLUG,
     dataSourceSlug: DATA_SOURCE_SLUG,
     fields: listDataSource?.fields,
-    onImported: reload,
+    onImported: reload
   })
 
   openWizardRef.current = openWizard
@@ -414,6 +451,7 @@ function LeadsPageInner({
     if (isLeadConverted(pendingDelete)) {
       toast.error(t('leads.convert.readOnlyDescription'))
       setPendingDelete(null)
+
       return
     }
 
@@ -426,7 +464,12 @@ function LeadsPageInner({
     } finally {
       setIsDeleting(false)
     }
-  }, [deleteLead, pendingDelete, reload, t])
+  }, [
+deleteLead,
+pendingDelete,
+reload,
+t
+])
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -438,9 +481,8 @@ function LeadsPageInner({
             <Plus className="mr-2 h-4 w-4" />
             {t('leads.newLead')}
           </MotionButton>
-        }
-      />
-      <PageContainer>
+        } />
+      <PageContainer className="flex min-h-0 flex-1 max-w-full flex-col overflow-hidden pb-0">
         {dialog && (
           <LeadFormDialog
             open
@@ -449,8 +491,7 @@ function LeadsPageInner({
             }}
             lead={dialog.lead ?? undefined}
             mode={dialog.mode}
-            onSubmitSuccess={reload}
-          />
+            onSubmitSuccess={reload} />
         )}
 
         {convertLead && (
@@ -463,8 +504,7 @@ function LeadsPageInner({
                 reload()
               }
             }}
-            lead={convertLead}
-          />
+            lead={convertLead} />
         )}
 
         {isListLoading && (
@@ -486,30 +526,16 @@ function LeadsPageInner({
           </Card>
         )}
 
-        {!isListLoading && !listError && listLeads.length === 0 && (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-lg font-medium">{t('leads.emptyTitle')}</p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {t('leads.emptyDescription')}
-              </p>
-              <MotionButton className="mt-4" onClick={onOpenCreate}>
-                <Plus className="mr-2 h-4 w-4" />
-                {t('leads.createLead')}
-              </MotionButton>
-            </CardContent>
-          </Card>
-        )}
-
-        {!isListLoading && !listError && listLeads.length > 0 && (
-          <div className="space-y-4">
-            {toolbar}
-            <DataGrid
-              table={table}
-              {...gridProps}
-              pagingMode={pagingMode}
-              height={600}
-            />
+        {!isListLoading && !listError && (
+          <div className="flex min-h-0 flex-1 flex-col gap-4">
+            <div className="shrink-0">{toolbar}</div>
+            <div className="min-h-0 flex-1">
+              <DataGrid
+                table={table}
+                {...gridProps}
+                pagingMode={pagingMode}
+                height="auto" />
+            </div>
           </div>
         )}
 
@@ -520,8 +546,7 @@ function LeadsPageInner({
           }}
           recordCount={pendingDelete ? 1 : 0}
           onConfirm={onConfirmDelete}
-          isPending={isDeleting}
-        />
+          isPending={isDeleting} />
 
         {wizard}
       </PageContainer>

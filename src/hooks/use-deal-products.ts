@@ -1,5 +1,7 @@
-import { useQuery } from '@tanstack/react-query'
 import type { ICollectionListParams } from '@/collections/types'
+
+import { useQuery } from '@tanstack/react-query'
+
 import { useBaseCrmDealProductCollection } from '@/collections'
 
 export function useDealProducts(params?: ICollectionListParams) {
@@ -20,12 +22,13 @@ export function useDealProducts(params?: ICollectionListParams) {
           'tax_rate',
           'total',
           'gross_total',
-          'net_total',
+          'net_total'
         ],
-        orderBy: params?.orderBy || 'created_on DESC',
+        orderBy: params?.orderBy || 'created_on DESC'
       })
+
       return response
     },
-    enabled: !!params,
+    enabled: !!params
   })
 }

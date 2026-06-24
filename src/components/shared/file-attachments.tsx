@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition, @typescript-eslint/require-await, no-shadow */
 import { useState } from 'react'
+
 import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -9,37 +9,38 @@ import {
   FileType,
   Image,
   Trash2,
-  Upload,
+  Upload
 } from 'lucide-react'
 import { toast } from 'sonner'
+
 import { Button } from '@/components/animate-ui/components/buttons/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   FileUpload,
   FileUploadDropzone,
-  FileUploadTrigger,
+  FileUploadTrigger
 } from '@/components/ui/file-upload'
 import { getApiClient } from '@/lib/api'
 import { formatDate } from '@/lib/formatters'
 
 interface FileAttachmentsProps {
-  appSlug: string
-  dataSource: string
-  recordId: string
+  appSlug: string;
+  dataSource: string;
+  recordId: string;
 }
 
 interface FileAttachment {
-  id: string
-  name: string
-  size: number
-  mime_type: string
-  url: string
-  created_on: string
+  id: string;
+  name: string;
+  size: number;
+  mime_type: string;
+  url: string;
+  created_on: string;
   created_by?: {
-    id: string
-    name: string
-  }
+    id: string;
+    name: string;
+  };
 }
 
 const ACCEPTED_FILE_TYPES = [
@@ -61,13 +62,13 @@ const ACCEPTED_FILE_TYPES = [
   '.xlsx',
   'text/*',
   '.txt',
-  '.csv',
+  '.csv'
 ].join(', ')
 
 export function FileAttachments({
   appSlug,
   dataSource,
-  recordId,
+  recordId
 }: FileAttachmentsProps) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
@@ -77,26 +78,29 @@ export function FileAttachments({
   const {
     data: files,
     isLoading,
-    error,
+    error
   } = useQuery<Array<FileAttachment>>({
     queryKey: ['files', dataSource, recordId],
     queryFn: async () => {
       const apiClient = getApiClient()
+
       if (!apiClient) throw new Error('API client not initialized')
 
       return await apiClient.get(
-        `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/files`,
+        `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/files`
       )
-    },
+    }
   })
 
   // Upload file mutation
   const uploadMutation = useMutation({
     mutationFn: async (files: Array<File>) => {
       const apiClient = getApiClient()
+
       if (!apiClient) throw new Error('API client not initialized')
 
       const formData = new FormData()
+
       files.forEach((file) => {
         formData.append('files', file)
       })
@@ -106,14 +110,14 @@ export function FileAttachments({
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        },
+            'Content-Type': 'multipart/form-data'
+          }
+        }
       )
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['files', dataSource, recordId],
+        queryKey: ['files', dataSource, recordId]
       })
       setUploading(false)
       toast.success(t('files.uploadSuccess'))
@@ -121,28 +125,29 @@ export function FileAttachments({
     onError: (err: Error) => {
       setUploading(false)
       toast.error(t('files.uploadError', { error: err.message }))
-    },
+    }
   })
 
   // Delete file mutation
   const deleteMutation = useMutation({
     mutationFn: async (fileId: string) => {
       const apiClient = getApiClient()
+
       if (!apiClient) throw new Error('API client not initialized')
 
       await apiClient.delete(
-        `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/files/${fileId}`,
+        `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/files/${fileId}`
       )
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['files', dataSource, recordId],
+        queryKey: ['files', dataSource, recordId]
       })
       toast.success(t('files.deleteSuccess'))
     },
     onError: (err: Error) => {
       toast.error(t('files.deleteError', { error: err.message }))
-    },
+    }
   })
 
   const handleUpload = async (uploadedFiles: Array<File>) => {
@@ -155,15 +160,17 @@ export function FileAttachments({
   const handleDownload = async (file: FileAttachment) => {
     try {
       const apiClient = getApiClient()
+
       if (!apiClient) throw new Error('API client not initialized')
 
       const response = await apiClient.get(file.url, {
-        responseType: 'blob',
+        responseType: 'blob'
       })
 
       const blob = response instanceof Blob ? response : new Blob([response])
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
+
       link.href = url
       link.setAttribute('download', file.name)
       document.body.appendChild(link)
@@ -178,15 +185,22 @@ export function FileAttachments({
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes'
     const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const sizes = [
+'Bytes',
+'KB',
+'MB',
+'GB'
+]
     const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i]
+
+    return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`
   }
 
   const getFileIcon = (mimeType: string) => {
     if (mimeType.startsWith('image/')) return <Image className="h-5 w-5" />
     if (mimeType.startsWith('text/')) return <FileText className="h-5 w-5" />
     if (mimeType === 'application/pdf') return <FileType className="h-5 w-5" />
+
     return <File className="h-5 w-5" />
   }
 
@@ -232,13 +246,12 @@ export function FileAttachments({
             onValueChange={(accepted) => {
               if (accepted.length > 0) void handleUpload(accepted)
             }}
-            disabled={uploading || uploadMutation.isPending}
-          >
+            disabled={uploading || uploadMutation.isPending}>
             <FileUploadDropzone className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed py-8 text-center">
               <Upload className="h-8 w-8 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">
                 {t('files.dropHint', {
-                  defaultValue: 'Drag & drop files here, or',
+                  defaultValue: 'Drag & drop files here, or'
                 })}
               </p>
               <FileUploadTrigger asChild>
@@ -246,8 +259,7 @@ export function FileAttachments({
                   type="button"
                   variant="outline"
                   size="sm"
-                  disabled={uploading || uploadMutation.isPending}
-                >
+                  disabled={uploading || uploadMutation.isPending}>
                   <Upload className="mr-2 h-4 w-4" />
                   {t('files.chooseFiles', { defaultValue: 'Choose files' })}
                 </Button>
@@ -260,7 +272,7 @@ export function FileAttachments({
       {/* File List */}
       {files && files.length > 0 ? (
         <div className="space-y-2">
-          {files.map((file) => (
+          {files.map(file => (
             <Card key={file.id}>
               <CardContent className="py-4">
                 <div className="flex items-center justify-between gap-4">
@@ -291,16 +303,14 @@ export function FileAttachments({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDownload(file)}
-                    >
+                      onClick={() => handleDownload(file)}>
                       <Download className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => deleteMutation.mutate(file.id)}
-                      disabled={deleteMutation.isPending}
-                    >
+                      disabled={deleteMutation.isPending}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>

@@ -1462,15 +1462,7 @@
     "calendar": {
       "title": "Saha Takvimi",
       "monthlyView": "Aylık görünüm",
-      "weekdaysShort": [
-        "Pzt",
-        "Sal",
-        "Çar",
-        "Per",
-        "Cum",
-        "Cts",
-        "Paz"
-      ],
+      "weekdaysShort": ["Pzt", "Sal", "Çar", "Per", "Cum", "Cts", "Paz"],
       "planLabel": "Plan: ",
       "visitLabel": "Ziyaret: ",
       "taskLabel": "Görev: ",

@@ -1,9 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import type {
-  LeadConvertConversionMode,
-  LeadConvertEntityCandidate,
-  LeadConvertForm,
+
+import {
+  type LeadConvertConversionMode,
+  type LeadConvertEntityCandidate,
+  type LeadConvertForm
 } from '@/components/leads/lead-convert-tabs'
+
+import type {
+  LeadConvertPrecheckTargetSummary,
+  LeadConvertStepDetail,
+  LeadConvertStepState
+} from '@/components/leads/lead-convert-utils'
+
 import {
   getErrorMessage,
   isAbortLikeError,
@@ -13,54 +21,51 @@ import {
   normalizeDomain,
   normalizePhone,
   sanitizeKeyword,
-  unwrapItems,
-  type LeadConvertPrecheckTargetSummary,
-  type LeadConvertStepDetail,
-  type LeadConvertStepState,
+  unwrapItems
 } from '@/components/leads/lead-convert-utils'
 
 type DocyrusClient = any
 
 export type LeadConvertPrecheckSummary = {
-  company: LeadConvertPrecheckTargetSummary
-  contact: LeadConvertPrecheckTargetSummary
-  deal: LeadConvertPrecheckTargetSummary
+  company: LeadConvertPrecheckTargetSummary;
+  contact: LeadConvertPrecheckTargetSummary;
+  deal: LeadConvertPrecheckTargetSummary;
 }
 
 export interface UseLeadConvertDuplicatesOptions {
-  client: DocyrusClient | null
-  lead: any
-  t: (key: string, params?: Record<string, unknown>) => string
-  setIsWorking: (working: boolean) => void
-  setStep: (key: 'precheck', state: LeadConvertStepState) => void
+  client: DocyrusClient | null;
+  lead: any;
+  t: (key: string, params?: Record<string, unknown>) => string;
+  setIsWorking: (working: boolean) => void;
+  setStep: (key: 'precheck', state: LeadConvertStepState) => void;
   setStepDetail: (
     key: 'precheck',
-    details: Array<LeadConvertStepDetail>,
-  ) => void
-  setErrorMessage: (message: string | null) => void
-  onExactCompanyMatch: (id: string) => void
-  onExactContactMatch: (id: string) => void
+    details: Array<LeadConvertStepDetail>
+  ) => void;
+  setErrorMessage: (message: string | null) => void;
+  onExactCompanyMatch: (id: string) => void;
+  onExactContactMatch: (id: string) => void;
 }
 
 export interface UseLeadConvertDuplicatesResult {
-  companyCandidates: Array<LeadConvertEntityCandidate>
-  contactCandidates: Array<LeadConvertEntityCandidate>
-  dealCandidates: Array<LeadConvertEntityCandidate>
-  exactCompanyId: string | null
-  exactContactId: string | null
-  precheckSummary: LeadConvertPrecheckSummary
-  duplicatesChecked: boolean
-  setDuplicatesChecked: (checked: boolean) => void
+  companyCandidates: Array<LeadConvertEntityCandidate>;
+  contactCandidates: Array<LeadConvertEntityCandidate>;
+  dealCandidates: Array<LeadConvertEntityCandidate>;
+  exactCompanyId: string | null;
+  exactContactId: string | null;
+  precheckSummary: LeadConvertPrecheckSummary;
+  duplicatesChecked: boolean;
+  setDuplicatesChecked: (checked: boolean) => void;
   findDuplicates: (args: {
-    form: LeadConvertForm
-    mode: LeadConvertConversionMode
-  }) => Promise<void>
+    form: LeadConvertForm;
+    mode: LeadConvertConversionMode;
+  }) => Promise<void>;
 }
 
 const INITIAL_SUMMARY: LeadConvertPrecheckSummary = {
   company: { status: 'unchecked', count: 0 },
   contact: { status: 'unchecked', count: 0 },
-  deal: { status: 'unchecked', count: 0 },
+  deal: { status: 'unchecked', count: 0 }
 }
 
 export function useLeadConvertDuplicates({
@@ -72,7 +77,7 @@ export function useLeadConvertDuplicates({
   setStepDetail,
   setErrorMessage,
   onExactCompanyMatch,
-  onExactContactMatch,
+  onExactContactMatch
 }: UseLeadConvertDuplicatesOptions): UseLeadConvertDuplicatesResult {
   const [companyCandidates, setCompanyCandidates] = useState<
     Array<LeadConvertEntityCandidate>
@@ -90,8 +95,8 @@ export function useLeadConvertDuplicates({
   const [duplicatesChecked, setDuplicatesChecked] = useState(false)
 
   const duplicateCheckRef = useRef<{
-    requestId: number
-    controller: AbortController | null
+    requestId: number;
+    controller: AbortController | null;
   }>({ requestId: 0, controller: null })
 
   useEffect(
@@ -100,7 +105,7 @@ export function useLeadConvertDuplicates({
       duplicateCheckRef.current.controller?.abort()
       duplicateCheckRef.current.controller = null
     },
-    [],
+    []
   )
 
   const findDuplicates: UseLeadConvertDuplicatesResult['findDuplicates'] =
@@ -109,6 +114,7 @@ export function useLeadConvertDuplicates({
       duplicateCheckRef.current.controller?.abort()
       const requestId = duplicateCheckRef.current.requestId + 1
       const controller = new AbortController()
+
       duplicateCheckRef.current = { requestId, controller }
       setIsWorking(true)
       setErrorMessage(null)
@@ -129,9 +135,9 @@ export function useLeadConvertDuplicates({
                 {
                   columns: 'id,name,email,phone,website,country(id,name)',
                   filterKeyword: companyKeyword,
-                  limit: 8,
+                  limit: 8
                 },
-                { signal: controller.signal },
+                { signal: controller.signal }
               )
             : Promise.resolve([]),
           contactKeyword
@@ -140,9 +146,9 @@ export function useLeadConvertDuplicates({
                 {
                   columns: 'id,name,email,mobile,organization(id,name)',
                   filterKeyword: contactKeyword,
-                  limit: 8,
+                  limit: 8
                 },
-                { signal: controller.signal },
+                { signal: controller.signal }
               )
             : Promise.resolve([]),
           lead?.id
@@ -152,15 +158,13 @@ export function useLeadConvertDuplicates({
                   columns:
                     'id,name,stage(id,name),organization(id,name),source_lead(id,name)',
                   filters: {
-                    rules: [
-                      { field: 'source_lead', operator: '=', value: lead.id },
-                    ],
+                    rules: [{ field: 'source_lead', operator: '=', value: lead.id }]
                   },
-                  limit: 8,
+                  limit: 8
                 },
-                { signal: controller.signal },
+                { signal: controller.signal }
               )
-            : Promise.resolve([]),
+            : Promise.resolve([])
         ])
 
         if (
@@ -180,7 +184,7 @@ export function useLeadConvertDuplicates({
         const contactPhone = normalizePhone(form.contactPhone)
         const exactCompany = companyMatches.find((candidate) => {
           const candidateDomain = normalizeDomain(
-            String(candidate.website ?? ''),
+            String(candidate.website ?? '')
           )
           const candidatePhone = normalizePhone(String(candidate.phone ?? ''))
           const candidateName = normalize(String(candidate.name ?? ''))
@@ -211,25 +215,26 @@ export function useLeadConvertDuplicates({
         if (exactContact?.id) onExactContactMatch(exactContact.id)
 
         const precheckDetails: Array<LeadConvertStepDetail> = []
+
         precheckDetails.push(
           makeStepDetail(
             'success',
-            t('leads.convert.check.dealName', { value: form.dealName }),
-          ),
+            t('leads.convert.check.dealName', { value: form.dealName })
+          )
         )
         if (mode === 'company_contact_deal') {
           precheckDetails.push(
             makeStepDetail(
               'success',
-              t('leads.convert.check.companyName', { value: form.companyName }),
-            ),
+              t('leads.convert.check.companyName', { value: form.companyName })
+            )
           )
         }
         precheckDetails.push(
           makeStepDetail(
             'success',
-            t('leads.convert.check.contactName', { value: form.contactName }),
-          ),
+            t('leads.convert.check.contactName', { value: form.contactName })
+          )
         )
         if (mode === 'company_contact_deal') {
           if (companyMatches.length > 0) {
@@ -239,19 +244,19 @@ export function useLeadConvertDuplicates({
                 exactCompany
                   ? t('leads.convert.check.similarCompaniesFound', {
                       count: companyMatches.length,
-                      name: exactCompany.name,
+                      name: exactCompany.name
                     })
                   : t('leads.convert.check.similarCompaniesSuggested', {
-                      count: companyMatches.length,
-                    }),
-              ),
+                      count: companyMatches.length
+                    })
+              )
             )
           } else {
             precheckDetails.push(
               makeStepDetail(
                 'success',
-                t('leads.convert.check.noCompanyConflict'),
-              ),
+                t('leads.convert.check.noCompanyConflict')
+              )
             )
           }
         }
@@ -262,35 +267,36 @@ export function useLeadConvertDuplicates({
               exactContact
                 ? t('leads.convert.check.similarContactsFound', {
                     count: contactMatches.length,
-                    name: exactContact.name,
+                    name: exactContact.name
                   })
                 : t('leads.convert.check.similarContactsSuggested', {
-                    count: contactMatches.length,
-                  }),
-            ),
+                    count: contactMatches.length
+                  })
+            )
           )
         } else {
           precheckDetails.push(
             makeStepDetail(
               'success',
-              t('leads.convert.check.noContactConflict'),
-            ),
+              t('leads.convert.check.noContactConflict')
+            )
           )
         }
         if (dealMatches.length > 0) {
           const first = dealMatches[0]
+
           precheckDetails.push(
             makeStepDetail(
               'warn',
               t('leads.convert.check.previousDeals', {
                 count: dealMatches.length,
-                name: first?.name ?? t('common.unknown'),
-              }),
-            ),
+                name: first?.name ?? t('common.unknown')
+              })
+            )
           )
         } else {
           precheckDetails.push(
-            makeStepDetail('success', t('leads.convert.check.noDealConflict')),
+            makeStepDetail('success', t('leads.convert.check.noDealConflict'))
           )
         }
         setStepDetail('precheck', precheckDetails)
@@ -306,7 +312,7 @@ export function useLeadConvertDuplicates({
                         ? 'exact'
                         : 'matches',
                   count: companyMatches.length,
-                  exactName: exactCompany?.name,
+                  exactName: exactCompany?.name
                 }
               : { status: 'unchecked', count: 0 },
           contact: {
@@ -317,13 +323,13 @@ export function useLeadConvertDuplicates({
                   ? 'exact'
                   : 'matches',
             count: contactMatches.length,
-            exactName: exactContact?.name,
+            exactName: exactContact?.name
           },
           deal: {
             status: dealMatches.length === 0 ? 'clean' : 'matches',
             count: dealMatches.length,
-            exactName: dealMatches[0]?.name,
-          },
+            exactName: dealMatches[0]?.name
+          }
         })
 
         setDuplicatesChecked(true)
@@ -331,6 +337,7 @@ export function useLeadConvertDuplicates({
           companyMatches.length > 0 ||
           contactMatches.length > 0 ||
           dealMatches.length > 0
+
         logLeadConvertEvent('info', 'precheck_completed', {
           leadId: lead?.id,
           mode,
@@ -339,7 +346,7 @@ export function useLeadConvertDuplicates({
           dealMatches: dealMatches.length,
           exactCompanyId: exactCompany?.id ?? null,
           exactContactId: exactContact?.id ?? null,
-          hasAnyMatch,
+          hasAnyMatch
         })
         setStep('precheck', hasAnyMatch ? 'warn' : 'done')
       } catch (error) {
@@ -348,17 +355,18 @@ export function useLeadConvertDuplicates({
         }
         setStep('precheck', 'failed')
         const errMsg = getErrorMessage(error, t)
+
         setStepDetail('precheck', [
           makeStepDetail(
             'error',
-            t('leads.convert.result.errorPrefix', { message: errMsg }),
-          ),
+            t('leads.convert.result.errorPrefix', { message: errMsg })
+          )
         ])
         setErrorMessage(errMsg)
         logLeadConvertEvent('error', 'precheck_failed', {
           leadId: lead?.id,
           mode,
-          message: errMsg,
+          message: errMsg
         })
       } finally {
         if (duplicateCheckRef.current.requestId === requestId) {
@@ -377,6 +385,6 @@ export function useLeadConvertDuplicates({
     precheckSummary,
     duplicatesChecked,
     setDuplicatesChecked,
-    findDuplicates,
+    findDuplicates
   }
 }

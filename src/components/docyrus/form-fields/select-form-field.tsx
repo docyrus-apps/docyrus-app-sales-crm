@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { useMemo } from 'react'
 
 import { Field, FieldError } from '@/components/ui/field'
@@ -11,12 +13,14 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 import { FormFieldLabel } from './form-field-label'
 import { EnumOptionDisplay } from './lib/enum-option-display'
 import { flattenNestedOptions } from './lib/utils'
 import { type DocyrusFormFieldProps, type EnumOption } from './types'
+
+const EMPTY_ENUM_OPTIONS: never[] = []
 
 export function SelectFormField({
   field: fieldConfig,
@@ -24,7 +28,7 @@ export function SelectFormField({
   disabled,
   required,
   className,
-  enumOptions = [],
+  enumOptions = EMPTY_ENUM_OPTIONS,
 }: DocyrusFormFieldProps) {
   const { t } = useUiTranslation()
   const isNested = fieldConfig.nested === true
@@ -48,9 +52,8 @@ export function SelectFormField({
   )
 
   return (
-    <form.Field
-      name={fieldConfig.slug}
-      children={(field: any) => {
+    <form.Field name={fieldConfig.slug}>
+      {(field: any) => {
         const isInvalid =
           field.state.meta.isTouched && !field.state.meta.isValid
 
@@ -82,7 +85,7 @@ export function SelectFormField({
                   ) : null}
                 </SelectValue>
               </SelectTrigger>
-              <SelectContent className="min-w-[18rem]">
+              <SelectContent>
                 {flatOptions
                   ? flatOptions.map(({ option, depth }) =>
                       renderOption(option, depth),
@@ -94,6 +97,6 @@ export function SelectFormField({
           </Field>
         )
       }}
-    />
+    </form.Field>
   )
 }

@@ -1,6 +1,8 @@
+import type { EventFormData } from '@/schemas/event-schema'
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import type { EventFormData } from '@/schemas/event-schema'
+
 import { useBaseEventCollection } from '@/collections/base-event.collection'
 
 export function useEvents(filters?: any) {
@@ -8,8 +10,7 @@ export function useEvents(filters?: any) {
 
   return useQuery({
     queryKey: ['events', filters],
-    queryFn: () =>
-      eventCollection.list({
+    queryFn: () => eventCollection.list({
         columns: [
           'id',
           'subject',
@@ -18,11 +19,11 @@ export function useEvents(filters?: any) {
           'end_date',
           'calendar',
           'event_notes',
-          'created_on',
+          'created_on'
         ],
         filters,
-        orderBy: 'created_on DESC',
-      }),
+        orderBy: 'created_on DESC'
+      })
   })
 }
 
@@ -33,6 +34,7 @@ export function useEvent(eventId: string | undefined) {
     queryKey: ['events', eventId],
     queryFn: () => {
       if (!eventId) throw new Error('Event ID is required')
+
       return eventCollection.get(eventId, {
         columns: [
           'id',
@@ -42,11 +44,11 @@ export function useEvent(eventId: string | undefined) {
           'end_date',
           'calendar',
           'event_notes',
-          'created_on',
-        ],
+          'created_on'
+        ]
       })
     },
-    enabled: !!eventId,
+    enabled: !!eventId
   })
 }
 
@@ -61,14 +63,18 @@ export type RecordEventRelation = 'contact' | 'organization' | 'lead' | 'deal'
  */
 export function useRecordEvents(
   relation: RecordEventRelation,
-  recordId: string | undefined,
+  recordId: string | undefined
 ) {
   const eventCollection = useBaseEventCollection()
 
   return useQuery({
-    queryKey: ['events', 'record', relation, recordId],
-    queryFn: () =>
-      eventCollection.list({
+    queryKey: [
+'events',
+'record',
+relation,
+recordId
+],
+    queryFn: () => eventCollection.list({
         columns: [
           'id',
           'subject',
@@ -77,14 +83,14 @@ export function useRecordEvents(
           'end_date',
           'calendar(id,name)',
           'record_owner(id,firstname,lastname,email)',
-          'created_on',
+          'created_on'
         ],
         filters: {
-          rules: [{ field: relation, operator: '=', value: recordId }],
+          rules: [{ field: relation, operator: '=', value: recordId }]
         },
-        orderBy: 'created_on DESC',
+        orderBy: 'created_on DESC'
       }),
-    enabled: !!recordId,
+    enabled: !!recordId
   })
 }
 
@@ -98,8 +104,7 @@ export function useCreateEvent() {
       queryClient.invalidateQueries({ queryKey: ['events'] })
       toast.success('Event created successfully')
     },
-    onError: (error: any) =>
-      toast.error(error?.message || 'Failed to create event'),
+    onError: (error: any) => toast.error(error?.message || 'Failed to create event')
   })
 }
 
@@ -108,14 +113,12 @@ export function useUpdateEvent() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ eventId, data }: { eventId: string; data: EventFormData }) =>
-      eventCollection.update(eventId, data),
+    mutationFn: ({ eventId, data }: { eventId: string; data: EventFormData }) => eventCollection.update(eventId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] })
       toast.success('Event updated successfully')
     },
-    onError: (error: any) =>
-      toast.error(error?.message || 'Failed to update event'),
+    onError: (error: any) => toast.error(error?.message || 'Failed to update event')
   })
 }
 
@@ -129,7 +132,6 @@ export function useDeleteEvent() {
       queryClient.invalidateQueries({ queryKey: ['events'] })
       toast.success('Event deleted successfully')
     },
-    onError: (error: any) =>
-      toast.error(error?.message || 'Failed to delete event'),
+    onError: (error: any) => toast.error(error?.message || 'Failed to delete event')
   })
 }

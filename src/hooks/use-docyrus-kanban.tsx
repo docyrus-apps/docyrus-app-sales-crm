@@ -1,24 +1,32 @@
 'use client'
 
 import {
+  type ReactNode,
   useCallback,
   useEffect,
   useMemo,
   useRef,
-  useState,
-  type ReactNode,
+  useState
 } from 'react'
 
 import { type DataSourceField } from '@docyrus/app-utils'
 import { type UniqueIdentifier } from '@dnd-kit/core'
+
+import type { RuleGroupType } from 'react-querybuilder'
+
 import {
   keepPreviousData,
   useMutation,
   useQuery,
-  useQueryClient,
+  useQueryClient
 } from '@tanstack/react-query'
 import { Loader2, RotateCw, Search } from 'lucide-react'
-import { type RuleGroupType } from 'react-querybuilder'
+
+import {
+  useDocyrusDataViewSelect,
+  type UseDocyrusDataViewSelectOptions,
+  type UseDocyrusDataViewSelectResult
+} from './use-docyrus-data-view-select'
 
 import { getEnumBadgeColors } from '@/components/docyrus/form-fields/lib/utils'
 import {
@@ -27,7 +35,7 @@ import {
   KanbanFinalColumn,
   KanbanFinalZone,
   KanbanItem,
-  KanbanOverlay,
+  KanbanOverlay
 } from '@/components/docyrus/kanban'
 import { RecordDeleteConfirmDialog } from '@/components/docyrus/record-delete-confirm-dialog'
 import { Button } from '@/components/ui/button'
@@ -39,7 +47,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -51,14 +59,8 @@ import {
   KanbanColumnAccent,
   KanbanColumnHeader,
   KanbanEmpty,
-  KanbanRootGeneric,
+  KanbanRootGeneric
 } from '@/hooks/_internal/use-docyrus-kanban-cards'
-
-import {
-  useDocyrusDataViewSelect,
-  type UseDocyrusDataViewSelectOptions,
-  type UseDocyrusDataViewSelectResult,
-} from './use-docyrus-data-view-select'
 
 /*
  * Renderer components live in `_internal/` so they're not picked up by
@@ -78,14 +80,10 @@ const SUPPORTED_GROUP_FIELD_TYPES = new Set<string>([
   'field-status',
   'field-userSelect',
   'field-date',
-  'field-dateTime',
+  'field-dateTime'
 ])
 
-const ENUM_GROUP_FIELD_TYPES = new Set<string>([
-  'field-select',
-  'field-radioGroup',
-  'field-status',
-])
+const ENUM_GROUP_FIELD_TYPES = new Set<string>(['field-select', 'field-radioGroup', 'field-status'])
 
 const DATE_GROUP_FIELD_TYPES = new Set<string>(['field-date', 'field-dateTime'])
 
@@ -95,114 +93,114 @@ export type DocyrusKanbanUserGroupBy = 'user' | 'team'
 /** Shape of a TanStack DB collection compatible with the kanban hook. */
 export interface DocyrusKanbanCollection<TData> {
   list: (
-    params?: Record<string, unknown>,
-  ) => Promise<Array<TData> | { data: Array<TData> }>
+    params?: Record<string, unknown>
+  ) => Promise<Array<TData> | { data: Array<TData> }>;
   /** PATCH `/items/:id` — used when a card is dropped into a different column. */
-  update?: (id: string, body: Record<string, unknown>) => Promise<unknown>
+  update?: (id: string, body: Record<string, unknown>) => Promise<unknown>;
   /** DELETE `/items/:id` — used by the default "Delete" action menu item. */
-  remove?: (id: string) => Promise<unknown>
+  remove?: (id: string) => Promise<unknown>;
 }
 
 export interface DocyrusKanbanListParams {
-  columns?: string
-  filters?: RuleGroupType | Record<string, unknown>
-  filterKeyword?: string
+  columns?: string;
+  filters?: RuleGroupType | Record<string, unknown>;
+  filterKeyword?: string;
   orderBy?:
     | string
     | { field: string; direction?: 'asc' | 'desc' }
-    | Array<{ field: string; direction?: 'asc' | 'desc' }>
-  limit?: number
-  offset?: number
-  fullCount?: boolean
-  expand?: Array<string>
-  expandTypes?: Array<'user' | 'enum' | 'relation'>
-  [key: string]: unknown
+    | Array<{ field: string; direction?: 'asc' | 'desc' }>;
+  limit?: number;
+  offset?: number;
+  fullCount?: boolean;
+  expand?: Array<string>;
+  expandTypes?: Array<'user' | 'enum' | 'relation'>;
+  [key: string]: unknown;
 }
 
 /** Resolved metadata for a single kanban column. */
 export interface DocyrusKanbanColumnMeta {
   /** Stable column id (enum option id/slug, user/team id, or bucketed date key). */
-  id: string
+  id: string;
   /** Display label rendered in the column header. */
-  label: string
+  label: string;
   /** Color forwarded from enum options or computed; rendered as the column accent. */
-  color?: string | null
+  color?: string | null;
   /** Icon identifier forwarded from enum options. */
-  icon?: string | null
+  icon?: string | null;
   /** Avatar image (e.g. user photo) — used for user/team grouping. */
-  imageUrl?: string | null
+  imageUrl?: string | null;
   /** Marks enum options where `is_final_option` / `isFinalOption` is `true`. */
-  isFinal?: boolean
+  isFinal?: boolean;
   /** Pre-computed count of items in the column. */
-  count: number
+  count: number;
 }
 
 /** Built-in card menu actions surfaced by the default `cardMenuItems`. */
 export type DocyrusKanbanCardAction = 'open' | 'edit' | 'delete'
 
 export interface DocyrusKanbanCardMenuItem<TData> {
-  key: string
-  label: ReactNode
-  icon?: ReactNode
-  destructive?: boolean
+  key: string;
+  label: ReactNode;
+  icon?: ReactNode;
+  destructive?: boolean;
   /** Disable the item; called with the row before `onAction` runs. */
-  disabled?: boolean | ((row: TData) => boolean)
-  onAction?: (row: TData) => void
+  disabled?: boolean | ((row: TData) => boolean);
+  onAction?: (row: TData) => void;
 }
 
 export interface DocyrusKanbanCardContext<TData> {
-  row: TData
-  column: DocyrusKanbanColumnMeta
+  row: TData;
+  column: DocyrusKanbanColumnMeta;
 }
 
 export interface UseDocyrusKanbanOptions<
   TData,
 > extends UseDocyrusDataViewSelectOptions {
   /** Slug of the field whose values become kanban columns. */
-  groupByFieldSlug: string
+  groupByFieldSlug: string;
   /** Pre-resolved rows. When provided, the hook skips its internal items query. */
-  data?: Array<TData>
+  data?: Array<TData>;
   /** TanStack DB collection (e.g., `useBaseOrganizationCollection()`). */
-  collection?: DocyrusKanbanCollection<TData>
+  collection?: DocyrusKanbanCollection<TData>;
   /** Extra query params merged on top of the view-derived payload. */
-  listParams?: DocyrusKanbanListParams
+  listParams?: DocyrusKanbanListParams;
   /** Default page size when no `limit` is supplied via `listParams`. Default `200`. */
-  defaultLimit?: number
+  defaultLimit?: number;
   /** Disable the internal items query. Default `true` when no `data` is provided. */
-  enableItemsQuery?: boolean
+  enableItemsQuery?: boolean;
   /**
    * Granularity used when grouping by a `field-date` / `field-dateTime` field.
    * Time portion is always ignored. Default `'day'`.
    */
-  dateGroupBy?: DocyrusKanbanDateGroupBy
+  dateGroupBy?: DocyrusKanbanDateGroupBy;
   /**
    * Grouping mode used when the group-by field is `field-userSelect`.
    * `'user'` groups one column per user; `'team'` groups by `team_id` /
    * `team` on the user payload. Default `'user'`.
    */
-  userGroupBy?: DocyrusKanbanUserGroupBy
+  userGroupBy?: DocyrusKanbanUserGroupBy;
   /**
    * For enum-backed fields (`field-select`, `field-radioGroup`, `field-status`),
    * controls whether columns are rendered for every enum option or only those
    * with at least one item. Default `true` (show all).
    */
-  showAllColumns?: boolean
+  showAllColumns?: boolean;
 
   /* ----------------------------- Card contract ------------------------- */
 
   /** Field slug whose `icon`/`color`/`image` value seeds the card avatar. */
-  avatarColumn?: string
+  avatarColumn?: string;
   /** Field slug used for the card title (top, large, single-line truncated). */
-  titleColumn?: string
+  titleColumn?: string;
   /** Field slug used for the card description (under the title). */
-  descriptionColumn?: string
+  descriptionColumn?: string;
   /** Field slug whose user value appears in the card footer (left). */
-  userColumn?: string
+  userColumn?: string;
   /**
    * Free-form card content rendered between the header and the footer.
    * Receives the raw row + active column metadata.
    */
-  cardContent?: (ctx: DocyrusKanbanCardContext<TData>) => ReactNode
+  cardContent?: (ctx: DocyrusKanbanCardContext<TData>) => ReactNode;
   /**
    * Override the card action menu (top-right vertical-three-dots). Default
    * surfaces Open, Edit, and Delete entries — wire callbacks via
@@ -212,40 +210,40 @@ export interface UseDocyrusKanbanOptions<
     | Array<DocyrusKanbanCardMenuItem<TData>>
     | ((
         row: TData,
-        defaults: Array<DocyrusKanbanCardMenuItem<TData>>,
-      ) => Array<DocyrusKanbanCardMenuItem<TData>>)
+        defaults: Array<DocyrusKanbanCardMenuItem<TData>>
+      ) => Array<DocyrusKanbanCardMenuItem<TData>>);
   /** Whitelist of default actions to keep. Default `['open', 'edit', 'delete']`. */
-  cardActions?: ReadonlyArray<DocyrusKanbanCardAction>
-  onCardOpen?: (row: TData) => void
-  onCardEdit?: (row: TData) => void
+  cardActions?: ReadonlyArray<DocyrusKanbanCardAction>;
+  onCardOpen?: (row: TData) => void;
+  onCardEdit?: (row: TData) => void;
   /**
    * Custom delete handler. If omitted, the hook uses
    * `collection.remove(id)` or `DELETE /v1/apps/.../items/:id` after a
    * confirmation dialog.
    */
-  onCardDelete?: (row: TData) => Promise<void> | void
+  onCardDelete?: (row: TData) => Promise<void> | void;
   /** Click handler fired when the user clicks the card body. */
-  onCardClick?: (row: TData) => void
+  onCardClick?: (row: TData) => void;
 
   /* --------------------------- Toolbar feature toggles ------------------ */
 
-  enableViewSelect?: boolean
-  enableSearchInput?: boolean
+  enableViewSelect?: boolean;
+  enableSearchInput?: boolean;
   /** Show the date grouping picker when grouping by date/dateTime. Default `true`. */
-  enableDateGroupMenu?: boolean
+  enableDateGroupMenu?: boolean;
   /** Show the user/team grouping picker when grouping by user. Default `true`. */
-  enableUserGroupMenu?: boolean
+  enableUserGroupMenu?: boolean;
   /** Show the "Show all columns" switch when grouping by enum. Default `true`. */
-  enableShowAllColumnsSwitch?: boolean
-  enableReloadButton?: boolean
+  enableShowAllColumnsSwitch?: boolean;
+  enableReloadButton?: boolean;
 
   /** Fired after the toolbar reload + internal `refetch`. */
-  onReload?: () => void
-  searchPlaceholder?: string
-  searchDebounceMs?: number
-  toolbarClassName?: string
-  toolbarStartContent?: ReactNode
-  toolbarEndContent?: ReactNode
+  onReload?: () => void;
+  searchPlaceholder?: string;
+  searchDebounceMs?: number;
+  toolbarClassName?: string;
+  toolbarStartContent?: ReactNode;
+  toolbarEndContent?: ReactNode;
 
   /**
    * Fired when a card is dropped into a different column. The hook still
@@ -253,23 +251,23 @@ export interface UseDocyrusKanbanOptions<
    * local state, fire analytics, etc.
    */
   onItemMove?: (params: {
-    row: TData
-    fromColumnId: string | null
-    toColumnId: string
-    column: DocyrusKanbanColumnMeta
-  }) => void
+    row: TData;
+    fromColumnId: string | null;
+    toColumnId: string;
+    column: DocyrusKanbanColumnMeta;
+  }) => void;
   /**
    * Custom item-move handler. When provided the hook skips its built-in
    * PATCH so callers fully own persistence (optimistic updates, validation,
    * undo, etc.). Throw to abort the move — the UI rolls back.
    */
   onItemMoveCommit?: (params: {
-    row: TData
-    fromColumnId: string | null
-    toColumnId: string
-    column: DocyrusKanbanColumnMeta
-    payload: Record<string, unknown>
-  }) => Promise<void> | void
+    row: TData;
+    fromColumnId: string | null;
+    toColumnId: string;
+    column: DocyrusKanbanColumnMeta;
+    payload: Record<string, unknown>;
+  }) => Promise<void> | void;
 }
 
 export interface UseDocyrusKanbanResult<TData> extends Omit<
@@ -277,33 +275,33 @@ export interface UseDocyrusKanbanResult<TData> extends Omit<
   'gridViewSelectProps'
 > {
   /** Pre-wired toolbar element ready to render above the board. */
-  toolbar: ReactNode
+  toolbar: ReactNode;
   /**
    * Pre-wired kanban board element. Render it directly — the underlying
    * `<Kanban>` is fully wired to the hook's items, columns, drag handlers
    * and final-zone integration.
    */
-  board: ReactNode
+  board: ReactNode;
   /** Resolved rows passed to the board. */
-  items: Array<TData>
+  items: Array<TData>;
   /** The list params actually sent to the backend. */
-  resolvedListParams: DocyrusKanbanListParams
+  resolvedListParams: DocyrusKanbanListParams;
   /** Group-by field metadata. */
-  groupByField: DataSourceField | undefined
+  groupByField: DataSourceField | undefined;
   /** Ordered metadata for every rendered column. */
-  columns: Array<DocyrusKanbanColumnMeta>
+  columns: Array<DocyrusKanbanColumnMeta>;
   /** Items grouped by `column.id` — same shape passed into `<Kanban value>`. */
-  columnsItems: Record<string, Array<TData>>
+  columnsItems: Record<string, Array<TData>>;
   /** Active date grouping (only meaningful when grouping by date). */
-  dateGroupBy: DocyrusKanbanDateGroupBy
-  setDateGroupBy: (value: DocyrusKanbanDateGroupBy) => void
+  dateGroupBy: DocyrusKanbanDateGroupBy;
+  setDateGroupBy: (value: DocyrusKanbanDateGroupBy) => void;
   /** Active user grouping (only meaningful when grouping by user). */
-  userGroupBy: DocyrusKanbanUserGroupBy
-  setUserGroupBy: (value: DocyrusKanbanUserGroupBy) => void
+  userGroupBy: DocyrusKanbanUserGroupBy;
+  setUserGroupBy: (value: DocyrusKanbanUserGroupBy) => void;
   /** Active "show all columns" switch state (enum grouping only). */
-  showAllColumns: boolean
-  setShowAllColumns: (value: boolean) => void
-  reload: () => void
+  showAllColumns: boolean;
+  setShowAllColumns: (value: boolean) => void;
+  reload: () => void;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -311,7 +309,7 @@ export interface UseDocyrusKanbanResult<TData> extends Omit<
 /* ------------------------------------------------------------------------- */
 
 export function useDocyrusKanban<TData extends Record<string, unknown>>(
-  options: UseDocyrusKanbanOptions<TData>,
+  options: UseDocyrusKanbanOptions<TData>
 ): UseDocyrusKanbanResult<TData> {
   const {
     groupByFieldSlug,
@@ -358,12 +356,12 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
     refetch: refetchViewSelect,
     views,
     activeViewId,
-    setActiveViewId,
+    setActiveViewId
   } = viewSelect
 
   const groupByField = useMemo(
-    () => dataSource?.fields?.find((field) => field.slug === groupByFieldSlug),
-    [dataSource?.fields, groupByFieldSlug],
+    () => dataSource?.fields?.find(field => field.slug === groupByFieldSlug),
+    [dataSource?.fields, groupByFieldSlug]
   )
 
   const groupByKind = useMemo<'enum' | 'user' | 'date' | 'unsupported'>(() => {
@@ -390,15 +388,15 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
   useEffect(() => {
     const timeout = window.setTimeout(
       () => setDebouncedSearch(searchInput),
-      searchDebounceMs,
+      searchDebounceMs
     )
 
     return () => window.clearTimeout(timeout)
   }, [searchInput, searchDebounceMs])
 
   const activeView = useMemo(
-    () => views.find((view) => view.id === activeViewId),
-    [views, activeViewId],
+    () => views.find(view => view.id === activeViewId),
+    [views, activeViewId]
   )
 
   const cardSlugs = useMemo(() => {
@@ -415,7 +413,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
     avatarColumn,
     titleColumn,
     descriptionColumn,
-    userColumn,
+    userColumn
   ])
 
   const resolvedListParams = useMemo<DocyrusKanbanListParams>(() => {
@@ -428,8 +426,8 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
      * card-tested data sources but we'd rather be explicit).
      */
     const fields = dataSource?.fields ?? []
-    const fieldSlugs = new Set(fields.map((field) => field.slug))
-    const required = cardSlugs.filter((slug) => fieldSlugs.has(slug))
+    const fieldSlugs = new Set(fields.map(field => field.slug))
+    const required = cardSlugs.filter(slug => fieldSlugs.has(slug))
 
     if (required.length > 0) {
       const set = new Set<string>(['id', ...required])
@@ -438,8 +436,8 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
         'created_on',
         'last_modified_on',
         'created_by',
-        'last_modified_by',
-      ].forEach((slug) => set.add(slug))
+        'last_modified_by'
+      ].forEach(slug => set.add(slug))
 
       params.columns = Array.from(set).join(', ')
     }
@@ -462,7 +460,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
     for (const slug of [avatarColumn, userColumn]) {
       if (!slug) continue
 
-      const field = fields.find((f) => f.slug === slug)
+      const field = fields.find(f => f.slug === slug)
 
       if (!field) continue
 
@@ -483,9 +481,9 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
     }
 
     if (activeView?.sorting && activeView.sorting.length > 0) {
-      params.orderBy = activeView.sorting.map((sort) => ({
+      params.orderBy = activeView.sorting.map(sort => ({
         field: sort.id,
-        direction: sort.desc ? ('desc' as const) : ('asc' as const),
+        direction: sort.desc ? ('desc' as const) : ('asc' as const)
       }))
     }
 
@@ -508,27 +506,26 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
     activeView,
     debouncedSearch,
     defaultLimit,
-    listParams,
+    listParams
   ])
 
   /* --------------------------- items query ------------------------------ */
 
   const itemsKey = useMemo(
-    () =>
-      [
+    () => [
         'docyrus',
         'docyrusKanbanItems',
         viewSelectOptions.appSlug,
         viewSelectOptions.dataSourceSlug,
         collection ? 'collection' : 'direct',
-        resolvedListParams,
+        resolvedListParams
       ] as const,
     [
       viewSelectOptions.appSlug,
       viewSelectOptions.dataSourceSlug,
       collection,
-      resolvedListParams,
-    ],
+      resolvedListParams
+    ]
   )
 
   const viewMetadataReady =
@@ -546,7 +543,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
         `/v1/apps/${viewSelectOptions.appSlug}/data-sources/${viewSelectOptions.dataSourceSlug}/items`,
         resolvedListParams as Parameters<
           typeof viewSelectOptions.client.get
-        >[1],
+        >[1]
       )
 
       return unwrapItems<TData>(response)
@@ -559,16 +556,16 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
       Boolean(groupByField) &&
       viewMetadataReady,
     staleTime: viewSelectOptions.staleTime ?? 30_000,
-    placeholderData: keepPreviousData,
+    placeholderData: keepPreviousData
   })
 
   const itemsRefetchRef = useRef<(() => Promise<unknown>) | null>(null)
 
-  itemsRefetchRef.current = itemsQuery.refetch as () => Promise<unknown>
+  itemsRefetchRef.current = itemsQuery.refetch
 
   const items = useMemo<Array<TData>>(
     () => providedData ?? itemsQuery.data ?? [],
-    [providedData, itemsQuery.data],
+    [providedData, itemsQuery.data]
   )
 
   /* --------------------------- column derivation ------------------------ */
@@ -589,7 +586,13 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
     }
 
     return []
-  }, [groupByField, groupByKind, items, userGroupBy, dateGroupBy])
+  }, [
+groupByField,
+groupByKind,
+items,
+userGroupBy,
+dateGroupBy
+])
 
   const columnsItems = useMemo<Record<string, Array<TData>>>(() => {
     const map: Record<string, Array<TData>> = {}
@@ -619,26 +622,31 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
     groupByField,
     groupByKind,
     dateGroupBy,
-    userGroupBy,
+    userGroupBy
   ])
 
   const visibleColumnsMeta = useMemo<Array<DocyrusKanbanColumnMeta>>(() => {
-    const withCounts = allColumnsMeta.map((col) => ({
+    const withCounts = allColumnsMeta.map(col => ({
       ...col,
-      count: columnsItems[col.id]?.length ?? 0,
+      count: columnsItems[col.id]?.length ?? 0
     }))
 
     if (groupByKind === 'enum' && !showAllColumns) {
-      return withCounts.filter((col) => col.count > 0)
+      return withCounts.filter(col => col.count > 0)
     }
 
     return withCounts
-  }, [allColumnsMeta, columnsItems, groupByKind, showAllColumns])
+  }, [
+allColumnsMeta,
+columnsItems,
+groupByKind,
+showAllColumns
+])
 
   const finalColumnIds = useMemo<Array<string>>(() => {
     if (groupByKind !== 'enum') return []
 
-    return visibleColumnsMeta.filter((col) => col.isFinal).map((col) => col.id)
+    return visibleColumnsMeta.filter(col => col.isFinal).map(col => col.id)
   }, [groupByKind, visibleColumnsMeta])
 
   /*
@@ -647,7 +655,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
    * zone) and we strip out columns the user hid via the show-all switch.
    */
   const kanbanValue = useMemo<Record<UniqueIdentifier, Array<TData>>>(() => {
-    const visibleIds = new Set(visibleColumnsMeta.map((col) => col.id))
+    const visibleIds = new Set(visibleColumnsMeta.map(col => col.id))
     const finalIdSet = new Set(finalColumnIds)
     const out: Record<UniqueIdentifier, Array<TData>> = {}
 
@@ -676,13 +684,13 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
 
   const columnsForRender = useMemo<Array<DocyrusKanbanColumnMeta>>(() => {
     const finalIdSet = new Set(finalColumnIds)
-    const list = visibleColumnsMeta.filter((col) => !finalIdSet.has(col.id))
+    const list = visibleColumnsMeta.filter(col => !finalIdSet.has(col.id))
 
     if (kanbanValue['__uncategorized__']) {
       list.push({
         id: '__uncategorized__',
         label: 'Uncategorized',
-        count: kanbanValue['__uncategorized__'].length,
+        count: kanbanValue['__uncategorized__'].length
       })
     }
 
@@ -693,8 +701,8 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
 
   const updateMutation = useMutation({
     mutationFn: async (vars: {
-      id: string
-      payload: Record<string, unknown>
+      id: string;
+      payload: Record<string, unknown>;
     }) => {
       if (collection?.update) {
         await collection.update(vars.id, vars.payload)
@@ -704,12 +712,12 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
 
       await viewSelectOptions.client.patch(
         `/v1/apps/${viewSelectOptions.appSlug}/data-sources/${viewSelectOptions.dataSourceSlug}/items/${vars.id}`,
-        vars.payload,
+        vars.payload
       )
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: itemsKey })
-    },
+    }
   })
 
   const deleteMutation = useMutation({
@@ -721,12 +729,12 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
       }
 
       await viewSelectOptions.client.delete(
-        `/v1/apps/${viewSelectOptions.appSlug}/data-sources/${viewSelectOptions.dataSourceSlug}/items/${id}`,
+        `/v1/apps/${viewSelectOptions.appSlug}/data-sources/${viewSelectOptions.dataSourceSlug}/items/${id}`
       )
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: itemsKey })
-    },
+    }
   })
 
   const buildMovePayload = useCallback(
@@ -747,7 +755,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
 
       return null
     },
-    [groupByField, groupByKind, userGroupBy],
+    [groupByField, groupByKind, userGroupBy]
   )
 
   /*
@@ -773,17 +781,17 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
     (next: Record<UniqueIdentifier, Array<TData>>) => {
       setLiveValue(next)
     },
-    [],
+    []
   )
 
   const dragStateRef = useRef<{ id: string; originalColumnId: string } | null>(
-    null,
+    null
   )
 
   const findColumnIdFor = useCallback(
     (
       rowId: string,
-      value: Record<UniqueIdentifier, Array<TData>>,
+      value: Record<UniqueIdentifier, Array<TData>>
     ): string | null => {
       for (const [columnId, list] of Object.entries(value)) {
         const found = list.some((row) => {
@@ -797,7 +805,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
 
       return null
     },
-    [],
+    []
   )
 
   const handleDragStart = useCallback(
@@ -807,7 +815,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
 
       dragStateRef.current = originalColumnId ? { id, originalColumnId } : null
     },
-    [findColumnIdFor],
+    [findColumnIdFor]
   )
 
   const handleDragCancel = useCallback(() => {
@@ -819,7 +827,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
       if (!groupByField) return
       if (fromColumnId === toColumnId) return
 
-      const meta = columnsForRender.find((col) => col.id === toColumnId)
+      const meta = columnsForRender.find(col => col.id === toColumnId)
 
       if (!meta) return
 
@@ -840,7 +848,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
         row,
         fromColumnId,
         toColumnId,
-        column: meta,
+        column: meta
       }
 
       onItemMove?.(ctx)
@@ -857,8 +865,8 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
       buildMovePayload,
       onItemMove,
       onItemMoveCommit,
-      updateMutation,
-    ],
+      updateMutation
+    ]
   )
 
   const handleDragEnd = useCallback(() => {
@@ -892,7 +900,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
       const { id } = item as Record<string, unknown>
 
       if (typeof id !== 'string' || id.length === 0) return
-      const meta = visibleColumnsMeta.find((col) => col.id === finalColumnId)
+      const meta = visibleColumnsMeta.find(col => col.id === finalColumnId)
 
       if (!meta) return
       const payload = { [groupByField.slug]: String(finalColumnId) }
@@ -901,7 +909,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
         row: item,
         fromColumnId: null,
         toColumnId: String(finalColumnId),
-        column: meta,
+        column: meta
       })
 
       if (onItemMoveCommit) {
@@ -911,8 +919,8 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
             fromColumnId: null,
             toColumnId: String(finalColumnId),
             column: meta,
-            payload,
-          }),
+            payload
+          })
         )
       } else {
         updateMutation.mutate({ id, payload })
@@ -923,8 +931,8 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
       visibleColumnsMeta,
       onItemMove,
       onItemMoveCommit,
-      updateMutation,
-    ],
+      updateMutation
+    ]
   )
 
   /* --------------------------- delete dialog ---------------------------- */
@@ -959,7 +967,12 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
     refetchViewSelect()
     if (providedData === undefined) void itemsQuery.refetch()
     onReload?.()
-  }, [refetchViewSelect, itemsQuery, providedData, onReload])
+  }, [
+refetchViewSelect,
+itemsQuery,
+providedData,
+onReload
+])
 
   const reloadItems = useCallback(() => {
     if (providedData === undefined) void itemsQuery.refetch()
@@ -978,14 +991,13 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
   const toolbar = (
     <div
       data-slot="docyrus-kanban-toolbar"
-      className={cn('flex flex-col gap-2 px-3 py-2', toolbarClassName)}
-    >
+      className={cn('flex flex-col gap-2 px-3 py-2', toolbarClassName)}>
       {(toolbarStartContent || showViewSelect) && (
         <div className="flex min-w-0 items-center gap-2 overflow-x-auto">
           {toolbarStartContent}
           {showViewSelect && (
             <div className="flex min-w-0 items-center gap-1">
-              {views.map((view) => (
+              {views.map(view => (
                 <Button
                   key={view.id}
                   type="button"
@@ -994,10 +1006,9 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
                   className={cn(
                     'h-8 shrink-0 rounded-none border-b-2 border-transparent px-3 text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground',
                     view.id === activeViewId &&
-                      'border-foreground text-foreground',
+                    'border-foreground text-foreground'
                   )}
-                  onClick={() => setActiveViewId(view.id)}
-                >
+                  onClick={() => setActiveViewId(view.id)}>
                   {view.name}
                 </Button>
               ))}
@@ -1013,10 +1024,9 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
               <Input
                 type="search"
                 value={searchInput}
-                onChange={(event) => setSearchInput(event.target.value)}
+                onChange={event => setSearchInput(event.target.value)}
                 placeholder={searchPlaceholder}
-                className="h-8 w-56 pl-7"
-              />
+                className="h-8 w-56 pl-7" />
             </div>
           )}
         </div>
@@ -1026,10 +1036,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
               <Label className="text-xs text-muted-foreground">Group by</Label>
               <Select
                 value={dateGroupBy}
-                onValueChange={(value) =>
-                  setDateGroupBy(value as DocyrusKanbanDateGroupBy)
-                }
-              >
+                onValueChange={value => setDateGroupBy(value as DocyrusKanbanDateGroupBy)}>
                 <SelectTrigger className="h-8 w-[7.5rem]">
                   <SelectValue />
                 </SelectTrigger>
@@ -1046,10 +1053,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
               <Label className="text-xs text-muted-foreground">Group by</Label>
               <Select
                 value={userGroupBy}
-                onValueChange={(value) =>
-                  setUserGroupBy(value as DocyrusKanbanUserGroupBy)
-                }
-              >
+                onValueChange={value => setUserGroupBy(value as DocyrusKanbanUserGroupBy)}>
                 <SelectTrigger className="h-8 w-[7rem]">
                   <SelectValue />
                 </SelectTrigger>
@@ -1065,12 +1069,10 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
               <Switch
                 id="docyrus-kanban-show-all"
                 checked={showAllColumns}
-                onCheckedChange={setShowAllColumns}
-              />
+                onCheckedChange={setShowAllColumns} />
               <Label
                 htmlFor="docyrus-kanban-show-all"
-                className="text-xs text-muted-foreground"
-              >
+                className="text-xs text-muted-foreground">
                 Show all
               </Label>
             </div>
@@ -1081,8 +1083,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
               size="icon-sm"
               aria-label="Reload"
               disabled={isReloading}
-              onClick={reloadItems}
-            >
+              onClick={reloadItems}>
               {isReloading ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
@@ -1107,7 +1108,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
       list.push({
         key: 'open',
         label: 'Open',
-        onAction: (r) => onCardOpen?.(r),
+        onAction: r => onCardOpen?.(r)
       })
     }
 
@@ -1115,7 +1116,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
       list.push({
         key: 'edit',
         label: 'Edit',
-        onAction: (r) => onCardEdit?.(r),
+        onAction: r => onCardEdit?.(r)
       })
     }
 
@@ -1124,7 +1125,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
         key: 'delete',
         label: 'Delete',
         destructive: true,
-        onAction: (r) => setDeleteRow(r),
+        onAction: r => setDeleteRow(r)
       })
     }
 
@@ -1141,7 +1142,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
 
       return cardMenuItems
     },
-    [buildDefaultMenu, cardMenuItems],
+    [buildDefaultMenu, cardMenuItems]
   )
 
   const renderCard = useCallback(
@@ -1155,8 +1156,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
         userColumn={userColumn}
         cardContent={cardContent}
         menu={resolveMenu(row)}
-        onClick={onCardClick}
-      />
+        onClick={onCardClick} />
     ),
     [
       avatarColumn,
@@ -1165,13 +1165,13 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
       userColumn,
       cardContent,
       resolveMenu,
-      onCardClick,
-    ],
+      onCardClick
+    ]
   )
 
   /* --------------------------- board ------------------------------------ */
 
-  const finalColumns = visibleColumnsMeta.filter((col) => col.isFinal)
+  const finalColumns = visibleColumnsMeta.filter(col => col.isFinal)
 
   const board: ReactNode = !groupByField ? (
     <KanbanEmpty>
@@ -1198,9 +1198,8 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
       onFinalDrop={handleFinalDrop}
-      finalColumns={finalColumns.map((col) => col.id)}
-      getItemValue={(item: TData) => item.id as UniqueIdentifier}
-    >
+      finalColumns={finalColumns.map(col => col.id)}
+      getItemValue={(item: TData) => item.id as UniqueIdentifier}>
       {/*
        * Kanban root is a `<DndContext>` (no DOM wrapper), and `<KanbanBoard>`
        * defaults to `size-full`. Wrap board + final zone in a flex column so
@@ -1217,8 +1216,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
               <KanbanColumn
                 key={col.id}
                 value={col.id}
-                className="flex h-full w-72 min-w-72 shrink-0 flex-col gap-0 overflow-hidden rounded-xl border bg-card p-0"
-              >
+                className="flex h-full w-72 min-w-72 shrink-0 flex-col gap-0 overflow-hidden rounded-xl border bg-card p-0">
                 <KanbanColumnHeader column={col} />
                 <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-2">
                   {items.map((row) => {
@@ -1249,7 +1247,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
               const finalClass = badge.className
                 ? cn(
                     badge.className,
-                    'group rounded-xl border-2 border-dashed border-current/30 transition-all duration-300 ease-in-out data-over:border-current/60 data-over:scale-[1.02]',
+                    'group rounded-xl border-2 border-dashed border-current/30 transition-all duration-300 ease-in-out data-over:border-current/60 data-over:scale-[1.02]'
                   )
                 : 'group rounded-xl border-2 border-dashed border-muted-foreground/30 bg-muted/40 transition-all duration-300 ease-in-out data-over:border-muted-foreground/60 data-over:bg-muted/60'
 
@@ -1258,8 +1256,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
                   key={col.id}
                   value={col.id}
                   className={finalClass}
-                  style={badge.style}
-                >
+                  style={badge.style}>
                   <KanbanColumnAccent color={col.color} icon={col.icon} />
                   <span className="text-xs font-semibold transition-all duration-300 ease-in-out group-data-dragging:text-sm">
                     {col.label}
@@ -1312,7 +1309,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
   const isLoading =
     viewSelect.isLoading ||
     (providedData === undefined && (itemsQuery.isLoading || !viewMetadataReady))
-  const error = viewSelect.error ?? (itemsQuery.error as Error | null) ?? null
+  const error = viewSelect.error ?? itemsQuery.error ?? null
 
   return {
     toolbar: (
@@ -1325,8 +1322,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
           }}
           recordCount={1}
           isPending={isDeleting}
-          onConfirm={onConfirmDelete}
-        />
+          onConfirm={onConfirmDelete} />
       </>
     ),
     board: <TooltipProvider>{board}</TooltipProvider>,
@@ -1349,7 +1345,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
     setActiveViewId: viewSelect.setActiveViewId,
     isLoading,
     error,
-    refetch: reload,
+    refetch: reload
   }
 }
 
@@ -1363,7 +1359,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
 /* ------------------------------------------------------------------------- */
 
 function unwrapItems<TData>(
-  value: Array<TData> | { data: Array<TData> } | unknown,
+  value: Array<TData> | { data: Array<TData> } | unknown
 ): Array<TData> {
   if (Array.isArray(value)) return value
   if (
@@ -1378,7 +1374,7 @@ function unwrapItems<TData>(
 }
 
 function extractEnumColumns(
-  field: DataSourceField,
+  field: DataSourceField
 ): Array<DocyrusKanbanColumnMeta> {
   const raw = field as Record<string, unknown>
   const enums = Array.isArray(raw.enums)
@@ -1421,20 +1417,18 @@ function extractEnumColumns(
       color,
       icon,
       isFinal,
-      count: 0,
+      count: 0
     })
   }
 
   result.sort((a, b) => {
     const aRaw = enums.find(
-      (e: unknown) =>
-        (e as Record<string, unknown>).id === a.id ||
-        (e as Record<string, unknown>).slug === a.id,
+      (e: unknown) => (e as Record<string, unknown>).id === a.id ||
+        (e as Record<string, unknown>).slug === a.id
     )
     const bRaw = enums.find(
-      (e: unknown) =>
-        (e as Record<string, unknown>).id === b.id ||
-        (e as Record<string, unknown>).slug === b.id,
+      (e: unknown) => (e as Record<string, unknown>).id === b.id ||
+        (e as Record<string, unknown>).slug === b.id
     )
     const aOrder =
       typeof (aRaw as Record<string, unknown>)?.sort_order === 'number'
@@ -1454,7 +1448,7 @@ function extractEnumColumns(
 function collectUserColumns<TData>(
   items: Array<TData>,
   slug: string,
-  mode: DocyrusKanbanUserGroupBy,
+  mode: DocyrusKanbanUserGroupBy
 ): Array<DocyrusKanbanColumnMeta> {
   const map = new Map<string, DocyrusKanbanColumnMeta>()
 
@@ -1469,7 +1463,7 @@ function collectUserColumns<TData>(
         id: meta.id,
         label: meta.label,
         imageUrl: meta.imageUrl,
-        count: 0,
+        count: 0
       })
     }
   }
@@ -1484,7 +1478,7 @@ function collectUserColumns<TData>(
  */
 export function readUserMeta(
   value: unknown,
-  mode: DocyrusKanbanUserGroupBy,
+  mode: DocyrusKanbanUserGroupBy
 ): { id: string; label: string; imageUrl?: string | null } | null {
   if (!value || typeof value !== 'object') return null
   const obj = value as Record<string, unknown>
@@ -1558,7 +1552,7 @@ export function readUserMeta(
 function collectDateColumns<TData>(
   items: Array<TData>,
   slug: string,
-  mode: DocyrusKanbanDateGroupBy,
+  mode: DocyrusKanbanDateGroupBy
 ): Array<DocyrusKanbanColumnMeta> {
   const map = new Map<string, { id: string; label: string; sortKey: number }>()
 
@@ -1571,19 +1565,19 @@ function collectDateColumns<TData>(
       map.set(bucket.key, {
         id: bucket.key,
         label: bucket.label,
-        sortKey: bucket.sortKey,
+        sortKey: bucket.sortKey
       })
     }
   }
 
   return Array.from(map.values())
     .sort((a, b) => a.sortKey - b.sortKey)
-    .map((entry) => ({ id: entry.id, label: entry.label, count: 0 }))
+    .map(entry => ({ id: entry.id, label: entry.label, count: 0 }))
 }
 
 function bucketDate(
   value: unknown,
-  mode: DocyrusKanbanDateGroupBy,
+  mode: DocyrusKanbanDateGroupBy
 ): { key: string; label: string; sortKey: number } | null {
   if (!value) return null
   const date =
@@ -1596,7 +1590,7 @@ function bucketDate(
   if (!date || Number.isNaN(date.getTime())) return null
 
   const utc = new Date(
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
   )
 
   if (mode === 'month') {
@@ -1604,7 +1598,7 @@ function bucketDate(
     const label = utc.toLocaleDateString(undefined, {
       year: 'numeric',
       month: 'long',
-      timeZone: 'UTC',
+      timeZone: 'UTC'
     })
 
     return { key, label, sortKey: utc.getTime() }
@@ -1626,7 +1620,7 @@ function bucketDate(
     year: 'numeric',
     month: 'short',
     day: 'numeric',
-    timeZone: 'UTC',
+    timeZone: 'UTC'
   })
 
   return { key, label, sortKey: utc.getTime() }
@@ -1639,7 +1633,7 @@ function getISOWeek(date: Date): number {
   const yearStart = new Date(Date.UTC(target.getUTCFullYear(), 0, 1))
 
   return Math.ceil(
-    ((target.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7,
+    ((target.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7
   )
 }
 
@@ -1647,7 +1641,7 @@ function resolveItemKeys(
   value: unknown,
   kind: 'enum' | 'user' | 'date' | 'unsupported',
   dateMode: DocyrusKanbanDateGroupBy,
-  userMode: DocyrusKanbanUserGroupBy,
+  userMode: DocyrusKanbanUserGroupBy
 ): Array<string> {
   if (kind === 'enum') {
     if (!value) return []

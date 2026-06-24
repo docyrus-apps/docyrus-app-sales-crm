@@ -10,7 +10,7 @@ export const patternStyles: Record<PatternStyle, string> = {
   crosshatch:
     'repeating-linear-gradient(45deg, transparent, transparent 6px, var(--stripe-color, rgba(0,0,0,0.03)) 6px, var(--stripe-color, rgba(0,0,0,0.03)) 7px), repeating-linear-gradient(-45deg, transparent, transparent 6px, var(--stripe-color, rgba(0,0,0,0.03)) 6px, var(--stripe-color, rgba(0,0,0,0.03)) 7px)',
   zigzag:
-    'linear-gradient(135deg, var(--stripe-color, rgba(0,0,0,0.03)) 25%, transparent 25%), linear-gradient(225deg, var(--stripe-color, rgba(0,0,0,0.03)) 25%, transparent 25%), linear-gradient(315deg, var(--stripe-color, rgba(0,0,0,0.03)) 25%, transparent 25%), linear-gradient(45deg, var(--stripe-color, rgba(0,0,0,0.03)) 25%, transparent 25%)',
+    'linear-gradient(135deg, var(--stripe-color, rgba(0,0,0,0.03)) 25%, transparent 25%), linear-gradient(225deg, var(--stripe-color, rgba(0,0,0,0.03)) 25%, transparent 25%), linear-gradient(315deg, var(--stripe-color, rgba(0,0,0,0.03)) 25%, transparent 25%), linear-gradient(45deg, var(--stripe-color, rgba(0,0,0,0.03)) 25%, transparent 25%)'
 }
 
 export const patternSizes: Record<PatternStyle, string> = {
@@ -18,7 +18,7 @@ export const patternSizes: Record<PatternStyle, string> = {
   dots: '12px 12px',
   grid: '16px 16px',
   crosshatch: '',
-  zigzag: '16px 16px',
+  zigzag: '16px 16px'
 }
 
 export function getPatternStyle(patternStyle: PatternStyle): CSSProperties {
@@ -26,6 +26,6 @@ export function getPatternStyle(patternStyle: PatternStyle): CSSProperties {
     backgroundImage: patternStyles[patternStyle],
     ...(patternSizes[patternStyle]
       ? { backgroundSize: patternSizes[patternStyle] }
-      : {}),
+      : {})
   }
 }

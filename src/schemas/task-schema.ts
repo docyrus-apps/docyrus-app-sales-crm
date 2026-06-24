@@ -13,7 +13,7 @@ export const taskFormSchema = z.object({
   parent: z.string().optional(),
   section: z.string().optional(),
   project: z.string().optional(),
-  followers: z.array(z.string()).optional(),
+  followers: z.array(z.string()).optional()
 })
 
 export type TaskFormData = z.infer<typeof taskFormSchema>

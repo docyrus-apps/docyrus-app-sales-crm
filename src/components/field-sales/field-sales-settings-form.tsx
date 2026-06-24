@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react'
+
+import { type FieldSalesConfig } from '@/lib/field-sales'
+
 import { useTranslation } from 'react-i18next'
+
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -9,22 +13,19 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  DEFAULT_FIELD_SALES_CONFIG,
-  type FieldSalesConfig,
-} from '@/lib/field-sales'
+import { DEFAULT_FIELD_SALES_CONFIG } from '@/lib/field-sales'
 import {
   useFieldSalesConfig,
-  useUpdateFieldSalesConfig,
+  useUpdateFieldSalesConfig
 } from '@/hooks/use-field-sales'
 
 interface FieldSalesSettingsFormProps {
   /** Called after a successful save (e.g. to close a containing modal). */
-  onSaved?: () => void
+  onSaved?: () => void;
 }
 
 /**
@@ -32,13 +33,13 @@ interface FieldSalesSettingsFormProps {
  * Reused by the `/settings` route and the App Config settings modal.
  */
 export function FieldSalesSettingsForm({
-  onSaved,
+  onSaved
 }: FieldSalesSettingsFormProps) {
   const { t } = useTranslation()
   const { data, isLoading } = useFieldSalesConfig()
   const updateConfig = useUpdateFieldSalesConfig()
   const [draft, setDraft] = useState<FieldSalesConfig>(
-    DEFAULT_FIELD_SALES_CONFIG,
+    DEFAULT_FIELD_SALES_CONFIG
   )
 
   useEffect(() => {
@@ -47,9 +48,9 @@ export function FieldSalesSettingsForm({
 
   const updateDraft = <K extends keyof FieldSalesConfig>(
     key: K,
-    value: FieldSalesConfig[K],
+    value: FieldSalesConfig[K]
   ) => {
-    setDraft((current) => ({ ...current, [key]: value }))
+    setDraft(current => ({ ...current, [key]: value }))
   }
 
   const save = async () => {
@@ -80,13 +81,10 @@ export function FieldSalesSettingsForm({
               </Label>
               <Select
                 value={draft.approvalMode}
-                onValueChange={(value) =>
-                  updateDraft(
+                onValueChange={value => updateDraft(
                     'approvalMode',
-                    value as FieldSalesConfig['approvalMode'],
-                  )
-                }
-              >
+                    value as FieldSalesConfig['approvalMode']
+                  )}>
                 <SelectTrigger id="approval-mode" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -107,13 +105,10 @@ export function FieldSalesSettingsForm({
               </Label>
               <Select
                 value={draft.planningEntity}
-                onValueChange={(value) =>
-                  updateDraft(
+                onValueChange={value => updateDraft(
                     'planningEntity',
-                    value as FieldSalesConfig['planningEntity'],
-                  )
-                }
-              >
+                    value as FieldSalesConfig['planningEntity']
+                  )}>
                 <SelectTrigger id="planning-entity" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -134,13 +129,10 @@ export function FieldSalesSettingsForm({
               </Label>
               <Select
                 value={String(draft.slotMinutes)}
-                onValueChange={(value) =>
-                  updateDraft(
+                onValueChange={value => updateDraft(
                     'slotMinutes',
-                    Number(value) as FieldSalesConfig['slotMinutes'],
-                  )
-                }
-              >
+                    Number(value) as FieldSalesConfig['slotMinutes']
+                  )}>
                 <SelectTrigger id="slot-minutes" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -166,10 +158,7 @@ export function FieldSalesSettingsForm({
               </div>
               <Switch
                 checked={draft.showWeekends}
-                onCheckedChange={(checked) =>
-                  updateDraft('showWeekends', checked)
-                }
-              />
+                onCheckedChange={checked => updateDraft('showWeekends', checked)} />
             </div>
           </CardContent>
         </Card>
@@ -190,10 +179,7 @@ export function FieldSalesSettingsForm({
                   id="day-start"
                   type="time"
                   value={draft.dayStartTime}
-                  onChange={(event) =>
-                    updateDraft('dayStartTime', event.target.value)
-                  }
-                />
+                  onChange={event => updateDraft('dayStartTime', event.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="day-end">
@@ -203,10 +189,7 @@ export function FieldSalesSettingsForm({
                   id="day-end"
                   type="time"
                   value={draft.dayEndTime}
-                  onChange={(event) =>
-                    updateDraft('dayEndTime', event.target.value)
-                  }
-                />
+                  onChange={event => updateDraft('dayEndTime', event.target.value)} />
               </div>
             </div>
 
@@ -221,10 +204,7 @@ export function FieldSalesSettingsForm({
               </div>
               <Switch
                 checked={draft.locationCheckEnabled}
-                onCheckedChange={(checked) =>
-                  updateDraft('locationCheckEnabled', checked)
-                }
-              />
+                onCheckedChange={checked => updateDraft('locationCheckEnabled', checked)} />
             </div>
 
             <div className="space-y-2">
@@ -237,13 +217,10 @@ export function FieldSalesSettingsForm({
                 min={0}
                 step={10}
                 value={draft.allowedDistanceMeters}
-                onChange={(event) =>
-                  updateDraft(
+                onChange={event => updateDraft(
                     'allowedDistanceMeters',
-                    Number(event.target.value || 0),
-                  )
-                }
-              />
+                    Number(event.target.value || 0)
+                  )} />
             </div>
           </CardContent>
         </Card>

@@ -1,19 +1,23 @@
 import { useEffect, useMemo, useState } from 'react'
+
+import type { ActiveFieldSalesVisit } from '@/components/field-sales/field-sales-visit-sheet'
+
 import {
   CheckCheck,
   Loader2,
   LocateFixed,
   MapPin,
-  Navigation,
+  Navigation
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
+
 import { useCompanies } from '@/hooks/use-companies'
 import {
   useCreateFieldSalesPlan,
   useFieldSalesConfig,
   useFieldSalesPlans,
-  useUpdateFieldSalesPlan,
+  useUpdateFieldSalesPlan
 } from '@/hooks/use-field-sales'
 import { useMyInfo } from '@/hooks/use-users'
 import {
@@ -22,63 +26,58 @@ import {
   getFieldSalesPlanStatusCode,
   getRelationName,
   haversineDistanceMeters,
-  parseMapLocation,
+  parseMapLocation
 } from '@/lib/field-sales'
 import { FieldSalesCheckoutSheet } from '@/components/field-sales/field-sales-checkout-sheet'
-import {
-  type ActiveFieldSalesVisit,
-  FieldSalesVisitSheet,
-} from '@/components/field-sales/field-sales-visit-sheet'
+import { FieldSalesVisitSheet } from '@/components/field-sales/field-sales-visit-sheet'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
+  PopoverTrigger
 } from '@/components/ui/popover'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 interface PositionState {
-  latitude: number
-  longitude: number
+  latitude: number;
+  longitude: number;
 }
 
 type PlanRecord = {
-  id?: string
-  subject?: string
-  start_date?: string
-  status?: unknown
-  organization?: any
-  contact?: any
-  location?: Record<string, unknown> | null
-  check_in_time?: string
+  id?: string;
+  subject?: string;
+  start_date?: string;
+  status?: unknown;
+  organization?: any;
+  contact?: any;
+  location?: Record<string, unknown> | null;
+  check_in_time?: string;
 }
 
 type CompanyRecord = {
-  id?: string
-  name?: string
-  phone?: string
-  email?: string
-  address?: string
-  map_location?: Record<string, unknown> | null
+  id?: string;
+  name?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  map_location?: Record<string, unknown> | null;
 }
 
 function formatElapsed(startedAtMs: number) {
   const elapsedSeconds = Math.max(
     1,
-    Math.floor((Date.now() - startedAtMs) / 1000),
+    Math.floor((Date.now() - startedAtMs) / 1000)
   )
   const minutes = Math.floor(elapsedSeconds / 60)
   const seconds = elapsedSeconds % 60
+
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 }
 
-function formatDistance(
-  distanceMeters: number,
-  noLocationLabel: string,
-) {
+function formatDistance(distanceMeters: number, noLocationLabel: string) {
   if (!Number.isFinite(distanceMeters)) {
     return noLocationLabel
   }
@@ -96,9 +95,16 @@ export function FieldSalesLocationActions() {
   const { data: plans = [] } = useFieldSalesPlans()
   const { data: myInfo } = useMyInfo()
   const { data: companies = [] } = useCompanies({
-    columns: ['id', 'name', 'phone', 'email', 'address', 'map_location'],
+    columns: [
+'id',
+'name',
+'phone',
+'email',
+'address',
+'map_location'
+],
     orderBy: 'name ASC',
-    limit: 500,
+    limit: 500
   })
   const createPlan = useCreateFieldSalesPlan()
   const updatePlan = useUpdateFieldSalesPlan()
@@ -110,7 +116,7 @@ export function FieldSalesLocationActions() {
   const [position, setPosition] = useState<PositionState | null>(null)
   const [locationError, setLocationError] = useState<string>('')
   const [activeVisit, setActiveVisit] = useState<ActiveFieldSalesVisit | null>(
-    null,
+    null
   )
   const [elapsedLabel, setElapsedLabel] = useState('00:01')
 
@@ -128,6 +134,7 @@ export function FieldSalesLocationActions() {
   const requestCurrentLocation = async () => {
     if (!navigator.geolocation) {
       setLocationError(t('fieldSales.locationActions.geolocationUnavailable'))
+
       return
     }
 
@@ -138,24 +145,24 @@ export function FieldSalesLocationActions() {
       const coords = await new Promise<GeolocationCoordinates>(
         (resolve, reject) => {
           navigator.geolocation.getCurrentPosition(
-            (result) => resolve(result.coords),
-            (error) => reject(error),
+            result => resolve(result.coords),
+            error => reject(error),
             {
               enableHighAccuracy: true,
               timeout: 10000,
-              maximumAge: 0,
-            },
+              maximumAge: 0
+            }
           )
-        },
+        }
       )
 
       setPosition({
         latitude: coords.latitude,
-        longitude: coords.longitude,
+        longitude: coords.longitude
       })
     } catch (error: any) {
       setLocationError(
-        error?.message || t('fieldSales.locationActions.couldNotGetLocation'),
+        error?.message || t('fieldSales.locationActions.couldNotGetLocation')
       )
     } finally {
       setLocating(false)
@@ -165,7 +172,7 @@ export function FieldSalesLocationActions() {
   const currentPoint = position
     ? {
         latitude: position.latitude,
-        longitude: position.longitude,
+        longitude: position.longitude
       }
     : null
 
@@ -183,11 +190,12 @@ export function FieldSalesLocationActions() {
 
         return {
           company,
-          distance,
+          distance
         }
       })
       .filter(({ company, distance }) => {
         if (!locationCheckEnabled) return Boolean(company.id)
+
         return Number.isFinite(distance) && distance <= maxDistance
       })
       .sort((first, second) => first.distance - second.distance)
@@ -195,7 +203,7 @@ export function FieldSalesLocationActions() {
     companies,
     config?.allowedDistanceMeters,
     config?.locationCheckEnabled,
-    currentPoint,
+    currentPoint
   ])
 
   const nearbyPlans = useMemo(() => {
@@ -203,14 +211,14 @@ export function FieldSalesLocationActions() {
     const locationCheckEnabled = config?.locationCheckEnabled ?? true
 
     return (plans as Array<PlanRecord>)
-      .filter((plan) => getFieldSalesPlanStatusCode(plan.status) === 'waiting')
+      .filter(plan => getFieldSalesPlanStatusCode(plan.status) === 'waiting')
       .map((plan) => {
         const organizationId =
           typeof plan.organization === 'object'
             ? plan.organization?.id
             : plan.organization
         const organization = (companies as Array<CompanyRecord>).find(
-          (company) => company.id === organizationId,
+          company => company.id === organizationId
         )
         const location =
           parseMapLocation(plan.organization?.map_location) ||
@@ -225,12 +233,13 @@ export function FieldSalesLocationActions() {
         return {
           plan,
           organization,
-          distance,
+          distance
         }
       })
       .filter(({ plan, organization, distance }) => {
         if (!plan.id || !(organization?.id || plan.organization)) return false
         if (!locationCheckEnabled) return true
+
         return Number.isFinite(distance) && distance <= maxDistance
       })
       .sort((first, second) => first.distance - second.distance)
@@ -239,7 +248,7 @@ export function FieldSalesLocationActions() {
     config?.allowedDistanceMeters,
     config?.locationCheckEnabled,
     currentPoint,
-    plans,
+    plans
   ])
 
   const openLocationPopover = async (open: boolean) => {
@@ -252,7 +261,7 @@ export function FieldSalesLocationActions() {
 
   const startPlannedVisit = async (
     plan: PlanRecord,
-    organization?: CompanyRecord,
+    organization?: CompanyRecord
   ) => {
     if (!plan.id || !myInfo?.id) return
 
@@ -260,7 +269,7 @@ export function FieldSalesLocationActions() {
     const checkInLocation = currentPoint
       ? {
           latitude: currentPoint.latitude,
-          longitude: currentPoint.longitude,
+          longitude: currentPoint.longitude
         }
       : null
 
@@ -270,8 +279,8 @@ export function FieldSalesLocationActions() {
         status: FIELD_SALES_PLAN_STATUS_IDS.checkedIn,
         check_in_time: nowIso,
         actual_start_date: nowIso,
-        location: checkInLocation,
-      },
+        location: checkInLocation
+      }
     })
 
     setActiveVisit({
@@ -281,15 +290,15 @@ export function FieldSalesLocationActions() {
         (typeof plan.organization === 'object'
           ? plan.organization?.id
           : plan.organization) ||
-        organization?.id ||
-        '',
+          organization?.id ||
+          '',
       organizationName:
         getRelationName(plan.organization) ||
         organization?.name ||
         getRelationName(plan.contact),
       startedAtMs: Date.now() - 1000,
       checkInTimeIso: nowIso,
-      checkInLocation,
+      checkInLocation
     })
     setElapsedLabel('00:01')
     setLocationOpen(false)
@@ -303,7 +312,7 @@ export function FieldSalesLocationActions() {
     const checkInLocation = currentPoint
       ? {
           latitude: currentPoint.latitude,
-          longitude: currentPoint.longitude,
+          longitude: currentPoint.longitude
         }
       : null
 
@@ -313,7 +322,7 @@ export function FieldSalesLocationActions() {
       organizationName: company.name || t('fieldSales.common.organization'),
       startedAtMs: Date.now() - 1000,
       checkInTimeIso: nowIso,
-      checkInLocation,
+      checkInLocation
     })
     setElapsedLabel('00:01')
     setLocationOpen(false)
@@ -322,10 +331,10 @@ export function FieldSalesLocationActions() {
 
   const completeVisit = async ({
     subject,
-    description,
+    description
   }: {
-    subject: string
-    description: string
+    subject: string;
+    description: string;
   }) => {
     if (!activeVisit || !myInfo?.id) return
 
@@ -335,13 +344,13 @@ export function FieldSalesLocationActions() {
       description,
       status: FIELD_SALES_PLAN_STATUS_IDS.completed,
       check_out_time: nowIso,
-      actual_end_date: nowIso,
+      actual_end_date: nowIso
     }
 
     if (activeVisit.planId) {
       await updatePlan.mutateAsync({
         planId: activeVisit.planId,
-        data: payload,
+        data: payload
       })
     } else {
       await createPlan.mutateAsync({
@@ -359,7 +368,7 @@ export function FieldSalesLocationActions() {
         status: FIELD_SALES_PLAN_STATUS_IDS.completed,
         require_approval: false,
         record_owner: myInfo.id,
-        location: activeVisit.checkInLocation,
+        location: activeVisit.checkInLocation
       })
     }
 
@@ -378,8 +387,7 @@ export function FieldSalesLocationActions() {
           size="sm"
           className="gap-2 bg-emerald-600 hover:bg-emerald-700"
           aria-label={t('fieldSales.locationActions.activeVisit')}
-          onClick={() => setCheckoutSheetOpen(true)}
-        >
+          onClick={() => setCheckoutSheetOpen(true)}>
           <CheckCheck className="size-4" />
           <span className="text-xs font-semibold">{elapsedLabel}</span>
         </Button>
@@ -390,8 +398,7 @@ export function FieldSalesLocationActions() {
               variant="ghost"
               size="sm"
               className="gap-2"
-              aria-label={t('fieldSales.locationActions.locationAndVisit')}
-            >
+              aria-label={t('fieldSales.locationActions.locationAndVisit')}>
               {locating ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
@@ -401,8 +408,7 @@ export function FieldSalesLocationActions() {
           </PopoverTrigger>
           <PopoverContent
             align="end"
-            className="w-[min(420px,calc(100vw-2rem))] p-0"
-          >
+            className="w-[min(420px,calc(100vw-2rem))] p-0">
             <Tabs defaultValue="plans" className="gap-0">
               <div className="border-b px-4 pt-4">
                 <div className="mb-3 flex items-center justify-between">
@@ -417,8 +423,7 @@ export function FieldSalesLocationActions() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => void requestCurrentLocation()}
-                  >
+                    onClick={() => void requestCurrentLocation()}>
                     {t('fieldSales.common.refresh')}
                   </Button>
                 </div>
@@ -466,16 +471,13 @@ export function FieldSalesLocationActions() {
                               <Badge variant="secondary">
                                 {formatDistance(
                                   distance,
-                                  t('fieldSales.locationActions.noLocation'),
+                                  t('fieldSales.locationActions.noLocation')
                                 )}
                               </Badge>
                             </div>
                             <Button
                               className="w-full"
-                              onClick={() =>
-                                void startPlannedVisit(plan, organization)
-                              }
-                            >
+                              onClick={() => void startPlannedVisit(plan, organization)}>
                               <Navigation className="mr-2 h-4 w-4" />
                               {t('fieldSales.common.checkIn')}
                             </Button>
@@ -513,14 +515,13 @@ export function FieldSalesLocationActions() {
                               <Badge variant="secondary">
                                 {formatDistance(
                                   distance,
-                                  t('fieldSales.locationActions.noLocation'),
+                                  t('fieldSales.locationActions.noLocation')
                                 )}
                               </Badge>
                             </div>
                             <Button
                               className="w-full"
-                              onClick={() => startUnplannedVisit(company)}
-                            >
+                              onClick={() => startUnplannedVisit(company)}>
                               <MapPin className="mr-2 h-4 w-4" />
                               {t('fieldSales.common.checkIn')}
                             </Button>
@@ -541,8 +542,7 @@ export function FieldSalesLocationActions() {
         onOpenChange={setVisitSheetOpen}
         visit={activeVisit}
         elapsedLabel={elapsedLabel}
-        onStartOrder={() => {}}
-      />
+        onStartOrder={() => {}} />
 
       <FieldSalesCheckoutSheet
         open={checkoutSheetOpen}
@@ -550,8 +550,7 @@ export function FieldSalesLocationActions() {
         visit={activeVisit}
         elapsedLabel={elapsedLabel}
         saving={createPlan.isPending || updatePlan.isPending}
-        onSave={completeVisit}
-      />
+        onSave={completeVisit} />
     </>
   )
 }

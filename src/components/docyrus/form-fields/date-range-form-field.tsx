@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { useRef, useState } from 'react'
 
 import { CalendarIcon } from 'lucide-react'
@@ -16,8 +18,8 @@ import {
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
-import { useDateFormat } from '@/lib/use-date-format'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
+import { useDateFormat } from '@/hooks/docyrus/use-date-format'
 
 import { FormFieldLabel } from './form-field-label'
 import { parseDateRange, toLocalDateString } from './lib/utils'
@@ -38,9 +40,8 @@ export function DateRangeFormField({
   const snapshotRef = useRef<string | null>(null)
 
   return (
-    <form.Field
-      name={fieldConfig.slug}
-      children={(field: any) => {
+    <form.Field name={fieldConfig.slug}>
+      {(field: any) => {
         const isInvalid =
           field.state.meta.isTouched && !field.state.meta.isValid
         const parsed = parseDateRange(field.state.value)
@@ -136,6 +137,6 @@ export function DateRangeFormField({
           </Field>
         )
       }}
-    />
+    </form.Field>
   )
 }

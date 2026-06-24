@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react'
+
 import { cn } from '@/lib/utils'
 
 interface PageContainerProps {
-  children: ReactNode
-  className?: string
+  children: ReactNode;
+  className?: string;
 }
 
 /**
@@ -14,9 +15,8 @@ export function PageContainer({ children, className }: PageContainerProps) {
     <div
       className={cn(
         'container mx-auto px-1 pt-3 pb-6 animate-fade-in-up',
-        className,
-      )}
-    >
+        className
+      )}>
       {children}
     </div>
   )

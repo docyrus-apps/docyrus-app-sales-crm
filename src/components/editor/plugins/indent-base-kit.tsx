@@ -1,3 +1,4 @@
+/* eslint-disable */
 // @ts-nocheck
 import { BaseIndentPlugin } from '@platejs/indent'
 import { KEYS } from 'platejs'

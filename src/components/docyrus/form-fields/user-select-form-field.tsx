@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { useState } from 'react'
 
 import { Check, ChevronsUpDown } from 'lucide-react'
@@ -22,10 +24,12 @@ import {
 } from '@/components/ui/command'
 import { cn } from '@/lib/utils'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 import { FormFieldLabel } from './form-field-label'
 import { type DocyrusFormFieldProps } from './types'
+
+const EMPTY_ENUM_OPTIONS: never[] = []
 
 export function UserSelectFormField({
   field: fieldConfig,
@@ -33,16 +37,15 @@ export function UserSelectFormField({
   disabled,
   required,
   className,
-  enumOptions = [],
+  enumOptions = EMPTY_ENUM_OPTIONS,
 }: DocyrusFormFieldProps) {
   const { t } = useUiTranslation()
 
   const [open, setOpen] = useState(false)
 
   return (
-    <form.Field
-      name={fieldConfig.slug}
-      children={(field: any) => {
+    <form.Field name={fieldConfig.slug}>
+      {(field: any) => {
         const isInvalid =
           field.state.meta.isTouched && !field.state.meta.isValid
         const currentValue = field.state.value ?? ''
@@ -146,6 +149,6 @@ export function UserSelectFormField({
           </Field>
         )
       }}
-    />
+    </form.Field>
   )
 }

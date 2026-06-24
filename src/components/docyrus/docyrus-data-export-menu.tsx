@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import {
@@ -34,7 +36,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { cn } from '@/lib/utils'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 /** Which column set the user picked from the menu. */
 export type DocyrusDataExportScope = 'visible' | 'all' | 'custom'
@@ -70,6 +72,32 @@ export interface DocyrusDataExportFieldOption {
   slug: string
   name: string
   type: string
+}
+
+const VARIANT_ORDER: ReadonlyArray<DocyrusDataExportColumnVariant> = [
+  'id',
+  'name',
+  'autonumber_id',
+]
+
+/**
+ * Encode a column entry into the wire format the export endpoint expects:
+ * `slug` for plain entries, `slug(v1,v2)` when variants are picked. Variants
+ * are emitted in canonical order (`id`, `name`, `autonumber_id`).
+ */
+export function encodeDocyrusDataExportColumn(
+  column: DocyrusDataExportColumn,
+): string {
+  const { variants } = column
+
+  if (!variants || variants.length === 0) return column.slug
+
+  const seen = new Set(variants)
+  const ordered = VARIANT_ORDER.filter((variant) => seen.has(variant))
+
+  if (ordered.length === 0) return column.slug
+
+  return `${column.slug}(${ordered.join(',')})`
 }
 
 export interface DocyrusDataExportMenuProps {
@@ -114,32 +142,6 @@ const ENUM_FIELD_TYPES = new Set<string>([
   'field-enum',
   'field-systemEnum',
 ])
-
-const VARIANT_ORDER: ReadonlyArray<DocyrusDataExportColumnVariant> = [
-  'id',
-  'name',
-  'autonumber_id',
-]
-
-/**
- * Encode a column entry into the wire format the export endpoint expects:
- * `slug` for plain entries, `slug(v1,v2)` when variants are picked. Variants
- * are emitted in canonical order (`id`, `name`, `autonumber_id`).
- */
-export function encodeDocyrusDataExportColumn(
-  column: DocyrusDataExportColumn,
-): string {
-  const { variants } = column
-
-  if (!variants || variants.length === 0) return column.slug
-
-  const seen = new Set(variants)
-  const ordered = VARIANT_ORDER.filter((variant) => seen.has(variant))
-
-  if (ordered.length === 0) return column.slug
-
-  return `${column.slug}(${ordered.join(',')})`
-}
 
 function getFieldKind(type: string): 'relation' | 'user' | 'enum' | 'plain' {
   if (RELATION_FIELD_TYPES.has(type)) return 'relation'
@@ -297,9 +299,11 @@ function DocyrusDataExportColumnDialog({
       }
     }
 
-    setSelected(initialSelected)
-    setVariants(initialVariants)
-    setSearch('')
+    queueMicrotask(() => {
+      setSelected(initialSelected)
+      setVariants(initialVariants)
+      setSearch('')
+    })
   }, [open, fields, visibleSlugs])
 
   const filteredFields = useMemo(() => {

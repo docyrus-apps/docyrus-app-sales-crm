@@ -1,14 +1,17 @@
-import { useMemo } from 'react'
+import { type ReactNode, useMemo } from 'react'
+
 import { Link, useLocation, useParams } from '@tanstack/react-router'
-import { useDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
+
 import { useTranslation } from 'react-i18next'
+
 import { AppSidebar } from './app-sidebar'
 import { AppHeaderActions } from './app-header-actions'
-import type { ReactNode } from 'react'
+
+import { useDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
 import {
   SidebarInset,
   SidebarProvider,
-  SidebarTrigger,
+  SidebarTrigger
 } from '@/components/animate-ui/components/radix/sidebar'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -17,7 +20,7 @@ import {
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
-  BreadcrumbSeparator,
+  BreadcrumbSeparator
 } from '@/components/ui/breadcrumb'
 
 const SEGMENT_BREADCRUMB_KEYS: Record<string, string> = {
@@ -40,7 +43,7 @@ const SEGMENT_BREADCRUMB_KEYS: Record<string, string> = {
   'app-config': 'appConfig.title',
   'field-sales': 'fieldSales.groupLabel',
   plans: 'fieldSales.plans.title',
-  approvals: 'fieldSales.approvals.title',
+  approvals: 'fieldSales.approvals.title'
 }
 
 function AppBreadcrumb() {
@@ -80,17 +83,25 @@ function AppBreadcrumb() {
       const label = key
         ? t(key)
         : segment.charAt(0).toUpperCase() + segment.slice(1)
+
       items.push({ label, href })
     }
 
-    // Append the record's name as the last crumb for detail pages, falling
-    // back to a generic label until the route publishes its resolved title.
+    /*
+     * Append the record's name as the last crumb for detail pages, falling
+     * back to a generic label until the route publishes its resolved title.
+     */
     if (entityId) {
       items.push({ label: detailTitle || t('breadcrumb.detail') })
     }
 
     return items
-  }, [segments, entityId, detailTitle, t])
+  }, [
+segments,
+entityId,
+detailTitle,
+t
+])
 
   if (crumbs.length === 0) {
     return (
@@ -114,6 +125,7 @@ function AppBreadcrumb() {
         </BreadcrumbItem>
         {crumbs.map((crumb, i) => {
           const isLast = i === crumbs.length - 1
+
           return (
             <span key={crumb.href ?? i} className="contents">
               <BreadcrumbSeparator />
@@ -135,7 +147,7 @@ function AppBreadcrumb() {
 }
 
 interface AppLayoutProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 /**

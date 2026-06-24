@@ -1,25 +1,28 @@
 import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
+
 import type { LogActivityPayload } from '@/components/docyrus/log-activity-form/types'
+
+import { useTranslation } from 'react-i18next'
+
 import {
   AwesomeDialog,
   AwesomeDialogBody,
-  AwesomeDialogHeader,
+  AwesomeDialogHeader
 } from '@/components/docyrus/awesome-dialog'
 import { LogActivityForm } from '@/components/docyrus/log-activity-form/log-activity-form'
 import { useCreateActivity } from '@/hooks/use-activities'
 import { useUsers } from '@/hooks/use-users'
 
 interface ActivityFormDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  activity?: any
-  mode: 'create' | 'edit'
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  activity?: any;
+  mode: 'create' | 'edit';
 }
 
 export function ActivityFormDialog({
   open,
-  onOpenChange,
+  onOpenChange
 }: ActivityFormDialogProps) {
   const { t } = useTranslation()
   const createActivity = useCreateActivity()
@@ -31,7 +34,7 @@ export function ActivityFormDialog({
     text: `${user.firstname ?? ''} ${user.lastname ?? ''}`.trim() || user.email,
     initials:
       `${(user.firstname?.[0] ?? '').toUpperCase()}${(user.lastname?.[0] ?? '').toUpperCase()}` ||
-      '?',
+      '?'
   }))
 
   const handleSubmit = async (payload: LogActivityPayload) => {
@@ -41,7 +44,7 @@ export function ActivityFormDialog({
         subject: payload.taskSubject ?? payload.subject ?? payload.type,
         description: payload.bodyText,
         start_date: payload.startDate?.toISOString(),
-        end_date: payload.endDate?.toISOString(),
+        end_date: payload.endDate?.toISOString()
       })
       onOpenChange(false)
     } finally {
@@ -54,19 +57,16 @@ export function ActivityFormDialog({
       open={open}
       onOpenChange={onOpenChange}
       container="modal"
-      size="lg"
-    >
+      size="lg">
       <AwesomeDialogHeader
         title={t('activities.form.createTitle')}
-        description={t('activities.form.createDescription')}
-      />
+        description={t('activities.form.createDescription')} />
       <AwesomeDialogBody>
         <LogActivityForm
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
           mentionUsers={mentionUsers}
-          submitLabel={t('activities.form.createButton')}
-        />
+          submitLabel={t('activities.form.createButton')} />
       </AwesomeDialogBody>
     </AwesomeDialog>
   )

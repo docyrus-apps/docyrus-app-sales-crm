@@ -1462,15 +1462,7 @@
     "calendar": {
       "title": "Field Calendar",
       "monthlyView": "Monthly view",
-      "weekdaysShort": [
-        "Mon",
-        "Tue",
-        "Wed",
-        "Thu",
-        "Fri",
-        "Sat",
-        "Sun"
-      ],
+      "weekdaysShort": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
       "planLabel": "Plan: ",
       "visitLabel": "Visit: ",
       "taskLabel": "Task: ",

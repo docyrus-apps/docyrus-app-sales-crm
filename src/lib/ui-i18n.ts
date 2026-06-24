@@ -9,7 +9,7 @@ export const UI_I18N_LOCALES = [
   'pt',
   'sl',
   'el',
-  'ar',
+  'ar'
 ] as const
 
 export type UiI18nLocale = (typeof UI_I18N_LOCALES)[number]
@@ -283,7 +283,7 @@ const enMessages = {
   dgvFormula: 'Formula',
   dgvAddRule: 'Add rule',
   dgvColumn: 'Column',
-  dgvColor: 'Color',
+  dgvColor: 'Color'
 } as const
 
 const uiI18nMessages = {
@@ -559,7 +559,7 @@ const uiI18nMessages = {
     dgvFormula: 'Formel',
     dgvAddRule: 'Regel hinzufügen',
     dgvColumn: 'Spalte',
-    dgvColor: 'Farbe',
+    dgvColor: 'Farbe'
   },
   fr: {
     search: 'Rechercher',
@@ -832,7 +832,7 @@ const uiI18nMessages = {
     dgvFormula: 'Formule',
     dgvAddRule: 'Ajouter une règle',
     dgvColumn: 'Colonne',
-    dgvColor: 'Couleur',
+    dgvColor: 'Couleur'
   },
   tr: {
     search: 'Ara',
@@ -1103,7 +1103,7 @@ const uiI18nMessages = {
     dgvFormula: 'Formül',
     dgvAddRule: 'Kural ekle',
     dgvColumn: 'Sütun',
-    dgvColor: 'Renk',
+    dgvColor: 'Renk'
   },
   it: {
     search: 'Cerca',
@@ -1374,7 +1374,7 @@ const uiI18nMessages = {
     dgvFormula: 'Formula',
     dgvAddRule: 'Aggiungi regola',
     dgvColumn: 'Colonna',
-    dgvColor: 'Colore',
+    dgvColor: 'Colore'
   },
   es: {
     search: 'Buscar',
@@ -1646,7 +1646,7 @@ const uiI18nMessages = {
     dgvFormula: 'Fórmula',
     dgvAddRule: 'Añadir regla',
     dgvColumn: 'Columna',
-    dgvColor: 'Color',
+    dgvColor: 'Color'
   },
   nl: {
     search: 'Zoeken',
@@ -1918,7 +1918,7 @@ const uiI18nMessages = {
     dgvFormula: 'Formule',
     dgvAddRule: 'Regel toevoegen',
     dgvColumn: 'Kolom',
-    dgvColor: 'Kleur',
+    dgvColor: 'Kleur'
   },
   pt: {
     search: 'Pesquisar',
@@ -2190,11 +2190,11 @@ const uiI18nMessages = {
     dgvFormula: 'Fórmula',
     dgvAddRule: 'Adicionar regra',
     dgvColumn: 'Coluna',
-    dgvColor: 'Cor',
+    dgvColor: 'Cor'
   },
   sl: enMessages,
   el: enMessages,
-  ar: enMessages,
+  ar: enMessages
 } as const
 
 export type UiI18nKey = keyof (typeof uiI18nMessages)['en']

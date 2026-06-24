@@ -21,8 +21,7 @@ export function AppHeaderActions() {
       {webphoneEnabled && fieldSalesEnabled && (
         <span
           aria-hidden
-          className="mx-1 h-5 w-px shrink-0 self-center rounded-full bg-border/70"
-        />
+          className="mx-1 h-5 w-px shrink-0 self-center rounded-full bg-border/70" />
       )}
 
       {fieldSalesEnabled && <FieldSalesLocationActions />}

@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
+
+import { type ActiveFieldSalesVisit } from '@/components/field-sales/field-sales-visit-sheet'
+
 import { useTranslation } from 'react-i18next'
 import { Loader2, LogOut } from 'lucide-react'
+
 import { useMyInfo } from '@/hooks/use-users'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -10,23 +14,22 @@ import {
   Sheet,
   SheetContent,
   SheetHeader,
-  SheetTitle,
+  SheetTitle
 } from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
-import { type ActiveFieldSalesVisit } from '@/components/field-sales/field-sales-visit-sheet'
 
 export interface FieldSalesCheckoutPayload {
-  subject: string
-  description: string
+  subject: string;
+  description: string;
 }
 
 interface FieldSalesCheckoutSheetProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  visit: ActiveFieldSalesVisit | null
-  elapsedLabel: string
-  saving?: boolean
-  onSave: (payload: FieldSalesCheckoutPayload) => Promise<void> | void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  visit: ActiveFieldSalesVisit | null;
+  elapsedLabel: string;
+  saving?: boolean;
+  onSave: (payload: FieldSalesCheckoutPayload) => Promise<void> | void;
 }
 
 export function FieldSalesCheckoutSheet({
@@ -35,7 +38,7 @@ export function FieldSalesCheckoutSheet({
   visit,
   elapsedLabel,
   saving = false,
-  onSave,
+  onSave
 }: FieldSalesCheckoutSheetProps) {
   const { t } = useTranslation()
   const { data: myInfo } = useMyInfo()
@@ -47,8 +50,8 @@ export function FieldSalesCheckoutSheet({
 
     setSubject(
       t('fieldSales.checkoutSheet.visitSubjectTemplate', {
-        name: visit.organizationName,
-      }),
+        name: visit.organizationName
+      })
     )
     setDescription('')
   }, [visit, t])
@@ -60,9 +63,9 @@ export function FieldSalesCheckoutSheet({
         t('fieldSales.checkoutSheet.visitSubjectTemplate', {
           name:
             visit?.organizationName ||
-            t('fieldSales.checkoutSheet.customerFallback'),
+            t('fieldSales.checkoutSheet.customerFallback')
         }),
-      description: description.trim(),
+      description: description.trim()
     })
   }
 
@@ -115,9 +118,8 @@ export function FieldSalesCheckoutSheet({
             <Input
               id="visit-subject"
               value={subject}
-              onChange={(event) => setSubject(event.target.value)}
-              placeholder={t('fieldSales.checkoutSheet.visitTitlePlaceholder')}
-            />
+              onChange={event => setSubject(event.target.value)}
+              placeholder={t('fieldSales.checkoutSheet.visitTitlePlaceholder')} />
           </div>
 
           <div className="space-y-2">
@@ -127,10 +129,9 @@ export function FieldSalesCheckoutSheet({
             <Textarea
               id="visit-description"
               value={description}
-              onChange={(event) => setDescription(event.target.value)}
+              onChange={event => setDescription(event.target.value)}
               rows={10}
-              placeholder={t('fieldSales.checkoutSheet.visitNotesPlaceholder')}
-            />
+              placeholder={t('fieldSales.checkoutSheet.visitNotesPlaceholder')} />
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-4">

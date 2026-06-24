@@ -1,7 +1,12 @@
 import { useMemo, useState } from 'react'
+
+import { type PieData } from '@/components/charts/pie-context'
+
 import { useTranslation } from 'react-i18next'
-import { BarChart3, TrendingUp, Target, Timer } from 'lucide-react'
-import type { PieData } from '@/components/charts/pie-context'
+import { BarChart3, Target, Timer, TrendingUp } from 'lucide-react'
+
+import { ReportCard } from './report-card'
+
 import { BarChart } from '@/components/charts/bar-chart'
 import { Bar } from '@/components/charts/bar'
 import { BarXAxis } from '@/components/charts/bar-x-axis'
@@ -15,15 +20,17 @@ import {
   LegendItem,
   LegendLabel,
   LegendMarker,
-  LegendValue,
+  LegendValue
 } from '@/components/charts/legend'
-import { ReportCard } from './report-card'
+
 import { useDeals } from '@/hooks/use-deals'
+
 import type { DateRange } from '@/hooks/use-report-query'
+
 import {
   buildDateFilter,
-  getMonthLabels,
   getMonthIndex,
+  getMonthLabels
 } from '@/hooks/use-report-query'
 import { formatCurrency } from '@/lib/formatters'
 
@@ -33,7 +40,7 @@ const COLORS = {
   lost: 'hsl(0, 72%, 51%)',
   weighted: 'hsl(43, 100%, 57%)',
   avgValue: 'hsl(252, 56%, 68%)',
-  cycleTime: 'hsl(18, 100%, 63%)',
+  cycleTime: 'hsl(18, 100%, 63%)'
 }
 
 const PIE_COLORS = [
@@ -42,11 +49,11 @@ const PIE_COLORS = [
   'hsl(43, 100%, 57%)',
   'hsl(252, 56%, 68%)',
   'hsl(210, 100%, 50%)',
-  'hsl(162, 100%, 39%)',
+  'hsl(162, 100%, 39%)'
 ]
 
 interface RevenuePipelineTabProps {
-  dateRange: DateRange
+  dateRange: DateRange;
 }
 
 export function RevenuePipelineTab({ dateRange }: RevenuePipelineTabProps) {
@@ -62,9 +69,9 @@ export function RevenuePipelineTab({ dateRange }: RevenuePipelineTabProps) {
       'expected_closing_date',
       'closed_date',
       'reason_for_lost',
-      'created_on',
+      'created_on'
     ],
-    limit: 10000,
+    limit: 10000
   })
 
   const monthLabels = useMemo(() => getMonthLabels(dateRange), [dateRange])
@@ -72,10 +79,10 @@ export function RevenuePipelineTab({ dateRange }: RevenuePipelineTabProps) {
   // 1.1 Revenue Trend
   const revenueTrendData = useMemo(() => {
     if (!deals) return []
-    const buckets = monthLabels.map((label) => ({
+    const buckets = monthLabels.map(label => ({
       month: label,
       won: 0,
-      pipeline: 0,
+      pipeline: 0
     }))
 
     for (const deal of deals as Array<any>) {
@@ -85,16 +92,19 @@ export function RevenuePipelineTab({ dateRange }: RevenuePipelineTabProps) {
         stageName?.toLowerCase().includes('won') ||
         stageName?.toLowerCase().includes('closed won')
       const dateStr = deal.expected_closing_date || deal.created_on
+
       if (!dateStr) continue
       const idx = getMonthIndex(dateStr, dateRange.from)
+
       if (idx < 0 || idx >= buckets.length) continue
 
       if (isWon) {
-        buckets[idx]!.won += Number(deal.deal_value ?? 0)
+        buckets[idx].won += Number(deal.deal_value ?? 0)
       } else {
-        buckets[idx]!.pipeline += Number(deal.deal_value ?? 0)
+        buckets[idx].pipeline += Number(deal.deal_value ?? 0)
       }
     }
+
     return buckets
   }, [deals, monthLabels, dateRange])
 
@@ -111,24 +121,27 @@ export function RevenuePipelineTab({ dateRange }: RevenuePipelineTabProps) {
         typeof deal.stage === 'object'
           ? deal.stage?.name
           : deal.stage || 'Unknown'
+
       if (!stageMap[stageName]) {
         stageMap[stageName] = { stage: stageName, total: 0, weighted: 0 }
       }
       const value = Number(deal.deal_value ?? 0)
       const prob = Number(deal.close_probability ?? 0) / 100
-      stageMap[stageName]!.total += value
-      stageMap[stageName]!.weighted += value * prob
+
+      stageMap[stageName].total += value
+      stageMap[stageName].weighted += value * prob
     }
+
     return Object.values(stageMap)
   }, [deals])
 
   // 1.3 Win/Loss Analysis
   const winLossData = useMemo(() => {
     if (!deals) return { monthly: [], reasons: [] as Array<PieData> }
-    const buckets = monthLabels.map((label) => ({
+    const buckets = monthLabels.map(label => ({
       month: label,
       won: 0,
-      lost: 0,
+      lost: 0
     }))
     const reasonCounts: Record<string, number> = {}
 
@@ -142,17 +155,20 @@ export function RevenuePipelineTab({ dateRange }: RevenuePipelineTabProps) {
         stageName?.toLowerCase().includes('lost') ||
         stageName?.toLowerCase().includes('closed lost')
       const dateStr = deal.closed_date || deal.created_on
+
       if (!dateStr) continue
       const idx = getMonthIndex(dateStr, dateRange.from)
+
       if (idx < 0 || idx >= buckets.length) continue
 
-      if (isWon) buckets[idx]!.won++
+      if (isWon) buckets[idx].won++
       if (isLost) {
-        buckets[idx]!.lost++
+        buckets[idx].lost++
         const reason =
           typeof deal.reason_for_lost === 'object'
             ? deal.reason_for_lost?.name
             : deal.reason_for_lost || t('reports.unknownReason')
+
         reasonCounts[reason] = (reasonCounts[reason] || 0) + 1
       }
     }
@@ -161,51 +177,59 @@ export function RevenuePipelineTab({ dateRange }: RevenuePipelineTabProps) {
       ([label, value], i) => ({
         label,
         value,
-        color: PIE_COLORS[i % PIE_COLORS.length],
-      }),
+        color: PIE_COLORS[i % PIE_COLORS.length]
+      })
     )
 
     return { monthly: buckets, reasons }
-  }, [deals, monthLabels, dateRange, t])
+  }, [
+deals,
+monthLabels,
+dateRange,
+t
+])
 
   // 1.4 Avg Deal Size & Cycle Time
   const dealMetricsData = useMemo(() => {
     if (!deals) return []
-    const buckets = monthLabels.map((label) => ({
+    const buckets = monthLabels.map(label => ({
       month: label,
       totalValue: 0,
       count: 0,
       totalDays: 0,
-      closedCount: 0,
+      closedCount: 0
     }))
 
     for (const deal of deals as Array<any>) {
       const dateStr = deal.created_on
+
       if (!dateStr) continue
       const idx = getMonthIndex(dateStr, dateRange.from)
+
       if (idx < 0 || idx >= buckets.length) continue
 
-      buckets[idx]!.totalValue += Number(deal.deal_value ?? 0)
-      buckets[idx]!.count++
+      buckets[idx].totalValue += Number(deal.deal_value ?? 0)
+      buckets[idx].count++
 
       if (deal.closed_date && deal.created_on) {
         const days = Math.round(
           (new Date(deal.closed_date).getTime() -
             new Date(deal.created_on).getTime()) /
-            (1000 * 60 * 60 * 24),
+              (1000 * 60 * 60 * 24)
         )
+
         if (days >= 0) {
-          buckets[idx]!.totalDays += days
-          buckets[idx]!.closedCount++
+          buckets[idx].totalDays += days
+          buckets[idx].closedCount++
         }
       }
     }
 
-    return buckets.map((b) => ({
+    return buckets.map(b => ({
       month: b.month,
       avgValue: b.count > 0 ? Math.round(b.totalValue / b.count) : 0,
       avgCycleTime:
-        b.closedCount > 0 ? Math.round(b.totalDays / b.closedCount) : 0,
+        b.closedCount > 0 ? Math.round(b.totalDays / b.closedCount) : 0
     }))
   }, [deals, monthLabels, dateRange])
 
@@ -218,32 +242,29 @@ export function RevenuePipelineTab({ dateRange }: RevenuePipelineTabProps) {
         title={t('reports.revenueTrend')}
         icon={<TrendingUp className="size-4" />}
         isLoading={isLoading}
-        isEmpty={revenueTrendData.length === 0}
-      >
+        isEmpty={revenueTrendData.length === 0}>
         <BarChart
-          data={revenueTrendData as Array<Record<string, unknown>>}
+          data={revenueTrendData}
           xDataKey="month"
           stacked
-          aspectRatio="16 / 9"
-        >
+          aspectRatio="16 / 9">
           <Grid horizontal />
           <Bar dataKey="won" fill={COLORS.won} lineCap="round" />
           <Bar dataKey="pipeline" fill={COLORS.pipeline} lineCap="round" />
           <BarXAxis showAllLabels />
           <ChartTooltip
-            rows={(point) => [
+            rows={point => [
               {
                 color: COLORS.won,
                 label: t('reports.won'),
-                value: formatCurrency(Number(point.won ?? 0)),
+                value: formatCurrency(Number(point.won ?? 0))
               },
               {
                 color: COLORS.pipeline,
                 label: t('reports.pipeline'),
-                value: formatCurrency(Number(point.pipeline ?? 0)),
-              },
-            ]}
-          />
+                value: formatCurrency(Number(point.pipeline ?? 0))
+              }
+            ]} />
         </BarChart>
       </ReportCard>
 
@@ -252,32 +273,29 @@ export function RevenuePipelineTab({ dateRange }: RevenuePipelineTabProps) {
         title={t('reports.pipelineValueByStage')}
         icon={<BarChart3 className="size-4" />}
         isLoading={isLoading}
-        isEmpty={pipelineValueData.length === 0}
-      >
+        isEmpty={pipelineValueData.length === 0}>
         <BarChart
-          data={pipelineValueData as Array<Record<string, unknown>>}
+          data={pipelineValueData}
           xDataKey="stage"
           orientation="horizontal"
-          aspectRatio="16 / 9"
-        >
+          aspectRatio="16 / 9">
           <Grid horizontal />
           <Bar dataKey="total" fill={COLORS.pipeline} lineCap="round" />
           <Bar dataKey="weighted" fill={COLORS.weighted} lineCap="round" />
           <BarXAxis showAllLabels />
           <ChartTooltip
-            rows={(point) => [
+            rows={point => [
               {
                 color: COLORS.pipeline,
                 label: t('reports.totalValue'),
-                value: formatCurrency(Number(point.total ?? 0)),
+                value: formatCurrency(Number(point.total ?? 0))
               },
               {
                 color: COLORS.weighted,
                 label: t('reports.weightedValue'),
-                value: formatCurrency(Number(point.weighted ?? 0)),
-              },
-            ]}
-          />
+                value: formatCurrency(Number(point.weighted ?? 0))
+              }
+            ]} />
         </BarChart>
       </ReportCard>
 
@@ -287,34 +305,31 @@ export function RevenuePipelineTab({ dateRange }: RevenuePipelineTabProps) {
         icon={<Target className="size-4" />}
         isLoading={isLoading}
         isEmpty={
-          winLossData.monthly.every((m) => m.won === 0 && m.lost === 0) &&
+          winLossData.monthly.every(m => m.won === 0 && m.lost === 0) &&
           winLossData.reasons.length === 0
-        }
-      >
+        }>
         <div className="space-y-4">
           <BarChart
-            data={winLossData.monthly as Array<Record<string, unknown>>}
+            data={winLossData.monthly}
             xDataKey="month"
-            aspectRatio="21 / 9"
-          >
+            aspectRatio="21 / 9">
             <Grid horizontal />
             <Bar dataKey="won" fill={COLORS.won} lineCap="round" />
             <Bar dataKey="lost" fill={COLORS.lost} lineCap="round" />
             <BarXAxis showAllLabels />
             <ChartTooltip
-              rows={(point) => [
+              rows={point => [
                 {
                   color: COLORS.won,
                   label: t('reports.won'),
-                  value: String(point.won ?? 0),
+                  value: String(point.won ?? 0)
                 },
                 {
                   color: COLORS.lost,
                   label: t('reports.lost'),
-                  value: String(point.lost ?? 0),
-                },
-              ]}
-            />
+                  value: String(point.lost ?? 0)
+                }
+              ]} />
           </BarChart>
           {winLossData.reasons.length > 0 && (
             <div className="flex items-center gap-6 pt-2">
@@ -325,27 +340,25 @@ export function RevenuePipelineTab({ dateRange }: RevenuePipelineTabProps) {
                 padAngle={0.03}
                 cornerRadius={4}
                 hoveredIndex={hoveredReasonIdx}
-                onHoverChange={setHoveredReasonIdx}
-              >
+                onHoverChange={setHoveredReasonIdx}>
                 {winLossData.reasons.map((_, index) => (
                   <PieSlice key={index} index={index} hoverEffect="grow" />
                 ))}
                 <PieCenter defaultLabel={t('reports.lossReasons')} />
               </PieChart>
               <Legend
-                items={winLossData.reasons.map((r) => ({
+                items={winLossData.reasons.map(r => ({
                   label: r.label,
                   value: r.value,
                   color: r.color ?? '',
                   maxValue: winLossData.reasons.reduce(
                     (s, d) => s + d.value,
-                    0,
-                  ),
+                    0
+                  )
                 }))}
                 hoveredIndex={hoveredReasonIdx}
                 onHoverChange={setHoveredReasonIdx}
-                className="flex-1"
-              >
+                className="flex-1">
                 <LegendItem className="flex items-center gap-2">
                   <LegendMarker className="size-2.5 rounded-full" />
                   <LegendLabel className="flex-1 text-sm" />
@@ -362,31 +375,25 @@ export function RevenuePipelineTab({ dateRange }: RevenuePipelineTabProps) {
         title={t('reports.avgDealSizeAndCycleTime')}
         icon={<Timer className="size-4" />}
         isLoading={isLoading}
-        isEmpty={dealMetricsData.length === 0}
-      >
-        <BarChart
-          data={dealMetricsData as Array<Record<string, unknown>>}
-          xDataKey="month"
-          aspectRatio="16 / 9"
-        >
+        isEmpty={dealMetricsData.length === 0}>
+        <BarChart data={dealMetricsData} xDataKey="month" aspectRatio="16 / 9">
           <Grid horizontal />
           <Bar dataKey="avgValue" fill={COLORS.avgValue} lineCap="round" />
           <Bar dataKey="avgCycleTime" fill={COLORS.cycleTime} lineCap="round" />
           <BarXAxis showAllLabels />
           <ChartTooltip
-            rows={(point) => [
+            rows={point => [
               {
                 color: COLORS.avgValue,
                 label: t('reports.avgDealSize'),
-                value: formatCurrency(Number(point.avgValue ?? 0)),
+                value: formatCurrency(Number(point.avgValue ?? 0))
               },
               {
                 color: COLORS.cycleTime,
                 label: t('reports.avgCycleTimeDays'),
-                value: `${point.avgCycleTime ?? 0} ${t('reports.days')}`,
-              },
-            ]}
-          />
+                value: `${point.avgCycleTime ?? 0} ${t('reports.days')}`
+              }
+            ]} />
         </BarChart>
       </ReportCard>
     </div>

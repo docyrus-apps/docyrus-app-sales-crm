@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { Field, FieldError } from '@/components/ui/field'
 import {
   Select,
@@ -9,11 +11,13 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 import { FormFieldLabel } from './form-field-label'
 import { EnumOptionDisplay } from './lib/enum-option-display'
 import { type DocyrusFormFieldProps } from './types'
+
+const EMPTY_ENUM_OPTIONS: never[] = []
 
 export function EnumFormField({
   field: fieldConfig,
@@ -21,14 +25,13 @@ export function EnumFormField({
   disabled,
   required,
   className,
-  enumOptions = [],
+  enumOptions = EMPTY_ENUM_OPTIONS,
 }: DocyrusFormFieldProps) {
   const { t } = useUiTranslation()
 
   return (
-    <form.Field
-      name={fieldConfig.slug}
-      children={(field: any) => {
+    <form.Field name={fieldConfig.slug}>
+      {(field: any) => {
         const isInvalid =
           field.state.meta.isTouched && !field.state.meta.isValid
 
@@ -60,7 +63,7 @@ export function EnumFormField({
                   ) : null}
                 </SelectValue>
               </SelectTrigger>
-              <SelectContent className="min-w-[18rem]">
+              <SelectContent>
                 {enumOptions.map((option) => (
                   <SelectItem key={option.id} value={option.id}>
                     <EnumOptionDisplay option={option} />
@@ -72,6 +75,6 @@ export function EnumFormField({
           </Field>
         )
       }}
-    />
+    </form.Field>
   )
 }

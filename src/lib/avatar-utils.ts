@@ -1,67 +1,65 @@
 import { TAILWIND_COLOR_FAMILIES } from './tailwind-colors'
 
 export interface AvatarFieldMapping {
-  iconField?: string | null
-  colorField?: string | null
-  imageField?: string | null
+  iconField?: string | null;
+  colorField?: string | null;
+  imageField?: string | null;
 }
 
 export interface ResolvedAvatarFieldMapping {
-  iconField: string
-  colorField: string
-  imageField: string
+  iconField: string;
+  colorField: string;
+  imageField: string;
 }
 
 export interface AvatarImageValue {
-  id?: string
-  file_name?: string
-  signed_url?: string | null
-  file_type?: string
-  file_size?: number
-  source?: string
-  [key: string]: unknown
+  id?: string;
+  file_name?: string;
+  signed_url?: string | null;
+  file_type?: string;
+  file_size?: number;
+  source?: string;
+  [key: string]: unknown;
 }
 
 export interface AvatarFieldValue {
-  icon: string | null
-  color: string | null
-  image: AvatarImageValue | null
+  icon: string | null;
+  color: string | null;
+  image: AvatarImageValue | null;
 }
 
 export {
   TAILWIND_COLOR_FAMILIES,
   TAILWIND_HEX,
-  resolveColorHex as resolveColorCssValue,
+  resolveColorHex as resolveColorCssValue
 } from './tailwind-colors'
 
 export const TAILWIND_AVATAR_COLOR_LEVELS = [200, 500] as const
 
-export const TAILWIND_AVATAR_COLORS = TAILWIND_COLOR_FAMILIES.flatMap((name) =>
-  TAILWIND_AVATAR_COLOR_LEVELS.map((level) => `${name}-${level}`),
-)
+export const TAILWIND_AVATAR_COLORS = TAILWIND_COLOR_FAMILIES.flatMap(name => TAILWIND_AVATAR_COLOR_LEVELS.map(level => `${name}-${level}`))
 
 export const DEFAULT_AVATAR_FIELDS: ResolvedAvatarFieldMapping = {
   iconField: 'icon',
   colorField: 'color',
-  imageField: 'image',
+  imageField: 'image'
 }
 
 export const EMPTY_AVATAR_VALUE: AvatarFieldValue = {
   icon: null,
   color: null,
-  image: null,
+  image: null
 }
 
 const EMOJI_RE =
   /^(?:\p{Emoji_Presentation}|\p{Extended_Pictographic}|\p{Emoji}\uFE0F)(?:\u200D(?:\p{Emoji_Presentation}|\p{Extended_Pictographic}|\p{Emoji}\uFE0F))*$/u
 
 export function resolveAvatarFieldMapping(
-  mapping?: AvatarFieldMapping | null,
+  mapping?: AvatarFieldMapping | null
 ): ResolvedAvatarFieldMapping {
   return {
     iconField: mapping?.iconField?.trim() || DEFAULT_AVATAR_FIELDS.iconField,
     colorField: mapping?.colorField?.trim() || DEFAULT_AVATAR_FIELDS.colorField,
-    imageField: mapping?.imageField?.trim() || DEFAULT_AVATAR_FIELDS.imageField,
+    imageField: mapping?.imageField?.trim() || DEFAULT_AVATAR_FIELDS.imageField
   }
 }
 
@@ -84,7 +82,7 @@ function normalizeImage(value: unknown): AvatarImageValue | null {
   const obj = value as Record<string, unknown>
 
   if ('signed_url' in obj || 'file_name' in obj || 'id' in obj) {
-    return obj as AvatarImageValue
+    return obj
   }
 
   return null
@@ -98,18 +96,18 @@ function toStringOrNull(value: unknown): string | null {
 }
 
 export function normalizeAvatarValue(
-  value?: Partial<AvatarFieldValue> | null,
+  value?: Partial<AvatarFieldValue> | null
 ): AvatarFieldValue {
   return {
     icon: toStringOrNull(value?.icon),
     color: toStringOrNull(value?.color),
-    image: normalizeImage(value?.image),
+    image: normalizeImage(value?.image)
   }
 }
 
 export function extractAvatarValue(
   source: Record<string, unknown> | null | undefined,
-  mapping?: AvatarFieldMapping | null,
+  mapping?: AvatarFieldMapping | null
 ): AvatarFieldValue {
   if (!source) return { ...EMPTY_AVATAR_VALUE }
 
@@ -118,19 +116,19 @@ export function extractAvatarValue(
   return normalizeAvatarValue({
     icon: source[fields.iconField] as string | null,
     color: source[fields.colorField] as string | null,
-    image: source[fields.imageField] as AvatarImageValue | null,
+    image: source[fields.imageField] as AvatarImageValue | null
   })
 }
 
 export function buildAvatarPayload(
   value: AvatarFieldValue,
-  mapping?: AvatarFieldMapping | null,
+  mapping?: AvatarFieldMapping | null
 ): Record<string, unknown> {
   const fields = resolveAvatarFieldMapping(mapping)
 
   return {
     [fields.iconField]: value.icon ?? null,
     [fields.colorField]: value.color ?? null,
-    [fields.imageField]: value.image ?? null,
+    [fields.imageField]: value.image ?? null
   }
 }

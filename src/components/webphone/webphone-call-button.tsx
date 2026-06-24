@@ -1,16 +1,18 @@
 import { Phone } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+
 import { useWebphone } from './webphone-context'
+
 import { Button } from '@/components/ui/button'
 
 interface WebphoneCallButtonProps {
-  phone?: string | null
-  contactId?: string
-  leadId?: string
-  size?: 'sm' | 'default' | 'icon'
-  variant?: 'default' | 'outline' | 'ghost' | 'secondary'
-  className?: string
-  label?: string
+  phone?: string | null;
+  contactId?: string;
+  leadId?: string;
+  size?: 'sm' | 'default' | 'icon';
+  variant?: 'default' | 'outline' | 'ghost' | 'secondary';
+  className?: string;
+  label?: string;
 }
 
 /**
@@ -24,7 +26,7 @@ export function WebphoneCallButton({
   size = 'sm',
   variant = 'outline',
   className,
-  label,
+  label
 }: WebphoneCallButtonProps) {
   const { t } = useTranslation()
   const { enabled, ready, registrationStatus, activeSession, dial } =
@@ -44,8 +46,7 @@ export function WebphoneCallButton({
       disabled={!canDial}
       onClick={() => {
         if (trimmed) void dial(trimmed, { contactId, leadId })
-      }}
-    >
+      }}>
       <Phone className="size-4" />
       {size !== 'icon' && (label ?? t('webphone.callButton'))}
     </Button>

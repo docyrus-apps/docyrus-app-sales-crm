@@ -49,55 +49,55 @@ Kopyalarken bu tablo en faydalı kısımdır. Sol sütun kit sözleşmesindeki k
 
 ### Saf çekirdek — `src/lib/webphone/` (React yok)
 
-| Kavram | Dosya | Ne yapar |
-| --- | --- | --- |
-| Tipler / controller arayüzü | [types.ts](../../src/lib/webphone/types.ts) | `WebphoneController`, session snapshot, lifecycle event, `CustomerAdapter`, lokal `WebphoneAgentProfile` tipi |
-| Telefon normalizasyonu (Risk 2) | [phone.ts](../../src/lib/webphone/phone.ts) | `normalizePhoneForMatch`, `samePhone` (son-10 fallback), `normalizePhoneForStorage` (E.164-vari), `toDialableTarget` |
-| Runtime + **tek readiness** (Risk 4/5) | [runtime.ts](../../src/lib/webphone/runtime.ts) | Verimor defaults, `buildWebrtcRuntimeConfig`, `resolveWebphoneReadiness` (tüm dial gating'in tek kaynağı) |
-| Enum çözümü (Risk 3) | [enum-resolver.ts](../../src/lib/webphone/enum-resolver.ts) | slug/name normalize edip enum id bulur; çözülemezse `undefined` döner (tahmin yok) |
-| Screen-pop kararı | [screen-pop.ts](../../src/lib/webphone/screen-pop.ts) | 0/1/N mode, tek eşleşmede boş-ise-patch kararı (Risk 8) |
-| Call kaydı payload'u (Risk 6/7) | [call-lifecycle.ts](../../src/lib/webphone/call-lifecycle.ts) | event → `base_callcenter.call` payload; `call_id` başına tek kayıt, süre hesabı |
-| Wrap-up payload'u | [wrapup.ts](../../src/lib/webphone/wrapup.ts) | disposition UI token → tenant enum **adı** → id; live note import kuralı |
+| Kavram                                 | Dosya                                                         | Ne yapar                                                                                                             |
+| -------------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Tipler / controller arayüzü            | [types.ts](../../src/lib/webphone/types.ts)                   | `WebphoneController`, session snapshot, lifecycle event, `CustomerAdapter`, lokal `WebphoneAgentProfile` tipi        |
+| Telefon normalizasyonu (Risk 2)        | [phone.ts](../../src/lib/webphone/phone.ts)                   | `normalizePhoneForMatch`, `samePhone` (son-10 fallback), `normalizePhoneForStorage` (E.164-vari), `toDialableTarget` |
+| Runtime + **tek readiness** (Risk 4/5) | [runtime.ts](../../src/lib/webphone/runtime.ts)               | Verimor defaults, `buildWebrtcRuntimeConfig`, `resolveWebphoneReadiness` (tüm dial gating'in tek kaynağı)            |
+| Enum çözümü (Risk 3)                   | [enum-resolver.ts](../../src/lib/webphone/enum-resolver.ts)   | slug/name normalize edip enum id bulur; çözülemezse `undefined` döner (tahmin yok)                                   |
+| Screen-pop kararı                      | [screen-pop.ts](../../src/lib/webphone/screen-pop.ts)         | 0/1/N mode, tek eşleşmede boş-ise-patch kararı (Risk 8)                                                              |
+| Call kaydı payload'u (Risk 6/7)        | [call-lifecycle.ts](../../src/lib/webphone/call-lifecycle.ts) | event → `base_callcenter.call` payload; `call_id` başına tek kayıt, süre hesabı                                      |
+| Wrap-up payload'u                      | [wrapup.ts](../../src/lib/webphone/wrapup.ts)                 | disposition UI token → tenant enum **adı** → id; live note import kuralı                                             |
 
 ### Veri hook'ları — `src/hooks/use-webphone-*`
 
-| Kavram | Dosya | Ne yapar |
-| --- | --- | --- |
-| Tenant runtime ayarları | [use-webphone-config.ts](../../src/hooks/use-webphone-config.ts) | `data.webrtc`'i okur/yazar (credential-free) |
-| Agent profili + credential | [use-webphone-profile.ts](../../src/hooks/use-webphone-profile.ts) | mevcut kullanıcının `agent_telephony_profile`'ı; kendi dahili/şifre güncellemesi |
-| Müşteri adapter'ı | [use-webphone-customer-adapter.ts](../../src/hooks/use-webphone-customer-adapter.ts) | `base.contact` → `CustomerAdapter`; kart = `/contacts/$contactId` |
-| Enum resolver hook'u | [use-webphone-enums.ts](../../src/hooks/use-webphone-enums.ts) | paylaşılan 1s cache'li enum kataloğunu resolver'a bağlar |
-| Call lifecycle persistence | [use-webphone-call-log.ts](../../src/hooks/use-webphone-call-log.ts) | controller event'lerini `call` kaydına yazar; relation patch; **canlı çağrıyı asla bloklamaz** |
-| Wrap-up + pinned note | [use-webphone-wrapup.ts](../../src/hooks/use-webphone-wrapup.ts) | `call_activity` upsert + `call` patch + `call_screen_note` create |
-| Çağrı geçmişi sorguları | [use-webphone-call-history.ts](../../src/hooks/use-webphone-call-history.ts) | müşteri geçmişi (relation-first + phone fallback), tenant log, pinned notlar |
-| **SIP controller** | [use-webphone-sip.ts](../../src/hooks/use-webphone-sip.ts) | tek JsSIP UA; register/call/answer/hangup/mute/hold/DTMF; mic izni; remote audio; ringback; lifecycle event emisyonu |
+| Kavram                     | Dosya                                                                                | Ne yapar                                                                                                             |
+| -------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| Tenant runtime ayarları    | [use-webphone-config.ts](../../src/hooks/use-webphone-config.ts)                     | `data.webrtc`'i okur/yazar (credential-free)                                                                         |
+| Agent profili + credential | [use-webphone-profile.ts](../../src/hooks/use-webphone-profile.ts)                   | mevcut kullanıcının `agent_telephony_profile`'ı; kendi dahili/şifre güncellemesi                                     |
+| Müşteri adapter'ı          | [use-webphone-customer-adapter.ts](../../src/hooks/use-webphone-customer-adapter.ts) | `base.contact` → `CustomerAdapter`; kart = `/contacts/$contactId`                                                    |
+| Enum resolver hook'u       | [use-webphone-enums.ts](../../src/hooks/use-webphone-enums.ts)                       | paylaşılan 1s cache'li enum kataloğunu resolver'a bağlar                                                             |
+| Call lifecycle persistence | [use-webphone-call-log.ts](../../src/hooks/use-webphone-call-log.ts)                 | controller event'lerini `call` kaydına yazar; relation patch; **canlı çağrıyı asla bloklamaz**                       |
+| Wrap-up + pinned note      | [use-webphone-wrapup.ts](../../src/hooks/use-webphone-wrapup.ts)                     | `call_activity` upsert + `call` patch + `call_screen_note` create                                                    |
+| Çağrı geçmişi sorguları    | [use-webphone-call-history.ts](../../src/hooks/use-webphone-call-history.ts)         | müşteri geçmişi (relation-first + phone fallback), tenant log, pinned notlar                                         |
+| **SIP controller**         | [use-webphone-sip.ts](../../src/hooks/use-webphone-sip.ts)                           | tek JsSIP UA; register/call/answer/hangup/mute/hold/DTMF; mic izni; remote audio; ringback; lifecycle event emisyonu |
 
 ### React kompozisyonu + UI — `src/components/webphone/`
 
-| Yüzey | Dosya | Ne yapar |
-| --- | --- | --- |
-| Provider + `useWebphone()` | [webphone-context.tsx](../../src/components/webphone/webphone-context.tsx) | her şeyi birleştirir; auto-connect; screen-pop effect'i; pending wrap-up |
-| Header durum chip'i | [webphone-status-badge.tsx](../../src/components/webphone/webphone-status-badge.tsx) | nokta-renk durumu, Online/Offline menüsü, hata toast'ı, dahili ayar girişi |
-| Per-user dahili ayarı | [webphone-extension-dialog.tsx](../../src/components/webphone/webphone-extension-dialog.tsx) | kullanıcının kendi SIP credential'ı; "Kaydet & bağlan" |
-| Header dialpad | [webphone-dialpad.tsx](../../src/components/webphone/webphone-dialpad.tsx) | dış arama; ≥7 hane yazılınca contact araması; tek tıkla ara+bağla |
-| Global çağrı widget'ı | [webphone-widget.tsx](../../src/components/webphone/webphone-widget.tsx) | gelen screen-pop → aktif çağrı → wrap-up (öncelik sırasıyla) |
-| Click-to-call butonu | [webphone-call-button.tsx](../../src/components/webphone/webphone-call-button.tsx) | kayıt kartlarındaki "Ara" aksiyonu (gated) |
-| Müşteri çağrıları paneli | [webphone-customer-calls.tsx](../../src/components/webphone/webphone-customer-calls.tsx) | geçmiş + pinned notlar (contact kartındaki "Çağrılar" sekmesi) |
-| Tenant ayar formu | [webphone-settings-form.tsx](../../src/components/webphone/webphone-settings-form.tsx) | `data.webrtc` runtime ayarları + readiness özeti (read-only + onayla-düzenle) |
+| Yüzey                      | Dosya                                                                                        | Ne yapar                                                                      |
+| -------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Provider + `useWebphone()` | [webphone-context.tsx](../../src/components/webphone/webphone-context.tsx)                   | her şeyi birleştirir; auto-connect; screen-pop effect'i; pending wrap-up      |
+| Header durum chip'i        | [webphone-status-badge.tsx](../../src/components/webphone/webphone-status-badge.tsx)         | nokta-renk durumu, Online/Offline menüsü, hata toast'ı, dahili ayar girişi    |
+| Per-user dahili ayarı      | [webphone-extension-dialog.tsx](../../src/components/webphone/webphone-extension-dialog.tsx) | kullanıcının kendi SIP credential'ı; "Kaydet & bağlan"                        |
+| Header dialpad             | [webphone-dialpad.tsx](../../src/components/webphone/webphone-dialpad.tsx)                   | dış arama; ≥7 hane yazılınca contact araması; tek tıkla ara+bağla             |
+| Global çağrı widget'ı      | [webphone-widget.tsx](../../src/components/webphone/webphone-widget.tsx)                     | gelen screen-pop → aktif çağrı → wrap-up (öncelik sırasıyla)                  |
+| Click-to-call butonu       | [webphone-call-button.tsx](../../src/components/webphone/webphone-call-button.tsx)           | kayıt kartlarındaki "Ara" aksiyonu (gated)                                    |
+| Müşteri çağrıları paneli   | [webphone-customer-calls.tsx](../../src/components/webphone/webphone-customer-calls.tsx)     | geçmiş + pinned notlar (contact kartındaki "Çağrılar" sekmesi)                |
+| Tenant ayar formu          | [webphone-settings-form.tsx](../../src/components/webphone/webphone-settings-form.tsx)       | `data.webrtc` runtime ayarları + readiness özeti (read-only + onayla-düzenle) |
 
 ### Bağlama (wiring) noktaları
 
-| Yer | Dosya | Ne eklendi |
-| --- | --- | --- |
-| Modül flag tanımı | [app-config.ts](../../src/lib/app-config.ts) | `webphone: boolean` (default `false`), `isModuleEnabled` |
-| Modül oku/yaz | [use-app-config.ts](../../src/hooks/use-app-config.ts) | `useAppModules` / `useUpdateAppModules` |
-| Rota guard | [module-guard.tsx](../../src/components/shared/module-guard.tsx) | kapalı modül rotası `/`'a redirect |
-| Provider + widget mount | [App.tsx](../../src/App.tsx) | `<WebphoneProvider>` + `<WebphoneWidget />` |
-| Header aksiyonları | [app-header-actions.tsx](../../src/components/layout/app-header-actions.tsx) | durum badge + dialpad (modül açıksa) |
-| Sidebar grubu | [app-sidebar.tsx](../../src/components/layout/app-sidebar.tsx) | `/calls` öğesi (modül açıksa) |
-| App Config ekranı | [app-config.tsx](../../src/routes/app-config.tsx) | modül satırı + tamam/eksik rozeti + ayar modalı |
-| Tenant çağrı log'u | [calls.tsx](../../src/routes/calls.tsx) | `/calls` DataGrid sayfası |
-| CRM kart entegrasyonu | [contact-detail.tsx](../../src/routes/contact-detail.tsx), [company-detail.tsx](../../src/routes/company-detail.tsx), [lead-detail.tsx](../../src/routes/lead-detail.tsx), [deal-detail.tsx](../../src/routes/deal-detail.tsx) | "Ara" butonu / doğrudan dial; contact'ta ek "Çağrılar" sekmesi |
+| Yer                     | Dosya                                                                                                                                                                                                                          | Ne eklendi                                                     |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| Modül flag tanımı       | [app-config.ts](../../src/lib/app-config.ts)                                                                                                                                                                                   | `webphone: boolean` (default `false`), `isModuleEnabled`       |
+| Modül oku/yaz           | [use-app-config.ts](../../src/hooks/use-app-config.ts)                                                                                                                                                                         | `useAppModules` / `useUpdateAppModules`                        |
+| Rota guard              | [module-guard.tsx](../../src/components/shared/module-guard.tsx)                                                                                                                                                               | kapalı modül rotası `/`'a redirect                             |
+| Provider + widget mount | [App.tsx](../../src/App.tsx)                                                                                                                                                                                                   | `<WebphoneProvider>` + `<WebphoneWidget />`                    |
+| Header aksiyonları      | [app-header-actions.tsx](../../src/components/layout/app-header-actions.tsx)                                                                                                                                                   | durum badge + dialpad (modül açıksa)                           |
+| Sidebar grubu           | [app-sidebar.tsx](../../src/components/layout/app-sidebar.tsx)                                                                                                                                                                 | `/calls` öğesi (modül açıksa)                                  |
+| App Config ekranı       | [app-config.tsx](../../src/routes/app-config.tsx)                                                                                                                                                                              | modül satırı + tamam/eksik rozeti + ayar modalı                |
+| Tenant çağrı log'u      | [calls.tsx](../../src/routes/calls.tsx)                                                                                                                                                                                        | `/calls` DataGrid sayfası                                      |
+| CRM kart entegrasyonu   | [contact-detail.tsx](../../src/routes/contact-detail.tsx), [company-detail.tsx](../../src/routes/company-detail.tsx), [lead-detail.tsx](../../src/routes/lead-detail.tsx), [deal-detail.tsx](../../src/routes/deal-detail.tsx) | "Ara" butonu / doğrudan dial; contact'ta ek "Çağrılar" sekmesi |
 
 ---
 
@@ -139,9 +139,9 @@ Hepsi modül kapalıyken `return null`. Hiçbiri kullanıcıya teknik dil göste
 - **Header dialpad** — Numara girişi + tuş takımı. ≥7 hane yazılınca `base.contact`'ta arama yapar; bilinen müşteri çıkarsa tek tıkla **arar ve bağlar**. Çağrı butonu yalnızca `ready && registered && aktif çağrı yok` iken aktif.
 
 - **Global widget** (sağ-alt, sabit) — Tek seferde tek panel, öncelik sırası: **gelen çağrı → aktif çağrı → wrap-up**.
-  - *Gelen:* arayan adı/numarası, çoklu eşleşmede seçim listesi, Cevapla/Reddet.
-  - *Aktif:* canlı geçen süre, Mute/Hold/Keypad (DTMF), live not alanı, Kapat.
-  - *Wrap-up:* disposition (7 seçenek), not (live not'tan prefill), follow-up switch'i, Kaydet/Atla. Disposition seçilmeden Kaydet kapalı; kayıt başarısızsa form **açık kalır**.
+  - _Gelen:_ arayan adı/numarası, çoklu eşleşmede seçim listesi, Cevapla/Reddet.
+  - _Aktif:_ canlı geçen süre, Mute/Hold/Keypad (DTMF), live not alanı, Kapat.
+  - _Wrap-up:_ disposition (7 seçenek), not (live not'tan prefill), follow-up switch'i, Kaydet/Atla. Disposition seçilmeden Kaydet kapalı; kayıt başarısızsa form **açık kalır**.
 
 - **Click-to-call butonu** — CRM kart kartlarına gömülü "Ara" aksiyonu. Modül açıkken contact/company/lead/deal'deki çağrı aksiyonları **gerçek WebPhone'a** yönlenir; modül kapalıyken eski görsel mock dialer'a düşer (eski `DialerProvider` bilinçli olarak dokunulmadan bırakıldı).
 
@@ -167,7 +167,7 @@ Bu, kitin "saha notları" kısmı — başka bir CRM'e taşırken büyük ihtima
 
 5. **Re-register sessiz no-op oluyordu.** Başarısız/kopmuş bir registration listener'ları `uaRef`'i set bırakınca tekrar register hiçbir şey yapmıyordu. `register()` artık her seferinde eski UA'yı `stop()` edip **sıfırdan** kuruyor.
 
-6. **`call.outcome`'da `completed` yok.** Tenant'ta başarı değeri `answered`. Hardcode etmek yerine token mapping'i buna göre kurdum (`callOutcomeToken`, wrap-up `WRAPUP_TO_OUTCOME`). → Enum *değerlerinizi* audit etmeden mapping yazmayın.
+6. **`call.outcome`'da `completed` yok.** Tenant'ta başarı değeri `answered`. Hardcode etmek yerine token mapping'i buna göre kurdum (`callOutcomeToken`, wrap-up `WRAPUP_TO_OUTCOME`). → Enum _değerlerinizi_ audit etmeden mapping yazmayın.
 
 7. **Wrap-up disposition iki adımlı çözülüyor.** UI token (`callback_requested`) → tenant enum **adı** (`Callback Scheduled`) → enum **id**. Hiçbir yerde id elle yazılmıyor; ad çözülemezse field düşürülüyor.
 
@@ -198,17 +198,17 @@ Sıra önemli. Detaylı sözleşmeler için `04-implementation-playbook.md`'ye, 
 
 ## 8. Doğrulama durumu (dürüst tablo)
 
-| Alan | Durum |
-| --- | --- |
-| Outbound dial → call kaydı → answer/end → süre | Kod yolu tam, akış simüle edildi |
-| Inbound screen-pop (0/1/N), kart açma, relation patch | Kod yolu tam |
-| Wrap-up (`call_activity` + `call` patch) + live not import | Kod yolu tam |
-| Pinned note (`call_screen_note`) | Kod yolu tam |
-| Müşteri geçmişi + tenant `/calls` log'u | Çalışır |
-| Module gating (default off, guard, no-op) | Çalışır |
-| TypeScript build / lint | Geçiyor |
-| **Saf helper'lar için birim test** | **Yok** — `lib/webphone/` fonksiyonları test edilebilir ama henüz test eklenmedi |
-| **Canlı SIP register / gerçek PBX'e gelen çağrı** | **Test edilmedi** — dolu profil + gerçek hat ile operasyona bırakıldı |
+| Alan                                                       | Durum                                                                            |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Outbound dial → call kaydı → answer/end → süre             | Kod yolu tam, akış simüle edildi                                                 |
+| Inbound screen-pop (0/1/N), kart açma, relation patch      | Kod yolu tam                                                                     |
+| Wrap-up (`call_activity` + `call` patch) + live not import | Kod yolu tam                                                                     |
+| Pinned note (`call_screen_note`)                           | Kod yolu tam                                                                     |
+| Müşteri geçmişi + tenant `/calls` log'u                    | Çalışır                                                                          |
+| Module gating (default off, guard, no-op)                  | Çalışır                                                                          |
+| TypeScript build / lint                                    | Geçiyor                                                                          |
+| **Saf helper'lar için birim test**                         | **Yok** — `lib/webphone/` fonksiyonları test edilebilir ama henüz test eklenmedi |
+| **Canlı SIP register / gerçek PBX'e gelen çağrı**          | **Test edilmedi** — dolu profil + gerçek hat ile operasyona bırakıldı            |
 
 > Not: `runtime.ts`, `phone.ts`, `enum-resolver.ts`, `call-lifecycle.ts`, `wrapup.ts`, `screen-pop.ts` saf ve yan etkisiz — taşıdığınız projede ilk test yazacağınız yerler bunlar olmalı (verification checklist madde 10).
 

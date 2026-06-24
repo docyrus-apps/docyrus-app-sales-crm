@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+
+import type {
+  ILineItem,
+  IPricingDocumentData,
+  IProductCatalogItem
+} from '@/components/docyrus/pricing-engine-panel'
+
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
-import {
-  PricingEnginePanel,
-  type ILineItem,
-  type IPricingDocumentData,
-  type IProductCatalogItem,
-} from '@/components/docyrus/pricing-engine-panel'
+import { PricingEnginePanel } from '@/components/docyrus/pricing-engine-panel'
 import { buildLineItemRows } from '@/components/docyrus/pricing-engine-panel/lib/calculations'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSalesOrder } from '@/hooks/use-sales-orders'
@@ -16,7 +18,7 @@ import {
   useCreateSalesOrderItem,
   useDeleteSalesOrderItem,
   useSalesOrderItems,
-  useUpdateSalesOrderItem,
+  useUpdateSalesOrderItem
 } from '@/hooks/use-sales-order-items'
 import { useProducts } from '@/hooks/use-products'
 import { useBaseCrmSalesOrderCollection } from '@/collections'
@@ -24,10 +26,15 @@ import { useUiLocale } from '@/hooks/use-ui-locale'
 
 const DEFAULT_CURRENCY = 'TRY'
 const DEFAULT_VAT_RATE = 20
-const VAT_RATES = [0, 1, 10, 20]
+const VAT_RATES = [
+0,
+1,
+10,
+20
+]
 
 function getRelationName(
-  value?: { name?: string } | string | null,
+  value?: { name?: string } | string | null
 ): string | undefined {
   if (!value) return undefined
   if (typeof value === 'object') return value.name
@@ -42,9 +49,9 @@ function getRelationId(value?: { id?: string } | string | null): string | null {
 }
 
 export interface QuoteLineItemsProps {
-  quoteId: string
+  quoteId: string;
   /** Read-only rendering (e.g. for the build/preview screen). */
-  readOnly?: boolean
+  readOnly?: boolean;
 }
 
 /**
@@ -74,21 +81,27 @@ export function QuoteLineItems({ quoteId, readOnly }: QuoteLineItemsProps) {
       'tax_rate',
       'total',
       'gross_total',
-      'net_total',
+      'net_total'
     ],
     filters: {
-      rules: [{ field: 'related_sales_order', operator: '=', value: quoteId }],
+      rules: [{ field: 'related_sales_order', operator: '=', value: quoteId }]
     },
-    orderBy: 'created_on asc',
+    orderBy: 'created_on asc'
   })
 
   const { data: products } = useProducts({
-    columns: ['id', 'name', 'product_code', 'unit_price', 'tax', 'category'],
+    columns: [
+'id',
+'name',
+'product_code',
+'unit_price',
+'tax',
+'category'
+]
   })
 
   const productCatalog = useMemo<Array<IProductCatalogItem>>(
-    () =>
-      (products ?? [])
+    () => (products ?? [])
         .filter((product: any) => product.id)
         .map((product: any) => ({
           id: String(product.id),
@@ -98,9 +111,9 @@ export function QuoteLineItems({ quoteId, readOnly }: QuoteLineItemsProps) {
             t('quotes.untitledProduct', { defaultValue: 'Product' }),
           category: getRelationName(product.category) ?? '',
           unitPrice: Number(product.unit_price ?? 0),
-          vatRate: Number(product.tax ?? DEFAULT_VAT_RATE),
+          vatRate: Number(product.tax ?? DEFAULT_VAT_RATE)
         })),
-    [products, t],
+    [products, t]
   )
 
   const locale = useUiLocale()
@@ -120,11 +133,11 @@ export function QuoteLineItems({ quoteId, readOnly }: QuoteLineItemsProps) {
         quantity: Number(item.qty ?? 1),
         unitPrice: Number(item.unit_price ?? 0),
         vatRate: Number(item.tax_rate ?? DEFAULT_VAT_RATE),
-        discountPercent: Number(item.discount ?? 0),
-      }),
+        discountPercent: Number(item.discount ?? 0)
+      })
     )
 
-    originalItemIds.current = new Set(lineItems.map((line) => line.id))
+    originalItemIds.current = new Set(lineItems.map(line => line.id))
 
     return {
       lineItems,
@@ -133,7 +146,7 @@ export function QuoteLineItems({ quoteId, readOnly }: QuoteLineItemsProps) {
       currency: {
         code: DEFAULT_CURRENCY,
         secondaryCurrencyCode: null,
-        exchangeRate: 1,
+        exchangeRate: 1
       },
       config: {
         showVatColumn: true,
@@ -147,7 +160,7 @@ export function QuoteLineItems({ quoteId, readOnly }: QuoteLineItemsProps) {
         enableAdjustment: true,
         defaultVatRate: DEFAULT_VAT_RATE,
         vatRates: VAT_RATES,
-        viewMode: 'net',
+        viewMode: 'net'
       },
       description: '',
       termsAndConditions: '',
@@ -160,8 +173,8 @@ export function QuoteLineItems({ quoteId, readOnly }: QuoteLineItemsProps) {
         netTotal: 0,
         vatTotal: 0,
         adjustment: 0,
-        grandTotal: 0,
-      },
+        grandTotal: 0
+      }
     }
   }, [orderItems])
 
@@ -176,14 +189,15 @@ export function QuoteLineItems({ quoteId, readOnly }: QuoteLineItemsProps) {
         await salesOrderCollection.update(quoteId, {
           sub_total: data.totals.netTotal,
           tax_total: data.totals.vatTotal,
-          grand_total: data.totals.grandTotal,
+          grand_total: data.totals.grandTotal
         })
 
-        const currentIds = new Set(data.lineItems.map((line) => line.id))
+        const currentIds = new Set(data.lineItems.map(line => line.id))
         const removed = [...originalItemIds.current].filter(
-          (id) => !currentIds.has(id),
+          id => !currentIds.has(id)
         )
-        await Promise.all(removed.map((id) => deleteItem.mutateAsync(id)))
+
+        await Promise.all(removed.map(id => deleteItem.mutateAsync(id)))
 
         for (let index = 0; index < data.lineItems.length; index++) {
           const line = data.lineItems[index]
@@ -196,8 +210,9 @@ export function QuoteLineItems({ quoteId, readOnly }: QuoteLineItemsProps) {
             tax_rate: line.vatRate,
             total: row.lineSubtotal,
             net_total: row.netAfterDiscount,
-            gross_total: row.grossTotal,
+            gross_total: row.grossTotal
           }
+
           if (line.productId) itemPayload.product = line.productId
 
           if (originalItemIds.current.has(line.id)) {
@@ -212,7 +227,7 @@ export function QuoteLineItems({ quoteId, readOnly }: QuoteLineItemsProps) {
       } catch (error: any) {
         toast.error(
           error?.message ||
-            t('quotes.saveFailed', { defaultValue: 'Failed to save quote' }),
+          t('quotes.saveFailed', { defaultValue: 'Failed to save quote' })
         )
       } finally {
         setIsSaving(false)
@@ -226,12 +241,14 @@ export function QuoteLineItems({ quoteId, readOnly }: QuoteLineItemsProps) {
       quoteId,
       salesOrderCollection,
       t,
-      updateItem,
-    ],
+      updateItem
+    ]
   )
 
-  // Keep totals shown in the panel aligned with any adjustment the stored order
-  // carries (parity with the read-only views elsewhere).
+  /*
+   * Keep totals shown in the panel aligned with any adjustment the stored order
+   * carries (parity with the read-only views elsewhere).
+   */
   useEffect(() => {
     void order
   }, [order])
@@ -253,13 +270,12 @@ export function QuoteLineItems({ quoteId, readOnly }: QuoteLineItemsProps) {
       showDescription={false}
       showTerms={false}
       showCategoryColumn={false}
-      onSave={(data) => void persist(data)}
-      onSaveDraft={(data) => void persist(data)}
+      onSave={data => void persist(data)}
+      onSaveDraft={data => void persist(data)}
       defaultCurrency={DEFAULT_CURRENCY}
       defaultVatRate={DEFAULT_VAT_RATE}
       vatRates={VAT_RATES}
       size="full"
-      variant={readOnly ? 'default' : 'bordered'}
-    />
+      variant={readOnly ? 'default' : 'bordered'} />
   )
 }

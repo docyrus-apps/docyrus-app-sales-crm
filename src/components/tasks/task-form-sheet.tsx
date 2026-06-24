@@ -1,17 +1,19 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { useEffect, useState } from 'react'
+
+import type { TaskFormData } from '@/schemas/task-schema'
+
 import { useTranslation } from 'react-i18next'
 import { useForm } from '@tanstack/react-form'
 import { zodValidator } from '@tanstack/zod-form-adapter'
 import { CalendarIcon, Loader2 } from 'lucide-react'
 import { format } from 'date-fns'
-import type { TaskFormData } from '@/schemas/task-schema'
+
 import { Button } from '@/components/animate-ui/components/buttons/button'
 import {
   AwesomeDialog,
   AwesomeDialogBody,
   AwesomeDialogFooter,
-  AwesomeDialogHeader,
+  AwesomeDialogHeader
 } from '@/components/docyrus/awesome-dialog'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
@@ -21,7 +23,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Combobox } from '@/components/ui/combobox-simple'
@@ -35,12 +37,12 @@ import {
   ComboboxInput,
   ComboboxItem,
   ComboboxTrigger,
-  Combobox as MultiCombobox,
+  Combobox as MultiCombobox
 } from '@/components/ui/combobox'
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
+  PopoverTrigger
 } from '@/components/ui/popover'
 import { taskFormSchema } from '@/schemas/task-schema'
 import { useCreateTask, useUpdateTask } from '@/hooks/use-tasks'
@@ -50,18 +52,18 @@ import { useEnumOptions } from '@/hooks/use-enums'
 import { cn } from '@/lib/utils'
 
 interface TaskFormSheetProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  task?: any
-  mode: 'create' | 'edit'
-  onSubmitSuccess?: () => void | Promise<void>
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  task?: any;
+  mode: 'create' | 'edit';
+  onSubmitSuccess?: () => void | Promise<void>;
   /**
    * When creating from a record detail page, the parent relation column on
    * `base.task` (e.g. `lead`, `contact`, `organization`, `deal`) and the parent
    * record id. The new task is auto-associated with this parent on submit.
    */
-  parentField?: string
-  parentId?: string
+  parentField?: string;
+  parentId?: string;
 }
 
 export function TaskFormSheet({
@@ -71,7 +73,7 @@ export function TaskFormSheet({
   mode,
   onSubmitSuccess,
   parentField,
-  parentId,
+  parentId
 }: TaskFormSheetProps) {
   const { t } = useTranslation()
   const createTask = useCreateTask()
@@ -80,18 +82,18 @@ export function TaskFormSheet({
   const { data: users = [] } = useUsers()
   const { options: statusOptions = [] } = useEnumOptions('status', {
     appSlug: 'base',
-    dataSourceSlug: 'task',
+    dataSourceSlug: 'task'
   })
   const { options: priorityOptions = [] } = useEnumOptions('priority', {
     appSlug: 'base',
-    dataSourceSlug: 'task',
+    dataSourceSlug: 'task'
   })
 
   const [startDate, setStartDate] = useState<Date | undefined>(
-    task?.start_date ? new Date(task.start_date) : undefined,
+    task?.start_date ? new Date(task.start_date) : undefined
   )
   const [endDate, setEndDate] = useState<Date | undefined>(
-    task?.end_date ? new Date(task.end_date) : undefined,
+    task?.end_date ? new Date(task.end_date) : undefined
   )
 
   const form = useForm<TaskFormData>({
@@ -125,22 +127,17 @@ export function TaskFormSheet({
           ? task.project.id
           : task?.project || '',
       followers: Array.isArray(task?.followers)
-        ? task.followers.map((follower: any) =>
-            typeof follower === 'object' ? follower.id : follower,
-          )
-        : [],
+        ? task.followers.map((follower: any) => typeof follower === 'object' ? follower.id : follower)
+        : []
     },
     validatorAdapter: zodValidator(),
     validators: {
-      onChange: taskFormSchema,
+      onChange: taskFormSchema
     },
     onSubmit: async ({ value }) => {
       // Clean up empty strings (convert to undefined for UUID fields)
       const cleanedData = Object.fromEntries(
-        Object.entries(value).map(([key, val]) => [
-          key,
-          val === '' ? undefined : val,
-        ]),
+        Object.entries(value).map(([key, val]) => [key, val === '' ? undefined : val])
       )
 
       if (mode === 'create') {
@@ -148,6 +145,7 @@ export function TaskFormSheet({
           parentField && parentId
             ? { ...cleanedData, [parentField]: parentId }
             : cleanedData
+
         await createTask.mutateAsync(payload)
       } else if (task?.id) {
         await updateTask.mutateAsync({ taskId: task.id, data: cleanedData })
@@ -155,7 +153,7 @@ export function TaskFormSheet({
 
       await onSubmitSuccess?.()
       onOpenChange(false)
-    },
+    }
   })
 
   useEffect(() => {
@@ -172,12 +170,12 @@ export function TaskFormSheet({
 
   const companyOptions = companies.map((company: any) => ({
     label: company.name,
-    value: company.id,
+    value: company.id
   }))
 
   const userOptions = users.map((user: any) => ({
     label: `${user.firstname} ${user.lastname}`,
-    value: user.id,
+    value: user.id
   }))
 
   const isSubmitting = createTask.isPending || updateTask.isPending
@@ -188,16 +186,14 @@ export function TaskFormSheet({
       onOpenChange={onOpenChange}
       container="sheet"
       side="right"
-      size="default"
-    >
+      size="default">
       <form
         onSubmit={(e) => {
           e.preventDefault()
           e.stopPropagation()
           form.handleSubmit()
         }}
-        className="flex flex-col flex-1 overflow-hidden"
-      >
+        className="flex flex-col flex-1 overflow-hidden">
         <AwesomeDialogHeader
           title={
             mode === 'create'
@@ -208,13 +204,12 @@ export function TaskFormSheet({
             mode === 'create'
               ? t('tasks.form.createDescription')
               : t('tasks.form.editDescription')
-          }
-        />
+          } />
 
         <AwesomeDialogBody className="space-y-4">
           {/* Subject Field */}
           <form.Field name="subject">
-            {(field) => (
+            {field => (
               <Field>
                 <Label htmlFor={field.name}>
                   {t('tasks.form.subjectLabel')}{' '}
@@ -223,9 +218,8 @@ export function TaskFormSheet({
                 <Input
                   id={field.name}
                   value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder={t('tasks.form.subjectPlaceholder')}
-                />
+                  onChange={e => field.handleChange(e.target.value)}
+                  placeholder={t('tasks.form.subjectPlaceholder')} />
                 {field.state.meta.errors?.[0] && (
                   <p className="text-sm text-destructive">
                     {typeof field.state.meta.errors[0] === 'string'
@@ -240,7 +234,7 @@ export function TaskFormSheet({
 
           {/* Description Field */}
           <form.Field name="description">
-            {(field) => (
+            {field => (
               <Field>
                 <Label htmlFor={field.name}>
                   {t('tasks.form.descriptionLabel')}
@@ -248,10 +242,9 @@ export function TaskFormSheet({
                 <Textarea
                   id={field.name}
                   value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
+                  onChange={e => field.handleChange(e.target.value)}
                   placeholder={t('tasks.form.descriptionPlaceholder')}
-                  rows={4}
-                />
+                  rows={4} />
                 {field.state.meta.errors?.[0] && (
                   <p className="text-sm text-destructive">
                     {typeof field.state.meta.errors[0] === 'string'
@@ -266,19 +259,17 @@ export function TaskFormSheet({
 
           {/* Status Field */}
           <form.Field name="status">
-            {(field) => (
+            {field => (
               <Field>
                 <Label htmlFor={field.name}>
                   {t('tasks.form.statusLabel')}
                 </Label>
                 <Select
                   value={field.state.value}
-                  onValueChange={field.handleChange}
-                >
+                  onValueChange={field.handleChange}>
                   <SelectTrigger>
                     <SelectValue
-                      placeholder={t('tasks.form.statusPlaceholder')}
-                    />
+                      placeholder={t('tasks.form.statusPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {statusOptions.map((option: any) => (
@@ -302,21 +293,19 @@ export function TaskFormSheet({
 
           {/* Priority Field */}
           <form.Field name="priority">
-            {(field) => (
+            {field => (
               <Field>
                 <Label htmlFor={field.name}>
                   {t('tasks.form.priorityLabel', { defaultValue: 'Priority' })}
                 </Label>
                 <Select
                   value={field.state.value}
-                  onValueChange={field.handleChange}
-                >
+                  onValueChange={field.handleChange}>
                   <SelectTrigger>
                     <SelectValue
                       placeholder={t('tasks.form.priorityPlaceholder', {
-                        defaultValue: 'Select priority',
-                      })}
-                    />
+                        defaultValue: 'Select priority'
+                      })} />
                   </SelectTrigger>
                   <SelectContent>
                     {priorityOptions.map((option: any) => (
@@ -340,7 +329,7 @@ export function TaskFormSheet({
 
           {/* Organization Field */}
           <form.Field name="organization">
-            {(field) => (
+            {field => (
               <Field>
                 <Label htmlFor={field.name}>
                   {t('tasks.form.organizationLabel')}
@@ -348,10 +337,9 @@ export function TaskFormSheet({
                 <Combobox
                   options={companyOptions}
                   value={field.state.value}
-                  onValueChange={(value) => field.handleChange(value)}
+                  onValueChange={value => field.handleChange(value)}
                   placeholder={t('tasks.form.organizationPlaceholder')}
-                  emptyText={t('tasks.form.organizationEmpty')}
-                />
+                  emptyText={t('tasks.form.organizationEmpty')} />
                 {field.state.meta.errors?.[0] && (
                   <p className="text-sm text-destructive">
                     {typeof field.state.meta.errors[0] === 'string'
@@ -366,7 +354,7 @@ export function TaskFormSheet({
 
           {/* Start Date Field */}
           <form.Field name="start_date">
-            {(field) => (
+            {field => (
               <Field>
                 <Label htmlFor={field.name}>
                   {t('tasks.form.startDateLabel')}
@@ -377,9 +365,8 @@ export function TaskFormSheet({
                       variant="outline"
                       className={cn(
                         'w-full justify-start text-left font-normal',
-                        !startDate && 'text-muted-foreground',
-                      )}
-                    >
+                        !startDate && 'text-muted-foreground'
+                      )}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {startDate ? (
                         format(startDate, 'PPP')
@@ -393,8 +380,7 @@ export function TaskFormSheet({
                       mode="single"
                       selected={startDate}
                       onSelect={setStartDate}
-                      initialFocus
-                    />
+                      initialFocus />
                   </PopoverContent>
                 </Popover>
                 {field.state.meta.errors?.[0] && (
@@ -411,7 +397,7 @@ export function TaskFormSheet({
 
           {/* End Date Field */}
           <form.Field name="end_date">
-            {(field) => (
+            {field => (
               <Field>
                 <Label htmlFor={field.name}>
                   {t('tasks.form.dueDateLabel')}
@@ -422,9 +408,8 @@ export function TaskFormSheet({
                       variant="outline"
                       className={cn(
                         'w-full justify-start text-left font-normal',
-                        !endDate && 'text-muted-foreground',
-                      )}
-                    >
+                        !endDate && 'text-muted-foreground'
+                      )}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {endDate ? (
                         format(endDate, 'PPP')
@@ -438,8 +423,7 @@ export function TaskFormSheet({
                       mode="single"
                       selected={endDate}
                       onSelect={setEndDate}
-                      initialFocus
-                    />
+                      initialFocus />
                   </PopoverContent>
                 </Popover>
                 {field.state.meta.errors?.[0] && (
@@ -456,7 +440,7 @@ export function TaskFormSheet({
 
           {/* Record Owner Field */}
           <form.Field name="record_owner">
-            {(field) => (
+            {field => (
               <Field>
                 <Label htmlFor={field.name}>
                   {t('tasks.form.recordOwnerLabel')}
@@ -464,10 +448,9 @@ export function TaskFormSheet({
                 <Combobox
                   options={userOptions}
                   value={field.state.value}
-                  onValueChange={(value) => field.handleChange(value)}
+                  onValueChange={value => field.handleChange(value)}
                   placeholder={t('tasks.form.recordOwnerPlaceholder')}
-                  emptyText={t('tasks.form.recordOwnerEmpty')}
-                />
+                  emptyText={t('tasks.form.recordOwnerEmpty')} />
                 {field.state.meta.errors?.[0] && (
                   <p className="text-sm text-destructive">
                     {typeof field.state.meta.errors[0] === 'string'
@@ -482,33 +465,31 @@ export function TaskFormSheet({
 
           {/* Followers Field */}
           <form.Field name="followers">
-            {(field) => (
+            {field => (
               <Field>
                 <Label htmlFor={field.name}>
                   {t('tasks.form.followersLabel')}
                 </Label>
                 <MultiCombobox
                   value={field.state.value || []}
-                  onValueChange={(value) => field.handleChange(value)}
-                  multiple
-                >
+                  onValueChange={value => field.handleChange(value)}
+                  multiple>
                   <ComboboxAnchor>
                     <ComboboxBadgeList>
                       {(field.state.value || []).map((followerId: string) => {
                         const user = users.find((u: any) => u.id === followerId)
+
                         return user ? (
                           <ComboboxBadgeItem
                             key={followerId}
-                            value={followerId}
-                          >
+                            value={followerId}>
                             {user.firstname} {user.lastname}
                           </ComboboxBadgeItem>
                         ) : null
                       })}
                     </ComboboxBadgeList>
                     <ComboboxInput
-                      placeholder={t('tasks.form.followersPlaceholder')}
-                    />
+                      placeholder={t('tasks.form.followersPlaceholder')} />
                     <ComboboxTrigger />
                   </ComboboxAnchor>
                   <ComboboxContent>
@@ -540,8 +521,7 @@ export function TaskFormSheet({
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
-          >
+            disabled={isSubmitting}>
             {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={isSubmitting}>

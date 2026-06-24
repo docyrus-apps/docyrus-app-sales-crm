@@ -4,9 +4,9 @@ export type ThemeMode = 'light' | 'dark' | 'system'
 export type ThemeLanguage = 'en' | 'tr'
 
 export type DocyTheme = {
-  isDark: boolean
-  mode: ThemeMode
-  setMode: (mode: ThemeMode) => void
+  isDark: boolean;
+  mode: ThemeMode;
+  setMode: (mode: ThemeMode) => void;
 }
 
 /**
@@ -18,6 +18,6 @@ export function useDocyTheme(): DocyTheme {
   return {
     isDark: resolvedTheme === 'dark',
     mode: (theme as ThemeMode) ?? 'system',
-    setMode: setTheme as (mode: ThemeMode) => void,
+    setMode: setTheme
   }
 }

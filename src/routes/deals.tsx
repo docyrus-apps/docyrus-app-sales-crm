@@ -1,4 +1,9 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
+
+import type { ColumnDef } from '@tanstack/react-table'
+
+import { type RowChange } from '@/components/docyrus/data-grid'
+
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useDocyrusClient } from '@docyrus/signin'
@@ -9,25 +14,24 @@ import {
   Pencil,
   Plus,
   Trash2,
-  Upload,
+  Upload
 } from 'lucide-react'
-import type { ColumnDef } from '@tanstack/react-table'
 
 import type { BaseCrmDealsEntity } from '@/collections/base_crm-deals.collection'
+
 import { useBaseCrmDealsCollection } from '@/collections/base_crm-deals.collection'
 import { Button as MotionButton } from '@/components/animate-ui/components/buttons/button'
 import {
   Tabs,
   TabsList,
-  TabsTrigger,
+  TabsTrigger
 } from '@/components/animate-ui/components/radix/tabs'
 import {
   DataGrid,
   DataGridRowActions,
   DataGridSkeleton,
   DataGridSkeletonGrid,
-  getDataGridActionsColumn,
-  type RowChange,
+  getDataGridActionsColumn
 } from '@/components/docyrus/data-grid'
 import { RecordDeleteConfirmDialog } from '@/components/docyrus/record-delete-confirm-dialog'
 import { DealFormDialog } from '@/components/deals/deal-form-dialog'
@@ -38,16 +42,20 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   mapEnumEntitiesToCellOptions,
-  useEnumEntities,
+  useEnumEntities
 } from '@/hooks/use-enums'
 import { useDeleteDeal, useUpdateDeal } from '@/hooks/use-deals'
 import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
-import { useDocyrusDataGrid } from '@/hooks/use-docyrus-data-grid'
+import { useDocyrusDataGrid } from '@/hooks/docyrus/use-docyrus-data-grid'
 import { useSeedDefaultViews } from '@/hooks/use-seed-default-views'
 import { useDocyrusDataImportWizard } from '@/hooks/use-docyrus-data-import-wizard'
-import { useDocyrusKanban } from '@/hooks/use-docyrus-kanban'
+import { useDocyrusKanban } from '@/hooks/docyrus/use-docyrus-kanban'
 import { saveGridChanges } from '@/lib/data-grid-record-utils'
-import { createSystemViews } from '@/lib/crm-system-views'
+import {
+  createSystemViews,
+  equalsFilter,
+  findEnumIdByName
+} from '@/lib/crm-system-views'
 import { useDateFormat } from '@/lib/use-date-format'
 
 type DealsView = 'board' | 'list'
@@ -57,8 +65,8 @@ type DealFormMode = 'create' | 'edit'
 type DealFormRecord = BaseCrmDealsEntity | Record<string, unknown>
 
 interface DealDialogState {
-  mode: DealFormMode
-  deal: DealFormRecord | null
+  mode: DealFormMode;
+  deal: DealFormRecord | null;
 }
 
 const APP_SLUG = 'base_crm'
@@ -74,23 +82,14 @@ const DEAL_GRID_COLUMN_OVERRIDES: Record<
   organization: { size: 180 },
   contact_person: { size: 160 },
   close_probability: { size: 120 },
-  expected_closing_date: { size: 140 },
+  expected_closing_date: { size: 140 }
 }
 
 const DEAL_GRID_VISIBLE_FIELDS = new Set(
-  Object.keys(DEAL_GRID_COLUMN_OVERRIDES),
+  Object.keys(DEAL_GRID_COLUMN_OVERRIDES)
 )
 
 const DEAL_GRID_COLUMNS = Object.keys(DEAL_GRID_COLUMN_OVERRIDES)
-
-const DEAL_GRID_SYSTEM_VIEWS = createSystemViews('base-crm-deal', [
-  {
-    id: 'all',
-    name: 'All',
-    columns: DEAL_GRID_COLUMNS,
-    sorting: [{ id: 'created_on', desc: true }],
-  },
-])
 
 export function Deals() {
   const client = useDocyrusClient()
@@ -101,9 +100,9 @@ export function Deals() {
 }
 
 function DealsPageInner({
-  client,
+  client
 }: {
-  client: NonNullable<ReturnType<typeof useDocyrusClient>>
+  client: NonNullable<ReturnType<typeof useDocyrusClient>>;
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -112,30 +111,59 @@ function DealsPageInner({
   const updateDeal = useUpdateDeal()
   const { formatDate, formatDateTime } = useDateFormat()
 
+  const [viewType, setViewType] = useState<DealsView>('board')
+  const [dialog, setDialog] = useState<DealDialogState | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<BaseCrmDealsEntity | null>(
+    null
+  )
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const { data: dealStages = [], isLoading: areDealStagesLoading } =
+    useEnumEntities('stage', {
+      appSlug: APP_SLUG,
+      dataSourceSlug: DATA_SOURCE_SLUG
+    })
+
+  const stageOptions = useMemo(
+    () => mapEnumEntitiesToCellOptions(dealStages),
+    [dealStages]
+  )
+  const dealGridViews = useMemo(() => {
+    const wonStageId = findEnumIdByName(dealStages, ['Won'])
+    const lostStageId = findEnumIdByName(dealStages, ['Lost'])
+
+    return createSystemViews('base-crm-deal', [
+      {
+        id: 'all',
+        name: 'All',
+        columns: DEAL_GRID_COLUMNS,
+        sorting: [{ id: 'created_on', desc: true }]
+      },
+      {
+        id: 'won',
+        name: 'Won',
+        columns: DEAL_GRID_COLUMNS,
+        sorting: [{ id: 'closed_date', desc: true }],
+        filterQuery: equalsFilter('stage', wonStageId)
+      },
+      {
+        id: 'lost',
+        name: 'Lost',
+        columns: DEAL_GRID_COLUMNS,
+        sorting: [{ id: 'closed_date', desc: true }],
+        filterQuery: equalsFilter('stage', lostStageId)
+      }
+    ])
+  }, [dealStages])
+
   useSeedDefaultViews({
     client,
     appSlug: APP_SLUG,
     dataSourceSlug: DATA_SOURCE_SLUG,
-    templates: DEAL_GRID_SYSTEM_VIEWS,
-    pruneUnlisted: true,
+    templates: dealGridViews,
+    enabled: !areDealStagesLoading,
+    pruneUnlisted: true
   })
-
-  const [viewType, setViewType] = useState<DealsView>('board')
-  const [dialog, setDialog] = useState<DealDialogState | null>(null)
-  const [pendingDelete, setPendingDelete] = useState<BaseCrmDealsEntity | null>(
-    null,
-  )
-  const [isDeleting, setIsDeleting] = useState(false)
-
-  const { data: dealStages = [] } = useEnumEntities('stage', {
-    appSlug: APP_SLUG,
-    dataSourceSlug: DATA_SOURCE_SLUG,
-  })
-
-  const stageOptions = useMemo(
-    () => mapEnumEntitiesToCellOptions(dealStages),
-    [dealStages],
-  )
 
   const onOpenCreate = useCallback(() => {
     setDialog({ mode: 'create', deal: null })
@@ -156,10 +184,10 @@ function DealsPageInner({
       void navigate({
         to: '/deals/$dealId',
         params: { dealId: deal.id },
-        search: { tab: 'activity' },
+        search: { tab: 'activity' }
       })
     },
-    [navigate],
+    [navigate]
   )
 
   const onDelete = useCallback((deal: BaseCrmDealsEntity) => {
@@ -169,8 +197,7 @@ function DealsPageInner({
   }, [])
 
   const actionsColumn = useMemo<ColumnDef<BaseCrmDealsEntity>>(
-    () =>
-      getDataGridActionsColumn<BaseCrmDealsEntity>({
+    () => getDataGridActionsColumn<BaseCrmDealsEntity>({
         actionCount: 2,
         cell: ({ row }) => (
           <DataGridRowActions
@@ -183,35 +210,37 @@ function DealsPageInner({
                 key: 'edit',
                 label: t('common.edit', 'Edit'),
                 icon: <Pencil className="size-4" />,
-                onSelect: onOpenEdit,
+                onSelect: onOpenEdit
               },
               {
                 key: 'open',
                 label: t('common.openPage', 'Open page'),
                 icon: <DocyrusIcon icon="huge sidebar-right-01" size="sm" />,
-                onSelect: onView,
+                onSelect: onView
               },
               {
                 key: 'delete',
                 label: t('common.delete', 'Delete'),
                 icon: <Trash2 className="size-4" />,
                 destructive: true,
-                onSelect: onDelete,
-              },
-            ]}
-          />
-        ),
+                onSelect: onDelete
+              }
+            ]} />
+        )
       }),
-    [onDelete, onOpenEdit, onView, t],
+    [
+onDelete,
+onOpenEdit,
+onView,
+t
+]
   )
 
   const onChangesSave = useCallback(
     async (changes: Array<RowChange>, gridData: Array<BaseCrmDealsEntity>) => {
-      await saveGridChanges(changes, gridData, (id, data) =>
-        updateDeal.mutateAsync({ dealId: id, data }),
-      )
+      await saveGridChanges(changes, gridData, (id, data) => updateDeal.mutateAsync({ dealId: id, data }))
     },
-    [updateDeal],
+    [updateDeal]
   )
 
   const openWizardRef = useRef<() => void>(() => {})
@@ -224,13 +253,12 @@ function DealsPageInner({
         variant="outline"
         size="sm"
         className="gap-1.5"
-        onClick={() => openWizardRef.current()}
-      >
+        onClick={() => openWizardRef.current()}>
         <Upload className="size-4" />
         {t('common.import', 'Import')}
       </Button>
     ),
-    [t],
+    [t]
   )
 
   const {
@@ -238,11 +266,10 @@ function DealsPageInner({
     gridProps,
     pagingMode,
     toolbar,
-    items: listDeals,
     reload: reloadList,
     dataSource: listDataSource,
     isLoading: isListLoading,
-    error: listError,
+    error: listError
   } = useDocyrusDataGrid<BaseCrmDealsEntity>({
     client,
     appSlug: APP_SLUG,
@@ -259,8 +286,7 @@ function DealsPageInner({
     enableServerExportMenu: true,
     searchPlaceholder: t('common.search', 'Search...'),
     toolbarEndContent: importToolbarButton,
-    getRowLabel: (row) =>
-      row.name ||
+    getRowLabel: row => row.name ||
       (row.autonumber_id != null ? String(row.autonumber_id) : undefined) ||
       row.id ||
       t('deals.title'),
@@ -275,17 +301,17 @@ function DealsPageInner({
             ...defaultColumn.meta,
             cell: {
               ...(defaultColumn.meta?.cell ?? {}),
-              options: stageOptions,
-            },
-          },
+              options: stageOptions
+            }
+          }
         }
       }
 
       return {
         ...defaultColumn,
-        ...DEAL_GRID_COLUMN_OVERRIDES[field.slug],
+        ...DEAL_GRID_COLUMN_OVERRIDES[field.slug]
       }
-    },
+    }
   })
 
   const {
@@ -294,13 +320,13 @@ function DealsPageInner({
     reload: reloadBoard,
     dataSource: boardDataSource,
     isLoading: isBoardLoading,
-    error: boardError,
+    error: boardError
   } = useDocyrusKanban<BaseCrmDealsEntity>({
     client,
     appSlug: APP_SLUG,
     dataSourceSlug: DATA_SOURCE_SLUG,
     collection: {
-      list: (params) => collection.list(params),
+      list: params => collection.list(params)
     },
     groupByFieldSlug: 'stage',
     avatarColumn: 'stage',
@@ -359,17 +385,17 @@ function DealsPageInner({
     onCardEdit: onOpenEdit,
     onCardClick: onView,
     cardMenuItems: (_row, defaults) => {
-      const openItem = defaults.find((item) => item.key === 'open')
-      const editItem = defaults.find((item) => item.key === 'edit')
-      const deleteItem = defaults.find((item) => item.key === 'delete')
+      const openItem = defaults.find(item => item.key === 'open')
+      const editItem = defaults.find(item => item.key === 'edit')
+      const deleteItem = defaults.find(item => item.key === 'delete')
 
       return [
         ...(editItem
           ? [
               {
                 ...editItem,
-                icon: <Pencil className="size-4" />,
-              },
+                icon: <Pencil className="size-4" />
+              }
             ]
           : []),
         ...(openItem
@@ -377,18 +403,18 @@ function DealsPageInner({
               {
                 ...openItem,
                 label: t('common.openPage', 'Open page'),
-                icon: <DocyrusIcon icon="huge sidebar-right-01" size="sm" />,
-              },
+                icon: <DocyrusIcon icon="huge sidebar-right-01" size="sm" />
+              }
             ]
           : []),
         ...(deleteItem
           ? [
               {
                 ...deleteItem,
-                icon: <Trash2 className="size-4" />,
-              },
+                icon: <Trash2 className="size-4" />
+              }
             ]
-          : []),
+          : [])
       ]
     },
     onCardDelete: async (row) => {
@@ -406,14 +432,15 @@ function DealsPageInner({
       reloadBoardRef.current()
     },
     enableItemsQuery: viewType === 'board',
+    enableDataViews: false,
     enableViewSelect: false,
     listParams: {
       columns:
         'id, name, autonumber_id, record_owner(id,firstname,lastname,email,photo), expected_revenue, deal_value, stage, organization(id,name,company_logo), contact_person(id,name), hot_prospect, expected_closing_date, close_probability, customer_type, lead_source, created_on, last_modified_on, created_by, last_modified_by',
-      limit: 200,
+      limit: 200
     },
     searchPlaceholder: t('common.search', 'Search...'),
-    toolbarEndContent: importToolbarButton,
+    toolbarEndContent: importToolbarButton
   })
 
   reloadBoardRef.current = reloadBoard
@@ -428,7 +455,7 @@ function DealsPageInner({
     appSlug: APP_SLUG,
     dataSourceSlug: DATA_SOURCE_SLUG,
     fields: listDataSource?.fields ?? boardDataSource?.fields,
-    onImported: reload,
+    onImported: reload
   })
 
   openWizardRef.current = openWizard
@@ -455,9 +482,8 @@ function DealsPageInner({
         titleSuffix={
           <Tabs
             value={viewType}
-            onValueChange={(value) => setViewType(value as DealsView)}
-            className="w-full sm:w-auto"
-          >
+            onValueChange={value => setViewType(value as DealsView)}
+            className="w-full sm:w-auto">
             <TabsList className="w-full sm:w-auto">
               <TabsTrigger value="board" className="gap-2 px-3">
                 <Columns3 className="h-4 w-4" />
@@ -475,15 +501,8 @@ function DealsPageInner({
             <Plus className="mr-2 h-4 w-4" />
             {t('deals.newDeal')}
           </MotionButton>
-        }
-      />
-      <PageContainer
-        className={
-          viewType === 'board'
-            ? 'flex min-h-0 flex-1 max-w-full flex-col overflow-hidden pb-0'
-            : ''
-        }
-      >
+        } />
+      <PageContainer className="flex min-h-0 flex-1 max-w-full flex-col overflow-hidden pb-0">
         {dialog && (
           <DealFormDialog
             open
@@ -492,8 +511,7 @@ function DealsPageInner({
             }}
             deal={dialog.deal ?? undefined}
             mode={dialog.mode}
-            onSubmitSuccess={reload}
-          />
+            onSubmitSuccess={reload} />
         )}
 
         {isListLoading && viewType === 'list' && (
@@ -507,8 +525,7 @@ function DealsPageInner({
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="h-96 w-80 shrink-0 animate-pulse rounded-md bg-muted"
-              />
+                className="h-96 w-80 shrink-0 animate-pulse rounded-md bg-muted" />
             ))}
           </div>
         )}
@@ -540,29 +557,15 @@ function DealsPageInner({
         )}
 
         {viewType === 'list' && !isListLoading && !listError && (
-          <div className="space-y-4">
-            {toolbar}
-            {listDeals.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <p className="text-lg font-medium">{t('deals.emptyTitle')}</p>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {t('deals.emptyDescription')}
-                  </p>
-                  <MotionButton className="mt-4" onClick={onOpenCreate}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    {t('deals.createDeal')}
-                  </MotionButton>
-                </CardContent>
-              </Card>
-            ) : (
+          <div className="flex min-h-0 flex-1 flex-col gap-4">
+            <div className="shrink-0">{toolbar}</div>
+            <div className="min-h-0 flex-1">
               <DataGrid
                 table={table}
                 {...gridProps}
                 pagingMode={pagingMode}
-                height={600}
-              />
-            )}
+                height="auto" />
+            </div>
           </div>
         )}
 
@@ -573,8 +576,7 @@ function DealsPageInner({
           }}
           recordCount={pendingDelete ? 1 : 0}
           onConfirm={onConfirmDelete}
-          isPending={isDeleting}
-        />
+          isPending={isDeleting} />
 
         {wizard}
 

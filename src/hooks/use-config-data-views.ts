@@ -1,32 +1,34 @@
-import { useQuery } from '@tanstack/react-query'
 import type {
   ColumnFiltersState,
   ColumnPinningState,
-  ColumnSort,
+  ColumnSort
 } from '@tanstack/react-table'
 import type { RuleGroupType } from '@/components/docyrus/query-builder'
 import type { SavedDataGridView } from '@/components/docyrus/data-grid'
+
+import { useQuery } from '@tanstack/react-query'
+
 import { getApiClient } from '@/lib/api'
 
 interface ConfigDataViewRecord {
-  id: string
-  name: string
-  description?: string | null
-  columns?: unknown
-  filters?: unknown
-  sort?: unknown
-  color_rules?: unknown
-  sort_order?: number | null
-  is_default?: boolean
+  id: string;
+  name: string;
+  description?: string | null;
+  columns?: unknown;
+  filters?: unknown;
+  sort?: unknown;
+  color_rules?: unknown;
+  sort_order?: number | null;
+  is_default?: boolean;
 }
 
 interface ParseConfigDataViewsOptions {
-  statusLabelById?: Record<string, string>
+  statusLabelById?: Record<string, string>;
 }
 
 const EMPTY_FILTER_QUERY: RuleGroupType = {
   combinator: 'and',
-  rules: [],
+  rules: []
 }
 
 function parseMaybeJson<T>(value: unknown): T | null {
@@ -60,20 +62,20 @@ function parseColumnPinning(value: unknown): ColumnPinningState {
       : [],
     right: Array.isArray(pinning.right)
       ? pinning.right.filter((item): item is string => typeof item === 'string')
-      : [],
+      : []
   }
 }
 
 function parseColumns(
-  value: unknown,
+  value: unknown
 ): Pick<
   SavedDataGridView,
   'columnVisibility' | 'columnOrder' | 'columnPinning'
 > {
   const parsed = parseMaybeJson<{
-    visibility?: Record<string, boolean>
-    order?: Array<string>
-    pinning?: unknown
+    visibility?: Record<string, boolean>;
+    order?: Array<string>;
+    pinning?: unknown;
   }>(value)
 
   return {
@@ -84,7 +86,7 @@ function parseColumns(
     columnOrder: Array.isArray(parsed?.order)
       ? parsed.order.filter((item): item is string => typeof item === 'string')
       : [],
-    columnPinning: parseColumnPinning(parsed?.pinning),
+    columnPinning: parseColumnPinning(parsed?.pinning)
   }
 }
 
@@ -117,7 +119,7 @@ function parseSorting(value: unknown): Array<ColumnSort> | undefined {
 function translateRuleValue(
   field: string,
   value: unknown,
-  statusLabelById: Record<string, string>,
+  statusLabelById: Record<string, string>
 ): string | Array<string> | number | undefined {
   if (field === 'lead_status') {
     if (typeof value === 'string') {
@@ -126,11 +128,9 @@ function translateRuleValue(
 
     if (Array.isArray(value)) {
       return value
-        .map((item) =>
-          typeof item === 'string'
+        .map(item => typeof item === 'string'
             ? (statusLabelById[item] ?? item)
-            : undefined,
-        )
+            : undefined)
         .filter((item): item is string => typeof item === 'string')
     }
   }
@@ -148,7 +148,7 @@ function translateRuleValue(
 
 function parseColumnFilters(
   value: unknown,
-  statusLabelById: Record<string, string>,
+  statusLabelById: Record<string, string>
 ): ColumnFiltersState {
   const parsed = parseMaybeJson<RuleGroupType>(value)
 
@@ -167,7 +167,7 @@ function parseColumnFilters(
     const translatedValue = translateRuleValue(
       field,
       'value' in rule ? rule.value : undefined,
-      statusLabelById,
+      statusLabelById
     )
 
     if (operator === '=') {
@@ -176,9 +176,9 @@ function parseColumnFilters(
           id: field,
           value: {
             operator: 'is',
-            value: translatedValue,
-          },
-        },
+            value: translatedValue
+          }
+        }
       ]
     }
 
@@ -188,9 +188,9 @@ function parseColumnFilters(
           id: field,
           value: {
             operator: 'isNot',
-            value: translatedValue,
-          },
-        },
+            value: translatedValue
+          }
+        }
       ]
     }
 
@@ -200,9 +200,9 @@ function parseColumnFilters(
           id: field,
           value: {
             operator: 'isAnyOf',
-            value: translatedValue,
-          },
-        },
+            value: translatedValue
+          }
+        }
       ]
     }
 
@@ -212,9 +212,9 @@ function parseColumnFilters(
           id: field,
           value: {
             operator: 'isNoneOf',
-            value: translatedValue,
-          },
-        },
+            value: translatedValue
+          }
+        }
       ]
     }
 
@@ -224,21 +224,20 @@ function parseColumnFilters(
 
 export function parseConfigDataViews(
   data: Array<ConfigDataViewRecord>,
-  options: ParseConfigDataViewsOptions = {},
+  options: ParseConfigDataViewsOptions = {}
 ): Array<SavedDataGridView> {
   const { statusLabelById = {} } = options
 
   return [...data]
     .sort(
-      (left, right) =>
-        (left.sort_order ?? Number.MAX_SAFE_INTEGER) -
-        (right.sort_order ?? Number.MAX_SAFE_INTEGER),
+      (left, right) => (left.sort_order ?? Number.MAX_SAFE_INTEGER) -
+        (right.sort_order ?? Number.MAX_SAFE_INTEGER)
     )
     .map((view) => {
       const filterQuery =
         parseMaybeJson<RuleGroupType>(view.filters) ?? undefined
       const { columnVisibility, columnOrder, columnPinning } = parseColumns(
-        view.columns,
+        view.columns
       )
 
       return {
@@ -254,7 +253,7 @@ export function parseConfigDataViews(
         filterQuery:
           filterQuery && Array.isArray(filterQuery.rules)
             ? filterQuery
-            : EMPTY_FILTER_QUERY,
+            : EMPTY_FILTER_QUERY
       }
     })
 }
@@ -268,9 +267,9 @@ export function useConfigDataViews(appId: string, dataSourceId: string) {
       return apiClient.get<Array<ConfigDataViewRecord>>(
         `/v1/dev/apps/${appId}/config-data-views`,
         {
-          dataSourceId,
-        },
+          dataSourceId
+        }
       )
-    },
+    }
   })
 }

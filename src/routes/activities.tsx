@@ -1,18 +1,11 @@
 import { useMemo, useState } from 'react'
-import {
-  Zap,
-  Plus,
-  Pencil,
-  Trash2,
-  ChevronDown,
-  Filter,
-  Loader2,
-} from 'lucide-react'
+
+import { type AuditActivity } from '@/hooks/use-audit-activities'
+
+import { ChevronDown, Filter, Pencil, Plus, Trash2, Zap } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import {
-  useMyAuditActivities,
-  type AuditActivity,
-} from '@/hooks/use-audit-activities'
+
+import { useMyAuditActivities } from '@/hooks/use-audit-activities'
 import { formatDate } from '@/lib/formatters'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
@@ -25,7 +18,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 
@@ -35,48 +28,57 @@ function getDateRangeStart(range: DateRange): string | undefined {
   if (range === 'all') return undefined
   const now = new Date()
   const days = range === '7d' ? 7 : range === '30d' ? 30 : 90
+
   now.setDate(now.getDate() - days)
+
   return now.toISOString()
 }
 
 function getOperationIcon(operation: string) {
   const op = operation?.toLowerCase()
+
   if (op?.includes('insert') || op?.includes('create')) {
     return <Plus className="h-3.5 w-3.5" />
   }
   if (op?.includes('delete') || op?.includes('remove')) {
     return <Trash2 className="h-3.5 w-3.5" />
   }
+
   return <Pencil className="h-3.5 w-3.5" />
 }
 
 function getOperationColor(operation: string) {
   const op = operation?.toLowerCase()
+
   if (op?.includes('insert') || op?.includes('create')) {
     return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
   }
   if (op?.includes('delete') || op?.includes('remove')) {
     return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
   }
+
   return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
 }
 
 function getOperationLabel(operation: string, t: (key: string) => string) {
   const op = operation?.toLowerCase()
+
   if (op?.includes('insert') || op?.includes('create')) {
     return t('activities.operations.create')
   }
   if (op?.includes('delete') || op?.includes('remove')) {
     return t('activities.operations.delete')
   }
+
   return t('activities.operations.update')
 }
 
 function getUserDisplayName(
   user: AuditActivity['created_by_user'],
-  t: (key: string) => string,
+  t: (key: string) => string
 ): string {
   if (!user) return t('activities.systemUser')
+
   return (
     [user.firstname, user.lastname].filter(Boolean).join(' ') ||
     user.name ||
@@ -89,27 +91,33 @@ function getUserInitials(user: AuditActivity['created_by_user']): string {
   if (!user) return 'S'
   const first = user.firstname?.[0] || ''
   const last = user.lastname?.[0] || ''
+
   if (first || last) return (first + last).toUpperCase()
+
   return (user.name?.[0] || user.email?.[0] || '?').toUpperCase()
 }
 
 function groupActivitiesByDate(
   activities: Array<AuditActivity>,
-  t: (key: string) => string,
+  t: (key: string) => string
 ): Array<{ label: string; items: Array<AuditActivity> }> {
   const groups = new Map<string, Array<AuditActivity>>()
   const today = new Date()
+
   today.setHours(0, 0, 0, 0)
   const yesterday = new Date(today)
+
   yesterday.setDate(yesterday.getDate() - 1)
 
   for (const activity of activities) {
     const date = activity.created_on ? new Date(activity.created_on) : null
     let label: string
+
     if (!date) {
       label = t('activities.unknownDate')
     } else {
       const d = new Date(date)
+
       d.setHours(0, 0, 0, 0)
       if (d.getTime() === today.getTime()) {
         label = t('activities.today')
@@ -121,13 +129,14 @@ function groupActivitiesByDate(
       }
     }
     const existing = groups.get(label) ?? []
+
     existing.push(activity)
     groups.set(label, existing)
   }
 
   return Array.from(groups.entries()).map(([label, items]) => ({
     label,
-    items,
+    items
   }))
 }
 
@@ -143,12 +152,12 @@ export function Activities() {
   const { data: activities = [], isLoading } = useMyAuditActivities({
     limit: PAGE_SIZE,
     offset,
-    createdAfter,
+    createdAfter
   })
 
   const groupedActivities = useMemo(
     () => groupActivitiesByDate(activities, t),
-    [activities, t],
+    [activities, t]
   )
 
   const hasMore = activities.length === PAGE_SIZE
@@ -165,8 +174,7 @@ export function Activities() {
               onValueChange={(value) => {
                 setDateRange(value as DateRange)
                 setOffset(0)
-              }}
-            >
+              }}>
               <SelectTrigger className="w-[160px]">
                 <Filter className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
                 <SelectValue />
@@ -187,8 +195,7 @@ export function Activities() {
               </SelectContent>
             </Select>
           </div>
-        }
-      />
+        } />
       <PageContainer className="min-h-0 flex-1 overflow-y-auto">
         {isLoading ? (
           <Card>
@@ -216,7 +223,7 @@ export function Activities() {
           </Card>
         ) : (
           <div className="space-y-6">
-            {groupedActivities.map((group) => (
+            {groupedActivities.map(group => (
               <div key={group.label}>
                 <h3 className="mb-3 text-sm font-semibold text-muted-foreground">
                   {group.label}
@@ -224,7 +231,7 @@ export function Activities() {
                 <Card>
                   <CardContent className="p-0">
                     <div className="divide-y">
-                      {group.items.map((activity) => (
+                      {group.items.map(activity => (
                         <ActivityItem key={activity.id} activity={activity} />
                       ))}
                     </div>
@@ -239,8 +246,7 @@ export function Activities() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
-                  >
+                    onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}>
                     {t('activities.previous')}
                   </Button>
                 )}
@@ -248,8 +254,7 @@ export function Activities() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setOffset(offset + PAGE_SIZE)}
-                  >
+                    onClick={() => setOffset(offset + PAGE_SIZE)}>
                     {t('activities.loadMore')}
                     <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
                   </Button>
@@ -276,10 +281,9 @@ function ActivityItem({ activity }: { activity: AuditActivity }) {
       <div
         className={cn(
           'flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
-          'bg-muted text-muted-foreground',
+          'bg-muted text-muted-foreground'
         )}
-        title={userName}
-      >
+        title={userName}>
         {initials}
       </div>
       <div className="min-w-0 flex-1">
@@ -287,8 +291,7 @@ function ActivityItem({ activity }: { activity: AuditActivity }) {
           <span className="text-sm font-medium">{userName}</span>
           <Badge
             variant="secondary"
-            className={cn('gap-1 text-xs font-normal', operationColor)}
-          >
+            className={cn('gap-1 text-xs font-normal', operationColor)}>
             {operationIcon}
             {operationLabel}
           </Badge>

@@ -1,12 +1,16 @@
-import type { ReactNode } from 'react'
+import { type ReactNode } from 'react'
+
+import { type AppModuleKey } from '@/lib/app-config'
+
 import { Navigate } from '@tanstack/react-router'
 import { Loader2 } from 'lucide-react'
+
 import { useAppModules } from '@/hooks/use-app-config'
-import { type AppModuleKey, isModuleEnabled } from '@/lib/app-config'
+import { isModuleEnabled } from '@/lib/app-config'
 
 interface ModuleGuardProps {
-  module: AppModuleKey
-  children: ReactNode
+  module: AppModuleKey;
+  children: ReactNode;
 }
 
 /**

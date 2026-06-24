@@ -1,8 +1,11 @@
 import { useMemo } from 'react'
+
+import type { IEvent, IUser, TEventColor } from '@/components/docyrus/calendar'
+
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { CalendarDays as CalendarIcon } from 'lucide-react'
-import type { IEvent, IUser, TEventColor } from '@/components/docyrus/calendar'
+
 import { useBaseEventCollection } from '@/collections/base-event.collection'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
@@ -16,7 +19,7 @@ const EVENT_COLORS: Array<TEventColor> = [
   'red',
   'yellow',
   'purple',
-  'orange',
+  'orange'
 ]
 
 function getHashValue(input: string): number {
@@ -47,7 +50,7 @@ function getEventId(rawId: string | undefined, index: number): number {
 
 function getCalendarLabel(
   calendar: { id: string; name: string } | string | undefined,
-  t: (key: string) => string,
+  t: (key: string) => string
 ) {
   if (!calendar) {
     return t('events.defaultCalendarName')
@@ -63,21 +66,20 @@ export function CalendarPage() {
   const {
     data: records = [],
     error,
-    isLoading,
+    isLoading
   } = useQuery({
     queryKey: ['events', 'calendar'],
-    queryFn: () =>
-      list({
+    queryFn: () => list({
         columns: [
           'id',
           'subject',
           'description',
           'start_date',
           'end_date',
-          'calendar(name)',
+          'calendar(name)'
         ],
-        orderBy: 'start_date ASC',
-      }),
+        orderBy: 'start_date ASC'
+      })
   })
 
   const users = useMemo<Array<IUser>>(() => {
@@ -91,7 +93,7 @@ export function CalendarPage() {
         userMap.set(userId, {
           id: userId,
           name: label,
-          picturePath: null,
+          picturePath: null
         })
       }
     }
@@ -100,7 +102,7 @@ export function CalendarPage() {
       userMap.set('calendar-general', {
         id: 'calendar-general',
         name: t('events.defaultCalendarName'),
-        picturePath: null,
+        picturePath: null
       })
     }
 
@@ -111,12 +113,12 @@ export function CalendarPage() {
     const defaultUser = users[0] ?? {
       id: 'calendar-general',
       name: t('events.defaultCalendarName'),
-      picturePath: null,
+      picturePath: null
     }
-    const userLookup = new Map(users.map((user) => [user.name, user]))
+    const userLookup = new Map(users.map(user => [user.name, user]))
 
     return records
-      .filter((record) => Boolean(record.start_date))
+      .filter(record => Boolean(record.start_date))
       .map((record, index) => {
         const calendarLabel = getCalendarLabel(record.calendar, t)
         const assignedUser = userLookup.get(calendarLabel) ?? defaultUser
@@ -131,10 +133,10 @@ export function CalendarPage() {
           endDate,
           title: record.subject,
           color: getEventColor(
-            record.id ?? `${record.subject}-${calendarLabel}`,
+            record.id ?? `${record.subject}-${calendarLabel}`
           ),
           description: record.description ?? '',
-          user: assignedUser,
+          user: assignedUser
         }
       })
   }, [records, users, t])
@@ -144,8 +146,7 @@ export function CalendarPage() {
       <PageHeader
         title={t('calendar.title')}
         icon={<CalendarIcon className="h-4 w-4 text-cyan-500" />}
-        titleSuffix={<Badge variant="secondary">{calendarEvents.length}</Badge>}
-      />
+        titleSuffix={<Badge variant="secondary">{calendarEvents.length}</Badge>} />
       <PageContainer>
         {error ? (
           <Card>
@@ -161,8 +162,7 @@ export function CalendarPage() {
             defaultView="month"
             size="lg"
             readOnly
-            showUserFilter={false}
-          />
+            showUserFilter={false} />
         )}
       </PageContainer>
     </>

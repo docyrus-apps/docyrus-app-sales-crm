@@ -1,6 +1,9 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import {
+  createElement,
   useCallback,
   useEffect,
   useId,
@@ -17,6 +20,7 @@ import {
 } from 'react'
 
 import {
+  ArrowUpRight,
   Check,
   Clock,
   Copy,
@@ -63,7 +67,7 @@ import { Textarea } from '@/components/ui/textarea'
 
 import { cn } from '@/lib/utils'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 import { useBadgeOverflow } from './hooks/use-badge-overflow'
 import { useDebouncedCallback } from './hooks/use-debounced-callback'
@@ -111,8 +115,11 @@ function formatNumberDisplayValue(params: {
   value: string
   variant: 'number' | 'currency' | 'percent'
   currency?: string
+  decimalPrecision?: number
+  thousandSeparator?: string
 }): string {
-  const { value, variant, currency } = params
+  const { value, variant, currency, decimalPrecision, thousandSeparator } =
+    params
 
   if (!value) return ''
   const parsedValue = Number(value)
@@ -124,14 +131,37 @@ function formatNumberDisplayValue(params: {
       return new Intl.NumberFormat(undefined, {
         style: 'currency',
         currency: currency ?? 'USD',
+        ...(decimalPrecision !== undefined
+          ? {
+              minimumFractionDigits: decimalPrecision,
+              maximumFractionDigits: decimalPrecision,
+            }
+          : {}),
+        ...(thousandSeparator === '' ? { useGrouping: false } : {}),
       }).format(parsedValue)
     } catch {
-      return parsedValue.toFixed(2)
+      return parsedValue.toFixed(decimalPrecision ?? 2)
     }
   }
 
   if (variant === 'percent') {
+    if (decimalPrecision !== undefined) {
+      return `${parsedValue.toFixed(decimalPrecision)}%`
+    }
+
     return `${parsedValue}%`
+  }
+
+  if (decimalPrecision !== undefined || thousandSeparator !== undefined) {
+    return new Intl.NumberFormat(undefined, {
+      ...(decimalPrecision !== undefined
+        ? {
+            minimumFractionDigits: decimalPrecision,
+            maximumFractionDigits: decimalPrecision,
+          }
+        : {}),
+      ...(thousandSeparator === '' ? { useGrouping: false } : {}),
+    }).format(parsedValue)
   }
 
   return value
@@ -694,6 +724,8 @@ export function NumberCell<TData>({
   const min = numberCellOpts?.min
   const max = numberCellOpts?.max
   const step = numberCellOpts?.step
+  const decimalPrecision = numberCellOpts?.decimalPrecision
+  const thousandSeparator = numberCellOpts?.thousandSeparator
   const displayVariant = cellOpts?.variant ?? 'number'
 
   const prevIsEditingRef = useRef(isEditing)
@@ -781,15 +813,29 @@ export function NumberCell<TData>({
         : undefined
 
     if (formatNumber) {
-      return formatNumber(value, { variant: displayVariant, currency })
+      return formatNumber(value, {
+        variant: displayVariant,
+        currency,
+        ...(decimalPrecision !== undefined ? { decimalPrecision } : {}),
+        ...(thousandSeparator !== undefined ? { thousandSeparator } : {}),
+      })
     }
 
     return formatNumberDisplayValue({
       value,
       variant: displayVariant,
       currency,
+      decimalPrecision,
+      thousandSeparator,
     })
-  }, [displayVariant, numberCellOpts, value, formatNumber])
+  }, [
+    displayVariant,
+    numberCellOpts,
+    value,
+    formatNumber,
+    decimalPrecision,
+    thousandSeparator,
+  ])
 
   return (
     <DataGridCellWrapper<TData>
@@ -2423,6 +2469,7 @@ export function DateCell<TData>({
   }
 
   const selectedDate = value ? (parseLocalDate(value) ?? undefined) : undefined
+  const [todayAnchor] = useState(() => new Date())
 
   const onDateSelect = useCallback(
     (date: Date | undefined) => {
@@ -2498,10 +2545,9 @@ export function DateCell<TData>({
             className="w-auto p-0"
           >
             <Calendar
-              autoFocus
               captionLayout="dropdown"
               mode="single"
-              defaultMonth={selectedDate ?? new Date()}
+              defaultMonth={selectedDate ?? todayAnchor}
               selected={selectedDate}
               onSelect={onDateSelect}
             />
@@ -2535,7 +2581,9 @@ export function DateTimeCell<TData>({
       : cellValue instanceof Date
         ? cellValue.toISOString()
         : ''
-  const [value, setValue] = useState(toDateTimeLocalInputValue(initialValue))
+  const [value, setValue] = useState(() =>
+    toDateTimeLocalInputValue(initialValue),
+  )
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const prevIsEditingRef = useRef(isEditing)
@@ -2696,8 +2744,12 @@ export function FileCell<TData>({
   const descriptionId = useId()
 
   const [files, setFiles] = useState<Array<FileCellData>>(cellValue)
-  const [uploadingFiles, setUploadingFiles] = useState<Set<string>>(new Set())
-  const [deletingFiles, setDeletingFiles] = useState<Set<string>>(new Set())
+  const [uploadingFiles, setUploadingFiles] = useState<Set<string>>(
+    () => new Set(),
+  )
+  const [deletingFiles, setDeletingFiles] = useState<Set<string>>(
+    () => new Set(),
+  )
   const [isDraggingOver, setIsDraggingOver] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -2723,17 +2775,24 @@ export function FileCell<TData>({
   )
 
   const prevCellValueRef = useRef(cellValue)
+  const pendingRevokeRef = useRef<Array<string>>([])
 
   if (cellValue !== prevCellValueRef.current) {
     prevCellValueRef.current = cellValue
-    for (const file of files) {
-      if (file.url) {
-        URL.revokeObjectURL(file.url)
-      }
-    }
+    pendingRevokeRef.current = files
+      .map((f) => f.url)
+      .filter((u): u is string => Boolean(u))
     setFiles(cellValue)
     setError(null)
   }
+
+  useEffect(() => {
+    const urls = pendingRevokeRef.current
+
+    if (urls.length === 0) return
+    pendingRevokeRef.current = []
+    for (const url of urls) URL.revokeObjectURL(url)
+  })
 
   if (prevCellKeyRef.current !== cellKey) {
     prevCellKeyRef.current = cellKey
@@ -3320,7 +3379,7 @@ export function FileCell<TData>({
                   </div>
                   <div className="max-h-50 space-y-1 overflow-y-auto">
                     {files.map((file) => {
-                      const FileIcon = getFileIcon(file.type)
+                      const fileIcon = getFileIcon(file.type)
                       const isFileUploading = uploadingFiles.has(file.id)
                       const isFileDeleting = deletingFiles.has(file.id)
                       const isFilePending = isFileUploading || isFileDeleting
@@ -3331,9 +3390,11 @@ export function FileCell<TData>({
                           data-pending={isFilePending ? '' : undefined}
                           className="flex items-center gap-2 rounded-md border bg-muted/50 px-2 py-1.5 data-pending:opacity-60"
                         >
-                          {FileIcon && (
-                            <FileIcon className="size-4 shrink-0 text-muted-foreground" />
-                          )}
+                          {fileIcon &&
+                            createElement(fileIcon, {
+                              className:
+                                'size-4 shrink-0 text-muted-foreground',
+                            })}
                           <div className="flex-1 overflow-hidden">
                             <p className="truncate text-sm">{file.name}</p>
                             <p className="text-muted-foreground text-xs">
@@ -3386,7 +3447,7 @@ export function FileCell<TData>({
               )
             }
 
-            const FileIcon = getFileIcon(file.type)
+            const fileIcon = getFileIcon(file.type)
 
             return (
               <Badge
@@ -3394,7 +3455,8 @@ export function FileCell<TData>({
                 variant="secondary"
                 className="gap-1 px-1.5 py-px"
               >
-                {FileIcon && <FileIcon className="size-3 shrink-0" />}
+                {fileIcon &&
+                  createElement(fileIcon, { className: 'size-3 shrink-0' })}
                 <span className="max-w-25 truncate">{file.name}</span>
               </Badge>
             )
@@ -3620,7 +3682,7 @@ export function DurationCell<TData>({
   colorRuleBg,
 }: DataGridCellProps<TData>) {
   const initialValue = cell.getValue() as number
-  const [value, setValue] = useState(formatDuration(initialValue) || '')
+  const [value, setValue] = useState(() => formatDuration(initialValue) || '')
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -4391,10 +4453,31 @@ export function RelationCell<TData>({
   isChanged,
   readOnly,
   colorRuleBg,
+  columnOption,
 }: DataGridCellProps<TData>) {
-  const initialValue = cell.getValue() as
+  const { t } = useUiTranslation()
+  /*
+   * `cell.getValue()` is the projected string label (the column's
+   * `accessorFn` runs `normalizeFieldValue` → `extractObjectLabel` so
+   * TanStack grouping/sorting can work with a primitive). To reach the
+   * full `{ id, name, autonumber_id }` object the API returned, read the
+   * unmodified value from `row.original` — same pattern UserMultiSelectCell
+   * uses for inline user objects.
+   */
+  const rawValue = (cell.row.original as Record<string, unknown> | undefined)?.[
+    columnId
+  ]
+  const initialValue = (
+    typeof rawValue === 'object' && rawValue !== null
+      ? (rawValue as {
+          id: string
+          name: string
+          autonumber_id?: string | number | null
+        })
+      : cell.getValue()
+  ) as
     | string
-    | { id: string; name: string }
+    | { id: string; name: string; autonumber_id?: string | number | null }
     | null
     | undefined
   const containerRef = useRef<HTMLDivElement>(null)
@@ -4411,6 +4494,25 @@ export function RelationCell<TData>({
       : typeof initialValue === 'string'
         ? initialValue
         : ''
+  const initialAutonumber =
+    typeof initialValue === 'object' &&
+    initialValue !== null &&
+    initialValue.autonumber_id !== undefined &&
+    initialValue.autonumber_id !== null
+      ? String(initialValue.autonumber_id)
+      : ''
+
+  const cellOpts = cell.column.columnDef.meta?.cell
+  /*
+   * Source of truth for runtime toggles: the explicit `columnOption` prop
+   * forwarded by `DataGridRow`. Fall back to the column-meta default (a
+   * relation column can ship with `showAutonumber: true` as a static
+   * default via `meta.cell`).
+   */
+  const showAutonumber =
+    columnOption?.showAutonumber ??
+    (cellOpts?.variant === 'relation' ? cellOpts.showAutonumber : undefined) ??
+    false
 
   /*
    * Track the picked value locally so the cell renders the new label
@@ -4439,9 +4541,208 @@ export function RelationCell<TData>({
       : pickedValue
         ? pickedValue.name
         : ''
+  /*
+   * After a fresh pick we don't yet know the related record's
+   * `autonumber_id` — it's only on the row payload the server returns. Until
+   * the next refetch hydrates the row, fall through to "no autonumber" so
+   * the cell doesn't dangle a stale value above the new name.
+   */
+  const displayAutonumber = pickedValue === 'initial' ? initialAutonumber : ''
+
+  /*
+   * Column-wide max autonumber length, computed from the current row
+   * model so the autonumber gutter is exactly wide enough for the
+   * longest value in this column — no over-allocation for short IDs,
+   * no shifted titles between rows. Memoized on the row-model reference
+   * (stable per data load) so all cells in the column share the work.
+   */
+  const rowModelRows = cell.getContext().table.getRowModel().rows
+  const maxAutonumberLength = useMemo(() => {
+    if (!showAutonumber) return 0
+    let max = 0
+
+    for (const row of rowModelRows) {
+      const raw = (row.original as Record<string, unknown> | undefined)?.[
+        columnId
+      ]
+
+      if (raw && typeof raw === 'object') {
+        const autonumber = (raw as { autonumber_id?: unknown }).autonumber_id
+
+        if (autonumber != null) {
+          const len = String(autonumber).length
+
+          if (len > max) max = len
+        }
+      }
+    }
+
+    return max
+  }, [rowModelRows, columnId, showAutonumber])
+
+  /*
+   * Optional icon / logo prefix for the related record. The host wires
+   * `useDocyrusDataGrid({ relationIconFields: { <relationSlug>: <iconFieldSlug> } })`
+   * which stamps `cellOpts.iconField` here AND extends the items-query
+   * projection to include the field on the related record. At runtime
+   * the value lives at `row.original[columnId][iconField]` — same place
+   * we read `name` / `autonumber_id` above. Two value shapes are
+   * supported:
+   *
+   * - `string` (e.g. `'huge ai-brain-03'`) → resolved via `<DocyrusIcon>`.
+   * - object with `signed_url` (e.g. `{ signed_url, file_name }`, or an
+   *   array thereof) → rendered as a small `<img>` thumbnail.
+   *
+   * After a fresh pick we don't yet know the related record's icon
+   * either, so the prefix is suppressed until the next refetch hydrates
+   * the row (mirrors the `displayAutonumber` policy above).
+   */
+  const iconFieldSlug =
+    cellOpts?.variant === 'relation' ? cellOpts.iconField : undefined
+  const rawIconValue =
+    pickedValue === 'initial' &&
+    typeof iconFieldSlug === 'string' &&
+    iconFieldSlug.length > 0 &&
+    initialValue &&
+    typeof initialValue === 'object'
+      ? (initialValue as Record<string, unknown>)[iconFieldSlug]
+      : undefined
+
+  let displayIcon: ReactNode = null
+
+  if (typeof rawIconValue === 'string' && rawIconValue.length > 0) {
+    displayIcon = (
+      <DocyrusIcon icon={rawIconValue} className="size-4 shrink-0" />
+    )
+  } else if (rawIconValue && typeof rawIconValue === 'object') {
+    const candidate = Array.isArray(rawIconValue)
+      ? rawIconValue[0]
+      : rawIconValue
+    const url =
+      candidate &&
+      typeof candidate === 'object' &&
+      'signed_url' in candidate &&
+      typeof (candidate as { signed_url?: unknown }).signed_url === 'string'
+        ? (candidate as { signed_url: string }).signed_url
+        : undefined
+
+    if (url) {
+      displayIcon = (
+        <img
+          src={url}
+          alt=""
+          className="size-4 shrink-0 rounded object-cover"
+        />
+      )
+    }
+  }
 
   const loadCellOptions = tableMeta?.loadCellOptions
   const { column } = cell
+
+  /*
+   * Relation navigation extension point. The host wires
+   * `tableMeta.getRelationHref` / `tableMeta.onOpenRelation` to expose an
+   * "open related record" affordance. We surface the raw foreign-key id
+   * (`currentId`) plus any relation metadata declared on the column so the
+   * host can route directly to the related record without recovering the
+   * id from the projected display label.
+   *
+   * The affordance is suppressed in edit mode (the popover already owns
+   * the cell), when the row has no related id (a missing or cleared
+   * relation), or when the cell variant isn't actually `relation`.
+   */
+  const getRelationHref = tableMeta?.getRelationHref
+  const onOpenRelation = tableMeta?.onOpenRelation
+  const hasRelationNavHandler =
+    typeof getRelationHref === 'function' ||
+    typeof onOpenRelation === 'function'
+  const relationDataSourceId =
+    cellOpts?.variant === 'relation' ? cellOpts.dataSourceId : undefined
+  const relationAppSlug =
+    cellOpts?.variant === 'relation' ? cellOpts.relationAppSlug : undefined
+  const relationDataSourceSlug =
+    cellOpts?.variant === 'relation'
+      ? cellOpts.relationDataSourceSlug
+      : undefined
+  const isRelationVariant = cellOpts?.variant === 'relation'
+  const rowOriginal = cell.row.original
+  /*
+   * Memo so the args object keeps reference stability across renders when
+   * the underlying inputs don't change. `useCallback` below depends on it
+   * — recreating the object every render would defeat the click handler's
+   * own memoization.
+   */
+  const relationNavArgs = useMemo(() => {
+    if (isEditing || !currentId || !isRelationVariant || !hasRelationNavHandler)
+      return null
+
+    return {
+      relatedId: currentId,
+      label: displayName,
+      fieldSlug: columnId,
+      columnId,
+      rowOriginal,
+      ...(relationDataSourceId ? { dataSourceId: relationDataSourceId } : {}),
+      ...(relationAppSlug ? { relationAppSlug } : {}),
+      ...(relationDataSourceSlug ? { relationDataSourceSlug } : {}),
+    }
+  }, [
+    isEditing,
+    currentId,
+    isRelationVariant,
+    hasRelationNavHandler,
+    displayName,
+    columnId,
+    rowOriginal,
+    relationDataSourceId,
+    relationAppSlug,
+    relationDataSourceSlug,
+  ])
+  const relationHref =
+    relationNavArgs && typeof getRelationHref === 'function'
+      ? getRelationHref(relationNavArgs)
+      : undefined
+  /*
+   * Click handler is bound only when there's no href — when both callbacks
+   * are wired, `getRelationHref` wins so users keep middle-click /
+   * ctrl-click / "open in new tab" behavior on the resolved anchor.
+   */
+  const onRelationActionClick = useCallback(
+    (event: MouseEvent<HTMLElement>) => {
+      /*
+       * The icon sits inside the cell wrapper, which handles focus / cell
+       * editing. Stop propagation so a click on the affordance doesn't
+       * also toggle the popover or change cell focus state.
+       */
+      event.stopPropagation()
+      if (!relationNavArgs) return
+      if (typeof onOpenRelation === 'function') onOpenRelation(relationNavArgs)
+    },
+    [onOpenRelation, relationNavArgs],
+  )
+
+  const relationNavButton = relationNavArgs ? (
+    relationHref ? (
+      <a
+        href={relationHref}
+        aria-label={t('ui.dataGrid.openRelation', 'Open related record')}
+        onClick={(event) => event.stopPropagation()}
+        className="inline-flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground/70 hover:bg-muted hover:text-foreground"
+      >
+        <ArrowUpRight className="size-3.5" />
+      </a>
+    ) : (
+      <button
+        type="button"
+        aria-label={t('ui.dataGrid.openRelation', 'Open related record')}
+        onClick={onRelationActionClick}
+        className="inline-flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground/70 hover:bg-muted hover:text-foreground"
+      >
+        <ArrowUpRight className="size-3.5" />
+      </button>
+    )
+  ) : null
 
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -4467,19 +4768,27 @@ export function RelationCell<TData>({
     return () => window.clearTimeout(timeout)
   }, [search, isEditing])
 
-  useEffect(() => {
-    if (!isEditing) return
-    setPage(0)
-  }, [debouncedSearch, isEditing])
+  const prevDebouncedSearchRef = useRef(debouncedSearch)
 
-  useEffect(() => {
-    if (isEditing) return
+  if (isEditing && prevDebouncedSearchRef.current !== debouncedSearch) {
+    prevDebouncedSearchRef.current = debouncedSearch
+    setPage(0)
+  } else if (prevDebouncedSearchRef.current !== debouncedSearch) {
+    prevDebouncedSearchRef.current = debouncedSearch
+  }
+
+  const prevIsEditingRef = useRef(isEditing)
+
+  if (prevIsEditingRef.current && !isEditing) {
+    prevIsEditingRef.current = isEditing
     setSearch('')
     setDebouncedSearch('')
     setItems([])
     setPage(0)
     setHasMore(false)
-  }, [isEditing])
+  } else if (prevIsEditingRef.current !== isEditing) {
+    prevIsEditingRef.current = isEditing
+  }
 
   useEffect(() => {
     if (!isEditing || !loadCellOptions) return
@@ -4487,11 +4796,15 @@ export function RelationCell<TData>({
     const controller = new AbortController()
     const isFirstPage = page === 0
 
-    if (isFirstPage) {
-      setIsLoading(true)
-    } else {
-      setIsLoadingMore(true)
-    }
+    queueMicrotask(() => {
+      if (controller.signal.aborted) return
+
+      if (isFirstPage) {
+        setIsLoading(true)
+      } else {
+        setIsLoadingMore(true)
+      }
+    })
 
     void (async () => {
       try {
@@ -4594,9 +4907,34 @@ export function RelationCell<TData>({
           colorRuleBg={colorRuleBg}
           onKeyDown={onWrapperKeyDown}
         >
-          <span data-slot="grid-cell-content" className="truncate text-primary">
-            {displayName}
-          </span>
+          {showAutonumber && displayAutonumber ? (
+            <span className="flex min-w-0 flex-1 items-center gap-1.5 text-primary">
+              {displayIcon}
+              <span
+                className="inline-block shrink-0 font-mono text-[10px] font-medium tabular-nums text-muted-foreground/80"
+                style={
+                  maxAutonumberLength > 0
+                    ? { minWidth: `${maxAutonumberLength + 1}ch` }
+                    : undefined
+                }
+              >
+                <span className="opacity-50">#</span>
+                {displayAutonumber}
+              </span>
+              <span data-slot="grid-cell-content" className="truncate">
+                {displayName}
+              </span>
+              {relationNavButton}
+            </span>
+          ) : (
+            <span className="flex min-w-0 flex-1 items-center gap-1.5 text-primary">
+              {displayIcon}
+              <span data-slot="grid-cell-content" className="truncate">
+                {displayName}
+              </span>
+              {relationNavButton}
+            </span>
+          )}
         </DataGridCellWrapper>
       </PopoverAnchor>
       <PopoverContent
@@ -4681,7 +5019,7 @@ export function RelationCell<TData>({
           </Command>
         ) : (
           <p className="p-3 text-xs text-muted-foreground">
-            Relation editing requires `tableMeta.loadCellOptions` — wire it up
+            Relation editing requires `tableMeta.loadCellOptions`: wire it up
             via <code className="font-mono">useDocyrusDataGrid</code>
             <span>.</span>
           </p>

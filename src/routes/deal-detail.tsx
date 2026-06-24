@@ -1,7 +1,13 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { useMemo, useState } from 'react'
+
+import { type ColumnDef } from '@tanstack/react-table'
+
+import type {
+  FieldChange,
+  RecordDetailField
+} from '@/components/docyrus/editable-record-detail'
+
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
-import type { ColumnDef } from '@tanstack/react-table'
 import { useTranslation } from 'react-i18next'
 import {
   Activity,
@@ -15,36 +21,33 @@ import {
   Phone,
   ShoppingCart,
   StickyNote,
-  Users,
+  Users
 } from 'lucide-react'
+
 import {
   PricingEnginePanel,
-  type ILineItem,
+  type ILineItem
 } from '@/components/docyrus/pricing-engine-panel'
 import {
   bankersRound,
   buildLineItemRows,
-  calculateTotals,
+  calculateTotals
 } from '@/components/docyrus/pricing-engine-panel/lib/calculations'
 import {
   DataGrid,
   DataGridSkeleton,
   DataGridSkeletonGrid,
-  useDataGrid,
+  useDataGrid
 } from '@/components/docyrus/data-grid'
 import { DataGridStandardToolbar } from '@/components/docyrus/data-grid-standard-toolbar'
 import { getDataGridRowActionsColumn } from '@/components/docyrus/data-grid-row-actions-column'
-import {
-  type FieldChange,
-  type RecordDetailField,
-} from '@/components/docyrus/editable-record-detail'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
   RecordDetailLayout,
-  RecordKpiCard,
-  RecordTabPlaceholder,
   type RecordDetailTab,
+  RecordKpiCard,
+  RecordTabPlaceholder
 } from '@/components/crm/record-detail-layout'
 import { RelatedContactsTable } from '@/components/crm/related-contacts-table'
 import { ContactFormDialog } from '@/components/contacts/contact-form-dialog'
@@ -64,7 +67,9 @@ import { useEnumEntities } from '@/hooks/use-enums'
 import { useRecordActivities } from '@/hooks/use-record-activities'
 import { useSalesOrders } from '@/hooks/use-sales-orders'
 import { useUsers } from '@/hooks/use-users'
+
 import type { EnumOption, IField } from '@/components/docyrus/form-fields/types'
+
 import { useUiLocale } from '@/hooks/use-ui-locale'
 import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
 
@@ -84,16 +89,22 @@ const FIELD_SLUGS = [
   'organization',
   'contact_person',
   'record_owner',
-  'hot_prospect',
+  'hot_prospect'
 ]
 
 function makeField(
   slug: string,
   name: string,
   type: IField['type'] = 'field-text',
-  extra: Partial<IField> = {},
+  extra: Partial<IField> = {}
 ): IField {
-  return { id: slug, name, slug, type, ...extra }
+  return {
+    id: slug,
+    name,
+    slug,
+    type,
+    ...extra
+  }
 }
 
 function extractName(value: unknown): unknown {
@@ -108,7 +119,7 @@ function getInitials(value: string) {
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
+    .map(part => part[0]?.toUpperCase() ?? '')
     .join('')
 
   return initials || 'DL'
@@ -118,14 +129,14 @@ function getDealOrganization(value: unknown) {
   if (!value || typeof value !== 'object') return null
 
   return value as {
-    id?: string
-    name?: string
-    company_logo?: { signed_url?: string | null } | null
+    id?: string;
+    name?: string;
+    company_logo?: { signed_url?: string | null } | null;
   }
 }
 
 function getRelationName(
-  value?: { name?: string } | string | null,
+  value?: { name?: string } | string | null
 ): string | undefined {
   if (!value) return undefined
   if (typeof value === 'object') return value.name
@@ -142,7 +153,7 @@ function getRelationId(value?: { id?: string } | string | null): string | null {
 function getFieldValue(value: unknown): string | number | boolean | null {
   if (value == null) return null
   if (typeof value === 'object' && 'id' in value) {
-    const id = (value as { id?: string }).id
+    const { id } = value as { id?: string }
 
     return id ?? null
   }
@@ -159,17 +170,17 @@ function getFieldValue(value: unknown): string | number | boolean | null {
 
 function mapEnumEntitiesToOptions(
   items: Array<{
-    id: string
-    name: string
-    color?: string | null
-    icon?: string | null
-  }>,
+    id: string;
+    name: string;
+    color?: string | null;
+    icon?: string | null;
+  }>
 ): Array<EnumOption> {
-  return items.map((item) => ({
+  return items.map(item => ({
     id: item.id,
     name: item.name,
     color: item.color ?? undefined,
-    icon: item.icon ?? undefined,
+    icon: item.icon ?? undefined
   }))
 }
 
@@ -191,36 +202,36 @@ export function DealDetail() {
 
   const { data: companies = [] } = useCompanies({
     columns: ['id', 'name'],
-    orderBy: 'name ASC',
+    orderBy: 'name ASC'
   })
   const { data: allContacts = [] } = useContacts({
     columns: ['id', 'name'],
-    orderBy: 'name ASC',
+    orderBy: 'name ASC'
   })
   const { data: users = [] } = useUsers()
   const { data: stageEntities = [] } = useEnumEntities('stage', {
     appSlug: 'base_crm',
-    dataSourceSlug: 'deal',
+    dataSourceSlug: 'deal'
   })
   const { data: leadSourceEntities = [] } = useEnumEntities('lead_source', {
     appSlug: 'base_crm',
-    dataSourceSlug: 'deal',
+    dataSourceSlug: 'deal'
   })
   const { data: customerTypeEntities = [] } = useEnumEntities('customer_type', {
     appSlug: 'base_crm',
-    dataSourceSlug: 'deal',
+    dataSourceSlug: 'deal'
   })
   const { data: reasonForLostEntities = [] } = useEnumEntities(
     'reason_for_lost',
     {
       appSlug: 'base_crm',
-      dataSourceSlug: 'deal',
-    },
+      dataSourceSlug: 'deal'
+    }
   )
   const { data: countryEntities = [] } = useEnumEntities('country')
   const { data: dealTypeEntities = [] } = useEnumEntities('deal_type', {
     appSlug: 'base_crm',
-    dataSourceSlug: 'deal',
+    dataSourceSlug: 'deal'
   })
 
   const [addContactOpen, setAddContactOpen] = useState(false)
@@ -233,13 +244,19 @@ export function DealDetail() {
   const { data: orgContacts = [], isLoading: orgContactsLoading } = useContacts(
     orgId
       ? {
-          columns: ['id', 'name', 'job_title', 'email', 'mobile'],
+          columns: [
+'id',
+'name',
+'job_title',
+'email',
+'mobile'
+],
           filters: {
-            rules: [{ field: 'organization', operator: '=', value: orgId }],
+            rules: [{ field: 'organization', operator: '=', value: orgId }]
           },
-          orderBy: 'created_on desc',
+          orderBy: 'created_on desc'
         }
-      : undefined,
+      : undefined
   )
 
   const { data: activities = [], isLoading: activitiesLoading } =
@@ -258,14 +275,14 @@ export function DealDetail() {
             'tax_rate',
             'total',
             'gross_total',
-            'net_total',
+            'net_total'
           ],
           filters: {
-            rules: [{ field: 'related_deal', operator: '=', value: dealId }],
+            rules: [{ field: 'related_deal', operator: '=', value: dealId }]
           },
-          orderBy: 'created_on asc',
+          orderBy: 'created_on asc'
         }
-      : undefined,
+      : undefined
   )
 
   const { data: salesOrders, isLoading: ordersLoading } = useSalesOrders(
@@ -278,129 +295,134 @@ export function DealDetail() {
             'sub_total',
             'tax_total',
             'grand_total',
-            'created_on',
+            'created_on'
           ],
           filters: {
-            rules: [{ field: 'organization', operator: '=', value: orgId }],
+            rules: [{ field: 'organization', operator: '=', value: orgId }]
           },
-          orderBy: 'created_on desc',
+          orderBy: 'created_on desc'
         }
-      : undefined,
+      : undefined
   )
 
   const { data: dealQuotes = [], isLoading: dealQuotesLoading } =
     useSalesOrders(
       dealId
         ? {
-            columns: ['id', 'status', 'grand_total', 'created_on'],
+            columns: [
+'id',
+'status',
+'grand_total',
+'created_on'
+],
             filters: {
-              rules: [{ field: 'deal', operator: '=', value: dealId }],
+              rules: [{ field: 'deal', operator: '=', value: dealId }]
             },
-            orderBy: 'created_on DESC',
+            orderBy: 'created_on DESC'
           }
-        : undefined,
+        : undefined
     )
 
   const detailFields = useMemo<Array<RecordDetailField>>(
     () => [
       {
         field: makeField('stage', t('deals.stage'), 'field-status'),
-        enumOptions: mapEnumEntitiesToOptions(stageEntities),
+        enumOptions: mapEnumEntitiesToOptions(stageEntities)
       },
       { field: makeField('deal_value', t('deals.dealValue'), 'field-number') },
       {
         field: makeField(
           'expected_revenue',
           t('deals.expectedRevenue'),
-          'field-number',
-        ),
+          'field-number'
+        )
       },
       {
         field: makeField(
           'close_probability',
           t('deals.closeProbability'),
-          'field-percent',
-        ),
+          'field-percent'
+        )
       },
       {
         field: makeField(
           'expected_closing_date',
           t('deals.expectedClose'),
-          'field-date',
-        ),
+          'field-date'
+        )
       },
       {
         field: makeField(
           'follow_up_on',
           t('deals.followUpOn', { defaultValue: 'Follow Up On' }),
-          'field-date',
-        ),
+          'field-date'
+        )
       },
       {
         field: makeField(
           'closed_date',
           t('deals.closedDate', { defaultValue: 'Closed Date' }),
-          'field-date',
-        ),
+          'field-date'
+        )
       },
       {
         field: makeField(
           'customer_type',
           t('deals.customerType'),
-          'field-select',
+          'field-select'
         ),
-        enumOptions: mapEnumEntitiesToOptions(customerTypeEntities),
+        enumOptions: mapEnumEntitiesToOptions(customerTypeEntities)
       },
       {
         field: makeField(
           'deal_type',
           t('deals.dealType', { defaultValue: 'Deal Type' }),
-          'field-select',
+          'field-select'
         ),
-        enumOptions: mapEnumEntitiesToOptions(dealTypeEntities),
+        enumOptions: mapEnumEntitiesToOptions(dealTypeEntities)
       },
       {
         field: makeField('lead_source', t('deals.leadSource'), 'field-select'),
-        enumOptions: mapEnumEntitiesToOptions(leadSourceEntities),
+        enumOptions: mapEnumEntitiesToOptions(leadSourceEntities)
       },
       {
         field: makeField(
           'reason_for_lost',
           t('deals.reasonForLost', { defaultValue: 'Reason for Lost' }),
-          'field-select',
+          'field-select'
         ),
-        enumOptions: mapEnumEntitiesToOptions(reasonForLostEntities),
+        enumOptions: mapEnumEntitiesToOptions(reasonForLostEntities)
       },
       {
         field: makeField(
           'country',
           t('deals.country', { defaultValue: 'Country' }),
-          countryEntities.length > 0 ? 'field-select' : 'field-text',
+          countryEntities.length > 0 ? 'field-select' : 'field-text'
         ),
         enumOptions: mapEnumEntitiesToOptions(countryEntities),
-        readOnly: countryEntities.length === 0,
+        readOnly: countryEntities.length === 0
       },
       {
         field: makeField(
           'organization',
           t('deals.organization'),
-          'field-select',
+          'field-select'
         ),
         enumOptions: companies.map((company: any) => ({
           id: company.id,
-          name: company.name,
-        })),
+          name: company.name
+        }))
       },
       {
         field: makeField(
           'contact_person',
           t('deals.contactPerson', { defaultValue: 'Contact Person' }),
-          'field-select',
+          'field-select'
         ),
         enumOptions: allContacts.map((contact: any) => ({
           id: contact.id,
-          name: contact.name,
-        })),
+          name: contact.name
+        }))
       },
       {
         field: makeField('record_owner', t('deals.owner'), 'field-select'),
@@ -409,16 +431,16 @@ export function DealDetail() {
           name:
             `${user.firstname ?? ''} ${user.lastname ?? ''}`.trim() ||
             user.email ||
-            user.name,
-        })),
+            user.name
+        }))
       },
       {
         field: makeField(
           'hot_prospect',
           t('deals.hotProspect'),
-          'field-checkbox',
-        ),
-      },
+          'field-checkbox'
+        )
+      }
     ],
     [
       companies,
@@ -430,8 +452,8 @@ export function DealDetail() {
       stageEntities,
       countryEntities,
       t,
-      users,
-    ],
+      users
+    ]
   )
 
   const flatRecord = useMemo<Record<string, unknown>>(() => {
@@ -456,21 +478,18 @@ export function DealDetail() {
       organization: getFieldValue(deal.organization),
       contact_person: getFieldValue(deal.contact_person),
       record_owner: getFieldValue(deal.record_owner),
-      hot_prospect: deal.hot_prospect ?? false,
+      hot_prospect: deal.hot_prospect ?? false
     }
   }, [deal, countryEntities])
 
   const handleInlineSave = async (
     changes: Array<FieldChange>,
-    _values: Record<string, unknown>,
+    _values: Record<string, unknown>
   ) => {
     if (!dealId || changes.length === 0) return
 
     const payload = Object.fromEntries(
-      changes.map((change) => [
-        change.fieldSlug,
-        change.newValue === '' ? undefined : change.newValue,
-      ]),
+      changes.map(change => [change.fieldSlug, change.newValue === '' ? undefined : change.newValue])
     )
 
     await updateDeal.mutateAsync({ dealId, data: payload })
@@ -490,17 +509,17 @@ export function DealDetail() {
         quantity: Number(item.qty ?? 0),
         unitPrice: Number(item.unit_price ?? 0),
         vatRate: Number(item.tax_rate ?? 0),
-        discountPercent: Number(item.discount ?? 0),
-      }),
+        discountPercent: Number(item.discount ?? 0)
+      })
     )
 
-    const enableVat = pricingLineItems.some((item) => item.vatRate > 0)
+    const enableVat = pricingLineItems.some(item => item.vatRate > 0)
     const vatRates = Array.from(
       new Set(
         pricingLineItems
-          .map((item) => item.vatRate)
-          .filter((rate) => Number.isFinite(rate)),
-      ),
+          .map(item => item.vatRate)
+          .filter(rate => Number.isFinite(rate))
+      )
     ).sort((left, right) => left - right)
 
     if (vatRates.length === 0) {
@@ -510,11 +529,11 @@ export function DealDetail() {
     const config = {
       showVatColumn: enableVat,
       showDiscountColumn: pricingLineItems.some(
-        (item) => item.discountPercent > 0,
+        item => item.discountPercent > 0
       ),
       showGrossColumn: true,
       showCategoryColumn: pricingLineItems.some(
-        (item) => item.category.length > 0,
+        item => item.category.length > 0
       ),
       discountBeforeVat: true,
       enableVat,
@@ -523,14 +542,14 @@ export function DealDetail() {
       enableAdjustment: false,
       defaultVatRate: vatRates[vatRates.length - 1] ?? 0,
       vatRates,
-      viewMode: 'net' as const,
+      viewMode: 'net' as const
     }
 
     const totals = calculateTotals(
       buildLineItemRows(pricingLineItems, config),
       0,
       0,
-      config,
+      config
     )
 
     return {
@@ -540,13 +559,13 @@ export function DealDetail() {
       currency: {
         code: 'USD',
         secondaryCurrencyCode: null,
-        exchangeRate: 1,
+        exchangeRate: 1
       },
       config,
       description: '',
       termsAndConditions: '',
       status: 'saved' as const,
-      totals,
+      totals
     }
   }, [dealProducts, t])
 
@@ -555,7 +574,7 @@ export function DealDetail() {
 
     void navigate({
       to: '/sales-orders/$orderId',
-      params: { orderId: order.id },
+      params: { orderId: order.id }
     })
   }
 
@@ -567,80 +586,76 @@ export function DealDetail() {
         onView: onViewOrder,
         onEdit: onViewOrder,
         onDuplicate: noopOrderAction,
-        onDelete: noopOrderAction,
+        onDelete: noopOrderAction
       }),
       {
         accessorKey: 'id',
         header: t('salesOrders.columns.orderNumber'),
         meta: { cell: { variant: 'short-text' } },
         enableSorting: true,
-        size: 140,
+        size: 140
       },
       {
         id: 'organization',
-        accessorFn: (row) =>
-          typeof row.organization === 'object'
+        accessorFn: row => typeof row.organization === 'object'
             ? (row.organization?.name ?? '')
             : (row.organization ?? ''),
         header: t('salesOrders.columns.organization'),
         meta: { cell: { variant: 'short-text' } },
         enableSorting: true,
-        size: 220,
+        size: 220
       },
       {
         id: 'status',
-        accessorFn: (row) =>
-          typeof row.status === 'object'
+        accessorFn: row => typeof row.status === 'object'
             ? (row.status?.name ?? '')
             : (row.status ?? ''),
         header: t('salesOrders.columns.status'),
         meta: { cell: { variant: 'short-text' } },
         enableSorting: true,
-        size: 160,
+        size: 160
       },
       {
         accessorKey: 'sub_total',
         header: t('salesOrders.columns.subtotal'),
         meta: { cell: { variant: 'currency' } },
         enableSorting: true,
-        size: 130,
+        size: 130
       },
       {
         accessorKey: 'tax_total',
         header: t('salesOrders.columns.tax'),
         meta: { cell: { variant: 'currency' } },
         enableSorting: true,
-        size: 120,
+        size: 120
       },
       {
         accessorKey: 'grand_total',
         header: t('salesOrders.columns.grandTotal'),
         meta: { cell: { variant: 'currency' } },
         enableSorting: true,
-        size: 140,
+        size: 140
       },
       {
         accessorKey: 'created_on',
         header: t('salesOrders.columns.created'),
         meta: { cell: { variant: 'date' } },
         enableSorting: true,
-        size: 140,
-      },
+        size: 140
+      }
     ],
-    [t],
+    [t]
   )
 
   const { table: ordersTable, ...ordersGridProps } = useDataGrid({
     data: salesOrders || [],
     columns: orderColumns,
     getRowId: (row: any) => row.id,
-    readOnly: true,
+    readOnly: true
   })
 
   // Generated entity type omits `name`/`autonumber_id`, present at runtime.
-  const dealRecord = deal as
-    | (typeof deal & { name?: string; autonumber_id?: string | number })
-    | undefined
+  const dealRecord = deal
   const stageName =
     deal?.stage && typeof deal.stage === 'object'
       ? deal.stage.name
@@ -658,12 +673,12 @@ export function DealDetail() {
       : null
 
   useSetDetailBreadcrumbTitle(
-    dealRecord ? (dealNumber ? `${dealNumber} ${dealTitle}` : dealTitle) : null,
+    dealRecord ? (dealNumber ? `${dealNumber} ${dealTitle}` : dealTitle) : null
   )
 
   const contactsWithPhone = useMemo(
     () => orgContacts.filter((c: any) => c.mobile),
-    [orgContacts],
+    [orgContacts]
   )
 
   const tabs = useMemo<Array<RecordDetailTab>>(() => {
@@ -682,13 +697,11 @@ export function DealDetail() {
                     ? deal.deal_value.toLocaleString()
                     : '—'
                 }
-                icon={<Briefcase className="size-3.5" />}
-              />
+                icon={<Briefcase className="size-3.5" />} />
               <RecordKpiCard
                 label={t('deals.stage')}
                 value={stageName || '—'}
-                icon={<CircleDot className="size-3.5" />}
-              />
+                icon={<CircleDot className="size-3.5" />} />
               <RecordKpiCard
                 label={t('deals.closeProbability')}
                 value={
@@ -696,32 +709,29 @@ export function DealDetail() {
                     ? `${deal.close_probability}%`
                     : '—'
                 }
-                icon={<Percent className="size-3.5" />}
-              />
+                icon={<Percent className="size-3.5" />} />
             </div>
 
             <div className="rounded-xl border p-3">
               <div className="mb-2 flex items-center justify-between">
                 <h3 className="text-[13px] font-semibold">
                   {t('contacts.recentActivity', {
-                    defaultValue: 'Recent activity',
+                    defaultValue: 'Recent activity'
                   })}
                 </h3>
                 <button
                   type="button"
                   onClick={() => handleTabChange('activity')}
-                  className="text-xs font-medium text-muted-foreground hover:text-foreground"
-                >
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground">
                   {t('common.viewAll', { defaultValue: 'View all' })}
                 </button>
               </div>
               <RecordActivityPanel
                 activities={activities.slice(0, 2)}
-                isLoading={activitiesLoading}
-              />
+                isLoading={activitiesLoading} />
             </div>
           </div>
-        ),
+        )
       },
       {
         value: 'activity',
@@ -731,9 +741,8 @@ export function DealDetail() {
           <RecordActivityPanel
             activities={activities}
             isLoading={activitiesLoading}
-            filterable
-          />
-        ),
+            filterable />
+        )
       },
       {
         value: 'contacts',
@@ -743,22 +752,19 @@ export function DealDetail() {
         bare: true,
         content: (
           <RelatedContactsTable
-            contacts={orgContacts as any}
+            contacts={orgContacts}
             isLoading={orgContactsLoading}
             emptyLabel={t('deals.contacts.empty', {
-              defaultValue: 'No contacts for this organization',
+              defaultValue: 'No contacts for this organization'
             })}
             onAddContact={() => setAddContactOpen(true)}
-            onOpenContact={(id) =>
-              navigate({
+            onOpenContact={id => navigate({
                 to: '/contacts/$contactId',
                 params: { contactId: id },
-                search: { tab: 'overview' },
-              })
-            }
-            onEmail={(c) => c.email && window.open(`mailto:${c.email}`)}
-            onCall={(c) =>
-              webphone.enabled
+                search: { tab: 'overview' }
+              })}
+            onEmail={c => c.email && window.open(`mailto:${c.email}`)}
+            onCall={c => webphone.enabled
                 ? dialer.open({
                     recordLabel: c.name,
                     targets: [
@@ -766,15 +772,13 @@ export function DealDetail() {
                         label: c.name ?? c.mobile ?? '',
                         sublabel: c.job_title || undefined,
                         number: c.mobile,
-                        contactId: c.id,
-                      },
-                    ],
+                        contactId: c.id
+                      }
+                    ]
                   })
-                : c.mobile && window.open(`tel:${c.mobile}`)
-            }
-            onSms={(c) => c.mobile && window.open(`sms:${c.mobile}`)}
-          />
-        ),
+                : c.mobile && window.open(`tel:${c.mobile}`)}
+            onSms={c => c.mobile && window.open(`sms:${c.mobile}`)} />
+        )
       },
       {
         value: 'products',
@@ -802,20 +806,17 @@ export function DealDetail() {
                 discountBeforeVat={pricingDocument.config.discountBeforeVat}
                 enableVat={pricingDocument.config.enableVat}
                 enableLineDiscount={pricingDocument.config.enableLineDiscount}
-                enableGlobalDiscount={
-                  pricingDocument.config.enableGlobalDiscount
-                }
+                enableGlobalDiscount={pricingDocument.config.enableGlobalDiscount}
                 enableAdjustment={pricingDocument.config.enableAdjustment}
                 defaultVatRate={pricingDocument.config.defaultVatRate}
                 vatRates={pricingDocument.config.vatRates}
                 defaultCurrency={pricingDocument.currency.code}
                 viewMode={pricingDocument.config.viewMode}
                 size="full"
-                variant="bordered"
-              />
+                variant="bordered" />
             )}
           </div>
-        ),
+        )
       },
       {
         value: 'quotes',
@@ -825,23 +826,18 @@ export function DealDetail() {
         bare: true,
         content: (
           <RelatedQuotesTable
-            quotes={dealQuotes as any}
+            quotes={dealQuotes}
             isLoading={dealQuotesLoading}
-            onOpenQuote={(id) =>
-              navigate({ to: '/quotes/$quoteId', params: { quoteId: id } })
-            }
-            onNewQuote={() =>
-              navigate({
+            onOpenQuote={id => navigate({ to: '/quotes/$quoteId', params: { quoteId: id } })}
+            onNewQuote={() => navigate({
                 to: '/quotes/new',
                 search: {
                   deal: dealId,
                   organization: orgId,
-                  organizationName,
-                },
-              })
-            }
-          />
-        ),
+                  organizationName
+                }
+              })} />
+        )
       },
       {
         value: 'orders',
@@ -855,7 +851,7 @@ export function DealDetail() {
                 {t('deals.orders.relatedByOrganization', {
                   defaultValue:
                     'Showing sales orders for the same organization: {{organization}}',
-                  organization: organizationName,
+                  organization: organizationName
                 })}
               </p>
             )}
@@ -872,11 +868,11 @@ export function DealDetail() {
                     ? t('deals.orders.relatedByOrganizationEmpty', {
                         defaultValue:
                           'No sales orders were found for {{organization}}.',
-                        organization: organizationName,
+                        organization: organizationName
                       })
                     : t('deals.orders.relatedByOrganizationMissing', {
                         defaultValue:
-                          'This deal does not have an organization linked yet.',
+                          'This deal does not have an organization linked yet.'
                       })}
                 </p>
               </div>
@@ -884,17 +880,15 @@ export function DealDetail() {
               <>
                 <DataGridStandardToolbar
                   table={ordersTable}
-                  searchPlaceholder={t('common.search', 'Search...')}
-                />
+                  searchPlaceholder={t('common.search', 'Search...')} />
                 <DataGrid
                   table={ordersTable}
                   {...ordersGridProps}
-                  height={520}
-                />
+                  height={520} />
               </>
             )}
           </div>
-        ),
+        )
       },
       {
         value: 'comments',
@@ -906,10 +900,9 @@ export function DealDetail() {
             <CommentsPanel
               appSlug="base_crm"
               dataSource="deal"
-              recordId={dealId!}
-            />
+              recordId={dealId!} />
           </div>
-        ),
+        )
       },
       {
         value: 'notes',
@@ -920,17 +913,16 @@ export function DealDetail() {
             icon={<StickyNote className="size-5" />}
             title={t('common.comingSoon', { defaultValue: 'Coming soon' })}
             description={t('common.notesComingSoon', {
-              defaultValue: 'Notes will be available here soon.',
-            })}
-          />
-        ),
+              defaultValue: 'Notes will be available here soon.'
+            })} />
+        )
       },
       {
         value: 'tasks',
         label: t('deals.tabs.tasks', { defaultValue: 'Tasks' }),
         icon: <ListTodo className="size-3.5" />,
         bare: true,
-        content: <RecordTasksPanel parentField="deal" parentId={dealId} />,
+        content: <RecordTasksPanel parentField="deal" parentId={dealId} />
       },
       {
         value: 'files',
@@ -942,13 +934,11 @@ export function DealDetail() {
             <FileAttachments
               appSlug="base_crm"
               dataSource="deal"
-              recordId={dealId!}
-            />
+              recordId={dealId!} />
           </div>
-        ),
-      },
+        )
+      }
     ]
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     t,
     deal?.deal_value,
@@ -970,7 +960,7 @@ export function DealDetail() {
     ordersGridProps,
     dealQuotes,
     dealQuotesLoading,
-    dealId,
+    dealId
   ])
 
   const attributeActions = (
@@ -979,25 +969,25 @@ export function DealDetail() {
         variant="ghost"
         size="sm"
         className="h-7 gap-1.5 text-[13px]"
-        onClick={() => handleTabChange('notes')}
-      >
+        onClick={() => handleTabChange('notes')}>
         <StickyNote className="size-3.5" />
         {t('contacts.actions.note', { defaultValue: 'Note' })}
       </Button>
     </>
   )
 
-  // Open the webphone call composer with the deal's related contacts (the deal
-  // itself has no number); the composer shows a picker / "no number" warning.
-  const openCallComposer = () =>
-    dialer.open({
+  /*
+   * Open the webphone call composer with the deal's related contacts (the deal
+   * itself has no number); the composer shows a picker / "no number" warning.
+   */
+  const openCallComposer = () => dialer.open({
       recordLabel: dealTitle,
       targets: contactsWithPhone.map((c: any) => ({
         label: c.name,
         sublabel: c.job_title || undefined,
         number: c.mobile,
-        contactId: c.id,
-      })),
+        contactId: c.id
+      }))
     })
 
   const dialerTrigger = webphone.enabled ? (
@@ -1005,8 +995,7 @@ export function DealDetail() {
       type="button"
       onClick={openCallComposer}
       aria-label={t('common.openDialer')}
-      className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
-    >
+      className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30">
       <Phone className="size-4" />
     </button>
   ) : undefined
@@ -1041,14 +1030,12 @@ export function DealDetail() {
         dialerTrigger={dialerTrigger}
         tabs={tabs}
         activeTab={activeTab}
-        onTabChange={handleTabChange}
-      />
+        onTabChange={handleTabChange} />
       <ContactFormDialog
         open={addContactOpen}
         onOpenChange={setAddContactOpen}
         contact={orgId ? { organization: orgId } : undefined}
-        mode="create"
-      />
+        mode="create" />
     </PageContainer>
   )
 }

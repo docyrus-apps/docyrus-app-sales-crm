@@ -1,20 +1,21 @@
 import type { ReactNode } from 'react'
+
 import {
   AwesomeCard,
   AwesomeCardBody,
   AwesomeCardHeader,
   AwesomeCardIcon,
-  AwesomeCardTitle,
+  AwesomeCardTitle
 } from '@/components/docyrus/awesome-card'
 import { Skeleton } from '@/components/ui/skeleton'
 
 interface ReportCardProps {
-  title: string
-  icon: ReactNode
-  isLoading: boolean
-  isEmpty?: boolean
-  emptyMessage?: string
-  children: ReactNode
+  title: string;
+  icon: ReactNode;
+  isLoading: boolean;
+  isEmpty?: boolean;
+  emptyMessage?: string;
+  children: ReactNode;
 }
 
 export function ReportCard({
@@ -23,7 +24,7 @@ export function ReportCard({
   isLoading,
   isEmpty,
   emptyMessage = 'No data available',
-  children,
+  children
 }: ReportCardProps) {
   return (
     <AwesomeCard className="animate-fade-in-up">

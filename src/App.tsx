@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
+
 import { Outlet } from '@tanstack/react-router'
 import { NuqsAdapter } from 'nuqs/adapters/tanstack-router'
 import { SignInButton, useDocyrusAuth, useDocyrusClient } from '@docyrus/signin'
 import { useTranslation } from 'react-i18next'
+
 import { Button } from './components/animate-ui/components/buttons/button'
 import { setApiClient } from './lib/api'
 import { AppLayout } from './components/layout/app-layout'
@@ -27,17 +29,21 @@ function App() {
   const client = useDocyrusClient()
   const { t } = useTranslation()
 
-  // Adapter so the Docyrus UI translation bridge (which expects a simple
-  // `(key, fallback) => string` signature) can be backed by react-i18next's
-  // overloaded `TFunction`. Lets every Docyrus UI component follow the app
-  // language instead of always falling back to its English default.
+  /*
+   * Adapter so the Docyrus UI translation bridge (which expects a simple
+   * `(key, fallback) => string` signature) can be backed by react-i18next's
+   * overloaded `TFunction`. Lets every Docyrus UI component follow the app
+   * language instead of always falling back to its English default.
+   */
   const translateForUi = (
     key: string,
-    fallbackOrParams?: string | Record<string, string | number>,
+    fallbackOrParams?: string | Record<string, string | number>
   ): string => t(key, fallbackOrParams as string)
 
-  // Bridge host shell postMessage events (navigation + notifications) into the
-  // embedded app. No-op outside iframe mode.
+  /*
+   * Bridge host shell postMessage events (navigation + notifications) into the
+   * embedded app. No-op outside iframe mode.
+   */
   useHostBridge()
 
   // Command palette state
@@ -47,8 +53,10 @@ function App() {
   const [taskFormOpen, setTaskFormOpen] = useState(false)
   const [eventFormOpen, setEventFormOpen] = useState(false)
 
-  // Sync the library's API client to the module-level apiClient used by collections
-  // Track readiness so we don't render children until the client is available
+  /*
+   * Sync the library's API client to the module-level apiClient used by collections
+   * Track readiness so we don't render children until the client is available
+   */
   const [clientReady, setClientReady] = useState(false)
 
   useEffect(() => {
@@ -63,11 +71,12 @@ function App() {
     const down = (e: KeyboardEvent) => {
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
-        setCommandOpen((open) => !open)
+        setCommandOpen(open => !open)
       }
     }
 
     document.addEventListener('keydown', down)
+
     return () => document.removeEventListener('keydown', down)
   }, [])
 
@@ -91,8 +100,7 @@ function App() {
                 <img
                   src="/logo.svg"
                   alt="Sales CRM"
-                  className="h-12 w-12 mb-2"
-                />
+                  className="h-12 w-12 mb-2" />
                 <h1 className="text-2xl font-bold">{t('auth.appTitle')}</h1>
                 <p className="text-muted-foreground text-sm text-balance">
                   {t('auth.appSubtitle')}
@@ -105,8 +113,7 @@ function App() {
                       onClick={signIn}
                       className="w-full"
                       disabled={btnStatus === 'loading'}
-                      size="lg"
-                    >
+                      size="lg">
                       {btnStatus === 'loading'
                         ? t('auth.redirecting')
                         : t('auth.signInWithDocyrus')}
@@ -121,8 +128,10 @@ function App() {
     )
   }
 
-  // Authenticated + client ready by this point; guard narrows the type for the
-  // date-format provider (which needs a non-null client to read tenant prefs).
+  /*
+   * Authenticated + client ready by this point; guard narrows the type for the
+   * date-format provider (which needs a non-null client to read tenant prefs).
+   */
   if (!client) return null
 
   return (
@@ -130,46 +139,41 @@ function App() {
       <LibUiTranslationProvider t={translateForUi}>
         <HooksUiTranslationProvider t={translateForUi}>
           <DocyrusDateFormatProvider client={client}>
-        <TooltipProvider>
-          <WebphoneProvider>
-            <DialerProvider>
-              <AppLayout>
-                <Outlet />
-              </AppLayout>
-            </DialerProvider>
-            <WebphoneWidget />
-          </WebphoneProvider>
-          <Toaster />
-          <CommandPalette
-            open={commandOpen}
-            onOpenChange={setCommandOpen}
-            onCreateDeal={() => setDealFormOpen(true)}
-            onCreateLead={() => setLeadFormOpen(true)}
-            onCreateTask={() => setTaskFormOpen(true)}
-            onCreateEvent={() => setEventFormOpen(true)}
-          />
-          <DealFormDialog
-            open={dealFormOpen}
-            onOpenChange={setDealFormOpen}
-            mode="create"
-          />
-          <LeadFormDialog
-            open={leadFormOpen}
-            onOpenChange={setLeadFormOpen}
-            mode="create"
-          />
-          <TaskFormSheet
-            open={taskFormOpen}
-            onOpenChange={setTaskFormOpen}
-            mode="create"
-          />
-          <EventFormDialog
-            open={eventFormOpen}
-            onOpenChange={setEventFormOpen}
-            mode="create"
-          />
-          <GlobalDialogBar />
-        </TooltipProvider>
+            <TooltipProvider>
+              <WebphoneProvider>
+                <DialerProvider>
+                  <AppLayout>
+                    <Outlet />
+                  </AppLayout>
+                </DialerProvider>
+                <WebphoneWidget />
+              </WebphoneProvider>
+              <Toaster />
+              <CommandPalette
+                open={commandOpen}
+                onOpenChange={setCommandOpen}
+                onCreateDeal={() => setDealFormOpen(true)}
+                onCreateLead={() => setLeadFormOpen(true)}
+                onCreateTask={() => setTaskFormOpen(true)}
+                onCreateEvent={() => setEventFormOpen(true)} />
+              <DealFormDialog
+                open={dealFormOpen}
+                onOpenChange={setDealFormOpen}
+                mode="create" />
+              <LeadFormDialog
+                open={leadFormOpen}
+                onOpenChange={setLeadFormOpen}
+                mode="create" />
+              <TaskFormSheet
+                open={taskFormOpen}
+                onOpenChange={setTaskFormOpen}
+                mode="create" />
+              <EventFormDialog
+                open={eventFormOpen}
+                onOpenChange={setEventFormOpen}
+                mode="create" />
+              <GlobalDialogBar />
+            </TooltipProvider>
           </DocyrusDateFormatProvider>
         </HooksUiTranslationProvider>
       </LibUiTranslationProvider>

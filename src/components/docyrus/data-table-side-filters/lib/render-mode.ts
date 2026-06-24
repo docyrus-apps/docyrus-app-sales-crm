@@ -1,3 +1,5 @@
+// @ts-nocheck
+/* eslint-disable */
 import {
   type ColumnConfig,
   type ColumnDataType,

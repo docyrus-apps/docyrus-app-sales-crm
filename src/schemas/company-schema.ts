@@ -12,7 +12,7 @@ export const companyFormSchema = z.object({
   type: z.string().optional(),
   address: z.string().optional(),
   tax_number: z.string().optional(),
-  district: z.string().optional(),
+  district: z.string().optional()
 })
 
 export type CompanyFormData = z.infer<typeof companyFormSchema>

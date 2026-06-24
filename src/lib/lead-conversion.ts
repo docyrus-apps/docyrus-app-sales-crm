@@ -1,26 +1,27 @@
 export type RelationLike =
   | string
   | {
-      id?: string
-      name?: string
-      label?: string
-      firstname?: string
-      lastname?: string
-      [key: string]: unknown
+      id?: string;
+      name?: string;
+      label?: string;
+      firstname?: string;
+      lastname?: string;
+      [key: string]: unknown;
     }
-  | null
-  | undefined
+    | null
+    | undefined
 
 export type LeadConversionRecord = {
-  converted_deal?: RelationLike
-  conversion_state?: RelationLike
+  converted_deal?: RelationLike;
+  conversion_state?: RelationLike;
 }
 
 export function getRelationId(value: unknown): string | undefined {
   if (!value) return undefined
   if (typeof value === 'string') return value
   if (typeof value === 'object' && 'id' in value) {
-    const id = (value as { id?: unknown }).id
+    const { id } = value as { id?: unknown }
+
     return typeof id === 'string' ? id : undefined
   }
 
@@ -33,10 +34,10 @@ export function getRelationName(value: unknown): string | undefined {
   if (typeof value !== 'object') return undefined
 
   const record = value as {
-    name?: unknown
-    label?: unknown
-    firstname?: unknown
-    lastname?: unknown
+    name?: unknown;
+    label?: unknown;
+    firstname?: unknown;
+    lastname?: unknown;
   }
 
   if (typeof record.name === 'string') return record.name
@@ -44,7 +45,7 @@ export function getRelationName(value: unknown): string | undefined {
 
   const fullName = [record.firstname, record.lastname]
     .filter(
-      (part): part is string => typeof part === 'string' && part.length > 0,
+      (part): part is string => typeof part === 'string' && part.length > 0
     )
     .join(' ')
 
@@ -68,10 +69,10 @@ export function isConversionState(value: unknown, state: string): boolean {
 }
 
 export function isLeadConvertedRecord(
-  lead?: LeadConversionRecord | null,
+  lead?: LeadConversionRecord | null
 ): boolean {
   return Boolean(
     lead?.converted_deal ||
-    isConversionState(lead?.conversion_state, 'completed'),
+    isConversionState(lead?.conversion_state, 'completed')
   )
 }

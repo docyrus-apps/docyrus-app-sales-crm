@@ -1,9 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { useState } from 'react'
+
 import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Edit2, MessageSquare, Send, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
+
 import { Button } from '@/components/animate-ui/components/buttons/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
@@ -13,30 +14,32 @@ import { getApiClient } from '@/lib/api'
 import { formatDate } from '@/lib/formatters'
 
 interface CommentsPanelProps {
-  appSlug: string
-  dataSource: string
-  recordId: string
+  appSlug: string;
+  dataSource: string;
+  recordId: string;
 }
 
 interface CommentAuthor {
-  id?: string
-  name?: string
-  firstname?: string
-  lastname?: string
-  email?: string
-  avatar?: string
-  photo?: string
+  id?: string;
+  name?: string;
+  firstname?: string;
+  lastname?: string;
+  email?: string;
+  avatar?: string;
+  photo?: string;
 }
 
 interface Comment {
-  id: string
-  message: string
-  created_on: string
-  // The API may expose the author under `created_by` or `created_by_user`
-  // (the latter mirrors the audit-activity shape), and `created_by` is
-  // sometimes just the raw user id string.
-  created_by?: CommentAuthor | string
-  created_by_user?: CommentAuthor
+  id: string;
+  message: string;
+  created_on: string;
+  /*
+   * The API may expose the author under `created_by` or `created_by_user`
+   * (the latter mirrors the audit-activity shape), and `created_by` is
+   * sometimes just the raw user id string.
+   */
+  created_by?: CommentAuthor | string;
+  created_by_user?: CommentAuthor;
 }
 
 /** Pick the first expanded author object the comment exposes. */
@@ -51,6 +54,7 @@ function resolveAuthor(comment: Comment): CommentAuthor | undefined {
 /** Resolve a display name from the various shapes the API may return. */
 function authorName(comment: Comment): string | undefined {
   const author = resolveAuthor(comment)
+
   if (!author) return undefined
 
   const full = [author.firstname, author.lastname].filter(Boolean).join(' ')
@@ -67,7 +71,7 @@ function authorAvatar(comment: Comment): string | undefined {
 export function CommentsPanel({
   appSlug,
   dataSource,
-  recordId,
+  recordId
 }: CommentsPanelProps) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
@@ -79,62 +83,65 @@ export function CommentsPanel({
   const {
     data: comments,
     isLoading,
-    error,
+    error
   } = useQuery<Array<Comment>>({
     queryKey: ['comments', dataSource, recordId],
     queryFn: async () => {
       const apiClient = getApiClient()
+
       if (!apiClient) throw new Error('API client not initialized')
 
       return await apiClient.get(
-        `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/comments`,
+        `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/comments`
       )
-    },
+    }
   })
 
   // Create comment mutation
   const createMutation = useMutation({
     mutationFn: async (body: string) => {
       const apiClient = getApiClient()
+
       if (!apiClient) throw new Error('API client not initialized')
 
       return await apiClient.post(
         `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/comments`,
-        { message: body },
+        { message: body }
       )
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['comments', dataSource, recordId],
+        queryKey: ['comments', dataSource, recordId]
       })
       setNewComment('')
       toast.success(t('comments.addedSuccess'))
     },
     onError: (err: Error) => {
       toast.error(t('comments.addedError', { error: err.message }))
-    },
+    }
   })
 
   // Update comment mutation
   const updateMutation = useMutation({
     mutationFn: async ({
       commentId,
-      body,
+      body
     }: {
-      commentId: string
-      body: string
+      commentId: string;
+      body: string;
     }) => {
       const apiClient = getApiClient()
+
       if (!apiClient) throw new Error('API client not initialized')
 
       return await apiClient.patch(
         `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/comments/${commentId}`,
-        { message: body },
+        { message: body }
       )
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['comments', dataSource, recordId],
+        queryKey: ['comments', dataSource, recordId]
       })
       setEditingId(null)
       setEditingBody('')
@@ -142,28 +149,29 @@ export function CommentsPanel({
     },
     onError: (err: Error) => {
       toast.error(t('comments.updatedError', { error: err.message }))
-    },
+    }
   })
 
   // Delete comment mutation
   const deleteMutation = useMutation({
     mutationFn: async (commentId: string) => {
       const apiClient = getApiClient()
+
       if (!apiClient) throw new Error('API client not initialized')
 
       await apiClient.delete(
-        `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/comments/${commentId}`,
+        `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/comments/${commentId}`
       )
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['comments', dataSource, recordId],
+        queryKey: ['comments', dataSource, recordId]
       })
       toast.success(t('comments.deletedSuccess'))
     },
     onError: (err: Error) => {
       toast.error(t('comments.deletedError', { error: err.message }))
-    },
+    }
   })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -191,9 +199,10 @@ export function CommentsPanel({
 
   const getInitials = (name?: string) => {
     if (!name) return '??'
+
     return name
       .split(' ')
-      .map((n) => n[0])
+      .map(n => n[0])
       .join('')
       .toUpperCase()
       .slice(0, 2)
@@ -226,7 +235,7 @@ export function CommentsPanel({
       {/* Comment List */}
       {comments && comments.length > 0 ? (
         <div className="space-y-4">
-          {comments.map((comment) => (
+          {comments.map(comment => (
             <Card key={comment.id}>
               <CardContent className="pt-6">
                 <div className="flex gap-3">
@@ -242,12 +251,12 @@ export function CommentsPanel({
                         <p className="text-sm font-medium">
                           {authorName(comment) ??
                             t('comments.unknownAuthor', {
-                              defaultValue: 'Unknown',
+                              defaultValue: 'Unknown'
                             })}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {formatDate(comment.created_on, {
-                            format: 'relative',
+                            format: 'relative'
                           })}
                         </p>
                       </div>
@@ -256,16 +265,14 @@ export function CommentsPanel({
                           variant="ghost"
                           size="sm"
                           onClick={() => handleEdit(comment)}
-                          disabled={editingId === comment.id}
-                        >
+                          disabled={editingId === comment.id}>
                           <Edit2 className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => deleteMutation.mutate(comment.id)}
-                          disabled={deleteMutation.isPending}
-                        >
+                          disabled={deleteMutation.isPending}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -274,26 +281,21 @@ export function CommentsPanel({
                       <div className="space-y-2">
                         <Textarea
                           value={editingBody}
-                          onChange={(e) => setEditingBody(e.target.value)}
+                          onChange={e => setEditingBody(e.target.value)}
                           rows={3}
-                          className="resize-none"
-                        />
+                          className="resize-none" />
                         <div className="flex gap-2">
                           <Button
                             size="sm"
                             onClick={() => handleUpdate(comment.id)}
-                            disabled={
-                              updateMutation.isPending || !editingBody.trim()
-                            }
-                          >
+                            disabled={updateMutation.isPending || !editingBody.trim()}>
                             Save
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={handleCancelEdit}
-                            disabled={updateMutation.isPending}
-                          >
+                            disabled={updateMutation.isPending}>
                             <X className="mr-1 h-4 w-4" />
                             Cancel
                           </Button>
@@ -331,15 +333,13 @@ export function CommentsPanel({
             <Textarea
               placeholder={t('comments.placeholder')}
               value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
+              onChange={e => setNewComment(e.target.value)}
               rows={3}
-              className="resize-none"
-            />
+              className="resize-none" />
             <div className="flex justify-end">
               <Button
                 type="submit"
-                disabled={createMutation.isPending || !newComment.trim()}
-              >
+                disabled={createMutation.isPending || !newComment.trim()}>
                 <Send className="mr-2 h-4 w-4" />
                 {t('comments.addComment')}
               </Button>

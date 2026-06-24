@@ -1,8 +1,11 @@
 // @docyrus: [[architecture#Localization (i18n)]]
 import { useMemo } from 'react'
+
+import { type UiI18nLocale } from '@/lib/ui-i18n'
+
 import { useTranslation } from 'react-i18next'
 
-import { UI_I18N_LOCALES, type UiI18nLocale } from '@/lib/ui-i18n'
+import { UI_I18N_LOCALES } from '@/lib/ui-i18n'
 
 /**
  * Resolves the active app language (react-i18next) to a Docyrus UI locale

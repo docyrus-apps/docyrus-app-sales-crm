@@ -1,62 +1,65 @@
 import { type ReactNode } from 'react'
+
+import {
+  type FieldKind,
+  type SelectOption
+} from '@/components/leads/field-mapping-row'
+
 import { useTranslation } from 'react-i18next'
 import { AlertTriangle, ArrowRight, Plus } from 'lucide-react'
+
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/animate-ui/components/buttons/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
+  PopoverTrigger
 } from '@/components/ui/popover'
-import {
-  FieldMappingRow,
-  type FieldKind,
-  type SelectOption,
-} from '@/components/leads/field-mapping-row'
+import { FieldMappingRow } from '@/components/leads/field-mapping-row'
 import { LeadConvertReuseBanner } from '@/components/leads/lead-convert-reuse-banner'
 
 export type LeadConvertConversionMode = 'company_contact_deal' | 'contact_deal'
 export type LeadConvertTarget = 'company' | 'contact' | 'deal'
 export type LeadConvertEntityCandidate = Record<string, any> & {
-  id?: string
-  name?: string
+  id?: string;
+  name?: string;
 }
 export type LeadConvertExtraField = {
-  slug: string
-  label: string
-  kind: FieldKind
-  value: string
+  slug: string;
+  label: string;
+  kind: FieldKind;
+  value: string;
 }
 export type LeadConvertExtraFieldsState = Record<
   LeadConvertTarget,
   Array<LeadConvertExtraField>
 >
 export type LeadConvertTargetFieldOption = {
-  slug: string
-  name: string
-  type: string
+  slug: string;
+  name: string;
+  type: string;
 }
 
 export type LeadConvertForm = {
-  companyName: string
-  companyWebsite: string
-  companyEmail: string
-  companyPhone: string
-  companyAddress: string
-  companyCity: string
-  companyIndustry: string
-  companySize: string
-  contactName: string
-  contactEmail: string
-  contactPhone: string
-  contactJobTitle: string
-  dealName: string
-  dealValue: string
-  notes: string
-  dealStageId: string
-  dealLeadSourceId: string
-  dealCustomerTypeId: string
+  companyName: string;
+  companyWebsite: string;
+  companyEmail: string;
+  companyPhone: string;
+  companyAddress: string;
+  companyCity: string;
+  companyIndustry: string;
+  companySize: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
+  contactJobTitle: string;
+  dealName: string;
+  dealValue: string;
+  notes: string;
+  dealStageId: string;
+  dealLeadSourceId: string;
+  dealCustomerTypeId: string;
 }
 
 /** A single mapping row plus the flag used to sort required rows first. */
@@ -64,71 +67,68 @@ type OrderedRow = { key: string; required: boolean; node: ReactNode }
 
 /** Stable: required rows keep their relative order, then the optional ones. */
 function orderRequiredFirst(rows: Array<OrderedRow>): Array<ReactNode> {
-  return [
-    ...rows.filter((row) => row.required),
-    ...rows.filter((row) => !row.required),
-  ].map((row) => <div key={row.key}>{row.node}</div>)
+  return [...rows.filter(row => row.required), ...rows.filter(row => !row.required)].map(row => <div key={row.key}>{row.node}</div>)
 }
 
 export interface LeadConvertTabsProps {
-  mode: LeadConvertConversionMode
-  activeTab: LeadConvertTarget
-  onActiveTabChange: (tab: LeadConvertTarget) => void
-  targetLabels: Record<LeadConvertTarget, string>
+  mode: LeadConvertConversionMode;
+  activeTab: LeadConvertTarget;
+  onActiveTabChange: (tab: LeadConvertTarget) => void;
+  targetLabels: Record<LeadConvertTarget, string>;
 
-  lead: any
-  form: LeadConvertForm
-  updateForm: (key: keyof LeadConvertForm, value: string) => void
-  formDisabled: boolean
-  isWorking: boolean
-  sourceDealName: string
+  lead: any;
+  form: LeadConvertForm;
+  updateForm: (key: keyof LeadConvertForm, value: string) => void;
+  formDisabled: boolean;
+  isWorking: boolean;
+  sourceDealName: string;
 
-  companyCandidates: Array<LeadConvertEntityCandidate>
-  contactCandidates: Array<LeadConvertEntityCandidate>
-  dealCandidates: Array<LeadConvertEntityCandidate>
-  selectedCompanyId: string | null
-  selectedContactId: string | null
-  exactCompanyId: string | null
-  exactContactId: string | null
-  onSelectCompany: (id: string | null) => void
-  onSelectContact: (id: string | null) => void
+  companyCandidates: Array<LeadConvertEntityCandidate>;
+  contactCandidates: Array<LeadConvertEntityCandidate>;
+  dealCandidates: Array<LeadConvertEntityCandidate>;
+  selectedCompanyId: string | null;
+  selectedContactId: string | null;
+  exactCompanyId: string | null;
+  exactContactId: string | null;
+  onSelectCompany: (id: string | null) => void;
+  onSelectContact: (id: string | null) => void;
 
-  industrySelectOptions: Array<SelectOption>
-  companySizeSelectOptions: Array<SelectOption>
-  stageSelectOptions: Array<SelectOption>
-  leadSourceSelectOptions: Array<SelectOption>
-  customerTypeSelectOptions: Array<SelectOption>
+  industrySelectOptions: Array<SelectOption>;
+  companySizeSelectOptions: Array<SelectOption>;
+  stageSelectOptions: Array<SelectOption>;
+  leadSourceSelectOptions: Array<SelectOption>;
+  customerTypeSelectOptions: Array<SelectOption>;
 
-  effectiveCompanyIndustryId: string
-  mappedCompanyIndustryId: string | undefined
-  effectiveCompanySizeId: string
-  mappedCompanySizeId: string | undefined
-  effectiveStageId: string
-  newStageId: string | undefined
-  effectiveLeadSourceId: string
-  mappedDealLeadSourceId: string | undefined
-  effectiveCustomerTypeId: string
-  mappedCustomerTypeId: string | undefined
+  effectiveCompanyIndustryId: string;
+  mappedCompanyIndustryId: string | undefined;
+  effectiveCompanySizeId: string;
+  mappedCompanySizeId: string | undefined;
+  effectiveStageId: string;
+  newStageId: string | undefined;
+  effectiveLeadSourceId: string;
+  mappedDealLeadSourceId: string | undefined;
+  effectiveCustomerTypeId: string;
+  mappedCustomerTypeId: string | undefined;
 
-  leadCompanyIndustryName: string
-  leadCompanySizeName: string
-  leadSourceName: string
-  leadTypeName: string
+  leadCompanyIndustryName: string;
+  leadCompanySizeName: string;
+  leadSourceName: string;
+  leadTypeName: string;
 
-  extraFields: LeadConvertExtraFieldsState
+  extraFields: LeadConvertExtraFieldsState;
   availableExtraFields: (
-    target: LeadConvertTarget,
-  ) => Array<LeadConvertTargetFieldOption>
+    target: LeadConvertTarget
+  ) => Array<LeadConvertTargetFieldOption>;
   addExtraField: (
     target: LeadConvertTarget,
-    field: LeadConvertTargetFieldOption,
-  ) => void
+    field: LeadConvertTargetFieldOption
+  ) => void;
   setExtraValue: (
     target: LeadConvertTarget,
     slug: string,
-    value: string,
-  ) => void
-  removeExtraField: (target: LeadConvertTarget, slug: string) => void
+    value: string
+  ) => void;
+  removeExtraField: (target: LeadConvertTarget, slug: string) => void;
 }
 
 export function LeadConvertTabs(props: LeadConvertTabsProps) {
@@ -175,11 +175,12 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
     availableExtraFields,
     addExtraField,
     setExtraValue,
-    removeExtraField,
+    removeExtraField
   } = props
   const { t } = useTranslation()
 
   const tabsToShow: Array<LeadConvertTarget> = []
+
   if (mode === 'company_contact_deal') tabsToShow.push('company')
   tabsToShow.push('contact')
   tabsToShow.push('deal')
@@ -201,11 +202,10 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
   const targetLabelKey: Record<LeadConvertTarget, string> = {
     company: 'organization',
     contact: 'contact',
-    deal: 'deal',
+    deal: 'deal'
   }
 
-  const renderExtraRows = (target: LeadConvertTarget): Array<OrderedRow> =>
-    extraFields[target].map((extra) => ({
+  const renderExtraRows = (target: LeadConvertTarget): Array<OrderedRow> => extraFields[target].map(extra => ({
       key: `${target}:${extra.slug}`,
       required: false,
       node: (
@@ -217,23 +217,23 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
             `leads.convert.targetLabel.${targetLabelKey[target]}`,
             {
               field: extra.slug,
-              defaultValue: extra.slug,
-            },
+              defaultValue: extra.slug
+            }
           )}
           sourceValue=""
           value={extra.value}
           kind={extra.kind}
-          onChange={(v) => setExtraValue(target, extra.slug, v)}
+          onChange={v => setExtraValue(target, extra.slug, v)}
           onRemove={() => removeExtraField(target, extra.slug)}
-          disabled={formDisabled}
-        />
-      ),
+          disabled={formDisabled} />
+      )
     }))
 
   const renderAddFieldPopover = (target: LeadConvertTarget) => {
     const targetLabel = targetLabels[target]
     const options = availableExtraFields(target)
     const addedCount = extraFields[target].length
+
     return (
       <Popover>
         <PopoverTrigger asChild>
@@ -242,15 +242,13 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
             variant="outline"
             size="sm"
             disabled={formDisabled || options.length === 0}
-            className="h-8 rounded-md"
-          >
+            className="h-8 rounded-md">
             <Plus className="mr-1 size-3.5" />
             {t('leads.convert.addField', { target: targetLabel })}
             {addedCount > 0 ? (
               <Badge
                 variant="secondary"
-                className="ml-1.5 h-4 px-1 text-[10px]"
-              >
+                className="ml-1.5 h-4 px-1 text-[10px]">
                 +{addedCount}
               </Badge>
             ) : null}
@@ -263,13 +261,12 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
                 {t('leads.convert.noFieldsAvailable')}
               </p>
             ) : (
-              options.map((option) => (
+              options.map(option => (
                 <button
                   key={option.slug}
                   type="button"
                   onClick={() => addExtraField(target, option)}
-                  className="flex w-full items-center justify-between rounded px-2 py-1.5 text-left text-xs hover:bg-accent"
-                >
+                  className="flex w-full items-center justify-between rounded px-2 py-1.5 text-left text-xs hover:bg-accent">
                   <span className="truncate">{option.name}</span>
                   <span className="ml-2 text-[10px] text-muted-foreground">
                     {option.type.replace('field-', '')}
@@ -292,22 +289,19 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
           fieldKey="company:name"
           label={t('leads.convert.field.companyName')}
           sourceLabel={t('leads.convert.sourceLabel.lead', {
-            field: 'company_name_text',
+            field: 'company_name_text'
           })}
           targetLabel={t('leads.convert.targetLabel.organization', {
-            field: 'name',
+            field: 'name'
           })}
           sourceValue={lead?.company_name_text ?? ''}
           value={form.companyName}
-          onChange={(v) => updateForm('companyName', v)}
-          onRestoreSource={() =>
-            updateForm('companyName', lead?.company_name_text || '')
-          }
+          onChange={v => updateForm('companyName', v)}
+          onRestoreSource={() => updateForm('companyName', lead?.company_name_text || '')}
           disabled={formDisabled}
           highlight
-          required
-        />
-      ),
+          required />
+      )
     },
     {
       key: 'company:industry',
@@ -317,24 +311,21 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
           fieldKey="company:industry"
           label={t('leads.convert.field.industry')}
           sourceLabel={t('leads.convert.sourceLabel.lead', {
-            field: 'company_industry',
+            field: 'company_industry'
           })}
           targetLabel={t('leads.convert.targetLabel.organization', {
-            field: 'industry',
+            field: 'industry'
           })}
           sourceValue={leadCompanyIndustryName}
           value={effectiveCompanyIndustryId}
           kind="select"
           options={industrySelectOptions}
           placeholder={t('leads.convert.placeholder.selectIndustry')}
-          onChange={(v) => updateForm('companyIndustry', v)}
-          onRestoreSource={() =>
-            updateForm('companyIndustry', mappedCompanyIndustryId || '')
-          }
+          onChange={v => updateForm('companyIndustry', v)}
+          onRestoreSource={() => updateForm('companyIndustry', mappedCompanyIndustryId || '')}
           disabled={formDisabled}
-          required={Boolean(leadCompanyIndustryName)}
-        />
-      ),
+          required={Boolean(leadCompanyIndustryName)} />
+      )
     },
     ...(companySizeSelectOptions.length > 0
       ? [
@@ -346,25 +337,22 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
                 fieldKey="company:company_size"
                 label={t('leads.convert.field.companySize')}
                 sourceLabel={t('leads.convert.sourceLabel.lead', {
-                  field: 'company_size',
+                  field: 'company_size'
                 })}
                 targetLabel={t('leads.convert.targetLabel.organization', {
-                  field: 'company_size',
+                  field: 'company_size'
                 })}
                 sourceValue={leadCompanySizeName}
                 value={effectiveCompanySizeId}
                 kind="select"
                 options={companySizeSelectOptions}
                 placeholder={t('leads.convert.placeholder.selectSize')}
-                onChange={(v) => updateForm('companySize', v)}
-                onRestoreSource={() =>
-                  updateForm('companySize', mappedCompanySizeId || '')
-                }
+                onChange={v => updateForm('companySize', v)}
+                onRestoreSource={() => updateForm('companySize', mappedCompanySizeId || '')}
                 disabled={formDisabled}
-                required={Boolean(leadCompanySizeName)}
-              />
-            ),
-          },
+                required={Boolean(leadCompanySizeName)} />
+            )
+          }
         ]
       : []),
     {
@@ -374,21 +362,18 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
         <FieldMappingRow
           label={t('leads.convert.field.companyEmail')}
           sourceLabel={t('leads.convert.sourceLabel.lead', {
-            field: 'company_email',
+            field: 'company_email'
           })}
           targetLabel={t('leads.convert.targetLabel.organization', {
-            field: 'email',
+            field: 'email'
           })}
           sourceValue={lead?.company_email ?? ''}
           value={form.companyEmail}
           kind="email"
-          onChange={(v) => updateForm('companyEmail', v)}
-          onRestoreSource={() =>
-            updateForm('companyEmail', lead?.company_email || '')
-          }
-          disabled={formDisabled}
-        />
-      ),
+          onChange={v => updateForm('companyEmail', v)}
+          onRestoreSource={() => updateForm('companyEmail', lead?.company_email || '')}
+          disabled={formDisabled} />
+      )
     },
     {
       key: 'company:phone',
@@ -397,21 +382,18 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
         <FieldMappingRow
           label={t('leads.convert.field.companyPhone')}
           sourceLabel={t('leads.convert.sourceLabel.lead', {
-            field: 'company_phone',
+            field: 'company_phone'
           })}
           targetLabel={t('leads.convert.targetLabel.organization', {
-            field: 'phone',
+            field: 'phone'
           })}
           sourceValue={lead?.company_phone ?? ''}
           value={form.companyPhone}
           kind="phone"
-          onChange={(v) => updateForm('companyPhone', v)}
-          onRestoreSource={() =>
-            updateForm('companyPhone', lead?.company_phone || '')
-          }
-          disabled={formDisabled}
-        />
-      ),
+          onChange={v => updateForm('companyPhone', v)}
+          onRestoreSource={() => updateForm('companyPhone', lead?.company_phone || '')}
+          disabled={formDisabled} />
+      )
     },
     {
       key: 'company:website',
@@ -420,21 +402,18 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
         <FieldMappingRow
           label={t('leads.convert.field.website')}
           sourceLabel={t('leads.convert.sourceLabel.lead', {
-            field: 'website',
+            field: 'website'
           })}
           targetLabel={t('leads.convert.targetLabel.organization', {
-            field: 'website',
+            field: 'website'
           })}
           sourceValue={lead?.website ?? ''}
           value={form.companyWebsite}
           kind="url"
-          onChange={(v) => updateForm('companyWebsite', v)}
-          onRestoreSource={() =>
-            updateForm('companyWebsite', lead?.website || '')
-          }
-          disabled={formDisabled}
-        />
-      ),
+          onChange={v => updateForm('companyWebsite', v)}
+          onRestoreSource={() => updateForm('companyWebsite', lead?.website || '')}
+          disabled={formDisabled} />
+      )
     },
     {
       key: 'company:address',
@@ -443,21 +422,18 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
         <FieldMappingRow
           label={t('leads.convert.field.address')}
           sourceLabel={t('leads.convert.sourceLabel.lead', {
-            field: 'address',
+            field: 'address'
           })}
           targetLabel={t('leads.convert.targetLabel.organization', {
-            field: 'address',
+            field: 'address'
           })}
           sourceValue={lead?.address ?? ''}
           value={form.companyAddress}
           kind="textarea"
-          onChange={(v) => updateForm('companyAddress', v)}
-          onRestoreSource={() =>
-            updateForm('companyAddress', lead?.address || '')
-          }
-          disabled={formDisabled}
-        />
-      ),
+          onChange={v => updateForm('companyAddress', v)}
+          onRestoreSource={() => updateForm('companyAddress', lead?.address || '')}
+          disabled={formDisabled} />
+      )
     },
     {
       key: 'company:city',
@@ -466,20 +442,19 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
         <FieldMappingRow
           label={t('leads.convert.field.city')}
           sourceLabel={t('leads.convert.sourceLabel.lead', {
-            field: 'city',
+            field: 'city'
           })}
           targetLabel={t('leads.convert.targetLabel.organization', {
-            field: 'city',
+            field: 'city'
           })}
           sourceValue={lead?.city ?? ''}
           value={form.companyCity}
-          onChange={(v) => updateForm('companyCity', v)}
+          onChange={v => updateForm('companyCity', v)}
           onRestoreSource={() => updateForm('companyCity', lead?.city || '')}
-          disabled={formDisabled}
-        />
-      ),
+          disabled={formDisabled} />
+      )
     },
-    ...renderExtraRows('company'),
+    ...renderExtraRows('company')
   ]
 
   const contactRows: Array<OrderedRow> = [
@@ -491,20 +466,19 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
           fieldKey="contact:name"
           label={t('leads.convert.field.contactName')}
           sourceLabel={t('leads.convert.sourceLabel.lead', {
-            field: 'name',
+            field: 'name'
           })}
           targetLabel={t('leads.convert.targetLabel.contact', {
-            field: 'name',
+            field: 'name'
           })}
           sourceValue={lead?.name ?? ''}
           value={form.contactName}
-          onChange={(v) => updateForm('contactName', v)}
+          onChange={v => updateForm('contactName', v)}
           onRestoreSource={() => updateForm('contactName', lead?.name || '')}
           disabled={formDisabled}
           highlight
-          required
-        />
-      ),
+          required />
+      )
     },
     {
       key: 'contact:job_title',
@@ -513,20 +487,17 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
         <FieldMappingRow
           label={t('leads.convert.field.jobTitle')}
           sourceLabel={t('leads.convert.sourceLabel.lead', {
-            field: 'contact_job_title',
+            field: 'contact_job_title'
           })}
           targetLabel={t('leads.convert.targetLabel.contact', {
-            field: 'job_title',
+            field: 'job_title'
           })}
           sourceValue={lead?.contact_job_title ?? ''}
           value={form.contactJobTitle}
-          onChange={(v) => updateForm('contactJobTitle', v)}
-          onRestoreSource={() =>
-            updateForm('contactJobTitle', lead?.contact_job_title || '')
-          }
-          disabled={formDisabled}
-        />
-      ),
+          onChange={v => updateForm('contactJobTitle', v)}
+          onRestoreSource={() => updateForm('contactJobTitle', lead?.contact_job_title || '')}
+          disabled={formDisabled} />
+      )
     },
     {
       key: 'contact:email',
@@ -535,19 +506,18 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
         <FieldMappingRow
           label={t('leads.convert.field.email')}
           sourceLabel={t('leads.convert.sourceLabel.lead', {
-            field: 'email',
+            field: 'email'
           })}
           targetLabel={t('leads.convert.targetLabel.contact', {
-            field: 'email',
+            field: 'email'
           })}
           sourceValue={lead?.email ?? ''}
           value={form.contactEmail}
           kind="email"
-          onChange={(v) => updateForm('contactEmail', v)}
+          onChange={v => updateForm('contactEmail', v)}
           onRestoreSource={() => updateForm('contactEmail', lead?.email || '')}
-          disabled={formDisabled}
-        />
-      ),
+          disabled={formDisabled} />
+      )
     },
     {
       key: 'contact:phone',
@@ -556,21 +526,20 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
         <FieldMappingRow
           label={t('leads.convert.field.phone')}
           sourceLabel={t('leads.convert.sourceLabel.lead', {
-            field: 'phone',
+            field: 'phone'
           })}
           targetLabel={t('leads.convert.targetLabel.contact', {
-            field: 'mobile',
+            field: 'mobile'
           })}
           sourceValue={lead?.phone ?? ''}
           value={form.contactPhone}
           kind="phone"
-          onChange={(v) => updateForm('contactPhone', v)}
+          onChange={v => updateForm('contactPhone', v)}
           onRestoreSource={() => updateForm('contactPhone', lead?.phone || '')}
-          disabled={formDisabled}
-        />
-      ),
+          disabled={formDisabled} />
+      )
     },
-    ...renderExtraRows('contact'),
+    ...renderExtraRows('contact')
   ]
 
   const dealRows: Array<OrderedRow> = [
@@ -588,13 +557,12 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
             ''
           }
           value={form.dealName}
-          onChange={(v) => updateForm('dealName', v)}
+          onChange={v => updateForm('dealName', v)}
           onRestoreSource={() => updateForm('dealName', sourceDealName)}
           disabled={formDisabled}
           highlight
-          required
-        />
-      ),
+          required />
+      )
     },
     {
       key: 'deal:stage',
@@ -605,19 +573,18 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
           label={t('leads.convert.field.stage')}
           sourceLabel={t('leads.convert.sourceLabel.fixed', { value: 'New' })}
           targetLabel={t('leads.convert.targetLabel.deal', {
-            field: 'stage',
+            field: 'stage'
           })}
           sourceValue="New"
           value={effectiveStageId}
           kind="select"
           options={stageSelectOptions}
           placeholder={t('leads.convert.placeholder.selectStage')}
-          onChange={(v) => updateForm('dealStageId', v)}
+          onChange={v => updateForm('dealStageId', v)}
           onRestoreSource={() => updateForm('dealStageId', newStageId || '')}
           disabled={formDisabled}
-          required
-        />
-      ),
+          required />
+      )
     },
     {
       key: 'deal:lead_source',
@@ -627,24 +594,21 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
           fieldKey="deal:lead_source"
           label={t('leads.convert.field.leadSource')}
           sourceLabel={t('leads.convert.sourceLabel.lead', {
-            field: 'lead_source',
+            field: 'lead_source'
           })}
           targetLabel={t('leads.convert.targetLabel.deal', {
-            field: 'lead_source',
+            field: 'lead_source'
           })}
           sourceValue={leadSourceName}
           value={effectiveLeadSourceId}
           kind="select"
           options={leadSourceSelectOptions}
           placeholder={t('leads.convert.placeholder.selectSource')}
-          onChange={(v) => updateForm('dealLeadSourceId', v)}
-          onRestoreSource={() =>
-            updateForm('dealLeadSourceId', mappedDealLeadSourceId || '')
-          }
+          onChange={v => updateForm('dealLeadSourceId', v)}
+          onRestoreSource={() => updateForm('dealLeadSourceId', mappedDealLeadSourceId || '')}
           disabled={formDisabled}
-          required={Boolean(leadSourceName)}
-        />
-      ),
+          required={Boolean(leadSourceName)} />
+      )
     },
     {
       key: 'deal:customer_type',
@@ -654,24 +618,21 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
           fieldKey="deal:customer_type"
           label={t('leads.convert.field.customerType')}
           sourceLabel={t('leads.convert.sourceLabel.lead', {
-            field: 'lead_type',
+            field: 'lead_type'
           })}
           targetLabel={t('leads.convert.targetLabel.deal', {
-            field: 'customer_type',
+            field: 'customer_type'
           })}
           sourceValue={leadTypeName}
           value={effectiveCustomerTypeId}
           kind="select"
           options={customerTypeSelectOptions}
           placeholder={t('leads.convert.placeholder.selectType')}
-          onChange={(v) => updateForm('dealCustomerTypeId', v)}
-          onRestoreSource={() =>
-            updateForm('dealCustomerTypeId', mappedCustomerTypeId || '')
-          }
+          onChange={v => updateForm('dealCustomerTypeId', v)}
+          onRestoreSource={() => updateForm('dealCustomerTypeId', mappedCustomerTypeId || '')}
           disabled={formDisabled}
-          required={Boolean(leadTypeName)}
-        />
-      ),
+          required={Boolean(leadTypeName)} />
+      )
     },
     {
       key: 'deal:deal_value',
@@ -680,24 +641,21 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
         <FieldMappingRow
           label={t('leads.convert.field.estimatedValue')}
           sourceLabel={t('leads.convert.sourceLabel.lead', {
-            field: 'deal_value',
+            field: 'deal_value'
           })}
           targetLabel={t('leads.convert.targetLabel.deal', {
-            field: 'deal_value',
+            field: 'deal_value'
           })}
           sourceValue={lead?.deal_value ? String(lead.deal_value) : ''}
           value={form.dealValue}
           kind="money"
-          onChange={(v) => updateForm('dealValue', v)}
-          onRestoreSource={() =>
-            updateForm(
+          onChange={v => updateForm('dealValue', v)}
+          onRestoreSource={() => updateForm(
               'dealValue',
-              lead?.deal_value ? String(lead.deal_value) : '',
-            )
-          }
-          disabled={formDisabled}
-        />
-      ),
+              lead?.deal_value ? String(lead.deal_value) : ''
+            )}
+          disabled={formDisabled} />
+      )
     },
     {
       key: 'deal:notes',
@@ -706,41 +664,37 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
         <FieldMappingRow
           label={t('leads.convert.field.description')}
           sourceLabel={t('leads.convert.sourceLabel.lead', {
-            field: 'contact_message',
+            field: 'contact_message'
           })}
           targetLabel={t('leads.convert.targetLabel.deal', {
-            field: 'qualification_notes',
+            field: 'qualification_notes'
           })}
           sourceValue={lead?.contact_message ?? ''}
           value={form.notes}
           kind="textarea"
-          onChange={(v) => updateForm('notes', v)}
-          onRestoreSource={() =>
-            updateForm('notes', lead?.contact_message || '')
-          }
-          disabled={formDisabled}
-        />
-      ),
+          onChange={v => updateForm('notes', v)}
+          onRestoreSource={() => updateForm('notes', lead?.contact_message || '')}
+          disabled={formDisabled} />
+      )
     },
-    ...renderExtraRows('deal'),
+    ...renderExtraRows('deal')
   ]
 
   return (
     <Tabs
       value={activeTab}
-      onValueChange={(value) => onActiveTabChange(value as LeadConvertTarget)}
-      className="w-full"
-    >
+      onValueChange={value => onActiveTabChange(value as LeadConvertTarget)}
+      className="w-full">
       <div className="sticky top-0 z-20 -mx-5 mb-1 bg-card px-5 pb-2 pt-2 shadow-[0_6px_8px_-7px_rgba(15,23,42,0.18)]">
         <TabsList className="w-full justify-start rounded-lg border border-slate-200 bg-muted/40 p-1 shadow-[0_1px_2px_rgba(15,23,42,0.04),inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-slate-700/80">
           {tabsToShow.map((tab) => {
             const extraCount = extraFields[tab].length
+
             return (
               <TabsTrigger
                 key={tab}
                 value={tab}
-                className="flex-1 gap-1.5 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
+                className="flex-1 gap-1.5 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm">
                 <span>{targetLabels[tab]}</span>
                 {extraCount > 0 ? (
                   <Badge variant="secondary" className="h-4 px-1 text-[10px]">
@@ -761,13 +715,12 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
             selectedId={selectedCompanyId}
             exactId={exactCompanyId}
             isWorking={isWorking}
-            onSelect={onSelectCompany}
-          />
+            onSelect={onSelectCompany} />
           {selectedCompanyId !== null ? (
             <div className="rounded-md border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground">
               {t('leads.convert.reuse.noteCompany', {
                 defaultValue:
-                  'The existing company will be linked at convert time. No new record will be created — go to the company page to edit its details.',
+                  'The existing company will be linked at convert time. No new record will be created — go to the company page to edit its details.'
               })}
             </div>
           ) : (
@@ -790,13 +743,12 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
             selectedId={selectedContactId}
             exactId={exactContactId}
             isWorking={isWorking}
-            onSelect={onSelectContact}
-          />
+            onSelect={onSelectContact} />
           {selectedContactId !== null ? (
             <div className="rounded-md border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground">
               {t('leads.convert.reuse.noteContact', {
                 defaultValue:
-                  'The existing contact will be linked at convert time. No new record will be created — go to the contact page to edit its details.',
+                  'The existing contact will be linked at convert time. No new record will be created — go to the contact page to edit its details.'
               })}
             </div>
           ) : (
@@ -821,18 +773,17 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
               </p>
             </div>
             <div className="max-h-44 space-y-1.5 overflow-y-auto pr-1">
-              {dealCandidates.map((candidate) => (
+              {dealCandidates.map(candidate => (
                 <div
                   key={candidate.id}
-                  className="rounded-md border bg-background px-3 py-2 text-xs"
-                >
+                  className="rounded-md border bg-background px-3 py-2 text-xs">
                   <p className="font-medium">{candidate.name}</p>
                   <p className="text-muted-foreground">
                     {typeof candidate.stage === 'object'
                       ? candidate.stage?.name
                       : null}
                     {candidate.organization &&
-                    typeof candidate.organization === 'object'
+                      typeof candidate.organization === 'object'
                       ? ` · ${candidate.organization.name}`
                       : ''}
                   </p>

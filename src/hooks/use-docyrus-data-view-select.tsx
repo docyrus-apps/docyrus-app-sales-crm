@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { type RestApiClient } from '@docyrus/api-client'
+
+import type { FullField } from 'react-querybuilder'
+
 import {
   createDataSourceClient,
   createDataViewClient,
@@ -10,40 +13,42 @@ import {
   type DataSource,
   type DataSourceField,
   type DataView,
-  type UpdateDataViewBody,
+  type UpdateDataViewBody
 } from '@docyrus/app-utils'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { type FullField } from 'react-querybuilder'
 
 import { type DataGridViewSelectProps } from '@/components/docyrus/data-grid-view-select'
+
+import { DATA_GRID_DEFAULT_PAGE_SIZE } from '@/components/docyrus/data-grid/types'
+
 import {
-  DATA_GRID_DEFAULT_PAGE_SIZE,
   type DataGridPagingMode,
-  type SavedDataGridView,
+  type SavedDataGridView
 } from '@/components/docyrus/data-grid/types'
+
 import {
   FILTER_GROUP_INPUT_TYPE,
   FILTER_GROUP_VALUE_EDITOR_TYPE,
+  type FilterGroup,
   getFilterGroupForFieldType,
   getOperatorsForGroup,
-  resolveValueEditorType,
-  type FilterGroup,
+  resolveValueEditorType
 } from '@/components/docyrus/query-builder/query-operators'
 
 export interface UseDocyrusDataViewSelectOptions {
-  client: RestApiClient
-  appSlug: string
-  dataSourceSlug: string
-  appId?: string
-  overrideFields?: Array<FullField>
+  client: RestApiClient;
+  appSlug: string;
+  dataSourceSlug: string;
+  appId?: string;
+  overrideFields?: Array<FullField>;
   mapField?: (
     field: DataSourceField,
-    defaultMapped: FullField,
-  ) => FullField | null
-  staleTime?: number
-  enabled?: boolean
-  persistActiveView?: boolean
-  persistKey?: string
+    defaultMapped: FullField
+  ) => FullField | null;
+  staleTime?: number;
+  enabled?: boolean;
+  persistActiveView?: boolean;
+  persistKey?: string;
   /**
    * Column id used as the default row-grouping column for views that do not
    * already specify a `grouping`. Forwarded to `DataGridViewSelect` and
@@ -52,7 +57,7 @@ export interface UseDocyrusDataViewSelectOptions {
    * Eligible field types: `field-select`, `field-status`, `field-relation`,
    * `field-date`, `field-dateTime`, `field-user`.
    */
-  defaultRowGroupingColumn?: string
+  defaultRowGroupingColumn?: string;
   /**
    * Developer-defined static views that always appear before the saved
    * server-side views in the tab list. Each entry is automatically marked
@@ -62,7 +67,7 @@ export interface UseDocyrusDataViewSelectOptions {
    * users can hide a system view from the tab strip and bring it back via
    * the **Manage All Views** menu.
    */
-  systemViews?: Array<SavedDataGridView>
+  systemViews?: Array<SavedDataGridView>;
 }
 
 type ManagedProps =
@@ -83,19 +88,19 @@ type ManagedProps =
   | 'isLoading'
 
 export interface UseDocyrusDataViewSelectResult {
-  gridViewSelectProps: Pick<DataGridViewSelectProps<unknown>, ManagedProps>
-  views: Array<SavedDataGridView>
-  fields: Array<FullField>
-  dataSource: DataSource | undefined
-  activeViewId: string
-  setActiveViewId: (viewId: string) => void
-  isLoading: boolean
-  error: Error | null
-  refetch: () => void
+  gridViewSelectProps: Pick<DataGridViewSelectProps<unknown>, ManagedProps>;
+  views: Array<SavedDataGridView>;
+  fields: Array<FullField>;
+  dataSource: DataSource | undefined;
+  activeViewId: string;
+  setActiveViewId: (viewId: string) => void;
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => void;
 }
 
 export function useDocyrusDataViewSelect(
-  options: UseDocyrusDataViewSelectOptions,
+  options: UseDocyrusDataViewSelectOptions
 ): UseDocyrusDataViewSelectResult {
   const {
     client,
@@ -109,19 +114,19 @@ export function useDocyrusDataViewSelect(
     persistActiveView = true,
     persistKey,
     defaultRowGroupingColumn,
-    systemViews,
+    systemViews
   } = options
 
   const queryClient = useQueryClient()
 
   const dataSourcesClient = useMemo(
     () => createDataSourceClient(client),
-    [client],
+    [client]
   )
 
   const dataViewsClient = useMemo(
     () => createDataViewClient(client, appSlug, dataSourceSlug),
-    [client, appSlug, dataSourceSlug],
+    [client, appSlug, dataSourceSlug]
   )
 
   const storageKey = useMemo(() => {
@@ -134,7 +139,13 @@ export function useDocyrusDataViewSelect(
       : `${appSlug}:${dataSourceSlug}`
 
     return `docyrus:data-grid-view:${suffix}`
-  }, [persistActiveView, persistKey, appSlug, dataSourceSlug, appId])
+  }, [
+persistActiveView,
+persistKey,
+appSlug,
+dataSourceSlug,
+appId
+])
 
   /*
    * Independent storage key for the per-user hidden-views list. Uses the
@@ -177,12 +188,10 @@ export function useDocyrusDataViewSelect(
         /* storage unavailable */
       }
     },
-    [hiddenStorageKey],
+    [hiddenStorageKey]
   )
 
-  const [hiddenViewIds, setHiddenViewIds] = useState<Array<string>>(() =>
-    readStoredHiddenIds(),
-  )
+  const [hiddenViewIds, setHiddenViewIds] = useState<Array<string>>(() => readStoredHiddenIds())
 
   /*
    * Re-read the stored hidden IDs whenever the storage key changes (e.g. on
@@ -190,7 +199,7 @@ export function useDocyrusDataViewSelect(
    * we don't trigger the `set-state-in-effect` warning.
    */
   const [trackedReadStoredHiddenIds, setTrackedReadStoredHiddenIds] = useState(
-    () => readStoredHiddenIds,
+    () => readStoredHiddenIds
   )
 
   if (trackedReadStoredHiddenIds !== readStoredHiddenIds) {
@@ -210,7 +219,7 @@ export function useDocyrusDataViewSelect(
         return next
       })
     },
-    [writeStoredHiddenIds],
+    [writeStoredHiddenIds]
   )
 
   const onViewUnhide = useCallback(
@@ -218,14 +227,14 @@ export function useDocyrusDataViewSelect(
       setHiddenViewIds((prev) => {
         if (!prev.includes(viewId)) return prev
 
-        const next = prev.filter((id) => id !== viewId)
+        const next = prev.filter(id => id !== viewId)
 
         writeStoredHiddenIds(next)
 
         return next
       })
     },
-    [writeStoredHiddenIds],
+    [writeStoredHiddenIds]
   )
 
   const readStoredViewId = useCallback((): string | null => {
@@ -248,35 +257,44 @@ export function useDocyrusDataViewSelect(
         /* storage unavailable (Safari private mode, quota, etc.) */
       }
     },
-    [storageKey],
+    [storageKey]
   )
 
   const dataSourceKey = useMemo(
-    () => ['docyrus', 'dataSource', appSlug, dataSourceSlug] as const,
-    [appSlug, dataSourceSlug],
+    () => [
+'docyrus',
+'dataSource',
+appSlug,
+dataSourceSlug
+] as const,
+    [appSlug, dataSourceSlug]
   )
 
   const viewsKey = useMemo(
-    () =>
-      ['docyrus', 'dataViews', appSlug, dataSourceSlug, appId ?? null] as const,
-    [appSlug, dataSourceSlug, appId],
+    () => [
+'docyrus',
+'dataViews',
+appSlug,
+dataSourceSlug,
+appId ?? null
+] as const,
+    [appSlug, dataSourceSlug, appId]
   )
 
   const queryEnabled = enabled && Boolean(appSlug) && Boolean(dataSourceSlug)
 
   const dataSourceQuery = useQuery({
     queryKey: dataSourceKey,
-    queryFn: () =>
-      dataSourcesClient.getBySlug(appSlug, dataSourceSlug, { expand: 'enums' }),
+    queryFn: () => dataSourcesClient.getBySlug(appSlug, dataSourceSlug, { expand: 'enums' }),
     enabled: queryEnabled,
-    staleTime,
+    staleTime
   })
 
   const viewsQuery = useQuery({
     queryKey: viewsKey,
     queryFn: () => dataViewsClient.list({ appId }),
     enabled: queryEnabled,
-    staleTime,
+    staleTime
   })
 
   const invalidateViews = useCallback(() => {
@@ -284,20 +302,18 @@ export function useDocyrusDataViewSelect(
   }, [queryClient, viewsKey])
 
   const createMutation = useMutation({
-    mutationFn: (view: SavedDataGridView) =>
-      dataViewsClient.create(savedViewToCreateBody(view)),
-    onSuccess: invalidateViews,
+    mutationFn: (view: SavedDataGridView) => dataViewsClient.create(savedViewToCreateBody(view)),
+    onSuccess: invalidateViews
   })
 
   const updateMutation = useMutation({
-    mutationFn: (view: SavedDataGridView) =>
-      dataViewsClient.update(view.id, savedViewToUpdateBody(view)),
-    onSuccess: invalidateViews,
+    mutationFn: (view: SavedDataGridView) => dataViewsClient.update(view.id, savedViewToUpdateBody(view)),
+    onSuccess: invalidateViews
   })
 
   const deleteMutation = useMutation({
     mutationFn: (viewId: string) => dataViewsClient.remove(viewId),
-    onSuccess: invalidateViews,
+    onSuccess: invalidateViews
   })
 
   /*
@@ -309,7 +325,7 @@ export function useDocyrusDataViewSelect(
   const reorderMutation = useMutation({
     mutationFn: async (orderedViewIds: Array<string>) => {
       const current = queryClient.getQueryData<Array<DataView>>(viewsKey) ?? []
-      const byId = new Map(current.map((v) => [v.id, v]))
+      const byId = new Map(current.map(v => [v.id, v]))
       const updates: Array<Promise<DataView>> = []
 
       orderedViewIds.forEach((viewId, index) => {
@@ -328,7 +344,7 @@ export function useDocyrusDataViewSelect(
       const previous = queryClient.getQueryData<Array<DataView>>(viewsKey)
 
       if (previous) {
-        const byId = new Map(previous.map((v) => [v.id, v]))
+        const byId = new Map(previous.map(v => [v.id, v]))
         const reordered: Array<DataView> = []
 
         orderedViewIds.forEach((id, index) => {
@@ -347,7 +363,7 @@ export function useDocyrusDataViewSelect(
         queryClient.setQueryData(viewsKey, ctx.previous)
       }
     },
-    onSettled: invalidateViews,
+    onSettled: invalidateViews
   })
 
   const userViews = useMemo<Array<SavedDataGridView>>(() => {
@@ -372,13 +388,13 @@ export function useDocyrusDataViewSelect(
   }, [viewsQuery.data])
 
   const normalizedSystemViews = useMemo<Array<SavedDataGridView>>(
-    () => (systemViews ?? []).map((view) => ({ ...view, isSystem: true })),
-    [systemViews],
+    () => (systemViews ?? []).map(view => ({ ...view, isSystem: true })),
+    [systemViews]
   )
 
   const views = useMemo<Array<SavedDataGridView>>(
     () => [...normalizedSystemViews, ...userViews],
-    [normalizedSystemViews, userViews],
+    [normalizedSystemViews, userViews]
   )
 
   /*
@@ -389,7 +405,7 @@ export function useDocyrusDataViewSelect(
    * lets the memo below pick a default once views arrive.
    */
   const [activeViewIdState, setActiveViewIdState] = useState<string>(
-    () => readStoredViewId() ?? '',
+    () => readStoredViewId() ?? ''
   )
 
   /*
@@ -408,17 +424,17 @@ export function useDocyrusDataViewSelect(
   const activeViewId = useMemo(() => {
     if (views.length === 0) return ''
 
-    if (activeViewIdState && views.some((v) => v.id === activeViewIdState)) {
+    if (activeViewIdState && views.some(v => v.id === activeViewIdState)) {
       return activeViewIdState
     }
 
     const stored = readStoredViewId()
 
-    if (stored && views.some((v) => v.id === stored)) {
+    if (stored && views.some(v => v.id === stored)) {
       return stored
     }
 
-    return views.find((v) => v.isDefault)?.id ?? views[0]?.id ?? ''
+    return views.find(v => v.isDefault)?.id ?? views[0]?.id ?? ''
   }, [views, activeViewIdState, readStoredViewId])
 
   const setActiveViewId = useCallback((viewId: string) => {
@@ -437,7 +453,7 @@ export function useDocyrusDataViewSelect(
     (view: SavedDataGridView) => {
       setActiveViewId(view.id)
     },
-    [setActiveViewId],
+    [setActiveViewId]
   )
 
   /*
@@ -451,7 +467,7 @@ export function useDocyrusDataViewSelect(
     const rawFields = dataSourceQuery.data?.fields ?? []
 
     return rawFields
-      .map((field) => extractRelationTarget(field))
+      .map(field => extractRelationTarget(field))
       .filter((target): target is RelationTarget => target !== null)
   }, [dataSourceQuery.data?.fields])
 
@@ -464,8 +480,8 @@ export function useDocyrusDataViewSelect(
       appSlug,
       dataSourceSlug,
       relationTargets.map(
-        (t) => `${t.fieldSlug}:${t.appSlug}/${t.dataSourceSlug}`,
-      ),
+        t => `${t.fieldSlug}:${t.appSlug}/${t.dataSourceSlug}`
+      )
     ],
     queryFn: async () => {
       const result: Record<string, Array<DocyrusEnumOption>> = {}
@@ -483,9 +499,7 @@ export function useDocyrusDataViewSelect(
             | Array<Record<string, unknown>>
           >(
             `/v1/apps/${target.appSlug}/data-sources/${target.dataSourceSlug}/items`,
-            { columns: 'id, name, autonumber_id', limit: 200 } as Parameters<
-              typeof client.get
-            >[1],
+            { columns: 'id, name, autonumber_id', limit: 200 }
           )
 
           const items = Array.isArray(response)
@@ -502,24 +516,24 @@ export function useDocyrusDataViewSelect(
                 typeof item.name === 'string'
                   ? item.name
                   : typeof item.autonumber_id === 'string' ||
-                      typeof item.autonumber_id === 'number'
+                    typeof item.autonumber_id === 'number'
                     ? String(item.autonumber_id)
                     : id
 
               return {
                 name: id,
                 value: id,
-                label,
-              } as DocyrusEnumOption
+                label
+              }
             })
             .filter((option): option is DocyrusEnumOption => option !== null)
-        }),
+        })
       )
 
       return result
     },
     enabled: queryEnabled && relationTargets.length > 0,
-    staleTime,
+    staleTime
   })
 
   const fields = useMemo<Array<FullField>>(() => {
@@ -545,33 +559,33 @@ export function useDocyrusDataViewSelect(
     dataSourceQuery.data?.fields,
     relationOptionsQuery.data,
     overrideFields,
-    mapField,
+    mapField
   ])
 
   const onViewCreate = useCallback(
     (view: SavedDataGridView) => {
       createMutation.mutate(view)
     },
-    [createMutation],
+    [createMutation]
   )
 
   const onViewSave = useCallback(
     (view: SavedDataGridView) => {
       updateMutation.mutate(view)
     },
-    [updateMutation],
+    [updateMutation]
   )
 
   const onViewDelete = useCallback(
     (viewId: string) => {
       deleteMutation.mutate(viewId)
     },
-    [deleteMutation],
+    [deleteMutation]
   )
 
   const systemViewIds = useMemo(
-    () => new Set(normalizedSystemViews.map((v) => v.id)),
-    [normalizedSystemViews],
+    () => new Set(normalizedSystemViews.map(v => v.id)),
+    [normalizedSystemViews]
   )
 
   const onViewReorder = useCallback(
@@ -582,15 +596,15 @@ export function useDocyrusDataViewSelect(
        * relative position is fixed (always before user views) by the
        * `[...systemViews, ...userViews]` composition.
        */
-      const userOnly = orderedViewIds.filter((id) => !systemViewIds.has(id))
+      const userOnly = orderedViewIds.filter(id => !systemViewIds.has(id))
 
       reorderMutation.mutate(userOnly)
     },
-    [reorderMutation, systemViewIds],
+    [reorderMutation, systemViewIds]
   )
 
   const isLoading = dataSourceQuery.isLoading || viewsQuery.isLoading
-  const error = (dataSourceQuery.error ?? viewsQuery.error) as Error | null
+  const error = dataSourceQuery.error ?? viewsQuery.error
 
   const isSaving = createMutation.isPending || updateMutation.isPending
 
@@ -612,7 +626,7 @@ export function useDocyrusDataViewSelect(
       disabled: error !== null,
       defaultRowGroupingColumn,
       isSaving,
-      isLoading,
+      isLoading
     }),
     [
       views,
@@ -629,8 +643,8 @@ export function useDocyrusDataViewSelect(
       error,
       defaultRowGroupingColumn,
       isSaving,
-      isLoading,
-    ],
+      isLoading
+    ]
   )
 
   const refetch = useCallback(() => {
@@ -647,7 +661,7 @@ export function useDocyrusDataViewSelect(
     setActiveViewId,
     isLoading,
     error,
-    refetch,
+    refetch
   }
 }
 
@@ -659,7 +673,7 @@ export function useDocyrusDataViewSelect(
  */
 
 function savedViewToColumnsPayload(
-  view: SavedDataGridView,
+  view: SavedDataGridView
 ): Record<string, unknown> {
   return {
     visibility: view.columnVisibility,
@@ -685,33 +699,33 @@ function savedViewToColumnsPayload(
      * fields before being applied to the table.
      */
     inlineEditingEnabled: view.inlineEditingEnabled,
-    readOnlyColumns: view.readOnlyColumns,
+    readOnlyColumns: view.readOnlyColumns
   }
 }
 
 function savedViewToFiltersPayload(
-  view: SavedDataGridView,
+  view: SavedDataGridView
 ): Record<string, unknown> {
   return {
     columnFilters: view.columnFilters ?? [],
-    filterQuery: view.filterQuery,
+    filterQuery: view.filterQuery
   }
 }
 
 function savedViewToSortPayload(
-  view: SavedDataGridView,
+  view: SavedDataGridView
 ): Record<string, unknown> {
   return {
-    sorting: view.sorting ?? [],
+    sorting: view.sorting ?? []
   }
 }
 
 function savedViewToColorRulesPayload(
-  view: SavedDataGridView,
+  view: SavedDataGridView
 ): Record<string, unknown> {
   return {
     row: view.rowColorRules ?? [],
-    cell: view.cellColorRules ?? [],
+    cell: view.cellColorRules ?? []
   }
 }
 
@@ -721,7 +735,7 @@ function savedViewToCreateBody(view: SavedDataGridView): CreateDataViewBody {
     columns: savedViewToColumnsPayload(view),
     filters: savedViewToFiltersPayload(view),
     sort: savedViewToSortPayload(view),
-    color_rules: savedViewToColorRulesPayload(view),
+    color_rules: savedViewToColorRulesPayload(view)
   }
 
   if (view.description && view.description.length > 0) {
@@ -737,7 +751,7 @@ function savedViewToUpdateBody(view: SavedDataGridView): UpdateDataViewBody {
     columns: savedViewToColumnsPayload(view),
     filters: savedViewToFiltersPayload(view),
     sort: savedViewToSortPayload(view),
-    color_rules: savedViewToColorRulesPayload(view),
+    color_rules: savedViewToColorRulesPayload(view)
   }
 
   if (view.description && view.description.length > 0) {
@@ -749,7 +763,7 @@ function savedViewToUpdateBody(view: SavedDataGridView): UpdateDataViewBody {
 
 function pickRecord(
   value: Record<string, unknown> | null | undefined,
-  key: string,
+  key: string
 ): unknown {
   if (!value) return undefined
 
@@ -763,9 +777,9 @@ function getSavedViewPageSize(value: unknown): number {
 }
 
 function getSavedViewPaging(columns: Record<string, unknown>): {
-  pagingEnabled: boolean
-  pagingMode?: DataGridPagingMode
-  pageSize?: number
+  pagingEnabled: boolean;
+  pagingMode?: DataGridPagingMode;
+  pageSize?: number;
 } {
   const pagingEnabled = pickRecord(columns, 'pagingEnabled') !== false
 
@@ -773,7 +787,7 @@ function getSavedViewPaging(columns: Record<string, unknown>): {
     return {
       pagingEnabled,
       pagingMode: undefined,
-      pageSize: undefined,
+      pageSize: undefined
     }
   }
 
@@ -786,7 +800,7 @@ function getSavedViewPaging(columns: Record<string, unknown>): {
   return {
     pagingEnabled: true,
     pagingMode: 'standard',
-    pageSize: getSavedViewPageSize(pickRecord(columns, 'pageSize')),
+    pageSize: getSavedViewPageSize(pickRecord(columns, 'pageSize'))
   }
 }
 
@@ -806,27 +820,27 @@ function dataViewToSavedView(dv: DataView): SavedDataGridView {
     columnOrder: (pickRecord(columns, 'order') as Array<string>) ?? [],
     columnPinning: (pickRecord(
       columns,
-      'pinning',
+      'pinning'
     ) as SavedDataGridView['columnPinning']) ?? { left: [], right: [] },
     grouping: (pickRecord(columns, 'grouping') as Array<string>) ?? [],
     rowHeight: pickRecord(
       columns,
-      'rowHeight',
+      'rowHeight'
     ) as SavedDataGridView['rowHeight'],
     displayMode: pickRecord(
       columns,
-      'displayMode',
+      'displayMode'
     ) as SavedDataGridView['displayMode'],
     sorting:
       (pickRecord(sort, 'sorting') as SavedDataGridView['sorting']) ?? [],
     columnFilters:
       (pickRecord(
         filters,
-        'columnFilters',
+        'columnFilters'
       ) as SavedDataGridView['columnFilters']) ?? [],
     filterQuery: pickRecord(
       filters,
-      'filterQuery',
+      'filterQuery'
     ) as SavedDataGridView['filterQuery'],
     rowColorRules:
       (pickRecord(colorRules, 'row') as SavedDataGridView['rowColorRules']) ??
@@ -843,19 +857,19 @@ function dataViewToSavedView(dv: DataView): SavedDataGridView {
     pagingMode: paging.pagingMode,
     pageSize: paging.pageSize,
     inlineEditingEnabled: pickRecord(columns, 'inlineEditingEnabled') as
-      | boolean
-      | undefined,
+    | boolean
+    | undefined,
     readOnlyColumns:
       (pickRecord(columns, 'readOnlyColumns') as Array<string>) ?? undefined,
-    isDefault: dv.is_default,
+    isDefault: dv.is_default
   }
 }
 
 const FIELD_TYPE_MAP: Record<
   string,
   {
-    inputType?: FullField['inputType']
-    valueEditorType?: FullField['valueEditorType']
+    inputType?: FullField['inputType'];
+    valueEditorType?: FullField['valueEditorType'];
   }
 > = {
   'field-text': { inputType: 'text', valueEditorType: 'text' },
@@ -888,13 +902,13 @@ const FIELD_TYPE_MAP: Record<
   'field-status': { inputType: 'text', valueEditorType: 'select' },
   'field-systemEnum': { inputType: 'text', valueEditorType: 'select' },
   'field-multiSelect': { inputType: 'text', valueEditorType: 'multiselect' },
-  'field-tagSelect': { inputType: 'text', valueEditorType: 'multiselect' },
+  'field-tagSelect': { inputType: 'text', valueEditorType: 'multiselect' }
 }
 
 function dsFieldToFullField(field: DataSourceField): FullField {
   const mapping = FIELD_TYPE_MAP[field.type] ?? {
     inputType: 'text',
-    valueEditorType: 'text',
+    valueEditorType: 'text'
   }
   const options = extractFieldOptions(field)
   const filterGroup: FilterGroup = getFilterGroupForFieldType(field.type)
@@ -918,16 +932,15 @@ function dsFieldToFullField(field: DataSourceField): FullField {
     value: field.slug,
     label: field.name,
     inputType: fallbackInputType,
-    valueEditorType: (operator: string) =>
-      resolveValueEditorType(filterGroup, operator, fallbackValueEditorType),
+    valueEditorType: (operator: string) => resolveValueEditorType(filterGroup, operator, fallbackValueEditorType),
     operators: getOperatorsForGroup(filterGroup),
     /*
      * Keep filterGroup + fieldType on the field so consumers (and the
      * QueryBuilderDocyrus component) can reason about it without re-deriving.
      */
     filterGroup,
-    fieldType: field.type,
-  } as FullField & { filterGroup: FilterGroup; fieldType: string }
+    fieldType: field.type
+  }
 
   if (options && options.length > 0) {
     fullField.values = options
@@ -937,18 +950,18 @@ function dsFieldToFullField(field: DataSourceField): FullField {
 }
 
 interface DocyrusEnumOption {
-  name: string
-  value: string
-  label: string
-  icon?: string
-  color?: string
-  [key: string]: unknown
+  name: string;
+  value: string;
+  label: string;
+  icon?: string;
+  color?: string;
+  [key: string]: unknown;
 }
 
 interface RelationTarget {
-  fieldSlug: string
-  appSlug: string
-  dataSourceSlug: string
+  fieldSlug: string;
+  appSlug: string;
+  dataSourceSlug: string;
 }
 
 function extractRelationTarget(field: DataSourceField): RelationTarget | null {
@@ -973,12 +986,12 @@ function extractRelationTarget(field: DataSourceField): RelationTarget | null {
   return {
     fieldSlug: field.slug,
     appSlug: targetAppSlug,
-    dataSourceSlug: targetDataSourceSlug,
+    dataSourceSlug: targetDataSourceSlug
   }
 }
 
 function extractFieldOptions(
-  field: DataSourceField,
+  field: DataSourceField
 ): Array<DocyrusEnumOption> | null {
   const raw = field as Record<string, unknown>
   const source = Array.isArray(raw.enums)
@@ -1024,7 +1037,7 @@ function extractFieldOptions(
         value: identifier,
         label,
         ...(icon ? { icon } : {}),
-        ...(color ? { color } : {}),
+        ...(color ? { color } : {})
       })
     }
   }

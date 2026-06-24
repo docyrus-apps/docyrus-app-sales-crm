@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useReducer, useRef } from 'react'
+
 import { useTranslation } from 'react-i18next'
 import { Camera, Loader2, Save } from 'lucide-react'
 
 import { toast } from 'sonner'
+
 import { useUsersCollection } from '@/collections/users.collection'
 import { apiClient } from '@/lib/api'
 import { Button } from '@/components/animate-ui/components/buttons/button'
@@ -11,7 +13,7 @@ import {
   Field,
   FieldError,
   FieldGroup,
-  FieldLabel,
+  FieldLabel
 } from '@/components/ui/field'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
@@ -19,93 +21,99 @@ import {
   AwesomeDialog,
   AwesomeDialogBody,
   AwesomeDialogFooter,
-  AwesomeDialogHeader,
+  AwesomeDialogHeader
 } from '@/components/docyrus/awesome-dialog'
 import { ImageEditor } from '@/components/docyrus/image-editor'
 
 interface UserWithPhoto {
-  id?: string
-  email?: string
-  firstname?: string
-  lastname?: string
-  mobile?: string
-  job_title?: string
-  photo?: string
+  id?: string;
+  email?: string;
+  firstname?: string;
+  lastname?: string;
+  mobile?: string;
+  job_title?: string;
+  photo?: string;
 }
 
 interface ProfileDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 interface ProfileFormData {
-  firstname: string
-  lastname: string
-  mobile: string
-  job_title: string
+  firstname: string;
+  lastname: string;
+  mobile: string;
+  job_title: string;
 }
 
 interface FormErrors {
-  firstname?: string
-  lastname?: string
+  firstname?: string;
+  lastname?: string;
 }
 
 const ACCEPTED_IMAGE_TYPES = 'image/png,image/jpeg,image/webp,image/gif'
 const MAX_FILE_SIZE = 3 * 1024 * 1024 // 3 MB (backend limit)
 
 interface ProfileState {
-  user: UserWithPhoto | null
-  loading: boolean
-  saving: boolean
-  form: ProfileFormData
-  errors: FormErrors
-  photoUrl: string | null
-  editorSrc: string | null
-  editorOpen: boolean
-  uploadingPhoto: boolean
+  user: UserWithPhoto | null;
+  loading: boolean;
+  saving: boolean;
+  form: ProfileFormData;
+  errors: FormErrors;
+  photoUrl: string | null;
+  editorSrc: string | null;
+  editorOpen: boolean;
+  uploadingPhoto: boolean;
 }
 
 type ProfileAction =
   | { type: 'LOAD_START' }
   | {
-      type: 'LOAD_SUCCESS'
-      user: UserWithPhoto
+      type: 'LOAD_SUCCESS';
+      user: UserWithPhoto;
     }
-  | { type: 'LOAD_ERROR' }
-  | { type: 'SET_FORM_FIELD'; field: keyof ProfileFormData; value: string }
-  | { type: 'SET_ERRORS'; errors: FormErrors }
-  | { type: 'SAVE_START' }
-  | { type: 'SAVE_SUCCESS'; user: UserWithPhoto }
-  | { type: 'SAVE_END' }
-  | { type: 'SET_EDITOR_SRC'; src: string | null }
-  | { type: 'SET_EDITOR_OPEN'; open: boolean }
-  | { type: 'UPLOAD_START' }
-  | {
-      type: 'UPLOAD_SUCCESS'
-      photoUrl: string | undefined
-      user: UserWithPhoto | null
+    | { type: 'LOAD_ERROR' }
+    | { type: 'SET_FORM_FIELD'; field: keyof ProfileFormData; value: string }
+    | { type: 'SET_ERRORS'; errors: FormErrors }
+    | { type: 'SAVE_START' }
+    | { type: 'SAVE_SUCCESS'; user: UserWithPhoto }
+    | { type: 'SAVE_END' }
+    | { type: 'SET_EDITOR_SRC'; src: string | null }
+    | { type: 'SET_EDITOR_OPEN'; open: boolean }
+    | { type: 'UPLOAD_START' }
+    | {
+      type: 'UPLOAD_SUCCESS';
+      photoUrl: string | undefined;
+      user: UserWithPhoto | null;
     }
-  | { type: 'UPLOAD_END'; editorSrc: string | null }
+    | { type: 'UPLOAD_END'; editorSrc: string | null }
 
 const initialState: ProfileState = {
   user: null,
   loading: true,
   saving: false,
-  form: { firstname: '', lastname: '', mobile: '', job_title: '' },
+  form: {
+    firstname: '',
+    lastname: '',
+    mobile: '',
+    job_title: ''
+  },
   errors: {},
   photoUrl: null,
   editorSrc: null,
   editorOpen: false,
-  uploadingPhoto: false,
+  uploadingPhoto: false
 }
 
 function profileReducer(
   state: ProfileState,
-  action: ProfileAction,
+  action: ProfileAction
 ): ProfileState {
   switch (action.type) {
     case 'LOAD_START':
       return { ...state, loading: true }
+
     case 'LOAD_SUCCESS':
       return {
         ...state,
@@ -116,43 +124,54 @@ function profileReducer(
           firstname: action.user.firstname ?? '',
           lastname: action.user.lastname ?? '',
           mobile: action.user.mobile ?? '',
-          job_title: action.user.job_title ?? '',
-        },
+          job_title: action.user.job_title ?? ''
+        }
       }
+
     case 'LOAD_ERROR':
       return { ...state, loading: false }
+
     case 'SET_FORM_FIELD':
       return {
         ...state,
         form: { ...state.form, [action.field]: action.value },
-        errors: { ...state.errors, [action.field]: undefined },
+        errors: { ...state.errors, [action.field]: undefined }
       }
+
     case 'SET_ERRORS':
       return { ...state, errors: action.errors }
+
     case 'SAVE_START':
       return { ...state, saving: true }
+
     case 'SAVE_SUCCESS':
       return { ...state, saving: false, user: action.user }
+
     case 'SAVE_END':
       return { ...state, saving: false }
+
     case 'SET_EDITOR_SRC':
       return { ...state, editorSrc: action.src }
+
     case 'SET_EDITOR_OPEN':
       return { ...state, editorOpen: action.open }
+
     case 'UPLOAD_START':
       return { ...state, uploadingPhoto: true }
+
     case 'UPLOAD_SUCCESS':
       return {
         ...state,
         photoUrl: action.photoUrl ?? state.photoUrl,
         user: action.user,
-        editorOpen: false,
+        editorOpen: false
       }
+
     case 'UPLOAD_END':
       return {
         ...state,
         uploadingPhoto: false,
-        editorSrc: action.editorSrc,
+        editorSrc: action.editorSrc
       }
   }
 }
@@ -174,7 +193,6 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
         toast.error(t('profile.profileUpdateFailed'))
         dispatch({ type: 'LOAD_ERROR' })
       })
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- getMyInfo is unstable (new ref each render)
   }, [open])
 
   // Clean up object URLs on unmount
@@ -187,17 +205,17 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
   }, [state.editorSrc])
 
   const handleChange = useCallback(
-    (field: keyof ProfileFormData) =>
-      (e: React.ChangeEvent<HTMLInputElement>) => {
+    (field: keyof ProfileFormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
         dispatch({ type: 'SET_FORM_FIELD', field, value: e.target.value })
       },
-    [],
+    []
   )
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault()
       const validationErrors: FormErrors = {}
+
       if (!state.form.firstname.trim()) {
         validationErrors.firstname = t('profile.firstNameRequired')
       }
@@ -206,6 +224,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
       }
       if (Object.keys(validationErrors).length > 0) {
         dispatch({ type: 'SET_ERRORS', errors: validationErrors })
+
         return
       }
 
@@ -215,8 +234,9 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
           firstname: state.form.firstname.trim(),
           lastname: state.form.lastname.trim(),
           mobile: state.form.mobile.trim(),
-          job_title: state.form.job_title.trim(),
+          job_title: state.form.job_title.trim()
         })
+
         dispatch({ type: 'SAVE_SUCCESS', user: updated as UserWithPhoto })
         toast.success(t('profile.profileUpdated'))
         onOpenChange(false)
@@ -225,31 +245,40 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
         dispatch({ type: 'SAVE_END' })
       }
     },
-    [state.form, onOpenChange, updateMe, t],
+    [
+state.form,
+onOpenChange,
+updateMe,
+t
+]
   )
 
   const handleFileSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0]
+
       e.target.value = ''
 
       if (!file) return
 
       if (!file.type.startsWith('image/')) {
         toast.error(t('profile.selectImage'))
+
         return
       }
 
       if (file.size > MAX_FILE_SIZE) {
         toast.error(t('profile.imageTooLarge'))
+
         return
       }
 
       const objectUrl = URL.createObjectURL(file)
+
       dispatch({ type: 'SET_EDITOR_SRC', src: objectUrl })
       dispatch({ type: 'SET_EDITOR_OPEN', open: true })
     },
-    [t],
+    [t]
   )
 
   const handleImageSave = useCallback(
@@ -263,20 +292,22 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
         const file = new File([blob], 'avatar.png', { type: 'image/png' })
 
         const formData = new FormData()
+
         formData.append('photo', file)
 
         const result = await apiClient.put<{ fileUrl: string }>(
           '/v1/users/me/photo',
-          formData,
+          formData
         )
 
         const newPhotoUrl = result?.fileUrl
+
         dispatch({
           type: 'UPLOAD_SUCCESS',
           photoUrl: newPhotoUrl,
           user: state.user
             ? { ...state.user, photo: newPhotoUrl ?? state.user.photo }
-            : null,
+            : null
         })
         toast.success(t('profile.photoUpdated'))
       } catch {
@@ -289,7 +320,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
         dispatch({ type: 'UPLOAD_END', editorSrc: null })
       }
     },
-    [state.editorSrc, state.user, t],
+    [state.editorSrc, state.user, t]
   )
 
   const initials = state.user
@@ -298,7 +329,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
 
   const displayName = state.user
     ? [state.user.firstname, state.user.lastname].filter(Boolean).join(' ') ||
-      state.user.email
+    state.user.email
     : ''
 
   return (
@@ -308,8 +339,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
         onOpenChange={onOpenChange}
         container="sheet"
         side="right"
-        size="default"
-      >
+        size="default">
         <AwesomeDialogHeader title={t('profile.title')} />
         <AwesomeDialogBody>
           <div className="flex items-center gap-3 pb-4">
@@ -318,8 +348,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
               className="group relative shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               onClick={() => fileInputRef.current?.click()}
               disabled={state.uploadingPhoto}
-              aria-label={t('profile.changePhoto')}
-            >
+              aria-label={t('profile.changePhoto')}>
               <Avatar className="size-14">
                 {state.photoUrl && (
                   <AvatarImage src={state.photoUrl} alt={displayName ?? ''} />
@@ -339,8 +368,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
               type="file"
               accept={ACCEPTED_IMAGE_TYPES}
               className="hidden"
-              onChange={handleFileSelect}
-            />
+              onChange={handleFileSelect} />
             <div>
               <p className="font-medium">{displayName}</p>
               <p className="text-sm text-muted-foreground">
@@ -365,8 +393,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
                       value={state.form.firstname}
                       onChange={handleChange('firstname')}
                       placeholder={t('profile.firstName')}
-                      aria-invalid={!!state.errors.firstname}
-                    />
+                      aria-invalid={!!state.errors.firstname} />
                     {state.errors.firstname && (
                       <FieldError>{state.errors.firstname}</FieldError>
                     )}
@@ -378,8 +405,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
                       value={state.form.lastname}
                       onChange={handleChange('lastname')}
                       placeholder={t('profile.lastName')}
-                      aria-invalid={!!state.errors.lastname}
-                    />
+                      aria-invalid={!!state.errors.lastname} />
                     {state.errors.lastname && (
                       <FieldError>{state.errors.lastname}</FieldError>
                     )}
@@ -397,8 +423,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
                     value={state.form.mobile}
                     onChange={handleChange('mobile')}
                     placeholder={t('profile.phone')}
-                    type="tel"
-                  />
+                    type="tel" />
                 </Field>
 
                 <Field>
@@ -406,8 +431,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
                   <Input
                     value={state.form.job_title}
                     onChange={handleChange('job_title')}
-                    placeholder={t('profile.jobTitle')}
-                  />
+                    placeholder={t('profile.jobTitle')} />
                 </Field>
               </FieldGroup>
             </form>
@@ -427,22 +451,19 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
       {/* Image editor dialog */}
       <AwesomeDialog
         open={state.editorOpen}
-        onOpenChange={(v) => dispatch({ type: 'SET_EDITOR_OPEN', open: v })}
+        onOpenChange={v => dispatch({ type: 'SET_EDITOR_OPEN', open: v })}
         container="modal"
-        size="lg"
-      >
+        size="lg">
         <AwesomeDialogHeader
           title={t('profile.cropPhoto')}
-          description={t('profile.cropPhotoDescription')}
-        />
+          description={t('profile.cropPhotoDescription')} />
         <AwesomeDialogBody>
           {state.editorSrc && (
             <ImageEditor
               src={state.editorSrc}
               stencilShape="circle"
               aspectRatio={1}
-              onSave={handleImageSave}
-            />
+              onSave={handleImageSave} />
           )}
         </AwesomeDialogBody>
       </AwesomeDialog>

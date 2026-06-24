@@ -4,7 +4,7 @@ export const queryClient = new QueryClient()
 
 export function getContext() {
   return {
-    queryClient,
+    queryClient
   }
 }
 

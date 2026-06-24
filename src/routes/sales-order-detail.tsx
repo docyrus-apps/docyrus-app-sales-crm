@@ -1,15 +1,16 @@
 import { useMemo } from 'react'
+
+import { type ILineItem } from '@/components/docyrus/pricing-engine-panel'
+
 import { Link, useParams } from '@tanstack/react-router'
 import { ArrowLeft } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import {
-  PricingEnginePanel,
-  type ILineItem,
-} from '@/components/docyrus/pricing-engine-panel'
+
+import { PricingEnginePanel } from '@/components/docyrus/pricing-engine-panel'
 import {
   bankersRound,
   buildLineItemRows,
-  calculateTotals,
+  calculateTotals
 } from '@/components/docyrus/pricing-engine-panel/lib/calculations'
 import { PageContainer } from '@/components/layout/page-container'
 import { Button } from '@/components/animate-ui/components/buttons/button'
@@ -21,7 +22,7 @@ import { useUiLocale } from '@/hooks/use-ui-locale'
 import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
 
 function getRelationName(
-  value?: { name?: string } | string | null,
+  value?: { name?: string } | string | null
 ): string | undefined {
   if (!value) return undefined
   if (typeof value === 'object') return value.name
@@ -53,20 +54,20 @@ export function SalesOrderDetail() {
             'tax_rate',
             'total',
             'gross_total',
-            'net_total',
+            'net_total'
           ],
           filters: {
             rules: [
               {
                 field: 'related_sales_order',
                 operator: '=',
-                value: orderId,
-              },
-            ],
+                value: orderId
+              }
+            ]
           },
-          orderBy: 'created_on asc',
+          orderBy: 'created_on asc'
         }
-      : undefined,
+      : undefined
   )
 
   const locale = useUiLocale()
@@ -83,20 +84,20 @@ export function SalesOrderDetail() {
         quantity: Number(item.qty ?? 0),
         unitPrice: Number(item.unit_price ?? 0),
         vatRate: Number(item.tax_rate ?? 0),
-        discountPercent: Number(item.discount ?? 0),
-      }),
+        discountPercent: Number(item.discount ?? 0)
+      })
     )
 
     const enableVat =
-      pricingLineItems.some((item) => item.vatRate > 0) ||
+      pricingLineItems.some(item => item.vatRate > 0) ||
       Number(order?.tax_total ?? 0) > 0
 
     const vatRates = Array.from(
       new Set(
         pricingLineItems
-          .map((item) => item.vatRate)
-          .filter((rate) => Number.isFinite(rate)),
-      ),
+          .map(item => item.vatRate)
+          .filter(rate => Number.isFinite(rate))
+      )
     ).sort((left, right) => left - right)
 
     if (vatRates.length === 0) {
@@ -106,11 +107,11 @@ export function SalesOrderDetail() {
     const config = {
       showVatColumn: enableVat,
       showDiscountColumn: pricingLineItems.some(
-        (item) => item.discountPercent > 0,
+        item => item.discountPercent > 0
       ),
       showGrossColumn: true,
       showCategoryColumn: pricingLineItems.some(
-        (item) => item.category.length > 0,
+        item => item.category.length > 0
       ),
       discountBeforeVat: true,
       enableVat,
@@ -119,18 +120,18 @@ export function SalesOrderDetail() {
       enableAdjustment: false,
       defaultVatRate: vatRates[vatRates.length - 1] ?? 0,
       vatRates,
-      viewMode: 'net' as const,
+      viewMode: 'net' as const
     }
 
     const calculatedTotals = calculateTotals(
       buildLineItemRows(pricingLineItems, config),
       0,
       0,
-      config,
+      config
     )
 
     const adjustment = bankersRound(
-      Number(order?.grand_total ?? 0) - calculatedTotals.grandTotal,
+      Number(order?.grand_total ?? 0) - calculatedTotals.grandTotal
     )
 
     const hasAdjustment = adjustment !== 0
@@ -142,11 +143,11 @@ export function SalesOrderDetail() {
       currency: {
         code: 'USD',
         secondaryCurrencyCode: null,
-        exchangeRate: 1,
+        exchangeRate: 1
       },
       config: {
         ...config,
-        enableAdjustment: hasAdjustment,
+        enableAdjustment: hasAdjustment
       },
       description: '',
       termsAndConditions: '',
@@ -154,13 +155,18 @@ export function SalesOrderDetail() {
       totals: {
         ...calculatedTotals,
         adjustment,
-        grandTotal: bankersRound(calculatedTotals.grandTotal + adjustment),
-      },
+        grandTotal: bankersRound(calculatedTotals.grandTotal + adjustment)
+      }
     }
-  }, [lineItems, order?.grand_total, order?.tax_total, t])
+  }, [
+lineItems,
+order?.grand_total,
+order?.tax_total,
+t
+])
 
   useSetDetailBreadcrumbTitle(
-    order ? t('salesOrders.salesOrderTitle', { id: order.id }) : null,
+    order ? t('salesOrders.salesOrderTitle', { id: order.id }) : null
   )
 
   if (isLoading) {
@@ -264,17 +270,14 @@ export function SalesOrderDetail() {
                 discountBeforeVat={pricingDocument.config.discountBeforeVat}
                 enableVat={pricingDocument.config.enableVat}
                 enableLineDiscount={pricingDocument.config.enableLineDiscount}
-                enableGlobalDiscount={
-                  pricingDocument.config.enableGlobalDiscount
-                }
+                enableGlobalDiscount={pricingDocument.config.enableGlobalDiscount}
                 enableAdjustment={pricingDocument.config.enableAdjustment}
                 defaultVatRate={pricingDocument.config.defaultVatRate}
                 vatRates={pricingDocument.config.vatRates}
                 defaultCurrency={pricingDocument.currency.code}
                 viewMode={pricingDocument.config.viewMode}
                 size="full"
-                variant="bordered"
-              />
+                variant="bordered" />
             )}
           </CardContent>
         </Card>

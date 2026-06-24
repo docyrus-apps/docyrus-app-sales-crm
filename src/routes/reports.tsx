@@ -1,6 +1,10 @@
-import { lazy, Suspense, useState } from 'react'
+import { Suspense, lazy, useState } from 'react'
+
+import type { DateRangePreset } from '@/hooks/use-report-query'
+
 import { BarChart3 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
 import {
@@ -8,33 +12,24 @@ import {
   TabsContent,
   TabsContents,
   TabsList,
-  TabsTrigger,
+  TabsTrigger
 } from '@/components/animate-ui/components/radix/tabs'
 import { ReportDateRangeFilter } from '@/components/reports/report-date-range-filter'
 import { Skeleton } from '@/components/ui/skeleton'
-import type { DateRangePreset } from '@/hooks/use-report-query'
 import { getDateRange } from '@/hooks/use-report-query'
 
-const RevenuePipelineTab = lazy(() =>
-  import('@/components/reports/revenue-pipeline-tab').then((m) => ({
-    default: m.RevenuePipelineTab,
-  })),
-)
-const LeadAnalyticsTab = lazy(() =>
-  import('@/components/reports/lead-analytics-tab').then((m) => ({
-    default: m.LeadAnalyticsTab,
-  })),
-)
-const OrdersProductsTab = lazy(() =>
-  import('@/components/reports/orders-products-tab').then((m) => ({
-    default: m.OrdersProductsTab,
-  })),
-)
-const ActivityProductivityTab = lazy(() =>
-  import('@/components/reports/activity-productivity-tab').then((m) => ({
-    default: m.ActivityProductivityTab,
-  })),
-)
+const RevenuePipelineTab = lazy(() => import('@/components/reports/revenue-pipeline-tab').then(m => ({
+    default: m.RevenuePipelineTab
+  })))
+const LeadAnalyticsTab = lazy(() => import('@/components/reports/lead-analytics-tab').then(m => ({
+    default: m.LeadAnalyticsTab
+  })))
+const OrdersProductsTab = lazy(() => import('@/components/reports/orders-products-tab').then(m => ({
+    default: m.OrdersProductsTab
+  })))
+const ActivityProductivityTab = lazy(() => import('@/components/reports/activity-productivity-tab').then(m => ({
+    default: m.ActivityProductivityTab
+  })))
 
 function TabFallback() {
   return (
@@ -57,8 +52,7 @@ export function Reports() {
       <PageHeader
         title={t('reports.title')}
         icon={<BarChart3 className="h-4 w-4 text-blue-500" />}
-        actions={<ReportDateRangeFilter value={preset} onChange={setPreset} />}
-      />
+        actions={<ReportDateRangeFilter value={preset} onChange={setPreset} />} />
       <PageContainer className="space-y-6">
         <Tabs defaultValue="revenue">
           <TabsList>

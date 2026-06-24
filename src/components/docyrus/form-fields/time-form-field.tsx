@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { Field, FieldError } from '@/components/ui/field'
 import {
   TimePicker,
@@ -23,9 +25,8 @@ export function TimeFormField({
   className,
 }: DocyrusFormFieldProps) {
   return (
-    <form.Field
-      name={fieldConfig.slug}
-      children={(field: any) => {
+    <form.Field name={fieldConfig.slug}>
+      {(field: any) => {
         const isInvalid =
           field.state.meta.isTouched && !field.state.meta.isValid
         const isDisabled = disabled || fieldConfig.readOnly === true
@@ -61,6 +62,6 @@ export function TimeFormField({
           </Field>
         )
       }}
-    />
+    </form.Field>
   )
 }

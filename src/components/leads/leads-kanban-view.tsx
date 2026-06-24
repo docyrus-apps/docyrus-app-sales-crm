@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from '@tanstack/react-router'
-import type {
-  DragEndEvent,
-  DragStartEvent,
-  UniqueIdentifier,
+
+import {
+  type DragEndEvent,
+  type DragStartEvent,
+  type UniqueIdentifier
 } from '@dnd-kit/core'
-import { ArrowUpRight, Building2, Globe, Mail, Sparkles } from 'lucide-react'
+
 import type { BaseCrmLeadsEntity } from '@/collections/base_crm-leads.collection'
 import type { EnumEntity } from '@/collections/enums.collection'
+
+import { ArrowUpRight, Building2, Globe, Mail, Sparkles } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+
 import {
   Kanban,
   KanbanBoard,
@@ -15,7 +19,7 @@ import {
   KanbanFinalColumn,
   KanbanFinalZone,
   KanbanItem,
-  KanbanOverlay,
+  KanbanOverlay
 } from '@/components/docyrus/kanban'
 import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -23,18 +27,18 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface LeadsKanbanViewProps {
-  leads: Array<BaseCrmLeadsEntity>
-  statuses: Array<EnumEntity>
+  leads: Array<BaseCrmLeadsEntity>;
+  statuses: Array<EnumEntity>;
   onStatusChange?: (
     lead: BaseCrmLeadsEntity,
-    statusId: string,
-  ) => Promise<unknown> | unknown
+    statusId: string
+  ) => Promise<unknown> | unknown;
 }
 
 function getLeadStatusId(
   lead: BaseCrmLeadsEntity,
   statusById: Map<string, EnumEntity>,
-  statusByName: Map<string, EnumEntity>,
+  statusByName: Map<string, EnumEntity>
 ) {
   const status = lead.lead_status
 
@@ -55,11 +59,11 @@ function getLeadStatusId(
 
 function buildColumns(
   leads: Array<BaseCrmLeadsEntity>,
-  statuses: Array<EnumEntity>,
+  statuses: Array<EnumEntity>
 ): Record<UniqueIdentifier, Array<BaseCrmLeadsEntity>> {
-  const statusById = new Map(statuses.map((status) => [status.id, status]))
+  const statusById = new Map(statuses.map(status => [status.id, status]))
   const statusByName = new Map(
-    statuses.map((status) => [status.name.toLowerCase(), status]),
+    statuses.map(status => [status.name.toLowerCase(), status])
   )
   const columns: Record<UniqueIdentifier, Array<BaseCrmLeadsEntity>> = {}
 
@@ -72,7 +76,7 @@ function buildColumns(
 
     if (!statusId || !(statusId in columns)) continue
 
-    columns[statusId]!.push(lead)
+    columns[statusId].push(lead)
   }
 
   return columns
@@ -80,12 +84,12 @@ function buildColumns(
 
 function findColumnId<T extends { id?: string }>(
   columns: Record<UniqueIdentifier, Array<T>>,
-  itemId: UniqueIdentifier,
+  itemId: UniqueIdentifier
 ) {
   if (itemId in columns) return itemId
 
   for (const [columnId, items] of Object.entries(columns)) {
-    if (items.some((item) => item.id === itemId)) {
+    if (items.some(item => item.id === itemId)) {
       return columnId
     }
   }
@@ -95,10 +99,10 @@ function findColumnId<T extends { id?: string }>(
 
 function findLead(
   columns: Record<UniqueIdentifier, Array<BaseCrmLeadsEntity>>,
-  leadId: UniqueIdentifier,
+  leadId: UniqueIdentifier
 ) {
   for (const items of Object.values(columns)) {
-    const lead = items.find((item) => item.id === leadId)
+    const lead = items.find(item => item.id === leadId)
 
     if (lead) return lead
   }
@@ -109,7 +113,7 @@ function findLead(
 function getDropColumnId(
   columns: Record<UniqueIdentifier, Array<BaseCrmLeadsEntity>>,
   overId: UniqueIdentifier | null | undefined,
-  finalStatusIds: Set<string>,
+  finalStatusIds: Set<string>
 ) {
   if (!overId) return null
 
@@ -124,7 +128,7 @@ function getStatusSurfaceStyle(color?: string | null) {
   if (!color) return undefined
 
   return {
-    borderColor: `color-mix(in srgb, ${color} 32%, transparent)`,
+    borderColor: `color-mix(in srgb, ${color} 32%, transparent)`
   }
 }
 
@@ -133,7 +137,7 @@ function getStatusIconStyle(color?: string | null) {
 
   return {
     color,
-    backgroundColor: `color-mix(in srgb, ${color} 16%, transparent)`,
+    backgroundColor: `color-mix(in srgb, ${color} 16%, transparent)`
   }
 }
 
@@ -142,49 +146,49 @@ function getInitials(value: string) {
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
+    .map(part => part[0]?.toUpperCase() ?? '')
     .join('')
 }
 
 function getLeadCompany(lead: BaseCrmLeadsEntity) {
   return lead.company_name_text as
     | {
-        id?: string
-        name?: string
-        company_logo?: { signed_url?: string | null } | null
+        id?: string;
+        name?: string;
+        company_logo?: { signed_url?: string | null } | null;
       }
-    | string
-    | undefined
+      | string
+      | undefined
 }
 
 export function LeadsKanbanView({
   leads,
   statuses,
-  onStatusChange,
+  onStatusChange
 }: LeadsKanbanViewProps) {
   const activeStatuses = useMemo(
-    () => statuses.filter((status) => !status.isFinalOption),
-    [statuses],
+    () => statuses.filter(status => !status.isFinalOption),
+    [statuses]
   )
   const finalStatuses = useMemo(
-    () => statuses.filter((status) => status.isFinalOption),
-    [statuses],
+    () => statuses.filter(status => status.isFinalOption),
+    [statuses]
   )
   const initialColumns = useMemo(
     () => buildColumns(leads, activeStatuses),
-    [activeStatuses, leads],
+    [activeStatuses, leads]
   )
   const activeStatusIds = useMemo(
-    () => new Set(activeStatuses.map((status) => status.id)),
-    [activeStatuses],
+    () => new Set(activeStatuses.map(status => status.id)),
+    [activeStatuses]
   )
   const finalStatusIds = useMemo(
-    () => new Set(finalStatuses.map((status) => status.id)),
-    [finalStatuses],
+    () => new Set(finalStatuses.map(status => status.id)),
+    [finalStatuses]
   )
   const [columns, setColumns] =
     useState<Record<UniqueIdentifier, Array<BaseCrmLeadsEntity>>>(
-      initialColumns,
+      initialColumns
     )
   const columnsRef = useRef(columns)
   const dragSourceColumnRef = useRef<UniqueIdentifier | null>(null)
@@ -201,7 +205,7 @@ export function LeadsKanbanView({
   const handleDragStart = useCallback((event: DragStartEvent) => {
     dragSourceColumnRef.current = findColumnId(
       columnsRef.current,
-      event.active.id,
+      event.active.id
     )
   }, [])
 
@@ -216,7 +220,7 @@ export function LeadsKanbanView({
       const targetColumnId = getDropColumnId(
         columnsRef.current,
         event.over?.id,
-        finalStatusIds,
+        finalStatusIds
       )
 
       if (!targetColumnId || sourceColumnId === targetColumnId) return
@@ -236,7 +240,7 @@ export function LeadsKanbanView({
 
       void onStatusChange?.(lead, targetStatusId)
     },
-    [activeStatusIds, finalStatusIds, onStatusChange],
+    [activeStatusIds, finalStatusIds, onStatusChange]
   )
 
   return (
@@ -244,27 +248,24 @@ export function LeadsKanbanView({
       <Kanban
         value={columns}
         onValueChange={setColumns}
-        getItemValue={(item) => item.id ?? ''}
+        getItemValue={item => item.id ?? ''}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
-        finalColumns={finalStatuses.map((status) => status.id)}
-        flatCursor
-      >
+        finalColumns={finalStatuses.map(status => status.id)}
+        flatCursor>
         <KanbanBoard className="min-h-0 flex-1 overflow-x-auto overflow-y-hidden pb-4">
-          {activeStatuses.map((status) => (
+          {activeStatuses.map(status => (
             <KanbanColumn
               key={status.id}
               value={status.id}
               className="flex h-full min-h-0 w-80 shrink-0 overflow-hidden bg-primary-foreground"
-              style={getStatusSurfaceStyle(status.color)}
-            >
+              style={getStatusSurfaceStyle(status.color)}>
               <div className="flex items-center justify-between gap-3 border-b border-border/60 px-3 pb-3">
                 <div className="flex min-w-0 items-center gap-2">
                   {status.icon && (
                     <span
                       className="flex size-8 shrink-0 items-center justify-center rounded-lg"
-                      style={getStatusIconStyle(status.color)}
-                    >
+                      style={getStatusIconStyle(status.color)}>
                       <DocyrusIcon icon={status.icon} className="size-4" />
                     </span>
                   )}
@@ -306,18 +307,16 @@ export function LeadsKanbanView({
                         key={lead.id}
                         value={lead.id ?? ''}
                         asHandle
-                        className="min-w-0"
-                      >
+                        className="min-w-0">
                         <Card className="group relative w-full min-w-0 overflow-hidden border-border/60 bg-background shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
                           <Link
                             to="/leads/$leadId"
                             params={{ leadId: lead.id ?? '' }}
                             className="absolute top-4 right-4 z-10 flex size-8 items-center justify-center rounded-full border border-border/60 bg-background/90 text-muted-foreground transition hover:bg-background hover:text-foreground"
-                            onPointerDown={(event) => event.stopPropagation()}
-                            onMouseDown={(event) => event.stopPropagation()}
-                            onTouchStart={(event) => event.stopPropagation()}
-                            onClick={(event) => event.stopPropagation()}
-                          >
+                            onPointerDown={event => event.stopPropagation()}
+                            onMouseDown={event => event.stopPropagation()}
+                            onTouchStart={event => event.stopPropagation()}
+                            onClick={event => event.stopPropagation()}>
                             <ArrowUpRight className="size-4" />
                           </Link>
                           <CardHeader className="relative gap-4 pb-3">
@@ -329,11 +328,10 @@ export function LeadsKanbanView({
                                     typeof company === 'object'
                                       ? (company?.name ?? 'Company')
                                       : 'Lead company'
-                                  }
-                                />
+                                  } />
                                 <AvatarFallback className="rounded-2xl bg-muted text-sm font-semibold text-foreground">
                                   {getInitials(
-                                    companyName || lead.name || 'Lead',
+                                    companyName || lead.name || 'Lead'
                                   )}
                                 </AvatarFallback>
                               </Avatar>
@@ -387,8 +385,7 @@ export function LeadsKanbanView({
                             <div className="flex items-center justify-between gap-2">
                               <Badge
                                 variant="secondary"
-                                className="min-w-0 rounded-full px-2.5 py-1"
-                              >
+                                className="min-w-0 rounded-full px-2.5 py-1">
                                 <span className="truncate">{leadType}</span>
                               </Badge>
                               {lead.countries &&
@@ -411,19 +408,17 @@ export function LeadsKanbanView({
         </KanbanBoard>
         {finalStatuses.length > 0 && (
           <KanbanFinalZone className="shrink-0 gap-3 overflow-x-auto border-t bg-background/95 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-            {finalStatuses.map((status) => (
+            {finalStatuses.map(status => (
               <KanbanFinalColumn
                 key={status.id}
                 value={status.id}
                 className="min-h-28 min-w-64 shrink-0 bg-muted"
-                style={getStatusSurfaceStyle(status.color)}
-              >
+                style={getStatusSurfaceStyle(status.color)}>
                 <div className="flex flex-col items-center gap-3 text-center">
                   {status.icon && (
                     <span
                       className="flex size-10 items-center justify-center rounded-xl"
-                      style={getStatusIconStyle(status.color)}
-                    >
+                      style={getStatusIconStyle(status.color)}>
                       <DocyrusIcon icon={status.icon} className="size-5" />
                     </span>
                   )}

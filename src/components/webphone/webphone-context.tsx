@@ -6,9 +6,15 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactNode
 } from 'react'
-import type { ReactNode } from 'react'
+
+import { type WrapupSubmitInput } from '@/lib/webphone/wrapup'
+
+import type { WebphoneReadinessReason } from '@/lib/webphone/runtime'
+
 import { useDocyrusAuth } from '@docyrus/signin'
+
 import { useAppModules } from '@/hooks/use-app-config'
 import { isModuleEnabled } from '@/lib/app-config'
 import { useWebphoneRuntimeSettings } from '@/hooks/use-webphone-config'
@@ -20,20 +26,18 @@ import { useWebphoneSip } from '@/hooks/use-webphone-sip'
 import {
   buildWebrtcRuntimeConfig,
   isSecureContextForWebrtc,
-  resolveWebphoneReadiness,
-  type WebphoneReadinessReason,
+  resolveWebphoneReadiness
 } from '@/lib/webphone/runtime'
 import { loadPresenceIntent, savePresenceIntent } from '@/lib/webphone/presence'
 import {
   type ScreenPopState,
   buildSingleMatchRelationPatch,
-  resolveIncomingScreenPop,
+  resolveIncomingScreenPop
 } from '@/lib/webphone/screen-pop'
 import {
   type CreatePinnedNoteArgs,
-  useWebphoneWrapup,
+  useWebphoneWrapup
 } from '@/hooks/use-webphone-wrapup'
-import type { WrapupSubmitInput } from '@/lib/webphone/wrapup'
 import type {
   CustomerMatch,
   MicrophoneStatus,
@@ -41,51 +45,51 @@ import type {
   WebphoneAgentProfile,
   WebphoneCallDirection,
   WebphoneLifecycleEvent,
-  WebphoneSessionSnapshot,
+  WebphoneSessionSnapshot
 } from '@/lib/webphone/types'
 
 export interface PendingWrapup {
-  callRecordId: string
-  callId: string
-  phone: string
-  direction: WebphoneCallDirection
-  contactId?: string
-  leadId?: string
+  callRecordId: string;
+  callId: string;
+  phone: string;
+  direction: WebphoneCallDirection;
+  contactId?: string;
+  leadId?: string;
 }
 
 interface WebphoneContextValue {
-  enabled: boolean
-  ready: boolean
-  readinessReasons: Array<WebphoneReadinessReason>
-  registrationStatus: RegistrationStatus
-  microphoneStatus: MicrophoneStatus
-  activeSession: WebphoneSessionSnapshot | null
-  incomingSession: WebphoneSessionSnapshot | null
-  screenPop: ScreenPopState | null
-  lastError: string | null
-  connect: () => void
-  disconnect: () => void
-  requestConnect: (profileOverride?: WebphoneAgentProfile) => void
+  enabled: boolean;
+  ready: boolean;
+  readinessReasons: Array<WebphoneReadinessReason>;
+  registrationStatus: RegistrationStatus;
+  microphoneStatus: MicrophoneStatus;
+  activeSession: WebphoneSessionSnapshot | null;
+  incomingSession: WebphoneSessionSnapshot | null;
+  screenPop: ScreenPopState | null;
+  lastError: string | null;
+  connect: () => void;
+  disconnect: () => void;
+  requestConnect: (profileOverride?: WebphoneAgentProfile) => void;
   dial: (
     phone: string,
-    opts?: { contactId?: string; leadId?: string },
-  ) => Promise<void>
-  answer: () => void
-  reject: () => void
-  hangup: () => void
-  mute: () => void
-  unmute: () => void
-  hold: () => void
-  unhold: () => void
-  sendDtmf: (tone: string) => void
-  selectScreenPopMatch: (match: CustomerMatch) => void
-  dismissScreenPop: () => void
-  liveNotes: string
-  setLiveNotes: (value: string) => void
-  pendingWrapup: PendingWrapup | null
-  submitWrapup: (input: WrapupSubmitInput) => Promise<void>
-  dismissWrapup: () => void
-  createPinnedNote: (args: CreatePinnedNoteArgs) => Promise<void>
+    opts?: { contactId?: string; leadId?: string }
+  ) => Promise<void>;
+  answer: () => void;
+  reject: () => void;
+  hangup: () => void;
+  mute: () => void;
+  unmute: () => void;
+  hold: () => void;
+  unhold: () => void;
+  sendDtmf: (tone: string) => void;
+  selectScreenPopMatch: (match: CustomerMatch) => void;
+  dismissScreenPop: () => void;
+  liveNotes: string;
+  setLiveNotes: (value: string) => void;
+  pendingWrapup: PendingWrapup | null;
+  submitWrapup: (input: WrapupSubmitInput) => Promise<void>;
+  dismissWrapup: () => void;
+  createPinnedNote: (args: CreatePinnedNoteArgs) => Promise<void>;
 }
 
 const WebphoneContext = createContext<WebphoneContextValue | null>(null)
@@ -114,16 +118,20 @@ export function WebphoneProvider({ children }: { children: ReactNode }) {
   const [liveNotes, setLiveNotes] = useState('')
   const [pendingWrapup, setPendingWrapup] = useState<PendingWrapup | null>(null)
   const pendingWrapupRef = useRef<PendingWrapup | null>(null)
+
   pendingWrapupRef.current = pendingWrapup
   const currentRelationRef = useRef<{ contactId?: string; leadId?: string }>({})
   const answeredRef = useRef<Set<string>>(new Set())
 
-  // Wraps call-record persistence and opens a wrap-up form once a relevant call
-  // ends (answered calls or any outbound attempt).
+  /*
+   * Wraps call-record persistence and opens a wrap-up form once a relevant call
+   * ends (answered calls or any outbound attempt).
+   */
   const handleCallEvent = useCallback(
     async (event: WebphoneLifecycleEvent) => {
       if (event.event === 'answered') answeredRef.current.add(event.callId)
       const recordIdBefore = callLog.getCallRecordId(event.callId)
+
       await callLog.onCallEvent(event)
       if (
         event.event === 'ended' ||
@@ -131,9 +139,11 @@ export function WebphoneProvider({ children }: { children: ReactNode }) {
         event.event === 'rejected'
       ) {
         const wasAnswered = answeredRef.current.has(event.callId)
+
         answeredRef.current.delete(event.callId)
         const recordId = recordIdBefore ?? callLog.getCallRecordId(event.callId)
         const relation = currentRelationRef.current
+
         currentRelationRef.current = {}
         if (recordId && (wasAnswered || event.direction === 'outbound')) {
           setPendingWrapup({
@@ -142,51 +152,54 @@ export function WebphoneProvider({ children }: { children: ReactNode }) {
             phone: event.phone,
             direction: event.direction,
             contactId: relation.contactId,
-            leadId: relation.leadId,
+            leadId: relation.leadId
           })
         }
       }
     },
-    [callLog],
+    [callLog]
   )
 
   const config = useMemo(() => {
     if (!profile) return null
+
     return buildWebrtcRuntimeConfig({ settings: settings ?? null, profile })
   }, [settings, profile])
 
   const readiness = useMemo(
-    () =>
-      resolveWebphoneReadiness({
+    () => resolveWebphoneReadiness({
         isAuthenticated: status === 'authenticated',
         isSecureContext: isSecureContextForWebrtc(),
         settings: settings ?? null,
-        profile: profile ?? null,
+        profile: profile ?? null
       }),
-    [status, settings, profile],
+    [status, settings, profile]
   )
 
   const controller = useWebphoneSip({
     config: enabled ? config : null,
-    onCallEvent: handleCallEvent,
+    onCallEvent: handleCallEvent
   })
 
   const [screenPop, setScreenPop] = useState<ScreenPopState | null>(null)
   const screenPopRef = useRef<ScreenPopState | null>(null)
+
   screenPopRef.current = screenPop
 
   const pendingOutboundRef = useRef<{
-    contactId?: string
-    leadId?: string
+    contactId?: string;
+    leadId?: string;
   } | null>(null)
   const triedRegisterRef = useRef(false)
   const lastIncomingRef = useRef<string | null>(null)
   const lastOutgoingRef = useRef<string | null>(null)
 
-  // Auto-connect a ready agent once when the module is on — but only if their
-  // last explicit choice was Online (or they have never chosen). If they went
-  // Offline, stay offline across reloads: don't re-register or re-prompt for
-  // the microphone until they choose Online again.
+  /*
+   * Auto-connect a ready agent once when the module is on — but only if their
+   * last explicit choice was Online (or they have never chosen). If they went
+   * Offline, stay offline across reloads: don't re-register or re-prompt for
+   * the microphone until they choose Online again.
+   */
   useEffect(() => {
     if (!enabled || !readiness.ready) return
     if (controller.registrationStatus !== 'idle') return
@@ -199,32 +212,43 @@ export function WebphoneProvider({ children }: { children: ReactNode }) {
     readiness.ready,
     controller.registrationStatus,
     controller,
-    userId,
+    userId
   ])
 
-  // Explicit (re)connect after the user saves extension credentials. When the
-  // dialog has just written a new password, it passes a merged profile snapshot
-  // so registration uses the fresh values immediately instead of racing the
-  // profile refetch and accidentally registering with stale credentials.
+  /*
+   * Explicit (re)connect after the user saves extension credentials. When the
+   * dialog has just written a new password, it passes a merged profile snapshot
+   * so registration uses the fresh values immediately instead of racing the
+   * profile refetch and accidentally registering with stale credentials.
+   */
   const requestConnect = useCallback(
     (profileOverride?: WebphoneAgentProfile) => {
       const nextConfig = profileOverride
         ? buildWebrtcRuntimeConfig({
             settings: settings ?? null,
-            profile: profileOverride,
+            profile: profileOverride
           })
         : config
+
       if (!enabled || !nextConfig) return
       // Saving credentials and connecting is an explicit "go Online" choice.
       savePresenceIntent(userId, 'online')
       triedRegisterRef.current = true
       void controller.register(nextConfig)
     },
-    [config, controller, enabled, settings, userId],
+    [
+config,
+controller,
+enabled,
+settings,
+userId
+]
   )
 
-  // Explicit Online/Offline from the header status menu. These persist the
-  // agent's choice so a refresh restores it (see the auto-connect effect).
+  /*
+   * Explicit Online/Offline from the header status menu. These persist the
+   * agent's choice so a refresh restores it (see the auto-connect effect).
+   */
   const connect = useCallback(() => {
     savePresenceIntent(userId, 'online')
     triedRegisterRef.current = true
@@ -240,10 +264,12 @@ export function WebphoneProvider({ children }: { children: ReactNode }) {
   // Outbound: fill the call's customer relation from the dial context.
   useEffect(() => {
     const session = controller.activeSession
+
     if (!session || session.direction !== 'outgoing') return
     if (lastOutgoingRef.current === session.id) return
     lastOutgoingRef.current = session.id
     const pending = pendingOutboundRef.current
+
     pendingOutboundRef.current = null
     if (pending && (pending.contactId || pending.leadId)) {
       void callLog.patchCallRelation(session.id, pending)
@@ -253,28 +279,33 @@ export function WebphoneProvider({ children }: { children: ReactNode }) {
   // Inbound: resolve screen-pop, open the card on a single match.
   useEffect(() => {
     const session = controller.incomingSession
+
     if (!session) return
     if (lastIncomingRef.current === session.id) return
     lastIncomingRef.current = session.id
 
     let cancelled = false
+
     void (async () => {
       const state = await resolveIncomingScreenPop({
         callId: session.id,
         phone: session.remotePhone,
-        adapter,
+        adapter
       })
+
       if (cancelled) return
       setScreenPop(state)
       if (state.mode === 'single') {
         adapter.openCustomerCard(state.matches[0])
         const patch = buildSingleMatchRelationPatch({ state })
+
         if (patch.contactId || patch.leadId) {
           currentRelationRef.current = patch
           void callLog.patchCallRelation(state.callId, patch)
         }
       }
     })()
+
     return () => {
       cancelled = true
     }
@@ -295,31 +326,35 @@ export function WebphoneProvider({ children }: { children: ReactNode }) {
         opts?.contactId || opts?.leadId
           ? { contactId: opts.contactId, leadId: opts.leadId }
           : null
+
       pendingOutboundRef.current = relation
       currentRelationRef.current = relation ?? {}
       await controller.call(phone)
     },
-    [controller],
+    [controller]
   )
 
   const selectScreenPopMatch = useCallback(
     (match: CustomerMatch) => {
       adapter.openCustomerCard(match)
       const state = screenPopRef.current
+
       if (state) {
         const patch =
           match.kind === 'lead' ? { leadId: match.id } : { contactId: match.id }
+
         currentRelationRef.current = patch
         void callLog.patchCallRelation(state.callId, patch)
       }
       setScreenPop(null)
     },
-    [adapter, callLog],
+    [adapter, callLog]
   )
 
   const submitWrapup = useCallback(
     async (input: WrapupSubmitInput) => {
       const pending = pendingWrapupRef.current
+
       if (!pending) return
       await wrapup.submitWrapup({
         callRecordId: pending.callRecordId,
@@ -328,13 +363,13 @@ export function WebphoneProvider({ children }: { children: ReactNode }) {
         input: {
           ...input,
           contactId: input.contactId ?? pending.contactId,
-          leadId: input.leadId ?? pending.leadId,
-        },
+          leadId: input.leadId ?? pending.leadId
+        }
       })
       setPendingWrapup(null)
       setLiveNotes('')
     },
-    [wrapup],
+    [wrapup]
   )
 
   const dismissWrapup = useCallback(() => {
@@ -372,7 +407,7 @@ export function WebphoneProvider({ children }: { children: ReactNode }) {
       pendingWrapup,
       submitWrapup,
       dismissWrapup,
-      createPinnedNote: wrapup.createPinnedNote,
+      createPinnedNote: wrapup.createPinnedNote
     }),
     [
       enabled,
@@ -388,8 +423,8 @@ export function WebphoneProvider({ children }: { children: ReactNode }) {
       pendingWrapup,
       submitWrapup,
       dismissWrapup,
-      wrapup.createPinnedNote,
-    ],
+      wrapup.createPinnedNote
+    ]
   )
 
   return (
@@ -401,8 +436,10 @@ export function WebphoneProvider({ children }: { children: ReactNode }) {
 
 export function useWebphone(): WebphoneContextValue {
   const value = useContext(WebphoneContext)
+
   if (!value) {
     throw new Error('useWebphone must be used within a WebphoneProvider')
   }
+
   return value
 }

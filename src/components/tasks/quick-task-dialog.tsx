@@ -1,3 +1,5 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
+
 import { format } from 'date-fns'
 import {
   AtSign,
@@ -8,11 +10,11 @@ import {
   ChevronsUpDownIcon,
   Loader2,
   PlusIcon,
-  XIcon,
+  XIcon
 } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -22,20 +24,20 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
-  CommandList,
+  CommandList
 } from '@/components/ui/command'
 import {
   Dialog,
   DialogClose,
   DialogContent,
   DialogDescription,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog'
 import {
   Popover,
   PopoverAnchor,
   PopoverContent,
-  PopoverTrigger,
+  PopoverTrigger
 } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
@@ -51,36 +53,39 @@ const BACKLOG_STATUS_ID = '0bb8a460-aa02-11ed-84a0-059996ec9e38'
 type TriggerField = 'subject' | 'description'
 
 type TriggerState = {
-  type: '@' | '#'
-  field: TriggerField
-  startIndex: number
-  search: string
-  highlightIndex: number
+  type: '@' | '#';
+  field: TriggerField;
+  startIndex: number;
+  search: string;
+  highlightIndex: number;
 }
 
 type MentionItem = {
-  id: string
-  kind: 'user' | 'organization' | 'deal'
-  label: string
+  id: string;
+  kind: 'user' | 'organization' | 'deal';
+  label: string;
 }
 
 interface QuickTaskDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 function detectTrigger(
   text: string,
-  cursorPos: number,
+  cursorPos: number
 ): { type: '@' | '#'; startIndex: number; search: string } | null {
   const before = text.slice(0, cursorPos)
 
   for (const char of ['@', '#'] as const) {
     const idx = before.lastIndexOf(char)
+
     if (idx === -1) continue
     if (idx > 0 && before[idx - 1] !== ' ') continue
     const search = before.slice(idx + 1)
+
     if (search.includes(' ')) continue
+
     return { type: char, startIndex: idx, search }
   }
 
@@ -90,7 +95,7 @@ function detectTrigger(
 function getInitials(name: string) {
   return name
     .split(' ')
-    .map((part) => part.charAt(0))
+    .map(part => part.charAt(0))
     .join('')
     .toUpperCase()
     .slice(0, 2)
@@ -117,21 +122,23 @@ function MentionList({
   emptyLabel,
   highlightIndex,
   onSelect,
-  onHighlight,
+  onHighlight
 }: {
-  items: Array<MentionItem>
-  emptyLabel: string
-  highlightIndex: number
-  onSelect: (item: MentionItem) => void
-  onHighlight: (index: number) => void
+  items: Array<MentionItem>;
+  emptyLabel: string;
+  highlightIndex: number;
+  onSelect: (item: MentionItem) => void;
+  onHighlight: (index: number) => void;
 }) {
   const listRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const list = listRef.current
+
     if (!list) return
 
     const highlighted = list.children[highlightIndex] as HTMLElement | undefined
+
     highlighted?.scrollIntoView({ block: 'nearest' })
   }, [highlightIndex])
 
@@ -155,12 +162,11 @@ function MentionList({
             'flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm outline-none',
             index === highlightIndex
               ? 'bg-accent text-accent-foreground'
-              : 'hover:bg-accent/50',
+              : 'hover:bg-accent/50'
           )}
-          onMouseDown={(event) => event.preventDefault()}
+          onMouseDown={event => event.preventDefault()}
           onMouseEnter={() => onHighlight(index)}
-          onClick={() => onSelect(item)}
-        >
+          onClick={() => onSelect(item)}>
           {item.kind === 'organization' ? (
             <BriefcaseBusiness className="size-3.5 text-muted-foreground" />
           ) : item.kind === 'deal' ? (
@@ -181,7 +187,7 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
   const { data: users = [] } = useUsers()
   const { data: companies = [] } = useCompanies({
     columns: ['id', 'name'],
-    orderBy: 'name ASC',
+    orderBy: 'name ASC'
   })
   const { data: deals = [] } = useDeals({
     columns: [
@@ -190,9 +196,9 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
       'deal_value',
       'expected_revenue',
       'organization(id,name)',
-      'created_on',
+      'created_on'
     ],
-    orderBy: 'created_on DESC',
+    orderBy: 'created_on DESC'
   })
 
   const [subject, setSubject] = useState('')
@@ -238,27 +244,31 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
   const organizationName = useMemo(() => {
     if (!organizationId) return ''
     const organization = companies.find(
-      (company: any) => company.id === organizationId,
+      (company: any) => company.id === organizationId
     )
+
     return organization?.name ?? ''
   }, [companies, organizationId])
 
   const organizationDeals = useMemo(() => {
     if (!organizationId) return []
+
     return deals.filter(
-      (deal: any) => getOrganizationId(deal) === organizationId,
+      (deal: any) => getOrganizationId(deal) === organizationId
     )
   }, [deals, organizationId])
 
   const dealName = useMemo(() => {
     if (!dealId) return ''
     const deal = organizationDeals.find((item: any) => item.id === dealId)
+
     return deal ? getDealLabel(deal) : ''
   }, [dealId, organizationDeals])
 
   const assigneeName = useMemo(() => {
     if (!recordOwnerId) return ''
-    const user = users.find((item) => item.id === recordOwnerId)
+    const user = users.find(item => item.id === recordOwnerId)
+
     return user ? `${user.firstname} ${user.lastname}`.trim() || user.email : ''
   }, [recordOwnerId, users])
 
@@ -272,28 +282,27 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
         .filter((user) => {
           const label =
             `${user.firstname} ${user.lastname}`.trim() || user.email
+
           return label.toLowerCase().includes(search)
         })
         .slice(0, 8)
-        .map((user) => ({
+        .map(user => ({
           id: user.id!,
           kind: 'user',
-          label: `${user.firstname} ${user.lastname}`.trim() || user.email,
+          label: `${user.firstname} ${user.lastname}`.trim() || user.email
         }))
     }
 
     if (!organizationId) {
       return companies
-        .filter((company: any) =>
-          String(company.name ?? '')
+        .filter((company: any) => String(company.name ?? '')
             .toLowerCase()
-            .includes(search),
-        )
+            .includes(search))
         .slice(0, 8)
         .map((company: any) => ({
           id: company.id,
           kind: 'organization',
-          label: company.name,
+          label: company.name
         }))
     }
 
@@ -303,28 +312,36 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
       .map((deal: any) => ({
         id: deal.id,
         kind: 'deal',
-        label: getDealLabel(deal),
+        label: getDealLabel(deal)
       }))
-  }, [companies, organizationDeals, organizationId, trigger, users])
+  }, [
+companies,
+organizationDeals,
+organizationId,
+trigger,
+users
+])
 
   function updateTrigger(
     value: string,
     cursorPos: number,
-    field: TriggerField,
+    field: TriggerField
   ) {
     if (field === 'subject') setSubject(value)
     else setDescription(value)
 
     const detected = detectTrigger(value, cursorPos)
+
     if (!detected) {
       setTrigger(null)
+
       return
     }
 
     setTrigger({
       ...detected,
       field,
-      highlightIndex: 0,
+      highlightIndex: 0
     })
   }
 
@@ -336,13 +353,14 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
     const stripTrigger = (value: string) => {
       const before = value.slice(0, startIndex)
       const after = value.slice(startIndex + search.length + 1)
+
       return before + after
     }
 
     if (field === 'subject') {
-      setSubject((previous) => stripTrigger(previous))
+      setSubject(previous => stripTrigger(previous))
     } else {
-      setDescription((previous) => stripTrigger(previous))
+      setDescription(previous => stripTrigger(previous))
     }
 
     if (item.kind === 'user') {
@@ -363,49 +381,49 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
 
   function handleKeyDown(
     event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
-    field: TriggerField,
+    field: TriggerField
   ) {
     if (trigger && trigger.field === field) {
       if (event.key === 'ArrowDown') {
         event.preventDefault()
         if (mentionItems.length === 0) return
-        setTrigger((previous) =>
-          previous
+        setTrigger(previous => previous
             ? {
                 ...previous,
                 highlightIndex: Math.min(
                   previous.highlightIndex + 1,
-                  mentionItems.length - 1,
-                ),
+                  mentionItems.length - 1
+                )
               }
-            : null,
-        )
+            : null)
+
         return
       }
 
       if (event.key === 'ArrowUp') {
         event.preventDefault()
         if (mentionItems.length === 0) return
-        setTrigger((previous) =>
-          previous
+        setTrigger(previous => previous
             ? {
                 ...previous,
-                highlightIndex: Math.max(previous.highlightIndex - 1, 0),
+                highlightIndex: Math.max(previous.highlightIndex - 1, 0)
               }
-            : null,
-        )
+            : null)
+
         return
       }
 
       if (event.key === 'Enter' && mentionItems.length > 0) {
         event.preventDefault()
         selectMentionItem(mentionItems[trigger.highlightIndex])
+
         return
       }
 
       if (event.key === 'Escape') {
         event.preventDefault()
         setTrigger(null)
+
         return
       }
     }
@@ -420,12 +438,13 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
     if (!subject.trim()) {
       toast.error(t('quickTask.nameRequired'))
       subjectRef.current?.focus()
+
       return
     }
 
     const payload: Record<string, unknown> = {
       subject: subject.trim(),
-      status: isBacklog ? BACKLOG_STATUS_ID : OPEN_STATUS_ID,
+      status: isBacklog ? BACKLOG_STATUS_ID : OPEN_STATUS_ID
     }
 
     if (description.trim()) payload.description = description.trim()
@@ -442,11 +461,12 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
           setShowDescription(false)
           setTrigger(null)
           requestAnimationFrame(() => subjectRef.current?.focus())
+
           return
         }
 
         onOpenChange(false)
-      },
+      }
     })
   }
 
@@ -473,11 +493,11 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
         }}
         onPointerDownOutside={(event) => {
           const target = event.target as HTMLElement
+
           if (target.closest('[data-slot="popover-content"]')) {
             event.preventDefault()
           }
-        }}
-      >
+        }}>
         <DialogTitle className="sr-only">{t('tasks.newTask')}</DialogTitle>
         <DialogDescription className="sr-only">
           {t('quickTask.dialogDescription')}
@@ -491,14 +511,12 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
 
           <Popover
             open={organizationPopoverOpen}
-            onOpenChange={setOrganizationPopoverOpen}
-          >
+            onOpenChange={setOrganizationPopoverOpen}>
             <PopoverTrigger asChild>
               {organizationName ? (
                 <button
                   type="button"
-                  className="inline-flex max-w-52 items-center gap-1.5 rounded-md border border-sky-200 bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700 hover:bg-sky-100"
-                >
+                  className="inline-flex max-w-52 items-center gap-1.5 rounded-md border border-sky-200 bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700 hover:bg-sky-100">
                   <BriefcaseBusiness className="size-3.5 shrink-0" />
                   <span className="truncate">{organizationName}</span>
                   <ChevronsUpDownIcon className="size-3 shrink-0 opacity-50" />
@@ -506,8 +524,7 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
               ) : (
                 <button
                   type="button"
-                  className="text-sm text-muted-foreground hover:text-foreground"
-                >
+                  className="text-sm text-muted-foreground hover:text-foreground">
                   {t('quickTask.selectOrganization')}
                 </button>
               )}
@@ -515,8 +532,7 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
             <PopoverContent className="w-64 p-0" align="start">
               <Command>
                 <CommandInput
-                  placeholder={t('quickTask.searchOrganizations')}
-                />
+                  placeholder={t('quickTask.searchOrganizations')} />
                 <CommandList>
                   <CommandEmpty>{t('quickTask.noOrganizations')}</CommandEmpty>
                   <CommandGroup>
@@ -528,16 +544,14 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
                           setOrganizationId(company.id)
                           setDealId('')
                           setOrganizationPopoverOpen(false)
-                        }}
-                      >
+                        }}>
                         <CheckIcon
                           className={cn(
                             'mr-2 size-4',
                             organizationId === company.id
                               ? 'opacity-100'
-                              : 'opacity-0',
-                          )}
-                        />
+                              : 'opacity-0'
+                          )} />
                         {company.name}
                       </CommandItem>
                     ))}
@@ -555,8 +569,7 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
                   {dealName ? (
                     <button
                       type="button"
-                      className="inline-flex max-w-60 items-center gap-1.5 rounded-md border border-violet-200 bg-violet-50 px-2 py-0.5 text-xs font-medium text-violet-700 hover:bg-violet-100"
-                    >
+                      className="inline-flex max-w-60 items-center gap-1.5 rounded-md border border-violet-200 bg-violet-50 px-2 py-0.5 text-xs font-medium text-violet-700 hover:bg-violet-100">
                       <CheckCheck className="size-3.5 shrink-0" />
                       <span className="truncate">{dealName}</span>
                       <ChevronsUpDownIcon className="size-3 shrink-0 opacity-50" />
@@ -564,8 +577,7 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
                   ) : (
                     <button
                       type="button"
-                      className="text-sm text-muted-foreground hover:text-foreground"
-                    >
+                      className="text-sm text-muted-foreground hover:text-foreground">
                       {t('quickTask.selectDeal')}
                     </button>
                   )}
@@ -583,16 +595,14 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
                             onSelect={() => {
                               setDealId(deal.id)
                               setDealPopoverOpen(false)
-                            }}
-                          >
+                            }}>
                             <CheckIcon
                               className={cn(
                                 'mr-2 size-4',
                                 dealId === deal.id
                                   ? 'opacity-100'
-                                  : 'opacity-0',
-                              )}
-                            />
+                                  : 'opacity-0'
+                              )} />
                             {getDealLabel(deal)}
                           </CommandItem>
                         ))}
@@ -623,35 +633,26 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
                     value={subject}
                     className="w-full bg-transparent text-lg font-semibold outline-none placeholder:text-muted-foreground"
                     placeholder={t('quickTask.namePlaceholder')}
-                    onChange={(event) =>
-                      updateTrigger(
+                    onChange={event => updateTrigger(
                         event.target.value,
                         event.target.selectionStart ?? 0,
-                        'subject',
-                      )
-                    }
-                    onKeyDown={(event) => handleKeyDown(event, 'subject')}
-                  />
+                        'subject'
+                      )}
+                    onKeyDown={event => handleKeyDown(event, 'subject')} />
                 </PopoverAnchor>
                 {isSubjectMentionOpen ? (
                   <PopoverContent
                     align="start"
                     sideOffset={8}
                     className="w-64 p-1"
-                    onOpenAutoFocus={(event) => event.preventDefault()}
-                    onCloseAutoFocus={(event) => event.preventDefault()}
-                  >
+                    onOpenAutoFocus={event => event.preventDefault()}
+                    onCloseAutoFocus={event => event.preventDefault()}>
                     <MentionList
                       items={mentionItems}
                       emptyLabel={mentionEmptyLabel}
                       highlightIndex={trigger.highlightIndex}
-                      onHighlight={(highlightIndex) =>
-                        setTrigger((previous) =>
-                          previous ? { ...previous, highlightIndex } : null,
-                        )
-                      }
-                      onSelect={selectMentionItem}
-                    />
+                      onHighlight={highlightIndex => setTrigger(previous => previous ? { ...previous, highlightIndex } : null)}
+                      onSelect={selectMentionItem} />
                   </PopoverContent>
                 ) : null}
               </Popover>
@@ -668,35 +669,26 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
                       value={description}
                       className="min-h-[110px] w-full resize-none bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                       placeholder={t('quickTask.descriptionPlaceholder')}
-                      onChange={(event) =>
-                        updateTrigger(
+                      onChange={event => updateTrigger(
                           event.target.value,
                           event.target.selectionStart,
-                          'description',
-                        )
-                      }
-                      onKeyDown={(event) => handleKeyDown(event, 'description')}
-                    />
+                          'description'
+                        )}
+                      onKeyDown={event => handleKeyDown(event, 'description')} />
                   </PopoverAnchor>
                   {isDescriptionMentionOpen ? (
                     <PopoverContent
                       align="start"
                       sideOffset={8}
                       className="w-64 p-1"
-                      onOpenAutoFocus={(event) => event.preventDefault()}
-                      onCloseAutoFocus={(event) => event.preventDefault()}
-                    >
+                      onOpenAutoFocus={event => event.preventDefault()}
+                      onCloseAutoFocus={event => event.preventDefault()}>
                       <MentionList
                         items={mentionItems}
                         emptyLabel={mentionEmptyLabel}
                         highlightIndex={trigger.highlightIndex}
-                        onHighlight={(highlightIndex) =>
-                          setTrigger((previous) =>
-                            previous ? { ...previous, highlightIndex } : null,
-                          )
-                        }
-                        onSelect={selectMentionItem}
-                      />
+                        onHighlight={highlightIndex => setTrigger(previous => previous ? { ...previous, highlightIndex } : null)}
+                        onSelect={selectMentionItem} />
                     </PopoverContent>
                   ) : null}
                 </Popover>
@@ -708,8 +700,7 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
                 onClick={() => {
                   setShowDescription(true)
                   requestAnimationFrame(() => descriptionRef.current?.focus())
-                }}
-              >
+                }}>
                 <PlusIcon className="size-3.5" />
                 {t('quickTask.addDetails')}
               </button>
@@ -726,9 +717,8 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
                   size="sm"
                   className={cn(
                     'gap-1.5 text-muted-foreground',
-                    dueDate && 'text-blue-600',
-                  )}
-                >
+                    dueDate && 'text-blue-600'
+                  )}>
                   <CalendarIcon className="size-3.5" />
                   <span className="truncate">
                     {dueDate ? format(dueDate, 'PPP') : t('quickTask.dueDate')}
@@ -743,8 +733,7 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
                     setDueDate(value)
                     setDatePopoverOpen(false)
                   }}
-                  initialFocus
-                />
+                  initialFocus />
               </PopoverContent>
             </Popover>
 
@@ -755,9 +744,8 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
                   size="sm"
                   className={cn(
                     'gap-1.5 text-muted-foreground',
-                    recordOwnerId && 'text-blue-600',
-                  )}
-                >
+                    recordOwnerId && 'text-blue-600'
+                  )}>
                   <AtSign className="size-3.5" />
                   <span className="truncate">
                     {assigneeName || t('quickTask.assignee')}
@@ -774,25 +762,24 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
                         const label =
                           `${user.firstname} ${user.lastname}`.trim() ||
                           user.email
+
                         return (
                           <CommandItem
                             key={user.id}
                             value={label}
                             onSelect={() => {
                               setRecordOwnerId(
-                                user.id === recordOwnerId ? '' : user.id!,
+                                user.id === recordOwnerId ? '' : user.id!
                               )
                               setUserPopoverOpen(false)
-                            }}
-                          >
+                            }}>
                             <CheckIcon
                               className={cn(
                                 'mr-2 size-4',
                                 user.id === recordOwnerId
                                   ? 'opacity-100'
-                                  : 'opacity-0',
-                              )}
-                            />
+                                  : 'opacity-0'
+                              )} />
                             <Avatar className="mr-2 size-6">
                               <AvatarFallback className="text-[10px]">
                                 {getInitials(label)}
@@ -812,8 +799,7 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
               <Switch
                 checked={isBacklog}
                 onCheckedChange={setIsBacklog}
-                className="scale-75"
-              />
+                className="scale-75" />
               {t('quickTask.backlog')}
             </label>
           </div>
@@ -825,8 +811,7 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
               <Switch
                 checked={createMore}
                 onCheckedChange={setCreateMore}
-                className="scale-75"
-              />
+                className="scale-75" />
               {t('quickTask.createMore')}
             </label>
 
@@ -834,16 +819,14 @@ export function QuickTaskDialog({ open, onOpenChange }: QuickTaskDialogProps) {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onOpenChange(false)}
-              >
+                onClick={() => onOpenChange(false)}>
                 {t('common.cancel')}
               </Button>
               <Button
                 size="sm"
                 onClick={handleSave}
                 disabled={createTask.isPending}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
+                className="bg-blue-600 hover:bg-blue-700">
                 {createTask.isPending && (
                   <Loader2 className="mr-1.5 size-4 animate-spin" />
                 )}

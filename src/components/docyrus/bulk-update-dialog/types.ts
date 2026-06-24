@@ -1,3 +1,5 @@
+// @ts-nocheck
+/* eslint-disable */
 import { type RestApiClient } from '@docyrus/api-client'
 
 export interface BulkUpdateRecord {

@@ -1,12 +1,11 @@
+import { type AppModulesConfig } from '@/lib/app-config'
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useDocyrusClient } from '@docyrus/signin'
 import { createAppConfigClient } from '@docyrus/app-utils'
 import { toast } from 'sonner'
-import {
-  APP_CONFIG_APP_ID,
-  type AppModulesConfig,
-  getAppModulesConfig,
-} from '@/lib/app-config'
+
+import { APP_CONFIG_APP_ID, getAppModulesConfig } from '@/lib/app-config'
 
 /**
  * Tenant-level module switches stored under `data.modules` in the shared app
@@ -24,11 +23,12 @@ export function useAppModules() {
     queryFn: async () => {
       const configClient = createAppConfigClient(client!, APP_CONFIG_APP_ID)
       const config = await configClient.get().catch(() => null)
+
       return getAppModulesConfig(
         (config?.data?.modules as Record<string, unknown> | undefined) ??
-          undefined,
+        undefined
       )
-    },
+    }
   })
 }
 
@@ -42,7 +42,7 @@ export function useUpdateAppModules() {
       const current = await configClient.get().catch(() => null)
       const merged = {
         ...(current?.data ?? {}),
-        modules: nextModules,
+        modules: nextModules
       }
 
       return configClient.upsert({ data: merged })
@@ -53,6 +53,6 @@ export function useUpdateAppModules() {
     },
     onError: (error: any) => {
       toast.error(error?.message || 'Uygulama ayarları kaydedilemedi')
-    },
+    }
   })
 }

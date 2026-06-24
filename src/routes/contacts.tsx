@@ -1,11 +1,16 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate } from '@tanstack/react-router'
+
+import type { ColumnDef } from '@tanstack/react-table'
+
+import { type RowChange } from '@/components/docyrus/data-grid'
+
+import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useDocyrusClient } from '@docyrus/signin'
 import { Pencil, Plus, Trash2, Upload, User } from 'lucide-react'
-import type { ColumnDef } from '@tanstack/react-table'
 
 import type { BaseContactEntity } from '@/collections/base-contact.collection'
+
 import { useBaseContactCollection } from '@/collections/base-contact.collection'
 import { ContactFormDialog } from '@/components/contacts/contact-form-dialog'
 import {
@@ -13,24 +18,26 @@ import {
   DataGridRowActions,
   DataGridSkeleton,
   DataGridSkeletonGrid,
-  getDataGridActionsColumn,
-  type RowChange,
+  getDataGridActionsColumn
 } from '@/components/docyrus/data-grid'
 import { Button as MotionButton } from '@/components/animate-ui/components/buttons/button'
 import { RecordDeleteConfirmDialog } from '@/components/docyrus/record-delete-confirm-dialog'
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ViewSwitcher, type ViewType } from '@/components/view-switcher'
 import { useUpdateContact } from '@/hooks/use-contacts'
 import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
-import { useDocyrusDataGrid } from '@/hooks/use-docyrus-data-grid'
+import { useDocyrusDataGrid } from '@/hooks/docyrus/use-docyrus-data-grid'
 import { useSeedDefaultViews } from '@/hooks/use-seed-default-views'
 import { useDocyrusDataImportWizard } from '@/hooks/use-docyrus-data-import-wizard'
+import { useEnumEntities } from '@/hooks/use-enums'
 import { saveGridChanges } from '@/lib/data-grid-record-utils'
-import { createSystemViews } from '@/lib/crm-system-views'
+import {
+  createSystemViews,
+  equalsFilter,
+  findEnumIdByName
+} from '@/lib/crm-system-views'
 import { useDateFormat } from '@/lib/use-date-format'
 
 const APP_SLUG = 'base'
@@ -41,8 +48,8 @@ type ContactFormMode = 'create' | 'edit'
 type ContactFormRecord = BaseContactEntity | Record<string, unknown>
 
 interface ContactDialogState {
-  mode: ContactFormMode
-  contact: ContactFormRecord | null
+  mode: ContactFormMode;
+  contact: ContactFormRecord | null;
 }
 
 const CONTACT_GRID_COLUMN_OVERRIDES: Record<
@@ -52,25 +59,17 @@ const CONTACT_GRID_COLUMN_OVERRIDES: Record<
   name: { size: 220 },
   job_title: { size: 190 },
   organization: { size: 200 },
+  contact_status: { size: 150 },
   email: { size: 220 },
   mobile: { size: 170 },
-  created_on: { size: 150 },
+  created_on: { size: 150 }
 }
 
 const CONTACT_GRID_VISIBLE_FIELDS = new Set(
-  Object.keys(CONTACT_GRID_COLUMN_OVERRIDES),
+  Object.keys(CONTACT_GRID_COLUMN_OVERRIDES)
 )
 
 const CONTACT_GRID_COLUMNS = Object.keys(CONTACT_GRID_COLUMN_OVERRIDES)
-
-const CONTACT_GRID_SYSTEM_VIEWS = createSystemViews('base-contact', [
-  {
-    id: 'all',
-    name: 'All',
-    columns: CONTACT_GRID_COLUMNS,
-    sorting: [{ id: 'created_on', desc: true }],
-  },
-])
 
 export function Contacts() {
   const client = useDocyrusClient()
@@ -81,30 +80,62 @@ export function Contacts() {
 }
 
 function ContactsPageInner({
-  client,
+  client
 }: {
-  client: NonNullable<ReturnType<typeof useDocyrusClient>>
+  client: NonNullable<ReturnType<typeof useDocyrusClient>>;
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const collection = useBaseContactCollection()
   const updateContact = useUpdateContact()
   const { formatDate, formatDateTime } = useDateFormat()
+  const { data: contactStatuses = [], isLoading: areContactStatusesLoading } =
+    useEnumEntities('contact_status', {
+      appSlug: APP_SLUG,
+      dataSourceSlug: DATA_SOURCE_SLUG
+    })
+  const contactGridViews = useMemo(() => {
+    const activeStatusId = findEnumIdByName(contactStatuses, ['Active'])
+    const doNotContactStatusId = findEnumIdByName(contactStatuses, ['Do Not Contact'])
+
+    return createSystemViews('base-contact', [
+      {
+        id: 'all',
+        name: 'All',
+        columns: CONTACT_GRID_COLUMNS,
+        sorting: [{ id: 'created_on', desc: true }]
+      },
+      {
+        id: 'active',
+        name: 'Active',
+        columns: CONTACT_GRID_COLUMNS,
+        sorting: [{ id: 'name', desc: false }],
+        filterQuery: equalsFilter('contact_status', activeStatusId)
+      },
+      {
+        id: 'do-not-contact',
+        name: 'Do Not Contact',
+        columns: CONTACT_GRID_COLUMNS,
+        sorting: [{ id: 'last_modified_on', desc: true }],
+        filterQuery: equalsFilter('contact_status', doNotContactStatusId)
+      }
+    ])
+  }, [contactStatuses])
 
   useSeedDefaultViews({
     client,
     appSlug: APP_SLUG,
     dataSourceSlug: DATA_SOURCE_SLUG,
-    templates: CONTACT_GRID_SYSTEM_VIEWS,
-    pruneUnlisted: true,
+    templates: contactGridViews,
+    enabled: !areContactStatusesLoading,
+    pruneUnlisted: true
   })
 
   const [dialog, setDialog] = useState<ContactDialogState | null>(null)
   const [pendingDelete, setPendingDelete] = useState<BaseContactEntity | null>(
-    null,
+    null
   )
   const [isDeleting, setIsDeleting] = useState(false)
-  const [viewType, setViewType] = useState<ViewType>('list')
 
   const onOpenCreate = useCallback(() => {
     setDialog({ mode: 'create', contact: null })
@@ -125,10 +156,10 @@ function ContactsPageInner({
       void navigate({
         to: '/contacts/$contactId',
         params: { contactId: contact.id },
-        search: { tab: 'overview' },
+        search: { tab: 'overview' }
       })
     },
-    [navigate],
+    [navigate]
   )
 
   const onDelete = useCallback((contact: BaseContactEntity) => {
@@ -138,8 +169,7 @@ function ContactsPageInner({
   }, [])
 
   const actionsColumn = useMemo<ColumnDef<BaseContactEntity>>(
-    () =>
-      getDataGridActionsColumn<BaseContactEntity>({
+    () => getDataGridActionsColumn<BaseContactEntity>({
         actionCount: 2,
         cell: ({ row }) => (
           <DataGridRowActions
@@ -152,35 +182,37 @@ function ContactsPageInner({
                 key: 'edit',
                 label: t('common.edit', 'Edit'),
                 icon: <Pencil className="size-4" />,
-                onSelect: onOpenEdit,
+                onSelect: onOpenEdit
               },
               {
                 key: 'open',
                 label: t('common.openPage', 'Open page'),
                 icon: <DocyrusIcon icon="huge sidebar-right-01" size="sm" />,
-                onSelect: onView,
+                onSelect: onView
               },
               {
                 key: 'delete',
                 label: t('common.delete', 'Delete'),
                 icon: <Trash2 className="size-4" />,
                 destructive: true,
-                onSelect: onDelete,
-              },
-            ]}
-          />
-        ),
+                onSelect: onDelete
+              }
+            ]} />
+        )
       }),
-    [onDelete, onOpenEdit, onView, t],
+    [
+onDelete,
+onOpenEdit,
+onView,
+t
+]
   )
 
   const onChangesSave = useCallback(
     async (changes: Array<RowChange>, gridData: Array<BaseContactEntity>) => {
-      await saveGridChanges(changes, gridData, (id, data) =>
-        updateContact.mutateAsync({ contactId: id, data }),
-      )
+      await saveGridChanges(changes, gridData, (id, data) => updateContact.mutateAsync({ contactId: id, data }))
     },
-    [updateContact],
+    [updateContact]
   )
 
   const openWizardRef = useRef<() => void>(() => {})
@@ -192,13 +224,12 @@ function ContactsPageInner({
         variant="outline"
         size="sm"
         className="gap-1.5"
-        onClick={() => openWizardRef.current()}
-      >
+        onClick={() => openWizardRef.current()}>
         <Upload className="size-4" />
         {t('common.import', 'Import')}
       </Button>
     ),
-    [t],
+    [t]
   )
 
   const {
@@ -206,11 +237,10 @@ function ContactsPageInner({
     gridProps,
     pagingMode,
     toolbar,
-    items: contacts,
     reload,
     dataSource,
     isLoading,
-    error,
+    error
   } = useDocyrusDataGrid<BaseContactEntity>({
     client,
     appSlug: APP_SLUG,
@@ -226,15 +256,15 @@ function ContactsPageInner({
     enableServerExportMenu: true,
     searchPlaceholder: t('common.search', 'Search...'),
     toolbarEndContent: importToolbarButton,
-    getRowLabel: (row) => row.name || row.id || t('contacts.title'),
+    getRowLabel: row => row.name || row.id || t('contacts.title'),
     mapColumn: (field, defaultColumn) => {
       if (!CONTACT_GRID_VISIBLE_FIELDS.has(field.slug)) return null
 
       return {
         ...defaultColumn,
-        ...CONTACT_GRID_COLUMN_OVERRIDES[field.slug],
+        ...CONTACT_GRID_COLUMN_OVERRIDES[field.slug]
       }
-    },
+    }
   })
 
   const { openWizard, wizard } = useDocyrusDataImportWizard({
@@ -242,7 +272,7 @@ function ContactsPageInner({
     appSlug: APP_SLUG,
     dataSourceSlug: DATA_SOURCE_SLUG,
     fields: dataSource?.fields,
-    onImported: reload,
+    onImported: reload
   })
 
   openWizardRef.current = openWizard
@@ -267,20 +297,12 @@ function ContactsPageInner({
         title={t('contacts.title')}
         icon={<User className="h-4 w-4 text-pink-500" />}
         actions={
-          <>
-            <ViewSwitcher
-              value={viewType}
-              onValueChange={setViewType}
-              options={['card', 'list']}
-            />
-            <MotionButton size="sm" onClick={onOpenCreate}>
-              <Plus className="mr-2 h-4 w-4" />
-              {t('contacts.newContact')}
-            </MotionButton>
-          </>
-        }
-      />
-      <PageContainer>
+          <MotionButton size="sm" onClick={onOpenCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t('contacts.newContact')}
+          </MotionButton>
+        } />
+      <PageContainer className="flex min-h-0 flex-1 max-w-full flex-col overflow-hidden pb-0">
         {dialog && (
           <ContactFormDialog
             open
@@ -289,19 +311,10 @@ function ContactsPageInner({
             }}
             contact={dialog.contact ?? undefined}
             mode={dialog.mode}
-            onSubmitSuccess={reload}
-          />
+            onSubmitSuccess={reload} />
         )}
 
-        {isLoading && viewType === 'card' && (
-          <div className="space-y-4">
-            <div className="h-32 w-full animate-pulse rounded-md bg-muted" />
-            <div className="h-32 w-full animate-pulse rounded-md bg-muted" />
-            <div className="h-32 w-full animate-pulse rounded-md bg-muted" />
-          </div>
-        )}
-
-        {isLoading && viewType === 'list' && (
+        {isLoading && (
           <DataGridSkeleton>
             <DataGridSkeletonGrid />
           </DataGridSkeleton>
@@ -320,81 +333,16 @@ function ContactsPageInner({
           </Card>
         )}
 
-        {!isLoading && !error && contacts.length === 0 && (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-lg font-medium">{t('contacts.emptyTitle')}</p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {t('contacts.emptyDescription')}
-              </p>
-              <MotionButton className="mt-4" onClick={onOpenCreate}>
-                <Plus className="mr-2 h-4 w-4" />
-                {t('contacts.createContact')}
-              </MotionButton>
-            </CardContent>
-          </Card>
-        )}
-
-        {!isLoading && !error && contacts.length > 0 && viewType === 'card' && (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {contacts.map((contact) => (
-              <Link
-                key={contact.id}
-                to="/contacts/$contactId"
-                params={{ contactId: contact.id! }}
-                search={{ tab: 'overview' }}
-              >
-                <Card className="cursor-pointer transition-all hover:shadow-md">
-                  <CardHeader>
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                        <User className="h-5 w-5" />
-                      </div>
-                      <div className="flex-1">
-                        <CardTitle className="text-base">
-                          {contact.name}
-                        </CardTitle>
-                        {contact.job_title && (
-                          <p className="mt-0.5 text-sm text-muted-foreground">
-                            {contact.job_title}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {contact.organization &&
-                      typeof contact.organization === 'object' && (
-                        <Badge variant="secondary" className="mb-2">
-                          {contact.organization.name}
-                        </Badge>
-                      )}
-                    {contact.email && (
-                      <p className="text-xs text-muted-foreground">
-                        {contact.email}
-                      </p>
-                    )}
-                    {contact.mobile && (
-                      <p className="text-xs text-muted-foreground">
-                        {contact.mobile}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        )}
-
-        {!isLoading && !error && contacts.length > 0 && viewType === 'list' && (
-          <div className="space-y-4">
-            {toolbar}
-            <DataGrid
-              table={table}
-              {...gridProps}
-              pagingMode={pagingMode}
-              height={600}
-            />
+        {!isLoading && !error && (
+          <div className="flex min-h-0 flex-1 flex-col gap-4">
+            <div className="shrink-0">{toolbar}</div>
+            <div className="min-h-0 flex-1">
+              <DataGrid
+                table={table}
+                {...gridProps}
+                pagingMode={pagingMode}
+                height="auto" />
+            </div>
           </div>
         )}
 
@@ -405,8 +353,7 @@ function ContactsPageInner({
           }}
           recordCount={pendingDelete ? 1 : 0}
           onConfirm={onConfirmDelete}
-          isPending={isDeleting}
-        />
+          isPending={isDeleting} />
 
         {wizard}
       </PageContainer>

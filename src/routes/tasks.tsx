@@ -1,10 +1,15 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
+
+import { type ColumnDef } from '@tanstack/react-table'
+
+import type { CellUserOption, RowChange } from '@/components/docyrus/data-grid'
+
 import { useTranslation } from 'react-i18next'
 import { useDocyrusClient } from '@docyrus/signin'
-import { Plus, Trash2, Upload, CheckSquare, Pencil } from 'lucide-react'
-import type { ColumnDef } from '@tanstack/react-table'
+import { CheckSquare, Pencil, Plus, Trash2, Upload } from 'lucide-react'
 
-import type { BaseTaskEntity } from '@/collections/base-task.collection'
+import { type BaseTaskEntity } from '@/collections/base-task.collection'
+
 import { useBaseTaskCollection } from '@/collections/base-task.collection'
 import { Button as MotionButton } from '@/components/animate-ui/components/buttons/button'
 import {
@@ -12,9 +17,7 @@ import {
   DataGridRowActions,
   DataGridSkeleton,
   DataGridSkeletonGrid,
-  getDataGridActionsColumn,
-  type CellUserOption,
-  type RowChange,
+  getDataGridActionsColumn
 } from '@/components/docyrus/data-grid'
 import { RecordDeleteConfirmDialog } from '@/components/docyrus/record-delete-confirm-dialog'
 import { PageContainer } from '@/components/layout/page-container'
@@ -23,13 +26,19 @@ import { TaskFormSheet } from '@/components/tasks/task-form-sheet'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
-import { useDocyrusDataGrid } from '@/hooks/use-docyrus-data-grid'
+import { useDocyrusDataGrid } from '@/hooks/docyrus/use-docyrus-data-grid'
 import { useSeedDefaultViews } from '@/hooks/use-seed-default-views'
 import { useDocyrusDataImportWizard } from '@/hooks/use-docyrus-data-import-wizard'
 import { useDeleteTask, useUpdateTask } from '@/hooks/use-tasks'
 import { useUsers } from '@/hooks/use-users'
 import { saveGridChanges } from '@/lib/data-grid-record-utils'
-import { createSystemViews } from '@/lib/crm-system-views'
+import { useEnumEntities } from '@/hooks/use-enums'
+import {
+  createSystemViews,
+  dateShortcutFilter,
+  equalsFilter,
+  findEnumIdByName
+} from '@/lib/crm-system-views'
 import { useDateFormat } from '@/lib/use-date-format'
 
 const APP_SLUG = 'base'
@@ -41,25 +50,16 @@ const TASK_GRID_COLUMNS = [
   'start_date',
   'end_date',
   'organization',
-  'record_owner',
+  'record_owner'
 ]
-
-const TASK_GRID_SYSTEM_VIEWS = createSystemViews('base-task', [
-  {
-    id: 'all',
-    name: 'All',
-    columns: TASK_GRID_COLUMNS,
-    sorting: [{ id: 'start_date', desc: false }],
-  },
-])
 
 type TaskFormMode = 'create' | 'edit'
 
 type TaskFormRecord = BaseTaskEntity | Record<string, unknown>
 
 interface TaskDialogState {
-  mode: TaskFormMode
-  task: TaskFormRecord | null
+  mode: TaskFormMode;
+  task: TaskFormRecord | null;
 }
 
 export function Tasks() {
@@ -71,9 +71,9 @@ export function Tasks() {
 }
 
 function TasksPageInner({
-  client,
+  client
 }: {
-  client: NonNullable<ReturnType<typeof useDocyrusClient>>
+  client: NonNullable<ReturnType<typeof useDocyrusClient>>;
 }) {
   const { t } = useTranslation()
   const collection = useBaseTaskCollection()
@@ -81,26 +81,64 @@ function TasksPageInner({
   const updateTask = useUpdateTask()
   const { data: users = [] } = useUsers()
   const { formatDate, formatDateTime } = useDateFormat()
+  const { data: taskStatuses = [], isLoading: areTaskStatusesLoading } =
+    useEnumEntities('status', {
+      appSlug: APP_SLUG,
+      dataSourceSlug: DATA_SOURCE_SLUG
+    })
+
+  const taskGridViews = useMemo(() => {
+    const openStatusId = findEnumIdByName(taskStatuses, [
+      'Open',
+      'To Do',
+      'Todo',
+      'In Progress'
+    ])
+
+    return createSystemViews('base-task', [
+      {
+        id: 'all',
+        name: 'All',
+        columns: TASK_GRID_COLUMNS,
+        sorting: [{ id: 'start_date', desc: false }]
+      },
+      {
+        id: 'open',
+        name: 'Open',
+        columns: TASK_GRID_COLUMNS,
+        sorting: [{ id: 'start_date', desc: false }],
+        filterQuery: equalsFilter('status', openStatusId)
+      },
+      {
+        id: 'due-soon',
+        name: 'Due Soon',
+        columns: TASK_GRID_COLUMNS,
+        sorting: [{ id: 'end_date', desc: false }],
+        filterQuery: dateShortcutFilter('end_date', 'next_7_days')
+      }
+    ])
+  }, [taskStatuses])
 
   useSeedDefaultViews({
     client,
     appSlug: APP_SLUG,
     dataSourceSlug: DATA_SOURCE_SLUG,
-    templates: TASK_GRID_SYSTEM_VIEWS,
-    pruneUnlisted: true,
+    templates: taskGridViews,
+    enabled: !areTaskStatusesLoading,
+    pruneUnlisted: true
   })
 
   const [dialog, setDialog] = useState<TaskDialogState | null>(null)
   const [pendingDelete, setPendingDelete] = useState<BaseTaskEntity | null>(
-    null,
+    null
   )
   const [isDeleting, setIsDeleting] = useState(false)
 
   const taskUserOptions = useMemo<Array<CellUserOption>>(
-    () =>
-      users
+    () => users
         .map((user) => {
           const value = user.id || user.email
+
           if (!value) return null
 
           const label =
@@ -112,7 +150,7 @@ function TasksPageInner({
 
           const initials =
             [user.firstname, user.lastname]
-              .map((part) => part?.charAt(0) || '')
+              .map(part => part?.charAt(0) || '')
               .join('')
               .slice(0, 2)
               .toUpperCase() || label.slice(0, 2).toUpperCase()
@@ -120,11 +158,11 @@ function TasksPageInner({
           return {
             value,
             label,
-            initials,
+            initials
           }
         })
         .filter((option): option is CellUserOption => option !== null),
-    [users],
+    [users]
   )
 
   const onOpenCreate = useCallback(() => {
@@ -146,8 +184,7 @@ function TasksPageInner({
   }, [])
 
   const actionsColumn = useMemo<ColumnDef<BaseTaskEntity>>(
-    () =>
-      getDataGridActionsColumn<BaseTaskEntity>({
+    () => getDataGridActionsColumn<BaseTaskEntity>({
         actionCount: 2,
         cell: ({ row }) => (
           <DataGridRowActions
@@ -160,35 +197,32 @@ function TasksPageInner({
                 key: 'edit',
                 label: t('common.edit', 'Edit'),
                 icon: <Pencil className="size-4" />,
-                onSelect: onOpenEdit,
+                onSelect: onOpenEdit
               },
               {
                 key: 'open',
                 label: t('common.openPage', 'Open page'),
                 icon: <DocyrusIcon icon="huge sidebar-right-01" size="sm" />,
-                onSelect: onOpenEdit,
+                onSelect: onOpenEdit
               },
               {
                 key: 'delete',
                 label: t('common.delete', 'Delete'),
                 icon: <Trash2 className="size-4" />,
                 destructive: true,
-                onSelect: onDelete,
-              },
-            ]}
-          />
-        ),
+                onSelect: onDelete
+              }
+            ]} />
+        )
       }),
-    [onDelete, onOpenEdit, t],
+    [onDelete, onOpenEdit, t]
   )
 
   const onChangesSave = useCallback(
     async (changes: Array<RowChange>, gridData: Array<BaseTaskEntity>) => {
-      await saveGridChanges(changes, gridData, (id, data) =>
-        updateTask.mutateAsync({ taskId: id, data }),
-      )
+      await saveGridChanges(changes, gridData, (id, data) => updateTask.mutateAsync({ taskId: id, data }))
     },
-    [updateTask],
+    [updateTask]
   )
 
   const openWizardRef = useRef<() => void>(() => {})
@@ -200,13 +234,12 @@ function TasksPageInner({
         variant="outline"
         size="sm"
         className="gap-1.5"
-        onClick={() => openWizardRef.current()}
-      >
+        onClick={() => openWizardRef.current()}>
         <Upload className="size-4" />
         {t('common.import', 'Import')}
       </Button>
     ),
-    [t],
+    [t]
   )
 
   const columnOverrides = useMemo<
@@ -215,35 +248,35 @@ function TasksPageInner({
     () => ({
       subject: {
         header: t('tasks.columns.subject'),
-        size: 250,
+        size: 250
       },
       status: {
         header: t('tasks.columns.status'),
-        size: 140,
+        size: 140
       },
       start_date: {
         header: t('tasks.columns.startDate'),
-        size: 140,
+        size: 140
       },
       end_date: {
         header: t('tasks.columns.dueDate'),
-        size: 140,
+        size: 140
       },
       organization: {
         header: t('tasks.columns.organization'),
-        size: 190,
+        size: 190
       },
       record_owner: {
         header: t('tasks.columns.owner'),
-        size: 170,
-      },
+        size: 170
+      }
     }),
-    [t],
+    [t]
   )
 
   const visibleFields = useMemo(
     () => new Set(Object.keys(columnOverrides)),
-    [columnOverrides],
+    [columnOverrides]
   )
 
   const {
@@ -251,11 +284,10 @@ function TasksPageInner({
     gridProps,
     pagingMode,
     toolbar,
-    items: tasks,
     reload,
     dataSource,
     isLoading,
-    error,
+    error
   } = useDocyrusDataGrid<BaseTaskEntity>({
     client,
     appSlug: APP_SLUG,
@@ -272,15 +304,15 @@ function TasksPageInner({
     enableServerExportMenu: true,
     searchPlaceholder: t('common.search', 'Search...'),
     toolbarEndContent: importToolbarButton,
-    getRowLabel: (row) => row.subject || row.id || t('tasks.title'),
+    getRowLabel: row => row.subject || row.id || t('tasks.title'),
     mapColumn: (field, defaultColumn) => {
       if (!visibleFields.has(field.slug)) return null
 
       return {
         ...defaultColumn,
-        ...columnOverrides[field.slug],
+        ...columnOverrides[field.slug]
       }
-    },
+    }
   })
 
   const { openWizard, wizard } = useDocyrusDataImportWizard({
@@ -288,7 +320,7 @@ function TasksPageInner({
     appSlug: APP_SLUG,
     dataSourceSlug: DATA_SOURCE_SLUG,
     fields: dataSource?.fields,
-    onImported: reload,
+    onImported: reload
   })
 
   openWizardRef.current = openWizard
@@ -317,9 +349,8 @@ function TasksPageInner({
             <Plus className="mr-2 h-4 w-4" />
             {t('tasks.newTask')}
           </MotionButton>
-        }
-      />
-      <PageContainer>
+        } />
+      <PageContainer className="flex min-h-0 flex-1 max-w-full flex-col overflow-hidden pb-0">
         {dialog && (
           <TaskFormSheet
             open
@@ -328,8 +359,7 @@ function TasksPageInner({
             }}
             mode={dialog.mode}
             task={dialog.task ?? undefined}
-            onSubmitSuccess={reload}
-          />
+            onSubmitSuccess={reload} />
         )}
 
         {isLoading && (
@@ -351,31 +381,16 @@ function TasksPageInner({
           </Card>
         )}
 
-        {!isLoading && !error && tasks.length === 0 && (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <CheckSquare className="mb-4 h-12 w-12 text-muted-foreground" />
-              <p className="text-lg font-medium">{t('tasks.emptyTitle')}</p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {t('tasks.emptyDescription')}
-              </p>
-              <MotionButton className="mt-4" onClick={onOpenCreate}>
-                <Plus className="mr-2 h-4 w-4" />
-                {t('tasks.createTask')}
-              </MotionButton>
-            </CardContent>
-          </Card>
-        )}
-
-        {!isLoading && !error && tasks.length > 0 && (
-          <div className="space-y-4">
-            {toolbar}
-            <DataGrid
-              table={table}
-              {...gridProps}
-              pagingMode={pagingMode}
-              height={600}
-            />
+        {!isLoading && !error && (
+          <div className="flex min-h-0 flex-1 flex-col gap-4">
+            <div className="shrink-0">{toolbar}</div>
+            <div className="min-h-0 flex-1">
+              <DataGrid
+                table={table}
+                {...gridProps}
+                pagingMode={pagingMode}
+                height="auto" />
+            </div>
           </div>
         )}
 
@@ -386,8 +401,7 @@ function TasksPageInner({
           }}
           recordCount={pendingDelete ? 1 : 0}
           onConfirm={onConfirmDelete}
-          isPending={isDeleting}
-        />
+          isPending={isDeleting} />
 
         {wizard}
       </PageContainer>

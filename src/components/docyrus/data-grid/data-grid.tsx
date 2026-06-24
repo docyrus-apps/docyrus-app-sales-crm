@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import {
   Fragment,
   useCallback,
@@ -11,6 +13,8 @@ import {
 } from 'react'
 
 import { Inbox, Loader2, Plus, SearchX, X } from 'lucide-react'
+
+import { Skeleton } from '@/components/ui/skeleton'
 
 import {
   ActionBar,
@@ -26,7 +30,7 @@ import { useAsRef } from '@/hooks/use-as-ref'
 
 import { cn } from '@/lib/utils'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 import { type useDataGrid } from './hooks/use-data-grid'
 import {
@@ -48,10 +52,10 @@ import {
   flexRender,
   getColumnBorderVisibility,
   getColumnPinningStyle,
+  getRowHeightValue,
 } from './lib/data-grid'
 
 const EMPTY_CELL_SELECTION_SET = new Set<string>()
-const PAGINATION_FOOTER_HEIGHT_PX = 40
 
 export interface DataGridAction<TData> {
   /** Stable key for React reconciliation (defaults to `label`). */
@@ -99,6 +103,11 @@ interface DataGridProps<TData>
    * skeleton instead.
    */
   isReloading?: boolean
+  /**
+   * True during the initial data fetch. When `isLoading && rows.length === 0`,
+   * renders skeleton rows instead of the empty-state placeholder.
+   */
+  isLoading?: boolean
 }
 
 export function DataGrid<TData>({
@@ -142,6 +151,7 @@ export function DataGrid<TData>({
   getRowLabel,
   pagingMode,
   isReloading = false,
+  isLoading = false,
   className,
   ...props
 }: DataGridProps<TData>) {
@@ -154,20 +164,18 @@ export function DataGrid<TData>({
   const { columnFilters } = table.getState()
   const hasActiveFilters =
     columnFilters.length > 0 || (searchState?.searchQuery?.length ?? 0) > 0
-  const showEmptyState = rows.length === 0
-  const hasStandardPaging = pagingMode === 'standard'
-  const contentHeight =
-    typeof height === 'number' && hasStandardPaging
-      ? Math.max(0, height - PAGINATION_FOOTER_HEIGHT_PX)
-      : height
-  const contentHeightStyle =
-    contentHeight === 'auto'
-      ? {
-          height: hasStandardPaging
-            ? `calc(100% - ${PAGINATION_FOOTER_HEIGHT_PX}px)`
-            : '100%',
-        }
-      : { maxHeight: `${contentHeight}px` }
+  const showEmptyState = rows.length === 0 && !isLoading
+  const showSkeletonRows = isLoading && rows.length === 0
+  const skeletonHeaders = useMemo(
+    () =>
+      table
+        .getHeaderGroups()
+        .slice(-1)
+        .flatMap((hg) => hg.headers),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [table, columnVisibility],
+  )
+  const rowHeightPx = getRowHeightValue(rowHeight)
 
   const onClearFilters = useCallback(() => {
     if (columnFilters.length > 0) table.resetColumnFilters()
@@ -175,7 +183,7 @@ export function DataGrid<TData>({
   }, [columnFilters.length, table, searchState])
 
   const { rowSelection } = table.getState()
-  const selectedRowCount = Object.keys(rowSelection).length
+  const selectedRowCount = Object.values(rowSelection).filter(Boolean).length
   const showActionBar = !!actions && actions.length > 0 && selectedRowCount > 0
 
   const onActionBarOpenChange = useCallback(
@@ -228,7 +236,7 @@ export function DataGrid<TData>({
       dir={dir}
       {...props}
       className={cn(
-        'relative flex w-full flex-col',
+        'relative flex min-h-0 w-full flex-col',
         height === 'auto' && 'h-full',
         className,
       )}
@@ -245,19 +253,20 @@ export function DataGrid<TData>({
           table={table}
           tableMeta={tableMeta}
           cardConfig={cardConfig}
-          height={contentHeight}
+          height={height}
         />
       ) : (
         <div
           role="grid"
-          aria-label="Data grid"
+          aria-label={t('ui.dataGrid.dataGrid', 'Data grid')}
           aria-rowcount={rows.length + (onRowAddProp ? 1 : 0)}
           aria-colcount={columns.length}
           data-slot="grid"
           tabIndex={0}
           ref={dataGridRef}
           className={cn(
-            'relative flex flex-col select-none overflow-auto border focus:outline-none',
+            'relative flex flex-col select-none overflow-auto overscroll-x-contain border focus:outline-none',
+            height === 'auto' && 'min-h-0 flex-1',
             /*
              * When the standard paging footer is rendered as a sibling we
              * drop the grid's bottom rounding + bottom border so the footer
@@ -268,7 +277,12 @@ export function DataGrid<TData>({
               ? 'rounded-t-md border-b-0'
               : 'rounded-md',
           )}
-          style={{ ...columnSizeVars, ...contentHeightStyle }}
+          style={{
+            ...columnSizeVars,
+            ...(height === 'auto'
+              ? { minHeight: 0 }
+              : { maxHeight: `${height}px` }),
+          }}
           onContextMenu={onDataGridContextMenu}
         >
           <div
@@ -412,10 +426,58 @@ export function DataGrid<TData>({
                   adjustLayout={adjustLayout}
                   stretchColumns={stretchColumns}
                   readOnly={readOnly}
+                  columnOptions={tableMeta?.columnOptions}
                 />
               )
             })}
           </div>
+          {showSkeletonRows &&
+            skeletonHeaders.length > 0 &&
+            Array.from({ length: 8 }, (_, i) => (
+              <div
+                key={i}
+                role="row"
+                data-slot="grid-skeleton-row"
+                className="absolute flex w-full border-b border-border/50"
+                style={{
+                  top: `${i * rowHeightPx}px`,
+                  height: `${rowHeightPx}px`,
+                }}
+              >
+                {skeletonHeaders.map((header, hi) => {
+                  const isUtility =
+                    header.column.id === 'select' ||
+                    header.column.id === 'actions'
+
+                  return (
+                    <div
+                      key={header.id}
+                      className={cn(
+                        'flex shrink-0 items-center overflow-hidden px-3',
+                        header.column.getIsPinned() && 'sticky bg-background',
+                      )}
+                      style={{
+                        ...getColumnPinningStyle({
+                          column: header.column,
+                          dir,
+                          background: 'var(--background)',
+                        }),
+                        width: `calc(var(--header-${header.id}-size) * 1px)`,
+                      }}
+                    >
+                      {!isUtility && (
+                        <Skeleton
+                          className="h-3 rounded"
+                          style={{
+                            width: `${55 + ((i * 37 + hi * 17) % 30)}%`,
+                          }}
+                        />
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            ))}
           {showEmptyState && (
             <div
               role="status"
@@ -518,11 +580,7 @@ export function DataGrid<TData>({
               return (
                 <Button
                   key={key}
-                  variant={
-                    action.variant === 'destructive'
-                      ? 'destructive'
-                      : 'secondary'
-                  }
+                  variant={action.variant ?? 'secondary'}
                   size="sm"
                   onClick={() => action.onAction?.(selectedRows)}
                 >
@@ -548,7 +606,7 @@ export function DataGrid<TData>({
             getRowLabel={getRowLabel}
           />
         )}
-      {hasStandardPaging && <DataGridPaginationFooter table={table} />}
+      {pagingMode === 'standard' && <DataGridPaginationFooter table={table} />}
       {isReloading && (
         <div
           aria-hidden

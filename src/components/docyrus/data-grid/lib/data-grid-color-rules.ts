@@ -1,7 +1,9 @@
+// @ts-nocheck
+/* eslint-disable */
 import { type Row } from '@tanstack/react-table'
 import jsonata from 'jsonata'
 
-import { resolveColorHex } from '@/lib/tailwind-colors'
+import { resolveColorHex } from '@/lib/docyrus/tailwind-colors'
 
 import { type DataGridCellColorRule, type DataGridRowColorRule } from '../types'
 

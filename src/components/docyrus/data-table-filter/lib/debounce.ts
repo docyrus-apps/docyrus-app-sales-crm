@@ -1,3 +1,5 @@
+// @ts-nocheck
+/* eslint-disable */
 type ControlFunctions = {
   cancel: () => void
   flush: () => void

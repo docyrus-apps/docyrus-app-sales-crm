@@ -5,11 +5,11 @@ const DUPLICATE_EXCLUDED_KEYS = new Set([
   'created_on',
   'updated_on',
   'created_at',
-  'updated_at',
+  'updated_at'
 ])
 
 export function buildChangePayload(
-  changes: Map<string, { newValue: unknown }>,
+  changes: Map<string, { newValue: unknown }>
 ): Record<string, unknown> {
   const payload: Record<string, unknown> = {}
 
@@ -21,7 +21,7 @@ export function buildChangePayload(
 }
 
 export function buildDuplicatePayload(
-  record: Record<string, unknown>,
+  record: Record<string, unknown>
 ): Record<string, unknown> {
   const payload: Record<string, unknown> = {}
 
@@ -38,7 +38,7 @@ export function buildDuplicatePayload(
           return item
         })
       } else if ('id' in value) {
-        payload[key] = (value as { id: unknown }).id
+        payload[key] = value.id
       } else {
         payload[key] = value
       }
@@ -55,7 +55,7 @@ export function buildDuplicatePayload(
 export async function saveGridChanges<TData extends { id?: string }>(
   changes: Array<RowChange>,
   gridData: Array<TData>,
-  updateById: (id: string, data: Record<string, unknown>) => Promise<unknown>,
+  updateById: (id: string, data: Record<string, unknown>) => Promise<unknown>
 ): Promise<void> {
   const updates: Array<Promise<unknown>> = []
 

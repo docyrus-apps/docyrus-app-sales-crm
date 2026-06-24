@@ -1,7 +1,10 @@
+import type { ICollectionListParams } from '@/collections/types'
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import type { ICollectionListParams } from '@/collections/types'
-import type { ActivityFormData } from '@/schemas/activity-schema'
+
+import { type ActivityFormData } from '@/schemas/activity-schema'
+
 import { useBaseActivityCollection } from '@/collections'
 
 export function useActivities(params?: ICollectionListParams) {
@@ -9,8 +12,7 @@ export function useActivities(params?: ICollectionListParams) {
 
   return useQuery({
     queryKey: ['activities', params],
-    queryFn: async () =>
-      activityCollection.list({
+    queryFn: async () => activityCollection.list({
         ...params,
         columns: params?.columns || [
           'id',
@@ -19,10 +21,10 @@ export function useActivities(params?: ICollectionListParams) {
           'start_date',
           'end_date',
           'record_owner(id,email,firstname,lastname)',
-          'created_on',
+          'created_on'
         ],
-        orderBy: params?.orderBy || 'created_on DESC',
-      }),
+        orderBy: params?.orderBy || 'created_on DESC'
+      })
   })
 }
 
@@ -42,11 +44,11 @@ export function useActivity(activityId: string | undefined) {
           'start_date',
           'end_date',
           'record_owner(id,email,firstname,lastname)',
-          'created_on',
-        ],
+          'created_on'
+        ]
       })
     },
-    enabled: !!activityId,
+    enabled: !!activityId
   })
 }
 
@@ -60,8 +62,7 @@ export function useCreateActivity() {
       queryClient.invalidateQueries({ queryKey: ['activities'] })
       toast.success('Activity created successfully')
     },
-    onError: (error: any) =>
-      toast.error(error?.message || 'Failed to create activity'),
+    onError: (error: any) => toast.error(error?.message || 'Failed to create activity')
   })
 }
 
@@ -72,20 +73,19 @@ export function useUpdateActivity() {
   return useMutation({
     mutationFn: ({
       activityId,
-      data,
+      data
     }: {
-      activityId: string
-      data: ActivityFormData
+      activityId: string;
+      data: ActivityFormData;
     }) => activityCollection.update(activityId, data),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['activities'] })
       queryClient.invalidateQueries({
-        queryKey: ['activities', variables.activityId],
+        queryKey: ['activities', variables.activityId]
       })
       toast.success('Activity updated successfully')
     },
-    onError: (error: any) =>
-      toast.error(error?.message || 'Failed to update activity'),
+    onError: (error: any) => toast.error(error?.message || 'Failed to update activity')
   })
 }
 
@@ -99,7 +99,6 @@ export function useDeleteActivity() {
       queryClient.invalidateQueries({ queryKey: ['activities'] })
       toast.success('Activity deleted successfully')
     },
-    onError: (error: any) =>
-      toast.error(error?.message || 'Failed to delete activity'),
+    onError: (error: any) => toast.error(error?.message || 'Failed to delete activity')
   })
 }

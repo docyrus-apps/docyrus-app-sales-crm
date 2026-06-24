@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
+
 import { useTranslation } from 'react-i18next'
-import { format, parseISO, addMonths, addWeeks } from 'date-fns'
+import { addMonths, addWeeks, format, parseISO } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import { useQueryClient } from '@tanstack/react-query'
 import { CalendarCheck2, CheckCheck, MessageSquareReply } from 'lucide-react'
 import { toast } from 'sonner'
+
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
 import { FieldSalesScheduleBoard } from '@/components/field-sales/field-sales-schedule-board'
@@ -17,7 +19,7 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   useFieldSalesApprovals,
   useFieldSalesConfig,
-  useFieldSalesPlans,
+  useFieldSalesPlans
 } from '@/hooks/use-field-sales'
 import { useMyInfo } from '@/hooks/use-users'
 import {
@@ -28,50 +30,51 @@ import {
   getFieldSalesApprovalStatusCode,
   getFieldSalesPlanningDays,
   getStatusMeta,
-  isDateWithinRange,
+  isDateWithinRange
 } from '@/lib/field-sales'
 import {
   useBaseCrmPlanApprovalCollection,
-  useBaseEventCollection,
+  useBaseEventCollection
 } from '@/collections'
 
 type PlanRecord = {
-  id?: string
-  subject?: string
-  start_date?: string
-  end_date?: string
-  status?: unknown
-  event_type?: unknown
-  organization?: unknown
-  contact?: unknown
-  weekly_plan?: any
+  id?: string;
+  subject?: string;
+  start_date?: string;
+  end_date?: string;
+  status?: unknown;
+  event_type?: unknown;
+  organization?: unknown;
+  contact?: unknown;
+  weekly_plan?: any;
 }
 
 type ApprovalRecord = {
-  id?: string
-  label?: string
-  start_date?: string
-  end_date?: string
-  approval_status?: unknown
-  revision_message?: string
-  plan_owner?: any
-  approved_by?: any
-  created_on?: string
+  id?: string;
+  label?: string;
+  start_date?: string;
+  end_date?: string;
+  approval_status?: unknown;
+  revision_message?: string;
+  plan_owner?: any;
+  approved_by?: any;
+  created_on?: string;
 }
 
 function getApprovalOwnerLabel(
   approval: ApprovalRecord,
-  t: (key: string) => string,
+  t: (key: string) => string
 ) {
   if (!approval.plan_owner) return t('fieldSales.approvals.noOwner')
   if (typeof approval.plan_owner === 'string') return approval.plan_owner
+
   return (
     [approval.plan_owner.firstname, approval.plan_owner.lastname]
       .filter(Boolean)
       .join(' ') ||
-    approval.plan_owner.name ||
-    approval.plan_owner.email ||
-    t('fieldSales.approvals.defaultOwner')
+      approval.plan_owner.name ||
+      approval.plan_owner.email ||
+      t('fieldSales.approvals.defaultOwner')
   )
 }
 
@@ -103,25 +106,23 @@ export function FieldSalesApprovalsPage() {
   const showWeekends = config?.showWeekends ?? false
   const approvalRange = useMemo(
     () => getApprovalRange(anchorDate, approvalMode, showWeekends),
-    [anchorDate, approvalMode, showWeekends],
+    [anchorDate, approvalMode, showWeekends]
   )
 
   const visibleApprovals = useMemo(
-    () =>
-      (approvals as Array<ApprovalRecord>).filter(
-        (approval) =>
-          isDateWithinRange(
+    () => (approvals as Array<ApprovalRecord>).filter(
+        approval => isDateWithinRange(
             approval.start_date,
             approvalRange.start,
-            approvalRange.end,
+            approvalRange.end
           ) ||
           isDateWithinRange(
             approval.end_date,
             approvalRange.start,
-            approvalRange.end,
-          ),
+            approvalRange.end
+          )
       ),
-    [approvalRange.end, approvalRange.start, approvals],
+    [approvalRange.end, approvalRange.start, approvals]
   )
 
   useEffect(() => {
@@ -131,17 +132,16 @@ export function FieldSalesApprovalsPage() {
 
     if (
       selectedApprovalId &&
-      !visibleApprovals.some((approval) => approval.id === selectedApprovalId)
+      !visibleApprovals.some(approval => approval.id === selectedApprovalId)
     ) {
       setSelectedApprovalId(visibleApprovals[0]?.id || '')
     }
   }, [selectedApprovalId, visibleApprovals])
 
   const selectedApproval = useMemo(
-    () =>
-      visibleApprovals.find((approval) => approval.id === selectedApprovalId) ||
+    () => visibleApprovals.find(approval => approval.id === selectedApprovalId) ||
       null,
-    [selectedApprovalId, visibleApprovals],
+    [selectedApprovalId, visibleApprovals]
   )
 
   useEffect(() => {
@@ -149,25 +149,25 @@ export function FieldSalesApprovalsPage() {
   }, [selectedApproval?.id, selectedApproval?.revision_message])
 
   const selectedApprovalStatusCode = getFieldSalesApprovalStatusCode(
-    selectedApproval?.approval_status,
+    selectedApproval?.approval_status
   )
   const selectedApprovalStatusMeta = getStatusMeta(
-    selectedApproval?.approval_status,
+    selectedApproval?.approval_status
   )
   const approvalActionMeta =
     selectedApprovalStatusCode === 'revision_requested'
       ? {
           title: t('fieldSales.approvals.actionRevisionTitle'),
-          description: t('fieldSales.approvals.actionRevisionDescription'),
+          description: t('fieldSales.approvals.actionRevisionDescription')
         }
       : selectedApprovalStatusCode === 'approved'
         ? {
             title: t('fieldSales.approvals.actionApprovedTitle'),
-            description: t('fieldSales.approvals.actionApprovedDescription'),
+            description: t('fieldSales.approvals.actionApprovedDescription')
           }
         : {
             title: t('fieldSales.approvals.actionPendingTitle'),
-            description: '',
+            description: ''
           }
 
   const boardDays = useMemo(() => {
@@ -178,9 +178,14 @@ export function FieldSalesApprovalsPage() {
     return getFieldSalesPlanningDays(
       parseISO(selectedApproval.start_date),
       approvalMode,
-      showWeekends,
+      showWeekends
     )
-  }, [anchorDate, approvalMode, selectedApproval?.start_date, showWeekends])
+  }, [
+anchorDate,
+approvalMode,
+selectedApproval?.start_date,
+showWeekends
+])
 
   const slots = generateSlotDefinitions(
     config || {
@@ -191,22 +196,22 @@ export function FieldSalesApprovalsPage() {
       allowedDistanceMeters: 250,
       showWeekends: false,
       dayStartTime: '09:00',
-      dayEndTime: '18:00',
-    },
+      dayEndTime: '18:00'
+    }
   )
 
   const relatedPlans = useMemo(
-    () =>
-      (plans as Array<PlanRecord>).filter((plan) => {
+    () => (plans as Array<PlanRecord>).filter((plan) => {
         const weeklyPlanId =
           typeof plan.weekly_plan === 'object'
             ? plan.weekly_plan?.id
             : plan.weekly_plan
+
         return selectedApproval?.id
           ? weeklyPlanId === selectedApproval.id
           : false
       }),
-    [plans, selectedApproval?.id],
+    [plans, selectedApproval?.id]
   )
 
   const groupedApprovals = useMemo(() => {
@@ -215,43 +220,40 @@ export function FieldSalesApprovalsPage() {
         const status =
           getStatusMeta(approval.approval_status).name ||
           t('fieldSales.common.other')
+
         accumulator[status] = accumulator[status] || []
         accumulator[status].push(approval)
+
         return accumulator
       },
-      {},
+      {}
     )
   }, [visibleApprovals])
 
   const refreshQueries = async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['field-sales', 'plans'] }),
-      queryClient.invalidateQueries({ queryKey: ['field-sales', 'approvals'] }),
-      queryClient.invalidateQueries({ queryKey: ['events'] }),
-    ])
+    await Promise.all([queryClient.invalidateQueries({ queryKey: ['field-sales', 'plans'] }), queryClient.invalidateQueries({ queryKey: ['field-sales', 'approvals'] }), queryClient.invalidateQueries({ queryKey: ['events'] })])
   }
 
   const approveSelected = async () => {
     if (!selectedApproval?.id || !myInfo?.id) return
     if (selectedApprovalStatusCode !== 'waiting_for_approval') {
       toast.error(t('fieldSales.approvals.notOpenForApproval'))
+
       return
     }
 
     await approvalCollection.update(selectedApproval.id, {
       approval_status: FIELD_SALES_APPROVAL_STATUS_IDS.approved,
       approved_by: myInfo.id,
-      revision_message: '',
+      revision_message: ''
     })
 
     await Promise.all(
       relatedPlans
-        .filter((plan) => plan.id)
-        .map((plan) =>
-          planCollection.update(plan.id!, {
-            plan_status: FIELD_SALES_PLAN_STATUS_IDS.waiting,
-          }),
-        ),
+        .filter(plan => plan.id)
+        .map(plan => planCollection.update(plan.id!, {
+            plan_status: FIELD_SALES_PLAN_STATUS_IDS.waiting
+          }))
     )
 
     await refreshQueries()
@@ -262,16 +264,18 @@ export function FieldSalesApprovalsPage() {
     if (!selectedApproval?.id) return
     if (selectedApprovalStatusCode === 'approved') {
       toast.error(t('fieldSales.approvals.cannotRequestRevisionForApproved'))
+
       return
     }
     if (!revisionMessage.trim()) {
       toast.error(t('fieldSales.approvals.revisionMessageRequired'))
+
       return
     }
 
     await approvalCollection.update(selectedApproval.id, {
       approval_status: FIELD_SALES_APPROVAL_STATUS_IDS.revisionRequested,
-      revision_message: revisionMessage.trim(),
+      revision_message: revisionMessage.trim()
     })
 
     await refreshQueries()
@@ -279,15 +283,13 @@ export function FieldSalesApprovalsPage() {
   }
 
   const navigateRange = (direction: 'prev' | 'next') => {
-    setAnchorDate((current) =>
-      approvalMode === 'monthly'
+    setAnchorDate(current => approvalMode === 'monthly'
         ? direction === 'next'
           ? addMonths(current, 1)
           : addMonths(current, -1)
         : direction === 'next'
           ? addWeeks(current, 1)
-          : addWeeks(current, -1),
-    )
+          : addWeeks(current, -1))
   }
 
   return (
@@ -295,35 +297,29 @@ export function FieldSalesApprovalsPage() {
       <PageHeader
         title={t('fieldSales.approvals.title')}
         icon={<CalendarCheck2 className="h-4 w-4 text-cyan-500" />}
-        titleSuffix={
-          <Badge variant="secondary">{visibleApprovals.length}</Badge>
-        }
+        titleSuffix={<Badge variant="secondary">{visibleApprovals.length}</Badge>}
         actions={
           <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigateRange('prev')}
-            >
+              onClick={() => navigateRange('prev')}>
               {t('fieldSales.common.previous')}
             </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setAnchorDate(new Date())}
-            >
+              onClick={() => setAnchorDate(new Date())}>
               {t('fieldSales.common.today')}
             </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigateRange('next')}
-            >
+              onClick={() => navigateRange('next')}>
               {t('fieldSales.common.next')}
             </Button>
           </div>
-        }
-      />
+        } />
       <PageContainer className="grid gap-4 overflow-x-hidden px-3 sm:px-4 lg:px-6 xl:grid-cols-[320px_minmax(0,1fr)]">
         <Card>
           <CardHeader>
@@ -340,19 +336,17 @@ export function FieldSalesApprovalsPage() {
                       </div>
                       {items.map((approval) => {
                         const isActive = approval.id === selectedApprovalId
+
                         return (
                           <button
                             key={approval.id}
                             type="button"
-                            onClick={() =>
-                              setSelectedApprovalId(approval.id || '')
-                            }
+                            onClick={() => setSelectedApprovalId(approval.id || '')}
                             className={`w-full rounded-xl border px-3 py-3 text-left transition ${
                               isActive
                                 ? 'border-primary bg-primary/5'
                                 : 'bg-card hover:border-primary/30 hover:bg-muted/40'
-                            }`}
-                          >
+                            }`}>
                             <div className="font-medium">{approval.label}</div>
                             <div className="mt-1 text-sm text-muted-foreground">
                               {getApprovalOwnerLabel(approval, t)}
@@ -365,7 +359,7 @@ export function FieldSalesApprovalsPage() {
                         )
                       })}
                     </div>
-                  ),
+                  )
                 )}
                 {visibleApprovals.length === 0 ? (
                   <div className="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
@@ -409,8 +403,7 @@ export function FieldSalesApprovalsPage() {
                 days={boardDays}
                 slots={slots}
                 plans={relatedPlans}
-                readOnly
-              />
+                readOnly />
 
               <Card>
                 <CardHeader>
@@ -425,12 +418,12 @@ export function FieldSalesApprovalsPage() {
                     </div>
                     <div>
                       {t('fieldSales.approvals.planCount', {
-                        count: relatedPlans.length,
+                        count: relatedPlans.length
                       })}
                     </div>
                     <div>
                       {t('fieldSales.approvals.lastStatus', {
-                        status: selectedApprovalStatusMeta.name,
+                        status: selectedApprovalStatusMeta.name
                       })}
                     </div>
                   </div>
@@ -455,21 +448,17 @@ export function FieldSalesApprovalsPage() {
                         <Textarea
                           id="revision-message"
                           value={revisionMessage}
-                          onChange={(event) =>
-                            setRevisionMessage(event.target.value)
-                          }
+                          onChange={event => setRevisionMessage(event.target.value)}
                           rows={6}
                           placeholder={t(
-                            'fieldSales.approvals.revisionPlaceholder',
-                          )}
-                        />
+                            'fieldSales.approvals.revisionPlaceholder'
+                          )} />
                       </div>
 
                       <Button
                         variant="outline"
                         className="w-full"
-                        onClick={requestRevision}
-                      >
+                        onClick={requestRevision}>
                         <MessageSquareReply className="mr-2 h-4 w-4" />
                         {t('fieldSales.approvals.requestRevision')}
                       </Button>
@@ -485,21 +474,17 @@ export function FieldSalesApprovalsPage() {
                         <Textarea
                           id="revision-message"
                           value={revisionMessage}
-                          onChange={(event) =>
-                            setRevisionMessage(event.target.value)
-                          }
+                          onChange={event => setRevisionMessage(event.target.value)}
                           rows={6}
                           placeholder={t(
-                            'fieldSales.approvals.revisionPlaceholder',
-                          )}
-                        />
+                            'fieldSales.approvals.revisionPlaceholder'
+                          )} />
                       </div>
 
                       <Button
                         variant="outline"
                         className="w-full"
-                        onClick={requestRevision}
-                      >
+                        onClick={requestRevision}>
                         <MessageSquareReply className="mr-2 h-4 w-4" />
                         {t('fieldSales.approvals.updateRevisionMessage')}
                       </Button>

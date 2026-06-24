@@ -1,7 +1,9 @@
-import { useRef, type ChangeEvent } from 'react'
+import { type ChangeEvent, useRef } from 'react'
+
 import { useTranslation } from 'react-i18next'
 import { Camera, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useUploadCompanyLogo } from '@/hooks/use-companies'
@@ -14,17 +16,17 @@ function getInitials(value?: string): string {
       .split(/\s+/)
       .filter(Boolean)
       .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase() ?? '')
+      .map(part => part[0]?.toUpperCase() ?? '')
       .join('') || '#'
   )
 }
 
 interface CompanyLogoAvatarProps {
-  companyId?: string
-  name?: string
+  companyId?: string;
+  name?: string;
   /** Current logo URL (company_logo.signed_url) */
-  logoUrl?: string
-  className?: string
+  logoUrl?: string;
+  className?: string;
 }
 
 const MAX_LOGO_SIZE = 5 * 1024 * 1024 // 5MB
@@ -38,7 +40,7 @@ export function CompanyLogoAvatar({
   companyId,
   name,
   logoUrl,
-  className,
+  className
 }: CompanyLogoAvatarProps) {
   const { t } = useTranslation()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -47,6 +49,7 @@ export function CompanyLogoAvatar({
 
   const handleSelect = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
+
     event.target.value = ''
 
     if (!file || !companyId) return
@@ -54,8 +57,8 @@ export function CompanyLogoAvatar({
     if (!file.type.startsWith('image/')) {
       toast.error(
         t('companies.logoInvalidType', {
-          defaultValue: 'Please choose an image file',
-        }),
+          defaultValue: 'Please choose an image file'
+        })
       )
 
       return
@@ -64,8 +67,8 @@ export function CompanyLogoAvatar({
     if (file.size > MAX_LOGO_SIZE) {
       toast.error(
         t('companies.logoTooLarge', {
-          defaultValue: 'Image must be smaller than 5MB',
-        }),
+          defaultValue: 'Image must be smaller than 5MB'
+        })
       )
 
       return
@@ -88,16 +91,15 @@ export function CompanyLogoAvatar({
         disabled={isUploading || !companyId}
         onClick={() => inputRef.current?.click()}
         aria-label={t('companies.uploadLogo', {
-          defaultValue: 'Upload logo',
+          defaultValue: 'Upload logo'
         })}
         title={t('companies.uploadLogo', { defaultValue: 'Upload logo' })}
         className={cn(
           'absolute inset-0 flex items-center justify-center rounded-lg bg-black/55 text-white transition-opacity',
           'opacity-0 group-hover:opacity-100 focus-visible:opacity-100',
           'disabled:cursor-not-allowed',
-          isUploading && 'opacity-100',
-        )}
-      >
+          isUploading && 'opacity-100'
+        )}>
         {isUploading ? (
           <Loader2 className="size-4 animate-spin" />
         ) : (
@@ -110,8 +112,7 @@ export function CompanyLogoAvatar({
         type="file"
         accept="image/*"
         className="hidden"
-        onChange={handleSelect}
-      />
+        onChange={handleSelect} />
     </div>
   )
 }

@@ -10,7 +10,7 @@ import {
   isWeekend,
   parseISO,
   startOfMonth,
-  startOfWeek,
+  startOfWeek
 } from 'date-fns'
 
 export const FIELD_SALES_APP_ID = '019c4b95-bd68-768f-b0d9-b5f9ad0a91d7'
@@ -20,21 +20,21 @@ export type FieldSalesPlanningEntity = 'organization' | 'contact'
 export type FieldSalesApprovalMode = 'weekly' | 'monthly'
 
 export interface FieldSalesConfig {
-  approvalMode: FieldSalesApprovalMode
-  planningEntity: FieldSalesPlanningEntity
-  slotMinutes: 30 | 60
-  locationCheckEnabled: boolean
-  allowedDistanceMeters: number
-  showWeekends: boolean
-  dayStartTime: string
-  dayEndTime: string
+  approvalMode: FieldSalesApprovalMode;
+  planningEntity: FieldSalesPlanningEntity;
+  slotMinutes: 30 | 60;
+  locationCheckEnabled: boolean;
+  allowedDistanceMeters: number;
+  showWeekends: boolean;
+  dayStartTime: string;
+  dayEndTime: string;
 }
 
 export interface SlotDefinition {
-  key: string
-  start: string
-  end: string
-  label: string
+  key: string;
+  start: string;
+  end: string;
+  label: string;
 }
 
 export const DEFAULT_FIELD_SALES_CONFIG: FieldSalesConfig = {
@@ -45,7 +45,7 @@ export const DEFAULT_FIELD_SALES_CONFIG: FieldSalesConfig = {
   allowedDistanceMeters: 250,
   showWeekends: false,
   dayStartTime: '09:00',
-  dayEndTime: '18:00',
+  dayEndTime: '18:00'
 }
 
 export const FIELD_SALES_PLAN_STATUS_IDS = {
@@ -53,38 +53,40 @@ export const FIELD_SALES_PLAN_STATUS_IDS = {
   postponed: '019e206f-8bbf-770a-be89-13f4288ba964',
   completed: '019e206f-8bbf-7b48-aa8d-d965aa224e84',
   checkedIn: '019e206f-8bbf-7e04-ae6e-322768c55d45',
-  cancelled: '019e206f-8bc0-711b-a2e4-61a2cb38d028',
+  cancelled: '019e206f-8bc0-711b-a2e4-61a2cb38d028'
 } as const
 
 export const FIELD_SALES_APPROVAL_STATUS_IDS = {
   waitingForApproval: '019e17ac-0b23-7a19-8899-8d02db14fb62',
   approved: '019e17ac-0b24-7887-ac2c-87e2407d85c4',
-  revisionRequested: '019e17ac-0b25-7d37-b718-994cd6503e47',
+  revisionRequested: '019e17ac-0b25-7d37-b718-994cd6503e47'
 } as const
 
 export const FIELD_SALES_EVENT_TYPE_IDS = {
   plannedVisit: '019e206f-9213-76d5-b4c1-cc5c0884afb3',
   task: '019e206f-9214-7ce1-a619-c55ebae6f1d2',
-  unplannedVisit: '019e206f-9215-70e1-a720-fabf2d782d32',
+  unplannedVisit: '019e206f-9215-70e1-a720-fabf2d782d32'
 } as const
 
 export function getFieldSalesConfig(
-  value: Partial<FieldSalesConfig> | null | undefined,
+  value: Partial<FieldSalesConfig> | null | undefined
 ): FieldSalesConfig {
   return {
     ...DEFAULT_FIELD_SALES_CONFIG,
-    ...(value ?? {}),
+    ...(value ?? {})
   }
 }
 
 export function parseTimeToMinutes(value: string) {
   const [hours = '0', minutes = '0'] = value.split(':')
+
   return Number(hours) * 60 + Number(minutes)
 }
 
 export function formatMinutesAsTime(totalMinutes: number) {
   const hours = Math.floor(totalMinutes / 60)
   const minutes = totalMinutes % 60
+
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
 }
 
@@ -96,11 +98,12 @@ export function generateSlotDefinitions(config: FieldSalesConfig) {
   for (let minutes = start; minutes < end; minutes += config.slotMinutes) {
     const slotStart = formatMinutesAsTime(minutes)
     const slotEnd = formatMinutesAsTime(minutes + config.slotMinutes)
+
     slots.push({
       key: slotStart,
       start: slotStart,
       end: slotEnd,
-      label: slotStart,
+      label: slotStart
     })
   }
 
@@ -109,7 +112,7 @@ export function generateSlotDefinitions(config: FieldSalesConfig) {
 
 export function getFieldSalesWeekDays(
   anchorDate: Date,
-  showWeekends: boolean,
+  showWeekends: boolean
 ): Array<Date> {
   const weekStart = startOfWeek(anchorDate, { weekStartsOn: 1 })
   const days = showWeekends ? 7 : 5
@@ -120,7 +123,7 @@ export function getFieldSalesWeekDays(
 export function getFieldSalesPlanningDays(
   anchorDate: Date,
   approvalMode: FieldSalesApprovalMode,
-  showWeekends: boolean,
+  showWeekends: boolean
 ): Array<Date> {
   if (approvalMode === 'weekly') {
     return getFieldSalesWeekDays(anchorDate, showWeekends)
@@ -129,7 +132,7 @@ export function getFieldSalesPlanningDays(
   const monthRange = getMonthRange(anchorDate)
   const days = eachDayOfInterval(monthRange)
 
-  return showWeekends ? days : days.filter((day) => !isWeekend(day))
+  return showWeekends ? days : days.filter(day => !isWeekend(day))
 }
 
 export function getWeekRange(anchorDate: Date, showWeekends: boolean) {
@@ -144,14 +147,14 @@ export function getWeekRange(anchorDate: Date, showWeekends: boolean) {
 export function getMonthRange(anchorDate: Date) {
   return {
     start: startOfMonth(anchorDate),
-    end: endOfMonth(anchorDate),
+    end: endOfMonth(anchorDate)
   }
 }
 
 export function getApprovalRange(
   anchorDate: Date,
   approvalMode: FieldSalesApprovalMode,
-  showWeekends: boolean,
+  showWeekends: boolean
 ) {
   return approvalMode === 'monthly'
     ? getMonthRange(anchorDate)
@@ -161,12 +164,15 @@ export function getApprovalRange(
 export function buildIsoDateTime(date: Date, time: string) {
   const [hours = '0', minutes = '0'] = time.split(':')
   const value = new Date(date)
+
   value.setHours(Number(hours), Number(minutes), 0, 0)
+
   return value.toISOString()
 }
 
 export function buildSlotEndIso(date: Date, time: string, slotMinutes: number) {
   const start = new Date(buildIsoDateTime(date, time))
+
   return addMinutes(start, slotMinutes).toISOString()
 }
 
@@ -180,6 +186,7 @@ export function getTimeKey(value: string | Date) {
 
 export function getSlotKeyFromIso(value: string | undefined) {
   if (!value) return null
+
   return `${getDateKey(value)}|${getTimeKey(value)}`
 }
 
@@ -195,7 +202,7 @@ export function getStatusMeta(status: any) {
   return {
     id: status.id ?? '',
     name: status.name ?? status.label ?? status.slug ?? '',
-    slug: status.slug ?? status.name ?? status.id ?? '',
+    slug: status.slug ?? status.name ?? status.id ?? ''
   }
 }
 
@@ -206,15 +213,15 @@ function normalizeStatusToken(value: string) {
 function matchesStatusTokens(
   value: any,
   tokens: Array<string>,
-  ids: Array<string>,
+  ids: Array<string>
 ) {
   const meta = getStatusMeta(value)
   const normalized = [meta.id, meta.slug, meta.name]
     .filter(Boolean)
-    .map((token) => normalizeStatusToken(String(token)))
+    .map(token => normalizeStatusToken(String(token)))
 
   return normalized.some(
-    (token) => ids.includes(token) || tokens.includes(token),
+    token => ids.includes(token) || tokens.includes(token)
   )
 }
 
@@ -223,7 +230,7 @@ export function getFieldSalesPlanStatusCode(value: any) {
     matchesStatusTokens(
       value,
       ['waiting', 'beklemede'],
-      [FIELD_SALES_PLAN_STATUS_IDS.waiting],
+      [FIELD_SALES_PLAN_STATUS_IDS.waiting]
     )
   ) {
     return 'waiting'
@@ -233,7 +240,7 @@ export function getFieldSalesPlanStatusCode(value: any) {
     matchesStatusTokens(
       value,
       ['postponed', 'ertelendi'],
-      [FIELD_SALES_PLAN_STATUS_IDS.postponed],
+      [FIELD_SALES_PLAN_STATUS_IDS.postponed]
     )
   ) {
     return 'postponed'
@@ -243,7 +250,7 @@ export function getFieldSalesPlanStatusCode(value: any) {
     matchesStatusTokens(
       value,
       ['completed', 'gerçekleşti'],
-      [FIELD_SALES_PLAN_STATUS_IDS.completed],
+      [FIELD_SALES_PLAN_STATUS_IDS.completed]
     )
   ) {
     return 'completed'
@@ -253,7 +260,7 @@ export function getFieldSalesPlanStatusCode(value: any) {
     matchesStatusTokens(
       value,
       ['checked_in', 'ziyarette'],
-      [FIELD_SALES_PLAN_STATUS_IDS.checkedIn],
+      [FIELD_SALES_PLAN_STATUS_IDS.checkedIn]
     )
   ) {
     return 'checked_in'
@@ -263,7 +270,7 @@ export function getFieldSalesPlanStatusCode(value: any) {
     matchesStatusTokens(
       value,
       ['cancelled', 'iptal'],
-      [FIELD_SALES_PLAN_STATUS_IDS.cancelled],
+      [FIELD_SALES_PLAN_STATUS_IDS.cancelled]
     )
   ) {
     return 'cancelled'
@@ -277,7 +284,7 @@ export function getFieldSalesApprovalStatusCode(value: any) {
     matchesStatusTokens(
       value,
       ['waiting_for_approval', 'onay bekliyor'],
-      [FIELD_SALES_APPROVAL_STATUS_IDS.waitingForApproval],
+      [FIELD_SALES_APPROVAL_STATUS_IDS.waitingForApproval]
     )
   ) {
     return 'waiting_for_approval'
@@ -287,7 +294,7 @@ export function getFieldSalesApprovalStatusCode(value: any) {
     matchesStatusTokens(
       value,
       ['approved', 'onaylandı'],
-      [FIELD_SALES_APPROVAL_STATUS_IDS.approved],
+      [FIELD_SALES_APPROVAL_STATUS_IDS.approved]
     )
   ) {
     return 'approved'
@@ -297,7 +304,7 @@ export function getFieldSalesApprovalStatusCode(value: any) {
     matchesStatusTokens(
       value,
       ['revision_requested', 'revizyon'],
-      [FIELD_SALES_APPROVAL_STATUS_IDS.revisionRequested],
+      [FIELD_SALES_APPROVAL_STATUS_IDS.revisionRequested]
     )
   ) {
     return 'revision_requested'
@@ -311,7 +318,7 @@ export function getFieldSalesEventTypeCode(value: any) {
     matchesStatusTokens(
       value,
       ['planned_visit', 'planned visit'],
-      [FIELD_SALES_EVENT_TYPE_IDS.plannedVisit],
+      [FIELD_SALES_EVENT_TYPE_IDS.plannedVisit]
     )
   ) {
     return 'planned_visit'
@@ -325,7 +332,7 @@ export function getFieldSalesEventTypeCode(value: any) {
     matchesStatusTokens(
       value,
       ['unplanned_visit', 'unplanned visit'],
-      [FIELD_SALES_EVENT_TYPE_IDS.unplannedVisit],
+      [FIELD_SALES_EVENT_TYPE_IDS.unplannedVisit]
     )
   ) {
     return 'unplanned_visit'
@@ -337,12 +344,14 @@ export function getFieldSalesEventTypeCode(value: any) {
 export function getRelationName(value: any) {
   if (!value) return ''
   if (typeof value === 'string') return value
+
   return value.name ?? value.label ?? ''
 }
 
 export function getUserDisplayName(value: any) {
   if (!value) return ''
   if (typeof value === 'string') return value
+
   return (
     [value.firstname, value.lastname].filter(Boolean).join(' ').trim() ||
     value.name ||
@@ -362,7 +371,7 @@ export function getMonthApprovalLabel(date: Date, owner: any) {
 export function getApprovalLabel(
   date: Date,
   owner: any,
-  approvalMode: FieldSalesApprovalMode,
+  approvalMode: FieldSalesApprovalMode
 ) {
   return approvalMode === 'monthly'
     ? getMonthApprovalLabel(date, owner)
@@ -374,16 +383,16 @@ export function parseMapLocation(value: any) {
 
   const latitude = Number(
     value.latitude ??
-      value.lat ??
-      value.coords?.latitude ??
-      value.location?.lat,
+    value.lat ??
+    value.coords?.latitude ??
+    value.location?.lat
   )
   const longitude = Number(
     value.longitude ??
-      value.lng ??
-      value.lon ??
-      value.coords?.longitude ??
-      value.location?.lng,
+    value.lng ??
+    value.lon ??
+    value.coords?.longitude ??
+    value.location?.lng
   )
 
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
@@ -393,13 +402,13 @@ export function parseMapLocation(value: any) {
   return {
     latitude,
     longitude,
-    label: value.address ?? value.label ?? value.name ?? '',
+    label: value.address ?? value.label ?? value.name ?? ''
   }
 }
 
 export function haversineDistanceMeters(
   first: { latitude: number; longitude: number },
-  second: { latitude: number; longitude: number },
+  second: { latitude: number; longitude: number }
 ) {
   const toRadians = (degrees: number) => (degrees * Math.PI) / 180
   const earthRadius = 6371000
@@ -418,14 +427,16 @@ export function haversineDistanceMeters(
 export function isDateWithinRange(
   value: string | undefined,
   start: Date,
-  end: Date,
+  end: Date
 ) {
   if (!value) return false
   const parsed = parseISO(value)
+
   return parsed >= start && parsed <= end
 }
 
 export function isSameCalendarDay(value: string | undefined, day: Date) {
   if (!value) return false
+
   return isSameDay(parseISO(value), day)
 }

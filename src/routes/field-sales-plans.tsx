@@ -1,9 +1,13 @@
 import { useMemo, useState } from 'react'
+
+import { type SlotDefinition } from '@/lib/field-sales'
+
 import { useTranslation } from 'react-i18next'
-import { format, addMonths, addWeeks } from 'date-fns'
+import { addMonths, addWeeks, format } from 'date-fns'
 import { useQueryClient } from '@tanstack/react-query'
 import { CalendarRange, RefreshCcw, Send, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
+
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
 import { FieldSalesScheduleBoard } from '@/components/field-sales/field-sales-schedule-board'
@@ -19,14 +23,14 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogTitle
 } from '@/components/ui/alert-dialog'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
 import { useCompanies } from '@/hooks/use-companies'
 import { useContacts } from '@/hooks/use-contacts'
@@ -37,7 +41,7 @@ import {
   useFieldSalesConfig,
   useFieldSalesCurrentApproval,
   useFieldSalesPlans,
-  useUpdateFieldSalesPlan,
+  useUpdateFieldSalesPlan
 } from '@/hooks/use-field-sales'
 import { useMyInfo, useUsers } from '@/hooks/use-users'
 import {
@@ -52,48 +56,49 @@ import {
   getFieldSalesApprovalStatusCode,
   getFieldSalesPlanningDays,
   getRelationName,
-  isDateWithinRange,
-  type SlotDefinition,
+  isDateWithinRange
 } from '@/lib/field-sales'
 import {
   useBaseCrmPlanApprovalCollection,
-  useBaseEventCollection,
+  useBaseEventCollection
 } from '@/collections'
 
 type PlanRecord = {
-  id?: string
-  subject?: string
-  start_date?: string
-  end_date?: string
-  status?: unknown
-  event_type?: unknown
-  organization?: any
-  contact?: any
-  weekly_plan?: any
-  record_owner?: any
-  location?: Record<string, unknown> | null
+  id?: string;
+  subject?: string;
+  start_date?: string;
+  end_date?: string;
+  status?: unknown;
+  event_type?: unknown;
+  organization?: any;
+  contact?: any;
+  weekly_plan?: any;
+  record_owner?: any;
+  location?: Record<string, unknown> | null;
 }
 
 type SourceRecord = {
-  id?: string
-  name?: string
-  phone?: string
-  email?: string
-  mobile?: string
-  address?: string
-  map_location?: Record<string, unknown> | null
-  organization?: { id?: string; name?: string } | string
+  id?: string;
+  name?: string;
+  phone?: string;
+  email?: string;
+  mobile?: string;
+  address?: string;
+  map_location?: Record<string, unknown> | null;
+  organization?: { id?: string; name?: string } | string;
 }
 
 function getUserId(value: any) {
   if (!value) return ''
   if (typeof value === 'string') return value
+
   return value.id ?? ''
 }
 
 function getRelationId(value: any) {
   if (!value) return ''
   if (typeof value === 'string') return value
+
   return value.id ?? ''
 }
 
@@ -121,9 +126,16 @@ export function FieldSalesPlansPage() {
   const { data: users = [] } = useUsers()
   const { data: myInfo } = useMyInfo()
   const { data: companies = [] } = useCompanies({
-    columns: ['id', 'name', 'phone', 'email', 'address', 'map_location'],
+    columns: [
+'id',
+'name',
+'phone',
+'email',
+'address',
+'map_location'
+],
     orderBy: 'name ASC',
-    limit: 300,
+    limit: 300
   })
   const { data: contacts = [] } = useContacts({
     columns: [
@@ -132,10 +144,10 @@ export function FieldSalesPlansPage() {
       'mobile',
       'email',
       'map_location',
-      'organization(id,name)',
+      'organization(id,name)'
     ],
     orderBy: 'name ASC',
-    limit: 300,
+    limit: 300
   })
   const createPlan = useCreateFieldSalesPlan()
   const updatePlan = useUpdateFieldSalesPlan()
@@ -148,7 +160,7 @@ export function FieldSalesPlansPage() {
   const [sourceFilter, setSourceFilter] = useState<SourceFilterOption>('all')
   const [sourceSort, setSourceSort] = useState<SourceSortOption>('name_asc')
   const [pendingDeletePlan, setPendingDeletePlan] = useState<PlanRecord | null>(
-    null,
+    null
   )
   const [optimisticApprovalRangeKeys, setOptimisticApprovalRangeKeys] =
     useState<Array<string>>([])
@@ -161,26 +173,25 @@ export function FieldSalesPlansPage() {
     allowedDistanceMeters: 250,
     showWeekends: false,
     dayStartTime: '09:00',
-    dayEndTime: '18:00',
+    dayEndTime: '18:00'
   }
-  const approvalMode = plannerConfig.approvalMode
-  const showWeekends = plannerConfig.showWeekends
+  const { approvalMode } = plannerConfig
+  const { showWeekends } = plannerConfig
   const slots = generateSlotDefinitions(plannerConfig)
 
   const days = useMemo(
     () => getFieldSalesPlanningDays(anchorDate, approvalMode, showWeekends),
-    [anchorDate, approvalMode, showWeekends],
+    [anchorDate, approvalMode, showWeekends]
   )
 
   const approvalRange = useMemo(
     () => getApprovalRange(anchorDate, approvalMode, showWeekends),
-    [anchorDate, approvalMode, showWeekends],
+    [anchorDate, approvalMode, showWeekends]
   )
 
   const ownerId = myInfo?.id
   const scopedPlans = useMemo(
-    () =>
-      (allPlans as Array<PlanRecord>).filter((plan) => {
+    () => (allPlans as Array<PlanRecord>).filter((plan) => {
         const planOwnerId = getUserId(plan.record_owner)
         const belongsToCurrentUser = ownerId ? planOwnerId === ownerId : true
 
@@ -189,24 +200,27 @@ export function FieldSalesPlansPage() {
           isDateWithinRange(
             plan.start_date,
             approvalRange.start,
-            approvalRange.end,
+            approvalRange.end
           )
         )
       }),
-    [allPlans, approvalRange.end, approvalRange.start, ownerId],
+    [
+allPlans,
+approvalRange.end,
+approvalRange.start,
+ownerId
+]
   )
 
   const currentApproval = useFieldSalesCurrentApproval(
     approvals,
     ownerId,
     format(approvalRange.start, 'yyyy-MM-dd'),
-    format(approvalRange.end, 'yyyy-MM-dd'),
+    format(approvalRange.end, 'yyyy-MM-dd')
   )
 
   const sourceRecords = useMemo<Array<SourceRecord>>(() => {
-    return plannerConfig.planningEntity === 'contact'
-      ? (contacts as Array<SourceRecord>)
-      : (companies as Array<SourceRecord>)
+    return plannerConfig.planningEntity === 'contact' ? contacts : companies
   }, [companies, contacts, plannerConfig.planningEntity])
 
   const plannedSourceIds = useMemo(() => {
@@ -257,20 +271,20 @@ export function FieldSalesPlansPage() {
           getSourceName(right, t),
           'tr',
           {
-            sensitivity: 'base',
-          },
+            sensitivity: 'base'
+          }
         )
 
         return sourceSort === 'name_desc' ? comparison * -1 : comparison
       })
-      .map((record) => ({
+      .map(record => ({
         id: record.id || '',
         title: getSourceName(record, t),
         subtitle:
           plannerConfig.planningEntity === 'contact'
             ? getRelationName(record.organization)
             : record.address || '',
-        detail: getRecordSubtitle(record),
+        detail: getRecordSubtitle(record)
       }))
   }, [
     plannedSourceIds,
@@ -279,15 +293,15 @@ export function FieldSalesPlansPage() {
     sourceFilter,
     sourceRecords,
     sourceSort,
-    t,
+    t
   ])
 
   const approvalRangeKey = `${format(approvalRange.start, 'yyyy-MM-dd')}|${format(
     approvalRange.end,
-    'yyyy-MM-dd',
+    'yyyy-MM-dd'
   )}`
   const currentApprovalCode = getFieldSalesApprovalStatusCode(
-    currentApproval?.approval_status,
+    currentApproval?.approval_status
   )
   const isOptimisticallyPending =
     !currentApprovalCode &&
@@ -315,11 +329,12 @@ export function FieldSalesPlansPage() {
   const handleDropToSlot = async (
     payload: { type: 'source' | 'plan'; id: string },
     day: Date,
-    slot: SlotDefinition,
+    slot: SlotDefinition
   ) => {
     if (!myInfo?.id) return
     if (planEditingLocked) {
       toast.error(t('fieldSales.plans.cannotEditApprovedPlans'))
+
       return
     }
 
@@ -327,7 +342,8 @@ export function FieldSalesPlansPage() {
     const endDate = buildSlotEndIso(day, slot.start, plannerConfig.slotMinutes)
 
     if (payload.type === 'source') {
-      const record = sourceRecords.find((item) => item.id === payload.id)
+      const record = sourceRecords.find(item => item.id === payload.id)
+
       if (!record?.id) return
 
       const basePayload: Record<string, unknown> = {
@@ -339,7 +355,7 @@ export function FieldSalesPlansPage() {
         event_type: FIELD_SALES_EVENT_TYPE_IDS.plannedVisit,
         require_approval: true,
         record_owner: myInfo.id,
-        location: record.map_location ?? null,
+        location: record.map_location ?? null
       }
 
       if (plannerConfig.planningEntity === 'organization') {
@@ -352,13 +368,16 @@ export function FieldSalesPlansPage() {
       }
 
       await createPlan.mutateAsync(basePayload)
+
       return
     }
 
-    const plan = scopedPlans.find((item) => item.id === payload.id)
+    const plan = scopedPlans.find(item => item.id === payload.id)
+
     if (!plan?.id) return
     if (!canEditPlan(plan)) {
       toast.error(t('fieldSales.plans.cannotMoveInApproval'))
+
       return
     }
 
@@ -366,27 +385,24 @@ export function FieldSalesPlansPage() {
       planId: plan.id,
       data: {
         start_date: startDate,
-        end_date: endDate,
-      },
+        end_date: endDate
+      }
     })
   }
 
   const refreshQueries = async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['field-sales', 'plans'] }),
-      queryClient.invalidateQueries({ queryKey: ['field-sales', 'approvals'] }),
-      queryClient.invalidateQueries({ queryKey: ['events'] }),
-    ])
+    await Promise.all([queryClient.invalidateQueries({ queryKey: ['field-sales', 'plans'] }), queryClient.invalidateQueries({ queryKey: ['field-sales', 'approvals'] }), queryClient.invalidateQueries({ queryKey: ['events'] })])
   }
 
   const submitRangeForApproval = async () => {
     if (!myInfo?.id) return
     if (scopedPlans.length === 0) {
       toast.error(t('fieldSales.plans.requiresPlansForSubmission'))
+
       return
     }
 
-    const approver = users.find((user) => user.id && user.id !== myInfo.id)
+    const approver = users.find(user => user.id && user.id !== myInfo.id)
 
     const approval = await approvalCollection.create({
       label: getApprovalLabel(anchorDate, myInfo, approvalMode),
@@ -397,25 +413,21 @@ export function FieldSalesPlansPage() {
       plan_owner: myInfo.id,
       approved_by: approver?.id,
       record_owner: myInfo.id,
-      name: getApprovalLabel(anchorDate, myInfo, approvalMode),
+      name: getApprovalLabel(anchorDate, myInfo, approvalMode)
     })
 
     await Promise.all(
       scopedPlans
-        .filter((plan) => plan.id)
-        .map((plan) =>
-          planCollection.update(plan.id!, {
+        .filter(plan => plan.id)
+        .map(plan => planCollection.update(plan.id!, {
             plan_approval: approval.id,
-            require_approval: true,
-          }),
-        ),
+            require_approval: true
+          }))
     )
 
-    setOptimisticApprovalRangeKeys((current) =>
-      current.includes(approvalRangeKey)
+    setOptimisticApprovalRangeKeys(current => current.includes(approvalRangeKey)
         ? current
-        : [...current, approvalRangeKey],
-    )
+        : [...current, approvalRangeKey])
 
     await refreshQueries()
     toast.success(t('fieldSales.messages.planSubmittedForApproval'))
@@ -425,49 +437,45 @@ export function FieldSalesPlansPage() {
     if (!currentApproval?.id) return
     if (currentApprovalCode !== 'revision_requested') {
       toast.error(t('fieldSales.plans.onlyRevisionPlansCanResubmit'))
+
       return
     }
     if (scopedPlans.length === 0) {
       toast.error(t('fieldSales.plans.requiresPlansForResubmission'))
+
       return
     }
 
     await approvalCollection.update(currentApproval.id, {
       approval_status: FIELD_SALES_APPROVAL_STATUS_IDS.waitingForApproval,
-      revision_message: '',
+      revision_message: ''
     })
 
     await Promise.all(
       scopedPlans
-        .filter((plan) => plan.id)
-        .map((plan) =>
-          planCollection.update(plan.id!, {
+        .filter(plan => plan.id)
+        .map(plan => planCollection.update(plan.id!, {
             plan_approval: currentApproval.id,
-            require_approval: true,
-          }),
-        ),
+            require_approval: true
+          }))
     )
 
-    setOptimisticApprovalRangeKeys((current) =>
-      current.includes(approvalRangeKey)
+    setOptimisticApprovalRangeKeys(current => current.includes(approvalRangeKey)
         ? current
-        : [...current, approvalRangeKey],
-    )
+        : [...current, approvalRangeKey])
 
     await refreshQueries()
     toast.success(t('fieldSales.plans.resubmittedToast'))
   }
 
   const navigateRange = (direction: 'prev' | 'next') => {
-    setAnchorDate((current) =>
-      approvalMode === 'monthly'
+    setAnchorDate(current => approvalMode === 'monthly'
         ? direction === 'next'
           ? addMonths(current, 1)
           : addMonths(current, -1)
         : direction === 'next'
           ? addWeeks(current, 1)
-          : addWeeks(current, -1),
-    )
+          : addWeeks(current, -1))
   }
 
   const confirmDeletePlan = async () => {
@@ -485,14 +493,11 @@ export function FieldSalesPlansPage() {
           <Badge variant="secondary">
             {t('fieldSales.plans.planCount', { count: scopedPlans.length })}
           </Badge>
-        }
-      />
+        } />
       <PageContainer className="space-y-4 overflow-x-hidden px-3 sm:px-4 lg:px-6">
         {currentApprovalCode === 'revision_requested' ? (
           <Alert>
-            <AlertTitle>
-              {t('fieldSales.plans.revisionPending')}
-            </AlertTitle>
+            <AlertTitle>{t('fieldSales.plans.revisionPending')}</AlertTitle>
             <AlertDescription>
               {currentApproval?.revision_message ||
                 t('fieldSales.plans.revisionPendingDescription')}{' '}
@@ -513,24 +518,19 @@ export function FieldSalesPlansPage() {
             <div className="space-y-3">
               <Input
                 value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
+                onChange={event => setSearchTerm(event.target.value)}
                 placeholder={
                   plannerConfig.planningEntity === 'contact'
                     ? t('fieldSales.plans.searchContacts')
                     : t('fieldSales.plans.searchOrganizations')
-                }
-              />
+                } />
               <div className="grid gap-2 sm:grid-cols-2">
                 <Select
                   value={sourceFilter}
-                  onValueChange={(value) =>
-                    setSourceFilter(value as SourceFilterOption)
-                  }
-                >
+                  onValueChange={value => setSourceFilter(value as SourceFilterOption)}>
                   <SelectTrigger className="w-full" size="sm">
                     <SelectValue
-                      placeholder={t('fieldSales.plans.filterLabel')}
-                    />
+                      placeholder={t('fieldSales.plans.filterLabel')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">
@@ -549,14 +549,10 @@ export function FieldSalesPlansPage() {
                 </Select>
                 <Select
                   value={sourceSort}
-                  onValueChange={(value) =>
-                    setSourceSort(value as SourceSortOption)
-                  }
-                >
+                  onValueChange={value => setSourceSort(value as SourceSortOption)}>
                   <SelectTrigger className="w-full" size="sm">
                     <SelectValue
-                      placeholder={t('fieldSales.plans.sortLabel')}
-                    />
+                      placeholder={t('fieldSales.plans.sortLabel')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="name_asc">
@@ -570,7 +566,7 @@ export function FieldSalesPlansPage() {
               </div>
               <p className="text-xs text-muted-foreground">
                 {t('fieldSales.plans.recordsListed', {
-                  count: sourceItems.length,
+                  count: sourceItems.length
                 })}
               </p>
             </div>
@@ -593,15 +589,13 @@ export function FieldSalesPlansPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => navigateRange('prev')}
-                  >
+                    onClick={() => navigateRange('prev')}>
                     {t('fieldSales.common.previous')}
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => navigateRange('next')}
-                  >
+                    onClick={() => navigateRange('next')}>
                     {t('fieldSales.common.next')}
                   </Button>
                 </div>
@@ -616,8 +610,7 @@ export function FieldSalesPlansPage() {
                 <Button
                   className="w-full sm:w-auto"
                   variant="secondary"
-                  disabled
-                >
+                  disabled>
                   {effectiveCurrentApprovalCode === 'approved'
                     ? t('fieldSales.plans.planApproved')
                     : t('fieldSales.plans.planAwaitingApproval')}
@@ -625,8 +618,7 @@ export function FieldSalesPlansPage() {
               ) : (
                 <Button
                   className="w-full sm:w-auto"
-                  onClick={submitRangeForApproval}
-                >
+                  onClick={submitRangeForApproval}>
                   <Send className="mr-2 h-4 w-4" />
                   {approvalMode === 'monthly'
                     ? t('fieldSales.plans.submitForApprovalMonthly')
@@ -638,11 +630,10 @@ export function FieldSalesPlansPage() {
           days={days}
           slots={slots}
           plans={scopedPlans}
-          canDragPlan={(plan) => canEditPlan(plan as PlanRecord)}
-          canDeletePlan={(plan) => canEditPlan(plan as PlanRecord)}
-          onDeletePlan={(plan) => setPendingDeletePlan(plan as PlanRecord)}
-          onDropToSlot={handleDropToSlot}
-        />
+          canDragPlan={plan => canEditPlan(plan as PlanRecord)}
+          canDeletePlan={plan => canEditPlan(plan as PlanRecord)}
+          onDeletePlan={plan => setPendingDeletePlan(plan as PlanRecord)}
+          onDropToSlot={handleDropToSlot} />
       </PageContainer>
 
       <AlertDialog
@@ -651,8 +642,7 @@ export function FieldSalesPlansPage() {
           if (!open && !deletePlan.isPending) {
             setPendingDeletePlan(null)
           }
-        }}
-      >
+        }}>
         <AlertDialogContent size="sm">
           <AlertDialogHeader>
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
@@ -668,9 +658,10 @@ export function FieldSalesPlansPage() {
                   (pendingDeletePlan.subject ||
                     getRelationName(pendingDeletePlan.organization) ||
                     getRelationName(pendingDeletePlan.contact))
+
                 return planName
                   ? t('fieldSales.plans.deleteConfirmDescription', {
-                      name: planName,
+                      name: planName
                     })
                   : t('fieldSales.plans.deleteConfirmDescriptionDefault')
               })()}
@@ -683,8 +674,7 @@ export function FieldSalesPlansPage() {
             <AlertDialogAction
               variant="destructive"
               disabled={deletePlan.isPending}
-              onClick={confirmDeletePlan}
-            >
+              onClick={confirmDeletePlan}>
               {deletePlan.isPending
                 ? t('fieldSales.common.deleting')
                 : t('fieldSales.plans.deleteButton')}

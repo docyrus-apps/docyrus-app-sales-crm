@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { memo, useCallback, useRef, type ComponentProps } from 'react'
 
 import { type TableMeta } from '@tanstack/react-table'
@@ -16,7 +18,7 @@ import {
 import { useAsRef } from '@/hooks/use-as-ref'
 import { cn } from '@/lib/utils'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 import { type PasteDialogState } from './types'
 
@@ -130,7 +132,7 @@ function PasteDialogImpl({
           <Button variant="outline" onClick={onCancel}>
             {t('ui.common.cancel', 'Cancel')}
           </Button>
-          <Button onClick={onContinue}>Continue</Button>
+          <Button onClick={onContinue}>Paste rows</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

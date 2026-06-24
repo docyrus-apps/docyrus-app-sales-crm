@@ -1,28 +1,33 @@
 import { useState } from 'react'
+
+import { type CallHistoryRow } from '@/hooks/use-webphone-call-history'
+
 import { format, parseISO } from 'date-fns'
 import {
   ExternalLink,
   Loader2,
   PhoneIncoming,
   PhoneMissed,
-  PhoneOutgoing,
+  PhoneOutgoing
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+
 import { useWebphone } from './webphone-context'
+
 import {
-  type CallHistoryRow,
   useCustomerCallHistory,
-  useCustomerPinnedNotes,
+  useCustomerPinnedNotes
 } from '@/hooks/use-webphone-call-history'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 
 function enumName(
-  value: { name?: string } | string | null | undefined,
+  value: { name?: string } | string | null | undefined
 ): string {
   if (!value) return ''
   if (typeof value === 'string') return value
+
   return value.name ?? ''
 }
 
@@ -39,6 +44,7 @@ function formatDuration(seconds: number | null | undefined): string {
   if (!seconds || seconds <= 0) return ''
   const minutes = Math.floor(seconds / 60)
   const rest = seconds % 60
+
   return `${minutes}:${String(rest).padStart(2, '0')}`
 }
 
@@ -63,8 +69,7 @@ function CallRow({ row }: { row: CallHistoryRow }) {
             : isInbound
               ? 'size-4 shrink-0 text-emerald-500'
               : 'size-4 shrink-0 text-blue-500'
-        }
-      />
+        } />
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-medium">{title}</div>
         <div className="truncate text-xs text-muted-foreground">
@@ -80,8 +85,7 @@ function CallRow({ row }: { row: CallHistoryRow }) {
           href={row.recording_url}
           target="_blank"
           rel="noreferrer"
-          className="text-muted-foreground hover:text-foreground"
-        >
+          className="text-muted-foreground hover:text-foreground">
           <ExternalLink className="size-4" />
         </a>
       )}
@@ -90,9 +94,9 @@ function CallRow({ row }: { row: CallHistoryRow }) {
 }
 
 interface WebphoneCustomerCallsProps {
-  contactId?: string
-  leadId?: string
-  phone?: string
+  contactId?: string;
+  leadId?: string;
+  phone?: string;
 }
 
 /**
@@ -103,7 +107,7 @@ interface WebphoneCustomerCallsProps {
 export function WebphoneCustomerCalls({
   contactId,
   leadId,
-  phone,
+  phone
 }: WebphoneCustomerCallsProps) {
   const { t } = useTranslation()
   const { createPinnedNote } = useWebphone()
@@ -143,7 +147,7 @@ export function WebphoneCustomerCalls({
           </p>
         ) : (
           <div className="space-y-1.5">
-            {calls.map((row) => (
+            {calls.map(row => (
               <CallRow key={row.id} row={row} />
             ))}
           </div>
@@ -155,16 +159,14 @@ export function WebphoneCustomerCalls({
         <div className="space-y-2">
           <Textarea
             value={noteText}
-            onChange={(event) => setNoteText(event.target.value)}
+            onChange={event => setNoteText(event.target.value)}
             placeholder={t('webphone.notes.placeholder')}
-            className="min-h-16 text-sm"
-          />
+            className="min-h-16 text-sm" />
           <div className="flex justify-end">
             <Button
               size="sm"
               disabled={!noteText.trim() || saving}
-              onClick={addNote}
-            >
+              onClick={addNote}>
               {saving ? t('common.saving') : t('webphone.notes.add')}
             </Button>
           </div>
@@ -180,7 +182,7 @@ export function WebphoneCustomerCalls({
           </p>
         ) : (
           <div className="space-y-1.5">
-            {notes.map((note) => (
+            {notes.map(note => (
               <div key={note.id} className="rounded-lg border px-3 py-2">
                 <div className="whitespace-pre-wrap text-sm">
                   {note.note_text}

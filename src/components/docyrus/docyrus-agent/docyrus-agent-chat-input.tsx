@@ -1,35 +1,35 @@
-'use client';
+'use client'
 
 // @ts-nocheck
 /* eslint-disable */
-import { type ReactNode, useCallback } from 'react';
+import { type ReactNode, useCallback } from 'react'
 
 import {
   type PromptInputMessage,
   PromptInput,
   PromptInputFooter,
   PromptInputProvider,
-  PromptInputTools
-} from '@/components/ai-elements/prompt-input';
+  PromptInputTools,
+} from '@/components/ai-elements/prompt-input'
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'
 
-import { useDocyrusAgent } from './docyrus-agent-context';
-import { DocyrusAgentChatInputAttachButton } from './docyrus-agent-chat-input-attach-button';
-import { DocyrusAgentChatInputAttachments } from './docyrus-agent-chat-input-attachments';
-import { DocyrusAgentChatInputDeepResearchToggle } from './docyrus-agent-chat-input-deep-research-toggle';
-import { DocyrusAgentChatInputDocumentSearchToggle } from './docyrus-agent-chat-input-document-search-toggle';
-import { DocyrusAgentChatInputFeatureMenu } from './docyrus-agent-chat-input-feature-menu';
-import { DocyrusAgentChatInputSubmit } from './docyrus-agent-chat-input-submit';
-import { DocyrusAgentChatInputTextarea } from './docyrus-agent-chat-input-textarea';
-import { DocyrusAgentChatInputThinkingToggle } from './docyrus-agent-chat-input-thinking-toggle';
-import { DocyrusAgentChatInputWebSearchToggle } from './docyrus-agent-chat-input-web-search-toggle';
-import { DocyrusAgentChatInputWorkCanvasToggle } from './docyrus-agent-chat-input-work-canvas-toggle';
+import { useDocyrusAgent } from './docyrus-agent-context'
+import { DocyrusAgentChatInputAttachButton } from './docyrus-agent-chat-input-attach-button'
+import { DocyrusAgentChatInputAttachments } from './docyrus-agent-chat-input-attachments'
+import { DocyrusAgentChatInputDeepResearchToggle } from './docyrus-agent-chat-input-deep-research-toggle'
+import { DocyrusAgentChatInputDocumentSearchToggle } from './docyrus-agent-chat-input-document-search-toggle'
+import { DocyrusAgentChatInputFeatureMenu } from './docyrus-agent-chat-input-feature-menu'
+import { DocyrusAgentChatInputSubmit } from './docyrus-agent-chat-input-submit'
+import { DocyrusAgentChatInputTextarea } from './docyrus-agent-chat-input-textarea'
+import { DocyrusAgentChatInputThinkingToggle } from './docyrus-agent-chat-input-thinking-toggle'
+import { DocyrusAgentChatInputWebSearchToggle } from './docyrus-agent-chat-input-web-search-toggle'
+import { DocyrusAgentChatInputWorkCanvasToggle } from './docyrus-agent-chat-input-work-canvas-toggle'
 
-export type DocyrusAgentChatInputToolbarLayout = 'menu' | 'expanded';
+export type DocyrusAgentChatInputToolbarLayout = 'menu' | 'expanded'
 
 export interface DocyrusAgentChatInputProps {
-  className?: string;
+  className?: string
   /**
    * Override the default body (attachments preview + textarea + footer). When supplied,
    * the wrapping `<PromptInput>` (with `onSubmit` wired to `onSendMessage` from context)
@@ -37,40 +37,37 @@ export interface DocyrusAgentChatInputProps {
    * `<DocyrusAgentChatInputTextarea />`, `<DocyrusAgentChatInputAttachButton />`,
    * `<DocyrusAgentChatInputSubmit />`, custom toolbar buttons, etc.
    */
-  children?: ReactNode;
+  children?: ReactNode
 }
 
 export const DocyrusAgentChatInput = ({
   className,
-  children
+  children,
 }: DocyrusAgentChatInputProps) => {
-  const { onSendMessage, acceptFileTypes, featureFlags } = useDocyrusAgent();
+  const { onSendMessage, acceptFileTypes, featureFlags } = useDocyrusAgent()
 
   const handleSubmit = useCallback(
     (message: PromptInputMessage) => {
-      if (!message.text.trim() && message.files.length === 0) return;
+      if (!message.text.trim() && message.files.length === 0) return
       onSendMessage?.({
         files: message.files.length > 0 ? message.files : undefined,
         text: message.text,
-        featureFlags
-      });
+        featureFlags,
+      })
     },
-    [onSendMessage, featureFlags]
-  );
+    [onSendMessage, featureFlags],
+  )
 
   return (
     <div className={cn('border-t px-4 py-3', className)}>
       <PromptInputProvider>
-        <PromptInput
-          accept={acceptFileTypes}
-          multiple
-          onSubmit={handleSubmit}>
+        <PromptInput accept={acceptFileTypes} multiple onSubmit={handleSubmit}>
           {children ?? <DocyrusAgentChatInputDefaultBody />}
         </PromptInput>
       </PromptInputProvider>
     </div>
-  );
-};
+  )
+}
 
 export interface DocyrusAgentChatInputDefaultBodyProps {
   /**
@@ -78,7 +75,7 @@ export interface DocyrusAgentChatInputDefaultBodyProps {
    * - `'menu'` (default): all five toggles collapse into one `DocyrusAgentChatInputFeatureMenu` dropdown
    * - `'expanded'`: each capability-supported toggle renders as a separate `PromptInputButton`
    */
-  toolbarLayout?: DocyrusAgentChatInputToolbarLayout;
+  toolbarLayout?: DocyrusAgentChatInputToolbarLayout
 }
 
 /**
@@ -92,9 +89,9 @@ export interface DocyrusAgentChatInputDefaultBodyProps {
  * `<DocyrusAgentChatInputSubmit />`, and any custom buttons.
  */
 export const DocyrusAgentChatInputDefaultBody = ({
-  toolbarLayout = 'menu'
+  toolbarLayout = 'menu',
 }: DocyrusAgentChatInputDefaultBodyProps = {}) => {
-  const { allowAttachments, capabilities } = useDocyrusAgent();
+  const { allowAttachments, capabilities } = useDocyrusAgent()
 
   return (
     <>
@@ -107,16 +104,26 @@ export const DocyrusAgentChatInputDefaultBody = ({
             <DocyrusAgentChatInputFeatureMenu />
           ) : (
             <>
-              {capabilities.supportWebSearch && <DocyrusAgentChatInputWebSearchToggle />}
-              {capabilities.supportDocumentSearch && <DocyrusAgentChatInputDocumentSearchToggle />}
-              {capabilities.supportThinking && <DocyrusAgentChatInputThinkingToggle />}
-              {capabilities.supportDeepResearch && <DocyrusAgentChatInputDeepResearchToggle />}
-              {capabilities.supportWorkCanvas && <DocyrusAgentChatInputWorkCanvasToggle />}
+              {capabilities.supportWebSearch && (
+                <DocyrusAgentChatInputWebSearchToggle />
+              )}
+              {capabilities.supportDocumentSearch && (
+                <DocyrusAgentChatInputDocumentSearchToggle />
+              )}
+              {capabilities.supportThinking && (
+                <DocyrusAgentChatInputThinkingToggle />
+              )}
+              {capabilities.supportDeepResearch && (
+                <DocyrusAgentChatInputDeepResearchToggle />
+              )}
+              {capabilities.supportWorkCanvas && (
+                <DocyrusAgentChatInputWorkCanvasToggle />
+              )}
             </>
           )}
         </PromptInputTools>
         <DocyrusAgentChatInputSubmit />
       </PromptInputFooter>
     </>
-  );
-};
+  )
+}

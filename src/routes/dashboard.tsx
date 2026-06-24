@@ -1,4 +1,7 @@
 import { useId, useMemo, useState } from 'react'
+
+import type { PieData } from '@/components/charts/pie-context'
+
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import {
@@ -10,9 +13,9 @@ import {
   PieChartIcon,
   TrendingUp,
   UserPlus,
-  Users,
+  Users
 } from 'lucide-react'
-import type { PieData } from '@/components/charts/pie-context'
+
 import { BarChart } from '@/components/charts/bar-chart'
 import { Bar } from '@/components/charts/bar'
 import { BarXAxis } from '@/components/charts/bar-x-axis'
@@ -26,7 +29,7 @@ import {
   LegendItem,
   LegendLabel,
   LegendMarker,
-  LegendValue,
+  LegendValue
 } from '@/components/charts/legend'
 import { PageContainer } from '@/components/layout/page-container'
 import {
@@ -36,7 +39,7 @@ import {
   AwesomeCardIcon,
   AwesomeCardTitle,
   AwesomeCardTrend,
-  AwesomeCardValue,
+  AwesomeCardValue
 } from '@/components/docyrus/awesome-card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -52,7 +55,7 @@ const PIE_COLORS = [
   'hsl(43, 100%, 57%)',
   'hsl(18, 100%, 63%)',
   'hsl(252, 56%, 68%)',
-  'hsl(140, 45%, 65%)',
+  'hsl(140, 45%, 65%)'
 ]
 
 const WEEK_BUCKETS = 8
@@ -63,6 +66,7 @@ function getValidDate(value: unknown): Date | null {
   if (!value) return null
 
   const date = value instanceof Date ? value : new Date(String(value))
+
   return Number.isNaN(date.getTime()) ? null : date
 }
 
@@ -88,16 +92,18 @@ function getSourceLabel(value: unknown, t: (key: string) => string) {
 function buildWeeklySparkline(
   records: Array<any> | undefined,
   getDateValue: (record: any) => unknown,
-  getAmount?: (record: any) => number,
+  getAmount?: (record: any) => number
 ) {
   const buckets = Array.from({ length: WEEK_BUCKETS }, () => 0)
   const start = Date.now() - (WEEK_BUCKETS - 1) * WEEK_IN_MS
 
   for (const record of records ?? []) {
     const date = getValidDate(getDateValue(record))
+
     if (!date) continue
 
     const bucketIndex = Math.floor((date.getTime() - start) / WEEK_IN_MS)
+
     if (bucketIndex < 0 || bucketIndex >= WEEK_BUCKETS) continue
 
     buckets[bucketIndex] += getAmount ? getAmount(record) : 1
@@ -112,11 +118,12 @@ function buildMonthlyRevenueSparkline(records: Array<any> | undefined) {
   const startMonth = new Date(
     now.getFullYear(),
     now.getMonth() - (MONTH_BUCKETS - 1),
-    1,
+    1
   )
 
   for (const record of records ?? []) {
     const date = getValidDate(record.expected_closing_date ?? record.created_on)
+
     if (!date) continue
 
     const bucketIndex =
@@ -133,10 +140,10 @@ function buildMonthlyRevenueSparkline(records: Array<any> | undefined) {
 
 function MiniSparkline({
   data,
-  className,
+  className
 }: {
-  data: Array<number>
-  className?: string
+  data: Array<number>;
+  className?: string;
 }) {
   const gradientId = useId()
   const width = 120
@@ -165,9 +172,9 @@ function MiniSparkline({
 
   const areaPath = [
     `M ${points[0]?.x ?? padding} ${height - padding}`,
-    ...points.map((point) => `L ${point.x} ${point.y}`),
+    ...points.map(point => `L ${point.x} ${point.y}`),
     `L ${points.at(-1)?.x ?? width - padding} ${height - padding}`,
-    'Z',
+    'Z'
   ].join(' ')
 
   return (
@@ -176,8 +183,7 @@ function MiniSparkline({
         viewBox={`0 0 ${width} ${height}`}
         className="h-full w-full"
         aria-hidden="true"
-        preserveAspectRatio="none"
-      >
+        preserveAspectRatio="none">
         <defs>
           <linearGradient id={gradientId} x1="0%" x2="0%" y1="0%" y2="100%">
             <stop offset="0%" stopColor="currentColor" stopOpacity="0.24" />
@@ -191,8 +197,7 @@ function MiniSparkline({
           stroke="currentColor"
           strokeLinecap="round"
           strokeLinejoin="round"
-          strokeWidth="2.5"
-        />
+          strokeWidth="2.5" />
       </svg>
     </div>
   )
@@ -202,11 +207,11 @@ function PieLeadsBySource({ data }: { data: Array<PieData> }) {
   const { t } = useTranslation()
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
-  const legendItems = data.map((item) => ({
+  const legendItems = data.map(item => ({
     label: item.label,
     value: item.value,
     color: item.color ?? '',
-    maxValue: data.reduce((sum, d) => sum + d.value, 0),
+    maxValue: data.reduce((sum, d) => sum + d.value, 0)
   }))
 
   return (
@@ -218,8 +223,7 @@ function PieLeadsBySource({ data }: { data: Array<PieData> }) {
         padAngle={0.03}
         cornerRadius={4}
         hoveredIndex={hoveredIndex}
-        onHoverChange={setHoveredIndex}
-      >
+        onHoverChange={setHoveredIndex}>
         {data.map((item, index) => (
           <PieSlice key={item.label} index={index} hoverEffect="grow" />
         ))}
@@ -229,8 +233,7 @@ function PieLeadsBySource({ data }: { data: Array<PieData> }) {
         items={legendItems}
         hoveredIndex={hoveredIndex}
         onHoverChange={setHoveredIndex}
-        className="flex-1"
-      >
+        className="flex-1">
         <LegendItem className="flex items-center gap-2">
           <LegendMarker className="size-2.5 rounded-full" />
           <LegendLabel className="flex-1 text-sm" />
@@ -252,11 +255,11 @@ export function Dashboard() {
         'organization(id,name)',
         'hot_prospect',
         'expected_closing_date',
-        'created_on',
+        'created_on'
       ],
-      orderBy: 'created_on DESC',
+      orderBy: 'created_on DESC'
     }),
-    [],
+    []
   )
   const { data: deals, isLoading: dealsLoading } = useDeals(dashboardDealParams)
   const { data: leads, isLoading: leadsLoading } = useLeads()
@@ -281,6 +284,7 @@ export function Dashboard() {
         ?.filter((deal: any) => {
           if (!deal.expected_closing_date) return false
           const closeDate = new Date(deal.expected_closing_date)
+
           return (
             closeDate.getMonth() === currentMonth &&
             closeDate.getFullYear() === currentYear
@@ -293,7 +297,7 @@ export function Dashboard() {
       totalRevenue,
       monthlyRevenue,
       totalLeads,
-      totalCompanies,
+      totalCompanies
     }
   }, [deals, leads, companies])
 
@@ -306,11 +310,13 @@ export function Dashboard() {
         deal.stage && typeof deal.stage === 'object'
           ? deal.stage.name
           : deal.stage || 'Unknown'
+
       if (!acc[stageName]) {
         acc[stageName] = { stage: stageName, count: 0, value: 0 }
       }
       acc[stageName].count++
       acc[stageName].value += deal.deal_value || 0
+
       return acc
     }, {})
 
@@ -326,22 +332,25 @@ export function Dashboard() {
         lead.lead_source && typeof lead.lead_source === 'object'
           ? lead.lead_source.name
           : lead.lead_source || 'Unknown'
+
       if (!acc[sourceName]) {
         acc[sourceName] = { label: sourceName, value: 0 }
       }
       acc[sourceName].value++
+
       return acc
     }, {})
 
     return Object.values(sourceGroups).map((item, index) => ({
       ...item,
-      color: PIE_COLORS[index % PIE_COLORS.length],
+      color: PIE_COLORS[index % PIE_COLORS.length]
     }))
   }, [leads])
 
   // Hot deals (top 5)
   const hotDeals = useMemo(() => {
     if (!deals) return []
+
     return deals
       .filter((deal: any) => deal.hot_prospect)
       .sort((a: any, b: any) => (b.deal_value || 0) - (a.deal_value || 0))
@@ -353,15 +362,16 @@ export function Dashboard() {
     if (!tasks) return []
     const now = new Date()
     const next7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+
     return tasks
       .filter((task: any) => {
         if (!task.end_date) return false
         const endDate = new Date(task.end_date)
+
         return endDate >= now && endDate <= next7Days
       })
       .sort(
-        (a: any, b: any) =>
-          new Date(a.end_date).getTime() - new Date(b.end_date).getTime(),
+        (a: any, b: any) => new Date(a.end_date).getTime() - new Date(b.end_date).getTime()
       )
       .slice(0, 5)
   }, [tasks])
@@ -370,15 +380,15 @@ export function Dashboard() {
 
   const sparklineData = useMemo(
     () => ({
-      deals: buildWeeklySparkline(deals, (deal) => deal.created_on),
-      leads: buildWeeklySparkline(leads, (lead) => lead.created_on),
+      deals: buildWeeklySparkline(deals, deal => deal.created_on),
+      leads: buildWeeklySparkline(leads, lead => lead.created_on),
       companies: buildWeeklySparkline(
         companies,
-        (company) => company.created_on,
+        company => company.created_on
       ),
-      revenue: buildMonthlyRevenueSparkline(deals),
+      revenue: buildMonthlyRevenueSparkline(deals)
     }),
-    [companies, deals, leads],
+    [companies, deals, leads]
   )
 
   const isLoading =
@@ -418,8 +428,7 @@ export function Dashboard() {
                   </div>
                   <MiniSparkline
                     data={sparklineData.deals}
-                    className="h-12 w-24 text-emerald-500"
-                  />
+                    className="h-12 w-24 text-emerald-500" />
                 </div>
               )}
             </AwesomeCardBody>
@@ -445,8 +454,7 @@ export function Dashboard() {
                   </div>
                   <MiniSparkline
                     data={sparklineData.leads}
-                    className="h-12 w-24 text-sky-500"
-                  />
+                    className="h-12 w-24 text-sky-500" />
                 </div>
               )}
             </AwesomeCardBody>
@@ -472,8 +480,7 @@ export function Dashboard() {
                   </div>
                   <MiniSparkline
                     data={sparklineData.companies}
-                    className="h-12 w-24 text-violet-500"
-                  />
+                    className="h-12 w-24 text-violet-500" />
                 </div>
               )}
             </AwesomeCardBody>
@@ -501,8 +508,7 @@ export function Dashboard() {
                   </div>
                   <MiniSparkline
                     data={sparklineData.revenue}
-                    className="h-12 w-24 text-amber-500"
-                  />
+                    className="h-12 w-24 text-amber-500" />
                 </div>
               )}
             </AwesomeCardBody>
@@ -531,24 +537,21 @@ export function Dashboard() {
                 <BarChart
                   data={pipelineData as Array<Record<string, unknown>>}
                   xDataKey="stage"
-                  aspectRatio="16 / 9"
-                >
+                  aspectRatio="16 / 9">
                   <Grid horizontal />
                   <Bar
                     dataKey="count"
                     fill="hsl(252, 56%, 68%)"
-                    lineCap="round"
-                  />
+                    lineCap="round" />
                   <BarXAxis showAllLabels />
                   <ChartTooltip
-                    rows={(point) => [
+                    rows={point => [
                       {
                         color: 'hsl(252, 56%, 68%)',
                         label: t('dashboard.dealCount'),
-                        value: String(point.count ?? 0),
-                      },
-                    ]}
-                  />
+                        value: String(point.count ?? 0)
+                      }
+                    ]} />
                 </BarChart>
               )}
             </AwesomeCardBody>
@@ -604,8 +607,7 @@ export function Dashboard() {
                       key={lead.id}
                       to="/leads/$leadId"
                       params={{ leadId: lead.id }}
-                      className="block rounded-lg border border-border/60 bg-background/60 p-3 transition-colors hover:bg-muted/70"
-                    >
+                      className="block rounded-lg border border-border/60 bg-background/60 p-3 transition-colors hover:bg-muted/70">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium">
@@ -659,13 +661,12 @@ export function Dashboard() {
                       key={deal.id}
                       to="/deals/$dealId"
                       params={{ dealId: deal.id }}
-                      className="block"
-                    >
+                      className="block">
                       <div className="flex items-center justify-between hover:bg-muted p-2 rounded-md transition-colors">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">
                             {deal.organization &&
-                            typeof deal.organization === 'object'
+                              typeof deal.organization === 'object'
                               ? deal.organization.name
                               : t('dashboard.defaultDeal')}
                           </p>
@@ -711,8 +712,7 @@ export function Dashboard() {
                   {upcomingTasks.map((task: any) => (
                     <div
                       key={task.id}
-                      className="flex items-start justify-between gap-2"
-                    >
+                      className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">
                           {task.subject}

@@ -1,11 +1,15 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
-import { shouldRenderEnumOptionChip } from '../form-fields/lib/enum-option-display'
-import { getEnumBadgeColors } from '../form-fields/lib/utils'
+import {
+  getEnumBadgeColors,
+  shouldRenderEnumOptionChip,
+} from '../form-fields/lib/utils'
 import { extractEnumId, extractEnumLabel } from './utils'
 import { type DocyrusValueProps } from './types'
 
@@ -15,7 +19,7 @@ export function SelectValue({
   className,
 }: DocyrusValueProps) {
   if (value == null || value === '') {
-    return <span className="text-muted-foreground">—</span>
+    return <span className="text-muted-foreground">–</span>
   }
 
   const id = extractEnumId(value)

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 
@@ -9,23 +10,23 @@ import { Input } from '@/components/ui/input'
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
+  PopoverTrigger
 } from '@/components/ui/popover'
 import { useBaseCountryCollection } from '@/collections'
 import { useDebounce } from '@/hooks/use-debounce'
 
 interface LocationFieldProps {
-  record: Record<string, unknown>
-  onSave: (patch: Record<string, string | null>) => void | Promise<void>
+  record: Record<string, unknown>;
+  onSave: (patch: Record<string, string | null>) => void | Promise<void>;
   /** Record field that stores the country relation id (default "country") */
-  countryField?: string
+  countryField?: string;
   /** Render display-only (e.g. converted/locked records) */
-  readOnly?: boolean
+  readOnly?: boolean;
 }
 
 interface CountryRef {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 function countryRef(value: unknown): CountryRef | null {
@@ -51,7 +52,7 @@ export function LocationField({
   record,
   onSave,
   countryField = 'country',
-  readOnly,
+  readOnly
 }: LocationFieldProps) {
   const { t } = useTranslation()
   const collection = useBaseCountryCollection()
@@ -67,28 +68,28 @@ export function LocationField({
 
   const debouncedQuery = useDebounce(query, 300)
 
-  // Server-side keyword search across all 250 countries. `columns` is required
-  // — without it the API returns only `id` and the names come back empty.
+  /*
+   * Server-side keyword search across all 250 countries. `columns` is required
+   * — without it the API returns only `id` and the names come back empty.
+   */
   const { data, isFetching } = useQuery({
     queryKey: ['location-country-search', debouncedQuery],
-    queryFn: () =>
-      collection.list({
+    queryFn: () => collection.list({
         columns: ['id', 'name'],
         filterKeyword: debouncedQuery || undefined,
         limit: 50,
-        orderBy: { field: 'name', direction: 'asc' },
+        orderBy: { field: 'name', direction: 'asc' }
       }),
     enabled: open && !selected,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000
   })
 
   const results = useMemo<Array<CountryRef>>(
-    () =>
-      ((data ?? []) as Array<{ id?: unknown; name?: unknown }>).map((item) => ({
+    () => ((data ?? []) as Array<{ id?: unknown; name?: unknown }>).map(item => ({
         id: String(item?.id ?? ''),
-        name: String(item?.name ?? ''),
+        name: String(item?.name ?? '')
       })),
-    [data],
+    [data]
   )
 
   const display = [initialCity, initialCountry?.name].filter(Boolean).join(', ')
@@ -106,7 +107,7 @@ export function LocationField({
     try {
       await onSave({
         [countryField]: selected?.id ?? null,
-        city: city.trim() || null,
+        city: city.trim() || null
       })
       setOpen(false)
     } finally {
@@ -124,13 +125,11 @@ export function LocationField({
           setCity(initialCity)
           setQuery('')
         }
-      }}
-    >
+      }}>
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="flex w-full items-center gap-1.5 truncate rounded-md px-1 py-0.5 text-left text-[13px] transition-colors hover:bg-muted/50"
-        >
+          className="flex w-full items-center gap-1.5 truncate rounded-md px-1 py-0.5 text-left text-[13px] transition-colors hover:bg-muted/50">
           {display ? (
             <span className="truncate">{display}</span>
           ) : (
@@ -151,8 +150,7 @@ export function LocationField({
                 type="button"
                 aria-label={t('common.clear', { defaultValue: 'Clear' })}
                 onClick={() => setSelected(null)}
-                className="shrink-0 text-muted-foreground hover:text-foreground"
-              >
+                className="shrink-0 text-muted-foreground hover:text-foreground">
                 <X className="size-3.5" />
               </button>
             </div>
@@ -162,13 +160,12 @@ export function LocationField({
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={query}
-                  onChange={(event) => setQuery(event.target.value)}
+                  onChange={event => setQuery(event.target.value)}
                   placeholder={t('leads.form.countryPlaceholder', {
-                    defaultValue: 'Search country…',
+                    defaultValue: 'Search country…'
                   })}
                   className="h-8 pl-8 text-[13px]"
-                  autoFocus
-                />
+                  autoFocus />
               </div>
               <div className="max-h-44 overflow-auto rounded-md border">
                 {isFetching ? (
@@ -180,13 +177,12 @@ export function LocationField({
                     {t('common.noResults', { defaultValue: 'No results' })}
                   </p>
                 ) : (
-                  results.map((option) => (
+                  results.map(option => (
                     <button
                       key={option.id}
                       type="button"
                       onClick={() => setSelected(option)}
-                      className="flex w-full items-center px-2.5 py-1.5 text-left text-[13px] transition-colors hover:bg-muted/60"
-                    >
+                      className="flex w-full items-center px-2.5 py-1.5 text-left text-[13px] transition-colors hover:bg-muted/60">
                       <span className="truncate">{option.name}</span>
                     </button>
                   ))
@@ -203,7 +199,7 @@ export function LocationField({
           </div>
           <Input
             value={city}
-            onChange={(event) => setCity(event.target.value)}
+            onChange={event => setCity(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === 'Enter') {
                 event.preventDefault()
@@ -211,8 +207,7 @@ export function LocationField({
               }
             }}
             placeholder={t('companies.city', { defaultValue: 'City' })}
-            className="h-8 text-[13px]"
-          />
+            className="h-8 text-[13px]" />
         </div>
 
         <div className="flex justify-end gap-1.5 pt-0.5">
@@ -221,8 +216,7 @@ export function LocationField({
             variant="ghost"
             size="sm"
             className="h-7"
-            onClick={() => setOpen(false)}
-          >
+            onClick={() => setOpen(false)}>
             {t('common.cancel', { defaultValue: 'Cancel' })}
           </Button>
           <Button
@@ -230,8 +224,7 @@ export function LocationField({
             size="sm"
             className="h-7 gap-1.5"
             disabled={saving}
-            onClick={() => void handleSave()}
-          >
+            onClick={() => void handleSave()}>
             {saving && <Loader2 className="size-3.5 animate-spin" />}
             {t('common.save', { defaultValue: 'Save' })}
           </Button>

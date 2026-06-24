@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+
 import {
   ClipboardCheck,
   Grid3x3,
@@ -9,11 +10,13 @@ import {
   PhoneIncoming,
   PhoneOff,
   Play,
-  User,
+  User
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+
 import { useWebphone } from './webphone-context'
+
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
@@ -23,32 +26,50 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
 import {
   WRAPUP_DISPOSITIONS,
-  importLiveNotesIntoWrapup,
+  importLiveNotesIntoWrapup
 } from '@/lib/webphone/wrapup'
 import { cn } from '@/lib/utils'
 
-const DTMF_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#']
+const DTMF_KEYS = [
+'1',
+'2',
+'3',
+'4',
+'5',
+'6',
+'7',
+'8',
+'9',
+'*',
+'0',
+'#'
+]
 
 function useElapsedSeconds(startIso?: string): number {
   const [now, setNow] = useState(() => Date.now())
+
   useEffect(() => {
     if (!startIso) return
     const id = window.setInterval(() => setNow(Date.now()), 1000)
+
     return () => window.clearInterval(id)
   }, [startIso])
   if (!startIso) return 0
   const started = Date.parse(startIso)
+
   if (!Number.isFinite(started)) return 0
+
   return Math.max(0, Math.floor((now - started) / 1000))
 }
 
 function formatElapsed(totalSeconds: number): string {
   const minutes = Math.floor(totalSeconds / 60)
   const seconds = totalSeconds % 60
+
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 }
 
@@ -84,13 +105,12 @@ function IncomingCall() {
             {t('webphone.incoming.matches')}
           </div>
           <div className="max-h-28 space-y-1 overflow-y-auto">
-            {screenPop?.matches.map((match) => (
+            {screenPop?.matches.map(match => (
               <button
                 key={match.id}
                 type="button"
                 onClick={() => selectScreenPopMatch(match)}
-                className="flex w-full items-center gap-2 rounded-md border px-2 py-1.5 text-left text-sm hover:bg-accent"
-              >
+                className="flex w-full items-center gap-2 rounded-md border px-2 py-1.5 text-left text-sm hover:bg-accent">
                 <User className="size-3.5 text-muted-foreground" />
                 <span className="truncate">{match.label}</span>
               </button>
@@ -102,8 +122,7 @@ function IncomingCall() {
       <div className="mt-4 flex gap-2">
         <Button
           className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700"
-          onClick={answer}
-        >
+          onClick={answer}>
           <Phone className="size-4" />
           {t('webphone.incoming.answer')}
         </Button>
@@ -127,12 +146,12 @@ function ActiveCall() {
     unhold,
     sendDtmf,
     liveNotes,
-    setLiveNotes,
+    setLiveNotes
   } = useWebphone()
   const [showKeypad, setShowKeypad] = useState(false)
 
   const elapsed = useElapsedSeconds(
-    activeSession?.answeredAt ?? activeSession?.startedAt,
+    activeSession?.answeredAt ?? activeSession?.startedAt
   )
 
   if (!activeSession) return null
@@ -166,8 +185,7 @@ function ActiveCall() {
           variant={activeSession.isMuted ? 'default' : 'outline'}
           size="sm"
           className="gap-1.5"
-          onClick={() => (activeSession.isMuted ? unmute() : mute())}
-        >
+          onClick={() => (activeSession.isMuted ? unmute() : mute())}>
           {activeSession.isMuted ? (
             <MicOff className="size-4" />
           ) : (
@@ -181,8 +199,7 @@ function ActiveCall() {
           variant={activeSession.isOnHold ? 'default' : 'outline'}
           size="sm"
           className="gap-1.5"
-          onClick={() => (activeSession.isOnHold ? unhold() : hold())}
-        >
+          onClick={() => (activeSession.isOnHold ? unhold() : hold())}>
           {activeSession.isOnHold ? (
             <Play className="size-4" />
           ) : (
@@ -196,8 +213,7 @@ function ActiveCall() {
           variant={showKeypad ? 'default' : 'outline'}
           size="sm"
           className="gap-1.5"
-          onClick={() => setShowKeypad((open) => !open)}
-        >
+          onClick={() => setShowKeypad(open => !open)}>
           <Grid3x3 className="size-4" />
           {t('webphone.active.keypad')}
         </Button>
@@ -205,14 +221,13 @@ function ActiveCall() {
 
       {showKeypad && (
         <div className="mt-2 grid grid-cols-3 gap-1.5">
-          {DTMF_KEYS.map((key) => (
+          {DTMF_KEYS.map(key => (
             <Button
               key={key}
               variant="outline"
               size="sm"
               className="tabular-nums"
-              onClick={() => sendDtmf(key)}
-            >
+              onClick={() => sendDtmf(key)}>
               {key}
             </Button>
           ))}
@@ -221,16 +236,14 @@ function ActiveCall() {
 
       <Textarea
         value={liveNotes}
-        onChange={(event) => setLiveNotes(event.target.value)}
+        onChange={event => setLiveNotes(event.target.value)}
         placeholder={t('webphone.wrapup.liveNotesPlaceholder')}
-        className="mt-3 min-h-16 text-sm"
-      />
+        className="mt-3 min-h-16 text-sm" />
 
       <Button
         variant="destructive"
         className="mt-3 w-full gap-2"
-        onClick={hangup}
-      >
+        onClick={hangup}>
         <PhoneOff className="size-4" />
         {t('webphone.active.hangup')}
       </Button>
@@ -245,7 +258,7 @@ function WrapupPanel() {
 
   const initialNotes = useMemo(
     () => importLiveNotesIntoWrapup({ liveNotes, currentWrapupNotes: '' }),
-    [liveNotes],
+    [liveNotes]
   )
   const [disposition, setDisposition] = useState('')
   const [notes, setNotes] = useState(initialNotes)
@@ -254,7 +267,7 @@ function WrapupPanel() {
 
   // Prefill notes from the live notes captured during the call.
   useEffect(() => {
-    setNotes((current) => (current.trim() ? current : initialNotes))
+    setNotes(current => (current.trim() ? current : initialNotes))
   }, [initialNotes])
 
   if (!pendingWrapup) return null
@@ -266,7 +279,7 @@ function WrapupPanel() {
       await submitWrapup({
         disposition,
         notes: notes.trim() || undefined,
-        followupRequired: followup,
+        followupRequired: followup
       })
     } catch {
       toast.error(t('webphone.wrapup.error'))
@@ -290,11 +303,10 @@ function WrapupPanel() {
           <Select value={disposition} onValueChange={setDisposition}>
             <SelectTrigger className="w-full">
               <SelectValue
-                placeholder={t('webphone.wrapup.dispositionPlaceholder')}
-              />
+                placeholder={t('webphone.wrapup.dispositionPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
-              {WRAPUP_DISPOSITIONS.map((token) => (
+              {WRAPUP_DISPOSITIONS.map(token => (
                 <SelectItem key={token} value={token}>
                   {t(`webphone.wrapup.dispositions.${token}`)}
                 </SelectItem>
@@ -305,10 +317,9 @@ function WrapupPanel() {
 
         <Textarea
           value={notes}
-          onChange={(event) => setNotes(event.target.value)}
+          onChange={event => setNotes(event.target.value)}
           placeholder={t('webphone.wrapup.notesPlaceholder')}
-          className="min-h-16 text-sm"
-        />
+          className="min-h-16 text-sm" />
 
         <div className="flex items-center justify-between">
           <Label htmlFor="webphone-followup" className="text-sm font-normal">
@@ -317,8 +328,7 @@ function WrapupPanel() {
           <Switch
             id="webphone-followup"
             checked={followup}
-            onCheckedChange={setFollowup}
-          />
+            onCheckedChange={setFollowup} />
         </div>
       </div>
 
@@ -327,15 +337,13 @@ function WrapupPanel() {
           variant="ghost"
           className="flex-1"
           onClick={dismissWrapup}
-          disabled={submitting}
-        >
+          disabled={submitting}>
           {t('webphone.wrapup.skip')}
         </Button>
         <Button
           className="flex-1"
           onClick={submit}
-          disabled={!disposition || submitting}
-        >
+          disabled={!disposition || submitting}>
           {submitting ? t('common.saving') : t('webphone.wrapup.submit')}
         </Button>
       </div>
@@ -359,9 +367,8 @@ export function WebphoneWidget() {
     <div
       className={cn(
         'fixed bottom-4 right-4 z-50',
-        'animate-in fade-in slide-in-from-bottom-2',
-      )}
-    >
+        'animate-in fade-in slide-in-from-bottom-2'
+      )}>
       {incomingSession ? (
         <IncomingCall />
       ) : activeSession ? (

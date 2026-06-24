@@ -1,12 +1,14 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { type Table } from '@tanstack/react-table'
 
 import { LayoutGrid, Table2 } from 'lucide-react'
 
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 import { type DataGridDisplayMode } from './types'
 

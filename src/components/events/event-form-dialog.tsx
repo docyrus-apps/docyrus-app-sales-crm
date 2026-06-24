@@ -1,17 +1,17 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { useEffect, useState } from 'react'
+
 import { useTranslation } from 'react-i18next'
 import { useForm } from '@tanstack/react-form'
 import { zodValidator } from '@tanstack/zod-form-adapter'
 import { CalendarIcon, Loader2 } from 'lucide-react'
 import { format } from 'date-fns'
-import type { EventFormData } from '@/schemas/event-schema'
+
 import { Button } from '@/components/animate-ui/components/buttons/button'
 import {
   AwesomeDialog,
   AwesomeDialogBody,
   AwesomeDialogFooter,
-  AwesomeDialogHeader,
+  AwesomeDialogHeader
 } from '@/components/docyrus/awesome-dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,34 +20,34 @@ import { Calendar } from '@/components/ui/calendar'
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
+  PopoverTrigger
 } from '@/components/ui/popover'
 import { eventFormSchema } from '@/schemas/event-schema'
 import { useCreateEvent, useUpdateEvent } from '@/hooks/use-events'
 import { cn } from '@/lib/utils'
 
 interface EventFormDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  event?: any
-  mode: 'create' | 'edit'
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  event?: any;
+  mode: 'create' | 'edit';
 }
 
 export function EventFormDialog({
   open,
   onOpenChange,
   event,
-  mode,
+  mode
 }: EventFormDialogProps) {
   const { t } = useTranslation()
   const createEvent = useCreateEvent()
   const updateEvent = useUpdateEvent()
 
   const [startDate, setStartDate] = useState<Date | undefined>(
-    event?.start_date ? new Date(event.start_date) : undefined,
+    event?.start_date ? new Date(event.start_date) : undefined
   )
   const [endDate, setEndDate] = useState<Date | undefined>(
-    event?.end_date ? new Date(event.end_date) : undefined,
+    event?.end_date ? new Date(event.end_date) : undefined
   )
 
   const form = useForm({
@@ -57,19 +57,16 @@ export function EventFormDialog({
       start_date: event?.start_date || '',
       end_date: event?.end_date || '',
       calendar: event?.calendar || '',
-      event_notes: event?.event_notes || undefined,
+      event_notes: event?.event_notes || undefined
     },
     validatorAdapter: zodValidator(),
     validators: {
-      onChange: eventFormSchema,
+      onChange: eventFormSchema
     },
     onSubmit: async ({ value }) => {
       // Clean up empty strings (convert to undefined for UUID fields)
       const cleanedData = Object.fromEntries(
-        Object.entries(value).map(([key, val]) => [
-          key,
-          val === '' ? undefined : val,
-        ]),
+        Object.entries(value).map(([key, val]) => [key, val === '' ? undefined : val])
       )
 
       try {
@@ -78,7 +75,7 @@ export function EventFormDialog({
         } else if (event?.id) {
           await updateEvent.mutateAsync({
             eventId: event.id,
-            data: cleanedData,
+            data: cleanedData
           })
         }
         onOpenChange(false)
@@ -86,7 +83,7 @@ export function EventFormDialog({
       } catch (error) {
         console.error('Form submission error:', error)
       }
-    },
+    }
   })
 
   // Sync date state with form
@@ -102,23 +99,21 @@ export function EventFormDialog({
     }
   }, [endDate, form])
 
-  const isSubmitting = form.state.isSubmitting
+  const { isSubmitting } = form.state
 
   return (
     <AwesomeDialog
       open={open}
       onOpenChange={onOpenChange}
       container="modal"
-      size="lg"
-    >
+      size="lg">
       <form
         onSubmit={(e) => {
           e.preventDefault()
           e.stopPropagation()
           form.handleSubmit()
         }}
-        className="flex flex-col flex-1 overflow-hidden"
-      >
+        className="flex flex-col flex-1 overflow-hidden">
         <AwesomeDialogHeader
           title={
             mode === 'create'
@@ -129,14 +124,13 @@ export function EventFormDialog({
             mode === 'create'
               ? t('events.form.createDescription')
               : t('events.form.editDescription')
-          }
-        />
+          } />
 
         <AwesomeDialogBody>
           <div className="space-y-4">
             {/* Subject */}
             <form.Field name="subject">
-              {(field) => (
+              {field => (
                 <div className="space-y-2">
                   <Label htmlFor="subject">
                     {t('events.form.subjectLabel')}{' '}
@@ -145,10 +139,9 @@ export function EventFormDialog({
                   <Input
                     id="subject"
                     value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
+                    onChange={e => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
-                    placeholder={t('events.form.subjectPlaceholder')}
-                  />
+                    placeholder={t('events.form.subjectPlaceholder')} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-red-500">
                       {typeof field.state.meta.errors[0] === 'string'
@@ -163,7 +156,7 @@ export function EventFormDialog({
 
             {/* Description */}
             <form.Field name="description">
-              {(field) => (
+              {field => (
                 <div className="space-y-2">
                   <Label htmlFor="description">
                     {t('events.form.descriptionLabel')}
@@ -171,11 +164,10 @@ export function EventFormDialog({
                   <Textarea
                     id="description"
                     value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
+                    onChange={e => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
                     placeholder={t('events.form.descriptionPlaceholder')}
-                    rows={3}
-                  />
+                    rows={3} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-red-500">
                       {typeof field.state.meta.errors[0] === 'string'
@@ -191,7 +183,7 @@ export function EventFormDialog({
             {/* Start Date & Time */}
             <div className="grid grid-cols-2 gap-4">
               <form.Field name="start_date">
-                {(field) => (
+                {field => (
                   <div className="space-y-2">
                     <Label>{t('events.form.startDateTimeLabel')}</Label>
                     <Popover>
@@ -200,9 +192,8 @@ export function EventFormDialog({
                           variant="outline"
                           className={cn(
                             'w-full justify-start text-left font-normal',
-                            !startDate && 'text-muted-foreground',
-                          )}
-                        >
+                            !startDate && 'text-muted-foreground'
+                          )}>
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {startDate ? (
                             format(startDate, 'PPP p')
@@ -216,8 +207,7 @@ export function EventFormDialog({
                           mode="single"
                           selected={startDate}
                           onSelect={setStartDate}
-                          initialFocus
-                        />
+                          initialFocus />
                         <div className="p-3 border-t">
                           <Label htmlFor="start-time" className="text-xs">
                             {t('common.time')}
@@ -225,20 +215,18 @@ export function EventFormDialog({
                           <Input
                             id="start-time"
                             type="time"
-                            value={
-                              startDate ? format(startDate, 'HH:mm') : '09:00'
-                            }
+                            value={startDate ? format(startDate, 'HH:mm') : '09:00'}
                             onChange={(e) => {
                               const [hours, minutes] = e.target.value.split(':')
                               const newDate = startDate || new Date()
+
                               newDate.setHours(
                                 parseInt(hours),
-                                parseInt(minutes),
+                                parseInt(minutes)
                               )
                               setStartDate(new Date(newDate))
                             }}
-                            className="mt-1"
-                          />
+                            className="mt-1" />
                         </div>
                       </PopoverContent>
                     </Popover>
@@ -256,7 +244,7 @@ export function EventFormDialog({
 
               {/* End Date & Time */}
               <form.Field name="end_date">
-                {(field) => (
+                {field => (
                   <div className="space-y-2">
                     <Label>{t('events.form.endDateTimeLabel')}</Label>
                     <Popover>
@@ -265,9 +253,8 @@ export function EventFormDialog({
                           variant="outline"
                           className={cn(
                             'w-full justify-start text-left font-normal',
-                            !endDate && 'text-muted-foreground',
-                          )}
-                        >
+                            !endDate && 'text-muted-foreground'
+                          )}>
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {endDate ? (
                             format(endDate, 'PPP p')
@@ -281,8 +268,7 @@ export function EventFormDialog({
                           mode="single"
                           selected={endDate}
                           onSelect={setEndDate}
-                          initialFocus
-                        />
+                          initialFocus />
                         <div className="p-3 border-t">
                           <Label htmlFor="end-time" className="text-xs">
                             {t('common.time')}
@@ -294,14 +280,14 @@ export function EventFormDialog({
                             onChange={(e) => {
                               const [hours, minutes] = e.target.value.split(':')
                               const newDate = endDate || new Date()
+
                               newDate.setHours(
                                 parseInt(hours),
-                                parseInt(minutes),
+                                parseInt(minutes)
                               )
                               setEndDate(new Date(newDate))
                             }}
-                            className="mt-1"
-                          />
+                            className="mt-1" />
                         </div>
                       </PopoverContent>
                     </Popover>
@@ -320,7 +306,7 @@ export function EventFormDialog({
 
             {/* Calendar */}
             <form.Field name="calendar">
-              {(field) => (
+              {field => (
                 <div className="space-y-2">
                   <Label htmlFor="calendar">
                     {t('events.form.calendarLabel')}
@@ -328,10 +314,9 @@ export function EventFormDialog({
                   <Input
                     id="calendar"
                     value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
+                    onChange={e => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
-                    placeholder={t('events.form.calendarPlaceholder')}
-                  />
+                    placeholder={t('events.form.calendarPlaceholder')} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-red-500">
                       {typeof field.state.meta.errors[0] === 'string'
@@ -346,7 +331,7 @@ export function EventFormDialog({
 
             {/* Event Notes */}
             <form.Field name="event_notes">
-              {(field) => (
+              {field => (
                 <div className="space-y-2">
                   <Label htmlFor="event_notes">
                     {t('events.form.eventNotesLabel')}
@@ -354,11 +339,10 @@ export function EventFormDialog({
                   <Textarea
                     id="event_notes"
                     value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
+                    onChange={e => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
                     placeholder={t('events.form.eventNotesPlaceholder')}
-                    rows={2}
-                  />
+                    rows={2} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-red-500">
                       {typeof field.state.meta.errors[0] === 'string'
@@ -378,8 +362,7 @@ export function EventFormDialog({
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
-          >
+            disabled={isSubmitting}>
             {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={isSubmitting}>

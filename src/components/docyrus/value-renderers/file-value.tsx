@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { FileIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -11,6 +13,7 @@ interface FileData {
   signed_url?: string
   mime_type?: string
   size?: number
+  file_size?: number
 }
 
 function isFileData(val: unknown): val is FileData {
@@ -26,7 +29,7 @@ function formatFileSize(bytes: number): string {
 
 export function FileValue({ value, className }: DocyrusValueProps) {
   if (value == null || value === '') {
-    return <span className="text-muted-foreground">—</span>
+    return <span className="text-muted-foreground">–</span>
   }
 
   const file = isFileData(value) ? value : null
@@ -37,13 +40,23 @@ export function FileValue({ value, className }: DocyrusValueProps) {
     )
   }
 
+  const displayName = file.file_name
+    ? (file.file_name.split('/').pop() ?? file.file_name)
+    : 'File'
+  const fileSize = file.file_size ?? file.size
+
   const content = (
-    <span className={cn('inline-flex items-center gap-1.5 text-sm', className)}>
+    <span
+      className={cn(
+        'inline-flex min-w-0 items-center gap-1.5 text-sm',
+        className,
+      )}
+    >
       <FileIcon className="size-4 shrink-0 text-muted-foreground" />
-      <span className="truncate">{file.file_name ?? 'File'}</span>
-      {file.size != null && (
+      <span className="truncate">{displayName}</span>
+      {fileSize != null && (
         <span className="text-muted-foreground text-xs shrink-0">
-          ({formatFileSize(file.size)})
+          ({formatFileSize(fileSize)})
         </span>
       )}
     </span>

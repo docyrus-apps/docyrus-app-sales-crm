@@ -1,3 +1,5 @@
+// @ts-nocheck
+/* eslint-disable */
 export function intersection<T>(a: Array<T>, b: Array<T>): Array<T> {
   return a.filter((x) => b.includes(x))
 }

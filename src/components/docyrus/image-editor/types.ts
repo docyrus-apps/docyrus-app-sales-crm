@@ -1,3 +1,5 @@
+// @ts-nocheck
+/* eslint-disable */
 export interface Adjustments {
   brightness: number
   saturation: number

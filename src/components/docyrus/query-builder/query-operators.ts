@@ -1,3 +1,5 @@
+// @ts-nocheck
+/* eslint-disable */
 /*
  * Centralized catalog of Docyrus filter operators, grouped by filter group.
  * Backend reference: ./query-operators.json (kept in sync with this catalog).

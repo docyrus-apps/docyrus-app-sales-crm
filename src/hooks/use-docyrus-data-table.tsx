@@ -1,16 +1,19 @@
 'use client'
 
 import {
+  type ReactElement,
+  type ReactNode,
   useCallback,
   useEffect,
   useMemo,
   useRef,
-  useState,
-  type ReactElement,
-  type ReactNode,
+  useState
 } from 'react'
 
 import { type DataSourceField } from '@docyrus/app-utils'
+
+import type { RuleGroupType } from 'react-querybuilder'
+
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
 import {
   getCoreRowModel,
@@ -28,7 +31,7 @@ import {
   type PaginationState,
   type RowSelectionState,
   type SortingState,
-  type VisibilityState,
+  type VisibilityState
 } from '@tanstack/react-table'
 import {
   Download,
@@ -36,97 +39,103 @@ import {
   Pencil,
   RotateCw,
   Search,
-  Trash2,
+  Trash2
 } from 'lucide-react'
-import { type RuleGroupType } from 'react-querybuilder'
 
 import {
-  applyViewToTable,
+  useDocyrusDataExport,
+  type DocyrusDataExportPayload
+} from './use-docyrus-data-export'
+
+import {
+  GROUPABLE_FIELD_TYPES,
+  VALUE_RENDERER_MAP,
+  extractEnumOptions,
+  getCellOpts,
+  getFieldValue,
+  toIField,
+  type DocyrusFieldLike
+} from './use-docyrus-field-component'
+import { useDocyrusDataViewSelect } from './use-docyrus-data-view-select'
+import type {
+  UseDocyrusDataViewSelectOptions,
+  UseDocyrusDataViewSelectResult
+} from './use-docyrus-data-view-select'
+
+import type {
+  DocyrusDataGridBulkAction,
+  DocyrusDataGridCollection,
+  DocyrusDataGridListParams
+} from './use-docyrus-data-grid'
+
+import {
   DataGridDisplayMenu,
   DataGridFilterMenu,
   DataGridGallery,
   DataGridGroupMenu,
   DataGridSidePanel,
   DataGridSortMenu,
-  type DataGridAction,
-  type DataGridCardConfig,
-  type DataGridDisplayMode,
-  type SavedDataGridView,
+  applyViewToTable
+} from '@/components/docyrus/data-grid'
+import type {
+  DataGridAction,
+  DataGridCardConfig,
+  DataGridDisplayMode,
+  SavedDataGridView
 } from '@/components/docyrus/data-grid'
 import { toServerRule } from '@/components/docyrus/data-grid/lib/data-grid-server'
-import { type CellUserOption } from '@/components/docyrus/data-grid/types'
-import {
-  type AsyncOptionsConfig,
-  type ColumnConfig,
-  type FilterStrategy,
+
+import type { CellUserOption } from '@/components/docyrus/data-grid/types'
+import type {
+  AsyncOptionsConfig,
+  ColumnConfig,
+  FilterStrategy
 } from '@/components/docyrus/data-table-filter/core/types'
-import { type Locale as DataTableFilterLocale } from '@/components/docyrus/data-table-filter/lib/i18n'
+import type { Locale as DataTableFilterLocale } from '@/components/docyrus/data-table-filter/lib/i18n'
+
 import {
   DataTableSideFilters,
-  useDataTableSideFilters,
-  type SideFilterDefaults,
-  type SideFilterSectionGroup,
-  type DataTableSideFiltersProps,
+  useDataTableSideFilters
 } from '@/components/docyrus/data-table-side-filters'
-import {
-  DataGridViewSelect,
-  type DataGridViewSelectVariant,
-} from '@/components/docyrus/data-grid-view-select'
+import type {
+  DataTableSideFiltersProps,
+  SideFilterDefaults,
+  SideFilterSectionGroup
+} from '@/components/docyrus/data-table-side-filters'
+import { DataGridViewSelect } from '@/components/docyrus/data-grid-view-select'
+import type { DataGridViewSelectVariant } from '@/components/docyrus/data-grid-view-select'
 import { BulkUpdateDialog } from '@/components/docyrus/bulk-update-dialog'
 import { RecordDeleteConfirmDialog } from '@/components/docyrus/record-delete-confirm-dialog'
 import {
   DocyrusDataExportMenu,
-  encodeDocyrusDataExportColumn,
-  type DocyrusDataExportFieldOption,
-  type DocyrusDataExportSelection,
+  encodeDocyrusDataExportColumn
+} from '@/components/docyrus/docyrus-data-export-menu'
+import type {
+  DocyrusDataExportFieldOption,
+  DocyrusDataExportSelection
 } from '@/components/docyrus/docyrus-data-export-menu'
 import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 import {
   DataTable,
-  getDataTableSelectColumn,
-  type DataTableProps,
+  getDataTableSelectColumn
 } from '@/components/docyrus/data-table'
-import {
-  TextValue,
-  type IFieldType,
-} from '@/components/docyrus/value-renderers'
+import type { DataTableProps } from '@/components/docyrus/data-table'
+import { TextValue } from '@/components/docyrus/value-renderers'
+import type { IFieldType } from '@/components/docyrus/value-renderers'
 
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { normalizeSavedViewFilterQuery } from '@/lib/docyrus-filter-normalization'
 import { cn } from '@/lib/utils'
 
-import { useDataExport, type DataExportColumn } from '@/hooks/use-data-export'
-
-import {
-  useDocyrusDataExport,
-  type DocyrusDataExportPayload,
-} from './use-docyrus-data-export'
-import {
-  extractEnumOptions,
-  getCellOpts,
-  getFieldValue,
-  GROUPABLE_FIELD_TYPES,
-  toIField,
-  VALUE_RENDERER_MAP,
-  type DocyrusFieldLike,
-} from './use-docyrus-field-component'
-import {
-  useDocyrusDataViewSelect,
-  type UseDocyrusDataViewSelectOptions,
-  type UseDocyrusDataViewSelectResult,
-} from './use-docyrus-data-view-select'
-import {
-  type DocyrusDataGridBulkAction,
-  type DocyrusDataGridCollection,
-  type DocyrusDataGridListParams,
-} from './use-docyrus-data-grid'
+import { useDataExport } from '@/hooks/use-data-export'
+import type { DataExportColumn } from '@/hooks/use-data-export'
 
 const DEFAULT_SERVER_EXPORT_EXCLUDED_SLUGS: ReadonlyArray<string> = [
   'data',
@@ -141,13 +150,10 @@ const DEFAULT_SERVER_EXPORT_EXCLUDED_SLUGS: ReadonlyArray<string> = [
   'tenant_view_id',
   'tenant_data_source_id',
   'sort_order',
-  'editor_view_id',
+  'editor_view_id'
 ]
 
-const DEFAULT_SERVER_EXPORT_EXCLUDED_TYPES: ReadonlyArray<string> = [
-  'field-action',
-  'action',
-]
+const DEFAULT_SERVER_EXPORT_EXCLUDED_TYPES: ReadonlyArray<string> = ['field-action', 'action']
 
 /**
  * Configuration for the optional side-panel filter rail rendered alongside
@@ -156,103 +162,103 @@ const DEFAULT_SERVER_EXPORT_EXCLUDED_TYPES: ReadonlyArray<string> = [
  * toolbar filter menu rules.
  */
 export interface DocyrusDataTableSideFiltersConfig<TData> {
-  columnsConfig: ReadonlyArray<ColumnConfig<TData, any, any, any>>
-  strategy?: FilterStrategy
-  defaults?: SideFilterDefaults
-  sections?: ReadonlyArray<SideFilterSectionGroup>
-  variant?: DataTableSideFiltersProps<TData>['variant']
-  title?: DataTableSideFiltersProps<TData>['title']
-  showActiveChips?: boolean
-  showClearAll?: boolean
-  searchable?: boolean | string
-  clearAllLabel?: string
-  clearLabel?: string
-  locale?: DataTableFilterLocale
-  className?: string
-  collapseAriaLabel?: string
-  expandAriaLabel?: string
-  collapsedWidth?: number | string
+  columnsConfig: ReadonlyArray<ColumnConfig<TData, any, any, any>>;
+  strategy?: FilterStrategy;
+  defaults?: SideFilterDefaults;
+  sections?: ReadonlyArray<SideFilterSectionGroup>;
+  variant?: DataTableSideFiltersProps<TData>['variant'];
+  title?: DataTableSideFiltersProps<TData>['title'];
+  showActiveChips?: boolean;
+  showClearAll?: boolean;
+  searchable?: boolean | string;
+  clearAllLabel?: string;
+  clearLabel?: string;
+  locale?: DataTableFilterLocale;
+  className?: string;
+  collapseAriaLabel?: string;
+  expandAriaLabel?: string;
+  collapsedWidth?: number | string;
 }
 
 export interface UseDocyrusDataTableOptions<
   TData,
 > extends UseDocyrusDataViewSelectOptions {
-  data?: Array<TData>
-  collection?: DocyrusDataGridCollection<TData>
-  listParams?: DocyrusDataGridListParams
-  defaultLimit?: number
-  enableItemsQuery?: boolean
-  showSelectColumn?: boolean
-  enableRowNumbers?: boolean
-  selectColumn?: ColumnDef<TData>
-  actionsColumn?: ColumnDef<TData>
-  extraColumns?: Array<ColumnDef<TData>>
+  data?: Array<TData>;
+  collection?: DocyrusDataGridCollection<TData>;
+  listParams?: DocyrusDataGridListParams;
+  defaultLimit?: number;
+  enableItemsQuery?: boolean;
+  showSelectColumn?: boolean;
+  enableRowNumbers?: boolean;
+  selectColumn?: ColumnDef<TData>;
+  actionsColumn?: ColumnDef<TData>;
+  extraColumns?: Array<ColumnDef<TData>>;
   mapColumn?: (
     field: DataSourceField,
-    defaultColumn: ColumnDef<TData>,
-  ) => ColumnDef<TData> | null
-  enableViewSelect?: boolean
-  viewSelectVariant?: DataGridViewSelectVariant
-  viewSelectMaxVisible?: number
-  enableSearchInput?: boolean
-  enableFilterMenu?: boolean
-  enableGroupMenu?: boolean
-  enableSortMenu?: boolean
+    defaultColumn: ColumnDef<TData>
+  ) => ColumnDef<TData> | null;
+  enableViewSelect?: boolean;
+  viewSelectVariant?: DataGridViewSelectVariant;
+  viewSelectMaxVisible?: number;
+  enableSearchInput?: boolean;
+  enableFilterMenu?: boolean;
+  enableGroupMenu?: boolean;
+  enableSortMenu?: boolean;
   /**
    * Show the table/gallery display-mode toggle in the toolbar. Default `false`.
    * When enabled, the hook tracks the selected display mode and the returned
    * `view` element switches between `<DataTable>` and `<DataGridGallery>`.
    */
-  enableDisplayMenu?: boolean
+  enableDisplayMenu?: boolean;
   /** Initial display mode when uncontrolled. Default `'table'`. */
-  defaultDisplayMode?: DataGridDisplayMode
+  defaultDisplayMode?: DataGridDisplayMode;
   /** Controlled display mode. Pair with `onDisplayModeChange`. */
-  displayMode?: DataGridDisplayMode
+  displayMode?: DataGridDisplayMode;
   /** Called when the user toggles the display-mode menu. */
-  onDisplayModeChange?: (mode: DataGridDisplayMode) => void
+  onDisplayModeChange?: (mode: DataGridDisplayMode) => void;
   /** Card layout config used by the gallery view. */
-  cardConfig?: DataGridCardConfig<TData>
+  cardConfig?: DataGridCardConfig<TData>;
   /**
    * Height passed to `<DataGridGallery>` when rendering the gallery view.
    * Default `'auto'` — fills the parent container.
    */
-  galleryHeight?: number | 'auto'
+  galleryHeight?: number | 'auto';
   /** Extra className applied to the gallery container. */
-  galleryClassName?: string
-  enableReloadButton?: boolean
-  enableServerExportMenu?: boolean
-  serverExportLimit?: number
-  serverExportExcludedFieldTypes?: ReadonlyArray<string>
-  serverExportExcludedSlugs?: ReadonlyArray<string>
-  onReload?: () => void
-  searchPlaceholder?: string
-  searchDebounceMs?: number
-  toolbarClassName?: string
-  toolbarStartContent?: ReactNode
-  toolbarEndContent?: ReactNode
-  extraBulkActions?: Array<DataGridAction<TData>>
-  bulkActions?: false | ReadonlyArray<DocyrusDataGridBulkAction>
-  exportColumns?: 'visible' | 'all' | ReadonlyArray<string>
-  exportFileName?: string
-  users?: ReadonlyArray<CellUserOption>
-  formatDate?: (value: unknown) => string
-  formatDateTime?: (value: unknown) => string
+  galleryClassName?: string;
+  enableReloadButton?: boolean;
+  enableServerExportMenu?: boolean;
+  serverExportLimit?: number;
+  serverExportExcludedFieldTypes?: ReadonlyArray<string>;
+  serverExportExcludedSlugs?: ReadonlyArray<string>;
+  onReload?: () => void;
+  searchPlaceholder?: string;
+  searchDebounceMs?: number;
+  toolbarClassName?: string;
+  toolbarStartContent?: ReactNode;
+  toolbarEndContent?: ReactNode;
+  extraBulkActions?: Array<DataGridAction<TData>>;
+  bulkActions?: false | ReadonlyArray<DocyrusDataGridBulkAction>;
+  exportColumns?: 'visible' | 'all' | ReadonlyArray<string>;
+  exportFileName?: string;
+  users?: ReadonlyArray<CellUserOption>;
+  formatDate?: (value: unknown) => string;
+  formatDateTime?: (value: unknown) => string;
   formatNumber?: (
     value: unknown,
-    opts?: { variant?: 'number' | 'currency' | 'percent'; currency?: string },
-  ) => string
+    opts?: { variant?: 'number' | 'currency' | 'percent'; currency?: string }
+  ) => string;
   initialState?: Partial<{
-    sorting: SortingState
-    columnFilters: ColumnFiltersState
-    columnVisibility: VisibilityState
-    rowSelection: RowSelectionState
-    expanded: ExpandedState
-    grouping: GroupingState
-    pagination: PaginationState
-  }>
-  tableClassName?: DataTableProps<TData>['className']
-  tableContainerClassName?: DataTableProps<TData>['containerClassName']
-  emptyText?: string
+    sorting: SortingState;
+    columnFilters: ColumnFiltersState;
+    columnVisibility: VisibilityState;
+    rowSelection: RowSelectionState;
+    expanded: ExpandedState;
+    grouping: GroupingState;
+    pagination: PaginationState;
+  }>;
+  tableClassName?: DataTableProps<TData>['className'];
+  tableContainerClassName?: DataTableProps<TData>['containerClassName'];
+  emptyText?: string;
   /**
    * Activate the side-panel filter rail rendered alongside the table.
    * When `true`, the hook's `sideFilters` return value renders a
@@ -263,53 +269,53 @@ export interface UseDocyrusDataTableOptions<
    *
    * Requires `sideFiltersConfig` to be supplied with a `columnsConfig`.
    */
-  enableSideFilters?: boolean
+  enableSideFilters?: boolean;
   /**
    * Required side-panel configuration when `enableSideFilters` is `true`.
    * Exposes the filter `columnsConfig`, optional section grouping, and
    * presentation overrides.
    */
-  sideFiltersConfig?: DocyrusDataTableSideFiltersConfig<TData>
+  sideFiltersConfig?: DocyrusDataTableSideFiltersConfig<TData>;
   /**
    * Initial expanded state for the side panel. When `false`, the panel
    * mounts collapsed and renders a vertical rail with a 90°-rotated
    * "Filters" label that re-expands the panel on click. Default `true`.
    */
-  sideFiltersDefaultExpanded?: boolean
+  sideFiltersDefaultExpanded?: boolean;
   /**
    * Controlled expanded state. Pair with `onSideFiltersExpandedChange`. When
    * omitted, the hook manages the state internally.
    */
-  sideFiltersExpanded?: boolean
+  sideFiltersExpanded?: boolean;
   /** Called when the user toggles the side-panel collapse/expand control. */
-  onSideFiltersExpandedChange?: (expanded: boolean) => void
+  onSideFiltersExpandedChange?: (expanded: boolean) => void;
   /**
    * Width of the side panel when expanded. Number → px. Default `280`.
    */
-  sideFiltersWidth?: number | string
+  sideFiltersWidth?: number | string;
 }
 
 export interface UseDocyrusDataTableResult<TData> extends Omit<
   UseDocyrusDataViewSelectResult,
   'gridViewSelectProps'
 > {
-  table: ReturnType<typeof useReactTable<TData>>
+  table: ReturnType<typeof useReactTable<TData>>;
   tableProps: Omit<DataTableProps<TData>, 'table'> & {
-    isReloading?: boolean
-  }
-  toolbar: ReactNode
-  sidePanel: ReactNode
+    isReloading?: boolean;
+  };
+  toolbar: ReactNode;
+  sidePanel: ReactNode;
   /**
    * Pre-wired view element that switches between `<DataTable>` (table mode)
    * and `<DataGridGallery>` (gallery mode) based on the current display
    * mode. Render this directly instead of `<DataTable>` when you want the
    * built-in display-menu toggle to drive the layout.
    */
-  view: ReactNode
+  view: ReactNode;
   /** Current display mode (`'table'` or `'gallery'`). */
-  displayMode: DataGridDisplayMode
+  displayMode: DataGridDisplayMode;
   /** Programmatically change the display mode. */
-  setDisplayMode: (mode: DataGridDisplayMode) => void
+  setDisplayMode: (mode: DataGridDisplayMode) => void;
   /**
    * Pre-wired side-panel filter element. `null` when `enableSideFilters`
    * is `false`. Renders the full panel when expanded and a thin vertical
@@ -317,24 +323,24 @@ export interface UseDocyrusDataTableResult<TData> extends Omit<
    * the left of `<DataTable>` (typically inside the same flex row as
    * `sidePanel`).
    */
-  sideFilters: ReactNode
+  sideFilters: ReactNode;
   /** Current expanded state of the side filter panel. */
-  sideFiltersExpanded: boolean
+  sideFiltersExpanded: boolean;
   /** Programmatically toggle the side filter panel expanded state. */
-  setSideFiltersExpanded: (expanded: boolean) => void
+  setSideFiltersExpanded: (expanded: boolean) => void;
   /**
    * Current `RuleGroupType` emitted by the side filter panel, or
    * `undefined` when no rules are active.
    */
-  sideFiltersQuery: RuleGroupType | undefined
-  items: Array<TData>
-  resolvedListParams: DocyrusDataGridListParams
-  pagingMode: 'standard' | 'virtual-scroll' | undefined
-  reload: () => void
+  sideFiltersQuery: RuleGroupType | undefined;
+  items: Array<TData>;
+  resolvedListParams: DocyrusDataGridListParams;
+  pagingMode: 'standard' | 'virtual-scroll' | undefined;
+  reload: () => void;
 }
 
 export function useDocyrusDataTable<TData>(
-  options: UseDocyrusDataTableOptions<TData>,
+  options: UseDocyrusDataTableOptions<TData>
 ): UseDocyrusDataTableResult<TData> {
   const {
     data: providedData,
@@ -409,12 +415,12 @@ export function useDocyrusDataTable<TData>(
     gridViewSelectProps,
     refetch: refetchViewSelect,
     views,
-    activeViewId,
+    activeViewId
   } = viewSelect
 
   const activeView = useMemo<SavedDataGridView | undefined>(
-    () => views.find((view) => view.id === activeViewId),
-    [views, activeViewId],
+    () => views.find(view => view.id === activeViewId),
+    [views, activeViewId]
   )
 
   const isStandardPaging =
@@ -423,29 +429,28 @@ export function useDocyrusDataTable<TData>(
   const initialPageSize = activeView?.pageSize ?? defaultLimit
 
   const [pagination, setPagination] = useState<PaginationState>(
-    () =>
-      initialState?.pagination ?? {
+    () => initialState?.pagination ?? {
         pageIndex: 0,
-        pageSize: initialPageSize,
-      },
+        pageSize: initialPageSize
+      }
   )
   const [sorting, setSorting] = useState<SortingState>(
-    () => initialState?.sorting ?? [],
+    () => initialState?.sorting ?? []
   )
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
-    () => initialState?.columnFilters ?? [],
+    () => initialState?.columnFilters ?? []
   )
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
-    () => initialState?.columnVisibility ?? {},
+    () => initialState?.columnVisibility ?? {}
   )
   const [rowSelection, setRowSelection] = useState<RowSelectionState>(
-    () => initialState?.rowSelection ?? {},
+    () => initialState?.rowSelection ?? {}
   )
   const [expanded, setExpanded] = useState<ExpandedState>(
-    () => initialState?.expanded ?? {},
+    () => initialState?.expanded ?? {}
   )
   const [grouping, setGrouping] = useState<GroupingState>(
-    () => initialState?.grouping ?? [],
+    () => initialState?.grouping ?? []
   )
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -465,10 +470,10 @@ export function useDocyrusDataTable<TData>(
     if (columnFilters.length > 0) setColumnFilters([])
   } else if (trackedInitialPageSize !== initialPageSize) {
     setTrackedInitialPageSize(initialPageSize)
-    setPagination((prev) => ({
+    setPagination(prev => ({
       ...prev,
       pageSize: initialPageSize,
-      pageIndex: 0,
+      pageIndex: 0
     }))
   } else if (
     trackedDebouncedSearch !== debouncedSearch ||
@@ -477,7 +482,7 @@ export function useDocyrusDataTable<TData>(
     setTrackedDebouncedSearch(debouncedSearch)
     setTrackedColumnFilters(columnFilters)
     if (pagination.pageIndex !== 0) {
-      setPagination((prev) => ({ ...prev, pageIndex: 0 }))
+      setPagination(prev => ({ ...prev, pageIndex: 0 }))
     }
   }
 
@@ -505,10 +510,9 @@ export function useDocyrusDataTable<TData>(
    * items request alongside the view filter and toolbar filter rules.
    */
   const sideFiltersColumnsConfig = useMemo(
-    () =>
-      sideFiltersConfig?.columnsConfig ??
+    () => sideFiltersConfig?.columnsConfig ??
       ([] as ReadonlyArray<ColumnConfig<TData, any, any, any>>),
-    [sideFiltersConfig?.columnsConfig],
+    [sideFiltersConfig?.columnsConfig]
   )
   const sideFiltersStrategy: FilterStrategy =
     sideFiltersConfig?.strategy ?? 'server'
@@ -525,7 +529,7 @@ export function useDocyrusDataTable<TData>(
     data: [],
     defaults: sideFiltersConfig?.defaults,
     sections: sideFiltersConfig?.sections,
-    onQueryChange: setSideFiltersQuery,
+    onQueryChange: setSideFiltersQuery
   })
   const sideFiltersActiveQuery = enableSideFilters
     ? sideFiltersQuery
@@ -535,7 +539,7 @@ export function useDocyrusDataTable<TData>(
     useState<boolean>(sideFiltersDefaultExpanded)
   const isSideFiltersControlled = sideFiltersExpandedProp !== undefined
   const sideFiltersExpanded = isSideFiltersControlled
-    ? sideFiltersExpandedProp!
+    ? sideFiltersExpandedProp
     : internalSideFiltersExpanded
 
   const setSideFiltersExpanded = useCallback(
@@ -543,7 +547,7 @@ export function useDocyrusDataTable<TData>(
       if (!isSideFiltersControlled) setInternalSideFiltersExpanded(next)
       onSideFiltersExpandedChange?.(next)
     },
-    [isSideFiltersControlled, onSideFiltersExpandedChange],
+    [isSideFiltersControlled, onSideFiltersExpandedChange]
   )
 
   /*
@@ -556,7 +560,7 @@ export function useDocyrusDataTable<TData>(
     useState<DataGridDisplayMode>(defaultDisplayMode)
   const isDisplayModeControlled = displayModeProp !== undefined
   const displayMode: DataGridDisplayMode = isDisplayModeControlled
-    ? displayModeProp!
+    ? displayModeProp
     : internalDisplayMode
 
   const setDisplayMode = useCallback(
@@ -564,12 +568,11 @@ export function useDocyrusDataTable<TData>(
       if (!isDisplayModeControlled) setInternalDisplayMode(next)
       onDisplayModeChange?.(next)
     },
-    [isDisplayModeControlled, onDisplayModeChange],
+    [isDisplayModeControlled, onDisplayModeChange]
   )
 
   const resolvedListParams = useMemo<DocyrusDataGridListParams>(
-    () =>
-      buildListParams({
+    () => buildListParams({
         fields: dataSource?.fields,
         view: activeView,
         filterKeyword: debouncedSearch.trim() || undefined,
@@ -578,7 +581,7 @@ export function useDocyrusDataTable<TData>(
         requiredSlugs: groupingRequiredSlugs,
         pagination: isStandardPaging ? pagination : undefined,
         toolbarFilters: columnFilters,
-        sideFilters: sideFiltersActiveQuery,
+        sideFilters: sideFiltersActiveQuery
       }),
     [
       dataSource?.fields,
@@ -590,34 +593,33 @@ export function useDocyrusDataTable<TData>(
       isStandardPaging,
       pagination,
       columnFilters,
-      sideFiltersActiveQuery,
-    ],
+      sideFiltersActiveQuery
+    ]
   )
 
   const itemsKey = useMemo(
-    () =>
-      [
+    () => [
         'docyrus',
         'docyrusDataTableItems',
         viewSelectOptions.appSlug,
         viewSelectOptions.dataSourceSlug,
         collection ? 'collection' : 'direct',
-        resolvedListParams,
+        resolvedListParams
       ] as const,
     [
       viewSelectOptions.appSlug,
       viewSelectOptions.dataSourceSlug,
       collection,
-      resolvedListParams,
-    ],
+      resolvedListParams
+    ]
   )
 
   const viewMetadataReady =
     !viewSelect.isLoading && (views.length === 0 || Boolean(activeViewId))
 
   const itemsQuery = useQuery<{
-    items: Array<TData>
-    total: number | undefined
+    items: Array<TData>;
+    total: number | undefined;
   }>({
     queryKey: itemsKey,
     queryFn: async () => {
@@ -629,12 +631,12 @@ export function useDocyrusDataTable<TData>(
             `/v1/apps/${viewSelectOptions.appSlug}/data-sources/${viewSelectOptions.dataSourceSlug}/items`,
             resolvedListParams as Parameters<
               typeof viewSelectOptions.client.get
-            >[1],
+            >[1]
           )
 
       return {
         items: unwrapItems<TData>(response),
-        total: unwrapTotal(response),
+        total: unwrapTotal(response)
       }
     },
     enabled:
@@ -644,10 +646,10 @@ export function useDocyrusDataTable<TData>(
       Boolean(viewSelectOptions.dataSourceSlug) &&
       viewMetadataReady,
     staleTime: viewSelectOptions.staleTime ?? 30_000,
-    placeholderData: keepPreviousData,
+    placeholderData: keepPreviousData
   })
 
-  itemsRefetchRef.current = itemsQuery.refetch as () => Promise<unknown>
+  itemsRefetchRef.current = itemsQuery.refetch
 
   const items = useMemo<Array<TData>>(() => {
     if (providedData) {
@@ -666,7 +668,7 @@ export function useDocyrusDataTable<TData>(
     itemsQuery.data,
     isStandardPaging,
     pagination.pageIndex,
-    pagination.pageSize,
+    pagination.pageSize
   ])
 
   const rowCount = useMemo<number | undefined>(() => {
@@ -682,7 +684,12 @@ export function useDocyrusDataTable<TData>(
       void itemsQuery.refetch()
     }
     onReload?.()
-  }, [refetchViewSelect, itemsQuery, providedData, onReload])
+  }, [
+refetchViewSelect,
+itemsQuery,
+providedData,
+onReload
+])
 
   const reloadItems = useCallback(() => {
     if (providedData === undefined) {
@@ -698,7 +705,7 @@ export function useDocyrusDataTable<TData>(
           field,
           appSlug: viewSelectOptions.appSlug,
           dataSourceSlug: viewSelectOptions.dataSourceSlug,
-          users,
+          users
         })
         const mapped = mapColumn
           ? mapColumn(field, defaultColumn)
@@ -713,7 +720,7 @@ export function useDocyrusDataTable<TData>(
         getDataTableSelectColumn<TData>({
           size: 44,
           minSize: 44,
-          enableRowNumbers,
+          enableRowNumbers
         }))
       : null
 
@@ -721,7 +728,7 @@ export function useDocyrusDataTable<TData>(
       ...(resolvedSelectColumn ? [resolvedSelectColumn] : []),
       ...(actionsColumn ? [actionsColumn] : []),
       ...(extraColumns ?? []),
-      ...fieldColumns,
+      ...fieldColumns
     ]
   }, [
     dataSource?.fields,
@@ -733,7 +740,7 @@ export function useDocyrusDataTable<TData>(
     selectColumn,
     enableRowNumbers,
     actionsColumn,
-    extraColumns,
+    extraColumns
   ])
 
   const table = useReactTable<TData>({
@@ -755,7 +762,7 @@ export function useDocyrusDataTable<TData>(
       columnVisibility,
       rowSelection,
       expanded,
-      grouping,
+      grouping
     },
     onPaginationChange: setPagination,
     onSortingChange: setSorting,
@@ -777,8 +784,8 @@ export function useDocyrusDataTable<TData>(
         if (!config) return { items: [], hasMore: false }
 
         return config.load(params)
-      },
-    },
+      }
+    }
   })
 
   useEffect(() => {
@@ -803,8 +810,8 @@ export function useDocyrusDataTable<TData>(
       buildEnhancedVisibility(
         dataSource.fields,
         activeView,
-        groupingForVisibility,
-      ),
+        groupingForVisibility
+      )
     )
 
     const reservedIds: Array<string> = []
@@ -815,14 +822,11 @@ export function useDocyrusDataTable<TData>(
     if (reservedIds.length > 0) {
       const orderFromView = activeView.columnOrder ?? []
 
-      table.setColumnOrder([
-        ...reservedIds,
-        ...orderFromView.filter((id) => !reservedIds.includes(id)),
-      ])
+      table.setColumnOrder([...reservedIds, ...orderFromView.filter(id => !reservedIds.includes(id))])
     }
 
     const hasViewGrouping = (activeView.grouping ?? []).length > 0
-    const fieldSlugs = new Set(dataSource.fields.map((field) => field.slug))
+    const fieldSlugs = new Set(dataSource.fields.map(field => field.slug))
 
     if (
       !hasViewGrouping &&
@@ -838,7 +842,7 @@ export function useDocyrusDataTable<TData>(
     table,
     showSelectColumn,
     actionsColumn,
-    defaultRowGroupingColumn,
+    defaultRowGroupingColumn
   ])
 
   const dataSourcesLookupQuery = useQuery<
@@ -870,7 +874,7 @@ export function useDocyrusDataTable<TData>(
       return map
     },
     enabled: false,
-    staleTime: 5 * 60_000,
+    staleTime: 5 * 60_000
   })
 
   const ensureDataSourcesLookup = useCallback(async () => {
@@ -882,16 +886,16 @@ export function useDocyrusDataTable<TData>(
 
   const getAsyncOptions = useCallback(
     (column: {
-      columnDef: { meta?: { cell?: unknown } }
+      columnDef: { meta?: { cell?: unknown } };
     }): AsyncOptionsConfig | undefined => {
       const cellMeta = column.columnDef.meta?.cell as
         | {
-            variant?: string
-            dataSourceId?: string
-            relationAppSlug?: string
-            relationDataSourceSlug?: string
+            variant?: string;
+            dataSourceId?: string;
+            relationAppSlug?: string;
+            relationDataSourceSlug?: string;
           }
-        | undefined
+          | undefined
       const variant = cellMeta?.variant
 
       if (variant === 'user' || variant === 'user-multi-select') {
@@ -899,19 +903,19 @@ export function useDocyrusDataTable<TData>(
           load: async ({ search, page, pageSize, signal }) => {
             const response = await viewSelectOptions.client.get<
               | {
-                  data?: Array<Record<string, unknown>>
-                  meta?: { total?: number }
+                  data?: Array<Record<string, unknown>>;
+                  meta?: { total?: number };
                 }
-              | Array<Record<string, unknown>>
+                | Array<Record<string, unknown>>
             >(
               '/v1/users',
               {
                 filterKeyword: search || undefined,
                 limit: pageSize,
                 offset: page * pageSize,
-                fullCount: true,
-              } as Parameters<typeof viewSelectOptions.client.get>[1],
-              { signal },
+                fullCount: true
+              },
+              { signal }
             )
             const items = Array.isArray(response)
               ? response
@@ -973,8 +977,7 @@ export function useDocyrusDataTable<TData>(
                 const icon = imageUrl ? undefined : (
                   <DocyrusIcon
                     icon="huge user-circle-02"
-                    className="size-6 text-muted-foreground"
-                  />
+                    className="size-6 text-muted-foreground" />
                 )
 
                 return {
@@ -982,19 +985,19 @@ export function useDocyrusDataTable<TData>(
                   label,
                   ...(secondaryLabel ? { secondaryLabel } : {}),
                   ...(imageUrl ? { imageUrl } : {}),
-                  ...(icon ? { icon } : {}),
+                  ...(icon ? { icon } : {})
                 }
               })
               .filter(
                 (
-                  option,
+                  option
                 ): option is {
-                  value: string
-                  label: string
-                  secondaryLabel?: string
-                  imageUrl?: string
-                  icon?: ReactElement
-                } => option !== null,
+                  value: string;
+                  label: string;
+                  secondaryLabel?: string;
+                  imageUrl?: string;
+                  icon?: ReactElement;
+                } => option !== null
               )
             const hasMore =
               typeof total === 'number'
@@ -1002,7 +1005,7 @@ export function useDocyrusDataTable<TData>(
                 : items.length === pageSize
 
             return { items: mapped, hasMore }
-          },
+          }
         }
       }
 
@@ -1033,10 +1036,10 @@ export function useDocyrusDataTable<TData>(
 
             const response = await viewSelectOptions.client.get<
               | {
-                  data?: Array<Record<string, unknown>>
-                  meta?: { total?: number }
+                  data?: Array<Record<string, unknown>>;
+                  meta?: { total?: number };
                 }
-              | Array<Record<string, unknown>>
+                | Array<Record<string, unknown>>
             >(
               `/v1/apps/${target.appSlug}/data-sources/${target.slug}/items`,
               {
@@ -1044,9 +1047,9 @@ export function useDocyrusDataTable<TData>(
                 filterKeyword: search || undefined,
                 limit: pageSize,
                 offset: page * pageSize,
-                fullCount: true,
-              } as Parameters<typeof viewSelectOptions.client.get>[1],
-              { signal },
+                fullCount: true
+              },
+              { signal }
             )
             const items = Array.isArray(response)
               ? response
@@ -1061,7 +1064,7 @@ export function useDocyrusDataTable<TData>(
                   typeof record.name === 'string'
                     ? record.name
                     : typeof record.autonumber_id === 'string' ||
-                        typeof record.autonumber_id === 'number'
+                      typeof record.autonumber_id === 'number'
                       ? String(record.autonumber_id)
                       : id
 
@@ -1070,8 +1073,7 @@ export function useDocyrusDataTable<TData>(
                 return { value: id, label }
               })
               .filter(
-                (option): option is { value: string; label: string } =>
-                  option !== null,
+                (option): option is { value: string; label: string } => option !== null
               )
             const hasMore =
               typeof total === 'number'
@@ -1079,19 +1081,19 @@ export function useDocyrusDataTable<TData>(
                 : items.length === pageSize
 
             return { items: mapped, hasMore }
-          },
+          }
         }
       }
 
       return undefined
     },
-    [viewSelectOptions, ensureDataSourcesLookup],
+    [viewSelectOptions, ensureDataSourcesLookup]
   )
 
   const { exportData: exportServerData, isExporting: isServerExporting } =
     useDocyrusDataExport({
       client: viewSelectOptions.client,
-      defaultLimit: serverExportLimit,
+      defaultLimit: serverExportLimit
     })
 
   const serverExportableFields = useMemo<Array<DataSourceField>>(() => {
@@ -1100,10 +1102,10 @@ export function useDocyrusDataTable<TData>(
     if (fields.length === 0) return []
 
     const excludedSlugs = new Set<string>(
-      serverExportExcludedSlugs ?? DEFAULT_SERVER_EXPORT_EXCLUDED_SLUGS,
+      serverExportExcludedSlugs ?? DEFAULT_SERVER_EXPORT_EXCLUDED_SLUGS
     )
     const excludedTypes = new Set<string>(
-      serverExportExcludedFieldTypes ?? DEFAULT_SERVER_EXPORT_EXCLUDED_TYPES,
+      serverExportExcludedFieldTypes ?? DEFAULT_SERVER_EXPORT_EXCLUDED_TYPES
     )
 
     return fields.filter((field) => {
@@ -1117,56 +1119,51 @@ export function useDocyrusDataTable<TData>(
 
       return true
     })
-  }, [
-    dataSource?.fields,
-    serverExportExcludedSlugs,
-    serverExportExcludedFieldTypes,
-  ])
+  }, [dataSource?.fields, serverExportExcludedSlugs, serverExportExcludedFieldTypes])
 
   const serverExportColumnSlugs = useCallback(
     (scope: 'visible' | 'all'): Array<string> => {
       if (serverExportableFields.length === 0) return []
 
       if (scope === 'all') {
-        return serverExportableFields.map((field) => field.slug)
+        return serverExportableFields.map(field => field.slug)
       }
 
       const visibleSet = new Set(
         deriveVisibleSlugs(
           dataSource?.fields ?? [],
           activeView,
-          groupingRequiredSlugs,
-        ),
+          groupingRequiredSlugs
+        )
       )
 
       return serverExportableFields
-        .filter((field) => visibleSet.has(field.slug))
-        .map((field) => field.slug)
+        .filter(field => visibleSet.has(field.slug))
+        .map(field => field.slug)
     },
     [
       serverExportableFields,
       dataSource?.fields,
       activeView,
-      groupingRequiredSlugs,
-    ],
+      groupingRequiredSlugs
+    ]
   )
 
   const serverExportFieldOptions = useMemo<Array<DocyrusDataExportFieldOption>>(
-    () =>
-      serverExportableFields.map((field) => ({
+    () => serverExportableFields.map(field => ({
         slug: field.slug,
         name:
           typeof field.name === 'string' && field.name.length > 0
             ? field.name
             : field.slug,
-        type: typeof field.type === 'string' ? field.type : '',
+        type: typeof field.type === 'string' ? field.type : ''
       })),
-    [serverExportableFields],
+    [serverExportableFields]
   )
 
   const serverExportVisibleSlugs = useMemo(
     () => serverExportColumnSlugs('visible'),
-    [serverExportColumnSlugs],
+    [serverExportColumnSlugs]
   )
 
   const handleServerExport = useCallback(
@@ -1189,7 +1186,7 @@ export function useDocyrusDataTable<TData>(
           typeof resolvedListParams.filterKeyword === 'string'
             ? resolvedListParams.filterKeyword
             : undefined,
-        limit: serverExportLimit,
+        limit: serverExportLimit
       }
 
       await exportServerData(payload)
@@ -1200,8 +1197,8 @@ export function useDocyrusDataTable<TData>(
       resolvedListParams.filters,
       resolvedListParams.filterKeyword,
       serverExportLimit,
-      exportServerData,
-    ],
+      exportServerData
+    ]
   )
 
   const canServerExport = enableServerExportMenu && Boolean(dataSource?.id)
@@ -1210,35 +1207,35 @@ export function useDocyrusDataTable<TData>(
 
   const selectedRows = table
     .getFilteredSelectedRowModel()
-    .rows.map((row) => row.original)
+    .rows.map(row => row.original)
 
   const exportColumnDefs = useMemo<Array<DataExportColumn<TData>>>(() => {
     const fields = dataSource?.fields ?? []
     const visibility = table.getState().columnVisibility
     const slugs = (() => {
       if (Array.isArray(exportColumns)) return exportColumns
-      if (exportColumns === 'all') return fields.map((field) => field.slug)
+      if (exportColumns === 'all') return fields.map(field => field.slug)
 
       return fields
-        .map((field) => field.slug)
-        .filter((slug) => visibility[slug] !== false)
+        .map(field => field.slug)
+        .filter(slug => visibility[slug] !== false)
     })()
 
     return slugs
-      .map((slug) => fields.find((field) => field.slug === slug))
+      .map(slug => fields.find(field => field.slug === slug))
       .filter((field): field is DataSourceField => field !== undefined)
-      .map<DataExportColumn<TData>>((field) => ({
+      .map<DataExportColumn<TData>>(field => ({
         id: field.slug,
         header:
           typeof field.name === 'string' && field.name.length > 0
             ? field.name
-            : field.slug,
+            : field.slug
       }))
   }, [dataSource?.fields, exportColumns, table])
 
   const { exportData } = useDataExport<TData>({
     columns: exportColumnDefs,
-    fileName: exportFileName ?? viewSelectOptions.dataSourceSlug ?? 'export',
+    fileName: exportFileName ?? viewSelectOptions.dataSourceSlug ?? 'export'
   })
 
   const clearSelection = useCallback(() => {
@@ -1257,9 +1254,9 @@ export function useDocyrusDataTable<TData>(
 
       await viewSelectOptions.client.delete(
         `/v1/apps/${viewSelectOptions.appSlug}/data-sources/${viewSelectOptions.dataSourceSlug}/items`,
-        body,
+        body
       )
-    },
+    }
   })
 
   const [bulkUpdateOpen, setBulkUpdateOpen] = useState(false)
@@ -1287,7 +1284,12 @@ export function useDocyrusDataTable<TData>(
     } finally {
       setIsBulkDeleting(false)
     }
-  }, [bulkDeleteIds, bulkDeleteMutation, clearSelection, providedData])
+  }, [
+bulkDeleteIds,
+bulkDeleteMutation,
+clearSelection,
+providedData
+])
 
   const onBulkUpdateSuccess = useCallback(() => {
     clearSelection()
@@ -1315,7 +1317,7 @@ export function useDocyrusDataTable<TData>(
           if (rows.length === 0) return
           setBulkUpdateRecords(rows)
           setBulkUpdateOpen(true)
-        },
+        }
       })
     }
 
@@ -1327,9 +1329,9 @@ export function useDocyrusDataTable<TData>(
         variant: 'destructive',
         onAction: (rows) => {
           const ids = rows
-            .map((row) => (row as { id?: unknown }).id)
+            .map(row => (row as { id?: unknown }).id)
             .filter(
-              (id): id is string => typeof id === 'string' && id.length > 0,
+              (id): id is string => typeof id === 'string' && id.length > 0
             )
 
           if (ids.length === 0) return
@@ -1337,7 +1339,7 @@ export function useDocyrusDataTable<TData>(
           setBulkDeleteIds(ids)
           setBulkDeleteCount(rows.length)
           setBulkDeleteOpen(true)
-        },
+        }
       })
     }
 
@@ -1345,7 +1347,7 @@ export function useDocyrusDataTable<TData>(
       list.push({
         key: 'bulk-export',
         label: 'Export',
-        render: (rows) => (
+        render: rows => (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="sm">
@@ -1364,13 +1366,12 @@ export function useDocyrusDataTable<TData>(
                 JSON
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => void exportData(rows, 'markdown')}
-              >
+                onClick={() => void exportData(rows, 'markdown')}>
                 Markdown
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        ),
+        )
       })
     }
 
@@ -1388,23 +1389,18 @@ export function useDocyrusDataTable<TData>(
           {selectedRows.length} selected
         </span>
         <div className="flex items-center gap-2">
-          {bulkActionDescriptors.map((action) =>
-            action.render ? (
+          {bulkActionDescriptors.map(action => action.render ? (
               <span key={action.key}>{action.render(selectedRows)}</span>
             ) : (
               <Button
                 key={action.key}
-                variant={
-                  action.variant === 'destructive' ? 'destructive' : 'secondary'
-                }
+                variant={action.variant === 'destructive' ? 'destructive' : 'secondary'}
                 size="sm"
-                onClick={() => action.onAction?.(selectedRows)}
-              >
+                onClick={() => action.onAction?.(selectedRows)}>
                 {action.icon}
                 {action.label}
               </Button>
-            ),
-          )}
+            ))}
         </div>
       </div>
     ) : null
@@ -1423,8 +1419,7 @@ export function useDocyrusDataTable<TData>(
             appSlug={viewSelectOptions.appSlug}
             dataSourceSlug={viewSelectOptions.dataSourceSlug}
             records={bulkUpdateRecords as ReadonlyArray<{ id: string }>}
-            onSuccess={onBulkUpdateSuccess}
-          />
+            onSuccess={onBulkUpdateSuccess} />
         )}
         {bulkActionSet.has('delete') && (
           <RecordDeleteConfirmDialog
@@ -1438,8 +1433,7 @@ export function useDocyrusDataTable<TData>(
             }}
             recordCount={bulkDeleteCount}
             isPending={isBulkDeleting}
-            onConfirm={onConfirmBulkDelete}
-          />
+            onConfirm={onConfirmBulkDelete} />
         )}
       </>
     ) : null
@@ -1452,8 +1446,7 @@ export function useDocyrusDataTable<TData>(
   const controlsToolbar = (
     <div
       data-slot="docyrus-data-table-toolbar"
-      className={cn('flex items-start gap-2 px-3 py-2', toolbarClassName)}
-    >
+      className={cn('flex items-start gap-2 px-3 py-2', toolbarClassName)}>
       <div className="flex min-w-0 flex-1 items-center gap-2 flex-wrap">
         {toolbarStartContent}
         {renderViewSelectInToolbar && (
@@ -1462,8 +1455,7 @@ export function useDocyrusDataTable<TData>(
             variant={viewSelectVariant}
             maxVisibleViews={viewSelectMaxVisible}
             editable
-            {...gridViewSelectProps}
-          />
+            {...gridViewSelectProps} />
         )}
         {enableSearchInput && (
           <div className="relative shrink-0">
@@ -1471,26 +1463,23 @@ export function useDocyrusDataTable<TData>(
             <Input
               type="search"
               value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
+              onChange={event => setSearchInput(event.target.value)}
               placeholder={searchPlaceholder}
-              className="h-8 w-56 pl-7"
-            />
+              className="h-8 w-56 pl-7" />
           </div>
         )}
         {enableFilterMenu && (
           <DataGridFilterMenu
             table={table}
             getAsyncOptions={getAsyncOptions}
-            className="min-w-fit flex-1"
-          />
+            className="min-w-fit flex-1" />
         )}
       </div>
       <div className="flex flex-none shrink-0 items-center gap-2">
         {enableGroupMenu && (
           <DataGridGroupMenu
             table={table}
-            defaultRowGroupingColumn={defaultRowGroupingColumn}
-          />
+            defaultRowGroupingColumn={defaultRowGroupingColumn} />
         )}
         {enableSortMenu && <DataGridSortMenu table={table} />}
         {enableDisplayMenu && <DataGridDisplayMenu table={table} />}
@@ -1499,8 +1488,7 @@ export function useDocyrusDataTable<TData>(
             onExport={handleServerExport}
             fields={serverExportFieldOptions}
             visibleSlugs={serverExportVisibleSlugs}
-            isExporting={isServerExporting}
-          />
+            isExporting={isServerExporting} />
         )}
         {enableReloadButton && (
           <Button
@@ -1508,8 +1496,7 @@ export function useDocyrusDataTable<TData>(
             size="icon-sm"
             aria-label="Reload"
             disabled={isReloading}
-            onClick={reloadItems}
-          >
+            onClick={reloadItems}>
             {isReloading ? (
               <Loader2 className="size-4 animate-spin" />
             ) : (
@@ -1536,8 +1523,7 @@ export function useDocyrusDataTable<TData>(
         table={table}
         variant="vertical-tabs"
         editable
-        {...gridViewSelectProps}
-      />
+        {...gridViewSelectProps} />
     </DataGridSidePanel>
   ) : null
 
@@ -1564,24 +1550,21 @@ export function useDocyrusDataTable<TData>(
         clearLabel={sideFiltersConfig.clearLabel}
         className={cn(
           'h-full shrink-0 overflow-y-auto border-r p-3',
-          sideFiltersConfig.className,
+          sideFiltersConfig.className
         )}
-        style={
-          sideFiltersExpanded ? { width: expandedSideFilterWidth } : undefined
-        }
+        style={sideFiltersExpanded ? { width: expandedSideFilterWidth } : undefined}
         collapsible
         expanded={sideFiltersExpanded}
         onExpandedChange={setSideFiltersExpanded}
         collapsedWidth={sideFiltersConfig.collapsedWidth}
         collapseAriaLabel={sideFiltersConfig.collapseAriaLabel}
-        expandAriaLabel={sideFiltersConfig.expandAriaLabel}
-      />
+        expandAriaLabel={sideFiltersConfig.expandAriaLabel} />
     ) : null
 
   const isLoading =
     viewSelect.isLoading ||
     (providedData === undefined && (itemsQuery.isLoading || !viewMetadataReady))
-  const error = viewSelect.error ?? (itemsQuery.error as Error | null) ?? null
+  const error = viewSelect.error ?? itemsQuery.error ?? null
   const pagingMode: 'standard' | 'virtual-scroll' | undefined =
     activeView?.pagingEnabled
       ? (activeView.pagingMode ?? 'virtual-scroll')
@@ -1593,7 +1576,7 @@ export function useDocyrusDataTable<TData>(
     emptyText,
     pagination: pagingMode === 'standard',
     isLoading,
-    isReloading,
+    isReloading
   }
 
   const view: ReactNode =
@@ -1603,8 +1586,7 @@ export function useDocyrusDataTable<TData>(
         tableMeta={table.options.meta!}
         cardConfig={cardConfig}
         height={galleryHeight}
-        className={galleryClassName}
-      />
+        className={galleryClassName} />
     ) : (
       <DataTable table={table} {...tableProps} />
     )
@@ -1632,22 +1614,22 @@ export function useDocyrusDataTable<TData>(
     setActiveViewId: viewSelect.setActiveViewId,
     isLoading,
     error,
-    refetch: reload,
+    refetch: reload
   }
 }
 
 interface BuildDataTableColumnDefOptions {
-  field: DocyrusFieldLike
-  appSlug?: string
-  dataSourceSlug?: string
-  users?: ReadonlyArray<CellUserOption>
+  field: DocyrusFieldLike;
+  appSlug?: string;
+  dataSourceSlug?: string;
+  users?: ReadonlyArray<CellUserOption>;
 }
 
 function buildDataTableColumnDef<TData = unknown>({
   field,
   appSlug,
   dataSourceSlug,
-  users,
+  users
 }: BuildDataTableColumnDefOptions): ColumnDef<TData> {
   const fieldType = field.type as IFieldType
   const FieldValue = VALUE_RENDERER_MAP[fieldType] ?? TextValue
@@ -1666,8 +1648,7 @@ function buildDataTableColumnDef<TData = unknown>({
         record={row.original as Record<string, unknown>}
         enumOptions={enumOptions}
         uuid={fieldType === 'field-identity'}
-        className="max-w-full"
-      />
+        className="max-w-full" />
     ),
     meta: {
       label: field.name,
@@ -1680,15 +1661,14 @@ function buildDataTableColumnDef<TData = unknown>({
           record={record as Record<string, unknown> | undefined}
           enumOptions={enumOptions}
           uuid={fieldType === 'field-identity'}
-          className="max-w-full"
-        />
-      ),
-    },
+          className="max-w-full" />
+      )
+    }
   }
 }
 
 function unwrapItems<TData>(
-  value: Array<TData> | { data: Array<TData> } | unknown,
+  value: Array<TData> | { data: Array<TData> } | unknown
 ): Array<TData> {
   if (Array.isArray(value)) return value
   if (
@@ -1715,15 +1695,15 @@ function unwrapTotal(value: unknown): number | undefined {
 }
 
 interface BuildListParamsArgs {
-  fields: Array<DataSourceField> | undefined
-  view: SavedDataGridView | undefined
-  filterKeyword?: string
-  defaultLimit: number
-  override: DocyrusDataGridListParams | undefined
-  requiredSlugs?: Array<string>
-  pagination?: { pageIndex: number; pageSize: number }
-  toolbarFilters?: ColumnFiltersState
-  sideFilters?: RuleGroupType | undefined
+  fields: Array<DataSourceField> | undefined;
+  view: SavedDataGridView | undefined;
+  filterKeyword?: string;
+  defaultLimit: number;
+  override: DocyrusDataGridListParams | undefined;
+  requiredSlugs?: Array<string>;
+  pagination?: { pageIndex: number; pageSize: number };
+  toolbarFilters?: ColumnFiltersState;
+  sideFilters?: RuleGroupType | undefined;
 }
 
 function buildListParams(args: BuildListParamsArgs): DocyrusDataGridListParams {
@@ -1736,7 +1716,7 @@ function buildListParams(args: BuildListParamsArgs): DocyrusDataGridListParams {
     requiredSlugs,
     pagination,
     toolbarFilters,
-    sideFilters,
+    sideFilters
   } = args
   const params: DocyrusDataGridListParams = {}
   const visibleSlugs = fields
@@ -1753,7 +1733,7 @@ function buildListParams(args: BuildListParamsArgs): DocyrusDataGridListParams {
   const filters = buildFiltersParam(
     view?.filterQuery,
     toolbarFilters,
-    sideFilters,
+    sideFilters
   )
 
   if (filters) params.filters = filters
@@ -1780,7 +1760,7 @@ function buildListParams(args: BuildListParamsArgs): DocyrusDataGridListParams {
 function buildColumnsParam(
   fields: Array<DataSourceField> | undefined,
   view: SavedDataGridView | undefined,
-  requiredSlugs: Array<string> | undefined,
+  requiredSlugs: Array<string> | undefined
 ): string | undefined {
   if (!fields || fields.length === 0) return undefined
 
@@ -1788,7 +1768,7 @@ function buildColumnsParam(
 
   if (visibleSlugs.length === 0) return undefined
 
-  return ['id', ...visibleSlugs.filter((slug) => slug !== 'id')].join(', ')
+  return ['id', ...visibleSlugs.filter(slug => slug !== 'id')].join(', ')
 }
 
 const EXPANDABLE_FIELD_TYPES = new Set<string>([
@@ -1803,12 +1783,12 @@ const EXPANDABLE_FIELD_TYPES = new Set<string>([
   'field-multiSelect',
   'field-tagSelect',
   'field-status',
-  'field-approvalStatus',
+  'field-approvalStatus'
 ])
 
 function buildExpandParam(
   fields: Array<DataSourceField> | undefined,
-  visibleSlugs: Array<string>,
+  visibleSlugs: Array<string>
 ): Array<string> | undefined {
   if (!fields || fields.length === 0 || visibleSlugs.length === 0)
     return undefined
@@ -1817,22 +1797,19 @@ function buildExpandParam(
 
   return fields
     .filter(
-      (field) =>
-        visible.has(field.slug) && EXPANDABLE_FIELD_TYPES.has(field.type),
+      field => visible.has(field.slug) && EXPANDABLE_FIELD_TYPES.has(field.type)
     )
-    .map((field) => field.slug)
+    .map(field => field.slug)
 }
 
 function deriveVisibleSlugs(
   fields: Array<DataSourceField>,
   view: SavedDataGridView | undefined,
-  requiredSlugs?: Array<string>,
+  requiredSlugs?: Array<string>
 ): Array<string> {
-  const allSlugs = fields.map((field) => field.slug)
+  const allSlugs = fields.map(field => field.slug)
   const fieldSlugSet = new Set(allSlugs)
-  const required = (requiredSlugs ?? []).filter((slug) =>
-    fieldSlugSet.has(slug),
-  )
+  const required = (requiredSlugs ?? []).filter(slug => fieldSlugSet.has(slug))
   let visible: Array<string>
 
   if (!view) {
@@ -1843,10 +1820,10 @@ function deriveVisibleSlugs(
 
     if (order.length > 0) {
       visible = order.filter(
-        (slug) => fieldSlugSet.has(slug) && visibility[slug] !== false,
+        slug => fieldSlugSet.has(slug) && visibility[slug] !== false
       )
     } else if (Object.keys(visibility).length > 0) {
-      visible = allSlugs.filter((slug) => visibility[slug] === true)
+      visible = allSlugs.filter(slug => visibility[slug] === true)
     } else {
       visible = allSlugs
     }
@@ -1870,7 +1847,7 @@ function deriveVisibleSlugs(
 function buildEnhancedVisibility(
   fields: Array<DataSourceField>,
   view: SavedDataGridView,
-  requiredSlugs?: Array<string>,
+  requiredSlugs?: Array<string>
 ): Record<string, boolean> {
   const visibleSet = new Set(deriveVisibleSlugs(fields, view, requiredSlugs))
   const map: Record<string, boolean> = {}
@@ -1883,27 +1860,26 @@ function buildEnhancedVisibility(
 }
 
 function buildOrderByParam(
-  sorting: Array<ColumnSort> | undefined,
+  sorting: Array<ColumnSort> | undefined
 ): Array<{ field: string; direction: 'asc' | 'desc' }> | undefined {
   if (!sorting || sorting.length === 0) return undefined
 
-  return sorting.map((sort) => ({
+  return sorting.map(sort => ({
     field: sort.id,
-    direction: sort.desc ? 'desc' : 'asc',
+    direction: sort.desc ? 'desc' : 'asc'
   }))
 }
 
 function buildFiltersParam(
   filterQuery: SavedDataGridView['filterQuery'],
   toolbarFilters?: ColumnFiltersState,
-  sideFilters?: RuleGroupType | undefined,
+  sideFilters?: RuleGroupType | undefined
 ): RuleGroupType | undefined {
   const viewFilter = normalizeSavedViewFilterQuery(filterQuery)
   const toolbarRules = (toolbarFilters ?? [])
-    .map((filter) => toServerRule(filter))
+    .map(filter => toServerRule(filter))
     .filter(
-      (rule): rule is { field: string; operator: string; value?: unknown } =>
-        Boolean(rule),
+      (rule): rule is { field: string; operator: string; value?: unknown } => Boolean(rule)
     )
   const sideRule =
     sideFilters &&

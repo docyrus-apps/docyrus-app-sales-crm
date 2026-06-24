@@ -2,6 +2,7 @@ import type { SortingState } from '@tanstack/react-table'
 import type { RuleGroupType } from 'react-querybuilder'
 
 import type { SavedDataGridView } from '@/components/docyrus/data-grid'
+
 import { DATA_GRID_DEFAULT_PAGE_SIZE } from '@/components/docyrus/data-grid/types'
 
 /*
@@ -17,14 +18,14 @@ import { DATA_GRID_DEFAULT_PAGE_SIZE } from '@/components/docyrus/data-grid/type
  */
 
 interface SystemViewDefinition {
-  id: string
-  name: string
-  description?: string
-  columns: Array<string>
-  sorting?: SortingState
-  filterQuery?: RuleGroupType
+  id: string;
+  name: string;
+  description?: string;
+  columns: Array<string>;
+  sorting?: SortingState;
+  filterQuery?: RuleGroupType;
   /** Override the standard-paging page size (defaults to the grid default). */
-  pageSize?: number
+  pageSize?: number;
 }
 
 export function andFilter(rules: RuleGroupType['rules']): RuleGroupType {
@@ -35,16 +36,98 @@ export function orFilter(rules: RuleGroupType['rules']): RuleGroupType {
   return { combinator: 'or', rules }
 }
 
+interface EnumOptionLike {
+  id?: string | null;
+  name?: string | null;
+}
+
+function normalizeEnumName(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+}
+
+function containsNormalizedPhrase(value: string, phrase: string): boolean {
+  return ` ${value} `.includes(` ${phrase} `)
+}
+
+export function findEnumIdByName(
+  options: ReadonlyArray<EnumOptionLike>,
+  names: ReadonlyArray<string>
+): string | undefined {
+  const normalizedNames = names.map(normalizeEnumName)
+
+  for (const name of normalizedNames) {
+    const exact = options.find(
+      option => option.id && normalizeEnumName(option.name ?? '') === name
+    )
+
+    if (exact?.id) return exact.id
+  }
+
+  for (const name of normalizedNames) {
+    const partial = options.find((option) => {
+      if (!option.id) return false
+
+      const optionName = normalizeEnumName(option.name ?? '')
+
+      return (
+        containsNormalizedPhrase(optionName, name) ||
+        containsNormalizedPhrase(name, optionName)
+      )
+    })
+
+    if (partial?.id) return partial.id
+  }
+
+  return undefined
+}
+
+export function equalsFilter(
+  field: string,
+  value: string | undefined
+): RuleGroupType | undefined {
+  if (!value) return undefined
+
+  return andFilter([{ field, operator: '=', value }])
+}
+
+export function inFilter(
+  field: string,
+  values: ReadonlyArray<string | undefined>
+): RuleGroupType | undefined {
+  const resolved = values.filter((value): value is string => Boolean(value))
+
+  if (resolved.length === 0) return undefined
+
+  return andFilter([{ field, operator: 'in', value: resolved }])
+}
+
+export function numberGreaterThanFilter(
+  field: string,
+  value: number
+): RuleGroupType {
+  return andFilter([{ field, operator: '>', value }])
+}
+
+export function dateShortcutFilter(
+  field: string,
+  operator: string
+): RuleGroupType {
+  return andFilter([{ field, operator }])
+}
+
 export function createSystemViews(
   prefix: string,
-  views: Array<SystemViewDefinition>,
+  views: Array<SystemViewDefinition>
 ): Array<SavedDataGridView> {
   return views.map((view, index) => ({
     id: `${prefix}:${view.id}`,
     name: view.name,
     description: view.description,
     columnVisibility: Object.fromEntries(
-      view.columns.map((column) => [column, true]),
+      view.columns.map(column => [column, true])
     ),
     columnOrder: view.columns,
     columnPinning: { left: [], right: [] },
@@ -57,6 +140,6 @@ export function createSystemViews(
     pagingEnabled: true,
     pagingMode: 'standard',
     pageSize: view.pageSize ?? DATA_GRID_DEFAULT_PAGE_SIZE,
-    isDefault: index === 0,
+    isDefault: index === 0
   }))
 }

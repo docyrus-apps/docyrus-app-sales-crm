@@ -1,7 +1,7 @@
 import type {
   WebphoneAgentProfile,
   WebphoneRuntimeSettings,
-  WebrtcRuntimeConfig,
+  WebrtcRuntimeConfig
 } from './types'
 
 /**
@@ -24,35 +24,37 @@ export const DEFAULT_VERIMOR_RUNTIME: WebphoneRuntimeSettings = {
   iceServersJson: '[\n  { "urls": "stun:stun.l.google.com:19302" }\n]',
   extraRegisterHeaders: '',
   extraInviteHeaders: '',
-  preferredAudioCodecs: 'PCMU,PCMA',
+  preferredAudioCodecs: 'PCMU,PCMA'
 }
 
 export function getWebphoneRuntimeSettings(
-  value: Partial<WebphoneRuntimeSettings> | null | undefined,
+  value: Partial<WebphoneRuntimeSettings> | null | undefined
 ): WebphoneRuntimeSettings {
   return {
     ...DEFAULT_VERIMOR_RUNTIME,
     ...(value ?? {}),
-    // Code-managed fields: hidden from the settings form and never
-    // tenant-overridable. They always take the DEFAULT_VERIMOR_RUNTIME value,
-    // even if a stale value is stored under `data.webrtc`. Edit them here.
+    /*
+     * Code-managed fields: hidden from the settings form and never
+     * tenant-overridable. They always take the DEFAULT_VERIMOR_RUNTIME value,
+     * even if a stale value is stored under `data.webrtc`. Edit them here.
+     */
     registerExpires: DEFAULT_VERIMOR_RUNTIME.registerExpires,
     noAnswerTimeout: DEFAULT_VERIMOR_RUNTIME.noAnswerTimeout,
     preferredAudioCodecs: DEFAULT_VERIMOR_RUNTIME.preferredAudioCodecs,
-    iceServersJson: DEFAULT_VERIMOR_RUNTIME.iceServersJson,
+    iceServersJson: DEFAULT_VERIMOR_RUNTIME.iceServersJson
   }
 }
 
 /** username = pbx_user_id if present, else extension. */
 export function resolveSipUsername(
-  profile: Pick<WebphoneAgentProfile, 'pbx_user_id' | 'extension'> | null,
+  profile: Pick<WebphoneAgentProfile, 'pbx_user_id' | 'extension'> | null
 ): string {
   return profile?.pbx_user_id?.trim() || profile?.extension?.trim() || ''
 }
 
 export function buildWebrtcRuntimeConfig(args: {
-  settings: Partial<WebphoneRuntimeSettings> | null | undefined
-  profile: WebphoneAgentProfile
+  settings: Partial<WebphoneRuntimeSettings> | null | undefined;
+  profile: WebphoneAgentProfile;
 }): WebrtcRuntimeConfig {
   const username = resolveSipUsername(args.profile)
 
@@ -60,32 +62,37 @@ export function buildWebrtcRuntimeConfig(args: {
     ...getWebphoneRuntimeSettings(args.settings),
     username,
     password: args.profile.sip_password ?? '',
-    displayName: args.profile.display_name?.trim() || username,
+    displayName: args.profile.display_name?.trim() || username
   }
 }
 
 export function getPreferredDeviceSlug(
-  profile: Pick<WebphoneAgentProfile, 'preferred_device'> | null,
+  profile: Pick<WebphoneAgentProfile, 'preferred_device'> | null
 ): string {
   const device = profile?.preferred_device
+
   if (!device) return ''
   if (typeof device === 'string') return device.toLowerCase()
+
   return (device.slug ?? device.name ?? '').toLowerCase()
 }
 
 /** WebRTC / WebPhone both count as a browser softphone device. */
 export function isWebrtcPreferred(
-  profile: Pick<WebphoneAgentProfile, 'preferred_device'> | null,
+  profile: Pick<WebphoneAgentProfile, 'preferred_device'> | null
 ): boolean {
   const slug = getPreferredDeviceSlug(profile)
+
   // Empty preferred_device is treated as acceptable (no explicit non-webrtc choice).
   if (!slug) return true
+
   return slug.includes('webrtc') || slug.includes('webphone')
 }
 
 export function isSecureContextForWebrtc(): boolean {
   if (typeof window === 'undefined') return false
   const { protocol, hostname } = window.location
+
   return (
     protocol === 'https:' ||
     hostname === 'localhost' ||
@@ -109,15 +116,15 @@ export type WebphoneReadinessReason =
   | 'missing_ice'
 
 export interface WebphoneReadinessInput {
-  isAuthenticated: boolean
-  isSecureContext: boolean
-  settings: Partial<WebphoneRuntimeSettings> | null
-  profile: WebphoneAgentProfile | null
+  isAuthenticated: boolean;
+  isSecureContext: boolean;
+  settings: Partial<WebphoneRuntimeSettings> | null;
+  profile: WebphoneAgentProfile | null;
 }
 
 export interface WebphoneReadiness {
-  ready: boolean
-  reasons: Array<WebphoneReadinessReason>
+  ready: boolean;
+  reasons: Array<WebphoneReadinessReason>;
 }
 
 /**
@@ -125,7 +132,7 @@ export interface WebphoneReadiness {
  * the dial button must be disabled whenever `ready` is false.
  */
 export function resolveWebphoneReadiness(
-  input: WebphoneReadinessInput,
+  input: WebphoneReadinessInput
 ): WebphoneReadiness {
   const reasons: Array<WebphoneReadinessReason> = []
   const settings = getWebphoneRuntimeSettings(input.settings)

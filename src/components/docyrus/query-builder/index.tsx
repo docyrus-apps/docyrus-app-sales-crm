@@ -1,31 +1,9 @@
 'use client'
 
-export { QueryBuilderDocyrus, queryBuilderVariants } from './query-builder'
+// @ts-nocheck
+/* eslint-disable */
+export { QueryBuilderDocyrus } from './query-builder'
 export type { QueryBuilderDocyrusProps, DocyrusQBField } from './query-builder'
-
-export {
-  type FilterGroup,
-  OPERATOR_LABELS,
-  OPERATORS_BY_GROUP,
-  NO_VALUE_OPERATORS,
-  BETWEEN_OPERATORS,
-  NUMBER_VALUE_OPERATORS,
-  TIME_VALUE_OPERATORS,
-  WEEKDAYS_OPERATORS,
-  OTHER_FIELD_OPERATORS,
-  MULTI_VALUE_OPERATORS,
-  ARRAY_VALUE_OPERATORS,
-  JSON_KEY_OPERATORS,
-  JSON_KEY_NO_VALUE_OPERATORS,
-  FIELD_TYPE_TO_FILTER_GROUP,
-  FILTER_GROUP_INPUT_TYPE,
-  FILTER_GROUP_VALUE_EDITOR_TYPE,
-  WEEKDAY_OPTIONS,
-  getFilterGroupForFieldType,
-  getOperatorsForGroup,
-  resolveValueEditorType,
-  resolveInputType,
-} from './query-operators'
 
 export { QBActionElement } from './qb-action-element'
 export { QBValueSelector } from './qb-value-selector'
@@ -56,3 +34,51 @@ export type {
   RuleGroupTypeAny,
   VersatileSelectorProps,
 } from 'react-querybuilder'
+
+export { queryBuilderVariants } from './query-builder'
+
+export { useQuery2JsonataConverter } from './use-query-to-jsonata-converter'
+export type {
+  QueryJsonataContext,
+  EvaluateOptions,
+  UseQuery2JsonataConverterOptions,
+  UseQuery2JsonataConverterResult,
+} from './use-query-to-jsonata-converter'
+
+export {
+  convertQueryToJsonata,
+  computeDateBindings,
+  computeDateWindow,
+  createHelperBindings,
+  defaultFieldResolver,
+} from './lib/query-to-jsonata'
+export type {
+  ConvertQueryOptions,
+  ConvertQueryResult,
+  DateBindingSpec,
+  OperatorApi,
+} from './lib/query-to-jsonata'
+
+export {
+  OPERATOR_LABELS,
+  OPERATORS_BY_GROUP,
+  NO_VALUE_OPERATORS,
+  BETWEEN_OPERATORS,
+  NUMBER_VALUE_OPERATORS,
+  TIME_VALUE_OPERATORS,
+  WEEKDAYS_OPERATORS,
+  OTHER_FIELD_OPERATORS,
+  MULTI_VALUE_OPERATORS,
+  ARRAY_VALUE_OPERATORS,
+  JSON_KEY_OPERATORS,
+  JSON_KEY_NO_VALUE_OPERATORS,
+  FIELD_TYPE_TO_FILTER_GROUP,
+  FILTER_GROUP_INPUT_TYPE,
+  FILTER_GROUP_VALUE_EDITOR_TYPE,
+  WEEKDAY_OPTIONS,
+  getFilterGroupForFieldType,
+  getOperatorsForGroup,
+  resolveValueEditorType,
+  resolveInputType,
+} from './query-operators'
+export type { FilterGroup } from './query-operators'

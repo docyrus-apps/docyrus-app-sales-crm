@@ -1,10 +1,16 @@
 ## Companies & Contacts Workspace
 
-The companies and contacts routes now use the Docyrus data-grid runtime for list views with saved views, Docyrus-backed search/filtering, inline change saving, and toolbar import/export actions. Alternate layouts remain where implemented.
+CRM list routes use the Docyrus data-grid runtime with saved views, Docyrus-backed search/filtering, inline change saving, and toolbar import/export actions.
 
-List grid toolbars render saved views above the search/filter/tool row, and every datasource ships system views: All plus two query-backed filtered views that merge through `filterQuery` rather than toolbar quick-filter state.
+This covers companies, contacts, leads, products, sales orders/quotes, tasks, calls, and the deals list tab. Non-deal list pages stay list-only; the old right-side card/gallery view switcher is not rendered there.
 
-Saved data views are normalized to standard paging (`pagingEnabled: true`, `pagingMode: standard`) so the pagination footer is visible when the active list view loads. In standard paging mode, the shared DataGrid treats the configured `height` as the total grid area including the pagination footer, preventing large pages from pushing the footer below the viewport.
+List grid toolbars render saved views above the search/filter/tool row, and every datasource ships system views: All first plus two short, query-backed filtered views that merge through `filterQuery` rather than toolbar quick-filter state.
+
+Saved data views are normalized to standard paging (`pagingEnabled: true`, `pagingMode: standard`, 50 rows/page) so the pagination footer is visible when the active list view loads. `useSeedDefaultViews` overwrites matching system-view templates and prunes old seeded templates for these grids, so stale long-name views do not survive after a template refresh.
+
+Full-page list grids must use a flex shell, not a fixed pixel height: route `PageContainer` gets `min-h-0 flex-1 overflow-hidden`, the toolbar is `shrink-0`, the grid holder is `min-h-0 flex-1`, and `<DataGrid height="auto" />` fills that holder. The shared DataGrid makes the scrollable body `flex-1 min-h-0` and renders the standard paging footer as a sibling, so the footer remains visible at 100% browser zoom.
+
+List pages must not branch away from the grid when the current query returns zero rows. Search/filter no-result states leave the toolbar, view tabs, grid shell, and pagination in place, and the DataGrid empty state is responsible for showing no data until the search/filter is cleared.
 
 Saved view filter queries are normalized into backend filter syntax before list/board requests are sent: Query Builder-only fields are stripped and display operators like `is one of` are mapped to `in`, matching toolbar-generated filters. See [[architecture#Saved View Filter Normalization]].
 
@@ -25,6 +31,7 @@ Canonical ordered options (`sortOrder` in steps of 10, `*` = `isFinalOption`):
 Paired cross-datasource picklists now share identical option names: Deal `customer_type` and Lead `lead_type` = {New Business, Existing Business}; Deal `reason_for_lost` and Lead `lost_reason` = one canonical list (Competition, Price, Feature Gap, Expectation Mismatch, Lack of Response, Missed Follow Ups, Unqualified, Wrong Target, Future Interest, Other); `lead_source`, `company_size`, and `industry`/`company_industry` match across leads/deal/organization — `industry`/`company_industry` is now 10 options (Automotive, Consumer Services, Energy, Entertainment, Finance, HR, Healthcare, Manufacturing, Software, Technology).
 
 **Parity fields added (2026-06-19, mirroring the sibling `crm` CRM).** Created via `docyrus studio create-field` + `create-enums`, mirrored by hand into the generated collection `.ts` and the detail field configs (`flatRecord` stores the option/relation id; values load via the detail GET column lists):
+
 - Deal `deal_type` (field-select): New Business · Renewal · Expansion · Upsell · Partner · Pilot — separate from `customer_type`.
 - Organization `lifecycle_stage` (field-select): Prospect · Engaged · Customer · Expansion · Churned — kept alongside `type` (we did NOT adopt their separate `account_type`). `commercial_title` (field-text) also added. Both on the shared `base.organization`.
 - Lead `lead_category` (field-select): Lead · Partner · Investor · Other. `contact_person` (field-relation → `base/contact`, edited as a select over the contacts list) added; the lead name stays a single `name` field (not split into firstname/lastname). We did NOT adopt their `contact_consent`/`kvkk_consent`. Contact `related_product` and Org `account_type`/`parent_organization`/`referring_partner` were also intentionally skipped.
@@ -33,7 +40,7 @@ These shared concepts are deliberately kept as separate per-field enum definitio
 
 ## Products & Sales Orders
 
-The products and sales orders routes now follow the shared Docyrus grid pattern with saved views, card/list browsing, inline change saving, and toolbar import/export actions so catalog workflows behave consistently with the CRM workspaces.
+The products and sales orders routes follow the shared Docyrus grid pattern with list-only saved views, inline change saving, and toolbar import/export actions so catalog workflows behave consistently with the CRM workspaces.
 
 Their list grids use the same row action pattern as the CRM workspaces: an inline open-page button plus an overflow menu for Edit, Open page, and Delete.
 
@@ -54,7 +61,9 @@ Quotes reuse `sales_order` + `sales_order_item` (no separate entity). Data vs do
 
 ## Leads & Deals Pipeline
 
-The deals route uses the shared Docyrus grid runtime for its list tab and the Docyrus kanban hook for its board tab, with saved views, inline updates, and toolbar import/export actions.
+The deals route uses the shared Docyrus grid runtime for its list tab and the Docyrus kanban hook for its board tab.
+
+The list and board are intentionally independent: list data views do not drive the board query, and the board groups all matching deals by stage with `onCardOpen`/card click routing to deal detail.
 
 ⚠️ **Two kanban implementations exist** — Companies use `src/components/ui/kanban.tsx` (cards are `<Link>`s, navigation works natively); Deals use `src/components/docyrus/kanban.tsx` via the `useDocyrusKanban` hook (cards are whole-card drag handles, `asHandle`, with `onClick`→open detail). The docyrus kanban's dnd-kit sensors (`MouseSensor`/`TouchSensor`) **must** carry an `activationConstraint` (`{ distance: 8 }` / `{ delay: 200, tolerance: 8 }`) — without it every plain click is consumed as a drag, so card-click + card-menu Edit/Open-Page silently do nothing. The deals board's owner avatar (bottom-left) reads `userColumn: 'record_owner'`; the kanban `listParams.columns` must expand it as `record_owner(id,firstname,lastname,email,photo)` or `readUserMeta` falls back to the raw UUID as the label.
 
@@ -62,7 +71,7 @@ The leads route is list-only: the board/list view switcher and the `useDocyrusKa
 
 Their list views use system saved views (All plus two query-backed filtered views), so list filtering and sorting come from the active view query rather than local toolbar filter chips. Where a board/kanban view exists (deals), saved data views stay hidden and DataView controls are only rendered for the list grid.
 
-**Create/edit form dialogs** (`*-form-dialog.tsx` for lead/deal/company/contact) — required fields carry a `*` (lead/contact/company `name`, deal `organization` + `stage`; the deal Stage `SelectFormField` takes a `required` prop that renders the asterisk via `FormFieldLabel`). The **country** field in these dialogs is a **searchable `Combobox`** (`combobox-simple.tsx`, cmdk — searchable + scrollable) backed by the `base/country` collection (`useBaseCountryCollection().list({ columns: ['id','name'], orderBy: 'name ASC', limit: 300 })`), saved as the country relation id (lead persists it under the plural `countries` field). ⚠️ Do NOT use `useEnumOptions('country')` — `country` is a relation, not an enum, so that returns empty and the picker won't open (this was the deal & company form bug). This is the create/edit-dialog editor; the inline detail-panel country editor is separate (`LocationField`, see below).
+**Create/edit form dialogs** (`*-form-dialog.tsx` for lead/deal/company/contact/product) reset their TanStack form values whenever the dialog opens or the edited record changes, so stale edit values cannot leak into the next create flow. Required fields carry a `*` (lead/contact/company/product `name`, deal `organization` + `stage`; the deal Stage `SelectFormField` takes a `required` prop that renders the asterisk via `FormFieldLabel`). The **country** field in these dialogs is a **searchable `Combobox`** (`combobox-simple.tsx`, cmdk — searchable + scrollable) backed by the `base/country` collection (`useBaseCountryCollection().list({ columns: ['id','name'], orderBy: 'name ASC', limit: 300 })`), saved as the country relation id (lead persists it under the plural `countries` field). ⚠️ Do NOT use `useEnumOptions('country')` — `country` is a relation, not an enum, so that returns empty and the picker won't open (this was the deal & company form bug). This is the create/edit-dialog editor; the inline detail-panel country editor is separate (`LocationField`, see below).
 
 ### Lead Datasource (Pure Lead Model)
 
@@ -208,6 +217,7 @@ This section highlights the files that appear to integrate with Docyrus APIs or 
 <!-- docyrus-knowledge:auto:end -->
 
 <!-- docyrus-project-plan:features:begin -->
+
 ## Planned Features
 
 Features tracked in the project plan.

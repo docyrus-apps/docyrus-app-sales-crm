@@ -1,6 +1,8 @@
 import { useState } from 'react'
+
 import { useTranslation } from 'react-i18next'
 import { Loader2, ShoppingCart } from 'lucide-react'
+
 import { useMyInfo } from '@/hooks/use-users'
 import { useCreateSalesOrder } from '@/hooks/use-sales-orders'
 import { Button } from '@/components/ui/button'
@@ -10,7 +12,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,17 +20,17 @@ import { Label } from '@/components/ui/label'
 const SALES_ORDER_DRAFT_STATUS_ID = '019c48d0-6c11-7389-822c-7bf9f87b047e'
 
 interface FieldSalesQuickOrderDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  organizationId: string
-  organizationName: string
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  organizationId: string;
+  organizationName: string;
 }
 
 export function FieldSalesQuickOrderDialog({
   open,
   onOpenChange,
   organizationId,
-  organizationName,
+  organizationName
 }: FieldSalesQuickOrderDialogProps) {
   const { t } = useTranslation()
   const createSalesOrder = useCreateSalesOrder()
@@ -40,11 +42,11 @@ export function FieldSalesQuickOrderDialog({
       name:
         orderLabel.trim() ||
         t('fieldSales.quickOrder.orderNameTemplate', {
-          name: organizationName,
+          name: organizationName
         }),
       organization: organizationId,
       status: SALES_ORDER_DRAFT_STATUS_ID,
-      record_owner: myInfo?.id,
+      record_owner: myInfo?.id
     })
 
     setOrderLabel('')
@@ -79,11 +81,10 @@ export function FieldSalesQuickOrderDialog({
             <Input
               id="order-label"
               value={orderLabel}
-              onChange={(event) => setOrderLabel(event.target.value)}
+              onChange={event => setOrderLabel(event.target.value)}
               placeholder={t('fieldSales.quickOrder.orderNameTemplate', {
-                name: organizationName,
-              })}
-            />
+                name: organizationName
+              })} />
           </div>
         </div>
 

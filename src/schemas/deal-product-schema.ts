@@ -7,7 +7,7 @@ export const dealProductFormSchema = z.object({
   discount: z.number().min(0).max(100).optional(),
   tax_rate: z.number().min(0).max(100).optional(),
   product: z.string().min(1, 'Product is required'),
-  related_deal: z.string().min(1, 'Related deal is required'),
+  related_deal: z.string().min(1, 'Related deal is required')
 })
 
 export type DealProductFormData = z.infer<typeof dealProductFormSchema>

@@ -1,6 +1,8 @@
+import type { ICollectionListParams } from '@/collections/types'
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import type { ICollectionListParams } from '@/collections/types'
+
 import { useBaseOrganizationCollection } from '@/collections'
 import { getApiClient } from '@/lib/api'
 
@@ -28,12 +30,13 @@ export function useCompanies(params?: ICollectionListParams) {
           'type',
           'address',
           'tax_number',
-          'created_on',
+          'created_on'
         ],
-        orderBy: params?.orderBy || 'created_on DESC',
+        orderBy: params?.orderBy || 'created_on DESC'
       })
+
       return response
-    },
+    }
   })
 }
 
@@ -67,12 +70,13 @@ export function useCompany(companyId: string | undefined) {
           'tax_number',
           'district',
           'company_logo',
-          'created_on',
-        ],
+          'created_on'
+        ]
       })
+
       return response
     },
-    enabled: !!companyId,
+    enabled: !!companyId
   })
 }
 
@@ -81,12 +85,12 @@ export function useCompany(companyId: string | undefined) {
  * Mirrors the platform's image field value so it round-trips through update.
  */
 export interface CompanyLogoValue {
-  file_name: string
-  file_type: string
-  file_size: number
-  signed_url: string
-  source: string
-  file_data?: unknown
+  file_name: string;
+  file_type: string;
+  file_size: number;
+  signed_url: string;
+  source: string;
+  file_data?: unknown;
 }
 
 /**
@@ -102,19 +106,20 @@ export function useUploadCompanyLogo() {
   return useMutation({
     mutationFn: async ({
       companyId,
-      file,
+      file
     }: {
-      companyId: string
-      file: File
+      companyId: string;
+      file: File;
     }) => {
       const apiClient = getApiClient()
       const formData = new FormData()
+
       formData.append('files', file)
 
       const uploadResponse = await apiClient.post(
         '/v1/apps/base/data-sources/organization/files/upload',
         formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } },
+        { headers: { 'Content-Type': 'multipart/form-data' } }
       )
 
       // The endpoint may return the file object directly or wrapped in an array.
@@ -134,7 +139,7 @@ export function useUploadCompanyLogo() {
         file_size: uploaded.file_size ?? file.size,
         signed_url: uploaded.signed_url ?? '',
         source: uploaded.source ?? 'local',
-        file_data: uploaded.file_data ?? null,
+        file_data: uploaded.file_data ?? null
       }
 
       return organizationCollection.update(companyId, { company_logo: logo })
@@ -142,13 +147,13 @@ export function useUploadCompanyLogo() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['companies'] })
       queryClient.invalidateQueries({
-        queryKey: ['companies', variables.companyId],
+        queryKey: ['companies', variables.companyId]
       })
       toast.success('Logo updated')
     },
     onError: (error: any) => {
       toast.error(error?.message || 'Failed to upload logo')
-    },
+    }
   })
 }
 
@@ -162,6 +167,7 @@ export function useCreateCompany() {
   return useMutation({
     mutationFn: async (data: any) => {
       const response = await organizationCollection.create(data)
+
       return response
     },
     onSuccess: () => {
@@ -170,7 +176,7 @@ export function useCreateCompany() {
     },
     onError: (error: any) => {
       toast.error(error?.message || 'Failed to create company')
-    },
+    }
   })
 }
 
@@ -184,24 +190,25 @@ export function useUpdateCompany() {
   return useMutation({
     mutationFn: async ({
       companyId,
-      data,
+      data
     }: {
-      companyId: string
-      data: any
+      companyId: string;
+      data: any;
     }) => {
       const response = await organizationCollection.update(companyId, data)
+
       return response
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['companies'] })
       queryClient.invalidateQueries({
-        queryKey: ['companies', variables.companyId],
+        queryKey: ['companies', variables.companyId]
       })
       toast.success('Company updated successfully')
     },
     onError: (error: any) => {
       toast.error(error?.message || 'Failed to update company')
-    },
+    }
   })
 }
 
@@ -222,7 +229,7 @@ export function useDeleteCompany() {
     },
     onError: (error: any) => {
       toast.error(error?.message || 'Failed to delete company')
-    },
+    }
   })
 }
 
@@ -243,6 +250,6 @@ export function useDeleteCompanies() {
     },
     onError: (error: any) => {
       toast.error(error?.message || 'Failed to delete companies')
-    },
+    }
   })
 }

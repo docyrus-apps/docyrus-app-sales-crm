@@ -31,7 +31,7 @@ i18n
       pt: { translation: pt },
       sl: { translation: sl },
       el: { translation: el },
-      ar: { translation: ar },
+      ar: { translation: ar }
     },
     fallbackLng: 'en',
     supportedLngs: [
@@ -45,27 +45,29 @@ i18n
       'pt',
       'sl',
       'el',
-      'ar',
+      'ar'
     ],
     interpolation: {
-      escapeValue: false,
+      escapeValue: false
     },
     detection: {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],
-      lookupLocalStorage: 'i18nextLng',
-    },
+      lookupLocalStorage: 'i18nextLng'
+    }
   })
 
 // Update document direction and lang attribute for RTL/LTR support
 i18n.on('languageChanged', (lng) => {
   const isRTL = RTL_LANGUAGES.includes(lng)
+
   document.documentElement.dir = isRTL ? 'rtl' : 'ltr'
   document.documentElement.lang = lng
 })
 
 // Apply direction for the initially detected language
 const initialLng = i18n.language ?? 'en'
+
 document.documentElement.dir = RTL_LANGUAGES.includes(initialLng)
   ? 'rtl'
   : 'ltr'

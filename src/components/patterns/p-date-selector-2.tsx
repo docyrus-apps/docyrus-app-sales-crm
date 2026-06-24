@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
-import { CalendarIcon } from 'lucide-react'
+
 import type { DateSelectorValue } from '@/components/reui/date-selector'
+
+import { CalendarIcon } from 'lucide-react'
+
 import { DateSelector, formatDateValue } from '@/components/reui/date-selector'
 
 import { Button } from '@/components/ui/button'
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
+  PopoverTrigger
 } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
 
@@ -52,8 +55,7 @@ export function Pattern() {
             onChange={setInternalValue}
             allowRange={true}
             label="Due date"
-            inputHint="Try: 2025, Q4, 05/10/2025"
-          />
+            inputHint="Try: 2025, Q4, 05/10/2025" />
         </div>
         <Separator className="p-0" />
         <div className="flex justify-end gap-2 p-3 pt-0">

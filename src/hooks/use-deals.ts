@@ -1,10 +1,12 @@
+import type { ICollectionListParams } from '@/collections/types'
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import type { ICollectionListParams } from '@/collections/types'
+
 import { useBaseCrmDealsCollection } from '@/collections'
 
 interface UseDealsOptions {
-  enabled?: boolean
+  enabled?: boolean;
 }
 
 /**
@@ -12,7 +14,7 @@ interface UseDealsOptions {
  */
 export function useDeals(
   params?: ICollectionListParams,
-  options: UseDealsOptions = {},
+  options: UseDealsOptions = {}
 ) {
   const dealsCollection = useBaseCrmDealsCollection()
 
@@ -36,13 +38,14 @@ export function useDeals(
           'close_probability',
           'customer_type',
           'lead_source',
-          'created_on',
+          'created_on'
         ],
-        orderBy: params?.orderBy || 'created_on DESC',
+        orderBy: params?.orderBy || 'created_on DESC'
       })
+
       return response
     },
-    enabled: options.enabled,
+    enabled: options.enabled
   })
 }
 
@@ -80,12 +83,13 @@ export function useDeal(dealId: string | undefined) {
           'follow_up_on',
           'country(id,name,currency_symbol)',
           'followers',
-          'created_on',
-        ],
+          'created_on'
+        ]
       })
+
       return response
     },
-    enabled: !!dealId,
+    enabled: !!dealId
   })
 }
 
@@ -99,6 +103,7 @@ export function useCreateDeal() {
   return useMutation({
     mutationFn: async (data: any) => {
       const response = await dealsCollection.create(data)
+
       return response
     },
     onSuccess: () => {
@@ -107,7 +112,7 @@ export function useCreateDeal() {
     },
     onError: (error: any) => {
       toast.error(error?.message || 'Failed to create deal')
-    },
+    }
   })
 }
 
@@ -121,6 +126,7 @@ export function useUpdateDeal() {
   return useMutation({
     mutationFn: async ({ dealId, data }: { dealId: string; data: any }) => {
       const response = await dealsCollection.update(dealId, data)
+
       return response
     },
     onSuccess: (_data, variables) => {
@@ -130,7 +136,7 @@ export function useUpdateDeal() {
     },
     onError: (error: any) => {
       toast.error(error?.message || 'Failed to update deal')
-    },
+    }
   })
 }
 
@@ -151,7 +157,7 @@ export function useDeleteDeal() {
     },
     onError: (error: any) => {
       toast.error(error?.message || 'Failed to delete deal')
-    },
+    }
   })
 }
 
@@ -172,6 +178,6 @@ export function useDeleteDeals() {
     },
     onError: (error: any) => {
       toast.error(error?.message || 'Failed to delete deals')
-    },
+    }
   })
 }

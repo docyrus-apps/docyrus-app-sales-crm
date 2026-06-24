@@ -65,5 +65,5 @@ export const QUOTE_VARIABLES: Array<HandlebarsVariable> = [
   { name: 'totals.subtotal', label: 'Ara toplam', category: 'Tutarlar' },
   { name: 'totals.tax', label: 'KDV', category: 'Tutarlar' },
   { name: 'totals.grandTotal', label: 'Genel toplam', category: 'Tutarlar' },
-  { name: 'lineItems', label: 'Kalemler (liste)', category: 'Tutarlar' },
+  { name: 'lineItems', label: 'Kalemler (liste)', category: 'Tutarlar' }
 ]

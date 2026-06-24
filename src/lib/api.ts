@@ -30,8 +30,9 @@ export function setApiClient(client: RestApiClient) {
           'formulas',
           'childQueries',
           'pivot',
-          'distinctColumns',
+          'distinctColumns'
         ] as const
+
         for (const key of jsonKeys) {
           if (
             params[key] !== undefined &&
@@ -44,6 +45,7 @@ export function setApiClient(client: RestApiClient) {
 
         config.params = params
       }
+
       return config
     },
     response: (response) => {
@@ -54,21 +56,22 @@ export function setApiClient(client: RestApiClient) {
         !Array.isArray(response.data) &&
         'data' in response.data
       ) {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         response.data = response.data.data
       }
+
       return response
-    },
+    }
   })
 }
 
 export function getApiClient(): RestApiClient {
   if (!apiClient) {
     throw new Error(
-      'API client not initialized. Ensure DocyrusAuthProvider is mounted.',
+      'API client not initialized. Ensure DocyrusAuthProvider is mounted.'
     )
   }
+
   return apiClient
 }
 

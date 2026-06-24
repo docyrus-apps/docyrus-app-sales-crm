@@ -1,3 +1,5 @@
+// @ts-nocheck
+/* eslint-disable */
 import {
   type FC,
   type MouseEvent,
@@ -16,6 +18,11 @@ import {
 } from '@tanstack/react-table'
 
 import { type RuleGroupType } from 'react-querybuilder'
+
+import {
+  type DataGalleryCardConfigSerializable,
+  type DataGalleryDisplayConfig,
+} from '../../data-gallery/types'
 
 export type IFieldType =
   | 'field-text'
@@ -85,6 +92,45 @@ export interface DataGridRowColorRule {
   color: string
 }
 
+/**
+ * Per-column runtime overrides toggled from the column header dropdown.
+ * Persisted on `SavedDataGridView.columnOptions` keyed by `column.id`.
+ *
+ * Each field is variant-specific and merges on top of the defaults declared
+ * in `column.meta.cell` (see `CellOpts`). Cells should read these via
+ * `tableMeta.columnOptions?.[columnId]` and fall back to the cell-meta default.
+ */
+export interface DataGridColumnOptions {
+  /** Show the related record's `autonumber_id` above the name. Relation columns only. */
+  showAutonumber?: boolean
+}
+
+/**
+ * Context passed to the relation-navigation callbacks
+ * (`tableMeta.getRelationHref` / `tableMeta.onOpenRelation`). Carries the
+ * raw foreign-key id pulled from `row.original[columnId]` — NOT the
+ * projected display label — so host apps can route to the related record
+ * directly without recovering the id themselves.
+ */
+export interface RelationNavigationArgs<TData = unknown> {
+  /** Foreign-key id of the related record (raw, never the display label). */
+  relatedId: string
+  /** Display label currently rendered in the cell. */
+  label: string
+  /** Field slug / column id for the relation column. */
+  fieldSlug: string
+  /** Alias for `fieldSlug` — `column.id` from TanStack. */
+  columnId: string
+  /** Full row payload (`row.original`). */
+  rowOriginal: TData
+  /** UUID of the related data source, when declared on the column meta. */
+  dataSourceId?: string
+  /** REST path app slug for the related data source, when declared. */
+  relationAppSlug?: string
+  /** REST path data-source slug for the related data source, when declared. */
+  relationDataSourceSlug?: string
+}
+
 export interface DataGridCellColorRule {
   column: string
   formula: string
@@ -142,6 +188,19 @@ export type CellOpts =
       min?: number
       max?: number
       step?: number
+      /**
+       * Number of decimal places to render. Defaults to the host
+       * `formatNumber` decision (typically tenant locale). Used by
+       * identifier-like numeric fields such as `field-autonumber` which
+       * pass `0` to force whole-number rendering regardless of locale.
+       */
+      decimalPrecision?: number
+      /**
+       * Thousands grouping separator to use when rendering. Pass an empty
+       * string to disable grouping entirely (identifier-like fields), or a
+       * specific character to override the locale's default.
+       */
+      thousandSeparator?: string
     }
   | {
       variant: 'currency'
@@ -149,12 +208,16 @@ export type CellOpts =
       min?: number
       max?: number
       step?: number
+      decimalPrecision?: number
+      thousandSeparator?: string
     }
   | {
       variant: 'percent'
       min?: number
       max?: number
       step?: number
+      decimalPrecision?: number
+      thousandSeparator?: string
     }
   | {
       variant: 'select'
@@ -260,6 +323,26 @@ export type CellOpts =
       relationAppSlug?: string
       relationDataSourceSlug?: string
       displayField?: string
+      /**
+       * Slug of a field on the **related** data source that holds the record's
+       * display icon (a `field-icon` string identifier like `'huge ai-brain-03'`)
+       * or its display logo (a `field-image` value — string URL or
+       * `{ signed_url, file_name }` shape). When set, the relation cell prefixes
+       * the name with the icon/image. Wired by `useDocyrusDataGrid`'s
+       * `relationIconFields` option (or by direct `mapColumn` overrides). The
+       * configured slug is also added to the items-query projection — i.e.
+       * `<relationSlug>(id, name, autonumber_id, <iconField>)` — so the server
+       * returns it alongside the name.
+       */
+      iconField?: string
+      /**
+       * When `true`, render the related record's `autonumber_id` as a small
+       * gray prefix above the name. Used to disambiguate same-named records
+       * (e.g. two "Acme Ltd." rows). Default per-column setting; users can
+       * toggle the runtime value from the column header dropdown — see
+       * `SavedDataGridView.columnOptions`.
+       */
+      showAutonumber?: boolean
     }
   | {
       variant: 'user-multi-select'
@@ -338,6 +421,13 @@ declare module '@tanstack/react-table' {
     renderGroupValue?: (params: {
       value: unknown
       record: TData | undefined
+      /**
+       * The normalized bucket key the row is grouped under (e.g. the
+       * `yyyy-MM-dd` day key for date/datetime columns), as opposed to the
+       * arbitrary per-row `value`. Renderers that need the bucket identity
+       * rather than a sample row value should read this (issue #104).
+       */
+      groupingValue?: unknown
     }) => ReactNode
     /**
      * When `true`, this column is non-editable even if the table itself is
@@ -433,7 +523,14 @@ declare module '@tanstack/react-table' {
      */
     formatNumber?: (
       value: unknown,
-      opts?: { variant?: 'number' | 'currency' | 'percent'; currency?: string },
+      opts?: {
+        variant?: 'number' | 'currency' | 'percent'
+        currency?: string
+        /** Override the locale's default fraction digits (e.g. `0` for identifier-like numerics). */
+        decimalPrecision?: number
+        /** Override the locale's default thousands grouping. Empty string disables grouping. */
+        thousandSeparator?: string
+      },
     ) => string
     /**
      * Load options for a column whose cell variant requires async lookup
@@ -462,6 +559,58 @@ declare module '@tanstack/react-table' {
       }>
       hasMore?: boolean
     }>
+    /**
+     * Per-column runtime overrides toggled from the column header dropdown
+     * (e.g. `showAutonumber` for relation columns). Sourced from the active
+     * saved view's `columnOptions` and merged on top of the per-column
+     * defaults declared in `column.meta.cell`. Cells read this and fall back
+     * to the cell-meta default when no override exists.
+     */
+    columnOptions?: Record<string, DataGridColumnOptions>
+    /**
+     * Update a single column's runtime override. Called from the column
+     * header dropdown when the user toggles e.g. "Show autonumber". The
+     * host wires this so the new value flows back into `columnOptions`
+     * and is captured into the next saved view.
+     */
+    onColumnOptionsChange?: (
+      columnId: string,
+      updater: (
+        prev: DataGridColumnOptions | undefined,
+      ) => DataGridColumnOptions,
+    ) => void
+    /**
+     * Replace the entire `columnOptions` map. Used by `applyViewToTable`
+     * when activating a saved view to hydrate the per-column override map
+     * in one shot.
+     */
+    onColumnOptionsReset?: (next: Record<string, DataGridColumnOptions>) => void
+    /**
+     * Resolve a navigation target for a relation cell. When this returns a
+     * truthy href, a small "open related record" icon button is rendered
+     * inside the cell next to the label. The icon renders as a real `<a>`
+     * so users keep middle-click / ctrl-click / "open in new tab" semantics.
+     *
+     * Receives the raw foreign-key id read from `row.original[columnId]`
+     * (NOT the projected display label) plus any relation metadata
+     * declared on the column (`dataSourceId`, `relationAppSlug`,
+     * `relationDataSourceSlug`), so the host can map directly to the
+     * related record's detail route. Return `undefined` to skip the
+     * affordance for that row.
+     *
+     * Only invoked for true `field-relation` cells with a resolved id —
+     * related-field scalar lookups never produce a navigation target.
+     */
+    getRelationHref?: (
+      args: RelationNavigationArgs<TData>,
+    ) => string | undefined
+    /**
+     * Imperative variant of `getRelationHref` — for apps using programmatic
+     * routing (e.g. `router.push`). When both are supplied, `getRelationHref`
+     * wins (the icon stays an `<a>`); when only this callback is supplied,
+     * the icon renders as a `<button>` and invokes the handler on click.
+     */
+    onOpenRelation?: (args: RelationNavigationArgs<TData>) => void
   }
 }
 
@@ -536,6 +685,15 @@ export interface DataGridCellProps<TData> {
   isChanged: boolean
   readOnly: boolean
   colorRuleBg?: string | null
+  /**
+   * Per-column runtime overrides for this cell (e.g. relation
+   * `showAutonumber`). Forwarded by `DataGridRow` from
+   * `tableMeta.columnOptions[columnId]` so the cell memo can react to
+   * toggle changes by reference comparison — reading the map from
+   * `tableMeta` directly bypasses memoization because the wrapping object
+   * is referentially stable.
+   */
+  columnOption?: DataGridColumnOptions
 }
 
 export interface FileCellData {
@@ -564,6 +722,7 @@ export type NumberFilterOperator =
   | 'greaterThan'
   | 'greaterThanOrEqual'
   | 'isBetween'
+  | 'isNotBetween'
   | 'isEmpty'
   | 'isNotEmpty'
 
@@ -575,8 +734,47 @@ export type DateFilterOperator =
   | 'onOrBefore'
   | 'onOrAfter'
   | 'isBetween'
+  | 'isNotBetween'
   | 'isEmpty'
   | 'isNotEmpty'
+  | 'today'
+  | 'tomorrow'
+  | 'yesterday'
+  | 'last7Days'
+  | 'last15Days'
+  | 'last30Days'
+  | 'last60Days'
+  | 'last90Days'
+  | 'last120Days'
+  | 'next7Days'
+  | 'next15Days'
+  | 'next30Days'
+  | 'next60Days'
+  | 'next90Days'
+  | 'next120Days'
+  | 'lastWeek'
+  | 'thisWeek'
+  | 'nextWeek'
+  | 'lastMonth'
+  | 'thisMonth'
+  | 'nextMonth'
+  | 'beforeToday'
+  | 'afterToday'
+  | 'lastYear'
+  | 'thisYear'
+  | 'nextYear'
+  | 'firstQuarter'
+  | 'secondQuarter'
+  | 'thirdQuarter'
+  | 'fourthQuarter'
+  | 'last3Months'
+  | 'last6Months'
+  | 'xDaysAgo'
+  | 'xDaysLater'
+  | 'beforeLastXDays'
+  | 'inLastXDays'
+  | 'afterLastXDays'
+  | 'inNextXDays'
 
 export type SelectFilterOperator =
   | 'is'
@@ -586,7 +784,19 @@ export type SelectFilterOperator =
   | 'isEmpty'
   | 'isNotEmpty'
 
-export type MultiSelectFilterOperator = 'includesAll' | 'excludesIfAll'
+export type MultiSelectFilterOperator =
+  | 'includesAll'
+  | 'excludesIfAll'
+  /*
+   * Array-column membership operators. Used only for array-backed cell
+   * variants (`multi-select` / `tag-select` / `user-multi-select`, e.g. the
+   * `followers` uuid[] column) where the scalar `is` / `isAnyOf` (`=` / `in`)
+   * path 500s on the backend. They serialize to `contains any` / `not
+   * contains` in `toServerRule`. Scalar reference columns (`user` /
+   * `relation`) keep the `=` / `in` operators.
+   */
+  | 'includesAny'
+  | 'excludesAnyOf'
 
 export type BooleanFilterOperator =
   | 'isTrue'
@@ -684,6 +894,13 @@ export interface SavedDataGridView {
    */
   readOnlyColumns?: Array<string>
   /**
+   * Per-column runtime overrides for display options that users can toggle
+   * from the column header dropdown (e.g. `showAutonumber` for relation
+   * columns). Each entry is keyed by `column.id` and merges on top of the
+   * defaults declared in `column.meta.cell`.
+   */
+  columnOptions?: Record<string, DataGridColumnOptions>
+  /**
    * Whether this is a developer-defined system view. System views always
    * appear before user-saved views, cannot be edited or deleted, but can
    * still be hidden from the tab list (with the hidden state typically
@@ -702,6 +919,32 @@ export interface SavedDataGridView {
    * editor.
    */
   icon?: string
+  /**
+   * Id of the Docyrus saved form (`DataForm.id`) bound to this view. When set,
+   * record create/edit/view surfaces built with `useDocyrusFormView` render
+   * this form's layout for the view — e.g. the "All" view opens a different
+   * form than the "Open Tasks" view. Picked in the view editor's **Form**
+   * section. Persisted inside the opaque `columns` blob so no backend schema
+   * change is needed. Empty/undefined → no form bound (the host falls back to a
+   * default layout or a single-column auto-form built from the data-source
+   * fields).
+   */
+  formId?: string
+  /**
+   * Card slot bindings persisted for the gallery display mode. Only
+   * honored when the consuming UI is `<DataGallery>` (via
+   * `useDocyrusDataGallery`). Stored as a flat serializable record so the
+   * payload round-trips through the standard view storage without any
+   * custom encoding.
+   */
+  galleryCardConfig?: DataGalleryCardConfigSerializable
+  /**
+   * Display config (variant, density, cover style, column count, …)
+   * persisted for the gallery display mode. Stored as a `Partial<>` so
+   * users that haven't customized a field still pick up future default
+   * changes from `DEFAULT_DATA_GALLERY_DISPLAY_CONFIG`.
+   */
+  galleryDisplayConfig?: Partial<DataGalleryDisplayConfig>
 }
 
 export function isSavedDataGridView(
@@ -758,6 +1001,8 @@ export function isSavedDataGridView(
             typeof rule.column === 'string' &&
             typeof rule.formula === 'string' &&
             typeof rule.color === 'string',
-        )))
+        ))) &&
+    (item.columnOptions === undefined ||
+      (item.columnOptions !== null && typeof item.columnOptions === 'object'))
   )
 }

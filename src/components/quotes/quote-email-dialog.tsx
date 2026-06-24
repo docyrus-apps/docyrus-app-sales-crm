@@ -7,15 +7,15 @@ import {
   Sheet,
   SheetContent,
   SheetHeader,
-  SheetTitle,
+  SheetTitle
 } from '@/components/ui/sheet'
 
 export interface QuoteEmailDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  to?: string
-  subject?: string
-  body?: string
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  to?: string;
+  subject?: string;
+  body?: string;
 }
 
 /**
@@ -32,7 +32,7 @@ export function QuoteEmailDialog({
   onOpenChange,
   to,
   subject,
-  body,
+  body
 }: QuoteEmailDialogProps) {
   const { t } = useTranslation()
   const client = useDocyrusClient()
@@ -42,15 +42,14 @@ export function QuoteEmailDialog({
     initialTo: to ? [to] : [],
     initialSubject: subject ?? '',
     initialBody: body ?? '',
-    enabled: open && !!client,
+    enabled: open && !!client
   })
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="flex w-full flex-col gap-0 p-0 sm:max-w-xl"
-      >
+        className="flex w-full flex-col gap-0 p-0 sm:max-w-xl">
         <SheetHeader className="border-b px-4 py-3">
           <SheetTitle>
             {t('quotes.sendMail', { defaultValue: 'Send mail' })}

@@ -3,18 +3,17 @@
 import { useEffect, useMemo } from 'react'
 
 import { type RestApiClient } from '@docyrus/api-client'
-import {
-  createDataViewClient,
-  type CreateDataViewBody,
-  type DataView,
-  type UpdateDataViewBody,
-} from '@docyrus/app-utils'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
 
-import {
-  DATA_GRID_DEFAULT_PAGE_SIZE,
-  type SavedDataGridView,
-} from '@/components/docyrus/data-grid/types'
+import type { SavedDataGridView } from '@/components/docyrus/data-grid/types'
+
+import type {
+  CreateDataViewBody,
+  DataView,
+  UpdateDataViewBody
+} from '@docyrus/app-utils'
+
+import { createDataViewClient } from '@docyrus/app-utils'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 /*
  * Tracks which data sources have already had their seed pass run in this
@@ -30,20 +29,20 @@ const seededSources = new Set<string>()
  * The per-data-source localStorage marker stores this value once a prune
  * succeeds, so the destructive cleanup runs exactly once per version.
  */
-const PRUNE_RESET_VERSION = '1'
+const PRUNE_RESET_VERSION = '2'
 
 export interface UseSeedDefaultViewsOptions {
-  client: RestApiClient
-  appSlug: string
-  dataSourceSlug: string
-  appId?: string
+  client: RestApiClient;
+  appSlug: string;
+  dataSourceSlug: string;
+  appId?: string;
   /**
    * Default-view templates (see `createSystemViews`). Any whose `name` does not
    * already exist on the backend is created as a real, editable data-view.
    * Matching is case-insensitive so we never produce a duplicate "All".
    */
-  templates: Array<SavedDataGridView>
-  enabled?: boolean
+  templates: Array<SavedDataGridView>;
+  enabled?: boolean;
   /**
    * One-time cleanup. When `true`, the first seed pass for each data source
    * deletes every backend view whose name is not one of `templates`, plus any
@@ -52,7 +51,7 @@ export interface UseSeedDefaultViewsOptions {
    * (`PRUNE_RESET_VERSION`), so views a user creates AFTER the reset are never
    * touched on later loads. Default `false`.
    */
-  pruneUnlisted?: boolean
+  pruneUnlisted?: boolean;
 }
 
 /**
@@ -76,13 +75,13 @@ export function useSeedDefaultViews({
   appId,
   templates,
   enabled = true,
-  pruneUnlisted = false,
+  pruneUnlisted = false
 }: UseSeedDefaultViewsOptions): void {
   const queryClient = useQueryClient()
 
   const dataViewsClient = useMemo(
     () => createDataViewClient(client, appSlug, dataSourceSlug),
-    [client, appSlug, dataSourceSlug],
+    [client, appSlug, dataSourceSlug]
   )
 
   /*
@@ -91,9 +90,14 @@ export function useSeedDefaultViews({
    * the grid's tab strip too.
    */
   const viewsKey = useMemo(
-    () =>
-      ['docyrus', 'dataViews', appSlug, dataSourceSlug, appId ?? null] as const,
-    [appSlug, dataSourceSlug, appId],
+    () => [
+'docyrus',
+'dataViews',
+appSlug,
+dataSourceSlug,
+appId ?? null
+] as const,
+    [appSlug, dataSourceSlug, appId]
   )
 
   const queryEnabled = enabled && Boolean(appSlug) && Boolean(dataSourceSlug)
@@ -102,7 +106,7 @@ export function useSeedDefaultViews({
     queryKey: viewsKey,
     queryFn: () => dataViewsClient.list({ appId }),
     enabled: queryEnabled,
-    staleTime: 30_000,
+    staleTime: 30_000
   })
 
   const existing = existingQuery.data
@@ -120,7 +124,7 @@ export function useSeedDefaultViews({
     const shouldPrune = pruneUnlisted && !hasPruned(markerKey)
 
     const templateNames = new Set(
-      templates.map((template) => normalizeName(template.name)),
+      templates.map(template => normalizeName(template.name))
     )
 
     /*
@@ -132,6 +136,7 @@ export function useSeedDefaultViews({
     const keptNames = new Set<string>()
     const keep: Array<DataView> = []
     const toDelete: Array<DataView> = []
+    const keptByName = new Map<string, DataView>()
 
     for (const view of existing) {
       const name = normalizeName(view.name)
@@ -140,25 +145,35 @@ export function useSeedDefaultViews({
       if (shouldPrune) {
         if (isTemplate && !keptNames.has(name)) {
           keptNames.add(name)
+          keptByName.set(name, view)
           keep.push(view)
         } else {
           toDelete.push(view)
         }
       } else {
         keep.push(view)
-        if (isTemplate) keptNames.add(name)
+        if (isTemplate) {
+          keptNames.add(name)
+          if (!keptByName.has(name)) keptByName.set(name, view)
+        }
       }
     }
 
     const missing = templates.filter(
-      (template) => !keptNames.has(normalizeName(template.name)),
+      template => !keptNames.has(normalizeName(template.name))
     )
-    const pagingUpdates = keep.filter(needsStandardPagingUpdate)
+    const templateUpdates = templates.flatMap((template, index) => {
+      const view = keptByName.get(normalizeName(template.name))
+
+      if (!view) return []
+
+      return [{ view, template, sortOrder: index }]
+    })
 
     if (
       toDelete.length === 0 &&
       missing.length === 0 &&
-      pagingUpdates.length === 0
+      templateUpdates.length === 0
     ) {
       if (shouldPrune) markPruned(markerKey)
 
@@ -171,12 +186,17 @@ export function useSeedDefaultViews({
           await dataViewsClient.remove(view.id)
         }
 
-        for (const view of pagingUpdates) {
-          await dataViewsClient.update(view.id, buildStandardPagingUpdate(view))
+        for (const { view, template, sortOrder } of templateUpdates) {
+          await dataViewsClient.update(
+            view.id,
+            buildUpdateBody(template, sortOrder)
+          )
         }
 
-        for (const template of missing) {
-          await dataViewsClient.create(buildCreateBody(template))
+        for (const [index, template] of templates.entries()) {
+          if (!missing.includes(template)) continue
+
+          await dataViewsClient.create(buildCreateBody(template, index))
         }
 
         if (shouldPrune) markPruned(markerKey)
@@ -203,7 +223,7 @@ export function useSeedDefaultViews({
     viewsKey,
     appSlug,
     dataSourceSlug,
-    appId,
+    appId
   ])
 }
 
@@ -219,7 +239,7 @@ function normalizeName(name: string): string {
 function pruneMarkerKey(
   appSlug: string,
   dataSourceSlug: string,
-  appId?: string,
+  appId?: string
 ): string {
   return `docyrus:data-grid-views-reset:${appSlug}:${dataSourceSlug}:${appId ?? ''}`
 }
@@ -253,9 +273,14 @@ function markPruned(key: string): void {
  * local so the seeder doesn't depend on that hook's private serializers; the
  * opaque `columns` blob also carries paging + inline-editing config.
  */
-function buildCreateBody(view: SavedDataGridView): CreateDataViewBody {
+function buildCreateBody(
+  view: SavedDataGridView,
+  sortOrder: number
+): CreateDataViewBody {
   const body: CreateDataViewBody = {
     name: view.name,
+    is_default: view.isDefault === true,
+    sort_order: sortOrder,
     columns: {
       visibility: view.columnVisibility,
       order: view.columnOrder,
@@ -267,17 +292,17 @@ function buildCreateBody(view: SavedDataGridView): CreateDataViewBody {
       pagingMode: view.pagingMode,
       pageSize: view.pageSize,
       inlineEditingEnabled: view.inlineEditingEnabled,
-      readOnlyColumns: view.readOnlyColumns,
+      readOnlyColumns: view.readOnlyColumns
     },
     filters: {
       columnFilters: view.columnFilters ?? [],
-      filterQuery: view.filterQuery,
+      filterQuery: view.filterQuery
     },
     sort: { sorting: view.sorting ?? [] },
     color_rules: {
       row: view.rowColorRules ?? [],
-      cell: view.cellColorRules ?? [],
-    },
+      cell: view.cellColorRules ?? []
+    }
   }
 
   if (view.description && view.description.length > 0) {
@@ -287,35 +312,9 @@ function buildCreateBody(view: SavedDataGridView): CreateDataViewBody {
   return body
 }
 
-function getColumnsRecord(view: DataView): Record<string, unknown> {
-  return view.columns && typeof view.columns === 'object' ? view.columns : {}
-}
-
-function getPageSize(value: unknown): number {
-  return typeof value === 'number' && Number.isFinite(value) && value > 0
-    ? value
-    : DATA_GRID_DEFAULT_PAGE_SIZE
-}
-
-function needsStandardPagingUpdate(view: DataView): boolean {
-  const columns = getColumnsRecord(view)
-
-  return (
-    columns.pagingEnabled !== true ||
-    columns.pagingMode !== 'standard' ||
-    getPageSize(columns.pageSize) !== columns.pageSize
-  )
-}
-
-function buildStandardPagingUpdate(view: DataView): UpdateDataViewBody {
-  const columns = getColumnsRecord(view)
-
-  return {
-    columns: {
-      ...columns,
-      pagingEnabled: true,
-      pagingMode: 'standard',
-      pageSize: getPageSize(columns.pageSize),
-    },
-  }
+function buildUpdateBody(
+  view: SavedDataGridView,
+  sortOrder: number
+): UpdateDataViewBody {
+  return buildCreateBody(view, sortOrder)
 }

@@ -18,11 +18,12 @@ const KEY_PREFIX = 'webphone:presence-intent:'
  * storage is unavailable (private mode, disabled) so the agent still works.
  */
 export function loadPresenceIntent(
-  userId: string | null | undefined,
+  userId: string | null | undefined
 ): WebphonePresenceIntent | null {
   if (!userId || typeof window === 'undefined') return null
   try {
     const value = window.localStorage.getItem(KEY_PREFIX + userId)
+
     return value === 'online' || value === 'offline' ? value : null
   } catch {
     return null
@@ -32,7 +33,7 @@ export function loadPresenceIntent(
 /** Persists the agent's explicit Online/Offline choice for this browser. */
 export function savePresenceIntent(
   userId: string | null | undefined,
-  intent: WebphonePresenceIntent,
+  intent: WebphonePresenceIntent
 ): void {
   if (!userId || typeof window === 'undefined') return
   try {

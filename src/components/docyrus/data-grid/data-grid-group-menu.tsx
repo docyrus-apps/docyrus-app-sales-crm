@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { useCallback, useMemo, type ComponentProps } from 'react'
 
 import { type Column, type Table } from '@tanstack/react-table'
@@ -13,7 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 import { isColumnGroupable } from './lib/data-grid-grouping'
 

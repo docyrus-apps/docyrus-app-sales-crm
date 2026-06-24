@@ -9,7 +9,7 @@ export const productFormSchema = z.object({
     .number()
     .min(0, 'Tax must be between 0 and 100')
     .max(100, 'Tax must be between 0 and 100')
-    .optional(),
+    .optional()
 })
 
 export type ProductFormData = z.infer<typeof productFormSchema>
