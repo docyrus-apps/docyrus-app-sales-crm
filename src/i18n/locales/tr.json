@@ -966,6 +966,7 @@
     "date": "Tarih",
     "columnQuote": "Teklif",
     "preview": "Önizle",
+    "printPreview": "Print/Preview",
     "sendMail": "Mail Gönder",
     "mailComingSoon": "Teklif e-posta gönderimi şablonlarla birlikte bağlanacak.",
     "editLineItems": "Kalemleri düzenle",
@@ -982,6 +983,7 @@
     "content": "İçerik",
     "lineItemsSummary": "{{count}} kalem · {{total}}",
     "templates": "Şablonlar",
+    "selectedTemplate": "Seçili şablon",
     "createQuote": "Teklif oluştur",
     "updateQuote": "Güncelle",
     "saveBeforeMail": "Mail göndermek için teklifi oluşturun",
@@ -1005,6 +1007,8 @@
     "pdfFailed": "PDF oluşturulamadı",
     "templateNames": {
       "standard": "Standart",
+      "executive": "Kurumsal",
+      "custom": "Özel",
       "minimal": "Sade"
     },
     "wizard": {
@@ -1031,6 +1035,7 @@
       "templateHelp": "Seçilen şablon teklif için kaydedilir ve daha sonra builder'da açılır.",
       "defaultTemplate": "Varsayılan",
       "standardTemplateDescription": "Müşteri, tablo ve toplamları içeren klasik teklif yerleşimi.",
+      "executiveTemplateDescription": "Daha resmi teklif dili ve vurgulu toplam alanı olan şablon.",
       "minimalTemplateDescription": "Kalemlere ve toplam tutara odaklanan kompakt teklif yerleşimi.",
       "footerHint": "Üç kısa adımda teklif oluştur"
     }

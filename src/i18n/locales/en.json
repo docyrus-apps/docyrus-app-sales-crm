@@ -966,6 +966,7 @@
     "date": "Date",
     "columnQuote": "Quote",
     "preview": "Preview",
+    "printPreview": "Print/Preview",
     "sendMail": "Send mail",
     "mailComingSoon": "Quote email sending will be wired with templates.",
     "editLineItems": "Edit line items",
@@ -982,6 +983,7 @@
     "content": "Content",
     "lineItemsSummary": "{{count}} item(s) · {{total}}",
     "templates": "Templates",
+    "selectedTemplate": "Selected template",
     "createQuote": "Create quote",
     "updateQuote": "Update",
     "saveBeforeMail": "Create the quote to send mail",
@@ -1005,6 +1007,8 @@
     "pdfFailed": "Failed to export PDF",
     "templateNames": {
       "standard": "Standard",
+      "executive": "Executive",
+      "custom": "Custom",
       "minimal": "Simple"
     },
     "wizard": {
@@ -1031,6 +1035,7 @@
       "templateHelp": "The selected template is saved for the quote and opens in the builder later.",
       "defaultTemplate": "Default",
       "standardTemplateDescription": "Classic quote layout with customer, table and totals.",
+      "executiveTemplateDescription": "Formal proposal style with a strong total section.",
       "minimalTemplateDescription": "Compact quote layout focused on lines and total.",
       "footerHint": "Create a quote in three short steps"
     }

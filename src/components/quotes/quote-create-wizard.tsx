@@ -12,7 +12,7 @@ import {
   FileText,
   LayoutTemplate,
   Loader2,
-  Package,
+  Package
 } from 'lucide-react'
 
 import {
@@ -20,21 +20,21 @@ import {
   type ILineItem,
   type IPricingDocumentData,
   type IProductCatalogItem,
-  type ITotals,
+  type ITotals
 } from '@/components/docyrus/pricing-engine-panel'
 import {
   buildLineItemRows,
-  calculateTotals,
+  calculateTotals
 } from '@/components/docyrus/pricing-engine-panel/lib/calculations'
 import {
   AwesomeDialog,
   AwesomeDialogBody,
   AwesomeDialogFooter,
-  AwesomeDialogHeader,
+  AwesomeDialogHeader
 } from '@/components/docyrus/awesome-dialog'
 import {
-  DEFAULT_TEMPLATE,
-  MINIMAL_TEMPLATE,
+  QUOTE_TEMPLATE_PRESETS,
+  type QuoteTemplatePreset
 } from '@/components/quotes/quote-templates'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -44,14 +44,14 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
-  CommandList,
+  CommandList
 } from '@/components/ui/command'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
+  PopoverTrigger
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 import { useCompanies } from '@/hooks/use-companies'
@@ -59,7 +59,7 @@ import { useDeal, useDeals } from '@/hooks/use-deals'
 import { useProducts } from '@/hooks/use-products'
 import {
   useBaseCrmSalesOrderCollection,
-  useBaseCrmSalesOrderItemCollection,
+  useBaseCrmSalesOrderItemCollection
 } from '@/collections'
 import { useEnumEntities } from '@/hooks/use-enums'
 import { findEnumIdByName } from '@/lib/crm-system-views'
@@ -69,22 +69,36 @@ const APP_SLUG = 'base_crm'
 const DATA_SOURCE_SLUG = 'sales_order'
 const DEFAULT_CURRENCY = 'TRY'
 const DEFAULT_VAT_RATE = 20
-const VAT_RATES = [0, 1, 10, 20]
+const VAT_RATES = [
+0,
+1,
+10,
+20
+]
 
 type StepId = 'customer' | 'pricing' | 'template'
 
 interface PickerOption {
-  id: string
-  name: string
-  description?: string
+  id: string;
+  name: string;
+  description?: string;
+}
+
+type TemplateOption = {
+  id: string;
+  backendTemplateId: string;
+  name: string;
+  description: string;
+  isDefault: boolean;
+  template: QuoteTemplatePreset;
 }
 
 interface QuoteCreateWizardProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  initialOrganizationId?: string
-  initialOrganizationName?: string
-  initialDealId?: string
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  initialOrganizationId?: string;
+  initialOrganizationName?: string;
+  initialDealId?: string;
 }
 
 type RelationValue =
@@ -100,7 +114,7 @@ const ZERO_TOTALS: ITotals = {
   netTotal: 0,
   vatTotal: 0,
   adjustment: 0,
-  grandTotal: 0,
+  grandTotal: 0
 }
 
 function makeInitialPricingDocument(): IPricingDocumentData {
@@ -111,7 +125,7 @@ function makeInitialPricingDocument(): IPricingDocumentData {
     currency: {
       code: DEFAULT_CURRENCY,
       secondaryCurrencyCode: null,
-      exchangeRate: 1,
+      exchangeRate: 1
     },
     config: {
       showVatColumn: true,
@@ -125,12 +139,12 @@ function makeInitialPricingDocument(): IPricingDocumentData {
       enableAdjustment: true,
       defaultVatRate: DEFAULT_VAT_RATE,
       vatRates: VAT_RATES,
-      viewMode: 'net',
+      viewMode: 'net'
     },
     description: '',
     termsAndConditions: '',
     status: 'draft',
-    totals: ZERO_TOTALS,
+    totals: ZERO_TOTALS
   }
 }
 
@@ -153,7 +167,7 @@ function isMeaningfulLineItem(line: ILineItem) {
     line.productId ||
     line.name.trim() ||
     line.unitPrice > 0 ||
-    line.discountPercent > 0,
+    line.discountPercent > 0
   )
 }
 
@@ -166,7 +180,7 @@ export function QuoteCreateWizard({
   onOpenChange,
   initialOrganizationId,
   initialOrganizationName,
-  initialDealId,
+  initialDealId
 }: QuoteCreateWizardProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -185,36 +199,47 @@ export function QuoteCreateWizard({
   const [validUntil, setValidUntil] = useState('')
   const [templateId, setTemplateId] = useState('standard')
   const [pricingDocument, setPricingDocument] = useState<IPricingDocumentData>(
-    () => makeInitialPricingDocument(),
+    () => makeInitialPricingDocument()
   )
   const [isSaving, setIsSaving] = useState(false)
 
   const { data: companies = [] } = useCompanies({
-    columns: ['id', 'name', 'email', 'phone'],
+    columns: [
+'id',
+'name',
+'email',
+'phone'
+],
     orderBy: 'name ASC',
-    limit: 200,
+    limit: 200
   })
   const { data: deals = [] } = useDeals({
     columns: ['id', 'name', 'organization(id,name)'],
     orderBy: 'created_on DESC',
-    limit: 200,
+    limit: 200
   })
   const { data: initialDeal } = useDeal(initialDealId)
   const { data: products = [] } = useProducts({
-    columns: ['id', 'product_code', 'unit_price', 'tax', 'Unit'],
+    columns: [
+'id',
+'product_code',
+'unit_price',
+'tax',
+'Unit'
+],
     orderBy: 'product_code ASC',
-    limit: 500,
+    limit: 500
   })
   const { data: statuses = [] } = useEnumEntities('status', {
     appSlug: APP_SLUG,
-    dataSourceSlug: DATA_SOURCE_SLUG,
+    dataSourceSlug: DATA_SOURCE_SLUG
   })
 
   useEffect(() => {
     if (!open) return
 
     setStep('customer')
-    setPricingKey((key) => key + 1)
+    setPricingKey(key => key + 1)
     setCustomerId(initialOrganizationId ?? null)
     setCustomerName(initialOrganizationName ?? null)
     setDealId(initialDealId ?? null)
@@ -224,65 +249,72 @@ export function QuoteCreateWizard({
     setTemplateId('standard')
     setPricingDocument(makeInitialPricingDocument())
     setIsSaving(false)
-  }, [initialDealId, initialOrganizationId, initialOrganizationName, open])
+  }, [
+initialDealId,
+initialOrganizationId,
+initialOrganizationName,
+open
+])
 
   useEffect(() => {
     if (!open || !initialDeal) return
 
-    setDealName(initialDeal.name ?? null)
+    setDealName((initialDeal as any).name ?? null)
 
     const organizationId = getRelationId(initialDeal.organization)
     const organizationName = getRelationName(initialDeal.organization)
 
     if (!customerId && organizationId) setCustomerId(organizationId)
     if (!customerName && organizationName) setCustomerName(organizationName)
-  }, [customerId, customerName, initialDeal, open])
+  }, [
+customerId,
+customerName,
+initialDeal,
+open
+])
 
   const companyOptions = useMemo<Array<PickerOption>>(
-    () =>
-      (companies as Array<any>)
-        .filter((company) => company.id)
-        .map((company) => ({
+    () => (companies as Array<any>)
+        .filter(company => company.id)
+        .map(company => ({
           id: String(company.id),
           name: company.name || String(company.id),
-          description: company.email || company.phone || undefined,
+          description: company.email || company.phone || undefined
         })),
-    [companies],
+    [companies]
   )
 
   useEffect(() => {
     if (customerName || !customerId) return
 
-    const selected = companyOptions.find((option) => option.id === customerId)
+    const selected = companyOptions.find(option => option.id === customerId)
 
     if (selected) setCustomerName(selected.name)
   }, [companyOptions, customerId, customerName])
 
   const allDealOptions = useMemo(
-    () =>
-      (deals as Array<any>)
-        .filter((deal) => deal.id)
-        .map((deal) => ({
+    () => (deals as Array<any>)
+        .filter(deal => deal.id)
+        .map(deal => ({
           id: String(deal.id),
           name: deal.name || String(deal.id),
           organizationId: getRelationId(deal.organization),
-          description: getRelationName(deal.organization) ?? undefined,
+          description: getRelationName(deal.organization) ?? undefined
         })),
-    [deals],
+    [deals]
   )
 
   const dealOptions = useMemo<Array<PickerOption>>(
-    () =>
-      allDealOptions
-        .filter((deal) => !customerId || deal.organizationId === customerId)
+    () => allDealOptions
+        .filter(deal => !customerId || deal.organizationId === customerId)
         .map(({ id, name, description }) => ({ id, name, description })),
-    [allDealOptions, customerId],
+    [allDealOptions, customerId]
   )
 
   useEffect(() => {
     if (!dealId) return
 
-    const selectedDeal = allDealOptions.find((deal) => deal.id === dealId)
+    const selectedDeal = allDealOptions.find(deal => deal.id === dealId)
 
     if (!selectedDeal) return
     if (customerId && selectedDeal.organizationId !== customerId) {
@@ -295,10 +327,9 @@ export function QuoteCreateWizard({
   }, [allDealOptions, customerId, dealId])
 
   const productCatalog = useMemo<Array<IProductCatalogItem>>(
-    () =>
-      (products as Array<any>)
-        .filter((product) => product.id)
-        .map((product) => ({
+    () => (products as Array<any>)
+        .filter(product => product.id)
+        .map(product => ({
           id: String(product.id),
           name:
             product.name ||
@@ -306,98 +337,105 @@ export function QuoteCreateWizard({
             t('quotes.untitledProduct', { defaultValue: 'Product' }),
           category: getRelationName(product.category) ?? '',
           unitPrice: Number(product.unit_price ?? 0),
-          vatRate: Number(product.tax ?? DEFAULT_VAT_RATE),
+          vatRate: Number(product.tax ?? DEFAULT_VAT_RATE)
         })),
-    [products, t],
+    [products, t]
   )
 
-  const templatePresets = useMemo(
-    () => [
-      {
-        id: 'standard',
-        name: t('quotes.templateNames.standard', { defaultValue: 'Standard' }),
-        description: t('quotes.wizard.standardTemplateDescription', {
-          defaultValue: 'Classic quote layout with customer, table and totals.',
+  const fallbackTemplateOptions = useMemo<Array<TemplateOption>>(
+    () => QUOTE_TEMPLATE_PRESETS.map(template => ({
+        id: template.id,
+        backendTemplateId: template.backendTemplateId,
+        name: t(template.nameKey, { defaultValue: template.defaultName }),
+        description: t(template.descriptionKey, {
+          defaultValue: template.defaultDescription
         }),
-        body: DEFAULT_TEMPLATE,
-        default: true,
-      },
-      {
-        id: 'minimal',
-        name: t('quotes.templateNames.minimal', { defaultValue: 'Simple' }),
-        description: t('quotes.wizard.minimalTemplateDescription', {
-          defaultValue: 'Compact quote layout focused on lines and total.',
-        }),
-        body: MINIMAL_TEMPLATE,
-        default: false,
-      },
-    ],
-    [t],
+        isDefault: Boolean(template.default),
+        template
+      })),
+    [t]
   )
+  const templateOptions = fallbackTemplateOptions
+
+  useEffect(() => {
+    if (!open) return
+
+    const currentExists = templateOptions.some(
+      template => template.id === templateId
+    )
+
+    if (templateId && currentExists) return
+
+    const nextTemplate =
+      templateOptions.find(template => template.isDefault) ??
+      templateOptions[0]
+
+    if (nextTemplate) setTemplateId(nextTemplate.id)
+  }, [open, templateId, templateOptions])
 
   const selectedTemplate =
-    templatePresets.find((template) => template.id === templateId) ??
-    templatePresets[0]
+    templateOptions.find(template => template.id === templateId) ??
+    templateOptions.find(template => template.isDefault) ??
+    templateOptions[0]
 
   const draftStatusId = useMemo(
     () => findEnumIdByName(statuses, ['Draft', 'Taslak']),
-    [statuses],
+    [statuses]
   )
 
   const meaningfulLineItems = useMemo(
     () => pricingDocument.lineItems.filter(isMeaningfulLineItem),
-    [pricingDocument.lineItems],
+    [pricingDocument.lineItems]
   )
   const hasValidPricing =
     meaningfulLineItems.length > 0 &&
     meaningfulLineItems.every(isCompleteLineItem)
   const lineRows = useMemo(
     () => buildLineItemRows(meaningfulLineItems, pricingDocument.config),
-    [meaningfulLineItems, pricingDocument.config],
+    [meaningfulLineItems, pricingDocument.config]
   )
   const totals = useMemo(
-    () =>
-      calculateTotals(
+    () => calculateTotals(
         lineRows,
         pricingDocument.globalDiscountPercent,
         pricingDocument.adjustment,
-        pricingDocument.config,
+        pricingDocument.config
       ),
     [
       lineRows,
       pricingDocument.adjustment,
       pricingDocument.config,
-      pricingDocument.globalDiscountPercent,
-    ],
+      pricingDocument.globalDiscountPercent
+    ]
   )
   const steps = useMemo(
     () => [
       {
         id: 'customer' as const,
         label: t('quotes.wizard.stepCustomer', { defaultValue: 'Customer' }),
-        icon: Building2,
+        icon: Building2
       },
       {
         id: 'pricing' as const,
         label: t('quotes.wizard.stepPricing', { defaultValue: 'Pricing' }),
-        icon: Package,
+        icon: Package
       },
       {
         id: 'template' as const,
         label: t('quotes.wizard.stepTemplate', { defaultValue: 'Template' }),
-        icon: LayoutTemplate,
-      },
+        icon: LayoutTemplate
+      }
     ],
-    [t],
+    [t]
   )
-  const stepIndex = steps.findIndex((item) => item.id === step)
+  const stepIndex = steps.findIndex(item => item.id === step)
 
   const validateStep = (targetStep = step) => {
     if (targetStep === 'customer' && !customerId) {
       toast.error(
         t('quotes.customerRequired', {
-          defaultValue: 'Please select a customer first',
-        }),
+          defaultValue: 'Please select a customer first'
+        })
       )
 
       return false
@@ -407,11 +445,11 @@ export function QuoteCreateWizard({
       toast.error(
         meaningfulLineItems.length === 0
           ? t('quotes.wizard.pricingRequired', {
-              defaultValue: 'Add at least one quote line first',
+              defaultValue: 'Add at least one quote line first'
             })
           : t('quotes.wizard.productRequired', {
-              defaultValue: 'Select a product for every quote line',
-            }),
+              defaultValue: 'Select a product for every quote line'
+            })
       )
 
       return false
@@ -442,6 +480,14 @@ export function QuoteCreateWizard({
     setIsSaving(true)
 
     try {
+      const quoteDoc = {
+        docTitle: docTitle.trim(),
+        validUntil,
+        billingEmail: '',
+        billingAddress: '',
+        intro: '',
+        terms: ''
+      }
       const created = await salesOrderCollection.create({
         organization: customerId,
         ...(dealId ? { deal: dealId } : {}),
@@ -449,6 +495,10 @@ export function QuoteCreateWizard({
         sub_total: totals.netTotal,
         tax_total: totals.vatTotal,
         grand_total: totals.grandTotal,
+        quote_doc_json: quoteDoc,
+        ...(selectedTemplate
+          ? { quote_template_id: selectedTemplate.backendTemplateId }
+          : {})
       })
       const quoteId = String(created.id)
 
@@ -464,29 +514,28 @@ export function QuoteCreateWizard({
             tax_rate: line.vatRate,
             total: row.lineSubtotal,
             net_total: row.netAfterDiscount,
-            gross_total: row.grossTotal,
+            gross_total: row.grossTotal
           }
 
           return salesOrderItemCollection.create(payload)
-        }),
+        })
       )
 
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(
           `quote-doc:${quoteId}`,
-          JSON.stringify({
-            docTitle: docTitle.trim(),
-            validUntil,
-            billingEmail: '',
-            billingAddress: '',
-            intro: '',
-            terms: '',
-          }),
+          JSON.stringify(quoteDoc)
         )
-        window.localStorage.setItem(
-          `quote-template:${quoteId}`,
-          selectedTemplate.body,
-        )
+        if (selectedTemplate) {
+          window.localStorage.setItem(
+            `quote-template-id:${quoteId}`,
+            selectedTemplate.backendTemplateId
+          )
+          window.localStorage.setItem(
+            `quote-template:${quoteId}`,
+            selectedTemplate.template.body
+          )
+        }
       }
 
       queryClient.invalidateQueries({ queryKey: ['sales-orders'] })
@@ -494,12 +543,12 @@ export function QuoteCreateWizard({
       toast.success(t('quotes.saved', { defaultValue: 'Quote saved' }))
       void navigate({
         to: '/quotes/$quoteId',
-        params: { quoteId },
+        params: { quoteId }
       })
     } catch (error: any) {
       toast.error(
         error?.message ||
-          t('quotes.saveFailed', { defaultValue: 'Failed to save quote' }),
+        t('quotes.saveFailed', { defaultValue: 'Failed to save quote' })
       )
     } finally {
       setIsSaving(false)
@@ -514,12 +563,10 @@ export function QuoteCreateWizard({
       size="full"
       fullscreenable
       preventOutsideClose={isSaving}
-      className="h-full max-h-full"
-    >
+      className="h-full max-h-full">
       <AwesomeDialogHeader
         title={t('quotes.wizard.title', { defaultValue: 'New quote' })}
-        icon="huge file-02"
-      />
+        icon="huge file-02" />
       <AwesomeDialogBody className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
         <div className="flex shrink-0 justify-center border-b bg-muted/30 px-4 py-3">
           <div className="flex w-full max-w-2xl items-center">
@@ -539,9 +586,8 @@ export function QuoteCreateWizard({
                   key={item.id}
                   className={cn(
                     'flex min-w-0 items-center',
-                    index < steps.length - 1 && 'flex-1',
-                  )}
-                >
+                    index < steps.length - 1 && 'flex-1'
+                  )}>
                   <button
                     type="button"
                     disabled={!enabled || isSaving}
@@ -550,18 +596,16 @@ export function QuoteCreateWizard({
                       'flex min-w-0 items-center gap-2 rounded-md px-2 py-1 text-xs transition-colors',
                       active && 'bg-background text-foreground shadow-xs',
                       !active && 'text-muted-foreground hover:bg-background/60',
-                      !enabled && 'cursor-not-allowed opacity-40',
-                    )}
-                  >
+                      !enabled && 'cursor-not-allowed opacity-40'
+                    )}>
                     <span
                       className={cn(
                         'flex size-6 shrink-0 items-center justify-center rounded-full border text-[10px]',
                         active &&
-                          'border-primary bg-primary text-primary-foreground',
+                        'border-primary bg-primary text-primary-foreground',
                         completed &&
-                          'border-emerald-500 bg-emerald-500 text-white',
-                      )}
-                    >
+                        'border-emerald-500 bg-emerald-500 text-white'
+                      )}>
                       {completed ? (
                         <Check className="size-3" />
                       ) : (
@@ -574,9 +618,8 @@ export function QuoteCreateWizard({
                     <span
                       className={cn(
                         'mx-3 h-px min-w-8 flex-1 bg-border',
-                        completed && 'bg-primary/50',
-                      )}
-                    />
+                        completed && 'bg-primary/50'
+                      )} />
                   )}
                 </div>
               )
@@ -590,85 +633,77 @@ export function QuoteCreateWizard({
               <div className="grid w-full gap-3 rounded-lg border bg-background p-4">
                 <Field
                   label={t('quotes.customer', { defaultValue: 'Customer' })}
-                  required
-                >
+                  required>
                   <SearchableRelationPicker
                     value={customerId}
                     selectedName={customerName}
                     options={companyOptions}
                     placeholder={t('quotes.selectCustomer', {
-                      defaultValue: 'Select customer',
+                      defaultValue: 'Select customer'
                     })}
                     searchPlaceholder={t('quotes.searchCustomer', {
-                      defaultValue: 'Search customers...',
+                      defaultValue: 'Search customers...'
                     })}
                     emptyLabel={t('quotes.noCustomers', {
-                      defaultValue: 'No customers found',
+                      defaultValue: 'No customers found'
                     })}
                     invalid={!customerId}
                     leadingIcon={<Building2 className="size-4 opacity-60" />}
                     onSelect={(option) => {
                       setCustomerId(option.id)
                       setCustomerName(option.name)
-                    }}
-                  />
+                    }} />
                 </Field>
 
                 <Field
                   label={t('quotes.wizard.linkedDeal', {
-                    defaultValue: 'Linked deal',
-                  })}
-                >
+                    defaultValue: 'Linked deal'
+                  })}>
                   <SearchableRelationPicker
                     value={dealId}
                     selectedName={dealName}
                     options={dealOptions}
                     placeholder={t('quotes.wizard.selectDeal', {
-                      defaultValue: 'Select deal',
+                      defaultValue: 'Select deal'
                     })}
                     searchPlaceholder={t('quotes.wizard.searchDeal', {
-                      defaultValue: 'Search deals...',
+                      defaultValue: 'Search deals...'
                     })}
                     emptyLabel={t('quotes.wizard.noDeals', {
-                      defaultValue: 'No deals found',
+                      defaultValue: 'No deals found'
                     })}
                     disabled={!customerId}
                     leadingIcon={<Briefcase className="size-4 opacity-60" />}
                     onSelect={(option) => {
                       setDealId(option.id)
                       setDealName(option.name)
-                    }}
-                  />
+                    }} />
                 </Field>
 
                 <Field
                   label={t('quotes.docTitle', {
-                    defaultValue: 'Document title',
-                  })}
-                >
+                    defaultValue: 'Document title'
+                  })}>
                   <Input
                     value={docTitle}
-                    onChange={(event) => setDocTitle(event.target.value)}
+                    onChange={event => setDocTitle(event.target.value)}
                     placeholder={
                       customerName
                         ? `${t('quotes.untitledQuote', {
-                            defaultValue: 'Quote',
+                            defaultValue: 'Quote'
                           })} - ${customerName}`
                         : t('quotes.untitledQuote', { defaultValue: 'Quote' })
-                    }
-                  />
+                    } />
                 </Field>
 
                 <Field
                   label={t('quotes.validUntil', {
-                    defaultValue: 'Valid until',
-                  })}
-                >
+                    defaultValue: 'Valid until'
+                  })}>
                   <Input
                     type="date"
                     value={validUntil}
-                    onChange={(event) => setValidUntil(event.target.value)}
-                  />
+                    onChange={event => setValidUntil(event.target.value)} />
                 </Field>
               </div>
             </div>
@@ -692,8 +727,7 @@ export function QuoteCreateWizard({
                 defaultVatRate={DEFAULT_VAT_RATE}
                 vatRates={VAT_RATES}
                 size="full"
-                variant="bordered"
-              />
+                variant="bordered" />
             </div>
           </div>
         )}
@@ -702,7 +736,7 @@ export function QuoteCreateWizard({
           <div className="min-h-0 flex-1 overflow-auto p-6">
             <div className="mx-auto flex min-h-full max-w-xl items-center">
               <div className="grid w-full gap-3">
-                {templatePresets.map((template) => {
+                {templateOptions.map((template) => {
                   const selected = template.id === templateId
 
                   return (
@@ -712,9 +746,8 @@ export function QuoteCreateWizard({
                       onClick={() => setTemplateId(template.id)}
                       className={cn(
                         'rounded-lg border bg-background p-3 text-left transition-colors hover:bg-muted/30',
-                        selected && 'border-primary ring-2 ring-primary/15',
-                      )}
-                    >
+                        selected && 'border-primary ring-2 ring-primary/15'
+                      )}>
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex min-w-0 items-center gap-3">
                           <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
@@ -725,10 +758,10 @@ export function QuoteCreateWizard({
                               <span className="truncate text-sm font-semibold">
                                 {template.name}
                               </span>
-                              {template.default && (
+                              {template.isDefault && (
                                 <Badge variant="secondary" className="shrink-0">
                                   {t('quotes.wizard.defaultTemplate', {
-                                    defaultValue: 'Default',
+                                    defaultValue: 'Default'
                                   })}
                                 </Badge>
                               )}
@@ -742,9 +775,8 @@ export function QuoteCreateWizard({
                           className={cn(
                             'flex size-6 shrink-0 items-center justify-center rounded-full border',
                             selected &&
-                              'border-primary bg-primary text-primary-foreground',
-                          )}
-                        >
+                            'border-primary bg-primary text-primary-foreground'
+                          )}>
                           {selected && <Check className="size-3.5" />}
                         </span>
                       </div>
@@ -762,8 +794,7 @@ export function QuoteCreateWizard({
             type="button"
             variant="outline"
             disabled={isSaving}
-            onClick={() => onOpenChange(false)}
-          >
+            onClick={() => onOpenChange(false)}>
             {t('common.cancel', { defaultValue: 'Cancel' })}
           </Button>
           {stepIndex > 0 && (
@@ -771,8 +802,7 @@ export function QuoteCreateWizard({
               type="button"
               variant="outline"
               disabled={isSaving}
-              onClick={goPrevious}
-            >
+              onClick={goPrevious}>
               {t('common.previous', { defaultValue: 'Previous' })}
             </Button>
           )}
@@ -802,22 +832,22 @@ function SearchableRelationPicker({
   invalid,
   disabled,
   leadingIcon,
-  onSelect,
+  onSelect
 }: {
-  value: string | null
-  selectedName: string | null
-  options: Array<PickerOption>
-  placeholder: string
-  searchPlaceholder: string
-  emptyLabel: string
-  invalid?: boolean
-  disabled?: boolean
-  leadingIcon?: ReactNode
-  onSelect: (option: PickerOption) => void
+  value: string | null;
+  selectedName: string | null;
+  options: Array<PickerOption>;
+  placeholder: string;
+  searchPlaceholder: string;
+  emptyLabel: string;
+  invalid?: boolean;
+  disabled?: boolean;
+  leadingIcon?: ReactNode;
+  onSelect: (option: PickerOption) => void;
 }) {
   const [open, setOpen] = useState(false)
   const label =
-    selectedName ?? options.find((option) => option.id === value)?.name
+    selectedName ?? options.find(option => option.id === value)?.name
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -830,9 +860,8 @@ function SearchableRelationPicker({
           aria-invalid={invalid}
           className={cn(
             'w-full justify-between font-normal',
-            invalid && 'border-destructive text-destructive',
-          )}
-        >
+            invalid && 'border-destructive text-destructive'
+          )}>
           <span className="flex min-w-0 items-center gap-2">
             {leadingIcon}
             <span className={cn('truncate', !label && 'text-muted-foreground')}>
@@ -845,29 +874,26 @@ function SearchableRelationPicker({
       <PopoverContent
         align="start"
         className="w-[--radix-popover-trigger-width] min-w-[280px] overflow-hidden p-0"
-        onWheelCapture={(event) => event.stopPropagation()}
-        onWheel={(event) => event.stopPropagation()}
-      >
+        onWheelCapture={event => event.stopPropagation()}
+        onWheel={event => event.stopPropagation()}>
         <Command>
           <CommandInput placeholder={searchPlaceholder} />
           <CommandList className="max-h-[300px] overflow-y-auto overscroll-contain">
             <CommandEmpty>{emptyLabel}</CommandEmpty>
             <CommandGroup>
-              {options.map((option) => (
+              {options.map(option => (
                 <CommandItem
                   key={option.id}
                   value={`${option.name} ${option.description ?? ''} ${option.id}`}
                   onSelect={() => {
                     onSelect(option)
                     setOpen(false)
-                  }}
-                >
+                  }}>
                   <Check
                     className={cn(
                       'mr-1 size-3.5',
-                      value === option.id ? 'opacity-100' : 'opacity-0',
-                    )}
-                  />
+                      value === option.id ? 'opacity-100' : 'opacity-0'
+                    )} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate">{option.name}</span>
                     {option.description && (
@@ -891,13 +917,13 @@ function Field({
   label,
   hint,
   required,
-  children,
+  children
 }: {
-  className?: string
-  label: string
-  hint?: string
-  required?: boolean
-  children: ReactNode
+  className?: string;
+  label: string;
+  hint?: string;
+  required?: boolean;
+  children: ReactNode;
 }) {
   return (
     <div className={cn('space-y-1.5', className)}>

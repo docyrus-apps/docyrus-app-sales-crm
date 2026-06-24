@@ -31,12 +31,6 @@ import {
   DialogTitle
 } from '@/components/ui/dialog'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu'
-import {
   Command,
   CommandEmpty,
   CommandGroup,
@@ -62,7 +56,7 @@ import { useDateFormat } from '@/lib/use-date-format'
 import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
 import {
   DEFAULT_TEMPLATE,
-  MINIMAL_TEMPLATE,
+  QUOTE_TEMPLATE_PRESETS,
   QUOTE_VARIABLES
 } from '@/components/quotes/quote-templates'
 
@@ -90,6 +84,8 @@ interface QuoteDocFields {
   billingAddress: string;
   intro: string;
   terms: string;
+  templateBody: string;
+  templateBodyTemplateId: string;
 }
 
 const EMPTY_DOC: QuoteDocFields = {
@@ -98,7 +94,18 @@ const EMPTY_DOC: QuoteDocFields = {
   billingEmail: '',
   billingAddress: '',
   intro: '',
-  terms: ''
+  terms: '',
+  templateBody: '',
+  templateBodyTemplateId: ''
+}
+
+type TemplateOption = {
+  id: string;
+  backendTemplateId: string;
+  name: string;
+  description: string;
+  isDefault: boolean;
+  body: string;
 }
 
 function readStored<T>(key: string, fallback: T): T {
@@ -124,6 +131,29 @@ function moveStored(fromKey: string, toKey: string) {
   } catch {
     /* ignore */
   }
+}
+
+function isLegacyUnsafeTemplateDraft(value: string | null): value is string {
+  return Boolean(
+    value &&
+    (value.includes('{{#if lineItems}}') ||
+      (value.includes('{{#each lineItems}}') &&
+        (value.includes('<tbody') || value.includes('</tbody>'))))
+  )
+}
+
+function normalizeQuoteDoc(value: unknown): QuoteDocFields | null {
+  if (!value) return null
+  if (typeof value === 'string') {
+    try {
+      return normalizeQuoteDoc(JSON.parse(value))
+    } catch {
+      return null
+    }
+  }
+  if (typeof value !== 'object') return null
+
+  return { ...EMPTY_DOC, ...(value as Partial<QuoteDocFields>) }
 }
 
 type CustomerOption = { id: string; name: string }
@@ -215,8 +245,8 @@ function CustomerPicker({
  * Quote build / compose screen (create + edit). Left = customer picker, line
  * items (modal), document fields. Right = the Docyrus `HtmlTemplateEditor`.
  * "Create"/"Update" persists the sales_order; mail (composer) activates once
- * the quote exists. Template picker swaps the editor body. Doc fields/template
- * persist per-quote in localStorage (server persistence pending).
+ * the quote exists. Template picker uses seeded Studio template IDs; doc
+ * fields and selected template id persist on the quote record.
  *
  * @docyrus: [[features#Quotes (Teklif)]]
  */
@@ -229,21 +259,20 @@ export function QuoteBuild() {
   const id = quoteId ?? ''
   const storageId = id || 'new'
   const { formatDate } = useDateFormat()
-  const TEMPLATE_PRESETS = useMemo(
-    () => [
-      {
-        id: 'standard',
-        name: t('quotes.templateNames.standard'),
-        body: DEFAULT_TEMPLATE
-      },
-      {
-        id: 'minimal',
-        name: t('quotes.templateNames.minimal'),
-        body: MINIMAL_TEMPLATE
-      }
-    ],
+  const fallbackTemplateOptions = useMemo<Array<TemplateOption>>(
+    () => QUOTE_TEMPLATE_PRESETS.map(preset => ({
+        id: preset.id,
+        backendTemplateId: preset.backendTemplateId,
+        name: t(preset.nameKey, { defaultValue: preset.defaultName }),
+        description: t(preset.descriptionKey, {
+          defaultValue: preset.defaultDescription
+        }),
+        isDefault: Boolean(preset.default),
+        body: preset.body
+      })),
     [t]
   )
+  const templateOptions = fallbackTemplateOptions
   const salesOrderCollection = useBaseCrmSalesOrderCollection()
   const search = useSearch({ strict: false })
 
@@ -289,6 +318,7 @@ export function QuoteBuild() {
   const { data: company } = useCompany(customerId ?? undefined)
 
   const [doc, setDoc] = useState<QuoteDocFields>(() => readStored(`quote-doc:${storageId}`, EMPTY_DOC))
+  const [docHydratedFromRecord, setDocHydratedFromRecord] = useState(false)
 
   const quoteTitle =
     doc.docTitle.trim() ||
@@ -297,6 +327,32 @@ export function QuoteBuild() {
       : t('quotes.untitledQuote', { defaultValue: 'Teklif' }))
 
   useSetDetailBreadcrumbTitle(quoteTitle)
+  const [templatePresetId, setTemplatePresetId] = useState<string | null>(
+    () => {
+      if (typeof window === 'undefined') return null
+
+      return window.localStorage.getItem(`quote-template-id:${storageId}`)
+    }
+  )
+  const preferredTemplateId =
+    (typeof order?.quote_template_id === 'string'
+      ? order.quote_template_id
+      : null) ?? templatePresetId
+  const selectedTemplateOption = useMemo(
+    () => (preferredTemplateId
+        ? templateOptions.find(
+            template => template.id === preferredTemplateId ||
+              template.backendTemplateId === preferredTemplateId
+          )
+        : null) ??
+        templateOptions.find(template => template.isDefault) ??
+        templateOptions[0] ??
+        null,
+    [preferredTemplateId, templateOptions]
+  )
+  const selectedTemplateId = selectedTemplateOption?.id ?? null
+  const selectedBackendTemplateId =
+    selectedTemplateOption?.backendTemplateId ?? null
   const [template, setTemplate] = useState<string>(() => {
     if (typeof window === 'undefined') return DEFAULT_TEMPLATE
 
@@ -305,10 +361,71 @@ export function QuoteBuild() {
       DEFAULT_TEMPLATE
     )
   })
+  const [loadedTemplateId, setLoadedTemplateId] = useState<string | null>(null)
+  const [templateDirty, setTemplateDirty] = useState(false)
   const [saving, setSaving] = useState(false)
   const [justSaved, setJustSaved] = useState(false)
   const [mailOpen, setMailOpen] = useState(false)
   const [lineItemsOpen, setLineItemsOpen] = useState(false)
+  const [templatesOpen, setTemplatesOpen] = useState(false)
+
+  useEffect(() => {
+    if (!order || docHydratedFromRecord) return
+
+    const recordDoc = normalizeQuoteDoc(order.quote_doc_json)
+
+    if (recordDoc) setDoc(recordDoc)
+    setDocHydratedFromRecord(true)
+  }, [docHydratedFromRecord, order])
+
+  useEffect(() => {
+    if (!selectedTemplateOption) return
+
+    const storedTemplateId =
+      typeof window === 'undefined'
+        ? null
+        : window.localStorage.getItem(`quote-template-id:${storageId}`)
+    const canUseStoredDraft =
+      storedTemplateId === selectedTemplateOption.id ||
+      storedTemplateId === selectedTemplateOption.backendTemplateId
+    const storedDraft =
+      typeof window === 'undefined' || !canUseStoredDraft
+        ? null
+        : window.localStorage.getItem(`quote-template:${storageId}`)
+    const recordDraft =
+      doc.templateBody &&
+      (doc.templateBodyTemplateId === selectedTemplateOption.id ||
+        doc.templateBodyTemplateId === selectedTemplateOption.backendTemplateId)
+        ? doc.templateBody
+        : null
+    const nextBody = isLegacyUnsafeTemplateDraft(storedDraft)
+      ? selectedTemplateOption.body
+      : storedDraft || recordDraft || selectedTemplateOption.body
+
+    if (!nextBody) return
+    if (loadedTemplateId === selectedTemplateId && templateDirty) return
+
+    setTemplate(nextBody)
+    if (
+      typeof window !== 'undefined' &&
+      isLegacyUnsafeTemplateDraft(storedDraft)
+    ) {
+      window.localStorage.setItem(
+        `quote-template:${storageId}`,
+        selectedTemplateOption.body
+      )
+    }
+    setLoadedTemplateId(selectedTemplateId)
+    setTemplateDirty(false)
+  }, [
+    loadedTemplateId,
+    doc.templateBody,
+    doc.templateBodyTemplateId,
+    selectedTemplateId,
+    selectedTemplateOption,
+    storageId,
+    templateDirty
+  ])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -327,6 +444,37 @@ export function QuoteBuild() {
       /* ignore */
     }
   }, [template, storageId])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      if (selectedBackendTemplateId) {
+        window.localStorage.setItem(
+          `quote-template-id:${storageId}`,
+          selectedBackendTemplateId
+        )
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [selectedBackendTemplateId, storageId])
+
+  const selectedTemplateName =
+    selectedTemplateOption?.name ??
+    t('quotes.templateNames.custom', { defaultValue: 'Custom' })
+
+  const handleTemplateChange = (nextTemplate: string) => {
+    setTemplate(nextTemplate)
+    setTemplateDirty(nextTemplate !== selectedTemplateOption?.body)
+  }
+
+  const selectTemplate = (preset: TemplateOption) => {
+    setTemplatePresetId(preset.backendTemplateId)
+    setTemplate(preset.body)
+    setLoadedTemplateId(preset.id)
+    setTemplateDirty(false)
+    setTemplatesOpen(false)
+  }
 
   const setField = (key: keyof QuoteDocFields) => (value: string) => setDoc(prev => ({ ...prev, [key]: value }))
 
@@ -396,15 +544,36 @@ export function QuoteBuild() {
     if (saving) return
     setSaving(true)
     try {
+      const savedDoc = {
+        ...doc,
+        templateBody: template,
+        templateBodyTemplateId:
+          selectedBackendTemplateId ?? selectedTemplateId ?? ''
+      }
+      const quotePayload = {
+        organization: customerId,
+        quote_doc_json: savedDoc,
+        ...(selectedBackendTemplateId
+          ? { quote_template_id: selectedBackendTemplateId }
+          : {})
+      }
+
       if (isNew) {
         const created = await salesOrderCollection.create({
-          organization: customerId,
+          ...quotePayload,
           ...(search.deal ? { deal: search.deal } : {})
         })
         const newId = String(created.id)
 
         moveStored(`quote-doc:new`, `quote-doc:${newId}`)
+        moveStored(`quote-template-id:new`, `quote-template-id:${newId}`)
         moveStored(`quote-template:new`, `quote-template:${newId}`)
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem(
+            `quote-doc:${newId}`,
+            JSON.stringify(savedDoc)
+          )
+        }
         queryClient.invalidateQueries({ queryKey: ['sales-orders'] })
         toast.success(t('quotes.saved', { defaultValue: 'Quote saved' }))
         setJustSaved(true)
@@ -413,9 +582,11 @@ export function QuoteBuild() {
           params: { quoteId: newId }
         })
       } else {
-        await salesOrderCollection.update(id, { organization: customerId })
+        await salesOrderCollection.update(id, quotePayload)
         queryClient.invalidateQueries({ queryKey: ['sales-orders'] })
         queryClient.invalidateQueries({ queryKey: ['sales-orders', id] })
+        setDoc(savedDoc)
+        setTemplateDirty(false)
         toast.success(t('quotes.saved', { defaultValue: 'Quote saved' }))
         setJustSaved(true)
         window.setTimeout(() => setJustSaved(false), 2000)
@@ -451,37 +622,80 @@ export function QuoteBuild() {
         </div>
 
         <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1.5">
-                <LayoutTemplate className="size-4" />
-                {t('quotes.templates', { defaultValue: 'Templates' })}
+          <Popover open={templatesOpen} onOpenChange={setTemplatesOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="max-w-[260px] gap-1.5">
+                <LayoutTemplate className="size-4 shrink-0" />
+                <span className="shrink-0">
+                  {t('quotes.templates', { defaultValue: 'Templates' })}
+                </span>
+                <span className="min-w-0 truncate rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+                  {selectedTemplateName}
+                </span>
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {TEMPLATE_PRESETS.map(preset => (
-                <DropdownMenuItem
-                  key={preset.id}
-                  onSelect={() => setTemplate(preset.body)}>
-                  {preset.name}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-[340px] p-2">
+              <div className="px-1.5 pb-2">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
+                  {t('quotes.selectedTemplate', {
+                    defaultValue: 'Selected template'
+                  })}
+                </div>
+                <div className="mt-0.5 truncate text-sm font-medium">
+                  {selectedTemplateName}
+                </div>
+              </div>
+              <div className="grid gap-1.5">
+                {templateOptions.map((preset) => {
+                  const selected = preset.id === selectedTemplateId
 
-          <Button
-            onClick={handleSave}
-            disabled={saving}
-            className={cn(justSaved && 'bg-emerald-600 hover:bg-emerald-600')}>
-            {saving ? (
-              <Loader2 className="mr-2 size-4 animate-spin" />
-            ) : justSaved ? (
-              <Check className="mr-2 size-4" />
-            ) : null}
-            {isNew
-              ? t('quotes.createQuote', { defaultValue: 'Create quote' })
-              : t('quotes.updateQuote', { defaultValue: 'Update' })}
-          </Button>
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => selectTemplate(preset)}
+                      className={cn(
+                        'rounded-lg border p-3 text-left transition-colors hover:bg-muted/40',
+                        selected
+                          ? 'border-primary bg-primary/5 ring-2 ring-primary/15'
+                          : 'border-border bg-background'
+                      )}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <span className="truncate text-sm font-semibold">
+                              {preset.name}
+                            </span>
+                            {preset.isDefault && (
+                              <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                                {t('quotes.wizard.defaultTemplate', {
+                                  defaultValue: 'Default'
+                                })}
+                              </span>
+                            )}
+                          </div>
+                          <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">
+                            {preset.description}
+                          </p>
+                        </div>
+                        <span
+                          className={cn(
+                            'mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border',
+                            selected &&
+                            'border-primary bg-primary text-primary-foreground'
+                          )}>
+                          {selected && <Check className="size-3" />}
+                        </span>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </PopoverContent>
+          </Popover>
 
           <Button
             variant="outline"
@@ -503,136 +717,157 @@ export function QuoteBuild() {
       {!ready ? (
         <Skeleton className="h-[36rem] w-full" />
       ) : (
-        <div className="grid min-h-0 flex-1 gap-4 overflow-hidden lg:grid-cols-[360px_minmax(0,1fr)]">
+        <div className="grid min-h-0 flex-1 gap-4 overflow-hidden lg:grid-cols-[320px_minmax(0,1fr)]">
           {/* Left: customer, line items (high), then document fields. */}
-          <div className="min-h-0 space-y-3 overflow-auto pr-1">
-            <Card>
-              <CardContent className="space-y-3 p-4">
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
-                  {t('quotes.customer', { defaultValue: 'Customer' })}
-                </div>
-                <CustomerPicker
-                  value={customerId}
-                  selectedName={customerName}
-                  invalid={!customerId}
-                  onSelect={(c) => {
-                    setCustomerId(c.id)
-                    setCustomerName(c.name)
-                  }} />
-              </CardContent>
-            </Card>
+          <div className="flex min-h-0 flex-col overflow-hidden">
+            <div className="min-h-0 flex-1 space-y-3 overflow-auto pr-1">
+              <Card>
+                <CardContent className="space-y-3 p-4">
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
+                    {t('quotes.customer', { defaultValue: 'Customer' })}
+                  </div>
+                  <CustomerPicker
+                    value={customerId}
+                    selectedName={customerName}
+                    invalid={!customerId}
+                    onSelect={(c) => {
+                      setCustomerId(c.id)
+                      setCustomerName(c.name)
+                    }} />
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardContent className="space-y-3 p-4">
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
-                  {t('salesOrders.lineItems', { defaultValue: 'Line items' })}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {t('quotes.lineItemsSummary', {
-                    defaultValue: '{{count}} item(s) · {{total}}',
-                    count: itemCount,
-                    total: `${grandTotal.toLocaleString()} ${DEFAULT_CURRENCY}`
-                  })}
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full gap-1.5"
-                  disabled={isNew}
-                  title={
-                    isNew
-                      ? t('quotes.createBeforeLineItems', {
-                          defaultValue: 'Create the quote first'
-                        })
-                      : undefined
-                  }
-                  onClick={() => setLineItemsOpen(true)}>
-                  <Package className="size-4" />
-                  {t('quotes.editLineItems', {
-                    defaultValue: 'Edit line items'
-                  })}
-                </Button>
-              </CardContent>
-            </Card>
+              <Card>
+                <CardContent className="space-y-3 p-4">
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
+                    {t('salesOrders.lineItems', { defaultValue: 'Line items' })}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {t('quotes.lineItemsSummary', {
+                      defaultValue: '{{count}} item(s) · {{total}}',
+                      count: itemCount,
+                      total: `${grandTotal.toLocaleString()} ${DEFAULT_CURRENCY}`
+                    })}
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-1.5"
+                    disabled={isNew}
+                    title={
+                      isNew
+                        ? t('quotes.createBeforeLineItems', {
+                            defaultValue: 'Create the quote first'
+                          })
+                        : undefined
+                    }
+                    onClick={() => setLineItemsOpen(true)}>
+                    <Package className="size-4" />
+                    {t('quotes.editLineItems', {
+                      defaultValue: 'Edit line items'
+                    })}
+                  </Button>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardContent className="space-y-3 p-4">
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
-                  {t('quotes.docSection', { defaultValue: 'Quote details' })}
-                </div>
-                <Field
-                  label={t('quotes.docTitle', {
-                    defaultValue: 'Document title'
-                  })}>
-                  <Input
-                    value={doc.docTitle}
-                    onChange={e => setField('docTitle')(e.target.value)}
-                    placeholder={quoteTitle} />
-                </Field>
-                <Field
-                  label={t('quotes.validUntil', {
-                    defaultValue: 'Valid until'
-                  })}>
-                  <Input
-                    type="date"
-                    value={doc.validUntil}
-                    onChange={e => setField('validUntil')(e.target.value)} />
-                </Field>
-                <Field
-                  label={t('quotes.billingEmail', {
-                    defaultValue: 'Billing email'
-                  })}>
-                  <Input
-                    value={doc.billingEmail}
-                    onChange={e => setField('billingEmail')(e.target.value)}
-                    placeholder={(company as any)?.email ?? ''} />
-                </Field>
-                <Field
-                  label={t('quotes.billingAddress', {
-                    defaultValue: 'Billing address'
-                  })}>
-                  <Textarea
-                    value={doc.billingAddress}
-                    onChange={e => setField('billingAddress')(e.target.value)}
-                    placeholder={(company as any)?.address ?? ''}
-                    rows={2} />
-                </Field>
-              </CardContent>
-            </Card>
+              <Card>
+                <CardContent className="space-y-3 p-4">
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
+                    {t('quotes.docSection', { defaultValue: 'Quote details' })}
+                  </div>
+                  <Field
+                    label={t('quotes.docTitle', {
+                      defaultValue: 'Document title'
+                    })}>
+                    <Input
+                      value={doc.docTitle}
+                      onChange={e => setField('docTitle')(e.target.value)}
+                      placeholder={quoteTitle} />
+                  </Field>
+                  <Field
+                    label={t('quotes.validUntil', {
+                      defaultValue: 'Valid until'
+                    })}>
+                    <Input
+                      type="date"
+                      value={doc.validUntil}
+                      onChange={e => setField('validUntil')(e.target.value)} />
+                  </Field>
+                  <Field
+                    label={t('quotes.billingEmail', {
+                      defaultValue: 'Billing email'
+                    })}>
+                    <Input
+                      value={doc.billingEmail}
+                      onChange={e => setField('billingEmail')(e.target.value)}
+                      placeholder={(company as any)?.email ?? ''} />
+                  </Field>
+                  <Field
+                    label={t('quotes.billingAddress', {
+                      defaultValue: 'Billing address'
+                    })}>
+                    <Textarea
+                      value={doc.billingAddress}
+                      onChange={e => setField('billingAddress')(e.target.value)}
+                      placeholder={(company as any)?.address ?? ''}
+                      rows={2} />
+                  </Field>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardContent className="space-y-3 p-4">
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
-                  {t('quotes.content', { defaultValue: 'Content' })}
-                </div>
-                <Field
-                  label={t('quotes.introNote', {
-                    defaultValue: 'Intro / header note'
-                  })}>
-                  <Textarea
-                    value={doc.intro}
-                    onChange={e => setField('intro')(e.target.value)}
-                    rows={3} />
-                </Field>
-                <Field
-                  label={t('quotes.termsNote', {
-                    defaultValue: 'Terms & conditions'
-                  })}>
-                  <Textarea
-                    value={doc.terms}
-                    onChange={e => setField('terms')(e.target.value)}
-                    rows={3} />
-                </Field>
-              </CardContent>
-            </Card>
+              <Card>
+                <CardContent className="space-y-3 p-4">
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
+                    {t('quotes.content', { defaultValue: 'Content' })}
+                  </div>
+                  <Field
+                    label={t('quotes.introNote', {
+                      defaultValue: 'Intro / header note'
+                    })}>
+                    <Textarea
+                      value={doc.intro}
+                      onChange={e => setField('intro')(e.target.value)}
+                      rows={3} />
+                  </Field>
+                  <Field
+                    label={t('quotes.termsNote', {
+                      defaultValue: 'Terms & conditions'
+                    })}>
+                    <Textarea
+                      value={doc.terms}
+                      onChange={e => setField('terms')(e.target.value)}
+                      rows={3} />
+                  </Field>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="flex-none border-t bg-background/95 pt-3">
+              <Button
+                onClick={handleSave}
+                disabled={saving}
+                className={cn(
+                  'w-full',
+                  justSaved && 'bg-emerald-600 hover:bg-emerald-600'
+                )}>
+                {saving ? (
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                ) : justSaved ? (
+                  <Check className="mr-2 size-4" />
+                ) : null}
+                {isNew
+                  ? t('quotes.createQuote', { defaultValue: 'Create quote' })
+                  : t('quotes.updateQuote', { defaultValue: 'Update' })}
+              </Button>
+            </div>
           </div>
 
           {/* Right: the real template editor. */}
           <div className="min-h-0 overflow-hidden">
             <HtmlTemplateEditor
-              key={`${storageId}:${itemCount}:${company?.id ?? ''}`}
+              key={`${storageId}:${selectedTemplateId ?? 'fallback'}:${itemCount}:${company?.id ?? ''}`}
               value={template}
-              onChange={setTemplate}
+              onChange={handleTemplateChange}
               data={dataJson}
               variables={QUOTE_VARIABLES}
               extraHelpers={{ numberToWordsTR }}

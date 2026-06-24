@@ -9,14 +9,7 @@ import type { RecordDetailTab } from '@/components/crm/record-detail-layout'
 
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import {
-  Eye,
-  FileText,
-  Mail,
-  MessageSquare,
-  Package,
-  Pencil
-} from 'lucide-react'
+import { FileText, Mail, MessageSquare, Package } from 'lucide-react'
 
 import {
   RecordDetailLayout,
@@ -241,26 +234,18 @@ export function QuoteDetail() {
   const goBuild = () => navigate({ to: '/quotes/$quoteId/build', params: { quoteId: id } })
 
   const attributeActions = (
-    <div className="flex items-center justify-end gap-1.5">
+    <div className="flex w-full items-center justify-between gap-2">
       <Button
-        size="icon"
-        variant="outline"
-        className="size-7"
-        title={t('quotes.editInBuilder', { defaultValue: 'Edit in builder' })}
+        size="sm"
+        variant="ghost"
+        className="h-7 px-2 text-[13px] font-medium"
+        title={t('quotes.printPreview', { defaultValue: 'Print/Preview' })}
         onClick={goBuild}>
-        <Pencil className="size-3.5" />
+        {t('quotes.printPreview', { defaultValue: 'Print/Preview' })}
       </Button>
       <Button
         size="icon"
-        variant="outline"
-        className="size-7"
-        title={t('quotes.preview', { defaultValue: 'Preview' })}
-        onClick={goBuild}>
-        <Eye className="size-3.5" />
-      </Button>
-      <Button
-        size="icon"
-        variant="outline"
+        variant="ghost"
         className="size-7"
         title={t('quotes.sendMail', { defaultValue: 'Send mail' })}
         onClick={() => setMailOpen(true)}>
@@ -396,6 +381,7 @@ t
         record={flatRecord}
         onInlineSave={handleInlineSave}
         editTitle={t('common.editAll', { defaultValue: 'Edit All' })}
+        showAttributeEditAllButton={false}
         attributeActions={attributeActions}
         tabs={tabs}
         activeTab={activeTab}

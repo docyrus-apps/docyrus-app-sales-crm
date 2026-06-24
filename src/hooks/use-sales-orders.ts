@@ -20,7 +20,9 @@ export function useSalesOrders(params?: ICollectionListParams) {
           'sub_total',
           'tax_total',
           'grand_total',
-          'created_on'
+          'created_on',
+          'quote_template_id',
+          'quote_doc_json'
         ],
         orderBy: params?.orderBy || 'created_on DESC'
       })
@@ -48,7 +50,9 @@ export function useSalesOrder(orderId: string | undefined) {
           'tax_total',
           'grand_total',
           'created_on',
-          'record_owner'
+          'record_owner',
+          'quote_template_id',
+          'quote_doc_json'
         ]
       })
     },

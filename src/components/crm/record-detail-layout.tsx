@@ -219,6 +219,8 @@ interface RecordAttributePanelProps {
   notice?: ReactNode;
   /** Render fields display-only (no inline edit / no edit-all modal) */
   readOnly?: boolean;
+  /** Hide only the title-row edit-all pencil while keeping inline field editing */
+  showEditAllButton?: boolean;
   /** Per-slug custom renderers that replace the default inline editor */
   fieldRenderers?: FieldRendererMap;
 }
@@ -235,6 +237,7 @@ function RecordAttributePanel({
   onSave,
   editTitle,
   readOnly,
+  showEditAllButton = true,
   actions,
   notice,
   fieldRenderers
@@ -328,8 +331,7 @@ function RecordAttributePanel({
       `}
       </style>
 
-      {/* Record header — logo + title, aligned with the tabs card. The
-          edit-all pencil sits on the title's line, flush right. */}
+      {/* Record header — logo + title, aligned with the tabs card. */}
       <div className="flex items-start gap-2.5 border-b px-3 py-2.5">
         {onBack && (
           <button
@@ -346,7 +348,7 @@ function RecordAttributePanel({
             <div className="min-w-0 flex-1 truncate text-[15px] font-semibold leading-tight">
               {title}
             </div>
-            {!readOnly && (
+            {!readOnly && showEditAllButton && (
               <Button
                 id="edit-record-button"
                 variant="ghost"
@@ -690,6 +692,8 @@ export interface RecordDetailLayoutProps {
   attributeNotice?: ReactNode;
   /** Render the attribute panel display-only (e.g. converted/locked records) */
   readOnly?: boolean;
+  /** Hide only the title-row edit-all pencil while keeping inline field editing */
+  showAttributeEditAllButton?: boolean;
   /** Per-slug custom renderers that replace the default inline editor */
   fieldRenderers?: FieldRendererMap;
   /** Custom dialer launcher in the tab bar (overrides the default phone button) */
@@ -716,6 +720,7 @@ export function RecordDetailLayout({
   attributeActions,
   attributeNotice,
   readOnly,
+  showAttributeEditAllButton,
   fieldRenderers,
   dialerTrigger,
   tabs,
@@ -793,6 +798,7 @@ export function RecordDetailLayout({
       actions={attributeActions}
       notice={attributeNotice}
       readOnly={readOnly}
+      showEditAllButton={showAttributeEditAllButton}
       fieldRenderers={fieldRenderers} />
   )
 
