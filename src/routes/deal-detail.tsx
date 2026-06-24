@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import type { ColumnDef } from '@tanstack/react-table'
 import { useTranslation } from 'react-i18next'
@@ -47,6 +47,7 @@ import {
   type RecordDetailTab,
 } from '@/components/crm/record-detail-layout'
 import { RelatedContactsTable } from '@/components/crm/related-contacts-table'
+import { ContactFormDialog } from '@/components/contacts/contact-form-dialog'
 import { RelatedQuotesTable } from '@/components/crm/related-quotes-table'
 import { RecordActivityPanel } from '@/components/docyrus/record-activity-panel'
 import { RecordTasksPanel } from '@/components/crm/record-tasks-panel'
@@ -221,6 +222,8 @@ export function DealDetail() {
     appSlug: 'base_crm',
     dataSourceSlug: 'deal',
   })
+
+  const [addContactOpen, setAddContactOpen] = useState(false)
 
   const orgId =
     deal?.organization && typeof deal.organization === 'object'
@@ -745,7 +748,7 @@ export function DealDetail() {
             emptyLabel={t('deals.contacts.empty', {
               defaultValue: 'No contacts for this organization',
             })}
-            onAddContact={() => navigate({ to: '/contacts' })}
+            onAddContact={() => setAddContactOpen(true)}
             onOpenContact={(id) =>
               navigate({
                 to: '/contacts/$contactId',
@@ -1039,6 +1042,12 @@ export function DealDetail() {
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={handleTabChange}
+      />
+      <ContactFormDialog
+        open={addContactOpen}
+        onOpenChange={setAddContactOpen}
+        contact={orgId ? { organization: orgId } : undefined}
+        mode="create"
       />
     </PageContainer>
   )

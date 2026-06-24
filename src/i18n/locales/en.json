@@ -1157,7 +1157,8 @@
     "updatedSuccess": "Comment updated successfully",
     "updatedError": "Failed to update comment",
     "deletedSuccess": "Comment deleted successfully",
-    "deletedError": "Failed to delete comment"
+    "deletedError": "Failed to delete comment",
+    "unknownAuthor": "Unknown"
   },
   "files": {
     "title": "Files",
@@ -1169,7 +1170,9 @@
     "uploadError": "Failed to upload file",
     "deleteSuccess": "File deleted successfully",
     "deleteError": "Failed to delete file",
-    "downloadError": "Failed to download file"
+    "downloadError": "Failed to download file",
+    "dropHint": "Drag & drop files here, or",
+    "chooseFiles": "Choose files"
   },
   "table": {
     "noResults": "No results.",

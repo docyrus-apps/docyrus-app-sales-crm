@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { useTranslation } from 'react-i18next'
 import { useForm } from '@tanstack/react-form'
+import { useQuery } from '@tanstack/react-query'
 import { zodValidator } from '@tanstack/zod-form-adapter'
 import { Loader2 } from 'lucide-react'
 import type { CompanyFormData } from '@/schemas/company-schema'
@@ -19,7 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Combobox } from '@/components/ui/combobox-simple'
 import { companyFormSchema } from '@/schemas/company-schema'
+import { useBaseCountryCollection } from '@/collections'
 import { useCreateCompany, useUpdateCompany } from '@/hooks/use-companies'
 import { useEnumOptions } from '@/hooks/use-enums'
 
@@ -44,7 +47,20 @@ export function CompanyFormDialog({
   const { options: industryOptions = [] } = useEnumOptions('industry')
   const { options: statusOptions = [] } = useEnumOptions('status')
   const { options: typeOptions = [] } = useEnumOptions('type')
-  const { options: countryOptions = [] } = useEnumOptions('country')
+  const countriesCollection = useBaseCountryCollection()
+  const { data: countries = [] } = useQuery({
+    queryKey: ['base-country-options'],
+    queryFn: () =>
+      countriesCollection.list({
+        columns: ['id', 'name'],
+        orderBy: 'name ASC',
+        limit: 300,
+      }),
+  })
+  const countryOptions = countries.map((country) => ({
+    label: country.name,
+    value: country.id ?? '',
+  }))
 
   const form = useForm<CompanyFormData>({
     defaultValues: {
@@ -378,23 +394,15 @@ export function CompanyFormDialog({
                   <Label htmlFor={field.name}>
                     {t('companies.form.countryLabel')}
                   </Label>
-                  <Select
+                  <Combobox
+                    options={countryOptions}
                     value={field.state.value}
-                    onValueChange={field.handleChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t('companies.form.countryPlaceholder')}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {countryOptions.map((option: any) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    onValueChange={(value) => field.handleChange(value)}
+                    placeholder={t('companies.form.countryPlaceholder')}
+                    emptyText={t('common.noResults', {
+                      defaultValue: 'No results',
+                    })}
+                  />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
                       {typeof field.state.meta.errors[0] === 'string'

@@ -409,7 +409,7 @@ function DealsPageInner({
     enableViewSelect: false,
     listParams: {
       columns:
-        'id, name, autonumber_id, record_owner, expected_revenue, deal_value, stage, organization(id,name,company_logo), contact_person(id,name), hot_prospect, expected_closing_date, close_probability, customer_type, lead_source, created_on, last_modified_on, created_by, last_modified_by',
+        'id, name, autonumber_id, record_owner(id,firstname,lastname,email,photo), expected_revenue, deal_value, stage, organization(id,name,company_logo), contact_person(id,name), hot_prospect, expected_closing_date, close_probability, customer_type, lead_source, created_on, last_modified_on, created_by, last_modified_by',
       limit: 200,
     },
     searchPlaceholder: t('common.search', 'Search...'),

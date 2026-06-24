@@ -154,7 +154,7 @@ export function Activities() {
   const hasMore = activities.length === PAGE_SIZE
 
   return (
-    <>
+    <div className="flex min-h-0 flex-1 flex-col">
       <PageHeader
         title={t('activities.title')}
         icon={<Zap className="h-4 w-4 text-orange-500" />}
@@ -189,7 +189,7 @@ export function Activities() {
           </div>
         }
       />
-      <PageContainer>
+      <PageContainer className="min-h-0 flex-1 overflow-y-auto">
         {isLoading ? (
           <Card>
             <CardContent className="space-y-6 p-6">
@@ -259,7 +259,7 @@ export function Activities() {
           </div>
         )}
       </PageContainer>
-    </>
+    </div>
   )
 }
 

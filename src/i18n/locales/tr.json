@@ -1157,7 +1157,8 @@
     "updatedSuccess": "Yorum başarıyla güncellendi",
     "updatedError": "Yorum güncellenemedi",
     "deletedSuccess": "Yorum başarıyla silindi",
-    "deletedError": "Yorum silinemedi"
+    "deletedError": "Yorum silinemedi",
+    "unknownAuthor": "Bilinmiyor"
   },
   "files": {
     "title": "Dosyalar",
@@ -1169,7 +1170,9 @@
     "uploadError": "Dosya yüklenemedi",
     "deleteSuccess": "Dosya başarıyla silindi",
     "deleteError": "Dosya silinemedi",
-    "downloadError": "Dosya indirilemedi"
+    "downloadError": "Dosya indirilemedi",
+    "dropHint": "Dosyaları buraya sürükleyip bırakın veya",
+    "chooseFiles": "Dosya seç"
   },
   "table": {
     "noResults": "Sonuç yok.",

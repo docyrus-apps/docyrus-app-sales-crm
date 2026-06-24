@@ -541,24 +541,16 @@ export function LeadFormDialog({
                       <Label htmlFor={field.name}>
                         {t('leads.form.countryLabel')}
                       </Label>
-                      <Select
+                      <Combobox
+                        options={countryOptions}
                         value={field.state.value}
                         disabled={isConverted}
-                        onValueChange={field.handleChange}
-                      >
-                        <SelectTrigger>
-                          <SelectValue
-                            placeholder={t('leads.form.countryPlaceholder')}
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {countryOptions.map((option: any) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        onValueChange={(value) => field.handleChange(value)}
+                        placeholder={t('leads.form.countryPlaceholder')}
+                        emptyText={t('common.noResults', {
+                          defaultValue: 'No results',
+                        })}
+                      />
                     </Field>
                   )}
                 </form.Field>

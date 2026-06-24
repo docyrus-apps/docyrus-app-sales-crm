@@ -256,8 +256,19 @@ function Kanban<T>(props: KanbanProps<T>) {
   const lastOverIdRef = useRef<UniqueIdentifier | null>(null)
   const hasMovedRef = useRef(false)
   const sensors = useSensors(
-    useSensor(MouseSensor),
-    useSensor(TouchSensor),
+    /*
+     * Require a small pointer movement before a drag activates. Cards are
+     * draggable as a whole (`asHandle`), so without an activation constraint
+     * dnd-kit swallows plain clicks as drags — breaking card-level `onClick`
+     * (e.g. open detail page) and menu actions. The distance/delay let taps
+     * and clicks through while still enabling drag on intentional movement.
+     */
+    useSensor(MouseSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 8 },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter,
     }),

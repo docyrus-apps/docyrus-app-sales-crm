@@ -18,16 +18,50 @@ interface CommentsPanelProps {
   recordId: string
 }
 
+interface CommentAuthor {
+  id?: string
+  name?: string
+  firstname?: string
+  lastname?: string
+  email?: string
+  avatar?: string
+  photo?: string
+}
+
 interface Comment {
   id: string
   message: string
   created_on: string
-  created_by?: {
-    id: string
-    name?: string
-    email?: string
-    avatar?: string
+  // The API may expose the author under `created_by` or `created_by_user`
+  // (the latter mirrors the audit-activity shape), and `created_by` is
+  // sometimes just the raw user id string.
+  created_by?: CommentAuthor | string
+  created_by_user?: CommentAuthor
+}
+
+/** Pick the first expanded author object the comment exposes. */
+function resolveAuthor(comment: Comment): CommentAuthor | undefined {
+  if (comment.created_by && typeof comment.created_by === 'object') {
+    return comment.created_by
   }
+
+  return comment.created_by_user
+}
+
+/** Resolve a display name from the various shapes the API may return. */
+function authorName(comment: Comment): string | undefined {
+  const author = resolveAuthor(comment)
+  if (!author) return undefined
+
+  const full = [author.firstname, author.lastname].filter(Boolean).join(' ')
+
+  return author.name?.trim() || full || author.email || undefined
+}
+
+function authorAvatar(comment: Comment): string | undefined {
+  const author = resolveAuthor(comment)
+
+  return author?.photo || author?.avatar || undefined
 }
 
 export function CommentsPanel({
@@ -197,16 +231,19 @@ export function CommentsPanel({
               <CardContent className="pt-6">
                 <div className="flex gap-3">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={comment.created_by?.avatar} />
+                    <AvatarImage src={authorAvatar(comment)} />
                     <AvatarFallback>
-                      {getInitials(comment.created_by?.name)}
+                      {getInitials(authorName(comment))}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium">
-                          {comment.created_by?.name ?? 'Unknown'}
+                          {authorName(comment) ??
+                            t('comments.unknownAuthor', {
+                              defaultValue: 'Unknown',
+                            })}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {formatDate(comment.created_on, {

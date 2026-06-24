@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { useEffect, useState } from 'react'
 import { useForm } from '@tanstack/react-form'
+import { useQuery } from '@tanstack/react-query'
 import { zodValidator } from '@tanstack/zod-form-adapter'
 import { useTranslation } from 'react-i18next'
 import { CalendarIcon, Loader2 } from 'lucide-react'
@@ -25,6 +26,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { dealFormSchema } from '@/schemas/deal-schema'
+import { useBaseCountryCollection } from '@/collections'
 import { useCreateDeal, useUpdateDeal } from '@/hooks/use-deals'
 import { useCompanies } from '@/hooks/use-companies'
 import { useContacts } from '@/hooks/use-contacts'
@@ -56,7 +58,20 @@ export function DealFormDialog({
   const { options: stageOptions = [] } = useEnumOptions('stage')
   const { options: leadSourceOptions = [] } = useEnumOptions('lead_source')
   const { options: customerTypeOptions = [] } = useEnumOptions('customer_type')
-  const { options: countryOptions = [] } = useEnumOptions('country')
+  const countriesCollection = useBaseCountryCollection()
+  const { data: countries = [] } = useQuery({
+    queryKey: ['base-country-options'],
+    queryFn: () =>
+      countriesCollection.list({
+        columns: ['id', 'name'],
+        orderBy: 'name ASC',
+        limit: 300,
+      }),
+  })
+  const countryOptions = countries.map((country) => ({
+    label: country.name,
+    value: country.id ?? '',
+  }))
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     deal?.expected_closing_date
@@ -206,6 +221,7 @@ export function DealFormDialog({
 
             {/* Stage Field */}
             <SelectFormField
+              required
               field={{
                 slug: 'stage',
                 name: t('deals.form.stageLabel'),
@@ -389,20 +405,32 @@ export function DealFormDialog({
             />
 
             {/* Country Field */}
-            <SelectFormField
-              field={{
-                slug: 'country',
-                name: t('deals.form.countryLabel'),
-                readOnly: false,
-              }}
-              form={form}
-              enumOptions={countryOptions.map((opt: any) => ({
-                id: opt.value,
-                name: opt.label,
-                color: opt.color,
-                icon: opt.icon,
-              }))}
-            />
+            <form.Field name="country">
+              {(field) => (
+                <Field>
+                  <Label htmlFor={field.name}>
+                    {t('deals.form.countryLabel')}
+                  </Label>
+                  <Combobox
+                    options={countryOptions}
+                    value={field.state.value}
+                    onValueChange={(value) => field.handleChange(value)}
+                    placeholder={t('deals.form.countryLabel')}
+                    emptyText={t('common.noResults', {
+                      defaultValue: 'No results',
+                    })}
+                  />
+                  {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          t('common.validationError')}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
 
             {/* Contact Person Field */}
             <form.Field name="contact_person">

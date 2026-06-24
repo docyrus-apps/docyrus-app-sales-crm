@@ -15,7 +15,11 @@ import { toast } from 'sonner'
 import { Button } from '@/components/animate-ui/components/buttons/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { FileUpload } from '@/components/ui/file-upload'
+import {
+  FileUpload,
+  FileUploadDropzone,
+  FileUploadTrigger,
+} from '@/components/ui/file-upload'
 import { getApiClient } from '@/lib/api'
 import { formatDate } from '@/lib/formatters'
 
@@ -220,12 +224,36 @@ export function FileAttachments({
         </CardHeader>
         <CardContent>
           <FileUpload
+            multiple
             maxFiles={10}
             maxSize={10 * 1024 * 1024} // 10MB
             accept={ACCEPTED_FILE_TYPES}
-            onDrop={handleUpload}
+            value={[]}
+            onValueChange={(accepted) => {
+              if (accepted.length > 0) void handleUpload(accepted)
+            }}
             disabled={uploading || uploadMutation.isPending}
-          />
+          >
+            <FileUploadDropzone className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed py-8 text-center">
+              <Upload className="h-8 w-8 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">
+                {t('files.dropHint', {
+                  defaultValue: 'Drag & drop files here, or',
+                })}
+              </p>
+              <FileUploadTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={uploading || uploadMutation.isPending}
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  {t('files.chooseFiles', { defaultValue: 'Choose files' })}
+                </Button>
+              </FileUploadTrigger>
+            </FileUploadDropzone>
+          </FileUpload>
         </CardContent>
       </Card>
 
