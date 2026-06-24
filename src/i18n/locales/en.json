@@ -22,6 +22,8 @@
     "pickADate": "Pick a date",
     "time": "Time",
     "back": "Back",
+    "previous": "Previous",
+    "next": "Next",
     "detail": "Detail",
     "home": "Home",
     "comingSoon": "Coming soon",
@@ -1004,6 +1006,33 @@
     "templateNames": {
       "standard": "Standard",
       "minimal": "Simple"
+    },
+    "wizard": {
+      "title": "New quote",
+      "description": "Choose the customer, price the offer, then select the document template.",
+      "stepCustomer": "Customer",
+      "stepPricing": "Pricing",
+      "stepTemplate": "Template",
+      "customerTitle": "Customer and basics",
+      "customerHelp": "Start with the account. Link a deal when this quote belongs to an opportunity.",
+      "linkedDeal": "Linked deal",
+      "optional": "Optional",
+      "selectDeal": "Select deal",
+      "searchDeal": "Search deals...",
+      "noDeals": "No deals found",
+      "customerPreviewTitle": "Keep the setup short",
+      "customerPreviewDescription": "The wizard only asks for the fields needed to create a usable quote. Everything else can be refined from the detail page or builder.",
+      "pricingTitle": "Line items",
+      "pricingHelp": "Add products, quantities, discounts and VAT before creating the quote.",
+      "pricingRequired": "Add at least one quote line first",
+      "productRequired": "Select a product for every quote line",
+      "lineCount": "{{count}} line(s)",
+      "templateTitle": "Choose a template",
+      "templateHelp": "The selected template is saved for the quote and opens in the builder later.",
+      "defaultTemplate": "Default",
+      "standardTemplateDescription": "Classic quote layout with customer, table and totals.",
+      "minimalTemplateDescription": "Compact quote layout focused on lines and total.",
+      "footerHint": "Create a quote in three short steps"
     }
   },
   "activities": {

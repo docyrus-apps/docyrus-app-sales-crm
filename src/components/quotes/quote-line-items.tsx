@@ -92,12 +92,13 @@ export function QuoteLineItems({ quoteId, readOnly }: QuoteLineItemsProps) {
   const { data: products } = useProducts({
     columns: [
 'id',
-'name',
 'product_code',
 'unit_price',
 'tax',
-'category'
-]
+'Unit'
+],
+    orderBy: 'product_code ASC',
+    limit: 500
   })
 
   const productCatalog = useMemo<Array<IProductCatalogItem>>(

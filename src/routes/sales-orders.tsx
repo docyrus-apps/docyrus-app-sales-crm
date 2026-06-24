@@ -25,6 +25,7 @@ import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useUpdateSalesOrder } from '@/hooks/use-sales-orders'
+import { QuoteCreateWizard } from '@/components/quotes/quote-create-wizard'
 import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 import { useDocyrusDataGrid } from '@/hooks/docyrus/use-docyrus-data-grid'
 import { useSeedDefaultViews } from '@/hooks/use-seed-default-views'
@@ -124,6 +125,7 @@ function SalesOrdersPageInner({
   const [pendingDelete, setPendingDelete] =
     useState<BaseCrmSalesOrderEntity | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isCreateWizardOpen, setIsCreateWizardOpen] = useState(false)
 
   const onView = useCallback(
     (order: BaseCrmSalesOrderEntity) => {
@@ -290,7 +292,7 @@ t
           <Button
             size="sm"
             className="gap-1.5"
-            onClick={() => navigate({ to: '/quotes/new', search: {} })}>
+            onClick={() => setIsCreateWizardOpen(true)}>
             <FileText className="size-4" />
             {t('quotes.newQuote', 'New quote')}
           </Button>
@@ -338,6 +340,12 @@ t
           isPending={isDeleting} />
 
         {wizard}
+
+        {isCreateWizardOpen && (
+          <QuoteCreateWizard
+            open={isCreateWizardOpen}
+            onOpenChange={setIsCreateWizardOpen} />
+        )}
       </PageContainer>
     </>
   )

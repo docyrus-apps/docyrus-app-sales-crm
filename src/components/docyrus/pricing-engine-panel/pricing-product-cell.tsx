@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { Check, ChevronsUpDown, Package } from 'lucide-react'
 
@@ -46,6 +46,20 @@ export function PricingProductCell({
   } = usePricingEngine()
 
   const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState('')
+  const filteredProducts = useMemo(() => {
+    if (!productCatalog) return []
+
+    const query = search.trim().toLowerCase()
+
+    if (!query) return productCatalog
+
+    return productCatalog.filter((product) =>
+      [product.name, product.category, product.id]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query)),
+    )
+  }, [productCatalog, search])
 
   const handleRemoteProductSelect = () => {
     if (!onProductSelect) return
@@ -54,7 +68,7 @@ export function PricingProductCell({
     })
   }
 
-  if (productCatalog && productCatalog.length > 0) {
+  if (productCatalog) {
     const selectedProduct = productId
       ? productCatalog.find((p) => p.id === productId)
       : undefined
@@ -80,38 +94,53 @@ export function PricingProductCell({
             <ChevronsUpDown className="ml-1 h-3.5 w-3.5 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-60 p-0" align="start">
-          <Command>
-            <CommandInput placeholder={tUi(locale, 'pepSearchProducts')} />
-            <CommandList>
-              <CommandEmpty>{tUi(locale, 'pepNoResults')}</CommandEmpty>
-              <CommandGroup>
-                {productCatalog.map((product) => (
-                  <CommandItem
-                    key={product.id}
-                    value={product.name}
-                    onSelect={() => {
-                      setLineItemFromProduct(lineId, product)
-                      setOpen(false)
-                    }}
-                  >
-                    <Check
-                      className={cn(
-                        'mr-2 h-3.5 w-3.5',
-                        productId === product.id ? 'opacity-100' : 'opacity-0',
-                      )}
-                    />
-                    <div className="flex flex-col">
-                      <span className="text-sm">{product.name}</span>
-                      {product.category && (
-                        <span className="text-xs text-muted-foreground">
-                          {product.category}
-                        </span>
-                      )}
-                    </div>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
+        <PopoverContent
+          className="w-80 overflow-hidden p-0"
+          align="start"
+          onWheelCapture={(event) => event.stopPropagation()}
+          onWheel={(event) => event.stopPropagation()}
+        >
+          <Command shouldFilter={false}>
+            <CommandInput
+              value={search}
+              onValueChange={setSearch}
+              placeholder={tUi(locale, 'pepSearchProducts')}
+            />
+            <CommandList className="max-h-[280px] overflow-y-auto overscroll-contain">
+              {filteredProducts.length === 0 ? (
+                <CommandEmpty>{tUi(locale, 'pepNoResults')}</CommandEmpty>
+              ) : (
+                <CommandGroup>
+                  {filteredProducts.map((product) => (
+                    <CommandItem
+                      key={product.id}
+                      value={product.id}
+                      onSelect={() => {
+                        setLineItemFromProduct(lineId, product)
+                        setOpen(false)
+                        setSearch('')
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          'mr-2 h-3.5 w-3.5',
+                          productId === product.id
+                            ? 'opacity-100'
+                            : 'opacity-0',
+                        )}
+                      />
+                      <div className="flex min-w-0 flex-col">
+                        <span className="truncate text-sm">{product.name}</span>
+                        {product.category && (
+                          <span className="truncate text-xs text-muted-foreground">
+                            {product.category}
+                          </span>
+                        )}
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
             </CommandList>
           </Command>
         </PopoverContent>

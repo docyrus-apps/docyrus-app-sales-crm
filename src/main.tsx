@@ -34,6 +34,7 @@ import { CalendarPage } from './routes/calendar.tsx'
 import { Products } from './routes/products.tsx'
 import { SalesOrders } from './routes/sales-orders.tsx'
 import { SalesOrderDetail } from './routes/sales-order-detail.tsx'
+import { QuoteCreatePage } from './routes/quote-create.tsx'
 import { QuoteDetail } from './routes/quote-detail.tsx'
 import { QuoteBuild } from './routes/quote-build.tsx'
 import { Contacts } from './routes/contacts.tsx'
@@ -150,7 +151,7 @@ const salesOrderDetailRoute = createRoute({
 const quoteNewRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/quotes/new',
-  component: QuoteBuild,
+  component: QuoteCreatePage,
   validateSearch: (
     search: Record<string, unknown>
   ): {

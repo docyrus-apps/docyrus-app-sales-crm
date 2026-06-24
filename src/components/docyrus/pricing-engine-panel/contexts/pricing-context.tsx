@@ -95,6 +95,7 @@ export interface PricingEngineProviderProps {
   value?: Partial<IPricingDocumentData>
   onLineItemsChange?: (items: ILineItem[]) => void
   onTotalsChange?: (totals: ITotals) => void
+  onDocumentChange?: (data: IPricingDocumentData) => void
   onSave?: (data: IPricingDocumentData) => void
   onSaveDraft?: (data: IPricingDocumentData) => void
   onProductSelect?: (
@@ -119,6 +120,7 @@ export function PricingEngineProvider({
   value: controlledValue,
   onLineItemsChange,
   onTotalsChange,
+  onDocumentChange,
   onSave,
   onSaveDraft,
   onProductSelect,
@@ -237,6 +239,10 @@ export function PricingEngineProvider({
       totals,
     ],
   )
+
+  useEffect(() => {
+    onDocumentChange?.(buildDocumentData())
+  }, [buildDocumentData, onDocumentChange])
 
   const addLineItem = useCallback(
     (overrides?: Partial<ILineItem>) => {

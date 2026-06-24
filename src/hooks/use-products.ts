@@ -11,21 +11,34 @@ export function useProducts(params?: ICollectionListParams) {
   return useQuery({
     queryKey: ['products', params],
     queryFn: async () => {
+      const defaultColumns = [
+        'id',
+        'product_code',
+        'unit_price',
+        'Unit',
+        'tax',
+        'created_on'
+      ]
+      const columns = (params?.columns || defaultColumns).filter(
+        column => !['name', 'category'].includes(column)
+      )
       const response = await productCollection.list({
         ...params,
-        columns: params?.columns || [
-          'id',
-          'product_code',
-          'unit_price',
-          'Unit',
-          'category',
-          'tax',
-          'created_on'
-        ],
+        columns,
         orderBy: params?.orderBy || 'created_on DESC'
       })
 
-      return response
+      if (Array.isArray(response)) return response
+
+      const wrapped = response as any
+
+      if (Array.isArray(wrapped?.data)) return wrapped.data
+      if (Array.isArray(wrapped?.items)) return wrapped.items
+      if (Array.isArray(wrapped?.records)) return wrapped.records
+      if (Array.isArray(wrapped?.data?.items)) return wrapped.data.items
+      if (Array.isArray(wrapped?.data?.records)) return wrapped.data.records
+
+      return []
     }
   })
 }
@@ -44,7 +57,6 @@ export function useProduct(productId: string | undefined) {
           'product_code',
           'unit_price',
           'Unit',
-          'category',
           'tax',
           'created_on'
         ]

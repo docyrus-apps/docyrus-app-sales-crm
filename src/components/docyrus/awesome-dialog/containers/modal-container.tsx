@@ -36,7 +36,11 @@ export function ModalContainer({
         height: '100vh',
         maxHeight: '100vh',
       }
-    : { width: MODAL_SIZES[size].width, maxHeight: MODAL_SIZES[size].maxHeight }
+    : {
+        width: MODAL_SIZES[size].width,
+        maxHeight: MODAL_SIZES[size].maxHeight,
+        ...(size === 'full' ? { height: MODAL_SIZES[size].maxHeight } : {}),
+      }
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>

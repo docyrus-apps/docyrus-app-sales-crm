@@ -74,6 +74,7 @@ export interface PricingEnginePanelProps extends Omit<
   viewMode?: TPricingViewMode
   onLineItemsChange?: (items: ILineItem[]) => void
   onTotalsChange?: (totals: ITotals) => void
+  onDocumentChange?: (data: IPricingDocumentData) => void
   onSave?: (data: IPricingDocumentData) => void
   onSaveDraft?: (data: IPricingDocumentData) => void
   onProductSelect?: (
@@ -116,6 +117,7 @@ const PricingEnginePanel = forwardRef<HTMLDivElement, PricingEnginePanelProps>(
       viewMode = 'net',
       onLineItemsChange,
       onTotalsChange,
+      onDocumentChange,
       onSave,
       onSaveDraft,
       onProductSelect,
@@ -167,6 +169,7 @@ const PricingEnginePanel = forwardRef<HTMLDivElement, PricingEnginePanelProps>(
         defaultCurrency={defaultCurrency}
         onLineItemsChange={onLineItemsChange}
         onTotalsChange={onTotalsChange}
+        onDocumentChange={onDocumentChange}
         onSave={onSave}
         onSaveDraft={onSaveDraft}
         onProductSelect={onProductSelect}

@@ -22,6 +22,8 @@
     "pickADate": "Tarih seçin",
     "time": "Zaman",
     "back": "Geri",
+    "previous": "Önceki",
+    "next": "Sonraki",
     "detail": "Detay",
     "home": "Ana Sayfa",
     "comingSoon": "Yakında",
@@ -1004,6 +1006,33 @@
     "templateNames": {
       "standard": "Standart",
       "minimal": "Sade"
+    },
+    "wizard": {
+      "title": "Yeni teklif",
+      "description": "Müşteriyi seçin, kalemleri fiyatlandırın, sonra belge şablonunu belirleyin.",
+      "stepCustomer": "Müşteri",
+      "stepPricing": "Fiyatlandırma",
+      "stepTemplate": "Şablon",
+      "customerTitle": "Müşteri ve temel bilgiler",
+      "customerHelp": "Önce hesabı seçin. Teklif bir fırsata bağlıysa ilgili deal'i ilişkilendirin.",
+      "linkedDeal": "İlgili deal",
+      "optional": "Opsiyonel",
+      "selectDeal": "Deal seçin",
+      "searchDeal": "Deal ara...",
+      "noDeals": "Deal bulunamadı",
+      "customerPreviewTitle": "Kurulumu kısa tut",
+      "customerPreviewDescription": "Wizard yalnızca kullanılabilir bir teklif oluşturmak için gereken alanları ister. Diğer her şey detay sayfasından veya builder'dan düzenlenebilir.",
+      "pricingTitle": "Teklif kalemleri",
+      "pricingHelp": "Teklifi oluşturmadan önce ürünleri, adetleri, indirimleri ve KDV'yi ekleyin.",
+      "pricingRequired": "Önce en az bir teklif kalemi ekleyin",
+      "productRequired": "Her teklif kalemi için ürün seçin",
+      "lineCount": "{{count}} kalem",
+      "templateTitle": "Şablon seçimi",
+      "templateHelp": "Seçilen şablon teklif için kaydedilir ve daha sonra builder'da açılır.",
+      "defaultTemplate": "Varsayılan",
+      "standardTemplateDescription": "Müşteri, tablo ve toplamları içeren klasik teklif yerleşimi.",
+      "minimalTemplateDescription": "Kalemlere ve toplam tutara odaklanan kompakt teklif yerleşimi.",
+      "footerHint": "Üç kısa adımda teklif oluştur"
     }
   },
   "activities": {
