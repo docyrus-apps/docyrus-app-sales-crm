@@ -25,14 +25,14 @@ import { Button } from '@/components/ui/button'
 import { CompanyLogoAvatar } from '@/components/companies/company-logo-avatar'
 import {
   RecordDetailLayout,
-  RecordKpiCard,
-  RecordTabPlaceholder
+  RecordKpiCard
 } from '@/components/crm/record-detail-layout'
 import { RelatedContactsTable } from '@/components/crm/related-contacts-table'
 import { RelatedDealsTable } from '@/components/crm/related-deals-table'
 import { RelatedQuotesTable } from '@/components/crm/related-quotes-table'
 import { RecordActivityPanel } from '@/components/docyrus/record-activity-panel'
 import { RecordTasksPanel } from '@/components/crm/record-tasks-panel'
+import { RecordNotesPanel } from '@/components/crm/record-notes-panel'
 import { LocationField } from '@/components/crm/location-field'
 import { useDialer } from '@/components/dialer/dialer-widget'
 import { useWebphone } from '@/components/webphone/webphone-context'
@@ -554,13 +554,13 @@ export function CompanyDetail() {
         value: 'notes',
         label: t('companies.tabs.notes', { defaultValue: 'Notes' }),
         icon: <StickyNote className="size-3.5" />,
+        bare: true,
         content: (
-          <RecordTabPlaceholder
-            icon={<StickyNote className="size-5" />}
-            title={t('common.comingSoon', { defaultValue: 'Coming soon' })}
-            description={t('common.notesComingSoon', {
-              defaultValue: 'Notes will be available here soon.'
-            })} />
+          <RecordNotesPanel
+            appSlug="base"
+            dataSource="organization"
+            recordId={companyId}
+            recordLabel={companyName} />
         )
       },
       {
@@ -601,7 +601,8 @@ export function CompanyDetail() {
     leadsLoading,
     activities,
     activitiesLoading,
-    companyId
+    companyId,
+    companyName
   ])
 
   /*

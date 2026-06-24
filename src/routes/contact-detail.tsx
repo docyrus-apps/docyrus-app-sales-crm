@@ -31,6 +31,7 @@ import {
 import { RelatedDealsTable } from '@/components/crm/related-deals-table'
 import { RecordActivityPanel } from '@/components/docyrus/record-activity-panel'
 import { RecordTasksPanel } from '@/components/crm/record-tasks-panel'
+import { RecordNotesPanel } from '@/components/crm/record-notes-panel'
 import { ContactNameField } from '@/components/crm/contact-name-field'
 import { useDialer } from '@/components/dialer/dialer-widget'
 import { useWebphone } from '@/components/webphone/webphone-context'
@@ -385,13 +386,13 @@ statusEntities
         value: 'notes',
         label: t('contacts.tabs.notes', { defaultValue: 'Notes' }),
         icon: <StickyNote className="size-3.5" />,
+        bare: true,
         content: (
-          <RecordTabPlaceholder
-            icon={<StickyNote className="size-5" />}
-            title={t('common.comingSoon', { defaultValue: 'Coming soon' })}
-            description={t('common.notesComingSoon', {
-              defaultValue: 'Notes will be available here soon.'
-            })} />
+          <RecordNotesPanel
+            appSlug="base"
+            dataSource="contact"
+            recordId={contactId}
+            recordLabel={contactName} />
         )
       },
       {
@@ -428,6 +429,7 @@ statusEntities
     contact?.job_title,
     contact?.mobile,
     contactId,
+    contactName,
     webphone.enabled
   ])
 

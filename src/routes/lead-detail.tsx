@@ -31,6 +31,7 @@ import {
 } from '@/components/crm/record-detail-layout'
 import { RecordActivityPanel } from '@/components/docyrus/record-activity-panel'
 import { RecordTasksPanel } from '@/components/crm/record-tasks-panel'
+import { RecordNotesPanel } from '@/components/crm/record-notes-panel'
 import { LocationField } from '@/components/crm/location-field'
 import { useDialer } from '@/components/dialer/dialer-widget'
 import { useWebphone } from '@/components/webphone/webphone-context'
@@ -517,13 +518,13 @@ contactOptions
         value: 'notes',
         label: t('leads.tabs.notes', { defaultValue: 'Notes' }),
         icon: <StickyNote className="size-3.5" />,
+        bare: true,
         content: (
-          <RecordTabPlaceholder
-            icon={<StickyNote className="size-5" />}
-            title={t('common.comingSoon', { defaultValue: 'Coming soon' })}
-            description={t('common.notesComingSoon', {
-              defaultValue: 'Notes will be available here soon.'
-            })} />
+          <RecordNotesPanel
+            appSlug="base_crm"
+            dataSource="leads"
+            recordId={leadId}
+            recordLabel={leadName} />
         )
       },
       {
@@ -555,7 +556,8 @@ contactOptions
     lead?.company_name_text,
     activities,
     activitiesLoading,
-    leadId
+    leadId,
+    leadName
   ])
 
   /*

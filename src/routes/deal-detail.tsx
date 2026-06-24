@@ -46,14 +46,14 @@ import { Button } from '@/components/ui/button'
 import {
   RecordDetailLayout,
   type RecordDetailTab,
-  RecordKpiCard,
-  RecordTabPlaceholder
+  RecordKpiCard
 } from '@/components/crm/record-detail-layout'
 import { RelatedContactsTable } from '@/components/crm/related-contacts-table'
 import { ContactFormDialog } from '@/components/contacts/contact-form-dialog'
 import { RelatedQuotesTable } from '@/components/crm/related-quotes-table'
 import { RecordActivityPanel } from '@/components/docyrus/record-activity-panel'
 import { RecordTasksPanel } from '@/components/crm/record-tasks-panel'
+import { RecordNotesPanel } from '@/components/crm/record-notes-panel'
 import { useDialer } from '@/components/dialer/dialer-widget'
 import { useWebphone } from '@/components/webphone/webphone-context'
 import { PageContainer } from '@/components/layout/page-container'
@@ -908,13 +908,13 @@ export function DealDetail() {
         value: 'notes',
         label: t('deals.tabs.notes', { defaultValue: 'Notes' }),
         icon: <StickyNote className="size-3.5" />,
+        bare: true,
         content: (
-          <RecordTabPlaceholder
-            icon={<StickyNote className="size-5" />}
-            title={t('common.comingSoon', { defaultValue: 'Coming soon' })}
-            description={t('common.notesComingSoon', {
-              defaultValue: 'Notes will be available here soon.'
-            })} />
+          <RecordNotesPanel
+            appSlug="base_crm"
+            dataSource="deal"
+            recordId={dealId}
+            recordLabel={dealTitle} />
         )
       },
       {
@@ -960,7 +960,8 @@ export function DealDetail() {
     ordersGridProps,
     dealQuotes,
     dealQuotesLoading,
-    dealId
+    dealId,
+    dealTitle
   ])
 
   const attributeActions = (
