@@ -107,12 +107,7 @@ export function FileAttachments({
 
       return await apiClient.post(
         `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/files/upload`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        }
+        formData
       )
     },
     onSuccess: () => {

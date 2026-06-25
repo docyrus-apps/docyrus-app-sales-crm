@@ -118,8 +118,7 @@ export function useUploadCompanyLogo() {
 
       const uploadResponse = await apiClient.post(
         '/v1/apps/base/data-sources/organization/files/upload',
-        formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } }
+        formData
       )
 
       // The endpoint may return the file object directly or wrapped in an array.

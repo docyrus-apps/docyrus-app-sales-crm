@@ -322,10 +322,10 @@ mode
                   defaultValue: 'Contact information'
                 })}
               </h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <form.Field name="name">
                   {field => (
-                    <Field className="col-span-2">
+                    <Field className="md:col-span-2">
                       <Label htmlFor={field.name}>
                         {t('leads.form.contactNameLabel', {
                           defaultValue: 'Contact name'
@@ -393,8 +393,10 @@ mode
                         {t('leads.form.phoneLabel')}
                       </Label>
                       <PhoneInput
+                        id={field.name}
                         value={field.state.value}
                         disabled={isConverted}
+                        invalid={Boolean(field.state.meta.errors?.[0])}
                         onValueChange={field.handleChange}
                         placeholder={t('leads.form.phonePlaceholder')} />
                     </Field>
@@ -409,10 +411,10 @@ mode
                   defaultValue: 'Company information'
                 })}
               </h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <form.Field name="company_name_text">
                   {field => (
-                    <Field className="col-span-2">
+                    <Field className="md:col-span-2">
                       <Label htmlFor={field.name}>
                         {t('leads.form.companyLabel')}
                       </Label>
@@ -455,8 +457,10 @@ mode
                         })}
                       </Label>
                       <PhoneInput
+                        id={field.name}
                         value={field.state.value}
                         disabled={isConverted}
+                        invalid={Boolean(field.state.meta.errors?.[0])}
                         onValueChange={field.handleChange} />
                     </Field>
                   )}
@@ -464,7 +468,7 @@ mode
 
                 <form.Field name="website">
                   {field => (
-                    <Field className="col-span-2">
+                    <Field className="md:col-span-2">
                       <Label htmlFor={field.name}>
                         {t('leads.form.websiteLabel')}
                       </Label>
@@ -481,7 +485,7 @@ mode
 
                 <form.Field name="address">
                   {field => (
-                    <Field className="col-span-2">
+                    <Field className="md:col-span-2">
                       <Label htmlFor={field.name}>
                         {t('leads.form.addressLabel')}
                       </Label>
@@ -604,7 +608,7 @@ mode
                   )}
                 </form.Field>
 
-                <div className="col-span-2">
+                <div className="md:col-span-2">
                   <DynamicFormField
                     field={productTagField}
                     form={form}
@@ -620,7 +624,7 @@ mode
                   defaultValue: 'Qualification'
                 })}
               </h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <form.Field name="lead_status">
                   {field => (
                     <Field>
@@ -726,7 +730,7 @@ mode
                   {leadStatus => isDisqualifiedStatus(leadStatus) ? (
                       <form.Field name="lost_reason">
                         {field => (
-                          <Field className="col-span-2">
+                          <Field className="md:col-span-2">
                             <Label htmlFor={field.name}>
                               {t('leads.form.lostReasonLabel', {
                                 defaultValue: 'Lost reason'
@@ -754,7 +758,7 @@ mode
 
                 <form.Field name="contact_message">
                   {field => (
-                    <Field className="col-span-2">
+                    <Field className="md:col-span-2">
                       <Label htmlFor={field.name}>
                         {t('leads.form.qualificationNotesLabel', {
                           defaultValue: 'Qualification notes'

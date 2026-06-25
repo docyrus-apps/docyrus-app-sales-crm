@@ -26,7 +26,6 @@ import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useUpdateProduct } from '@/hooks/use-products'
-import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 import { useDocyrusDataGrid } from '@/hooks/docyrus/use-docyrus-data-grid'
 import { useSeedDefaultViews } from '@/hooks/use-seed-default-views'
 import { useDocyrusDataImportWizard } from '@/hooks/use-docyrus-data-import-wizard'
@@ -152,12 +151,6 @@ function ProductsPageInner({
                 key: 'edit',
                 label: t('common.edit', 'Edit'),
                 icon: <Pencil className="size-4" />,
-                onSelect: onOpenEdit
-              },
-              {
-                key: 'open',
-                label: t('common.openPage', 'Open page'),
-                icon: <DocyrusIcon icon="huge sidebar-right-01" size="sm" />,
                 onSelect: onOpenEdit
               },
               {

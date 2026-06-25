@@ -102,11 +102,11 @@ export function ContactFormDialog({
     form.reset(initialValues)
     setSubmitError(null)
   }, [
-form,
-initialValues,
-open,
-mode
-])
+    form,
+    initialValues,
+    open,
+    mode
+  ])
 
   const companyOptions = companies.map((company: any) => ({
     label: company.name,
@@ -162,14 +162,18 @@ mode
           } />
 
         <AwesomeDialogBody>
-          <div className="space-y-4">
-            <FormSubmitAlert
-              title={t('common.validationError')}
-              message={submitError} />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {submitError ? (
+              <div className="md:col-span-2">
+                <FormSubmitAlert
+                  title={t('common.validationError')}
+                  message={submitError} />
+              </div>
+            ) : null}
             {/* Name Field */}
             <form.Field name="name">
               {field => (
-                <Field>
+                <Field className="md:col-span-2">
                   <Label htmlFor={field.name}>
                     {t('contacts.form.nameLabel')}{' '}
                     <span className="text-destructive">*</span>
@@ -248,8 +252,10 @@ mode
                     {t('contacts.form.mobileLabel')}
                   </Label>
                   <PhoneInput
+                    id={field.name}
                     value={field.state.value}
-                    onChange={field.handleChange}
+                    invalid={Boolean(field.state.meta.errors?.[0])}
+                    onValueChange={field.handleChange}
                     placeholder={t('contacts.form.mobilePlaceholder')} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">

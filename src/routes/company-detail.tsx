@@ -27,6 +27,7 @@ import {
   RecordDetailLayout,
   RecordKpiCard
 } from '@/components/crm/record-detail-layout'
+import { ContactAddDialog } from '@/components/crm/contact-add-dialog'
 import { RelatedContactsTable } from '@/components/crm/related-contacts-table'
 import { RelatedDealsTable } from '@/components/crm/related-deals-table'
 import { RelatedQuotesTable } from '@/components/crm/related-quotes-table'
@@ -44,7 +45,6 @@ import { useLeads } from '@/hooks/use-leads'
 import { useEnumEntities } from '@/hooks/use-enums'
 import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
 import { useRecordActivities } from '@/hooks/use-record-activities'
-import { ContactFormDialog } from '@/components/contacts/contact-form-dialog'
 import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
 import { mergeCurrentEnumOption } from '@/lib/enum-options'
@@ -737,11 +737,11 @@ export function CompanyDetail() {
         activeTab={activeTab}
         onTabChange={handleTabChange} />
 
-      <ContactFormDialog
+      <ContactAddDialog
         open={addContactOpen}
         onOpenChange={setAddContactOpen}
-        contact={{ organization: company }}
-        mode="create" />
+        organization={company}
+        existingContactIds={contacts.map(contact => contact.id)} />
     </PageContainer>
   )
 }

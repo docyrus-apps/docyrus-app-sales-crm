@@ -480,6 +480,7 @@ function PhoneInput(props: PhoneInputProps) {
     invalid,
     showFlag = true,
     className,
+    children,
     id,
     ref,
     ...rootProps
@@ -603,6 +604,8 @@ function PhoneInput(props: PhoneInputProps) {
   )
 
   const RootPrimitive = asChild ? SlotPrimitive.Slot : 'div'
+  const shouldRenderDefaultParts =
+    !asChild && React.Children.count(children) === 0
 
   return (
     <StoreContext.Provider value={store}>
@@ -613,14 +616,22 @@ function PhoneInput(props: PhoneInputProps) {
           data-disabled={disabled ? '' : undefined}
           data-invalid={invalid ? '' : undefined}
           data-readonly={readOnly ? '' : undefined}
-          id={rootId}
           {...rootProps}
           ref={composedRef}
           className={cn(
-            'relative flex h-10 w-full items-center rounded-md border border-input bg-background transition-colors has-[[data-slot=input-group-control]:focus-visible]:border-ring has-[[data-slot][aria-invalid=true]]:border-destructive has-[[data-slot=input-group-control]:focus-visible]:ring-[3px] has-[[data-slot=input-group-control]:focus-visible]:ring-ring/50 has-[[data-slot][aria-invalid=true]]:ring-[3px] has-[[data-slot][aria-invalid=true]]:ring-destructive/20 data-disabled:cursor-not-allowed data-disabled:opacity-50 dark:bg-input/30 dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40',
+            'relative flex h-9 w-full items-center rounded-md border border-input bg-background transition-colors has-[[data-slot=phone-input-field]:focus-visible]:border-ring has-[[data-slot][aria-invalid=true]]:border-destructive has-[[data-slot=phone-input-field]:focus-visible]:ring-[3px] has-[[data-slot=phone-input-field]:focus-visible]:ring-ring/50 has-[[data-slot][aria-invalid=true]]:ring-[3px] has-[[data-slot][aria-invalid=true]]:ring-destructive/20 data-disabled:cursor-not-allowed data-disabled:opacity-50 dark:bg-input/30 dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40',
             className,
           )}
-        />
+        >
+          {shouldRenderDefaultParts ? (
+            <>
+              <PhoneInputCountrySelect />
+              <PhoneInputField />
+            </>
+          ) : (
+            children
+          )}
+        </RootPrimitive>
         {isFormControl && (
           <VisuallyHiddenInput
             type="hidden"
@@ -769,6 +780,7 @@ function PhoneInputField(props: React.ComponentProps<'input'>) {
     invalid,
     readOnly,
     required,
+    rootId,
     placeholder,
     countries,
   } = usePhoneInputContext(FIELD_NAME)
@@ -816,6 +828,7 @@ function PhoneInputField(props: React.ComponentProps<'input'>) {
       readOnly={isReadOnly}
       required={isRequired}
       {...inputProps}
+      id={inputProps.id ?? rootId}
       ref={composedRef}
       className={cn(
         'h-full flex-1 rounded-r-md rounded-l-none border-0 bg-transparent shadow-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:bg-transparent aria-invalid:border-destructive aria-invalid:ring-[3px] aria-invalid:ring-destructive/20 dark:bg-transparent dark:aria-invalid:ring-destructive/40 dark:disabled:bg-transparent',

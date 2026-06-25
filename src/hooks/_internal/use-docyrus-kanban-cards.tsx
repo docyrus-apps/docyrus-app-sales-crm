@@ -33,6 +33,7 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/components/ui/tooltip'
+import { type DateFormatFn, useDateFormat } from '@/lib/use-date-format'
 import { cn } from '@/lib/utils'
 
 import { readUserMeta } from '@/hooks/use-docyrus-kanban'
@@ -166,8 +167,9 @@ export function KanbanCard<TData>({
     : null
   const user = userColumn ? deriveUser(record[userColumn]) : null
 
-  const created = stringify(record.created_on)
-  const modified = stringify(record.last_modified_on)
+  const { formatDateTime } = useDateFormat()
+  const created = formatAuditDate(record.created_on, formatDateTime)
+  const modified = formatAuditDate(record.last_modified_on, formatDateTime)
   const createdBy = deriveUser(record.created_by)
   const modifiedBy = deriveUser(record.last_modified_by)
 
@@ -361,4 +363,15 @@ function stringify(value: unknown): string | null {
   }
 
   return null
+}
+
+function formatAuditDate(
+  value: unknown,
+  formatDateTime: DateFormatFn
+): string | null {
+  if (value == null) return null
+
+  const formatted = formatDateTime(value).trim()
+
+  return formatted.length > 0 ? formatted : stringify(value)
 }

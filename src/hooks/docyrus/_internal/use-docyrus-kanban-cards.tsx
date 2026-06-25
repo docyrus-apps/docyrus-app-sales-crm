@@ -35,6 +35,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { type DateFormatFn, useDateFormat } from '@/lib/use-date-format'
 import { cn } from '@/lib/utils'
 
 /*
@@ -170,8 +171,9 @@ export function KanbanCard<TData>({
     : null
   const user = userColumn ? deriveUser(record[userColumn]) : null
 
-  const created = stringify(record.created_on)
-  const modified = stringify(record.last_modified_on)
+  const { formatDateTime } = useDateFormat()
+  const created = formatAuditDate(record.created_on, formatDateTime)
+  const modified = formatAuditDate(record.last_modified_on, formatDateTime)
   const createdBy = deriveUser(record.created_by)
   const modifiedBy = deriveUser(record.last_modified_by)
 
@@ -370,4 +372,31 @@ function stringify(value: unknown): string | null {
   }
 
   return null
+}
+
+function formatAuditDate(
+  value: unknown,
+  formatDateTime: DateFormatFn,
+): string | null {
+  if (value == null) return null
+
+  const rawValue = value instanceof Date ? value.toISOString() : String(value)
+  const formatted = formatDateTime(value).trim()
+
+  if (formatted && formatted !== rawValue.trim()) return formatted
+
+  const date = value instanceof Date ? value : new Date(rawValue)
+
+  if (!Number.isNaN(date.getTime())) {
+    return new Intl.DateTimeFormat(undefined, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(date)
+  }
+
+  return stringify(value)
 }

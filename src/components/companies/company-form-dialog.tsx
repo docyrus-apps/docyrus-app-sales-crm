@@ -202,11 +202,11 @@ mode
           <FormSubmitAlert
             title={t('common.validationError')}
             message={submitError} />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* Name Field */}
             <form.Field name="name">
               {field => (
-                <Field className="col-span-2">
+                <Field className="md:col-span-2">
                   <Label htmlFor={field.name}>
                     {t('companies.form.companyNameLabel')}{' '}
                     <span className="text-destructive">*</span>
@@ -368,7 +368,7 @@ mode
             {/* Website Field */}
             <form.Field name="website">
               {field => (
-                <Field className="col-span-2">
+                <Field className="md:col-span-2">
                   <Label htmlFor={field.name}>
                     {t('companies.form.websiteLabel')}
                   </Label>
@@ -393,7 +393,7 @@ mode
             {/* Address Field */}
             <form.Field name="address">
               {field => (
-                <Field className="col-span-2">
+                <Field className="md:col-span-2">
                   <Label htmlFor={field.name}>
                     {t('companies.form.addressLabel')}
                   </Label>

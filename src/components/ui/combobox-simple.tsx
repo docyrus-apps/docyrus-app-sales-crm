@@ -72,7 +72,7 @@ export function Combobox({
       </PopoverTrigger>
       <PopoverContent
         className={cn(
-          'w-(--radix-popover-trigger-width) min-w-[16rem] p-0',
+          'w-(--radix-popover-trigger-width) min-w-[16rem] max-h-[min(22rem,var(--radix-popover-content-available-height))] overflow-hidden p-0',
           contentClassName,
         )}
         align="start"

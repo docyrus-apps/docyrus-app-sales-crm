@@ -40,8 +40,8 @@ import {
   type RecordDetailTab,
   RecordKpiCard
 } from '@/components/crm/record-detail-layout'
+import { ContactAddDialog } from '@/components/crm/contact-add-dialog'
 import { RelatedContactsTable } from '@/components/crm/related-contacts-table'
-import { ContactFormDialog } from '@/components/contacts/contact-form-dialog'
 import { DealProductsPanel } from '@/components/deals/deal-products-panel'
 import { RelatedQuotesTable } from '@/components/crm/related-quotes-table'
 import { RecordActivityPanel } from '@/components/docyrus/record-activity-panel'
@@ -977,11 +977,11 @@ export function DealDetail() {
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={handleTabChange} />
-      <ContactFormDialog
+      <ContactAddDialog
         open={addContactOpen}
         onOpenChange={setAddContactOpen}
-        contact={orgId ? { organization: orgId } : undefined}
-        mode="create" />
+        organizationId={orgId}
+        existingContactIds={orgContacts.map(contact => contact.id)} />
     </PageContainer>
   )
 }

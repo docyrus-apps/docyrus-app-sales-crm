@@ -1652,7 +1652,7 @@ export function readUserMeta(
       : firstName
     : lastName
   const email = typeof obj.email === 'string' ? obj.email : null
-  const label = fullName ?? email ?? id
+  const label = fullName ?? email ?? (isUuidLike(id) ? 'User' : id)
   const imageUrl =
     typeof obj.photo === 'string'
       ? obj.photo
@@ -1663,6 +1663,12 @@ export function readUserMeta(
           : null
 
   return { id, label, imageUrl }
+}
+
+function isUuidLike(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value,
+  )
 }
 
 export type DocyrusKanbanDateGroupBy = 'day' | 'week' | 'month'

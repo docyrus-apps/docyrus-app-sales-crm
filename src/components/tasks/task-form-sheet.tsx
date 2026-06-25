@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import type { TaskFormData } from '@/schemas/task-schema'
 
@@ -72,6 +72,49 @@ interface TaskFormSheetProps {
   parentId?: string;
 }
 
+function getRelationValue(value: unknown): string {
+  if (value && typeof value === 'object' && 'id' in value) {
+    return String((value as { id?: string | null }).id ?? '')
+  }
+
+  return typeof value === 'string' ? value : ''
+}
+
+function getMultiRelationValues(value: unknown): Array<string> {
+  if (!Array.isArray(value)) return []
+
+  return value.flatMap((item) => {
+    const id = getRelationValue(item)
+
+    return id ? [id] : []
+  })
+}
+
+function parseOptionalDate(value: string | undefined): Date | undefined {
+  if (!value) return undefined
+
+  const date = new Date(value)
+
+  return Number.isNaN(date.getTime()) ? undefined : date
+}
+
+function buildTaskFormDefaults(task: any): TaskFormData {
+  return {
+    subject: task?.subject || '',
+    description: task?.description || '',
+    start_date: task?.start_date || undefined,
+    end_date: task?.end_date || undefined,
+    status: getRelationValue(task?.status),
+    priority: getRelationValue(task?.priority),
+    organization: getRelationValue(task?.organization),
+    record_owner: getRelationValue(task?.record_owner),
+    parent: getRelationValue(task?.parent),
+    section: getRelationValue(task?.section),
+    project: getRelationValue(task?.project),
+    followers: getMultiRelationValues(task?.followers)
+  }
+}
+
 export function TaskFormSheet({
   open,
   onOpenChange,
@@ -95,48 +138,17 @@ export function TaskFormSheet({
     dataSourceSlug: 'task'
   })
 
+  const initialValues = useMemo(() => buildTaskFormDefaults(task), [task])
   const [startDate, setStartDate] = useState<Date | undefined>(
-    task?.start_date ? new Date(task.start_date) : undefined
+    parseOptionalDate(initialValues.start_date)
   )
   const [endDate, setEndDate] = useState<Date | undefined>(
-    task?.end_date ? new Date(task.end_date) : undefined
+    parseOptionalDate(initialValues.end_date)
   )
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const form = useForm<TaskFormData>({
-    defaultValues: {
-      subject: task?.subject || '',
-      description: task?.description || '',
-      start_date: task?.start_date || undefined,
-      end_date: task?.end_date || undefined,
-      status:
-        typeof task?.status === 'object' ? task.status.id : task?.status || '',
-      priority:
-        typeof task?.priority === 'object'
-          ? task.priority.id
-          : task?.priority || '',
-      organization:
-        typeof task?.organization === 'object'
-          ? task.organization.id
-          : task?.organization || '',
-      record_owner:
-        typeof task?.record_owner === 'object'
-          ? task.record_owner.id
-          : task?.record_owner || '',
-      parent:
-        typeof task?.parent === 'object' ? task.parent.id : task?.parent || '',
-      section:
-        typeof task?.section === 'object'
-          ? task.section.id
-          : task?.section || '',
-      project:
-        typeof task?.project === 'object'
-          ? task.project.id
-          : task?.project || '',
-      followers: Array.isArray(task?.followers)
-        ? task.followers.map((follower: any) => typeof follower === 'object' ? follower.id : follower)
-        : []
-    },
+    defaultValues: initialValues,
     validatorAdapter: zodValidator(),
     validators: {
       onChange: taskFormSchema,
@@ -170,19 +182,28 @@ export function TaskFormSheet({
   })
 
   useEffect(() => {
-    if (open) setSubmitError(null)
-  }, [open, mode, task?.id])
+    if (!open) return
+
+    form.reset(initialValues)
+    setStartDate(parseOptionalDate(initialValues.start_date))
+    setEndDate(parseOptionalDate(initialValues.end_date))
+    setSubmitError(null)
+  }, [
+    form,
+    initialValues,
+    open,
+    mode
+  ])
 
   useEffect(() => {
-    if (startDate) {
-      form.setFieldValue('start_date', startDate.toISOString())
-    }
+    form.setFieldValue(
+      'start_date',
+      startDate ? startDate.toISOString() : undefined
+    )
   }, [startDate, form])
 
   useEffect(() => {
-    if (endDate) {
-      form.setFieldValue('end_date', endDate.toISOString())
-    }
+    form.setFieldValue('end_date', endDate ? endDate.toISOString() : undefined)
   }, [endDate, form])
 
   const companyOptions = companies.map((company: any) => ({

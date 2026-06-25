@@ -245,7 +245,7 @@ mode
           <FormSubmitAlert
             title={t('common.validationError')}
             message={submitError} />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* Organization Field */}
             <form.Field name="organization">
               {field => (
@@ -349,7 +349,7 @@ mode
             {/* Close Probability Field */}
             <form.Field name="close_probability">
               {field => (
-                <Field className="col-span-2">
+                <Field className="md:col-span-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor={field.name}>
                       {t('deals.form.closeProbabilityLabel')}:{' '}
@@ -551,7 +551,7 @@ mode
             {/* Hot Prospect Field */}
             <form.Field name="hot_prospect">
               {field => (
-                <Field className="col-span-2">
+                <Field className="md:col-span-2">
                   <div className="flex items-center space-x-2">
                     <Switch
                       id={field.name}

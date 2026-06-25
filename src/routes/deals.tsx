@@ -343,12 +343,9 @@ t
           ? row.contact_person?.name
           : row.contact_person
       const dealValue = row.deal_value ?? row.expected_revenue ?? 0
-      const closeDate = row.expected_closing_date
-        ? new Date(row.expected_closing_date)
-        : null
       const closeDateLabel =
-        closeDate && !Number.isNaN(closeDate.getTime())
-          ? closeDate.toLocaleDateString()
+        row.expected_closing_date
+          ? formatDate(row.expected_closing_date)
           : t('deals.noCloseDate', 'No close date')
 
       return (
@@ -436,7 +433,7 @@ t
     enableViewSelect: false,
     listParams: {
       columns:
-        'id, name, autonumber_id, record_owner(id,firstname,lastname,email,photo), expected_revenue, deal_value, stage, organization(id,name,company_logo), contact_person(id,name), hot_prospect, expected_closing_date, close_probability, customer_type, lead_source, created_on, last_modified_on, created_by, last_modified_by',
+        'id, name, autonumber_id, record_owner(id,firstname,lastname,email,photo), expected_revenue, deal_value, stage, organization(id,name,company_logo), contact_person(id,name), hot_prospect, expected_closing_date, close_probability, customer_type, lead_source, created_on, last_modified_on, created_by(id,firstname,lastname,email,photo), last_modified_by(id,firstname,lastname,email,photo)',
       limit: 200
     },
     searchPlaceholder: t('common.search', 'Search...'),

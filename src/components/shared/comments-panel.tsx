@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useUsers } from '@/hooks/use-users'
 import { getApiClient } from '@/lib/api'
 import { formatDate } from '@/lib/formatters'
 
@@ -21,11 +22,13 @@ interface CommentsPanelProps {
 
 interface CommentAuthor {
   id?: string;
+  user_id?: string;
   name?: string;
   firstname?: string;
   lastname?: string;
   email?: string;
   avatar?: string;
+  avatar_url?: string;
   photo?: string;
 }
 
@@ -40,32 +43,70 @@ interface Comment {
    */
   created_by?: CommentAuthor | string;
   created_by_user?: CommentAuthor;
+  created_by_id?: string;
+  created_by_name?: string;
+  created_by_email?: string;
 }
 
 /** Pick the first expanded author object the comment exposes. */
-function resolveAuthor(comment: Comment): CommentAuthor | undefined {
+function resolveAuthor(
+  comment: Comment,
+  usersById: Map<string, CommentAuthor>
+): CommentAuthor | undefined {
   if (comment.created_by && typeof comment.created_by === 'object') {
     return comment.created_by
   }
 
-  return comment.created_by_user
+  if (comment.created_by_user) return comment.created_by_user
+
+  if (comment.created_by_name || comment.created_by_email) {
+    return {
+      id: comment.created_by_id,
+      name: comment.created_by_name,
+      email: comment.created_by_email
+    }
+  }
+
+  const rawId =
+    typeof comment.created_by === 'string'
+      ? comment.created_by
+      : comment.created_by_id
+
+  return rawId ? usersById.get(rawId) : undefined
 }
 
 /** Resolve a display name from the various shapes the API may return. */
-function authorName(comment: Comment): string | undefined {
-  const author = resolveAuthor(comment)
+function authorName(
+  comment: Comment,
+  usersById: Map<string, CommentAuthor>
+): string | undefined {
+  const author = resolveAuthor(comment, usersById)
 
-  if (!author) return undefined
+  if (!author) {
+    return typeof comment.created_by === 'string' &&
+      !isUuidLike(comment.created_by)
+      ? comment.created_by
+      : undefined
+  }
 
   const full = [author.firstname, author.lastname].filter(Boolean).join(' ')
 
   return author.name?.trim() || full || author.email || undefined
 }
 
-function authorAvatar(comment: Comment): string | undefined {
-  const author = resolveAuthor(comment)
+function authorAvatar(
+  comment: Comment,
+  usersById: Map<string, CommentAuthor>
+): string | undefined {
+  const author = resolveAuthor(comment, usersById)
 
-  return author?.photo || author?.avatar || undefined
+  return author?.photo || author?.avatar || author?.avatar_url || undefined
+}
+
+function isUuidLike(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value
+  )
 }
 
 export function CommentsPanel({
@@ -75,9 +116,21 @@ export function CommentsPanel({
 }: CommentsPanelProps) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
+  const { data: users = [] } = useUsers()
   const [newComment, setNewComment] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingBody, setEditingBody] = useState('')
+  const usersById = useMemo(() => {
+    const map = new Map<string, CommentAuthor>()
+
+    for (const user of users as Array<CommentAuthor>) {
+      const id = user.id ?? user.user_id
+
+      if (id) map.set(id, user)
+    }
+
+    return map
+  }, [users])
 
   // Fetch comments
   const {
@@ -235,82 +288,85 @@ export function CommentsPanel({
       {/* Comment List */}
       {comments && comments.length > 0 ? (
         <div className="space-y-4">
-          {comments.map(comment => (
-            <Card key={comment.id}>
-              <CardContent className="pt-6">
-                <div className="flex gap-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={authorAvatar(comment)} />
-                    <AvatarFallback>
-                      {getInitials(authorName(comment))}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium">
-                          {authorName(comment) ??
-                            t('comments.unknownAuthor', {
-                              defaultValue: 'Unknown'
+          {comments.map((comment) => {
+            const name = authorName(comment, usersById)
+            const avatar = authorAvatar(comment, usersById)
+
+            return (
+              <Card key={comment.id}>
+                <CardContent className="pt-6">
+                  <div className="flex gap-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={avatar} />
+                      <AvatarFallback>{getInitials(name)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium">
+                            {name ??
+                              t('comments.unknownAuthor', {
+                                defaultValue: 'Unknown'
+                              })}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(comment.created_on, {
+                              format: 'relative'
                             })}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatDate(comment.created_on, {
-                            format: 'relative'
-                          })}
-                        </p>
-                      </div>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(comment)}
-                          disabled={editingId === comment.id}>
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteMutation.mutate(comment.id)}
-                          disabled={deleteMutation.isPending}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    {editingId === comment.id ? (
-                      <div className="space-y-2">
-                        <Textarea
-                          value={editingBody}
-                          onChange={e => setEditingBody(e.target.value)}
-                          rows={3}
-                          className="resize-none" />
-                        <div className="flex gap-2">
+                          </p>
+                        </div>
+                        <div className="flex gap-1">
                           <Button
+                            variant="ghost"
                             size="sm"
-                            onClick={() => handleUpdate(comment.id)}
-                            disabled={updateMutation.isPending || !editingBody.trim()}>
-                            Save
+                            onClick={() => handleEdit(comment)}
+                            disabled={editingId === comment.id}>
+                            <Edit2 className="h-4 w-4" />
                           </Button>
                           <Button
+                            variant="ghost"
                             size="sm"
-                            variant="outline"
-                            onClick={handleCancelEdit}
-                            disabled={updateMutation.isPending}>
-                            <X className="mr-1 h-4 w-4" />
-                            Cancel
+                            onClick={() => deleteMutation.mutate(comment.id)}
+                            disabled={deleteMutation.isPending}>
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
-                    ) : (
-                      <p className="text-sm whitespace-pre-wrap">
-                        {comment.message}
-                      </p>
-                    )}
+                      {editingId === comment.id ? (
+                        <div className="space-y-2">
+                          <Textarea
+                            value={editingBody}
+                            onChange={e => setEditingBody(e.target.value)}
+                            rows={3}
+                            className="resize-none" />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleUpdate(comment.id)}
+                              disabled={updateMutation.isPending || !editingBody.trim()}>
+                              Save
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={handleCancelEdit}
+                              disabled={updateMutation.isPending}>
+                              <X className="mr-1 h-4 w-4" />
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm whitespace-pre-wrap">
+                          {comment.message}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
       ) : (
         <Card>
