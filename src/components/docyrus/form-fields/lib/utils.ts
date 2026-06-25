@@ -9,7 +9,7 @@ import { type IFieldType, type EnumOption } from '../types'
 export function shouldRenderEnumOptionChip(
   option: EnumOption | null | undefined,
 ): boolean {
-  return Boolean(option?.icon && option?.color)
+  return Boolean(option?.icon || option?.color)
 }
 
 /** Flatten nested options into an ordered list with depth info for tree rendering. */

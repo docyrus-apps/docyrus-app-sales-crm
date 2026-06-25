@@ -38,7 +38,6 @@ const SEGMENT_BREADCRUMB_KEYS: Record<string, string> = {
   quotes: 'quotes.title',
   build: 'quotes.builderCrumb',
   activities: 'breadcrumb.activities',
-  reports: 'breadcrumb.reports',
   calls: 'webphone.calls.title',
   'app-config': 'appConfig.title',
   'field-sales': 'fieldSales.groupLabel',

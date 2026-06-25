@@ -40,7 +40,6 @@ import { QuoteBuild } from './routes/quote-build.tsx'
 import { Contacts } from './routes/contacts.tsx'
 import { ContactDetail } from './routes/contact-detail.tsx'
 import { Activities } from './routes/activities.tsx'
-import { Reports } from './routes/reports.tsx'
 import { AppConfigPage } from './routes/app-config.tsx'
 import { CallsPage } from './routes/calls.tsx'
 import { FieldSalesPlansPage } from './routes/field-sales-plans.tsx'
@@ -183,12 +182,6 @@ const activitiesRoute = createRoute({
   component: Activities
 })
 
-const reportsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/reports',
-  component: Reports
-})
-
 const appConfigRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/app-config',
@@ -268,7 +261,6 @@ const routeTree = rootRoute.addChildren([
   quoteEditRoute,
   quoteBuildRoute,
   activitiesRoute,
-  reportsRoute,
   appConfigRoute,
   callsRoute,
   fieldSalesPlansRoute,

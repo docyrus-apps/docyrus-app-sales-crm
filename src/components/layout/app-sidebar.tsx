@@ -7,7 +7,6 @@ import { type LucideIcon } from 'lucide-react'
 import {
   Activity,
   BadgeCheck,
-  BarChart3,
   Briefcase,
   Building2,
   CalendarCheck2,
@@ -236,8 +235,7 @@ export function AppSidebar() {
     { titleKey: 'tasks.title', url: '/tasks', icon: CheckSquare },
     { titleKey: 'activities.title', url: '/activities', icon: Zap },
     { titleKey: 'calendar.title', url: '/calendar', icon: CalendarDays },
-    ...(webphoneEnabled ? [WEBPHONE_CALLS_ITEM] : []),
-    { titleKey: 'reports.title', url: '/reports', icon: BarChart3 }
+    ...(webphoneEnabled ? [WEBPHONE_CALLS_ITEM] : [])
   ]
   const usersCollection = useUsersCollection()
   const [userProfile, setUserProfile] = useState<

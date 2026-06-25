@@ -8,15 +8,18 @@ import {
   useCallback,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
   type ComponentProps,
+  type CSSProperties,
   type FocusEvent,
   type KeyboardEvent,
   type ReactNode,
   type RefObject,
   type Ref,
 } from 'react'
+import { createPortal } from 'react-dom'
 
 import { cva, type VariantProps } from 'class-variance-authority'
 
@@ -122,6 +125,44 @@ const POPOVER_TYPES = new Set<IFieldType>([
   'field-duration',
   'field-currency',
 ])
+
+const WIDE_INLINE_EDITOR_TYPES = new Set<IFieldType>([
+  'field-phone',
+  'field-money',
+  'field-duration',
+  'field-currency',
+])
+
+const FLOATING_EDITOR_MARGIN = 12
+
+function getFloatingEditorMinWidth(fieldType: IFieldType): number {
+  if (WIDE_INLINE_EDITOR_TYPES.has(fieldType)) return 320
+
+  return 0
+}
+
+function resolveFloatingEditorStyle(
+  anchor: HTMLElement | null,
+  fieldType: IFieldType,
+): CSSProperties | undefined {
+  if (!anchor || typeof window === 'undefined') return undefined
+
+  const rect = anchor.getBoundingClientRect()
+
+  if (rect.width <= 0 || rect.height <= 0) return undefined
+
+  const maxWidth = Math.max(180, window.innerWidth - FLOATING_EDITOR_MARGIN * 2)
+  const minWidth = getFloatingEditorMinWidth(fieldType)
+  const width = Math.min(Math.max(rect.width, minWidth), maxWidth)
+  const maxLeft = window.innerWidth - FLOATING_EDITOR_MARGIN - width
+  const left = Math.max(FLOATING_EDITOR_MARGIN, Math.min(rect.left, maxLeft))
+
+  return {
+    left,
+    top: rect.top,
+    width,
+  }
+}
 
 interface ProxyFieldContextValue {
   externalForm: any
@@ -403,6 +444,7 @@ function EditableValue({
   ref,
   ...props
 }: EditableValueProps) {
+  const anchorRef = useRef<HTMLDivElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
 
   const isFieldReadOnly =
@@ -430,6 +472,8 @@ function EditableValue({
 
   const id = useId()
   const [internalEditing, setInternalEditing] = useState(false)
+  const [floatingEditorStyle, setFloatingEditorStyle] =
+    useState<CSSProperties>()
   const isEditing = controlledEditing ?? internalEditing
 
   /*
@@ -475,6 +519,39 @@ function EditableValue({
       companionChangesRef.current = {}
     }
   }, [isEditing])
+
+  useLayoutEffect(() => {
+    if (!isEditing) return
+
+    let frameId: number | null = null
+
+    const setPosition = () => {
+      setFloatingEditorStyle(
+        resolveFloatingEditorStyle(anchorRef.current, field.type),
+      )
+    }
+
+    const schedulePosition = () => {
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId)
+      }
+
+      frameId = window.requestAnimationFrame(() => {
+        frameId = null
+        setPosition()
+      })
+    }
+
+    setPosition()
+    window.addEventListener('resize', schedulePosition)
+    window.addEventListener('scroll', schedulePosition, true)
+
+    return () => {
+      if (frameId !== null) window.cancelAnimationFrame(frameId)
+      window.removeEventListener('resize', schedulePosition)
+      window.removeEventListener('scroll', schedulePosition, true)
+    }
+  }, [isEditing, field.type])
 
   const setEditingRef = useRef(setEditing)
 
@@ -719,6 +796,7 @@ function EditableValue({
       const target = e.target as HTMLElement
 
       if (wrapperRef.current?.contains(target)) return
+      if (anchorRef.current?.contains(target)) return
 
       if (
         target.closest?.(
@@ -740,9 +818,87 @@ function EditableValue({
   }, [isEditing, isPopover, forceExplicit, handleCancel])
 
   if (isEditing) {
+    const editor = (
+      <div
+        ref={(node) => {
+          wrapperRef.current = node
+        }}
+        data-editing=""
+        className={cn(
+          'fixed z-[120]',
+          'flex items-center rounded-md',
+          'border border-ring bg-background shadow-lg',
+        )}
+        style={floatingEditorStyle ?? { visibility: 'hidden' }}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+      >
+        {/* Inline style overrides inner input borders/rings — Tailwind v4's
+              **:data-[…] generates :where() with zero specificity which cannot
+              reliably override component-level styles. */}
+        <style>
+          {`
+            [data-editing] :is(
+              [data-slot="input"],
+              [data-slot="mask-input"],
+              [data-slot="phone-input"],
+              [data-slot="phone-input-field"],
+              [data-slot="select-trigger"]
+            ) {
+              border-width: 0 !important;
+              box-shadow: none !important;
+              outline: none !important;
+            }
+            [data-editing] :is(
+              [data-slot="input"],
+              [data-slot="mask-input"],
+              [data-slot="phone-input-field"]
+            ):focus-visible {
+              border-width: 0 !important;
+              box-shadow: none !important;
+              outline: none !important;
+              --tw-ring-shadow: 0 0 #0000 !important;
+            }
+            [data-editing] [data-slot="phone-input"] {
+              height: 36px !important;
+            }
+            [data-editing] [data-slot="phone-input-country-select"] {
+              position: relative;
+              z-index: 1;
+            }
+          `}
+        </style>
+        <div
+          className={cn(
+            'flex-1 min-w-0 flex items-center px-2',
+            size === 'sm' ? 'text-xs' : size === 'lg' ? 'text-base' : 'text-sm',
+            '**:data-[slot=field-label]:hidden',
+            '**:data-[slot=field]:w-full **:data-[slot=field]:gap-0 **:data-[slot=field]:mb-0',
+            '**:data-[slot=phone-input]:h-9',
+          )}
+        >
+          <MicroFormContext value={microFormCtxRef}>
+            <ProxyFieldContext value={proxyFieldContextRef}>
+              <DynamicFormField
+                field={field}
+                form={activeForm}
+                enumOptions={enumOptions}
+                appSlug={appSlug}
+                dataSourceSlug={dataSourceSlug}
+              />
+            </ProxyFieldContext>
+          </MicroFormContext>
+        </div>
+        {effectiveShowActions && (
+          <EditableValueActions onSave={handleSave} onCancel={handleCancel} />
+        )}
+      </div>
+    )
+
     return (
       <div
         ref={(node) => {
+          anchorRef.current = node
           if (typeof ref === 'function') ref(node)
           else if (ref) ref.current = node
         }}
@@ -758,7 +914,7 @@ function EditableValue({
         {...props}
       >
         {/* Invisible spacer preserving the display-mode height */}
-        <div className="invisible">
+        <div className="pointer-events-none invisible">
           {children ?? (
             <DynamicValue
               field={field}
@@ -768,84 +924,7 @@ function EditableValue({
             />
           )}
         </div>
-        {/* Floating edit container */}
-        <div
-          ref={(node) => {
-            wrapperRef.current = node
-          }}
-          data-editing=""
-          className={cn(
-            'absolute inset-x-0 top-0 z-10',
-            'flex w-full items-center rounded-md',
-            'border border-ring bg-background shadow-md',
-          )}
-          onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
-        >
-          {/* Inline style overrides inner input borders/rings — Tailwind v4's
-                **:data-[…] generates :where() with zero specificity which cannot
-                reliably override component-level styles. */}
-          <style>
-            {`
-              [data-editing] :is(
-                [data-slot="input"],
-                [data-slot="mask-input"],
-                [data-slot="phone-input"],
-                [data-slot="phone-input-field"],
-                [data-slot="select-trigger"]
-              ) {
-                border-width: 0 !important;
-                box-shadow: none !important;
-                outline: none !important;
-              }
-              [data-editing] :is(
-                [data-slot="input"],
-                [data-slot="mask-input"],
-                [data-slot="phone-input-field"]
-              ):focus-visible {
-                border-width: 0 !important;
-                box-shadow: none !important;
-                outline: none !important;
-                --tw-ring-shadow: 0 0 #0000 !important;
-              }
-              [data-editing] [data-slot="phone-input"] {
-                height: 36px !important;
-              }
-              [data-editing] [data-slot="phone-input-country-select"] {
-                position: relative;
-                z-index: 1;
-              }
-            `}
-          </style>
-          <div
-            className={cn(
-              'flex-1 min-w-0 flex items-center px-2',
-              size === 'sm'
-                ? 'text-xs'
-                : size === 'lg'
-                  ? 'text-base'
-                  : 'text-sm',
-              '**:data-[slot=field-label]:hidden',
-              '**:data-[slot=field]:w-full **:data-[slot=field]:gap-0 **:data-[slot=field]:mb-0',
-              '**:data-[slot=phone-input]:h-9',
-            )}
-          >
-            <MicroFormContext value={microFormCtxRef}>
-              <ProxyFieldContext value={proxyFieldContextRef}>
-                <DynamicFormField
-                  field={field}
-                  form={activeForm}
-                  enumOptions={enumOptions}
-                  appSlug={appSlug}
-                  dataSourceSlug={dataSourceSlug}
-                />
-              </ProxyFieldContext>
-            </MicroFormContext>
-          </div>
-          {effectiveShowActions && (
-            <EditableValueActions onSave={handleSave} onCancel={handleCancel} />
-          )}
-        </div>
+        {typeof document !== 'undefined' && createPortal(editor, document.body)}
       </div>
     )
   }
@@ -853,6 +932,7 @@ function EditableValue({
   return (
     <div
       ref={(node) => {
+        anchorRef.current = node
         wrapperRef.current = node
         if (typeof ref === 'function') ref(node)
         else if (ref) ref.current = node
