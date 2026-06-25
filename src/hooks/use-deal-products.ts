@@ -14,8 +14,7 @@ export function useDealProducts(params?: ICollectionListParams) {
         ...params,
         columns: params?.columns || [
           'id',
-          'product(id,name)',
-          'category',
+          'product(id,name,category)',
           'qty',
           'unit_price',
           'discount',

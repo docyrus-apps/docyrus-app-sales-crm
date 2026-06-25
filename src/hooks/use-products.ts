@@ -14,13 +14,14 @@ export function useProducts(params?: ICollectionListParams) {
       const defaultColumns = [
         'id',
         'product_code',
+        'category',
         'unit_price',
         'Unit',
         'tax',
         'created_on'
       ]
       const columns = (params?.columns || defaultColumns).filter(
-        column => !['name', 'category'].includes(column)
+        column => column !== 'name'
       )
       const response = await productCollection.list({
         ...params,
@@ -55,6 +56,7 @@ export function useProduct(productId: string | undefined) {
         columns: [
           'id',
           'product_code',
+          'category',
           'unit_price',
           'Unit',
           'tax',

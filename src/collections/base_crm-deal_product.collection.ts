@@ -48,7 +48,14 @@ export interface BaseCrmDealProductEntity {
   unit_price: number
 
   /** Product */
-  product: { id: string; name: string } | string
+  product:
+    | {
+        id: string
+        name?: string
+        product_code?: string
+        category?: { id?: string; name?: string } | string | null
+      }
+    | string
 }
 
 export function useBaseCrmDealProductCollection() {

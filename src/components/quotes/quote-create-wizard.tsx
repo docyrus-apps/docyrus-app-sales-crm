@@ -162,6 +162,30 @@ function getRelationName(value: RelationValue | undefined): string | null {
   return value.name ?? null
 }
 
+function getMultiRelationRows(
+  value: unknown
+): Array<{ id: string; name?: string | null }> {
+  if (!Array.isArray(value)) return []
+
+  const rows = new Map<string, { id: string; name?: string | null }>()
+
+  for (const item of value) {
+    if (typeof item === 'string') {
+      if (item) rows.set(item, { id: item })
+      continue
+    }
+
+    if (!item || typeof item !== 'object' || !('id' in item)) continue
+
+    const row = item as { id?: string | null; name?: string | null }
+    const id = row.id ?? ''
+
+    if (id) rows.set(id, { id, name: row.name })
+  }
+
+  return Array.from(rows.values())
+}
+
 function isMeaningfulLineItem(line: ILineItem) {
   return Boolean(
     line.productId ||
@@ -201,6 +225,9 @@ export function QuoteCreateWizard({
   const [pricingDocument, setPricingDocument] = useState<IPricingDocumentData>(
     () => makeInitialPricingDocument()
   )
+  const [prefilledDealProductsFor, setPrefilledDealProductsFor] = useState<
+    string | null
+  >(null)
   const [isSaving, setIsSaving] = useState(false)
 
   const { data: companies = [] } = useCompanies({
@@ -219,10 +246,11 @@ export function QuoteCreateWizard({
     limit: 200
   })
   const { data: initialDeal } = useDeal(initialDealId)
-  const { data: products = [] } = useProducts({
+  const { data: products = [], isLoading: productsLoading } = useProducts({
     columns: [
 'id',
 'product_code',
+'category',
 'unit_price',
 'tax',
 'Unit'
@@ -248,6 +276,7 @@ export function QuoteCreateWizard({
     setValidUntil('')
     setTemplateId('standard')
     setPricingDocument(makeInitialPricingDocument())
+    setPrefilledDealProductsFor(null)
     setIsSaving(false)
   }, [
 initialDealId,
@@ -335,12 +364,88 @@ open
             product.name ||
             product.product_code ||
             t('quotes.untitledProduct', { defaultValue: 'Product' }),
+          categoryId: getRelationId(product.category) ?? undefined,
           category: getRelationName(product.category) ?? '',
           unitPrice: Number(product.unit_price ?? 0),
           vatRate: Number(product.tax ?? DEFAULT_VAT_RATE)
         })),
     [products, t]
   )
+
+  useEffect(() => {
+    if (!open || !initialDealId || !initialDeal) return
+    if (prefilledDealProductsFor === initialDealId) return
+
+    const relationRows = getMultiRelationRows(
+      (initialDeal as any).deals_products_tags
+    )
+
+    if (relationRows.length === 0) {
+      setPrefilledDealProductsFor(initialDealId)
+
+      return
+    }
+
+    if (productsLoading) return
+
+    if (pricingDocument.lineItems.some(isMeaningfulLineItem)) {
+      setPrefilledDealProductsFor(initialDealId)
+
+      return
+    }
+
+    const catalogById = new Map(
+      productCatalog.map(product => [product.id, product])
+    )
+    const lineItems: Array<ILineItem> = relationRows.map((row, index) => {
+      const catalogItem = catalogById.get(row.id)
+
+      return {
+        id: `deal-product-${row.id}`,
+        position: index,
+        productId: row.id,
+        categoryId: catalogItem?.categoryId,
+        name:
+          catalogItem?.name ||
+          row.name ||
+          t('quotes.untitledProduct', { defaultValue: 'Product' }),
+        category: catalogItem?.category ?? '',
+        quantity: 1,
+        unitPrice: catalogItem?.unitPrice ?? 0,
+        vatRate: catalogItem?.vatRate ?? DEFAULT_VAT_RATE,
+        discountPercent: 0
+      }
+    })
+    const nextConfig = {
+      ...pricingDocument.config,
+      showCategoryColumn: lineItems.some(line => line.category.length > 0)
+    }
+    const nextRows = buildLineItemRows(lineItems, nextConfig)
+
+    setPricingDocument(current => ({
+      ...current,
+      lineItems,
+      config: nextConfig,
+      totals: calculateTotals(
+        nextRows,
+        current.globalDiscountPercent,
+        current.adjustment,
+        nextConfig
+      )
+    }))
+    setPricingKey(key => key + 1)
+    setPrefilledDealProductsFor(initialDealId)
+  }, [
+    initialDeal,
+    initialDealId,
+    open,
+    prefilledDealProductsFor,
+    pricingDocument.config,
+    pricingDocument.lineItems,
+    productCatalog,
+    productsLoading,
+    t
+  ])
 
   const fallbackTemplateOptions = useMemo<Array<TemplateOption>>(
     () => QUOTE_TEMPLATE_PRESETS.map(template => ({

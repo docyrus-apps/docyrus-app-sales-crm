@@ -82,6 +82,7 @@ export function useDeal(dealId: string | undefined) {
           'closed_date',
           'follow_up_on',
           'country(id,name,currency_symbol)',
+          'deals_products_tags(id,name)',
           'followers',
           'created_on'
         ]

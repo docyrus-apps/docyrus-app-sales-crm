@@ -26,15 +26,6 @@ import {
 } from 'lucide-react'
 
 import {
-  PricingEnginePanel,
-  type ILineItem
-} from '@/components/docyrus/pricing-engine-panel'
-import {
-  bankersRound,
-  buildLineItemRows,
-  calculateTotals
-} from '@/components/docyrus/pricing-engine-panel/lib/calculations'
-import {
   DataGrid,
   DataGridSkeleton,
   DataGridSkeletonGrid,
@@ -51,6 +42,7 @@ import {
 } from '@/components/crm/record-detail-layout'
 import { RelatedContactsTable } from '@/components/crm/related-contacts-table'
 import { ContactFormDialog } from '@/components/contacts/contact-form-dialog'
+import { DealProductsPanel } from '@/components/deals/deal-products-panel'
 import { RelatedQuotesTable } from '@/components/crm/related-quotes-table'
 import { RecordActivityPanel } from '@/components/docyrus/record-activity-panel'
 import { RecordTasksPanel } from '@/components/crm/record-tasks-panel'
@@ -61,7 +53,6 @@ import { PageContainer } from '@/components/layout/page-container'
 import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
 import { useBaseCountryCollection } from '@/collections'
-import { useDealProducts } from '@/hooks/use-deal-products'
 import { useDeal, useUpdateDeal } from '@/hooks/use-deals'
 import { useCompanies } from '@/hooks/use-companies'
 import { useContacts } from '@/hooks/use-contacts'
@@ -72,7 +63,6 @@ import { useUsers } from '@/hooks/use-users'
 
 import type { EnumOption, IField } from '@/components/docyrus/form-fields/types'
 
-import { useUiLocale } from '@/hooks/use-ui-locale'
 import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
 import { mergeCurrentEnumOption } from '@/lib/enum-options'
 
@@ -187,6 +177,25 @@ function mapEnumEntitiesToOptions(
   }))
 }
 
+function getMultiRelationIds(value: unknown): Array<string> {
+  if (!Array.isArray(value)) return []
+
+  return Array.from(
+    new Set(
+      value.flatMap((item) => {
+        if (typeof item === 'string') return item ? [item] : []
+        if (item && typeof item === 'object' && 'id' in item) {
+          const { id } = item as { id?: string | null }
+
+          return id ? [id] : []
+        }
+
+        return []
+      })
+    )
+  )
+}
+
 export function DealDetail() {
   const { t } = useTranslation()
   const { dealId } = useParams({ strict: false })
@@ -197,7 +206,6 @@ export function DealDetail() {
   const dialer = useDialer()
   const webphone = useWebphone()
   const countriesCollection = useBaseCountryCollection()
-  const locale = useUiLocale()
 
   const activeTab = tab || 'overview'
 
@@ -292,29 +300,6 @@ export function DealDetail() {
 
   const { data: activities = [], isLoading: activitiesLoading } =
     useRecordActivities('base_crm', 'deal', dealId)
-
-  const { data: dealProducts, isLoading: productsLoading } = useDealProducts(
-    dealId
-      ? {
-          columns: [
-            'id',
-            'product(id,name)',
-            'category(id,name)',
-            'qty',
-            'unit_price',
-            'discount',
-            'tax_rate',
-            'total',
-            'gross_total',
-            'net_total'
-          ],
-          filters: {
-            rules: [{ field: 'related_deal', operator: '=', value: dealId }]
-          },
-          orderBy: 'created_on asc'
-        }
-      : undefined
-  )
 
   const { data: salesOrders, isLoading: ordersLoading } = useSalesOrders(
     orgId
@@ -547,78 +532,6 @@ export function DealDetail() {
     await updateDeal.mutateAsync({ dealId, data: payload })
   }
 
-  const pricingDocument = useMemo(() => {
-    const pricingLineItems: Array<ILineItem> = (dealProducts ?? []).map(
-      (item: any, index) => ({
-        id: item.id,
-        position: index,
-        productId: getRelationId(item.product),
-        categoryId: getRelationId(item.category),
-        name: getRelationName(item.product) || t('common.na'),
-        category: getRelationName(item.category) || '',
-        quantity: Number(item.qty ?? 0),
-        unitPrice: Number(item.unit_price ?? 0),
-        vatRate: Number(item.tax_rate ?? 0),
-        discountPercent: Number(item.discount ?? 0)
-      })
-    )
-
-    const enableVat = pricingLineItems.some(item => item.vatRate > 0)
-    const vatRates = Array.from(
-      new Set(
-        pricingLineItems
-          .map(item => item.vatRate)
-          .filter(rate => Number.isFinite(rate))
-      )
-    ).sort((left, right) => left - right)
-
-    if (vatRates.length === 0) {
-      vatRates.push(0)
-    }
-
-    const config = {
-      showVatColumn: enableVat,
-      showDiscountColumn: pricingLineItems.some(
-        item => item.discountPercent > 0
-      ),
-      showGrossColumn: true,
-      showCategoryColumn: pricingLineItems.some(
-        item => item.category.length > 0
-      ),
-      discountBeforeVat: true,
-      enableVat,
-      enableLineDiscount: true,
-      enableGlobalDiscount: false,
-      enableAdjustment: false,
-      defaultVatRate: vatRates[vatRates.length - 1] ?? 0,
-      vatRates,
-      viewMode: 'net' as const
-    }
-
-    const totals = calculateTotals(
-      buildLineItemRows(pricingLineItems, config),
-      0,
-      0,
-      config
-    )
-
-    return {
-      lineItems: pricingLineItems,
-      globalDiscountPercent: 0,
-      adjustment: bankersRound(0),
-      currency: {
-        code: 'USD',
-        secondaryCurrencyCode: null,
-        exchangeRate: 1
-      },
-      config,
-      description: '',
-      termsAndConditions: '',
-      status: 'saved' as const,
-      totals
-    }
-  }, [dealProducts, t])
-
   const onViewOrder = (order: any) => {
     if (!order?.id) return
 
@@ -721,6 +634,14 @@ export function DealDetail() {
     String(dealRecord.autonumber_id).trim().length > 0
       ? `#${dealRecord.autonumber_id}`
       : null
+  const dealCountry =
+    deal?.country && typeof deal.country === 'object'
+      ? (deal.country as { currency_symbol?: string | null })
+      : null
+  const dealCurrencySymbol = dealCountry?.currency_symbol || '$'
+  const selectedProductCount = getMultiRelationIds(
+    deal?.deals_products_tags
+  ).length
 
   useSetDetailBreadcrumbTitle(
     dealRecord ? (dealNumber ? `${dealNumber} ${dealTitle}` : dealTitle) : null
@@ -834,38 +755,13 @@ export function DealDetail() {
         value: 'products',
         label: t('deals.tabs.products'),
         icon: <Package className="size-3.5" />,
+        count: selectedProductCount,
         bare: true,
         content: (
-          <div className="h-full overflow-auto p-4">
-            {productsLoading ? (
-              <div className="h-[32rem] w-full animate-pulse rounded-xl bg-muted/40" />
-            ) : (
-              <PricingEnginePanel
-                value={pricingDocument}
-                defaultValue={pricingDocument}
-                title={dealNumber ? `${dealNumber} ${dealTitle}` : dealTitle}
-                locale={locale}
-                readOnly
-                showActions={false}
-                showDescription={false}
-                showTerms={false}
-                showVatColumn={pricingDocument.config.showVatColumn}
-                showDiscountColumn={pricingDocument.config.showDiscountColumn}
-                showGrossColumn={pricingDocument.config.showGrossColumn}
-                showCategoryColumn={pricingDocument.config.showCategoryColumn}
-                discountBeforeVat={pricingDocument.config.discountBeforeVat}
-                enableVat={pricingDocument.config.enableVat}
-                enableLineDiscount={pricingDocument.config.enableLineDiscount}
-                enableGlobalDiscount={pricingDocument.config.enableGlobalDiscount}
-                enableAdjustment={pricingDocument.config.enableAdjustment}
-                defaultVatRate={pricingDocument.config.defaultVatRate}
-                vatRates={pricingDocument.config.vatRates}
-                defaultCurrency={pricingDocument.currency.code}
-                viewMode={pricingDocument.config.viewMode}
-                size="full"
-                variant="bordered" />
-            )}
-          </div>
+          <DealProductsPanel
+            dealId={dealId}
+            selectedProducts={deal?.deals_products_tags}
+            currencySymbol={dealCurrencySymbol} />
         )
       },
       {
@@ -998,12 +894,12 @@ export function DealDetail() {
     activitiesLoading,
     orgContacts,
     orgContactsLoading,
-    productsLoading,
-    pricingDocument,
-    dealNumber,
     dealTitle,
-    locale,
+    deal?.deals_products_tags,
+    dealCurrencySymbol,
+    selectedProductCount,
     organizationName,
+    orgId,
     ordersLoading,
     salesOrders,
     ordersTable,

@@ -32,6 +32,9 @@ export interface BaseCrmProductEntity {
   /** Product Code */
   product_code?: string
 
+  /** Category */
+  category?: { id: string; name: string } | any
+
   /** Tax */
   tax?: number
 }

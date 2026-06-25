@@ -93,6 +93,7 @@ export function QuoteLineItems({ quoteId, readOnly }: QuoteLineItemsProps) {
     columns: [
 'id',
 'product_code',
+'category',
 'unit_price',
 'tax',
 'Unit'
@@ -110,6 +111,7 @@ export function QuoteLineItems({ quoteId, readOnly }: QuoteLineItemsProps) {
             product.name ||
             product.product_code ||
             t('quotes.untitledProduct', { defaultValue: 'Product' }),
+          categoryId: getRelationId(product.category) ?? undefined,
           category: getRelationName(product.category) ?? '',
           unitPrice: Number(product.unit_price ?? 0),
           vatRate: Number(product.tax ?? DEFAULT_VAT_RATE)
