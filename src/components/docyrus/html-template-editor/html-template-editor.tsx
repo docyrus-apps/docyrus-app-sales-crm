@@ -751,16 +751,21 @@ export function HtmlTemplateEditor({
   )
 
   /*
-   * Sync external `value` changes into Plate. Runs on mount AND whenever the
-   * parent updates `value` (e.g. AI agent's `applyHtmlTemplate` tool calls
-   * `setHtml(nextHtml)`). The diff against `liveEditorHtmlRef.current` short-
-   * circuits the common "parent echoes our own onChange back" round-trip so
-   * we don't redundantly re-deserialize on every keystroke.
+   * Sync external `value` into the SSOT WITHOUT a Plate round-trip. The Code /
+   * Preview / PDF tabs render straight from `templateHtml`, so keeping it equal
+   * to the source HTML means they render the template faithfully — Plate's
+   * deserialize→serialize would otherwise strip gradients, `<div>` layout,
+   * inline cell borders/widths, and color/size on `{{variables}}`, which is
+   * unacceptable for server-authored templates we only consume (never re-author).
+   * Plate is loaded lazily ONLY when the Visual tab is opened (handleTabChange);
+   * the diff against `liveEditorHtmlRef.current` skips echoes of our own edits.
    */
   useEffect(() => {
     if (initialValue === liveEditorHtmlRef.current) return
-    loadTemplateIntoEditor(initialValue)
-  }, [initialValue, loadTemplateIntoEditor])
+    liveEditorHtmlRef.current = initialValue
+    // eslint-disable-next-line @eslint-react/set-state-in-effect
+    setTemplateHtml(initialValue)
+  }, [initialValue])
 
   const handleValueChange = useCallback(
     ({ value }: { value: Value }) => {

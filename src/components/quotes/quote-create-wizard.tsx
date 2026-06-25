@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import { useNavigate } from '@tanstack/react-router'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useDocyrusClient } from '@docyrus/signin'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
@@ -32,10 +33,7 @@ import {
   AwesomeDialogFooter,
   AwesomeDialogHeader
 } from '@/components/docyrus/awesome-dialog'
-import {
-  QUOTE_TEMPLATE_PRESETS,
-  type QuoteTemplatePreset
-} from '@/components/quotes/quote-templates'
+import { listQuoteTemplates } from '@/components/quotes/quote-templates-api'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -84,14 +82,6 @@ interface PickerOption {
   description?: string;
 }
 
-type TemplateOption = {
-  id: string;
-  backendTemplateId: string;
-  name: string;
-  description: string;
-  isDefault: boolean;
-  template: QuoteTemplatePreset;
-}
 
 interface QuoteCreateWizardProps {
   open: boolean;
@@ -209,6 +199,7 @@ export function QuoteCreateWizard({
   const { t } = useTranslation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const client = useDocyrusClient()
   const salesOrderCollection = useBaseCrmSalesOrderCollection()
   const salesOrderItemCollection = useBaseCrmSalesOrderItemCollection()
   const locale = useUiLocale()
@@ -223,7 +214,7 @@ export function QuoteCreateWizard({
   // Once the user edits the title manually, stop auto-deriving it.
   const titleTouched = useRef(false)
   const [validUntil, setValidUntil] = useState('')
-  const [templateId, setTemplateId] = useState('standard')
+  const [templateId, setTemplateId] = useState('')
   const [pricingDocument, setPricingDocument] = useState<IPricingDocumentData>(
     () => makeInitialPricingDocument()
   )
@@ -277,7 +268,7 @@ export function QuoteCreateWizard({
     setDocTitle('')
     titleTouched.current = false
     setValidUntil('')
-    setTemplateId('standard')
+    setTemplateId('')
     setPricingDocument(makeInitialPricingDocument())
     setPrefilledDealProductsFor(null)
     setIsSaving(false)
@@ -459,20 +450,17 @@ open
     t
   ])
 
-  const fallbackTemplateOptions = useMemo<Array<TemplateOption>>(
-    () => QUOTE_TEMPLATE_PRESETS.map(template => ({
-        id: template.id,
-        backendTemplateId: template.backendTemplateId,
-        name: t(template.nameKey, { defaultValue: template.defaultName }),
-        description: t(template.descriptionKey, {
-          defaultValue: template.defaultDescription
-        }),
-        isDefault: Boolean(template.default),
-        template
-      })),
-    [t]
-  )
-  const templateOptions = fallbackTemplateOptions
+  /*
+   * Templates are READ from the backend (no embedded bodies); the wizard only
+   * needs metadata to let the user pick which template the quote will use.
+   */
+  const { data: templateOptions = [] } = useQuery({
+    queryKey: ['quote-templates'],
+    queryFn: () => listQuoteTemplates(client!),
+    enabled: !!client,
+    retry: false,
+    staleTime: 5 * 60_000
+  })
 
   useEffect(() => {
     if (!open) return
@@ -616,7 +604,7 @@ open
         grand_total: totals.grandTotal,
         quote_doc_json: quoteDoc,
         ...(selectedTemplate
-          ? { quote_template_id: selectedTemplate.backendTemplateId }
+          ? { quote_template_id: selectedTemplate.id }
           : {})
       })
       const quoteId = String(created.id)
@@ -648,11 +636,7 @@ open
         if (selectedTemplate) {
           window.localStorage.setItem(
             `quote-template-id:${quoteId}`,
-            selectedTemplate.backendTemplateId
-          )
-          window.localStorage.setItem(
-            `quote-template:${quoteId}`,
-            selectedTemplate.template.body
+            selectedTemplate.id
           )
         }
       }
@@ -889,7 +873,8 @@ open
                               )}
                             </div>
                             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                              {template.description}
+                              {(template.pageFormat ?? 'A4')} ·{' '}
+                              {template.pageOrientation ?? 'portrait'}
                             </p>
                           </div>
                         </div>

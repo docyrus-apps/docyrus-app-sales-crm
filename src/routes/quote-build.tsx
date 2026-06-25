@@ -1,8 +1,16 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode
+} from 'react'
 
 import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useDocyrusClient } from '@docyrus/signin'
 import { toast } from 'sonner'
 import {
   ArrowLeft,
@@ -58,11 +66,12 @@ import { useBaseCrmSalesOrderCollection } from '@/collections'
 import { useDateFormat } from '@/lib/use-date-format'
 import { useUiLocale } from '@/hooks/use-ui-locale'
 import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
+import { QUOTE_VARIABLES } from '@/components/quotes/quote-templates'
 import {
-  DEFAULT_TEMPLATE,
-  QUOTE_TEMPLATE_PRESETS,
-  QUOTE_VARIABLES
-} from '@/components/quotes/quote-templates'
+  getQuoteTemplate,
+  listQuoteTemplates,
+  type QuoteTemplateMeta
+} from '@/components/quotes/quote-templates-api'
 
 const DEFAULT_CURRENCY = 'TRY'
 
@@ -103,15 +112,6 @@ const EMPTY_DOC: QuoteDocFields = {
   templateBodyTemplateId: ''
 }
 
-type TemplateOption = {
-  id: string;
-  backendTemplateId: string;
-  name: string;
-  description: string;
-  isDefault: boolean;
-  body: string;
-}
-
 function readStored<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback
   try {
@@ -135,15 +135,6 @@ function moveStored(fromKey: string, toKey: string) {
   } catch {
     /* ignore */
   }
-}
-
-function isLegacyUnsafeTemplateDraft(value: string | null): value is string {
-  return Boolean(
-    value &&
-    (value.includes('{{#if lineItems}}') ||
-      (value.includes('{{#each lineItems}}') &&
-        (value.includes('<tbody') || value.includes('</tbody>'))))
-  )
 }
 
 function normalizeQuoteDoc(value: unknown): QuoteDocFields | null {
@@ -269,20 +260,19 @@ export function QuoteBuild() {
    * match the TRY default currency; English UI gets en-US.
    */
   const documentLocale = uiLocale === 'en' ? 'en-US' : 'tr-TR'
-  const fallbackTemplateOptions = useMemo<Array<TemplateOption>>(
-    () => QUOTE_TEMPLATE_PRESETS.map(preset => ({
-        id: preset.id,
-        backendTemplateId: preset.backendTemplateId,
-        name: t(preset.nameKey, { defaultValue: preset.defaultName }),
-        description: t(preset.descriptionKey, {
-          defaultValue: preset.defaultDescription
-        }),
-        isDefault: Boolean(preset.default),
-        body: preset.body
-      })),
-    [t]
-  )
-  const templateOptions = fallbackTemplateOptions
+  const client = useDocyrusClient()
+  /*
+   * Quote templates are READ from the backend (Studio `tenant_html_template`
+   * rows bound to `sales_order`) — the app embeds no template bodies and never
+   * writes them. The list is metadata only; the selected body is fetched below.
+   */
+  const { data: templateOptions = [], isLoading: templatesLoading } = useQuery({
+    queryKey: ['quote-templates'],
+    queryFn: () => listQuoteTemplates(client!),
+    enabled: !!client,
+    retry: false,
+    staleTime: 5 * 60_000
+  })
   const salesOrderCollection = useBaseCrmSalesOrderCollection()
   const search = useSearch({ strict: false })
 
@@ -342,18 +332,20 @@ export function QuoteBuild() {
     quoteTitle.replace(/[\\/:*?"<>|]+/g, '_').trim() || 'teklif'
   }.pdf`
   const [template, setTemplate] = useState<string>(() => {
-    if (typeof window === 'undefined') return DEFAULT_TEMPLATE
+    if (typeof window === 'undefined') return ''
 
-    return (
-      window.localStorage.getItem(`quote-template:${storageId}`) ||
-      DEFAULT_TEMPLATE
-    )
+    return window.localStorage.getItem(`quote-template:${storageId}`) || ''
   })
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
     () => (typeof window === 'undefined'
         ? null
         : window.localStorage.getItem(`quote-template-id:${storageId}`))
   )
+  /*
+   * Tracks which template id's body is loaded into `template`, so a backend
+   * fetch loads once per selection without clobbering unsaved in-session edits.
+   */
+  const loadedBodyFor = useRef<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [justSaved, setJustSaved] = useState(false)
   const [mailOpen, setMailOpen] = useState(false)
@@ -361,27 +353,61 @@ export function QuoteBuild() {
   const [templatesOpen, setTemplatesOpen] = useState(false)
   const [pdfBusy, setPdfBusy] = useState(false)
 
-  /*
-   * The selected template resolves from the in-session selection first — so a
-   * template click wins immediately — then falls back to the default preset.
-   * `selectedTemplateId` may hold a preset id OR a backend id; both are matched.
-   */
-  const selectedTemplateOption = useMemo(
+  const selectedTemplateOption = useMemo<QuoteTemplateMeta | null>(
     () => (selectedTemplateId
-        ? templateOptions.find(
-            o => o.id === selectedTemplateId ||
-              o.backendTemplateId === selectedTemplateId
-          )
+        ? templateOptions.find(o => o.id === selectedTemplateId)
         : null) ??
         templateOptions.find(o => o.isDefault) ??
         templateOptions[0] ??
         null,
     [selectedTemplateId, templateOptions]
   )
-  const selectedBackendTemplateId =
-    selectedTemplateOption?.backendTemplateId ?? null
+  const selectedBackendTemplateId = selectedTemplateOption?.id ?? null
 
-  // Hydrate doc + template body + selected template from the saved record once.
+  // Once the list loads, default to the backend's default template.
+  useEffect(() => {
+    if (selectedTemplateId || templateOptions.length === 0) return
+
+    const def = templateOptions.find(o => o.isDefault) ?? templateOptions[0]
+
+    if (def) setSelectedTemplateId(def.id)
+  }, [selectedTemplateId, templateOptions])
+
+  // Fetch the selected template's full body from the backend.
+  const { data: templateDetail } = useQuery({
+    queryKey: ['quote-template-detail', selectedBackendTemplateId],
+    queryFn: () => getQuoteTemplate(client!, selectedBackendTemplateId!),
+    enabled: !!client && !!selectedBackendTemplateId,
+    staleTime: 5 * 60_000
+  })
+
+  /*
+   * Load the fetched body into the editor once per selection; a per-quote saved
+   * body (quote_doc_json.templateBody) takes precedence over the backend body.
+   */
+  useEffect(() => {
+    if (!selectedBackendTemplateId || !templateDetail) return
+    if (loadedBodyFor.current === selectedBackendTemplateId) return
+
+    const savedBody =
+      doc.templateBody &&
+      doc.templateBodyTemplateId === selectedBackendTemplateId
+        ? doc.templateBody
+        : null
+
+    setTemplate(savedBody || templateDetail.body)
+    loadedBodyFor.current = selectedBackendTemplateId
+  }, [
+    selectedBackendTemplateId,
+    templateDetail,
+    doc.templateBody,
+    doc.templateBodyTemplateId
+  ])
+
+  /*
+   * Hydrate doc fields + selected template id from the saved record once. The
+   * body itself is loaded from the backend by the detail query + effect above.
+   */
   useEffect(() => {
     if (!order || docHydratedFromRecord) return
 
@@ -395,20 +421,8 @@ export function QuoteBuild() {
         : null
 
     if (savedId) setSelectedTemplateId(savedId)
-
-    const savedBody = recordDoc?.templateBody
-
-    if (savedBody && !isLegacyUnsafeTemplateDraft(savedBody)) {
-      setTemplate(savedBody)
-    } else if (savedId) {
-      const opt = templateOptions.find(
-        o => o.id === savedId || o.backendTemplateId === savedId
-      )
-
-      if (opt) setTemplate(opt.body)
-    }
     setDocHydratedFromRecord(true)
-  }, [docHydratedFromRecord, order, templateOptions])
+  }, [docHydratedFromRecord, order])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -444,16 +458,21 @@ export function QuoteBuild() {
 
   const selectedTemplateName =
     selectedTemplateOption?.name ??
-    t('quotes.templateNames.custom', { defaultValue: 'Custom' })
+    (templatesLoading
+      ? t('common.loading', { defaultValue: 'Loading…' })
+      : t('quotes.templates', { defaultValue: 'Templates' }))
 
   const handleTemplateChange = (nextTemplate: string) => {
     setTemplate(nextTemplate)
   }
 
-  const selectTemplate = (preset: TemplateOption) => {
-    setSelectedTemplateId(preset.id)
-    setTemplate(preset.body)
+  const selectTemplate = (meta: QuoteTemplateMeta) => {
     setTemplatesOpen(false)
+    if (meta.id === selectedTemplateId) return
+    // Force the new template's backend body to load (clears any prior edit).
+    loadedBodyFor.current = null
+    setSelectedTemplateId(meta.id)
+    setTemplate('')
   }
 
   const setField = (key: keyof QuoteDocFields) => (value: string) => setDoc(prev => ({ ...prev, [key]: value }))
@@ -680,50 +699,61 @@ t
                 </div>
               </div>
               <div className="grid gap-1.5">
-                {templateOptions.map((preset) => {
-                  const selected = preset.id === selectedTemplateId
+                {templateOptions.length === 0 ? (
+                  <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
+                    {templatesLoading
+                      ? t('common.loading', { defaultValue: 'Loading…' })
+                      : t('quotes.noTemplates', {
+                          defaultValue: 'No templates found'
+                        })}
+                  </div>
+                ) : (
+                  templateOptions.map((preset) => {
+                    const selected = preset.id === selectedTemplateId
 
-                  return (
-                    <button
-                      key={preset.id}
-                      type="button"
-                      onClick={() => selectTemplate(preset)}
-                      className={cn(
-                        'rounded-lg border p-3 text-left transition-colors hover:bg-muted/40',
-                        selected
-                          ? 'border-primary bg-primary/5 ring-2 ring-primary/15'
-                          : 'border-border bg-background'
-                      )}>
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="flex min-w-0 items-center gap-2">
-                            <span className="truncate text-sm font-semibold">
-                              {preset.name}
-                            </span>
-                            {preset.isDefault && (
-                              <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                                {t('quotes.wizard.defaultTemplate', {
-                                  defaultValue: 'Default'
-                                })}
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => selectTemplate(preset)}
+                        className={cn(
+                          'rounded-lg border p-3 text-left transition-colors hover:bg-muted/40',
+                          selected
+                            ? 'border-primary bg-primary/5 ring-2 ring-primary/15'
+                            : 'border-border bg-background'
+                        )}>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex min-w-0 items-center gap-2">
+                              <span className="truncate text-sm font-semibold">
+                                {preset.name}
                               </span>
-                            )}
+                              {preset.isDefault && (
+                                <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                                  {t('quotes.wizard.defaultTemplate', {
+                                    defaultValue: 'Default'
+                                  })}
+                                </span>
+                              )}
+                            </div>
+                            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                              {(preset.pageFormat ?? 'A4')} ·{' '}
+                              {preset.pageOrientation ?? 'portrait'}
+                            </p>
                           </div>
-                          <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">
-                            {preset.description}
-                          </p>
+                          <span
+                            className={cn(
+                              'mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border',
+                              selected &&
+                              'border-primary bg-primary text-primary-foreground'
+                            )}>
+                            {selected && <Check className="size-3" />}
+                          </span>
                         </div>
-                        <span
-                          className={cn(
-                            'mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border',
-                            selected &&
-                            'border-primary bg-primary text-primary-foreground'
-                          )}>
-                          {selected && <Check className="size-3" />}
-                        </span>
-                      </div>
-                    </button>
-                  )
-                })}
+                      </button>
+                    )
+                  })
+                )}
               </div>
             </PopoverContent>
           </Popover>
