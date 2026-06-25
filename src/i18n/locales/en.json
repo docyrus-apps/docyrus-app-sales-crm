@@ -972,6 +972,7 @@
     "preview": "Preview",
     "printPreview": "Print/Preview",
     "sendMail": "Send mail",
+    "downloadPdf": "Download PDF",
     "mailComingSoon": "Quote email sending will be wired with templates.",
     "editLineItems": "Edit line items",
     "openBuilder": "Open builder",

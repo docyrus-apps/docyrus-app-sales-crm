@@ -197,7 +197,7 @@ const A4_PREVIEW_CSS = `
   .page h3{font-size:18px;margin:18px 0 8px;font-weight:600}
   .page p{margin:0 0 10px}
   .page table{border-collapse:collapse;width:100%;margin:8px 0}
-  .page th,.page td{padding:8px 10px;text-align:left;vertical-align:top}
+  .page th,.page td{border:1px solid #e2e8f0;padding:8px 10px;text-align:left;vertical-align:top}
   .page th{font-weight:600}
   .page hr{border:0;border-top:1px solid #e2e8f0;margin:16px 0}
   .page a{color:#1d4ed8;text-decoration:underline}

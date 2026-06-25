@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import { useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
@@ -220,6 +220,8 @@ export function QuoteCreateWizard({
   const [dealId, setDealId] = useState<string | null>(null)
   const [dealName, setDealName] = useState<string | null>(null)
   const [docTitle, setDocTitle] = useState('')
+  // Once the user edits the title manually, stop auto-deriving it.
+  const titleTouched = useRef(false)
   const [validUntil, setValidUntil] = useState('')
   const [templateId, setTemplateId] = useState('standard')
   const [pricingDocument, setPricingDocument] = useState<IPricingDocumentData>(
@@ -273,6 +275,7 @@ export function QuoteCreateWizard({
     setDealId(initialDealId ?? null)
     setDealName(null)
     setDocTitle('')
+    titleTouched.current = false
     setValidUntil('')
     setTemplateId('standard')
     setPricingDocument(makeInitialPricingDocument())
@@ -284,6 +287,15 @@ initialOrganizationId,
 initialOrganizationName,
 open
 ])
+
+  /*
+   * Auto-derive the document title from the chosen customer — "{Customer}
+   * Price Quote" — until the user types their own title.
+   */
+  useEffect(() => {
+    if (titleTouched.current) return
+    setDocTitle(customerName ? `${customerName} Price Quote` : '')
+  }, [customerName])
 
   useEffect(() => {
     if (!open || !initialDeal) return
@@ -586,7 +598,9 @@ open
 
     try {
       const quoteDoc = {
-        docTitle: docTitle.trim(),
+        docTitle:
+          docTitle.trim() ||
+          (customerName ? `${customerName} Price Quote` : ''),
         validUntil,
         billingEmail: '',
         billingAddress: '',
@@ -791,7 +805,10 @@ open
                   })}>
                   <Input
                     value={docTitle}
-                    onChange={event => setDocTitle(event.target.value)}
+                    onChange={(event) => {
+                      titleTouched.current = true
+                      setDocTitle(event.target.value)
+                    }}
                     placeholder={
                       customerName
                         ? `${t('quotes.untitledQuote', {

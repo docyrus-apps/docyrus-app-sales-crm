@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 
 import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
@@ -9,16 +9,19 @@ import {
   Building2,
   Check,
   ChevronsUpDown,
+  Download,
   LayoutTemplate,
   Loader2,
-  Mail,
-  Package
+  Package,
+  Send
 } from 'lucide-react'
 
 import {
   HtmlTemplateEditor,
   numberToWordsTR
 } from '@/components/docyrus/html-template-editor'
+import { createEditorTemplateEngine } from '@/components/docyrus/html-template-editor/lib/editor-template-engine'
+import { htmlTemplateToPdf } from '@/components/docyrus/html-template-editor/lib/html-to-pdf'
 import { QuoteLineItems } from '@/components/quotes/quote-line-items'
 import { QuoteEmailDialog } from '@/components/quotes/quote-email-dialog'
 import { PageContainer } from '@/components/layout/page-container'
@@ -53,6 +56,7 @@ import { useSalesOrderItems } from '@/hooks/use-sales-order-items'
 import { useCompanies, useCompany } from '@/hooks/use-companies'
 import { useBaseCrmSalesOrderCollection } from '@/collections'
 import { useDateFormat } from '@/lib/use-date-format'
+import { useUiLocale } from '@/hooks/use-ui-locale'
 import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
 import {
   DEFAULT_TEMPLATE,
@@ -259,6 +263,12 @@ export function QuoteBuild() {
   const id = quoteId ?? ''
   const storageId = id || 'new'
   const { formatDate } = useDateFormat()
+  const uiLocale = useUiLocale()
+  /*
+   * BCP-47 locale handed to the template format helpers. Defaults to tr-TR to
+   * match the TRY default currency; English UI gets en-US.
+   */
+  const documentLocale = uiLocale === 'en' ? 'en-US' : 'tr-TR'
   const fallbackTemplateOptions = useMemo<Array<TemplateOption>>(
     () => QUOTE_TEMPLATE_PRESETS.map(preset => ({
         id: preset.id,
@@ -327,32 +337,10 @@ export function QuoteBuild() {
       : t('quotes.untitledQuote', { defaultValue: 'Teklif' }))
 
   useSetDetailBreadcrumbTitle(quoteTitle)
-  const [templatePresetId, setTemplatePresetId] = useState<string | null>(
-    () => {
-      if (typeof window === 'undefined') return null
-
-      return window.localStorage.getItem(`quote-template-id:${storageId}`)
-    }
-  )
-  const preferredTemplateId =
-    (typeof order?.quote_template_id === 'string'
-      ? order.quote_template_id
-      : null) ?? templatePresetId
-  const selectedTemplateOption = useMemo(
-    () => (preferredTemplateId
-        ? templateOptions.find(
-            template => template.id === preferredTemplateId ||
-              template.backendTemplateId === preferredTemplateId
-          )
-        : null) ??
-        templateOptions.find(template => template.isDefault) ??
-        templateOptions[0] ??
-        null,
-    [preferredTemplateId, templateOptions]
-  )
-  const selectedTemplateId = selectedTemplateOption?.id ?? null
-  const selectedBackendTemplateId =
-    selectedTemplateOption?.backendTemplateId ?? null
+  // Sanitized file name for the header "Download PDF" action.
+  const pdfFileName = `${
+    quoteTitle.replace(/[\\/:*?"<>|]+/g, '_').trim() || 'teklif'
+  }.pdf`
   const [template, setTemplate] = useState<string>(() => {
     if (typeof window === 'undefined') return DEFAULT_TEMPLATE
 
@@ -361,71 +349,66 @@ export function QuoteBuild() {
       DEFAULT_TEMPLATE
     )
   })
-  const [loadedTemplateId, setLoadedTemplateId] = useState<string | null>(null)
-  const [templateDirty, setTemplateDirty] = useState(false)
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
+    () => (typeof window === 'undefined'
+        ? null
+        : window.localStorage.getItem(`quote-template-id:${storageId}`))
+  )
   const [saving, setSaving] = useState(false)
   const [justSaved, setJustSaved] = useState(false)
   const [mailOpen, setMailOpen] = useState(false)
   const [lineItemsOpen, setLineItemsOpen] = useState(false)
   const [templatesOpen, setTemplatesOpen] = useState(false)
+  const [pdfBusy, setPdfBusy] = useState(false)
 
+  /*
+   * The selected template resolves from the in-session selection first — so a
+   * template click wins immediately — then falls back to the default preset.
+   * `selectedTemplateId` may hold a preset id OR a backend id; both are matched.
+   */
+  const selectedTemplateOption = useMemo(
+    () => (selectedTemplateId
+        ? templateOptions.find(
+            o => o.id === selectedTemplateId ||
+              o.backendTemplateId === selectedTemplateId
+          )
+        : null) ??
+        templateOptions.find(o => o.isDefault) ??
+        templateOptions[0] ??
+        null,
+    [selectedTemplateId, templateOptions]
+  )
+  const selectedBackendTemplateId =
+    selectedTemplateOption?.backendTemplateId ?? null
+
+  // Hydrate doc + template body + selected template from the saved record once.
   useEffect(() => {
     if (!order || docHydratedFromRecord) return
 
     const recordDoc = normalizeQuoteDoc(order.quote_doc_json)
 
     if (recordDoc) setDoc(recordDoc)
-    setDocHydratedFromRecord(true)
-  }, [docHydratedFromRecord, order])
 
-  useEffect(() => {
-    if (!selectedTemplateOption) return
-
-    const storedTemplateId =
-      typeof window === 'undefined'
-        ? null
-        : window.localStorage.getItem(`quote-template-id:${storageId}`)
-    const canUseStoredDraft =
-      storedTemplateId === selectedTemplateOption.id ||
-      storedTemplateId === selectedTemplateOption.backendTemplateId
-    const storedDraft =
-      typeof window === 'undefined' || !canUseStoredDraft
-        ? null
-        : window.localStorage.getItem(`quote-template:${storageId}`)
-    const recordDraft =
-      doc.templateBody &&
-      (doc.templateBodyTemplateId === selectedTemplateOption.id ||
-        doc.templateBodyTemplateId === selectedTemplateOption.backendTemplateId)
-        ? doc.templateBody
+    const savedId =
+      typeof order.quote_template_id === 'string'
+        ? order.quote_template_id
         : null
-    const nextBody = isLegacyUnsafeTemplateDraft(storedDraft)
-      ? selectedTemplateOption.body
-      : storedDraft || recordDraft || selectedTemplateOption.body
 
-    if (!nextBody) return
-    if (loadedTemplateId === selectedTemplateId && templateDirty) return
+    if (savedId) setSelectedTemplateId(savedId)
 
-    setTemplate(nextBody)
-    if (
-      typeof window !== 'undefined' &&
-      isLegacyUnsafeTemplateDraft(storedDraft)
-    ) {
-      window.localStorage.setItem(
-        `quote-template:${storageId}`,
-        selectedTemplateOption.body
+    const savedBody = recordDoc?.templateBody
+
+    if (savedBody && !isLegacyUnsafeTemplateDraft(savedBody)) {
+      setTemplate(savedBody)
+    } else if (savedId) {
+      const opt = templateOptions.find(
+        o => o.id === savedId || o.backendTemplateId === savedId
       )
+
+      if (opt) setTemplate(opt.body)
     }
-    setLoadedTemplateId(selectedTemplateId)
-    setTemplateDirty(false)
-  }, [
-    loadedTemplateId,
-    doc.templateBody,
-    doc.templateBodyTemplateId,
-    selectedTemplateId,
-    selectedTemplateOption,
-    storageId,
-    templateDirty
-  ])
+    setDocHydratedFromRecord(true)
+  }, [docHydratedFromRecord, order, templateOptions])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -465,14 +448,11 @@ export function QuoteBuild() {
 
   const handleTemplateChange = (nextTemplate: string) => {
     setTemplate(nextTemplate)
-    setTemplateDirty(nextTemplate !== selectedTemplateOption?.body)
   }
 
   const selectTemplate = (preset: TemplateOption) => {
-    setTemplatePresetId(preset.backendTemplateId)
+    setSelectedTemplateId(preset.id)
     setTemplate(preset.body)
-    setLoadedTemplateId(preset.id)
-    setTemplateDirty(false)
     setTemplatesOpen(false)
   }
 
@@ -496,8 +476,10 @@ export function QuoteBuild() {
         quote: {
           title: doc.docTitle || quoteTitle,
           no: '',
-          date: formatDate(new Date().toISOString()),
-          validUntil: doc.validUntil
+          date: formatDate(
+            (order as any)?.created_on ?? new Date().toISOString()
+          ),
+          validUntil: doc.validUntil ? formatDate(doc.validUntil) : ''
         },
         customer: {
           name: customerName ?? '',
@@ -509,6 +491,7 @@ export function QuoteBuild() {
         intro: doc.intro,
         terms: doc.terms,
         currency: DEFAULT_CURRENCY,
+        locale: documentLocale,
         lineItems,
         totals: {
           subtotal: Number(order?.sub_total ?? 0),
@@ -528,8 +511,57 @@ export function QuoteBuild() {
     quoteTitle,
     id,
     formatDate,
+    documentLocale,
     doc
   ])
+
+  /*
+   * Isolated engine for the header "Download PDF" action (same helpers as the
+   * editor preview, so the downloaded PDF matches what's on screen).
+   */
+  const pdfEngine = useMemo(
+    () => createEditorTemplateEngine({ extraHelpers: { numberToWordsTR } }),
+    []
+  )
+
+  const handleDownloadPdf = useCallback(async () => {
+    if (pdfBusy) return
+    setPdfBusy(true)
+    try {
+      let data: unknown = {}
+
+      try {
+        data = JSON.parse(dataJson)
+      } catch {
+        data = {}
+      }
+      const html = await pdfEngine.compileTpl(template)(data)
+      const bytes = await htmlTemplateToPdf(html)
+      const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' })
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+
+      anchor.href = url
+      anchor.download = pdfFileName
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+    } catch {
+      toast.error(
+        t('quotes.pdfFailed', { defaultValue: 'PDF oluşturulamadı' })
+      )
+    } finally {
+      setPdfBusy(false)
+    }
+  }, [
+pdfBusy,
+dataJson,
+template,
+pdfFileName,
+pdfEngine,
+t
+])
 
   const handleSave = async () => {
     if (!customerId) {
@@ -586,7 +618,6 @@ export function QuoteBuild() {
         queryClient.invalidateQueries({ queryKey: ['sales-orders'] })
         queryClient.invalidateQueries({ queryKey: ['sales-orders', id] })
         setDoc(savedDoc)
-        setTemplateDirty(false)
         toast.success(t('quotes.saved', { defaultValue: 'Quote saved' }))
         setJustSaved(true)
         window.setTimeout(() => setJustSaved(false), 2000)
@@ -699,7 +730,22 @@ export function QuoteBuild() {
 
           <Button
             variant="outline"
-            size="icon"
+            size="sm"
+            className="gap-1.5"
+            disabled={pdfBusy}
+            onClick={handleDownloadPdf}>
+            {pdfBusy ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Download className="size-4" />
+            )}
+            {t('quotes.downloadPdf', { defaultValue: 'PDF İndir' })}
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
             disabled={!canMail}
             title={
               canMail
@@ -709,7 +755,8 @@ export function QuoteBuild() {
                   })
             }
             onClick={() => setMailOpen(true)}>
-            <Mail className="size-4" />
+            <Send className="size-4" />
+            {t('quotes.send', { defaultValue: 'Send' })}
           </Button>
         </div>
       </div>

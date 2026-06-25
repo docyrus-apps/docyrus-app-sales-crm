@@ -53,7 +53,7 @@ const PDF_PAGE_CSS = `
   .dy-pdf-page h3 { font-size: 18px; margin: 18px 0 8px; font-weight: 600; }
   .dy-pdf-page p { margin: 0 0 10px; }
   .dy-pdf-page table { border-collapse: collapse; width: 100%; margin: 8px 0; }
-  .dy-pdf-page th, .dy-pdf-page td { padding: 8px 10px; text-align: left; vertical-align: top; }
+  .dy-pdf-page th, .dy-pdf-page td { border: 1px solid #e2e8f0; padding: 8px 10px; text-align: left; vertical-align: top; }
   .dy-pdf-page th { font-weight: 600; }
   .dy-pdf-page hr { border: 0; border-top: 1px solid #e2e8f0; margin: 16px 0; }
   .dy-pdf-page a { color: #1d4ed8; text-decoration: underline; }
