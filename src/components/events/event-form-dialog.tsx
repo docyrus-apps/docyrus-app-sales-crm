@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useForm } from '@tanstack/react-form'
 import { zodValidator } from '@tanstack/zod-form-adapter'
 import { CalendarIcon, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { format } from 'date-fns'
 
 import { Button } from '@/components/animate-ui/components/buttons/button'
@@ -13,6 +14,7 @@ import {
   AwesomeDialogFooter,
   AwesomeDialogHeader
 } from '@/components/docyrus/awesome-dialog'
+import { FormSubmitAlert } from '@/components/crm/form-submit-alert'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -25,6 +27,10 @@ import {
 import { eventFormSchema } from '@/schemas/event-schema'
 import { useCreateEvent, useUpdateEvent } from '@/hooks/use-events'
 import { cn } from '@/lib/utils'
+import {
+  getSubmitFailureMessage,
+  validateSubmitValues
+} from '@/lib/form-submit-feedback'
 
 interface EventFormDialogProps {
   open: boolean;
@@ -49,6 +55,7 @@ export function EventFormDialog({
   const [endDate, setEndDate] = useState<Date | undefined>(
     event?.end_date ? new Date(event.end_date) : undefined
   )
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const form = useForm({
     defaultValues: {
@@ -61,7 +68,8 @@ export function EventFormDialog({
     },
     validatorAdapter: zodValidator(),
     validators: {
-      onChange: eventFormSchema
+      onChange: eventFormSchema,
+      onSubmit: eventFormSchema
     },
     onSubmit: async ({ value }) => {
       // Clean up empty strings (convert to undefined for UUID fields)
@@ -70,6 +78,7 @@ export function EventFormDialog({
       )
 
       try {
+        setSubmitError(null)
         if (mode === 'create') {
           await createEvent.mutateAsync(cleanedData)
         } else if (event?.id) {
@@ -82,9 +91,14 @@ export function EventFormDialog({
         form.reset()
       } catch (error) {
         console.error('Form submission error:', error)
+        setSubmitError(getSubmitFailureMessage(error, t))
       }
     }
   })
+
+  useEffect(() => {
+    if (open) setSubmitError(null)
+  }, [open, mode, event?.id])
 
   // Sync date state with form
   useEffect(() => {
@@ -100,6 +114,27 @@ export function EventFormDialog({
   }, [endDate, form])
 
   const { isSubmitting } = form.state
+  const fieldLabels = {
+    subject: t('events.form.subjectLabel')
+  }
+  const handleFormSubmit = () => {
+    const validationMessage = validateSubmitValues(
+      eventFormSchema,
+      form.state.values,
+      fieldLabels,
+      t
+    )
+
+    if (validationMessage) {
+      setSubmitError(validationMessage)
+      toast.error(validationMessage)
+
+      return
+    }
+
+    setSubmitError(null)
+    void form.handleSubmit()
+  }
 
   return (
     <AwesomeDialog
@@ -111,7 +146,7 @@ export function EventFormDialog({
         onSubmit={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          form.handleSubmit()
+          handleFormSubmit()
         }}
         className="flex flex-col flex-1 overflow-hidden">
         <AwesomeDialogHeader
@@ -128,6 +163,9 @@ export function EventFormDialog({
 
         <AwesomeDialogBody>
           <div className="space-y-4">
+            <FormSubmitAlert
+              title={t('common.validationError')}
+              message={submitError} />
             {/* Subject */}
             <form.Field name="subject">
               {field => (

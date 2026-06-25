@@ -47,6 +47,7 @@ import { useRecordActivities } from '@/hooks/use-record-activities'
 import { ContactFormDialog } from '@/components/contacts/contact-form-dialog'
 import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
+import { mergeCurrentEnumOption } from '@/lib/enum-options'
 
 import {
   type FieldChange,
@@ -55,11 +56,11 @@ import {
 
 const FIELD_SLUGS = [
   'name',
-  'commercial_title',
-  'industry',
-  'type',
   'status',
+  'type',
+  'industry',
   'lifecycle_stage',
+  'commercial_title',
   'email',
   'phone',
   'website',
@@ -225,6 +226,25 @@ export function CompanyDetail() {
   const typeEditable = typeEntities.length > 0
   const industryEditable = industryEntities.length > 0
   const lifecycleEditable = lifecycleEntities.length > 0
+  const statusOptions = useMemo(
+    () => mergeCurrentEnumOption(toOptions(statusEntities), company?.status),
+    [statusEntities, company?.status]
+  )
+  const typeOptions = useMemo(
+    () => mergeCurrentEnumOption(toOptions(typeEntities), company?.type),
+    [typeEntities, company?.type]
+  )
+  const industryOptions = useMemo(
+    () => mergeCurrentEnumOption(toOptions(industryEntities), company?.industry),
+    [industryEntities, company?.industry]
+  )
+  const lifecycleOptions = useMemo(
+    () => mergeCurrentEnumOption(
+        toOptions(lifecycleEntities),
+        company?.lifecycle_stage
+      ),
+    [lifecycleEntities, company?.lifecycle_stage]
+  )
 
   const detailFields = useMemo<Array<RecordDetailField>>(
     () => [
@@ -241,7 +261,7 @@ export function CompanyDetail() {
           t('companies.industry'),
           industryEditable ? 'field-select' : 'field-text'
         ),
-        enumOptions: toOptions(industryEntities),
+        enumOptions: industryOptions,
         readOnly: !industryEditable
       },
       {
@@ -250,7 +270,7 @@ export function CompanyDetail() {
           t('companies.type'),
           typeEditable ? 'field-select' : 'field-text'
         ),
-        enumOptions: toOptions(typeEntities),
+        enumOptions: typeOptions,
         readOnly: !typeEditable
       },
       {
@@ -259,7 +279,7 @@ export function CompanyDetail() {
           t('companies.status'),
           statusEditable ? 'field-status' : 'field-text'
         ),
-        enumOptions: toOptions(statusEntities),
+        enumOptions: statusOptions,
         readOnly: !statusEditable
       },
       {
@@ -268,7 +288,7 @@ export function CompanyDetail() {
           t('companies.lifecycleStage', { defaultValue: 'Lifecycle Stage' }),
           lifecycleEditable ? 'field-select' : 'field-text'
         ),
-        enumOptions: toOptions(lifecycleEntities),
+        enumOptions: lifecycleOptions,
         readOnly: !lifecycleEditable
       },
       { field: makeField('email', t('companies.email'), 'field-email') },
@@ -291,10 +311,10 @@ export function CompanyDetail() {
       typeEditable,
       industryEditable,
       lifecycleEditable,
-      statusEntities,
-      typeEntities,
-      industryEntities,
-      lifecycleEntities
+      statusOptions,
+      typeOptions,
+      industryOptions,
+      lifecycleOptions
     ]
   )
 

@@ -45,6 +45,7 @@ import { useRecordActivities } from '@/hooks/use-record-activities'
 import { useEnumEntities } from '@/hooks/use-enums'
 import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
+import { mergeCurrentEnumOption } from '@/lib/enum-options'
 
 import {
   type FieldChange,
@@ -53,12 +54,12 @@ import {
 
 const FIELD_SLUGS = [
   'name',
-  'job_title',
+  'organization',
   'email',
   'mobile',
-  'organization',
-  'contact_type',
-  'contact_status'
+  'job_title',
+  'contact_status',
+  'contact_type'
 ]
 
 function makeField(
@@ -173,6 +174,27 @@ export function ContactDetail() {
 
   const typeEditable = typeEntities.length > 0
   const statusEditable = statusEntities.length > 0
+  const organizationOptions = useMemo<Array<EnumOption>>(
+    () => mergeCurrentEnumOption(
+        companies.map((company: any) => ({
+          id: company.id,
+          name: company.name
+        })),
+        contact?.organization
+      ),
+    [companies, contact?.organization]
+  )
+  const typeOptions = useMemo(
+    () => mergeCurrentEnumOption(toOptions(typeEntities), contact?.contact_type),
+    [typeEntities, contact?.contact_type]
+  )
+  const statusOptions = useMemo(
+    () => mergeCurrentEnumOption(
+        toOptions(statusEntities),
+        contact?.contact_status
+      ),
+    [statusEntities, contact?.contact_status]
+  )
 
   const detailFields = useMemo<Array<RecordDetailField>>(
     () => [
@@ -186,10 +208,7 @@ export function ContactDetail() {
           t('contacts.organization'),
           'field-select'
         ),
-        enumOptions: companies.map((company: any) => ({
-          id: company.id,
-          name: company.name
-        }))
+        enumOptions: organizationOptions
       },
       {
         field: makeField(
@@ -197,7 +216,7 @@ export function ContactDetail() {
           t('contacts.type', { defaultValue: 'Type' }),
           typeEditable ? 'field-select' : 'field-text'
         ),
-        enumOptions: toOptions(typeEntities),
+        enumOptions: typeOptions,
         readOnly: !typeEditable
       },
       {
@@ -206,18 +225,18 @@ export function ContactDetail() {
           t('contacts.status', { defaultValue: 'Status' }),
           statusEditable ? 'field-status' : 'field-text'
         ),
-        enumOptions: toOptions(statusEntities),
+        enumOptions: statusOptions,
         readOnly: !statusEditable
       }
     ],
     [
-t,
-companies,
-typeEditable,
-statusEditable,
-typeEntities,
-statusEntities
-]
+      t,
+      organizationOptions,
+      typeEditable,
+      statusEditable,
+      typeOptions,
+      statusOptions
+    ]
   )
 
   const flatRecord = useMemo<Record<string, unknown>>(() => {

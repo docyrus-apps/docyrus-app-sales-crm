@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import { zodValidator } from '@tanstack/zod-form-adapter'
 import { useTranslation } from 'react-i18next'
 import { CalendarIcon, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { format } from 'date-fns'
 
 import { Button } from '@/components/animate-ui/components/buttons/button'
@@ -14,6 +15,7 @@ import { AwesomeDialog } from '@/components/docyrus/awesome-dialog'
 import { AwesomeDialogHeader } from '@/components/docyrus/awesome-dialog/awesome-dialog-header'
 import { AwesomeDialogBody } from '@/components/docyrus/awesome-dialog/awesome-dialog-body'
 import { AwesomeDialogFooter } from '@/components/docyrus/awesome-dialog/awesome-dialog-footer'
+import { FormSubmitAlert } from '@/components/crm/form-submit-alert'
 import { SelectFormField } from '@/components/docyrus/form-fields/select-form-field'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
@@ -35,6 +37,10 @@ import { useContacts } from '@/hooks/use-contacts'
 import { useUsers } from '@/hooks/use-users'
 import { useEnumOptions } from '@/hooks/use-enums'
 import { cn } from '@/lib/utils'
+import {
+  getSubmitFailureMessage,
+  validateSubmitValues
+} from '@/lib/form-submit-feedback'
 
 interface DealFormDialogProps {
   open: boolean;
@@ -86,6 +92,16 @@ export function DealFormDialog({
     label: country.name,
     value: country.id ?? ''
   }))
+  const leadSourceComboboxOptions = leadSourceOptions.map((option: any) => ({
+    label: option.label,
+    value: option.value
+  }))
+  const customerTypeComboboxOptions = customerTypeOptions.map(
+    (option: any) => ({
+      label: option.label,
+      value: option.value
+    })
+  )
   const initialValues = useMemo<DealFormData>(
     () => ({
       organization: getRelationValue(deal?.organization),
@@ -105,28 +121,35 @@ export function DealFormDialog({
   )
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>()
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const form = useForm<DealFormData>({
     formId: `deal-form-${mode}-${deal?.id ?? 'new'}`,
     defaultValues: initialValues,
     validatorAdapter: zodValidator(),
     validators: {
-      onChange: dealFormSchema
+      onChange: dealFormSchema,
+      onSubmit: dealFormSchema
     },
     onSubmit: async ({ value }) => {
-      // Clean up empty strings (convert to undefined for UUID fields)
-      const cleanedData = Object.fromEntries(
-        Object.entries(value).map(([key, val]) => [key, val === '' ? undefined : val])
-      )
+      try {
+        setSubmitError(null)
+        // Clean up empty strings (convert to undefined for UUID fields)
+        const cleanedData = Object.fromEntries(
+          Object.entries(value).map(([key, val]) => [key, val === '' ? undefined : val])
+        )
 
-      if (mode === 'create') {
-        await createDeal.mutateAsync(cleanedData)
-      } else if (deal?.id) {
-        await updateDeal.mutateAsync({ dealId: deal.id, data: cleanedData })
+        if (mode === 'create') {
+          await createDeal.mutateAsync(cleanedData)
+        } else if (deal?.id) {
+          await updateDeal.mutateAsync({ dealId: deal.id, data: cleanedData })
+        }
+
+        await onSubmitSuccess?.()
+        onOpenChange(false)
+      } catch (error) {
+        setSubmitError(getSubmitFailureMessage(error, t))
       }
-
-      await onSubmitSuccess?.()
-      onOpenChange(false)
     }
   })
 
@@ -139,6 +162,7 @@ export function DealFormDialog({
         ? new Date(initialValues.expected_closing_date)
         : undefined
     )
+    setSubmitError(null)
   }, [
 form,
 initialValues,
@@ -169,6 +193,28 @@ mode
   }))
 
   const isSubmitting = createDeal.isPending || updateDeal.isPending
+  const fieldLabels = {
+    organization: t('deals.form.organizationLabel'),
+    stage: t('deals.form.stageLabel')
+  }
+  const handleFormSubmit = () => {
+    const validationMessage = validateSubmitValues(
+      dealFormSchema,
+      form.state.values,
+      fieldLabels,
+      t
+    )
+
+    if (validationMessage) {
+      setSubmitError(validationMessage)
+      toast.error(validationMessage)
+
+      return
+    }
+
+    setSubmitError(null)
+    void form.handleSubmit()
+  }
 
   return (
     <AwesomeDialog
@@ -180,7 +226,7 @@ mode
         onSubmit={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          form.handleSubmit()
+          handleFormSubmit()
         }}
         className="flex flex-col flex-1 overflow-hidden">
         <AwesomeDialogHeader
@@ -196,6 +242,9 @@ mode
           } />
 
         <AwesomeDialogBody className="space-y-4">
+          <FormSubmitAlert
+            title={t('common.validationError')}
+            message={submitError} />
           <div className="grid grid-cols-2 gap-4">
             {/* Organization Field */}
             <form.Field name="organization">
@@ -227,8 +276,10 @@ mode
             <SelectFormField
               required
               field={{
+                id: 'stage',
                 slug: 'stage',
                 name: t('deals.form.stageLabel'),
+                type: 'field-status',
                 readOnly: false
               }}
               form={form}
@@ -367,34 +418,58 @@ mode
             </form.Field>
 
             {/* Lead Source Field */}
-            <SelectFormField
-              field={{
-                slug: 'lead_source',
-                name: t('deals.form.leadSourceLabel'),
-                readOnly: false
-              }}
-              form={form}
-              enumOptions={leadSourceOptions.map((opt: any) => ({
-                id: opt.value,
-                name: opt.label,
-                color: opt.color,
-                icon: opt.icon
-              }))} />
+            <form.Field name="lead_source">
+              {field => (
+                <Field>
+                  <Label htmlFor={field.name}>
+                    {t('deals.form.leadSourceLabel')}
+                  </Label>
+                  <Combobox
+                    options={leadSourceComboboxOptions}
+                    value={field.state.value}
+                    onValueChange={value => field.handleChange(value)}
+                    placeholder={t('deals.form.leadSourceLabel')}
+                    emptyText={t('common.noResults', {
+                      defaultValue: 'No results'
+                    })} />
+                  {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          t('common.validationError')}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
 
             {/* Customer Type Field */}
-            <SelectFormField
-              field={{
-                slug: 'customer_type',
-                name: t('deals.form.customerTypeLabel'),
-                readOnly: false
-              }}
-              form={form}
-              enumOptions={customerTypeOptions.map((opt: any) => ({
-                id: opt.value,
-                name: opt.label,
-                color: opt.color,
-                icon: opt.icon
-              }))} />
+            <form.Field name="customer_type">
+              {field => (
+                <Field>
+                  <Label htmlFor={field.name}>
+                    {t('deals.form.customerTypeLabel')}
+                  </Label>
+                  <Combobox
+                    options={customerTypeComboboxOptions}
+                    value={field.state.value}
+                    onValueChange={value => field.handleChange(value)}
+                    placeholder={t('deals.form.customerTypeLabel')}
+                    emptyText={t('common.noResults', {
+                      defaultValue: 'No results'
+                    })} />
+                  {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          t('common.validationError')}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
 
             {/* Country Field */}
             <form.Field name="country">

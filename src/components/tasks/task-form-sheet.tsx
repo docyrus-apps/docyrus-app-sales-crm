@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { useForm } from '@tanstack/react-form'
 import { zodValidator } from '@tanstack/zod-form-adapter'
 import { CalendarIcon, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { format } from 'date-fns'
 
 import { Button } from '@/components/animate-ui/components/buttons/button'
@@ -15,6 +16,7 @@ import {
   AwesomeDialogFooter,
   AwesomeDialogHeader
 } from '@/components/docyrus/awesome-dialog'
+import { FormSubmitAlert } from '@/components/crm/form-submit-alert'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -50,6 +52,10 @@ import { useCompanies } from '@/hooks/use-companies'
 import { useUsers } from '@/hooks/use-users'
 import { useEnumOptions } from '@/hooks/use-enums'
 import { cn } from '@/lib/utils'
+import {
+  getSubmitFailureMessage,
+  validateSubmitValues
+} from '@/lib/form-submit-feedback'
 
 interface TaskFormSheetProps {
   open: boolean;
@@ -95,6 +101,7 @@ export function TaskFormSheet({
   const [endDate, setEndDate] = useState<Date | undefined>(
     task?.end_date ? new Date(task.end_date) : undefined
   )
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const form = useForm<TaskFormData>({
     defaultValues: {
@@ -132,29 +139,39 @@ export function TaskFormSheet({
     },
     validatorAdapter: zodValidator(),
     validators: {
-      onChange: taskFormSchema
+      onChange: taskFormSchema,
+      onSubmit: taskFormSchema
     },
     onSubmit: async ({ value }) => {
-      // Clean up empty strings (convert to undefined for UUID fields)
-      const cleanedData = Object.fromEntries(
-        Object.entries(value).map(([key, val]) => [key, val === '' ? undefined : val])
-      )
+      try {
+        setSubmitError(null)
+        // Clean up empty strings (convert to undefined for UUID fields)
+        const cleanedData = Object.fromEntries(
+          Object.entries(value).map(([key, val]) => [key, val === '' ? undefined : val])
+        )
 
-      if (mode === 'create') {
-        const payload =
-          parentField && parentId
-            ? { ...cleanedData, [parentField]: parentId }
-            : cleanedData
+        if (mode === 'create') {
+          const payload =
+            parentField && parentId
+              ? { ...cleanedData, [parentField]: parentId }
+              : cleanedData
 
-        await createTask.mutateAsync(payload)
-      } else if (task?.id) {
-        await updateTask.mutateAsync({ taskId: task.id, data: cleanedData })
+          await createTask.mutateAsync(payload)
+        } else if (task?.id) {
+          await updateTask.mutateAsync({ taskId: task.id, data: cleanedData })
+        }
+
+        await onSubmitSuccess?.()
+        onOpenChange(false)
+      } catch (error) {
+        setSubmitError(getSubmitFailureMessage(error, t))
       }
-
-      await onSubmitSuccess?.()
-      onOpenChange(false)
     }
   })
+
+  useEffect(() => {
+    if (open) setSubmitError(null)
+  }, [open, mode, task?.id])
 
   useEffect(() => {
     if (startDate) {
@@ -177,8 +194,33 @@ export function TaskFormSheet({
     label: `${user.firstname} ${user.lastname}`,
     value: user.id
   }))
+  const priorityComboboxOptions = priorityOptions.map((option: any) => ({
+    label: option.label,
+    value: option.value
+  }))
 
   const isSubmitting = createTask.isPending || updateTask.isPending
+  const fieldLabels = {
+    subject: t('tasks.form.subjectLabel')
+  }
+  const handleFormSubmit = () => {
+    const validationMessage = validateSubmitValues(
+      taskFormSchema,
+      form.state.values,
+      fieldLabels,
+      t
+    )
+
+    if (validationMessage) {
+      setSubmitError(validationMessage)
+      toast.error(validationMessage)
+
+      return
+    }
+
+    setSubmitError(null)
+    void form.handleSubmit()
+  }
 
   return (
     <AwesomeDialog
@@ -191,7 +233,7 @@ export function TaskFormSheet({
         onSubmit={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          form.handleSubmit()
+          handleFormSubmit()
         }}
         className="flex flex-col flex-1 overflow-hidden">
         <AwesomeDialogHeader
@@ -207,6 +249,9 @@ export function TaskFormSheet({
           } />
 
         <AwesomeDialogBody className="space-y-4">
+          <FormSubmitAlert
+            title={t('common.validationError')}
+            message={submitError} />
           {/* Subject Field */}
           <form.Field name="subject">
             {field => (
@@ -298,23 +343,16 @@ export function TaskFormSheet({
                 <Label htmlFor={field.name}>
                   {t('tasks.form.priorityLabel', { defaultValue: 'Priority' })}
                 </Label>
-                <Select
+                <Combobox
+                  options={priorityComboboxOptions}
                   value={field.state.value}
-                  onValueChange={field.handleChange}>
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={t('tasks.form.priorityPlaceholder', {
-                        defaultValue: 'Select priority'
-                      })} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {priorityOptions.map((option: any) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onValueChange={value => field.handleChange(value)}
+                  placeholder={t('tasks.form.priorityPlaceholder', {
+                    defaultValue: 'Select priority'
+                  })}
+                  emptyText={t('common.noResults', {
+                    defaultValue: 'No results'
+                  })} />
                 {field.state.meta.errors?.[0] && (
                   <p className="text-sm text-destructive">
                     {typeof field.state.meta.errors[0] === 'string'

@@ -21,7 +21,7 @@ export const leadFormSchema = z.object({
   lead_source: z.string().optional(),
   lead_status: z.string().optional(),
   lead_type: z.string().optional(),
-  country: z.string().optional(),
+  country: z.string().min(1, 'Country is required'),
   record_owner: z.string().optional(),
   contact_message: z.string().optional(),
   lost_reason: z.string().optional(),

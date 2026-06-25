@@ -32,6 +32,7 @@ import { useSalesOrder, useUpdateSalesOrder } from '@/hooks/use-sales-orders'
 import { useCompanies } from '@/hooks/use-companies'
 import { useEnumEntities } from '@/hooks/use-enums'
 import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
+import { mergeCurrentEnumOption } from '@/lib/enum-options'
 
 const FIELD_SLUGS = [
   'organization',
@@ -154,10 +155,13 @@ export function QuoteDetail() {
           t('salesOrders.organization', { defaultValue: 'Customer' }),
           'field-select'
         ),
-        enumOptions: companies.map((company: any) => ({
-          id: company.id,
-          name: company.name
-        })),
+        enumOptions: mergeCurrentEnumOption(
+          companies.map((company: any) => ({
+            id: company.id,
+            name: company.name
+          })),
+          order?.organization
+        ),
         required: true
       },
       {
@@ -166,7 +170,10 @@ export function QuoteDetail() {
           t('salesOrders.status', { defaultValue: 'Status' }),
           statusEntities.length > 0 ? 'field-status' : 'field-text'
         ),
-        enumOptions: mapEnumEntitiesToOptions(statusEntities),
+        enumOptions: mergeCurrentEnumOption(
+          mapEnumEntitiesToOptions(statusEntities),
+          order?.status
+        ),
         readOnly: statusEntities.length === 0
       },
       {
@@ -202,7 +209,13 @@ export function QuoteDetail() {
         readOnly: true
       }
     ],
-    [companies, statusEntities, t]
+    [
+companies,
+order?.organization,
+order?.status,
+statusEntities,
+t
+]
   )
 
   const flatRecord = useMemo<Record<string, unknown>>(() => {
@@ -237,8 +250,8 @@ export function QuoteDetail() {
     <div className="flex w-full items-center justify-between gap-2">
       <Button
         size="sm"
-        variant="ghost"
-        className="h-7 px-2 text-[13px] font-medium"
+        variant="outline"
+        className="h-7 border-sky-200 bg-sky-50/80 px-2 text-[13px] font-medium text-sky-700 shadow-none hover:bg-sky-100 hover:text-sky-800 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300 dark:hover:bg-sky-900/40"
         title={t('quotes.printPreview', { defaultValue: 'Print/Preview' })}
         onClick={goBuild}>
         {t('quotes.printPreview', { defaultValue: 'Print/Preview' })}

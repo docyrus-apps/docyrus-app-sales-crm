@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import type { EnumOption, IField } from '@/components/docyrus/form-fields/types'
 
@@ -7,9 +7,11 @@ import { useQuery } from '@tanstack/react-query'
 import { zodValidator } from '@tanstack/zod-form-adapter'
 import { useTranslation } from 'react-i18next'
 import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { useBaseCountryCollection } from '@/collections'
 import { DynamicFormField } from '@/components/docyrus/form-fields/dynamic-form-field'
+import { FormSubmitAlert } from '@/components/crm/form-submit-alert'
 
 import { type LeadFormData } from '@/schemas/lead-schema'
 
@@ -37,6 +39,10 @@ import { useProducts } from '@/hooks/use-products'
 import { useUsers } from '@/hooks/use-users'
 import { useEnumOptions } from '@/hooks/use-enums'
 import { isLeadConvertedRecord } from '@/lib/lead-conversion'
+import {
+  getSubmitFailureMessage,
+  validateSubmitValues
+} from '@/lib/form-submit-feedback'
 
 interface LeadFormDialogProps {
   open: boolean;
@@ -158,34 +164,42 @@ export function LeadFormDialog({
 
   const isConverted = isLeadConvertedRecord(lead)
   const initialValues = useMemo(() => buildLeadFormDefaults(lead), [lead])
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const form = useForm<LeadFormData>({
     formId: `lead-form-${mode}-${lead?.id ?? 'new'}`,
     defaultValues: initialValues,
     validatorAdapter: zodValidator(),
     validators: {
-      onChange: leadFormSchema
+      onChange: leadFormSchema,
+      onSubmit: leadFormSchema
     },
     onSubmit: async ({ value }) => {
-      const { country, ...rest } = value
-      const cleanedData = Object.fromEntries(
-        Object.entries({ ...rest, countries: country }).map(([key, val]) => [key, val === '' ? undefined : val])
-      )
+      try {
+        setSubmitError(null)
+        const { country, ...rest } = value
+        const cleanedData = Object.fromEntries(
+          Object.entries({ ...rest, countries: country }).map(([key, val]) => [key, val === '' ? undefined : val])
+        )
 
-      if (mode === 'create') {
-        await createLead.mutateAsync(cleanedData)
-      } else if (lead?.id) {
-        await updateLead.mutateAsync({ leadId: lead.id, data: cleanedData })
+        if (mode === 'create') {
+          await createLead.mutateAsync(cleanedData)
+        } else if (lead?.id) {
+          await updateLead.mutateAsync({ leadId: lead.id, data: cleanedData })
+        }
+
+        await onSubmitSuccess?.()
+        onOpenChange(false)
+      } catch (error) {
+        setSubmitError(getSubmitFailureMessage(error, t))
       }
-
-      await onSubmitSuccess?.()
-      onOpenChange(false)
     }
   })
 
   useEffect(() => {
     if (!open) return
     form.reset(initialValues)
+    setSubmitError(null)
   }, [
 form,
 initialValues,
@@ -211,8 +225,54 @@ mode
     label: country.name,
     value: country.id ?? ''
   }))
+  const companyIndustryComboboxOptions = companyIndustryOptions.map(
+    (option: any) => ({
+      label: option.label,
+      value: option.value
+    })
+  )
+  const companySizeComboboxOptions = companySizeOptions.map((option: any) => ({
+    label: option.label,
+    value: option.value
+  }))
+  const leadSourceComboboxOptions = leadSourceOptions.map((option: any) => ({
+    label: option.label,
+    value: option.value
+  }))
+  const leadTypeComboboxOptions = leadTypeOptions.map((option: any) => ({
+    label: option.label,
+    value: option.value
+  }))
+  const lostReasonComboboxOptions = lostReasonOptions.map((option: any) => ({
+    label: option.label,
+    value: option.value
+  }))
 
   const isSubmitting = createLead.isPending || updateLead.isPending
+  const fieldLabels = {
+    name: t('leads.form.contactNameLabel', {
+      defaultValue: 'Contact name'
+    }),
+    country: t('leads.form.countryLabel', { defaultValue: 'Country' })
+  }
+  const handleFormSubmit = () => {
+    const validationMessage = validateSubmitValues(
+      leadFormSchema,
+      form.state.values,
+      fieldLabels,
+      t
+    )
+
+    if (validationMessage) {
+      setSubmitError(validationMessage)
+      toast.error(validationMessage)
+
+      return
+    }
+
+    setSubmitError(null)
+    void form.handleSubmit()
+  }
   const isDisqualifiedStatus = (statusValue: string | undefined) => {
     const selectedLeadStatus = leadStatusOptions.find(
       (option: any) => option.value === statusValue
@@ -248,11 +308,14 @@ mode
         onSubmit={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          if (!isConverted) form.handleSubmit()
+          if (!isConverted) handleFormSubmit()
         }}
         className="flex flex-col flex-1 overflow-hidden">
         <AwesomeDialogBody>
           <div className="space-y-6">
+            <FormSubmitAlert
+              title={t('common.validationError')}
+              message={submitError} />
             <section className="space-y-3">
               <h3 className="text-sm font-semibold">
                 {t('leads.form.contactSection', {
@@ -277,6 +340,14 @@ mode
                         placeholder={t('leads.form.contactNamePlaceholder', {
                           defaultValue: 'Enter contact name...'
                         })} />
+                      {field.state.meta.errors?.[0] && (
+                        <p className="text-sm text-destructive">
+                          {typeof field.state.meta.errors[0] === 'string'
+                            ? field.state.meta.errors[0]
+                            : field.state.meta.errors[0]?.message ||
+                              t('common.validationError')}
+                        </p>
+                      )}
                     </Field>
                   )}
                 </form.Field>
@@ -464,27 +535,20 @@ mode
                           defaultValue: 'Company industry'
                         })}
                       </Label>
-                      <Select
+                      <Combobox
+                        options={companyIndustryComboboxOptions}
                         value={field.state.value}
                         disabled={isConverted}
-                        onValueChange={field.handleChange}>
-                        <SelectTrigger>
-                          <SelectValue
-                            placeholder={t(
-                              'leads.form.companyIndustryPlaceholder',
-                              {
-                                defaultValue: 'Select industry...'
-                              }
-                            )} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {companyIndustryOptions.map((option: any) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        onValueChange={field.handleChange}
+                        placeholder={t(
+                          'leads.form.companyIndustryPlaceholder',
+                          {
+                            defaultValue: 'Select industry...'
+                          }
+                        )}
+                        emptyText={t('common.noResults', {
+                          defaultValue: 'No results'
+                        })} />
                     </Field>
                   )}
                 </form.Field>
@@ -497,27 +561,17 @@ mode
                           defaultValue: 'Company size'
                         })}
                       </Label>
-                      <Select
+                      <Combobox
+                        options={companySizeComboboxOptions}
                         value={field.state.value}
                         disabled={isConverted}
-                        onValueChange={field.handleChange}>
-                        <SelectTrigger>
-                          <SelectValue
-                            placeholder={t(
-                              'leads.form.companySizePlaceholder',
-                              {
-                                defaultValue: 'Select size...'
-                              }
-                            )} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {companySizeOptions.map((option: any) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        onValueChange={field.handleChange}
+                        placeholder={t('leads.form.companySizePlaceholder', {
+                          defaultValue: 'Select size...'
+                        })}
+                        emptyText={t('common.noResults', {
+                          defaultValue: 'No results'
+                        })} />
                     </Field>
                   )}
                 </form.Field>
@@ -526,7 +580,8 @@ mode
                   {field => (
                     <Field>
                       <Label htmlFor={field.name}>
-                        {t('leads.form.countryLabel')}
+                        {t('leads.form.countryLabel')}{' '}
+                        <span className="text-destructive">*</span>
                       </Label>
                       <Combobox
                         options={countryOptions}
@@ -537,6 +592,14 @@ mode
                         emptyText={t('common.noResults', {
                           defaultValue: 'No results'
                         })} />
+                      {field.state.meta.errors?.[0] && (
+                        <p className="text-sm text-destructive">
+                          {typeof field.state.meta.errors[0] === 'string'
+                            ? field.state.meta.errors[0]
+                            : field.state.meta.errors[0]?.message ||
+                              t('common.validationError')}
+                        </p>
+                      )}
                     </Field>
                   )}
                 </form.Field>
@@ -590,22 +653,15 @@ mode
                       <Label htmlFor={field.name}>
                         {t('leads.form.leadSourceLabel')}
                       </Label>
-                      <Select
+                      <Combobox
+                        options={leadSourceComboboxOptions}
                         value={field.state.value}
                         disabled={isConverted}
-                        onValueChange={field.handleChange}>
-                        <SelectTrigger>
-                          <SelectValue
-                            placeholder={t('leads.form.leadSourcePlaceholder')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {leadSourceOptions.map((option: any) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        onValueChange={field.handleChange}
+                        placeholder={t('leads.form.leadSourcePlaceholder')}
+                        emptyText={t('common.noResults', {
+                          defaultValue: 'No results'
+                        })} />
                     </Field>
                   )}
                 </form.Field>
@@ -616,22 +672,15 @@ mode
                       <Label htmlFor={field.name}>
                         {t('leads.form.leadTypeLabel')}
                       </Label>
-                      <Select
+                      <Combobox
+                        options={leadTypeComboboxOptions}
                         value={field.state.value}
                         disabled={isConverted}
-                        onValueChange={field.handleChange}>
-                        <SelectTrigger>
-                          <SelectValue
-                            placeholder={t('leads.form.leadTypePlaceholder')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {leadTypeOptions.map((option: any) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        onValueChange={field.handleChange}
+                        placeholder={t('leads.form.leadTypePlaceholder')}
+                        emptyText={t('common.noResults', {
+                          defaultValue: 'No results'
+                        })} />
                     </Field>
                   )}
                 </form.Field>
@@ -683,29 +732,20 @@ mode
                                 defaultValue: 'Lost reason'
                               })}
                             </Label>
-                            <Select
+                            <Combobox
+                              options={lostReasonComboboxOptions}
                               value={field.state.value}
                               disabled={isConverted}
-                              onValueChange={field.handleChange}>
-                              <SelectTrigger>
-                                <SelectValue
-                                  placeholder={t(
-                                    'leads.form.lostReasonPlaceholder',
-                                    {
-                                      defaultValue: 'Select lost reason...'
-                                    }
-                                  )} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {lostReasonOptions.map((option: any) => (
-                                  <SelectItem
-                                    key={option.value}
-                                    value={option.value}>
-                                    {option.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                              onValueChange={field.handleChange}
+                              placeholder={t(
+                                'leads.form.lostReasonPlaceholder',
+                                {
+                                  defaultValue: 'Select lost reason...'
+                                }
+                              )}
+                              emptyText={t('common.noResults', {
+                                defaultValue: 'No results'
+                              })} />
                           </Field>
                         )}
                       </form.Field>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import type { ContactFormData } from '@/schemas/contact-schema'
 
@@ -6,12 +6,14 @@ import { useForm } from '@tanstack/react-form'
 import { zodValidator } from '@tanstack/zod-form-adapter'
 import { useTranslation } from 'react-i18next'
 import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/animate-ui/components/buttons/button'
 import { AwesomeDialog } from '@/components/docyrus/awesome-dialog'
 import { AwesomeDialogHeader } from '@/components/docyrus/awesome-dialog/awesome-dialog-header'
 import { AwesomeDialogBody } from '@/components/docyrus/awesome-dialog/awesome-dialog-body'
 import { AwesomeDialogFooter } from '@/components/docyrus/awesome-dialog/awesome-dialog-footer'
+import { FormSubmitAlert } from '@/components/crm/form-submit-alert'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,6 +22,10 @@ import { PhoneInput } from '@/components/ui/phone-input'
 import { contactFormSchema } from '@/schemas/contact-schema'
 import { useCreateContact, useUpdateContact } from '@/hooks/use-contacts'
 import { useCompanies } from '@/hooks/use-companies'
+import {
+  getSubmitFailureMessage,
+  validateSubmitValues
+} from '@/lib/form-submit-feedback'
 
 interface ContactFormDialogProps {
   open: boolean;
@@ -56,37 +62,45 @@ export function ContactFormDialog({
     }),
     [contact]
   )
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const form = useForm<ContactFormData>({
     formId: `contact-form-${mode}-${contact?.id ?? 'new'}`,
     defaultValues: initialValues,
     validatorAdapter: zodValidator(),
     validators: {
-      onChange: contactFormSchema
+      onChange: contactFormSchema,
+      onSubmit: contactFormSchema
     },
     onSubmit: async ({ value }) => {
-      // Clean up empty strings (convert to undefined for UUID fields)
-      const cleanedData = Object.fromEntries(
-        Object.entries(value).map(([key, val]) => [key, val === '' ? undefined : val])
-      )
+      try {
+        setSubmitError(null)
+        // Clean up empty strings (convert to undefined for UUID fields)
+        const cleanedData = Object.fromEntries(
+          Object.entries(value).map(([key, val]) => [key, val === '' ? undefined : val])
+        )
 
-      if (mode === 'create') {
-        await createContact.mutateAsync(cleanedData)
-      } else if (contact?.id) {
-        await updateContact.mutateAsync({
-          contactId: contact.id,
-          data: cleanedData
-        })
+        if (mode === 'create') {
+          await createContact.mutateAsync(cleanedData)
+        } else if (contact?.id) {
+          await updateContact.mutateAsync({
+            contactId: contact.id,
+            data: cleanedData
+          })
+        }
+
+        await onSubmitSuccess?.()
+        onOpenChange(false)
+      } catch (error) {
+        setSubmitError(getSubmitFailureMessage(error, t))
       }
-
-      await onSubmitSuccess?.()
-      onOpenChange(false)
     }
   })
 
   useEffect(() => {
     if (!open) return
     form.reset(initialValues)
+    setSubmitError(null)
   }, [
 form,
 initialValues,
@@ -100,6 +114,27 @@ mode
   }))
 
   const isSubmitting = createContact.isPending || updateContact.isPending
+  const fieldLabels = {
+    name: t('contacts.form.nameLabel')
+  }
+  const handleFormSubmit = () => {
+    const validationMessage = validateSubmitValues(
+      contactFormSchema,
+      form.state.values,
+      fieldLabels,
+      t
+    )
+
+    if (validationMessage) {
+      setSubmitError(validationMessage)
+      toast.error(validationMessage)
+
+      return
+    }
+
+    setSubmitError(null)
+    void form.handleSubmit()
+  }
 
   return (
     <AwesomeDialog
@@ -111,7 +146,7 @@ mode
         onSubmit={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          form.handleSubmit()
+          handleFormSubmit()
         }}
         className="flex flex-col flex-1 overflow-hidden">
         <AwesomeDialogHeader
@@ -128,6 +163,9 @@ mode
 
         <AwesomeDialogBody>
           <div className="space-y-4">
+            <FormSubmitAlert
+              title={t('common.validationError')}
+              message={submitError} />
             {/* Name Field */}
             <form.Field name="name">
               {field => (

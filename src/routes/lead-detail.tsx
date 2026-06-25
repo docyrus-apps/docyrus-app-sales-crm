@@ -45,6 +45,7 @@ import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
 import { getRelationId, isLeadConvertedRecord } from '@/lib/lead-conversion'
 import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
+import { mergeCurrentEnumOption } from '@/lib/enum-options'
 
 import {
   type FieldChange,
@@ -236,7 +237,10 @@ export function LeadDetail() {
 
       return {
         field: makeField(slug, name, editable ? type : 'field-text'),
-        enumOptions: toOptions(entities),
+        enumOptions: mergeCurrentEnumOption(
+          toOptions(entities),
+          (lead as Record<string, unknown> | undefined)?.[slug]
+        ),
         readOnly: !editable
       }
     }
@@ -281,7 +285,10 @@ export function LeadDetail() {
           t('leads.contactPerson', { defaultValue: 'Contact Person' }),
           'field-select'
         ),
-        enumOptions: contactOptions
+        enumOptions: mergeCurrentEnumOption(
+          contactOptions,
+          lead?.contact_person
+        )
       },
       {
         field: makeField(
@@ -346,7 +353,7 @@ export function LeadDetail() {
           t('leads.owner', { defaultValue: 'Owner' }),
           'field-select'
         ),
-        enumOptions: ownerOptions
+        enumOptions: mergeCurrentEnumOption(ownerOptions, lead?.record_owner)
       },
       {
         field: makeField(
@@ -362,7 +369,8 @@ export function LeadDetail() {
 t,
 enumEntities,
 ownerOptions,
-contactOptions
+contactOptions,
+lead
 ])
 
   const flatRecord = useMemo<Record<string, unknown>>(() => {

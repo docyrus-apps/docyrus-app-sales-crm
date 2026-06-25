@@ -26,7 +26,7 @@ import { DocEditorFormField } from '@/components/docyrus/form-fields/doc-editor-
 import { DurationFormField } from '@/components/docyrus/form-fields/duration-form-field'
 import { EmailEditorFormField } from '@/components/docyrus/form-fields/email-editor-form-field'
 import { EmailFormField } from '@/components/docyrus/form-fields/email-form-field'
-import { EnumFormField } from '@/components/docyrus/form-fields/enum-form-field'
+import { EnumComboboxField } from '@/components/docyrus/form-fields/enum-combobox-field'
 import { FileFormField } from '@/components/docyrus/form-fields/file-form-field'
 import { HtmlEditorFormField } from '@/components/docyrus/form-fields/html-editor-form-field'
 import { IconFormField } from '@/components/docyrus/form-fields/icon-form-field'
@@ -47,7 +47,6 @@ import { RadioGroupFormField } from '@/components/docyrus/form-fields/radio-grou
 import { RatingFormField } from '@/components/docyrus/form-fields/rating-form-field'
 import { RelationFormField } from '@/components/docyrus/form-fields/relation-form-field'
 import { SchemaRepeaterFormField } from '@/components/docyrus/form-fields/schema-repeater-form-field'
-import { SelectFormField } from '@/components/docyrus/form-fields/select-form-field'
 import { StatusFormField } from '@/components/docyrus/form-fields/status-form-field'
 import { SwitchFormField } from '@/components/docyrus/form-fields/switch-form-field'
 import { TagSelectFormField } from '@/components/docyrus/form-fields/tag-select-form-field'
@@ -159,12 +158,12 @@ export const FORM_FIELD_MAP: Partial<
   'field-url': UrlFormField,
   'field-checkbox': CheckboxFormField,
   'field-switch': SwitchFormField,
-  'field-select': SelectFormField,
+  'field-select': EnumComboboxField,
   'field-multiSelect': MultiSelectFormField,
   'field-tagSelect': TagSelectFormField,
   'field-radioGroup': RadioGroupFormField,
-  'field-enum': EnumFormField,
-  'field-systemEnum': EnumFormField,
+  'field-enum': EnumComboboxField,
+  'field-systemEnum': EnumComboboxField,
   'field-status': StatusFormField,
   'field-userSelect': UserSelectFormField,
   'field-userMultiSelect': UserMultiSelectFormField,

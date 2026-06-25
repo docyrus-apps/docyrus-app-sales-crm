@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 
 import { type ColumnDef } from '@tanstack/react-table'
+import { useQuery } from '@tanstack/react-query'
 
 import type {
   FieldChange,
@@ -59,6 +60,7 @@ import { useWebphone } from '@/components/webphone/webphone-context'
 import { PageContainer } from '@/components/layout/page-container'
 import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
+import { useBaseCountryCollection } from '@/collections'
 import { useDealProducts } from '@/hooks/use-deal-products'
 import { useDeal, useUpdateDeal } from '@/hooks/use-deals'
 import { useCompanies } from '@/hooks/use-companies'
@@ -72,6 +74,7 @@ import type { EnumOption, IField } from '@/components/docyrus/form-fields/types'
 
 import { useUiLocale } from '@/hooks/use-ui-locale'
 import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
+import { mergeCurrentEnumOption } from '@/lib/enum-options'
 
 const FIELD_SLUGS = [
   'stage',
@@ -193,6 +196,8 @@ export function DealDetail() {
   const updateDeal = useUpdateDeal()
   const dialer = useDialer()
   const webphone = useWebphone()
+  const countriesCollection = useBaseCountryCollection()
+  const locale = useUiLocale()
 
   const activeTab = tab || 'overview'
 
@@ -228,11 +233,37 @@ export function DealDetail() {
       dataSourceSlug: 'deal'
     }
   )
-  const { data: countryEntities = [] } = useEnumEntities('country')
   const { data: dealTypeEntities = [] } = useEnumEntities('deal_type', {
     appSlug: 'base_crm',
     dataSourceSlug: 'deal'
   })
+  const { data: countries = [] } = useQuery({
+    queryKey: ['base-country-options'],
+    queryFn: () => countriesCollection.list({
+        columns: ['id', 'name'],
+        orderBy: 'name ASC',
+        limit: 300
+      })
+  })
+  const countryOptions = useMemo<Array<EnumOption>>(() => {
+    const options = countries.map(country => ({
+      id: country.id ?? '',
+      name: country.name
+    }))
+    const currentId = getFieldValue(deal?.country)
+    const currentName = extractName(deal?.country)
+
+    if (
+      typeof currentId === 'string' &&
+      currentId &&
+      currentName &&
+      !options.some(option => option.id === currentId)
+    ) {
+      options.unshift({ id: currentId, name: String(currentName) })
+    }
+
+    return options.filter(option => option.id)
+  }, [countries, deal?.country])
 
   const [addContactOpen, setAddContactOpen] = useState(false)
 
@@ -327,7 +358,10 @@ export function DealDetail() {
     () => [
       {
         field: makeField('stage', t('deals.stage'), 'field-status'),
-        enumOptions: mapEnumEntitiesToOptions(stageEntities)
+        enumOptions: mergeCurrentEnumOption(
+          mapEnumEntitiesToOptions(stageEntities),
+          deal?.stage
+        )
       },
       { field: makeField('deal_value', t('deals.dealValue'), 'field-number') },
       {
@@ -371,7 +405,10 @@ export function DealDetail() {
           t('deals.customerType'),
           'field-select'
         ),
-        enumOptions: mapEnumEntitiesToOptions(customerTypeEntities)
+        enumOptions: mergeCurrentEnumOption(
+          mapEnumEntitiesToOptions(customerTypeEntities),
+          deal?.customer_type
+        )
       },
       {
         field: makeField(
@@ -379,11 +416,17 @@ export function DealDetail() {
           t('deals.dealType', { defaultValue: 'Deal Type' }),
           'field-select'
         ),
-        enumOptions: mapEnumEntitiesToOptions(dealTypeEntities)
+        enumOptions: mergeCurrentEnumOption(
+          mapEnumEntitiesToOptions(dealTypeEntities),
+          deal?.deal_type
+        )
       },
       {
         field: makeField('lead_source', t('deals.leadSource'), 'field-select'),
-        enumOptions: mapEnumEntitiesToOptions(leadSourceEntities)
+        enumOptions: mergeCurrentEnumOption(
+          mapEnumEntitiesToOptions(leadSourceEntities),
+          deal?.lead_source
+        )
       },
       {
         field: makeField(
@@ -391,16 +434,18 @@ export function DealDetail() {
           t('deals.reasonForLost', { defaultValue: 'Reason for Lost' }),
           'field-select'
         ),
-        enumOptions: mapEnumEntitiesToOptions(reasonForLostEntities)
+        enumOptions: mergeCurrentEnumOption(
+          mapEnumEntitiesToOptions(reasonForLostEntities),
+          deal?.reason_for_lost
+        )
       },
       {
         field: makeField(
           'country',
           t('deals.country', { defaultValue: 'Country' }),
-          countryEntities.length > 0 ? 'field-select' : 'field-text'
+          'field-select'
         ),
-        enumOptions: mapEnumEntitiesToOptions(countryEntities),
-        readOnly: countryEntities.length === 0
+        enumOptions: countryOptions
       },
       {
         field: makeField(
@@ -408,10 +453,13 @@ export function DealDetail() {
           t('deals.organization'),
           'field-select'
         ),
-        enumOptions: companies.map((company: any) => ({
-          id: company.id,
-          name: company.name
-        }))
+        enumOptions: mergeCurrentEnumOption(
+          companies.map((company: any) => ({
+            id: company.id,
+            name: company.name
+          })),
+          deal?.organization
+        )
       },
       {
         field: makeField(
@@ -419,20 +467,26 @@ export function DealDetail() {
           t('deals.contactPerson', { defaultValue: 'Contact Person' }),
           'field-select'
         ),
-        enumOptions: allContacts.map((contact: any) => ({
-          id: contact.id,
-          name: contact.name
-        }))
+        enumOptions: mergeCurrentEnumOption(
+          allContacts.map((contact: any) => ({
+            id: contact.id,
+            name: contact.name
+          })),
+          deal?.contact_person
+        )
       },
       {
         field: makeField('record_owner', t('deals.owner'), 'field-select'),
-        enumOptions: users.map((user: any) => ({
-          id: user.id,
-          name:
-            `${user.firstname ?? ''} ${user.lastname ?? ''}`.trim() ||
-            user.email ||
-            user.name
-        }))
+        enumOptions: mergeCurrentEnumOption(
+          users.map((user: any) => ({
+            id: user.id,
+            name:
+              `${user.firstname ?? ''} ${user.lastname ?? ''}`.trim() ||
+              user.email ||
+              user.name
+          })),
+          deal?.record_owner
+        )
       },
       {
         field: makeField(
@@ -450,9 +504,10 @@ export function DealDetail() {
       leadSourceEntities,
       reasonForLostEntities,
       stageEntities,
-      countryEntities,
+      countryOptions,
       t,
-      users
+      users,
+      deal
     ]
   )
 
@@ -471,16 +526,13 @@ export function DealDetail() {
       deal_type: getFieldValue(deal.deal_type),
       lead_source: getFieldValue(deal.lead_source),
       reason_for_lost: getFieldValue(deal.reason_for_lost),
-      country:
-        countryEntities.length > 0
-          ? (getFieldValue(deal.country) ?? '')
-          : (extractName(deal.country) ?? ''),
+      country: getFieldValue(deal.country) ?? '',
       organization: getFieldValue(deal.organization),
       contact_person: getFieldValue(deal.contact_person),
       record_owner: getFieldValue(deal.record_owner),
       hot_prospect: deal.hot_prospect ?? false
     }
-  }, [deal, countryEntities])
+  }, [deal])
 
   const handleInlineSave = async (
     changes: Array<FieldChange>,
@@ -494,8 +546,6 @@ export function DealDetail() {
 
     await updateDeal.mutateAsync({ dealId, data: payload })
   }
-
-  const locale = useUiLocale()
 
   const pricingDocument = useMemo(() => {
     const pricingLineItems: Array<ILineItem> = (dealProducts ?? []).map(
@@ -960,8 +1010,7 @@ export function DealDetail() {
     ordersGridProps,
     dealQuotes,
     dealQuotesLoading,
-    dealId,
-    dealTitle
+    dealId
   ])
 
   const attributeActions = (

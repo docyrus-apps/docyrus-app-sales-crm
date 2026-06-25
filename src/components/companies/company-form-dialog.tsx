@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import type { CompanyFormData } from '@/schemas/company-schema'
 
@@ -7,12 +7,14 @@ import { useForm } from '@tanstack/react-form'
 import { useQuery } from '@tanstack/react-query'
 import { zodValidator } from '@tanstack/zod-form-adapter'
 import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/animate-ui/components/buttons/button'
 import { AwesomeDialog } from '@/components/docyrus/awesome-dialog'
 import { AwesomeDialogHeader } from '@/components/docyrus/awesome-dialog/awesome-dialog-header'
 import { AwesomeDialogBody } from '@/components/docyrus/awesome-dialog/awesome-dialog-body'
 import { AwesomeDialogFooter } from '@/components/docyrus/awesome-dialog/awesome-dialog-footer'
+import { FormSubmitAlert } from '@/components/crm/form-submit-alert'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -28,6 +30,10 @@ import { companyFormSchema } from '@/schemas/company-schema'
 import { useBaseCountryCollection } from '@/collections'
 import { useCreateCompany, useUpdateCompany } from '@/hooks/use-companies'
 import { useEnumOptions } from '@/hooks/use-enums'
+import {
+  getSubmitFailureMessage,
+  validateSubmitValues
+} from '@/lib/form-submit-feedback'
 
 interface CompanyFormDialogProps {
   open: boolean;
@@ -73,6 +79,14 @@ export function CompanyFormDialog({
     label: country.name,
     value: country.id ?? ''
   }))
+  const industryComboboxOptions = industryOptions.map((option: any) => ({
+    label: option.label,
+    value: option.value
+  }))
+  const typeComboboxOptions = typeOptions.map((option: any) => ({
+    label: option.label,
+    value: option.value
+  }))
   const initialValues = useMemo<CompanyFormData>(
     () => ({
       name: company?.name || '',
@@ -90,37 +104,45 @@ export function CompanyFormDialog({
     }),
     [company]
   )
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const form = useForm<CompanyFormData>({
     formId: `company-form-${mode}-${company?.id ?? 'new'}`,
     defaultValues: initialValues,
     validatorAdapter: zodValidator(),
     validators: {
-      onChange: companyFormSchema
+      onChange: companyFormSchema,
+      onSubmit: companyFormSchema
     },
     onSubmit: async ({ value }) => {
-      // Clean up empty strings (convert to undefined for UUID fields)
-      const cleanedData = Object.fromEntries(
-        Object.entries(value).map(([key, val]) => [key, val === '' ? undefined : val])
-      )
+      try {
+        setSubmitError(null)
+        // Clean up empty strings (convert to undefined for UUID fields)
+        const cleanedData = Object.fromEntries(
+          Object.entries(value).map(([key, val]) => [key, val === '' ? undefined : val])
+        )
 
-      if (mode === 'create') {
-        await createCompany.mutateAsync(cleanedData)
-      } else if (company?.id) {
-        await updateCompany.mutateAsync({
-          companyId: company.id,
-          data: cleanedData
-        })
+        if (mode === 'create') {
+          await createCompany.mutateAsync(cleanedData)
+        } else if (company?.id) {
+          await updateCompany.mutateAsync({
+            companyId: company.id,
+            data: cleanedData
+          })
+        }
+
+        await onSubmitSuccess?.()
+        onOpenChange(false)
+      } catch (error) {
+        setSubmitError(getSubmitFailureMessage(error, t))
       }
-
-      await onSubmitSuccess?.()
-      onOpenChange(false)
     }
   })
 
   useEffect(() => {
     if (!open) return
     form.reset(initialValues)
+    setSubmitError(null)
   }, [
 form,
 initialValues,
@@ -129,6 +151,27 @@ mode
 ])
 
   const isSubmitting = createCompany.isPending || updateCompany.isPending
+  const fieldLabels = {
+    name: t('companies.form.companyNameLabel')
+  }
+  const handleFormSubmit = () => {
+    const validationMessage = validateSubmitValues(
+      companyFormSchema,
+      form.state.values,
+      fieldLabels,
+      t
+    )
+
+    if (validationMessage) {
+      setSubmitError(validationMessage)
+      toast.error(validationMessage)
+
+      return
+    }
+
+    setSubmitError(null)
+    void form.handleSubmit()
+  }
 
   return (
     <AwesomeDialog
@@ -140,7 +183,7 @@ mode
         onSubmit={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          form.handleSubmit()
+          handleFormSubmit()
         }}
         className="flex flex-col flex-1 overflow-hidden">
         <AwesomeDialogHeader
@@ -156,6 +199,9 @@ mode
           } />
 
         <AwesomeDialogBody className="space-y-4">
+          <FormSubmitAlert
+            title={t('common.validationError')}
+            message={submitError} />
           <div className="grid grid-cols-2 gap-4">
             {/* Name Field */}
             <form.Field name="name">
@@ -189,21 +235,14 @@ mode
                   <Label htmlFor={field.name}>
                     {t('companies.form.industryLabel')}
                   </Label>
-                  <Select
+                  <Combobox
+                    options={industryComboboxOptions}
                     value={field.state.value}
-                    onValueChange={field.handleChange}>
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t('companies.form.industryPlaceholder')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {industryOptions.map((option: any) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    onValueChange={field.handleChange}
+                    placeholder={t('companies.form.industryPlaceholder')}
+                    emptyText={t('common.noResults', {
+                      defaultValue: 'No results'
+                    })} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
                       {typeof field.state.meta.errors[0] === 'string'
@@ -223,21 +262,14 @@ mode
                   <Label htmlFor={field.name}>
                     {t('companies.form.typeLabel')}
                   </Label>
-                  <Select
+                  <Combobox
+                    options={typeComboboxOptions}
                     value={field.state.value}
-                    onValueChange={field.handleChange}>
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t('companies.form.typePlaceholder')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {typeOptions.map((option: any) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    onValueChange={field.handleChange}
+                    placeholder={t('companies.form.typePlaceholder')}
+                    emptyText={t('common.noResults', {
+                      defaultValue: 'No results'
+                    })} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
                       {typeof field.state.meta.errors[0] === 'string'
