@@ -1,80 +1,72 @@
-'use client'
+'use client';
 
 // @ts-nocheck
 /* eslint-disable */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback, useEffect, useMemo, useRef, useState
+} from 'react';
 
 export interface SpeechRecognitionTranscriptChunks {
   /** Cumulative finalized transcript for the current session. */
-  final: string
+  final: string;
   /** Current pending (not-yet-finalized) interim segment. */
-  interim: string
+  interim: string;
 }
 
 export interface UseSpeechRecognitionArgs {
   /** BCP-47 language tag (e.g. `en-US`, `tr-TR`). Defaults to the navigator language. */
-  lang?: string
+  lang?: string;
   /** Whether to keep listening after each result (defaults to `true`). */
-  continuous?: boolean
+  continuous?: boolean;
   /** Whether to surface partial transcripts as they stream (defaults to `true`). */
-  interimResults?: boolean
+  interimResults?: boolean;
   /** Fires on every result event with the cumulative session transcript split into final + interim. */
-  onTranscript?: (chunks: SpeechRecognitionTranscriptChunks) => void
+  onTranscript?: (chunks: SpeechRecognitionTranscriptChunks) => void;
   /** Fires when the recognition session starts. */
-  onStart?: () => void
+  onStart?: () => void;
   /** Fires when the recognition session ends (manually stopped, error, or browser timeout). */
-  onEnd?: () => void
+  onEnd?: () => void;
 }
 
 export interface UseSpeechRecognitionResult {
   /** Browser support flag. When `false`, `start`/`stop` are no-ops and `recognition` is `null`. */
-  isSupported: boolean
-  isRecording: boolean
+  isSupported: boolean;
+  isRecording: boolean;
   /** Cumulative finalized transcript for the current session. Cleared on `start` / `reset`. Interim (pending) text is not included — observe it via the `onTranscript` callback. */
-  transcript: string
-  start: () => void
-  stop: () => void
-  toggle: () => void
+  transcript: string;
+  start: () => void;
+  stop: () => void;
+  toggle: () => void;
   /** Clear the cumulative transcript buffer. */
-  reset: () => void
+  reset: () => void;
   /** Latest error from the browser API, if any. */
-  error: string | null
+  error: string | null;
 }
 
 interface SpeechRecognitionLike extends EventTarget {
-  lang: string
-  continuous: boolean
-  interimResults: boolean
-  start: () => void
-  stop: () => void
-  abort: () => void
-  onresult:
-    | ((
-        event: Event & {
-          results: ArrayLike<{
-            0: { transcript: string }
-            isFinal: boolean
-            length: number
-          }>
-        },
-      ) => void)
-    | null
-  onerror: ((event: Event & { error: string }) => void) | null
-  onend: (() => void) | null
-  onstart: (() => void) | null
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+  onresult: ((event: Event & { results: ArrayLike<{ 0: { transcript: string }; isFinal: boolean; length: number }> }) => void) | null;
+  onerror: ((event: Event & { error: string }) => void) | null;
+  onend: (() => void) | null;
+  onstart: (() => void) | null;
 }
 
-type SpeechRecognitionCtor = new () => SpeechRecognitionLike
+type SpeechRecognitionCtor = new () => SpeechRecognitionLike;
 
 function getRecognitionCtor(): SpeechRecognitionCtor | null {
-  if (typeof window === 'undefined') return null
+  if (typeof window === 'undefined') return null;
 
   const w = window as unknown as Window & {
-    SpeechRecognition?: SpeechRecognitionCtor
-    webkitSpeechRecognition?: SpeechRecognitionCtor
-  }
+    SpeechRecognition?: SpeechRecognitionCtor;
+    webkitSpeechRecognition?: SpeechRecognitionCtor;
+  };
 
-  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
 /**
@@ -89,116 +81,120 @@ export function useSpeechRecognition({
   interimResults = true,
   onTranscript,
   onStart,
-  onEnd,
+  onEnd
 }: UseSpeechRecognitionArgs = {}): UseSpeechRecognitionResult {
-  const Ctor = useMemo(() => getRecognitionCtor(), [])
-  const isSupported = !!Ctor
+  const Ctor = useMemo(() => getRecognitionCtor(), []);
+  const isSupported = !!Ctor;
 
-  const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
-  const onTranscriptRef = useRef(onTranscript)
-  const onStartRef = useRef(onStart)
-  const onEndRef = useRef(onEnd)
-  const [isRecording, setIsRecording] = useState(false)
-  const [transcript, setTranscript] = useState('')
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    onTranscriptRef.current = onTranscript
-    onStartRef.current = onStart
-    onEndRef.current = onEnd
-  }, [onTranscript, onStart, onEnd])
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const onTranscriptRef = useRef(onTranscript);
+  const onStartRef = useRef(onStart);
+  const onEndRef = useRef(onEnd);
+  const [isRecording, setIsRecording] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!Ctor) return undefined
+    onTranscriptRef.current = onTranscript;
+    onStartRef.current = onStart;
+    onEndRef.current = onEnd;
+  }, [onTranscript, onStart, onEnd]);
 
-    const instance = new Ctor()
+  useEffect(() => {
+    if (!Ctor) return undefined;
 
-    instance.lang =
-      lang ?? (typeof navigator !== 'undefined' ? navigator.language : 'en-US')
-    instance.continuous = continuous
-    instance.interimResults = interimResults
+    const instance = new Ctor();
+
+    instance.lang = lang ?? (typeof navigator !== 'undefined' ? navigator.language : 'en-US');
+    instance.continuous = continuous;
+    instance.interimResults = interimResults;
 
     instance.onstart = () => {
-      setIsRecording(true)
-      setTranscript('')
-      setError(null)
-      onStartRef.current?.()
-    }
+      setIsRecording(true);
+      setTranscript('');
+      setError(null);
+      onStartRef.current?.();
+    };
 
     instance.onresult = (event) => {
-      let interim = ''
-      let final = ''
+      let interim = '';
+      let final = '';
 
       for (let i = 0; i < event.results.length; i += 1) {
-        const result = event.results[i]
+        const result = event.results[i];
 
-        if (!result) continue
+        if (!result) continue;
 
-        const chunk = result[0]?.transcript ?? ''
+        const chunk = result[0]?.transcript ?? '';
 
         if (result.isFinal) {
-          final += chunk
+          final += chunk;
         } else {
-          interim += chunk
+          interim += chunk;
         }
       }
 
-      const finalText = final.trim()
-      const interimText = interim.trim()
+      const finalText = final.trim();
+      const interimText = interim.trim();
 
-      setTranscript(finalText)
-      onTranscriptRef.current?.({ final: finalText, interim: interimText })
-    }
+      setTranscript(finalText);
+      onTranscriptRef.current?.({ final: finalText, interim: interimText });
+    };
 
     instance.onerror = (event) => {
-      setError(event.error)
-      setIsRecording(false)
-      onEndRef.current?.()
-    }
+      setError(event.error);
+      setIsRecording(false);
+      onEndRef.current?.();
+    };
 
     instance.onend = () => {
-      setIsRecording(false)
-      onEndRef.current?.()
-    }
+      setIsRecording(false);
+      onEndRef.current?.();
+    };
 
-    recognitionRef.current = instance
+    recognitionRef.current = instance;
 
     return () => {
-      instance.abort()
-      recognitionRef.current = null
-    }
-  }, [Ctor, lang, continuous, interimResults])
+      instance.abort();
+      recognitionRef.current = null;
+    };
+  }, [
+    Ctor,
+    lang,
+    continuous,
+    interimResults
+  ]);
 
   const start = useCallback(() => {
-    const instance = recognitionRef.current
+    const instance = recognitionRef.current;
 
-    if (!instance || isRecording) return
-    setError(null)
+    if (!instance || isRecording) return;
+    setError(null);
     try {
-      instance.start()
+      instance.start();
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(err instanceof Error ? err.message : String(err));
     }
-  }, [isRecording])
+  }, [isRecording]);
 
   const stop = useCallback(() => {
-    const instance = recognitionRef.current
+    const instance = recognitionRef.current;
 
-    if (!instance || !isRecording) return
-    instance.stop()
-  }, [isRecording])
+    if (!instance || !isRecording) return;
+    instance.stop();
+  }, [isRecording]);
 
   const toggle = useCallback(() => {
     if (isRecording) {
-      stop()
+      stop();
     } else {
-      start()
+      start();
     }
-  }, [isRecording, start, stop])
+  }, [isRecording, start, stop]);
 
   const reset = useCallback(() => {
-    setTranscript('')
-  }, [])
+    setTranscript('');
+  }, []);
 
   return {
     isSupported,
@@ -208,6 +204,6 @@ export function useSpeechRecognition({
     stop,
     toggle,
     reset,
-    error,
-  }
+    error
+  };
 }

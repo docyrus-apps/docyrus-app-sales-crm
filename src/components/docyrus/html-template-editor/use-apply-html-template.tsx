@@ -1,20 +1,25 @@
-'use client'
+'use client';
 
 // @ts-nocheck
 /* eslint-disable */
-import { useCallback, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  useState
+} from 'react';
 
-import { type IEditorAgentClientTool } from '@/components/docyrus/editor-agent'
+import { type IEditorAgentClientTool } from '@/components/docyrus/editor-agent';
 import {
   INPUT_PREVIEW_MAX_CHARS,
   RESULT_PREVIEW_MAX_CHARS,
   coerceInputToText,
-  truncate,
-} from '@/components/docyrus/editor-agent/preview-utils'
+  truncate
+} from '@/components/docyrus/editor-agent/preview-utils';
 
-import { createEditorTemplateEngine } from './lib/editor-template-engine'
+import { createEditorTemplateEngine } from './lib/editor-template-engine';
 
-const TOOL_NAME = 'applyHtmlTemplate'
+const TOOL_NAME = 'applyHtmlTemplate';
 
 /*
  * Module-level engine singleton — created once with default config (no
@@ -22,33 +27,33 @@ const TOOL_NAME = 'applyHtmlTemplate'
  * (formatCurrency, lineNet, formula/JSONata, repeat, …) on an isolated
  * Handlebars instance so it doesn't pollute the global singleton.
  */
-const ENGINE = createEditorTemplateEngine()
+const ENGINE = createEditorTemplateEngine();
 
 interface IApplyHtmlTemplateInput {
-  html?: unknown
-  data?: unknown
-  explanation?: unknown
+  html?: unknown;
+  data?: unknown;
+  explanation?: unknown;
 }
 
 interface IApplyHtmlTemplateOutput {
-  applied: boolean
-  ok: boolean
-  resultPreview?: string
-  truncated?: boolean
-  dataProvided: boolean
-  dataPreview?: string
-  dataTruncated?: boolean
+  applied: boolean;
+  ok: boolean;
+  resultPreview?: string;
+  truncated?: boolean;
+  dataProvided: boolean;
+  dataPreview?: string;
+  dataTruncated?: boolean;
   error?: {
-    message: string
-  }
+    message: string;
+  };
 }
 
 export interface IUseApplyHtmlTemplateResult {
-  html: string
-  setHtml: (next: string) => void
-  data: string
-  setData: (next: string) => void
-  tools: ReadonlyArray<IEditorAgentClientTool>
+  html: string;
+  setHtml: (next: string) => void;
+  data: string;
+  setData: (next: string) => void;
+  tools: ReadonlyArray<IEditorAgentClientTool>;
 }
 
 /**
@@ -64,119 +69,104 @@ export interface IUseApplyHtmlTemplateResult {
  * `formula` / JSONata expressions) are available during AI-driven iteration.
  */
 export function useApplyHtmlTemplate(): IUseApplyHtmlTemplateResult {
-  const [html, setHtml] = useState('')
-  const [data, setData] = useState('')
-  const dataRef = useRef(data)
+  const [html, setHtml] = useState('');
+  const [data, setData] = useState('');
+  const dataRef = useRef(data);
 
-  dataRef.current = data
+  dataRef.current = data;
 
-  const execute = useCallback<IEditorAgentClientTool['execute']>(
-    async (toolInput) => {
-      const { html: nextHtml, data: providedData } = (toolInput ??
-        {}) as IApplyHtmlTemplateInput
-      const providedDataText = coerceInputToText(providedData)
+  const execute = useCallback<IEditorAgentClientTool['execute']>(async (toolInput) => {
+    const { html: nextHtml, data: providedData } = (toolInput ?? {}) as IApplyHtmlTemplateInput;
+    const providedDataText = coerceInputToText(providedData);
 
-      if (providedDataText !== null) {
-        setData(providedDataText)
-        dataRef.current = providedDataText
-      }
+    if (providedDataText !== null) {
+      setData(providedDataText);
+      dataRef.current = providedDataText;
+    }
 
-      const currentData = dataRef.current
-      const dataProvided = currentData.trim() !== ''
-      const dataSnapshot = dataProvided
-        ? truncate(currentData, INPUT_PREVIEW_MAX_CHARS)
-        : null
-      const dataPreview = dataSnapshot?.preview
-      const dataTruncated = dataSnapshot?.truncated ?? false
+    const currentData = dataRef.current;
+    const dataProvided = currentData.trim() !== '';
+    const dataSnapshot = dataProvided ? truncate(currentData, INPUT_PREVIEW_MAX_CHARS) : null;
+    const dataPreview = dataSnapshot?.preview;
+    const dataTruncated = dataSnapshot?.truncated ?? false;
 
-      if (typeof nextHtml !== 'string' || nextHtml.trim() === '') {
-        return {
-          applied: false,
-          ok: false,
-          dataProvided,
-          dataPreview,
-          dataTruncated,
-          error: { message: 'html is required and must be a non-empty string' },
-        } satisfies IApplyHtmlTemplateOutput
-      }
+    if (typeof nextHtml !== 'string' || nextHtml.trim() === '') {
+      return {
+        applied: false,
+        ok: false,
+        dataProvided,
+        dataPreview,
+        dataTruncated,
+        error: { message: 'html is required and must be a non-empty string' }
+      } satisfies IApplyHtmlTemplateOutput;
+    }
 
-      setHtml(nextHtml)
+    setHtml(nextHtml);
 
-      if (!dataProvided) {
-        return {
-          applied: true,
-          ok: false,
-          dataProvided: false,
-          error: {
-            message:
-              'The Data tab is empty. Ask the user to paste sample JSON, then call the tool again.',
-          },
-        } satisfies IApplyHtmlTemplateOutput
-      }
-
-      let parsedData: unknown
-
-      try {
-        parsedData = JSON.parse(currentData)
-      } catch (err) {
-        return {
-          applied: true,
-          ok: false,
-          dataProvided: true,
-          dataPreview,
-          dataTruncated,
-          error: {
-            message:
-              err instanceof Error
-                ? err.message
-                : 'Current data is not valid JSON',
-          },
-        } satisfies IApplyHtmlTemplateOutput
-      }
-
-      let rendered: string
-
-      try {
-        rendered = await ENGINE.compileTpl(nextHtml)(parsedData)
-      } catch (err) {
-        return {
-          applied: true,
-          ok: false,
-          dataProvided: true,
-          dataPreview,
-          dataTruncated,
-          error: { message: err instanceof Error ? err.message : String(err) },
-        } satisfies IApplyHtmlTemplateOutput
-      }
-
-      const { preview, truncated: resultTruncated } = truncate(
-        rendered,
-        RESULT_PREVIEW_MAX_CHARS,
-      )
-
+    if (!dataProvided) {
       return {
         applied: true,
-        ok: true,
-        resultPreview: preview,
-        truncated: resultTruncated,
+        ok: false,
+        dataProvided: false,
+        error: {
+          message: 'The Data tab is empty. Ask the user to paste sample JSON, then call the tool again.'
+        }
+      } satisfies IApplyHtmlTemplateOutput;
+    }
+
+    let parsedData: unknown;
+
+    try {
+      parsedData = JSON.parse(currentData);
+    } catch (err) {
+      return {
+        applied: true,
+        ok: false,
         dataProvided: true,
         dataPreview,
         dataTruncated,
-      } satisfies IApplyHtmlTemplateOutput
-    },
-    [],
-  )
+        error: { message: err instanceof Error ? err.message : 'Current data is not valid JSON' }
+      } satisfies IApplyHtmlTemplateOutput;
+    }
+
+    let rendered: string;
+
+    try {
+      rendered = await ENGINE.compileTpl(nextHtml)(parsedData);
+    } catch (err) {
+      return {
+        applied: true,
+        ok: false,
+        dataProvided: true,
+        dataPreview,
+        dataTruncated,
+        error: { message: err instanceof Error ? err.message : String(err) }
+      } satisfies IApplyHtmlTemplateOutput;
+    }
+
+    const { preview, truncated: resultTruncated } = truncate(rendered, RESULT_PREVIEW_MAX_CHARS);
+
+    return {
+      applied: true,
+      ok: true,
+      resultPreview: preview,
+      truncated: resultTruncated,
+      dataProvided: true,
+      dataPreview,
+      dataTruncated
+    } satisfies IApplyHtmlTemplateOutput;
+  }, []);
 
   const tools = useMemo<ReadonlyArray<IEditorAgentClientTool>>(
     () => [{ name: TOOL_NAME, execute }],
-    [execute],
-  )
+    [execute]
+  );
 
   return {
     html,
     setHtml,
     data,
     setData,
-    tools,
-  }
+    tools
+  };
 }

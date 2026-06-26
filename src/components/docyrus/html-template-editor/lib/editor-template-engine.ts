@@ -1,12 +1,8 @@
 // @ts-nocheck
 /* eslint-disable */
-import {
-  createTemplateEngine,
-  type DateUtils,
-  type NumberUtils,
-} from '@docyrus/app-utils'
+import { createTemplateEngine, type DateUtils, type NumberUtils } from '@docyrus/app-utils';
 
-import { type ExtraHandlebarsHelper } from '../types'
+import { type ExtraHandlebarsHelper } from '../types';
 import {
   add,
   avgProperty,
@@ -34,31 +30,31 @@ import {
   sumLineNetsKeyed,
   sumLineTaxes,
   sumLineTaxesKeyed,
-  sumProperty,
-} from './handlebars-helpers'
+  sumProperty
+} from './handlebars-helpers';
 
 export interface EditorTemplateEngineConfig {
   /**
    * Consumer-supplied Handlebars helpers, registered after the editor set.
    * Use for domain/locale-specific functions (e.g. `numberToWordsTR`).
    */
-  extraHelpers?: Record<string, ExtraHandlebarsHelper>
+  extraHelpers?: Record<string, ExtraHandlebarsHelper>;
   /**
    * Additional JSONata bindings available inside `{{formula '…'}}` expressions.
    */
-  extraJsonataBindings?: Record<string, unknown>
+  extraJsonataBindings?: Record<string, unknown>;
   /**
    * Locale-aware date utilities from `@docyrus/app-utils`. When provided,
    * `createTemplateEngine` registers locale-aware `formatDate` / `formatDateTime`
    * helpers. Without it the editor's standalone `formatDate` is used as a fallback.
    */
-  dateUtils?: DateUtils
+  dateUtils?: DateUtils;
   /**
    * Locale-aware number utilities from `@docyrus/app-utils`. When provided,
    * `createTemplateEngine` registers a locale-aware `formatNumber` helper.
    * Without it the editor's standalone `formatNumber` is used as a fallback.
    */
-  numberUtils?: NumberUtils
+  numberUtils?: NumberUtils;
 }
 
 export interface EditorTemplateEngine {
@@ -72,7 +68,7 @@ export interface EditorTemplateEngine {
    * (formula/JSONata, repeat, sum, path, json, formatDurationAs*,
    * formatNumberToWords, locale-aware formatDate/formatNumber when utils provided).
    */
-  compileTpl(templateString: string): (data: unknown) => Promise<string>
+  compileTpl(templateString: string): (data: unknown) => Promise<string>;
 }
 
 /**
@@ -97,14 +93,14 @@ export interface EditorTemplateEngine {
  * - **Consumer extras**: anything passed in `config.extraHelpers`
  */
 export function createEditorTemplateEngine(
-  config: EditorTemplateEngineConfig = {},
+  config: EditorTemplateEngineConfig = {}
 ): EditorTemplateEngine {
   const {
     extraHelpers = {},
     extraJsonataBindings,
     dateUtils,
-    numberUtils,
-  } = config
+    numberUtils
+  } = config;
 
   const editorHelpers: Record<string, ExtraHandlebarsHelper> = {
     formatCurrency,
@@ -131,8 +127,8 @@ export function createEditorTemplateEngine(
     sumLineExpr,
     eq,
     gt,
-    lt,
-  }
+    lt
+  };
 
   /*
    * Fallback locale helpers — only registered when no locale utils are
@@ -141,10 +137,10 @@ export function createEditorTemplateEngine(
    * as fallbacks for bare editor use (no tenant context).
    */
   if (!dateUtils) {
-    editorHelpers.formatDate = formatDate
+    editorHelpers.formatDate = formatDate;
   }
   if (!numberUtils) {
-    editorHelpers.formatNumber = formatNumber
+    editorHelpers.formatNumber = formatNumber;
   }
 
   const engine = createTemplateEngine({
@@ -153,9 +149,9 @@ export function createEditorTemplateEngine(
     extraJsonataBindings,
     additionalHelpers: {
       ...editorHelpers,
-      ...extraHelpers,
-    },
-  })
+      ...extraHelpers
+    }
+  });
 
-  return { compileTpl: engine.compileTpl }
+  return { compileTpl: engine.compileTpl };
 }

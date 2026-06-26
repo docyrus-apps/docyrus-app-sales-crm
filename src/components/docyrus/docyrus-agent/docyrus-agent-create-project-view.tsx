@@ -1,45 +1,42 @@
-'use client'
+'use client';
 
 // @ts-nocheck
 /* eslint-disable */
-import { type ReactNode, useState } from 'react'
+import { type ReactNode, useState } from 'react';
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { cn } from '@/lib/utils'
-import { ArrowLeft } from 'lucide-react'
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
+import { ArrowLeft } from 'lucide-react';
 
-import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation';
 
 export interface DocyrusAgentCreateProjectViewProps {
   /** Fires when the back arrow or Cancel button is pressed. */
-  onCancel: () => void
+  onCancel: () => void;
   /** Fires when the user submits the form. */
-  onCreate: (input: {
-    name: string
-    description: string
-  }) => void | Promise<void>
+  onCreate: (input: { name: string; description: string }) => void | Promise<void>;
   /** Disable the Create button (e.g. while the create mutation is pending). */
-  isCreating?: boolean
+  isCreating?: boolean;
   /** Override the heading. */
-  title?: string
+  title?: string;
   /** Override the name field label. */
-  nameLabel?: string
+  nameLabel?: string;
   /** Override the description field label. */
-  descriptionLabel?: string
+  descriptionLabel?: string;
   /** Override the name input placeholder. */
-  namePlaceholder?: string
+  namePlaceholder?: string;
   /** Override the description textarea placeholder. */
-  descriptionPlaceholder?: string
+  descriptionPlaceholder?: string;
   /** Slot rendered to the left of the back button (e.g. sidebar-toggle spacer). */
-  headerLeading?: ReactNode
+  headerLeading?: ReactNode;
   /** Extra fields rendered between the description textarea and the action footer. */
-  extraFields?: ReactNode
+  extraFields?: ReactNode;
   /** Replace the action footer (Cancel + Create buttons). */
-  actions?: ReactNode
-  className?: string
+  actions?: ReactNode;
+  className?: string;
 }
 
 /**
@@ -59,18 +56,18 @@ export const DocyrusAgentCreateProjectView = ({
   headerLeading,
   extraFields,
   actions,
-  className,
+  className
 }: DocyrusAgentCreateProjectViewProps) => {
-  const { t } = useUiTranslation()
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
+  const { t } = useUiTranslation();
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
 
-  const canSubmit = name.trim().length > 0 && !isCreating
+  const canSubmit = name.trim().length > 0 && !isCreating;
 
   const handleSubmit = () => {
-    if (!canSubmit) return
-    void onCreate({ name: name.trim(), description: description.trim() })
-  }
+    if (!canSubmit) return;
+    void onCreate({ name: name.trim(), description: description.trim() });
+  };
 
   return (
     <div className={cn('flex h-full flex-col bg-background', className)}>
@@ -81,8 +78,7 @@ export const DocyrusAgentCreateProjectView = ({
           className="size-8"
           size="icon"
           variant="ghost"
-          onClick={onCancel}
-        >
+          onClick={onCancel}>
           <ArrowLeft className="size-4" />
         </Button>
       </div>
@@ -95,48 +91,29 @@ export const DocyrusAgentCreateProjectView = ({
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="project-name">
-              {nameLabel ??
-                t(
-                  'ui.agent.createProjectNameLabel',
-                  'What are you working on?',
-                )}
+              {nameLabel ?? t('ui.agent.createProjectNameLabel', 'What are you working on?')}
             </Label>
             <Input
               autoFocus
               id="project-name"
-              placeholder={
-                namePlaceholder ??
-                t('ui.agent.createProjectNamePlaceholder', 'Name your project')
-              }
+              placeholder={namePlaceholder ?? t('ui.agent.createProjectNamePlaceholder', 'Name your project')}
               value={name}
-              onChange={(event) => setName(event.target.value)}
+              onChange={event => setName(event.target.value)}
               onKeyDown={(event) => {
-                if (event.key === 'Enter') handleSubmit()
-              }}
-            />
+                if (event.key === 'Enter') handleSubmit();
+              }} />
           </div>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="project-description">
-              {descriptionLabel ??
-                t(
-                  'ui.agent.createProjectDescriptionLabel',
-                  'What are you trying to achieve?',
-                )}
+              {descriptionLabel ?? t('ui.agent.createProjectDescriptionLabel', 'What are you trying to achieve?')}
             </Label>
             <Textarea
               className="min-h-24"
               id="project-description"
-              placeholder={
-                descriptionPlaceholder ??
-                t(
-                  'ui.agent.createProjectDescriptionPlaceholder',
-                  'Describe your Project',
-                )
-              }
+              placeholder={descriptionPlaceholder ?? t('ui.agent.createProjectDescriptionPlaceholder', 'Describe your Project')}
               value={description}
-              onChange={(event) => setDescription(event.target.value)}
-            />
+              onChange={event => setDescription(event.target.value)} />
           </div>
 
           {extraFields}
@@ -154,5 +131,5 @@ export const DocyrusAgentCreateProjectView = ({
         </div>
       </div>
     </div>
-  )
-}
+  );
+};

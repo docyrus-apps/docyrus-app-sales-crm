@@ -1,30 +1,30 @@
-'use client'
+'use client';
 
 // @ts-nocheck
 /* eslint-disable */
-import { type ReactNode } from 'react'
+import { type ReactNode } from 'react';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
-import { PanelLeft } from 'lucide-react'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { PanelLeft } from 'lucide-react';
 
-import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation';
 
-import { type AgentProfile } from './types'
+import { type AgentProfile } from './types';
 
 export interface DocyrusAgentSidebarHeaderProps {
   /** Agent identity rendered as avatar + name. Omit to fall back to `title`. */
-  agent?: AgentProfile
+  agent?: AgentProfile;
   /** Title shown when no agent is provided. Defaults to "Threads". */
-  title?: ReactNode
+  title?: ReactNode;
   /** Show a collapse button on the right — clicking calls `onClose`. */
-  onClose?: () => void
+  onClose?: () => void;
   /** Override the close icon. */
-  closeIcon?: ReactNode
+  closeIcon?: ReactNode;
   /** Slot rendered on the right, replacing the close button when supplied. */
-  trailing?: ReactNode
-  className?: string
+  trailing?: ReactNode;
+  className?: string;
 }
 
 /**
@@ -37,31 +37,19 @@ export const DocyrusAgentSidebarHeader = ({
   onClose,
   closeIcon,
   trailing,
-  className,
+  className
 }: DocyrusAgentSidebarHeaderProps) => {
-  const { t } = useUiTranslation()
+  const { t } = useUiTranslation();
 
   return (
-    <div
-      className={cn(
-        'flex items-center justify-between gap-2 border-b px-4 py-3',
-        className,
-      )}
-    >
+    <div className={cn('flex items-center justify-between gap-2 border-b px-4 py-3', className)}>
       {agent ? (
         <div className="flex min-w-0 items-center gap-2">
           <Avatar className="size-7 shrink-0">
-            {agent.avatar?.image && (
-              <AvatarImage alt={agent.name} src={agent.avatar.image} />
-            )}
+            {agent.avatar?.image && <AvatarImage alt={agent.name} src={agent.avatar.image} />}
             <AvatarFallback
               className="text-xs font-medium"
-              style={
-                agent.avatar?.color
-                  ? { backgroundColor: agent.avatar.color, color: 'white' }
-                  : undefined
-              }
-            >
+              style={agent.avatar?.color ? { backgroundColor: agent.avatar.color, color: 'white' } : undefined}>
               {(agent.avatar?.name ?? agent.name).slice(0, 2)}
             </AvatarFallback>
           </Avatar>
@@ -72,18 +60,16 @@ export const DocyrusAgentSidebarHeader = ({
           {title ?? t('ui.agent.threads', 'Threads')}
         </span>
       )}
-      {trailing ??
-        (onClose && (
-          <Button
-            aria-label={t('ui.agent.collapseSidebar', 'Collapse sidebar')}
-            className="size-7 text-muted-foreground"
-            size="icon"
-            variant="ghost"
-            onClick={onClose}
-          >
-            {closeIcon ?? <PanelLeft className="size-4" />}
-          </Button>
-        ))}
+      {trailing ?? (onClose && (
+        <Button
+          aria-label={t('ui.agent.collapseSidebar', 'Collapse sidebar')}
+          className="size-7 text-muted-foreground"
+          size="icon"
+          variant="ghost"
+          onClick={onClose}>
+          {closeIcon ?? <PanelLeft className="size-4" />}
+        </Button>
+      ))}
     </div>
-  )
-}
+  );
+};

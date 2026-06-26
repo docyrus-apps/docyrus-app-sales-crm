@@ -1,65 +1,57 @@
-'use client'
+'use client';
 
 // @ts-nocheck
 /* eslint-disable */
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo } from 'react';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-export type DocyrusAgentProjectsClientParams = Record<
-  string,
-  string | number | boolean | null | undefined
->
+export type DocyrusAgentProjectsClientParams = Record<string, string | number | boolean | null | undefined>;
 
 export interface DocyrusAgentProjectsClient {
-  get: <T = unknown>(
-    url: string,
-    params?: DocyrusAgentProjectsClientParams,
-  ) => Promise<T>
-  post: <T = unknown>(url: string, body?: unknown) => Promise<T>
-  patch: <T = unknown>(url: string, body?: unknown) => Promise<T>
-  delete: <T = unknown>(url: string) => Promise<T>
+  get: <T = unknown>(url: string, params?: DocyrusAgentProjectsClientParams) => Promise<T>;
+  post: <T = unknown>(url: string, body?: unknown) => Promise<T>;
+  patch: <T = unknown>(url: string, body?: unknown) => Promise<T>;
+  delete: <T = unknown>(url: string) => Promise<T>;
 }
 
 export interface DocyrusAgentProject {
-  id: string
-  name: string
-  description?: string
-  agentId?: string
-  deploymentId?: string
-  createdBy?: unknown
-  sharedTo?: Array<string>
+  id: string;
+  name: string;
+  description?: string;
+  agentId?: string;
+  deploymentId?: string;
+  createdBy?: unknown;
+  sharedTo?: Array<string>;
 }
 
 export interface UseDocyrusAgentProjectsArgs {
-  client: DocyrusAgentProjectsClient | null | undefined
-  agentId: string
+  client: DocyrusAgentProjectsClient | null | undefined;
+  agentId: string;
   /** Restrict list to projects owned by / shared with this user. */
-  userId?: string | null
-  enabled?: boolean
+  userId?: string | null;
+  enabled?: boolean;
 }
 
 export interface CreateProjectInput {
-  name: string
-  description?: string
+  name: string;
+  description?: string;
 }
 
 export interface UseDocyrusAgentProjectsResult {
-  projects: Array<DocyrusAgentProject>
-  isLoading: boolean
-  error: Error | null
-  refresh: () => Promise<void>
-  createProject: (
-    input: CreateProjectInput,
-  ) => Promise<DocyrusAgentProject | null>
-  isCreating: boolean
-  renameProject: (projectId: string, name: string) => Promise<boolean>
-  isRenaming: boolean
-  deleteProject: (projectId: string) => Promise<boolean>
-  isDeleting: boolean
+  projects: Array<DocyrusAgentProject>;
+  isLoading: boolean;
+  error: Error | null;
+  refresh: () => Promise<void>;
+  createProject: (input: CreateProjectInput) => Promise<DocyrusAgentProject | null>;
+  isCreating: boolean;
+  renameProject: (projectId: string, name: string) => Promise<boolean>;
+  isRenaming: boolean;
+  deleteProject: (projectId: string) => Promise<boolean>;
+  isDeleting: boolean;
 }
 
-const PROJECTS_QUERY_KEY = ['docyrus-agent', 'projects'] as const
+const PROJECTS_QUERY_KEY = ['docyrus-agent', 'projects'] as const;
 
 /**
  * Lists + manages Docyrus AI projects scoped to an agent.
@@ -78,149 +70,128 @@ export function useDocyrusAgentProjects({
   client,
   agentId,
   userId = null,
-  enabled,
+  enabled
 }: UseDocyrusAgentProjectsArgs): UseDocyrusAgentProjectsResult {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   const queryKey = useMemo(
     () => [...PROJECTS_QUERY_KEY, agentId, userId] as const,
-    [agentId, userId],
-  )
+    [agentId, userId]
+  );
 
   const listQuery = useQuery<Array<DocyrusAgentProject>, Error>({
     queryKey,
     enabled: enabled ?? !!client,
     queryFn: async () => {
-      if (!client) return []
+      if (!client) return [];
 
-      const response = await client.get<unknown>('/v1/ai/projects')
-      const items = extractListItems(response)
+      const response = await client.get<unknown>('/v1/ai/projects');
+      const items = extractListItems(response);
 
-      const projects = items.map(toProject)
+      const projects = items.map(toProject);
 
       return projects.filter((project) => {
-        if (agentId && project.agentId && project.agentId !== agentId)
-          return false
-        if (!userId) return true
-        if (project.createdBy === userId) return true
-        if (
-          Array.isArray(project.sharedTo) &&
-          project.sharedTo.includes(userId)
-        )
-          return true
+        if (agentId && project.agentId && project.agentId !== agentId) return false;
+        if (!userId) return true;
+        if (project.createdBy === userId) return true;
+        if (Array.isArray(project.sharedTo) && project.sharedTo.includes(userId)) return true;
 
-        return false
-      })
-    },
-  })
+        return false;
+      });
+    }
+  });
 
   const refresh = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey })
-  }, [queryClient, queryKey])
+    await queryClient.invalidateQueries({ queryKey });
+  }, [queryClient, queryKey]);
 
-  const createMutation = useMutation<
-    DocyrusAgentProject | null,
-    Error,
-    CreateProjectInput
-  >({
+  const createMutation = useMutation<DocyrusAgentProject | null, Error, CreateProjectInput>({
     mutationFn: async ({ name, description }) => {
-      if (!client) throw new Error('No client')
+      if (!client) throw new Error('No client');
 
       const response = await client.post<unknown>('/v1/ai/projects', {
         name,
         description: description || undefined,
-        tenant_ai_agent_id: agentId,
-      })
+        tenant_ai_agent_id: agentId
+      });
 
-      const envelope = response as
-        | { id?: string; data?: RawProject }
-        | RawProject
-        | null
+      const envelope = response as { id?: string; data?: RawProject } | RawProject | null;
 
-      if (!envelope) return null
-      if (
-        'data' in (envelope as object) &&
-        (envelope as { data?: RawProject }).data
-      ) {
-        return toProject((envelope as { data: RawProject }).data)
+      if (!envelope) return null;
+      if ('data' in (envelope as object) && (envelope as { data?: RawProject }).data) {
+        return toProject((envelope as { data: RawProject }).data);
       }
 
-      return toProject(envelope as RawProject)
+      return toProject(envelope as RawProject);
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey })
-    },
-  })
+      void queryClient.invalidateQueries({ queryKey });
+    }
+  });
 
   const renameMutation = useMutation({
-    mutationFn: async ({
-      projectId,
-      name,
-    }: {
-      projectId: string
-      name: string
-    }) => {
-      if (!client) throw new Error('No client')
+    mutationFn: async ({ projectId, name }: { projectId: string; name: string }) => {
+      if (!client) throw new Error('No client');
 
-      await client.patch(`/v1/ai/projects/${projectId}`, { name })
+      await client.patch(`/v1/ai/projects/${projectId}`, { name });
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey })
-    },
-  })
+      void queryClient.invalidateQueries({ queryKey });
+    }
+  });
 
   const deleteMutation = useMutation({
     mutationFn: async (projectId: string) => {
-      if (!client) throw new Error('No client')
+      if (!client) throw new Error('No client');
 
-      await client.delete(`/v1/ai/projects/${projectId}`)
+      await client.delete(`/v1/ai/projects/${projectId}`);
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey })
-    },
-  })
+      void queryClient.invalidateQueries({ queryKey });
+    }
+  });
 
   const createProject = useCallback(
     async (input: CreateProjectInput) => {
       try {
-        return await createMutation.mutateAsync(input)
+        return await createMutation.mutateAsync(input);
       } catch (error) {
-        console.warn('[useDocyrusAgentProjects] create failed', error)
+        console.warn('[useDocyrusAgentProjects] create failed', error);
 
-        return null
+        return null;
       }
     },
-    [createMutation],
-  )
+    [createMutation]
+  );
 
   const renameProject = useCallback(
     async (projectId: string, name: string) => {
       try {
-        await renameMutation.mutateAsync({ projectId, name })
+        await renameMutation.mutateAsync({ projectId, name });
 
-        return true
+        return true;
       } catch (error) {
-        console.warn('[useDocyrusAgentProjects] rename failed', error)
+        console.warn('[useDocyrusAgentProjects] rename failed', error);
 
-        return false
+        return false;
       }
     },
-    [renameMutation],
-  )
+    [renameMutation]
+  );
 
   const deleteProject = useCallback(
     async (projectId: string) => {
       try {
-        await deleteMutation.mutateAsync(projectId)
+        await deleteMutation.mutateAsync(projectId);
 
-        return true
+        return true;
       } catch (error) {
-        console.warn('[useDocyrusAgentProjects] delete failed', error)
+        console.warn('[useDocyrusAgentProjects] delete failed', error);
 
-        return false
+        return false;
       }
     },
-    [deleteMutation],
-  )
+    [deleteMutation]
+  );
 
   return {
     projects: listQuery.data ?? [],
@@ -232,37 +203,33 @@ export function useDocyrusAgentProjects({
     renameProject,
     isRenaming: renameMutation.isPending,
     deleteProject,
-    isDeleting: deleteMutation.isPending,
-  }
+    isDeleting: deleteMutation.isPending
+  };
 }
 
 interface RawProject {
-  id: string
-  name?: string
-  description?: string
-  tenant_ai_agent_id?: string
-  tenant_ai_agent_deployment_id?: string
-  created_by?: unknown
-  shared_to?: Array<string>
+  id: string;
+  name?: string;
+  description?: string;
+  tenant_ai_agent_id?: string;
+  tenant_ai_agent_deployment_id?: string;
+  created_by?: unknown;
+  shared_to?: Array<string>;
 }
 
 function extractListItems(response: unknown): Array<RawProject> {
-  if (Array.isArray(response)) return response as Array<RawProject>
+  if (Array.isArray(response)) return response as Array<RawProject>;
   if (response && typeof response === 'object') {
-    const env = response as { data?: unknown; items?: unknown }
+    const env = response as { data?: unknown; items?: unknown };
 
-    if (Array.isArray(env.data)) return env.data as Array<RawProject>
-    if (Array.isArray(env.items)) return env.items as Array<RawProject>
-    if (
-      env.data &&
-      typeof env.data === 'object' &&
-      Array.isArray((env.data as { items?: unknown }).items)
-    ) {
-      return (env.data as { items: Array<RawProject> }).items
+    if (Array.isArray(env.data)) return env.data as Array<RawProject>;
+    if (Array.isArray(env.items)) return env.items as Array<RawProject>;
+    if (env.data && typeof env.data === 'object' && Array.isArray((env.data as { items?: unknown }).items)) {
+      return (env.data as { items: Array<RawProject> }).items;
     }
   }
 
-  return []
+  return [];
 }
 
 function toProject(item: RawProject): DocyrusAgentProject {
@@ -273,6 +240,6 @@ function toProject(item: RawProject): DocyrusAgentProject {
     agentId: item.tenant_ai_agent_id,
     deploymentId: item.tenant_ai_agent_deployment_id,
     createdBy: item.created_by,
-    sharedTo: item.shared_to,
-  }
+    sharedTo: item.shared_to
+  };
 }

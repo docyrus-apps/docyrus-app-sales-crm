@@ -1,21 +1,21 @@
-'use client'
+'use client';
 
 // @ts-nocheck
 /* eslint-disable */
-import { type ReactNode } from 'react'
+import { type ReactNode } from 'react';
 
-import { cn } from '@/lib/utils'
-import { CirclePlus } from 'lucide-react'
+import { cn } from '@/lib/utils';
+import { CirclePlus } from 'lucide-react';
 
-import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation';
 
 export interface DocyrusAgentSidebarNewChatButtonProps {
-  onClick?: () => void
+  onClick?: () => void;
   /** Override the icon. */
-  icon?: ReactNode
+  icon?: ReactNode;
   /** Override the label. */
-  label?: ReactNode
-  className?: string
+  label?: ReactNode;
+  className?: string;
 }
 
 /**
@@ -26,26 +26,20 @@ export const DocyrusAgentSidebarNewChatButton = ({
   onClick,
   icon,
   label,
-  className,
+  className
 }: DocyrusAgentSidebarNewChatButtonProps) => {
-  const { t } = useUiTranslation()
+  const { t } = useUiTranslation();
 
   return (
     <button
       className={cn(
         'flex items-center gap-3 px-4 py-3 text-left text-sm font-medium transition-colors hover:bg-muted/40',
-        className,
+        className
       )}
       type="button"
-      onClick={onClick}
-    >
-      {icon ?? (
-        <CirclePlus
-          className="size-5 text-muted-foreground"
-          strokeWidth={1.5}
-        />
-      )}
+      onClick={onClick}>
+      {icon ?? <CirclePlus className="size-5 text-muted-foreground" strokeWidth={1.5} />}
       {label ?? t('ui.agent.newChat', 'New Chat')}
     </button>
-  )
-}
+  );
+};

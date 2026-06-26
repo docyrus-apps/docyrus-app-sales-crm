@@ -1,33 +1,28 @@
-'use client'
+'use client';
 
 // @ts-nocheck
 /* eslint-disable */
-import { type ReactNode } from 'react'
+import { type ReactNode } from 'react';
 
-import { PromptInputButton } from '@/components/ai-elements/prompt-input'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
-import { cn } from '@/lib/utils'
+import { PromptInputButton } from '@/components/ai-elements/prompt-input';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
-import { useDocyrusAgent } from './docyrus-agent-context'
-import { type AgentFeatureFlags } from './types'
+import { useDocyrusAgent } from './docyrus-agent-context';
+import { type AgentFeatureFlags } from './types';
 
-const ACTIVE_CLASSES =
-  'bg-primary/10 text-primary ring-1 ring-primary/30 hover:bg-primary/20'
+const ACTIVE_CLASSES = 'bg-primary/10 text-primary ring-1 ring-primary/30 hover:bg-primary/20';
 
 export interface DocyrusAgentChatInputFeatureToggleProps {
   /** Which `AgentFeatureFlags` key this toggle controls. */
-  feature: keyof AgentFeatureFlags
+  feature: keyof AgentFeatureFlags;
   /** Icon shown inside the button. */
-  icon: ReactNode
+  icon: ReactNode;
   /** Tooltip / aria-label. */
-  tooltip: string
+  tooltip: string;
   /** Override the active state styling. */
-  activeClassName?: string
-  className?: string
+  activeClassName?: string;
+  className?: string;
 }
 
 /**
@@ -43,10 +38,10 @@ export const DocyrusAgentChatInputFeatureToggle = ({
   icon,
   tooltip,
   activeClassName,
-  className,
+  className
 }: DocyrusAgentChatInputFeatureToggleProps) => {
-  const { featureFlags, setFeatureFlag } = useDocyrusAgent()
-  const isActive = featureFlags[feature]
+  const { featureFlags, setFeatureFlag } = useDocyrusAgent();
+  const isActive = featureFlags[feature];
 
   return (
     <Tooltip>
@@ -56,15 +51,14 @@ export const DocyrusAgentChatInputFeatureToggle = ({
           className={cn(
             'transition-all duration-200',
             isActive && (activeClassName ?? ACTIVE_CLASSES),
-            className,
+            className
           )}
           variant="ghost"
-          onClick={() => setFeatureFlag(feature, !isActive)}
-        >
+          onClick={() => setFeatureFlag(feature, !isActive)}>
           {icon}
         </PromptInputButton>
       </TooltipTrigger>
       <TooltipContent side="top">{tooltip}</TooltipContent>
     </Tooltip>
-  )
-}
+  );
+};

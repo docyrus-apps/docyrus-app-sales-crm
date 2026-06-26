@@ -1,10 +1,10 @@
-'use client'
+'use client';
 
 // @ts-nocheck
 /* eslint-disable */
-import { type ReactNode } from 'react'
+import { type ReactNode } from 'react';
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
 export interface DocyrusAgentSidebarProps {
   /**
@@ -12,14 +12,14 @@ export interface DocyrusAgentSidebarProps {
    * via a width transition. On narrow screens (< md), it renders as a floating drawer
    * overlay with a dismissable backdrop. Defaults to `true`.
    */
-  open?: boolean
+  open?: boolean;
   /** Called when the backdrop is clicked on narrow screens. */
-  onClose?: () => void
+  onClose?: () => void;
   /** Width of the open sidebar. Defaults to `w-72`. */
-  widthClassName?: string
+  widthClassName?: string;
   /** Sidebar body. Compose with `DocyrusAgentSidebarHeader`, `…ProjectsSection`, `…ThreadsSection`, or any custom content. */
-  children?: ReactNode
-  className?: string
+  children?: ReactNode;
+  className?: string;
 }
 
 /**
@@ -42,9 +42,9 @@ export const DocyrusAgentSidebar = ({
   onClose,
   widthClassName = 'w-72',
   children,
-  className,
+  className
 }: DocyrusAgentSidebarProps) => {
-  const minWidthClass = widthClassName.replace(/^w-/, 'min-w-')
+  const minWidthClass = widthClassName.replace(/^w-/, 'min-w-');
 
   return (
     <>
@@ -52,17 +52,10 @@ export const DocyrusAgentSidebar = ({
         className={cn(
           'hidden h-full shrink-0 flex-col overflow-hidden border-r bg-background transition-[width] duration-300 @3xl/agent:flex',
           open ? widthClassName : 'w-0 border-r-0',
-          className,
+          className
         )}
-        inert={!open}
-      >
-        <div
-          className={cn(
-            'flex min-h-0 flex-1 flex-col',
-            widthClassName,
-            minWidthClass,
-          )}
-        >
+        inert={!open}>
+        <div className={cn('flex min-h-0 flex-1 flex-col', widthClassName, minWidthClass)}>
           {children}
         </div>
       </aside>
@@ -72,27 +65,19 @@ export const DocyrusAgentSidebar = ({
           <div
             aria-hidden
             className="absolute inset-0 bg-black/30"
-            onClick={onClose}
-          />
+            onClick={onClose} />
           <aside
             className={cn(
               'absolute left-0 top-0 flex h-full flex-col overflow-hidden border-r bg-background shadow-xl',
               widthClassName,
-              className,
-            )}
-          >
-            <div
-              className={cn(
-                'flex min-h-0 flex-1 flex-col',
-                widthClassName,
-                minWidthClass,
-              )}
-            >
+              className
+            )}>
+            <div className={cn('flex min-h-0 flex-1 flex-col', widthClassName, minWidthClass)}>
               {children}
             </div>
           </aside>
         </div>
       )}
     </>
-  )
-}
+  );
+};

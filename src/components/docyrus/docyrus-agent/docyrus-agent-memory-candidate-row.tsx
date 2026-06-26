@@ -1,47 +1,44 @@
-'use client'
+'use client';
 
 // @ts-nocheck
 /* eslint-disable */
-import { type ReactNode } from 'react'
+import { type ReactNode } from 'react';
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
-import { Star } from 'lucide-react'
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { Star } from 'lucide-react';
 
-import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation';
 
 export interface DocyrusAgentMemoryLevel {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 export interface DocyrusAgentMemoryCandidate {
-  id?: string
-  title: string
-  content?: string
-  suggestedLevel?: string
-  suggestedImportance?: number
-  tags?: Array<string>
-  reason?: string
-  sourceMessageId?: string
+  id?: string;
+  title: string;
+  content?: string;
+  suggestedLevel?: string;
+  suggestedImportance?: number;
+  tags?: Array<string>;
+  reason?: string;
+  sourceMessageId?: string;
   /** Animation hint surfaced by the row. The dialog typically toggles this between save/skip + null. */
-  animating?: 'save' | 'skip' | null
+  animating?: 'save' | 'skip' | null;
 }
 
 export interface DocyrusAgentMemoryCandidateRowProps {
-  candidate: DocyrusAgentMemoryCandidate
+  candidate: DocyrusAgentMemoryCandidate;
   /** Memory levels available in the level selector. */
-  levels: ReadonlyArray<DocyrusAgentMemoryLevel>
-  onSave?: (candidate: DocyrusAgentMemoryCandidate) => void
-  onSkip?: (candidate: DocyrusAgentMemoryCandidate) => void
-  onLevelChange?: (
-    candidate: DocyrusAgentMemoryCandidate,
-    level: string,
-  ) => void
+  levels: ReadonlyArray<DocyrusAgentMemoryLevel>;
+  onSave?: (candidate: DocyrusAgentMemoryCandidate) => void;
+  onSkip?: (candidate: DocyrusAgentMemoryCandidate) => void;
+  onLevelChange?: (candidate: DocyrusAgentMemoryCandidate, level: string) => void;
   /** Replace the row layout entirely. */
-  children?: ReactNode
-  className?: string
+  children?: ReactNode;
+  className?: string;
 }
 
 /**
@@ -55,11 +52,11 @@ export const DocyrusAgentMemoryCandidateRow = ({
   onSkip,
   onLevelChange,
   children,
-  className,
+  className
 }: DocyrusAgentMemoryCandidateRowProps) => {
-  const { t } = useUiTranslation()
+  const { t } = useUiTranslation();
 
-  if (children) return <div className={className}>{children}</div>
+  if (children) return <div className={className}>{children}</div>;
 
   return (
     <div
@@ -67,9 +64,8 @@ export const DocyrusAgentMemoryCandidateRow = ({
         'rounded-md border bg-background p-2.5 transition-all duration-300',
         candidate.animating === 'save' && 'translate-x-full opacity-0',
         candidate.animating === 'skip' && '-translate-x-full opacity-0',
-        className,
-      )}
-    >
+        className
+      )}>
       <div className="flex items-center gap-1.5">
         <p className="truncate text-sm font-medium">{candidate.title}</p>
         {candidate.suggestedImportance != null && (
@@ -80,20 +76,12 @@ export const DocyrusAgentMemoryCandidateRow = ({
         )}
       </div>
       {candidate.content && (
-        <p className="mt-0.5 line-clamp-3 text-left text-xs text-muted-foreground">
-          {candidate.content}
-        </p>
+        <p className="mt-0.5 line-clamp-3 text-left text-xs text-muted-foreground">{candidate.content}</p>
       )}
       {candidate.tags && candidate.tags.length > 0 && (
         <div className="mt-1 flex flex-wrap gap-1">
-          {candidate.tags.map((tag) => (
-            <Badge
-              key={tag}
-              className="px-1.5 py-0 text-xs"
-              variant="secondary"
-            >
-              {tag}
-            </Badge>
+          {candidate.tags.map(tag => (
+            <Badge key={tag} className="px-1.5 py-0 text-xs" variant="secondary">{tag}</Badge>
           ))}
         </div>
       )}
@@ -105,12 +93,9 @@ export const DocyrusAgentMemoryCandidateRow = ({
           <select
             className="rounded border bg-background px-1.5 py-0.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             value={candidate.suggestedLevel ?? levels[0]?.id ?? ''}
-            onChange={(event) => onLevelChange?.(candidate, event.target.value)}
-          >
-            {levels.map((level) => (
-              <option key={level.id} value={level.id}>
-                {level.name}
-              </option>
+            onChange={event => onLevelChange?.(candidate, event.target.value)}>
+            {levels.map(level => (
+              <option key={level.id} value={level.id}>{level.name}</option>
             ))}
           </select>
         </div>
@@ -120,20 +105,18 @@ export const DocyrusAgentMemoryCandidateRow = ({
             disabled={!!candidate.animating}
             size="sm"
             variant="outline"
-            onClick={() => onSkip?.(candidate)}
-          >
+            onClick={() => onSkip?.(candidate)}>
             {t('ui.agent.memory.skip', 'Skip')}
           </Button>
           <Button
             className="h-6 bg-emerald-600 px-2 text-xs text-white hover:bg-emerald-700"
             disabled={!!candidate.animating}
             size="sm"
-            onClick={() => onSave?.(candidate)}
-          >
+            onClick={() => onSave?.(candidate)}>
             {t('ui.agent.memory.save', 'Save')}
           </Button>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};

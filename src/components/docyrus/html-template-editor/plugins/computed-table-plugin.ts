@@ -1,33 +1,33 @@
-'use client'
+'use client';
 
 // @ts-nocheck
 /* eslint-disable */
-import { createPlatePlugin } from 'platejs/react'
+import { createPlatePlugin } from 'platejs/react';
 
 import {
   COMPUTED_TABLE_KEY,
   type ComputedColumnConfig,
   type ComputedFooterConfig,
-  type ComputedRow,
-} from '../types'
+  type ComputedRow
+} from '../types';
 
 interface ComputedTablePayload {
-  schemaId?: string
-  rows?: ComputedRow[]
-  currency?: string
-  locale?: string
-  columnVisibility?: Record<string, boolean>
-  dataPath?: string
-  label?: string
-  columns?: ComputedColumnConfig[]
-  footer?: ComputedFooterConfig[]
+  schemaId?: string;
+  rows?: ComputedRow[];
+  currency?: string;
+  locale?: string;
+  columnVisibility?: Record<string, boolean>;
+  dataPath?: string;
+  label?: string;
+  columns?: ComputedColumnConfig[];
+  footer?: ComputedFooterConfig[];
 }
 
 function safeParse(raw: string): ComputedTablePayload {
   try {
-    return JSON.parse(decodeURIComponent(raw)) as ComputedTablePayload
+    return JSON.parse(decodeURIComponent(raw)) as ComputedTablePayload;
   } catch {
-    return {}
+    return {};
   }
 }
 
@@ -52,7 +52,7 @@ export const ComputedTablePlugin = createPlatePlugin({
   node: {
     isElement: true,
     isInline: false,
-    isVoid: true,
+    isVoid: true
   },
   parsers: {
     html: {
@@ -62,42 +62,27 @@ export const ComputedTablePlugin = createPlatePlugin({
         rules: [
           {
             validNodeName: 'DIV',
-            validAttribute: { 'data-computed-table': '1' },
-          },
+            validAttribute: { 'data-computed-table': '1' }
+          }
         ],
         parse: ({ element }) => {
-          const payload = safeParse(element.getAttribute('data-config') ?? '')
+          const payload = safeParse(element.getAttribute('data-config') ?? '');
 
           return {
             type: COMPUTED_TABLE_KEY,
-            schemaId:
-              typeof payload.schemaId === 'string' ? payload.schemaId : '',
+            schemaId: typeof payload.schemaId === 'string' ? payload.schemaId : '',
             rows: Array.isArray(payload.rows) ? payload.rows : [],
-            currency:
-              typeof payload.currency === 'string'
-                ? payload.currency
-                : undefined,
-            locale:
-              typeof payload.locale === 'string' ? payload.locale : undefined,
-            columnVisibility:
-              payload.columnVisibility &&
-              typeof payload.columnVisibility === 'object'
-                ? payload.columnVisibility
-                : undefined,
-            dataPath:
-              typeof payload.dataPath === 'string'
-                ? payload.dataPath
-                : undefined,
-            label:
-              typeof payload.label === 'string' ? payload.label : undefined,
-            columns: Array.isArray(payload.columns)
-              ? payload.columns
-              : undefined,
+            currency: typeof payload.currency === 'string' ? payload.currency : undefined,
+            locale: typeof payload.locale === 'string' ? payload.locale : undefined,
+            columnVisibility: payload.columnVisibility && typeof payload.columnVisibility === 'object' ? payload.columnVisibility : undefined,
+            dataPath: typeof payload.dataPath === 'string' ? payload.dataPath : undefined,
+            label: typeof payload.label === 'string' ? payload.label : undefined,
+            columns: Array.isArray(payload.columns) ? payload.columns : undefined,
             footer: Array.isArray(payload.footer) ? payload.footer : undefined,
-            children: [{ text: '' }],
-          }
-        },
-      },
-    },
-  },
-})
+            children: [{ text: '' }]
+          };
+        }
+      }
+    }
+  }
+});

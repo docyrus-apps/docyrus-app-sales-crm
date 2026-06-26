@@ -949,6 +949,12 @@ t
               variables={QUOTE_VARIABLES}
               extraHelpers={{ numberToWordsTR }}
               defaultCurrency={DEFAULT_CURRENCY}
+              visibleTabs={[
+'preview',
+'code',
+'data',
+'pdf'
+]}
               defaultTab="preview"
               className="h-full"
               minHeight="100%" />

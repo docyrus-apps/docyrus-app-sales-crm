@@ -1,12 +1,12 @@
 /* eslint-disable */
 // @ts-nocheck
-'use client'
+'use client';
 
-import { LinkRules } from '@platejs/link'
-import { LinkPlugin } from '@platejs/link/react'
+import { LinkRules } from '@platejs/link';
+import { LinkPlugin } from '@platejs/link/react';
 
-import { LinkElement } from '@/components/editor/ui/link-node'
-import { LinkFloatingToolbar } from '@/components/editor/ui/link-toolbar'
+import { LinkElement } from '@/components/editor/ui/link-node';
+import { LinkFloatingToolbar } from '@/components/editor/ui/link-toolbar';
 
 export const LinkKit = [
   LinkPlugin.configure({
@@ -21,4 +21,4 @@ export const LinkKit = [
       afterEditable: () => <LinkFloatingToolbar />,
     },
   }),
-]
+];

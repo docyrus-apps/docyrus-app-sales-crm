@@ -1,8 +1,8 @@
 /* eslint-disable */
 // @ts-nocheck
-'use client'
+'use client';
 
-import { type PlateElementProps, PlateElement } from 'platejs/react'
+import { type PlateElementProps, PlateElement } from 'platejs/react';
 
 export function BlockquoteElement(props: PlateElementProps) {
   return (
@@ -11,5 +11,5 @@ export function BlockquoteElement(props: PlateElementProps) {
       className="my-1 border-l-2 pl-6 italic"
       {...props}
     />
-  )
+  );
 }

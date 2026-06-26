@@ -1,84 +1,76 @@
-'use client'
+'use client';
 
 // @ts-nocheck
 /* eslint-disable */
-import { useState } from 'react'
+import { useState } from 'react';
 
-import { CodeIcon } from 'lucide-react'
-import { useEditorRef } from 'platejs/react'
+import { CodeIcon } from 'lucide-react';
+import { useEditorRef } from 'platejs/react';
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/button';
 import {
   Command,
   CommandGroup,
   CommandItem,
-  CommandList,
-} from '@/components/ui/command'
+  CommandList
+} from '@/components/ui/command';
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+  PopoverTrigger
+} from '@/components/ui/popover';
 
-import {
-  HBS_BLOCK_CLOSE_KEY,
-  HBS_BLOCK_OPEN_KEY,
-  type HandlebarsBlockHelper,
-} from '../types'
+import { HBS_BLOCK_CLOSE_KEY, HBS_BLOCK_OPEN_KEY, type HandlebarsBlockHelper } from '../types';
 
-import { BlockHelperForm } from './block-helper-form'
+import { BlockHelperForm } from './block-helper-form';
 
 interface InsertBlockPopoverProps {
-  helpers: HandlebarsBlockHelper[]
-  disabled?: boolean
+  helpers: HandlebarsBlockHelper[];
+  disabled?: boolean;
 }
 
-export function InsertBlockPopover({
-  helpers,
-  disabled,
-}: InsertBlockPopoverProps) {
-  const editor = useEditorRef()
-  const [open, setOpen] = useState(false)
-  const [selectedHelper, setSelectedHelper] =
-    useState<HandlebarsBlockHelper | null>(null)
-  const [expression, setExpression] = useState('')
+export function InsertBlockPopover({ helpers, disabled }: InsertBlockPopoverProps) {
+  const editor = useEditorRef();
+  const [open, setOpen] = useState(false);
+  const [selectedHelper, setSelectedHelper] = useState<HandlebarsBlockHelper | null>(null);
+  const [expression, setExpression] = useState('');
 
   function reset() {
-    setSelectedHelper(null)
-    setExpression('')
+    setSelectedHelper(null);
+    setExpression('');
   }
 
   function handleSelectHelper(helper: HandlebarsBlockHelper) {
-    setSelectedHelper(helper)
-    setExpression(helper.defaultExpression ?? '')
+    setSelectedHelper(helper);
+    setExpression(helper.defaultExpression ?? '');
   }
 
   function handleInsert() {
-    if (!selectedHelper) return
+    if (!selectedHelper) return;
 
-    editor.tf.focus()
+    editor.tf.focus();
     editor.tf.insertNodes([
       {
         type: HBS_BLOCK_OPEN_KEY,
         helper: selectedHelper.name,
         expression: expression.trim(),
-        children: [{ text: '' }],
+        children: [{ text: '' }]
       },
       { text: ' ' },
       {
         type: HBS_BLOCK_CLOSE_KEY,
         helper: selectedHelper.name,
-        children: [{ text: '' }],
-      },
-    ])
+        children: [{ text: '' }]
+      }
+    ]);
 
-    setOpen(false)
-    reset()
+    setOpen(false);
+    reset();
   }
 
   function handleOpenChange(next: boolean) {
-    setOpen(next)
-    if (!next) reset()
+    setOpen(next);
+    if (!next) reset();
   }
 
   return (
@@ -90,8 +82,7 @@ export function InsertBlockPopover({
           className="h-7 gap-1.5 px-2 text-xs font-medium text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:text-amber-400 dark:hover:bg-amber-900/20"
           disabled={disabled}
           title="Insert block helper ({{#...}}...{{/...}})"
-          aria-label="Insert handlebars block helper"
-        >
+          aria-label="Insert handlebars block helper">
           <CodeIcon className="size-3.5" />
           Block
         </Button>
@@ -101,21 +92,18 @@ export function InsertBlockPopover({
           <Command>
             <CommandList className="max-h-56">
               <CommandGroup heading="Block Helpers">
-                {helpers.map((h) => (
+                {helpers.map(h => (
                   <CommandItem
                     key={h.name}
                     value={h.name}
                     onSelect={() => handleSelectHelper(h)}
-                    className="cursor-pointer"
-                  >
+                    className="cursor-pointer">
                     <span className="flex flex-1 items-center gap-2">
                       <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs font-semibold">
                         {`{{#${h.name}}}`}
                       </code>
                       {h.description && (
-                        <span className="text-xs text-muted-foreground">
-                          {h.description}
-                        </span>
+                        <span className="text-xs text-muted-foreground">{h.description}</span>
                       )}
                     </span>
                   </CommandItem>
@@ -131,10 +119,9 @@ export function InsertBlockPopover({
             onBack={reset}
             onCancel={() => handleOpenChange(false)}
             onSubmit={handleInsert}
-            submitLabel="Insert Block"
-          />
+            submitLabel="Insert Block" />
         )}
       </PopoverContent>
     </Popover>
-  )
+  );
 }

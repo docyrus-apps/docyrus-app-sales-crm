@@ -1,46 +1,46 @@
-'use client'
+'use client';
 
 // @ts-nocheck
 /* eslint-disable */
-import { useCallback } from 'react'
+import { useCallback } from 'react';
 
-import { type FileUIPart } from 'ai'
+import { type FileUIPart } from 'ai';
 
 /**
  * Minimal REST client surface this hook needs. Compatible with `@docyrus/api-client`'s
  * `RestApiClient` (and any other client that exposes a typed `post`).
  */
 export interface DocyrusAgentAttachmentsClient {
-  post: <T = unknown>(url: string, body?: unknown) => Promise<T>
+  post: <T = unknown>(url: string, body?: unknown) => Promise<T>;
 }
 
 export interface UseDocyrusAgentAttachmentsArgs {
   /** Authenticated Docyrus REST client. */
-  client: DocyrusAgentAttachmentsClient | null | undefined
+  client: DocyrusAgentAttachmentsClient | null | undefined;
   /** Tenant AI agent ID. Threads + uploads are scoped to this agent. */
-  agentId: string
+  agentId: string;
   /**
    * Current thread ID. When null, the first `resolveFilePaths` call creates a new thread
    * and reports it via `onThreadCreated`. When set, files are uploaded to that thread.
    */
-  threadId: string | null
+  threadId: string | null;
   /** Fires when a fresh thread is created (only when the input `threadId` was null). */
-  onThreadCreated?: (threadId: string) => void
+  onThreadCreated?: (threadId: string) => void;
   /** Optional project scope. */
-  projectId?: string | null
+  projectId?: string | null;
   /** Optional deployment scope. */
-  deploymentId?: string | null
+  deploymentId?: string | null;
   /** Display name attached to the created thread. */
-  senderName?: string
+  senderName?: string;
   /** Subject prefix for newly-created threads. Defaults to the first 100 chars of the first message. */
-  threadSubject?: (messageText: string) => string
+  threadSubject?: (messageText: string) => string;
 }
 
 export interface ResolveFilePathsResult {
   /** Storage paths (e.g. `tenant/.../filename.png`) returned by the upload endpoint. */
-  filePaths: Array<string>
+  filePaths: Array<string>;
   /** Thread the files were attached to (newly created on first call, reused after). */
-  threadId: string | null
+  threadId: string | null;
 }
 
 export interface UseDocyrusAgentAttachmentsResult {
@@ -50,15 +50,15 @@ export interface UseDocyrusAgentAttachmentsResult {
    */
   resolveFilePaths: (
     files: Array<FileUIPart>,
-    messageText: string,
-  ) => Promise<ResolveFilePathsResult>
+    messageText: string
+  ) => Promise<ResolveFilePathsResult>;
   /**
    * Ensure a thread exists for the next message. Returns the current `threadId` when one is
    * already known; otherwise creates a fresh thread (scoped to the active `projectId` /
    * `deploymentId`) and reports it via `onThreadCreated`. Use this before `sendMessage` so
    * the backend can associate the message with a project even when no files are attached.
    */
-  ensureThread: (messageText: string) => Promise<string | null>
+  ensureThread: (messageText: string) => Promise<string | null>;
 }
 
 /**
@@ -106,16 +106,14 @@ export function useDocyrusAgentAttachments({
   projectId = null,
   deploymentId = null,
   senderName = 'User',
-  threadSubject,
+  threadSubject
 }: UseDocyrusAgentAttachmentsArgs): UseDocyrusAgentAttachmentsResult {
   const ensureThread = useCallback(
     async (messageText: string): Promise<string | null> => {
-      if (threadId) return threadId
-      if (!client) return null
+      if (threadId) return threadId;
+      if (!client) return null;
 
-      const subject = threadSubject
-        ? threadSubject(messageText)
-        : messageText.slice(0, 100) || 'New thread'
+      const subject = threadSubject ? threadSubject(messageText) : messageText.slice(0, 100) || 'New thread';
 
       try {
         const response = await client.post<unknown>(
@@ -127,26 +125,20 @@ export function useDocyrusAgentAttachments({
             thread_type: 'assistant',
             tenant_ai_agent_id: agentId,
             tenant_ai_agent_deployment_id: deploymentId,
-            tenant_ai_project_id: projectId,
-          },
-        )
+            tenant_ai_project_id: projectId
+          }
+        );
 
-        const envelope = response as {
-          id?: string
-          data?: { id?: string }
-        } | null
-        const id = envelope?.id ?? envelope?.data?.id ?? null
+        const envelope = response as { id?: string; data?: { id?: string } } | null;
+        const id = envelope?.id ?? envelope?.data?.id ?? null;
 
-        if (id) onThreadCreated?.(id)
+        if (id) onThreadCreated?.(id);
 
-        return id
+        return id;
       } catch (error) {
-        console.warn(
-          '[useDocyrusAgentAttachments] failed to create thread',
-          error,
-        )
+        console.warn('[useDocyrusAgentAttachments] failed to create thread', error);
 
-        return null
+        return null;
       }
     },
     [
@@ -157,74 +149,67 @@ export function useDocyrusAgentAttachments({
       deploymentId,
       senderName,
       threadSubject,
-      onThreadCreated,
-    ],
-  )
+      onThreadCreated
+    ]
+  );
 
   const uploadFile = useCallback(
     async (threadIdValue: string, file: FileUIPart): Promise<string | null> => {
-      if (!client || !file.url) return null
+      if (!client || !file.url) return null;
 
       try {
-        const blob = await (await fetch(file.url)).blob()
-        const formData = new FormData()
+        const blob = await (await fetch(file.url)).blob();
+        const formData = new FormData();
 
-        formData.append('file', blob, file.filename ?? 'upload')
+        formData.append('file', blob, file.filename ?? 'upload');
 
         const response = await client.post<unknown>(
           `/v1/apps/base/data-sources/thread/items/${threadIdValue}/files/upload`,
-          formData,
-        )
+          formData
+        );
 
         const envelope = response as {
-          file_name?: string
-          path?: string
-          data?:
-            | { file_name?: string; path?: string }
-            | Array<{ file_name?: string; path?: string }>
-        } | null
+          file_name?: string;
+          path?: string;
+          data?: { file_name?: string; path?: string } | Array<{ file_name?: string; path?: string }>;
+        } | null;
 
-        const direct = envelope?.file_name ?? envelope?.path
+        const direct = envelope?.file_name ?? envelope?.path;
 
-        if (direct) return direct
+        if (direct) return direct;
 
-        const nested = Array.isArray(envelope?.data)
-          ? envelope.data[0]
-          : envelope?.data
+        const nested = Array.isArray(envelope?.data) ? envelope.data[0] : envelope?.data;
 
-        return nested?.file_name ?? nested?.path ?? null
+        return nested?.file_name ?? nested?.path ?? null;
       } catch (error) {
-        console.warn('[useDocyrusAgentAttachments] file upload failed', error)
+        console.warn('[useDocyrusAgentAttachments] file upload failed', error);
 
-        return null
+        return null;
       }
     },
-    [client],
-  )
+    [client]
+  );
 
   const resolveFilePaths = useCallback(
-    async (
-      files: Array<FileUIPart>,
-      messageText: string,
-    ): Promise<ResolveFilePathsResult> => {
-      if (!files.length) return { filePaths: [], threadId }
+    async (files: Array<FileUIPart>, messageText: string): Promise<ResolveFilePathsResult> => {
+      if (!files.length) return { filePaths: [], threadId };
 
-      const resolvedThreadId = await ensureThread(messageText)
+      const resolvedThreadId = await ensureThread(messageText);
 
-      if (!resolvedThreadId) return { filePaths: [], threadId: null }
+      if (!resolvedThreadId) return { filePaths: [], threadId: null };
 
-      const filePaths: Array<string> = []
+      const filePaths: Array<string> = [];
 
       for (const file of files) {
-        const path = await uploadFile(resolvedThreadId, file)
+        const path = await uploadFile(resolvedThreadId, file);
 
-        if (path) filePaths.push(path)
+        if (path) filePaths.push(path);
       }
 
-      return { filePaths, threadId: resolvedThreadId }
+      return { filePaths, threadId: resolvedThreadId };
     },
-    [ensureThread, uploadFile, threadId],
-  )
+    [ensureThread, uploadFile, threadId]
+  );
 
-  return { resolveFilePaths, ensureThread }
+  return { resolveFilePaths, ensureThread };
 }

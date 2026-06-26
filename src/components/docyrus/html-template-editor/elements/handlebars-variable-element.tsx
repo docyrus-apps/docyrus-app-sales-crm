@@ -1,27 +1,27 @@
-'use client'
+'use client';
 
 // @ts-nocheck
 /* eslint-disable */
-import { useState } from 'react'
+import { useState } from 'react';
 
 import {
   type PlateElementProps,
   PlateElement,
   useFocused,
   useReadOnly,
-  useSelected,
-} from 'platejs/react'
+  useSelected
+} from 'platejs/react';
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+  PopoverTrigger
+} from '@/components/ui/popover';
 
-import { VariablePicker } from '../components/variable-picker'
-import { useHbsContext } from '../lib/hbs-context'
-import { type THandlebarsVariableElement } from '../types'
+import { VariablePicker } from '../components/variable-picker';
+import { useHbsContext } from '../lib/hbs-context';
+import { type THandlebarsVariableElement } from '../types';
 
 /*
  * Deterministic color from category string — cycles through a fixed palette
@@ -34,41 +34,40 @@ const CATEGORY_COLORS = [
   'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
   'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
   'border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300',
-  'border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700 dark:border-fuchsia-700 dark:bg-fuchsia-900/30 dark:text-fuchsia-300',
-]
+  'border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700 dark:border-fuchsia-700 dark:bg-fuchsia-900/30 dark:text-fuchsia-300'
+];
 
-const DEFAULT_COLOR =
-  'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+const DEFAULT_COLOR = 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-900/30 dark:text-blue-300';
 
 function categoryColor(category: string | undefined): string {
-  if (!category) return DEFAULT_COLOR
+  if (!category) return DEFAULT_COLOR;
 
-  let hash = 0
+  let hash = 0;
 
   for (let i = 0; i < category.length; i++) {
-    hash = (hash * 31 + category.charCodeAt(i)) & 0xff_ff_ff_ff
+    hash = (hash * 31 + category.charCodeAt(i)) & 0xff_ff_ff_ff;
   }
 
-  return (
-    CATEGORY_COLORS[Math.abs(hash) % CATEGORY_COLORS.length] ?? DEFAULT_COLOR
-  )
+  return CATEGORY_COLORS[Math.abs(hash) % CATEGORY_COLORS.length] ?? DEFAULT_COLOR;
 }
 
 export function HandlebarsVariableElement(
-  props: PlateElementProps<THandlebarsVariableElement>,
+  props: PlateElementProps<THandlebarsVariableElement>
 ) {
-  const { editor, element, children } = props
-  const selected = useSelected()
-  const focused = useFocused()
-  const readOnly = useReadOnly()
-  const { variables } = useHbsContext()
+  const { editor, element, children } = props;
+  const selected = useSelected();
+  const focused = useFocused();
+  const readOnly = useReadOnly();
+  const { variables } = useHbsContext();
 
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
 
-  const varDef = variables.find((v) => v.name === element.name)
-  const displayLabel = varDef?.label ?? element.name
-  const colorClass = categoryColor(varDef?.category)
-  const { bold, italic, underline, strikethrough, code } = element
+  const varDef = variables.find(v => v.name === element.name);
+  const displayLabel = varDef?.label ?? element.name;
+  const colorClass = categoryColor(varDef?.category);
+  const {
+    bold, italic, underline, strikethrough, code
+  } = element;
 
   /*
    * Update the slate node's `name` in-place — pass the element itself as
@@ -79,8 +78,8 @@ export function HandlebarsVariableElement(
    * italic / underline marks on the chip survive the swap.
    */
   function handleSelect(nextName: string) {
-    editor.tf.setNodes({ name: nextName }, { at: element })
-    setOpen(false)
+    editor.tf.setNodes({ name: nextName }, { at: element });
+    setOpen(false);
   }
 
   const chip = (
@@ -95,36 +94,29 @@ export function HandlebarsVariableElement(
        * toolbar simultaneously. Radix's `PopoverTrigger asChild` composes its
        * own handler on top of ours, so the popover still opens normally.
        */
-      onMouseDown={(e) => e.stopPropagation()}
-      onPointerDown={(e) => e.stopPropagation()}
+      onMouseDown={e => e.stopPropagation()}
+      onPointerDown={e => e.stopPropagation()}
       title={`{{${element.name}}}${varDef?.description ? ` — ${varDef.description}` : ''}${readOnly ? '' : ' (click to edit)'}`}
       className={cn(
         'relative inline-flex select-none items-center gap-0.5',
         'mx-0.5 rounded-md border px-1.5 py-0 align-middle text-xs font-medium',
         colorClass,
         'transition-colors',
-        readOnly
-          ? 'cursor-default'
-          : 'cursor-pointer hover:ring-1 hover:ring-ring/40',
+        readOnly ? 'cursor-default' : 'cursor-pointer hover:ring-1 hover:ring-ring/40',
         bold && 'font-bold',
         italic && 'italic',
         underline && 'underline underline-offset-2',
         strikethrough && 'line-through',
         code && 'font-mono',
-        selected && focused && 'ring-2 ring-ring ring-offset-1',
-      )}
-    >
+        selected && focused && 'ring-2 ring-ring ring-offset-1'
+      )}>
       <span aria-hidden="true">
-        <span className={cn('font-mono', bold ? 'opacity-60' : 'opacity-50')}>
-          {'{{'}
-        </span>
+        <span className={cn('font-mono', bold ? 'opacity-60' : 'opacity-50')}>{'{{'}</span>
         <span>{displayLabel}</span>
-        <span className={cn('font-mono', bold ? 'opacity-60' : 'opacity-50')}>
-          {'}}'}
-        </span>
+        <span className={cn('font-mono', bold ? 'opacity-60' : 'opacity-50')}>{'}}'}</span>
       </span>
     </span>
-  )
+  );
 
   return (
     <PlateElement
@@ -133,12 +125,9 @@ export function HandlebarsVariableElement(
       className="inline-block"
       attributes={{
         ...props.attributes,
-        contentEditable: false,
-      }}
-    >
-      {readOnly ? (
-        chip
-      ) : (
+        contentEditable: false
+      }}>
+      {readOnly ? chip : (
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>{chip}</PopoverTrigger>
           <PopoverContent
@@ -146,17 +135,15 @@ export function HandlebarsVariableElement(
             align="start"
             side="top"
             sideOffset={6}
-            collisionPadding={8}
-          >
+            collisionPadding={8}>
             <VariablePicker
               variables={variables}
               currentName={element.name}
-              onSelect={handleSelect}
-            />
+              onSelect={handleSelect} />
           </PopoverContent>
         </Popover>
       )}
       {children}
     </PlateElement>
-  )
+  );
 }

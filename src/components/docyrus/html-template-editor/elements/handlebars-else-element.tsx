@@ -1,26 +1,23 @@
-'use client'
+'use client';
 
 // @ts-nocheck
 /* eslint-disable */
-import { type MouseEvent, type PointerEvent } from 'react'
+import { type MouseEvent, type PointerEvent } from 'react';
 
 import {
-  type PlateElementProps,
-  PlateElement,
-  useFocused,
-  useSelected,
-} from 'platejs/react'
+  type PlateElementProps, PlateElement, useFocused, useSelected
+} from 'platejs/react';
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
-import { type THandlebarsElseElement } from '../types'
+import { type THandlebarsElseElement } from '../types';
 
 export function HandlebarsElseElement(
-  props: PlateElementProps<THandlebarsElseElement>,
+  props: PlateElementProps<THandlebarsElseElement>
 ) {
-  const { children } = props
-  const selected = useSelected()
-  const focused = useFocused()
+  const { children } = props;
+  const selected = useSelected();
+  const focused = useFocused();
 
   return (
     <PlateElement
@@ -38,7 +35,7 @@ export function HandlebarsElseElement(
          * on the block-open chip.
          */
         onMouseDown: (e: MouseEvent) => e.stopPropagation(),
-        onPointerDown: (e: PointerEvent) => e.stopPropagation(),
+        onPointerDown: (e: PointerEvent) => e.stopPropagation()
       }}
       className={cn(
         'relative inline-flex cursor-default select-none items-center',
@@ -46,9 +43,8 @@ export function HandlebarsElseElement(
         'border-amber-300 bg-amber-50/80 text-amber-700',
         'dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-400',
         'transition-colors',
-        selected && focused && 'ring-2 ring-ring ring-offset-1',
-      )}
-    >
+        selected && focused && 'ring-2 ring-ring ring-offset-1'
+      )}>
       {children}
       <span aria-hidden="true">
         <span className="opacity-60">{'{{'}</span>
@@ -56,5 +52,5 @@ export function HandlebarsElseElement(
         <span className="opacity-60">{'}}'}</span>
       </span>
     </PlateElement>
-  )
+  );
 }

@@ -1,43 +1,43 @@
-'use client'
+'use client';
 
 // @ts-nocheck
 /* eslint-disable */
-import { type ReactNode } from 'react'
+import { type ReactNode } from 'react';
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
-import { Star, Trash } from 'lucide-react'
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { Star, Trash } from 'lucide-react';
 
-import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation';
 
 export interface DocyrusAgentMemory {
-  id: string
-  title: string
-  content: string
-  memoryLevel?: string
-  importance?: number
-  tags?: ReadonlyArray<string>
-  alwaysInclude?: boolean
-  archived?: boolean
-  createdOn?: string
-  lastModifiedOn?: string | null
-  sourceType?: string
-  tenantAiAgentId?: string | null
+  id: string;
+  title: string;
+  content: string;
+  memoryLevel?: string;
+  importance?: number;
+  tags?: ReadonlyArray<string>;
+  alwaysInclude?: boolean;
+  archived?: boolean;
+  createdOn?: string;
+  lastModifiedOn?: string | null;
+  sourceType?: string;
+  tenantAiAgentId?: string | null;
 }
 
 export interface DocyrusAgentMemoryRowProps {
-  memory: DocyrusAgentMemory
-  onClick?: (memory: DocyrusAgentMemory) => void
-  onDelete?: (memory: DocyrusAgentMemory) => void
-  isDeleting?: boolean
+  memory: DocyrusAgentMemory;
+  onClick?: (memory: DocyrusAgentMemory) => void;
+  onDelete?: (memory: DocyrusAgentMemory) => void;
+  isDeleting?: boolean;
   /** Replace the entire body of the row (still inside the clickable container). */
-  children?: ReactNode
+  children?: ReactNode;
   /** Slot rendered at the end of the meta row (next to the importance score). */
-  trailingMeta?: ReactNode
+  trailingMeta?: ReactNode;
   /** Slot rendered next to the delete button. */
-  actions?: ReactNode
-  className?: string
+  actions?: ReactNode;
+  className?: string;
 }
 
 /**
@@ -53,9 +53,9 @@ export const DocyrusAgentMemoryRow = ({
   children,
   trailingMeta,
   actions,
-  className,
+  className
 }: DocyrusAgentMemoryRowProps) => {
-  const { t } = useUiTranslation()
+  const { t } = useUiTranslation();
 
   return (
     <div
@@ -64,20 +64,15 @@ export const DocyrusAgentMemoryRow = ({
       className={cn(
         'group relative flex items-start justify-between gap-2 rounded-lg border border-border bg-card p-3 transition-all',
         onClick && 'cursor-pointer hover:border-primary/40 hover:shadow-sm',
-        className,
+        className
       )}
       onClick={onClick ? () => onClick(memory) : undefined}
-      onKeyDown={
-        onClick
-          ? (e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault()
-                onClick(memory)
-              }
-            }
-          : undefined
-      }
-    >
+      onKeyDown={onClick ? (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick(memory);
+        }
+      } : undefined}>
       <div className="flex-1 min-w-0">
         {children ?? (
           <>
@@ -99,17 +94,12 @@ export const DocyrusAgentMemoryRow = ({
               {trailingMeta}
             </div>
             {memory.content && (
-              <p className="line-clamp-2 text-xs text-muted-foreground">
-                {memory.content}
-              </p>
+              <p className="line-clamp-2 text-xs text-muted-foreground">{memory.content}</p>
             )}
             {memory.tags && memory.tags.length > 0 && (
               <div className="mt-1.5 flex flex-wrap gap-1">
-                {memory.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground"
-                  >
+                {memory.tags.map(tag => (
+                  <span key={tag} className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
                     {tag}
                   </span>
                 ))}
@@ -118,22 +108,20 @@ export const DocyrusAgentMemoryRow = ({
           </>
         )}
       </div>
-      {actions ??
-        (onDelete && (
-          <Button
-            aria-label={t('ui.agent.memories.delete', 'Delete memory')}
-            variant="ghost"
-            size="icon"
-            disabled={isDeleting}
-            className="size-7 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-destructive"
-            onClick={(e) => {
-              e.stopPropagation()
-              onDelete(memory)
-            }}
-          >
-            <Trash className="size-3.5" />
-          </Button>
-        ))}
+      {actions ?? (onDelete && (
+        <Button
+          aria-label={t('ui.agent.memories.delete', 'Delete memory')}
+          variant="ghost"
+          size="icon"
+          disabled={isDeleting}
+          className="size-7 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-destructive"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(memory);
+          }}>
+          <Trash className="size-3.5" />
+        </Button>
+      ))}
     </div>
-  )
-}
+  );
+};

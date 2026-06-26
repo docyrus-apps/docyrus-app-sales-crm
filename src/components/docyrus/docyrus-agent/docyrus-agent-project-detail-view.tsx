@@ -1,84 +1,78 @@
-'use client'
+'use client';
 
 // @ts-nocheck
 /* eslint-disable */
-import { type ReactNode } from 'react'
+import { type ReactNode } from 'react';
 
-import { type ChatStatus } from 'ai'
+import { type ChatStatus } from 'ai';
 
-import { cn } from '@/lib/utils'
-import { Loader2 } from 'lucide-react'
+import { cn } from '@/lib/utils';
+import { Loader2 } from 'lucide-react';
 
-import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation';
 
-import { type DocyrusAgentProject } from '@/hooks/docyrus/use-docyrus-agent-projects'
-import { type DocyrusAgentThread } from '@/hooks/docyrus/use-docyrus-agent-threads'
+import { type DocyrusAgentProject } from '@/hooks/docyrus/use-docyrus-agent-projects';
+import { type DocyrusAgentThread } from '@/hooks/docyrus/use-docyrus-agent-threads';
 
-import { DocyrusAgentProjectHeader } from './docyrus-agent-project-header'
-import { DocyrusAgentProjectPromptInput } from './docyrus-agent-project-prompt-input'
+import { DocyrusAgentProjectHeader } from './docyrus-agent-project-header';
+import { DocyrusAgentProjectPromptInput } from './docyrus-agent-project-prompt-input';
 import {
   type DocyrusAgentProjectDetailTab,
-  DocyrusAgentProjectTabs,
-} from './docyrus-agent-project-tabs'
-import { DocyrusAgentProjectThreadRow } from './docyrus-agent-project-thread-row'
-import { type AgentMessagePayload, type AgentProfile } from './types'
+  DocyrusAgentProjectTabs
+} from './docyrus-agent-project-tabs';
+import { DocyrusAgentProjectThreadRow } from './docyrus-agent-project-thread-row';
+import { type AgentMessagePayload, type AgentProfile } from './types';
 
-export type { DocyrusAgentProjectDetailTab } from './docyrus-agent-project-tabs'
+export type { DocyrusAgentProjectDetailTab } from './docyrus-agent-project-tabs';
 
 export interface DocyrusAgentProjectDetailViewProps {
   /** Active project. */
-  project: DocyrusAgentProject
+  project: DocyrusAgentProject;
   /** Owning agent — required by the prompt input. */
-  agent: AgentProfile
+  agent: AgentProfile;
 
   /** Goes back to the projects list. */
-  onBack?: () => void
+  onBack?: () => void;
   /** Custom label for the "All Projects" link. */
-  allProjectsLabel?: string
+  allProjectsLabel?: string;
   /** Slot rendered to the left of the back link — typically a sidebar-toggle spacer. */
-  headerLeading?: ReactNode
+  headerLeading?: ReactNode;
 
   /** Fires when the user submits the prompt. */
-  onSendMessage?: (payload: AgentMessagePayload) => void | Promise<void>
+  onSendMessage?: (payload: AgentMessagePayload) => void | Promise<void>;
   /** Fires when the streaming Submit button is pressed in stop mode. */
-  onStopGeneration?: () => void
+  onStopGeneration?: () => void;
   /** Drives the Submit / Stop button. */
-  chatStatus?: ChatStatus
+  chatStatus?: ChatStatus;
   /** Show the attach-file button. */
-  allowAttachments?: boolean
+  allowAttachments?: boolean;
   /** HTML `accept` for the file picker. */
-  acceptFileTypes?: string
+  acceptFileTypes?: string;
   /** Placeholder shown in the input textarea. */
-  inputPlaceholder?: string
+  inputPlaceholder?: string;
 
   /** Threads to render under the Sessions tab. */
-  threads: Array<DocyrusAgentThread>
-  isLoadingThreads?: boolean
-  activeThreadId?: string | null
-  onSelectThread?: (thread: DocyrusAgentThread) => void
+  threads: Array<DocyrusAgentThread>;
+  isLoadingThreads?: boolean;
+  activeThreadId?: string | null;
+  onSelectThread?: (thread: DocyrusAgentThread) => void;
 
   /** Override the rendered Sessions tab body. When omitted, the built-in threads list is shown. */
-  sessionsContent?: ReactNode
+  sessionsContent?: ReactNode;
   /** Slot rendered inside the Works tab. When omitted, the tab is hidden. */
-  worksContent?: ReactNode
+  worksContent?: ReactNode;
   /** Slot rendered inside the Documents tab. When omitted, the tab is hidden. */
-  documentsContent?: ReactNode
+  documentsContent?: ReactNode;
   /** Replace the per-thread row renderer used by the default sessions content. */
-  renderThreadRow?: (
-    thread: DocyrusAgentThread,
-    props: {
-      isActive: boolean
-      onSelect?: (thread: DocyrusAgentThread) => void
-    },
-  ) => ReactNode
+  renderThreadRow?: (thread: DocyrusAgentThread, props: { isActive: boolean; onSelect?: (thread: DocyrusAgentThread) => void }) => ReactNode;
 
   /** Controlled active tab (defaults to 'sessions'). */
-  activeTab?: DocyrusAgentProjectDetailTab
-  onTabChange?: (tab: DocyrusAgentProjectDetailTab) => void
+  activeTab?: DocyrusAgentProjectDetailTab;
+  onTabChange?: (tab: DocyrusAgentProjectDetailTab) => void;
 
   /** Footer text under the prompt input (defaults to the standard AI disclaimer). */
-  footerText?: ReactNode
-  className?: string
+  footerText?: ReactNode;
+  className?: string;
 }
 
 /**
@@ -111,70 +105,52 @@ export const DocyrusAgentProjectDetailView = ({
   activeTab,
   onTabChange,
   footerText,
-  className,
+  className
 }: DocyrusAgentProjectDetailViewProps) => {
-  const { t } = useUiTranslation()
+  const { t } = useUiTranslation();
 
-  const defaultSessionsContent =
-    isLoadingThreads && threads.length === 0 ? (
-      <div className="flex items-center justify-center py-8 text-muted-foreground">
-        <Loader2 className="size-4 animate-spin" />
+  const defaultSessionsContent = isLoadingThreads && threads.length === 0 ? (
+    <div className="flex items-center justify-center py-8 text-muted-foreground">
+      <Loader2 className="size-4 animate-spin" />
+    </div>
+  ) : threads.length === 0 ? (
+    <div className="flex flex-col items-center justify-center gap-1 rounded-lg border border-dashed py-12 text-center text-sm text-muted-foreground">
+      <p className="text-foreground">{t('ui.agent.noThreadsForProject', 'No threads yet for this project')}</p>
+      <p>{t('ui.agent.startConversationToCreate', 'Start a conversation to create the first thread')}</p>
+    </div>
+  ) : (
+    <div className="flex flex-col gap-2">
+      <div className="text-right text-xs text-muted-foreground">
+        {threads.length === 1 ? '1 thread' : `${threads.length} threads`}
       </div>
-    ) : threads.length === 0 ? (
-      <div className="flex flex-col items-center justify-center gap-1 rounded-lg border border-dashed py-12 text-center text-sm text-muted-foreground">
-        <p className="text-foreground">
-          {t('ui.agent.noThreadsForProject', 'No threads yet for this project')}
-        </p>
-        <p>
-          {t(
-            'ui.agent.startConversationToCreate',
-            'Start a conversation to create the first thread',
-          )}
-        </p>
+      <div className="flex max-h-[420px] flex-col gap-2 overflow-y-auto">
+        {threads.map((thread) => {
+          const rowProps = { isActive: thread.id === activeThreadId, onSelect: onSelectThread };
+
+          if (renderThreadRow) return renderThreadRow(thread, rowProps);
+
+          return (
+            <DocyrusAgentProjectThreadRow
+              key={thread.id}
+              isActive={rowProps.isActive}
+              thread={thread}
+              onSelect={rowProps.onSelect} />
+          );
+        })}
       </div>
-    ) : (
-      <div className="flex flex-col gap-2">
-        <div className="text-right text-xs text-muted-foreground">
-          {threads.length === 1 ? '1 thread' : `${threads.length} threads`}
-        </div>
-        <div className="flex max-h-[420px] flex-col gap-2 overflow-y-auto">
-          {threads.map((thread) => {
-            const rowProps = {
-              isActive: thread.id === activeThreadId,
-              onSelect: onSelectThread,
-            }
+    </div>
+  );
 
-            if (renderThreadRow) return renderThreadRow(thread, rowProps)
-
-            return (
-              <DocyrusAgentProjectThreadRow
-                key={thread.id}
-                isActive={rowProps.isActive}
-                thread={thread}
-                onSelect={rowProps.onSelect}
-              />
-            )
-          })}
-        </div>
-      </div>
-    )
-
-  const resolvedSessionsContent = sessionsContent ?? defaultSessionsContent
+  const resolvedSessionsContent = sessionsContent ?? defaultSessionsContent;
 
   return (
-    <div
-      className={cn(
-        'flex h-full min-h-0 flex-col overflow-y-auto bg-background px-6 pb-6',
-        className,
-      )}
-    >
+    <div className={cn('flex h-full min-h-0 flex-col overflow-y-auto bg-background px-6 pb-6', className)}>
       <DocyrusAgentProjectHeader
         allProjectsLabel={allProjectsLabel}
         className="mt-4"
         leading={headerLeading}
         project={project}
-        onBack={onBack}
-      />
+        onBack={onBack} />
 
       <DocyrusAgentProjectPromptInput
         acceptFileTypes={acceptFileTypes}
@@ -185,8 +161,7 @@ export const DocyrusAgentProjectDetailView = ({
         footerText={footerText}
         placeholder={inputPlaceholder}
         onSendMessage={onSendMessage}
-        onStopGeneration={onStopGeneration}
-      />
+        onStopGeneration={onStopGeneration} />
 
       <DocyrusAgentProjectTabs
         className="mt-6"
@@ -194,8 +169,7 @@ export const DocyrusAgentProjectDetailView = ({
         sessionsContent={resolvedSessionsContent}
         value={activeTab}
         worksContent={worksContent}
-        onValueChange={onTabChange}
-      />
+        onValueChange={onTabChange} />
     </div>
-  )
-}
+  );
+};
