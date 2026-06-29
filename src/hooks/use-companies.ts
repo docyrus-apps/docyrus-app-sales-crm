@@ -114,7 +114,7 @@ export function useUploadCompanyLogo() {
       const apiClient = getApiClient()
       const formData = new FormData()
 
-      formData.append('files', file)
+      formData.append('file', file, file.name)
 
       const uploadResponse = await apiClient.post(
         '/v1/apps/base/data-sources/organization/files/upload',

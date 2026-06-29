@@ -34,13 +34,33 @@ interface FileAttachment {
   id: string;
   name: string;
   size: number;
-  mime_type: string;
+  mimeType: string;
   url: string;
   created_on: string;
   created_by?: {
-    id: string;
+    id?: string;
     name: string;
   };
+}
+
+interface RawFileAttachment {
+  id?: string;
+  name?: string;
+  file_name?: string;
+  size?: number;
+  file_size?: number;
+  mime_type?: string;
+  file_type?: string;
+  url?: string;
+  signed_url?: string | null;
+  created_on?: string;
+  created_by?: {
+    id?: string;
+    name?: string;
+    firstname?: string;
+    lastname?: string;
+    email?: string;
+  } | null;
 }
 
 const ACCEPTED_FILE_TYPES = [
@@ -65,6 +85,31 @@ const ACCEPTED_FILE_TYPES = [
   '.csv'
 ].join(', ')
 
+function normalizeFileAttachment(file: RawFileAttachment): FileAttachment {
+  const createdByName = [
+    file.created_by?.name,
+    [file.created_by?.firstname, file.created_by?.lastname]
+      .filter(Boolean)
+      .join(' '),
+    file.created_by?.email
+  ].find(value => typeof value === 'string' && value.trim().length > 0)
+
+  return {
+    id: file.id ?? crypto.randomUUID(),
+    name: file.name ?? file.file_name ?? 'Untitled file',
+    size: file.size ?? file.file_size ?? 0,
+    mimeType: file.mime_type ?? file.file_type ?? 'application/octet-stream',
+    url: file.url ?? file.signed_url ?? '',
+    created_on: file.created_on ?? new Date().toISOString(),
+    created_by: createdByName
+      ? {
+          id: file.created_by?.id,
+          name: createdByName
+        }
+      : undefined
+  }
+}
+
 export function FileAttachments({
   appSlug,
   dataSource,
@@ -86,9 +131,16 @@ export function FileAttachments({
 
       if (!apiClient) throw new Error('API client not initialized')
 
-      return await apiClient.get(
+      const response = await apiClient.get(
         `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/files`
       )
+
+      const rawFiles = Array.isArray(response)
+        ? (response as Array<RawFileAttachment>)
+        : (((response as { files?: Array<RawFileAttachment> })?.files ??
+          []))
+
+      return rawFiles.map(normalizeFileAttachment)
     }
   })
 
@@ -99,15 +151,17 @@ export function FileAttachments({
 
       if (!apiClient) throw new Error('API client not initialized')
 
-      const formData = new FormData()
+      return await Promise.all(
+        files.map(async (file) => {
+          const formData = new FormData()
 
-      files.forEach((file) => {
-        formData.append('files', file)
-      })
+          formData.append('file', file, file.name)
 
-      return await apiClient.post(
-        `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/files/upload`,
-        formData
+          return apiClient.post(
+            `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/files/upload`,
+            formData
+          )
+        })
       )
     },
     onSuccess: () => {
@@ -154,15 +208,17 @@ export function FileAttachments({
 
   const handleDownload = async (file: FileAttachment) => {
     try {
-      const apiClient = getApiClient()
+      if (!file.url) {
+        throw new Error('File URL not found')
+      }
 
-      if (!apiClient) throw new Error('API client not initialized')
+      const response = await fetch(file.url)
 
-      const response = await apiClient.get(file.url, {
-        responseType: 'blob'
-      })
+      if (!response.ok) {
+        throw new Error('File download failed')
+      }
 
-      const blob = response instanceof Blob ? response : new Blob([response])
+      const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
 
@@ -191,7 +247,8 @@ export function FileAttachments({
     return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`
   }
 
-  const getFileIcon = (mimeType: string) => {
+  const getFileIcon = (mimeType?: string) => {
+    if (!mimeType) return <File className="h-5 w-5" />
     if (mimeType.startsWith('image/')) return <Image className="h-5 w-5" />
     if (mimeType.startsWith('text/')) return <FileText className="h-5 w-5" />
     if (mimeType === 'application/pdf') return <FileType className="h-5 w-5" />
@@ -273,7 +330,7 @@ export function FileAttachments({
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div className="flex-shrink-0 text-muted-foreground">
-                      {getFileIcon(file.mime_type)}
+                      {getFileIcon(file.mimeType)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">
