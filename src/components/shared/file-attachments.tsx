@@ -30,6 +30,12 @@ interface FileAttachmentsProps {
   recordId: string;
 }
 
+interface DeleteFilePayload {
+  id: string;
+  fileName?: string;
+  pathTokens?: Array<string>;
+}
+
 interface FileAttachment {
   id: string;
   name: string;
@@ -37,6 +43,7 @@ interface FileAttachment {
   mimeType: string;
   url: string;
   created_on: string;
+  deletePayload: DeleteFilePayload;
   created_by?: {
     id?: string;
     name: string;
@@ -47,12 +54,17 @@ interface RawFileAttachment {
   id?: string;
   name?: string;
   file_name?: string;
+  fileName?: string;
   size?: number;
   file_size?: number;
+  fileSize?: number;
   mime_type?: string;
   file_type?: string;
+  fileType?: string;
   url?: string;
   signed_url?: string | null;
+  pathTokens?: Array<string>;
+  path_tokens?: Array<string>;
   created_on?: string;
   created_by?: {
     id?: string;
@@ -93,14 +105,30 @@ function normalizeFileAttachment(file: RawFileAttachment): FileAttachment {
       .join(' '),
     file.created_by?.email
   ].find(value => typeof value === 'string' && value.trim().length > 0)
+  const id = file.id ?? crypto.randomUUID()
+  const fileName = file.file_name ?? file.fileName ?? file.name
+  const pathTokens = Array.isArray(file.pathTokens)
+    ? file.pathTokens
+    : Array.isArray(file.path_tokens)
+      ? file.path_tokens
+      : undefined
 
   return {
-    id: file.id ?? crypto.randomUUID(),
-    name: file.name ?? file.file_name ?? 'Untitled file',
-    size: file.size ?? file.file_size ?? 0,
-    mimeType: file.mime_type ?? file.file_type ?? 'application/octet-stream',
+    id,
+    name: file.name ?? file.file_name ?? file.fileName ?? 'Untitled file',
+    size: file.size ?? file.file_size ?? file.fileSize ?? 0,
+    mimeType:
+      file.mime_type ??
+      file.file_type ??
+      file.fileType ??
+      'application/octet-stream',
     url: file.url ?? file.signed_url ?? '',
     created_on: file.created_on ?? new Date().toISOString(),
+    deletePayload: {
+      id,
+      fileName,
+      pathTokens
+    },
     created_by: createdByName
       ? {
           id: file.created_by?.id,
@@ -137,8 +165,7 @@ export function FileAttachments({
 
       const rawFiles = Array.isArray(response)
         ? (response as Array<RawFileAttachment>)
-        : (((response as { files?: Array<RawFileAttachment> })?.files ??
-          []))
+        : ((response as { files?: Array<RawFileAttachment> })?.files ?? [])
 
       return rawFiles.map(normalizeFileAttachment)
     }
@@ -179,13 +206,14 @@ export function FileAttachments({
 
   // Delete file mutation
   const deleteMutation = useMutation({
-    mutationFn: async (fileId: string) => {
+    mutationFn: async (file: FileAttachment) => {
       const apiClient = getApiClient()
 
       if (!apiClient) throw new Error('API client not initialized')
 
       await apiClient.delete(
-        `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/files/${fileId}`
+        `/v1/apps/${appSlug}/data-sources/${dataSource}/items/${recordId}/files/${file.id}`,
+        file.deletePayload
       )
     },
     onSuccess: () => {
@@ -295,7 +323,7 @@ export function FileAttachments({
             maxSize={10 * 1024 * 1024} // 10MB
             accept={ACCEPTED_FILE_TYPES}
             value={[]}
-            onValueChange={(accepted) => {
+            onAccept={(accepted) => {
               if (accepted.length > 0) void handleUpload(accepted)
             }}
             disabled={uploading || uploadMutation.isPending}>
@@ -361,7 +389,7 @@ export function FileAttachments({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => deleteMutation.mutate(file.id)}
+                      onClick={() => deleteMutation.mutate(file)}
                       disabled={deleteMutation.isPending}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
