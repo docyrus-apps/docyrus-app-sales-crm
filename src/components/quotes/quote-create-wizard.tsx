@@ -82,7 +82,6 @@ interface PickerOption {
   description?: string;
 }
 
-
 interface QuoteCreateWizardProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -234,7 +233,12 @@ export function QuoteCreateWizard({
     limit: 200
   })
   const { data: deals = [] } = useDeals({
-    columns: ['id', 'name', 'organization(id,name)'],
+    columns: [
+'id',
+'name',
+'autonumber_id',
+'organization(id,name)'
+],
     orderBy: 'created_on DESC',
     limit: 200
   })
@@ -291,10 +295,21 @@ open
   useEffect(() => {
     if (!open || !initialDeal) return
 
-    setDealName((initialDeal as any).name ?? null)
-
     const organizationId = getRelationId(initialDeal.organization)
     const organizationName = getRelationName(initialDeal.organization)
+    const shortDealId = String((initialDeal as any).id ?? initialDealId).slice(
+      0,
+      8
+    )
+
+    setDealName(
+      (initialDeal as any).name?.trim() ||
+      ((initialDeal as any).autonumber_id != null
+          ? `Fırsat #${(initialDeal as any).autonumber_id}`
+          : organizationName
+            ? `${organizationName} fırsatı`
+            : `Fırsat ${shortDealId}`)
+    )
 
     if (!customerId && organizationId) setCustomerId(organizationId)
     if (!customerName && organizationName) setCustomerName(organizationName)
@@ -327,12 +342,23 @@ open
   const allDealOptions = useMemo(
     () => (deals as Array<any>)
         .filter(deal => deal.id)
-        .map(deal => ({
-          id: String(deal.id),
-          name: deal.name || String(deal.id),
-          organizationId: getRelationId(deal.organization),
-          description: getRelationName(deal.organization) ?? undefined
-        })),
+        .map((deal) => {
+          const organizationName = getRelationName(deal.organization)
+          const shortId = String(deal.id).slice(0, 8)
+
+          return {
+            id: String(deal.id),
+            name:
+              deal.name?.trim() ||
+              (deal.autonumber_id != null
+                ? `Fırsat #${deal.autonumber_id}`
+                : organizationName
+                  ? `${organizationName} fırsatı`
+                  : `Fırsat ${shortId}`),
+            organizationId: getRelationId(deal.organization),
+            description: organizationName ?? undefined
+          }
+        }),
     [deals]
   )
 
@@ -603,9 +629,7 @@ open
         tax_total: totals.vatTotal,
         grand_total: totals.grandTotal,
         quote_doc_json: quoteDoc,
-        ...(selectedTemplate
-          ? { quote_template_id: selectedTemplate.id }
-          : {})
+        ...(selectedTemplate ? { quote_template_id: selectedTemplate.id } : {})
       })
       const quoteId = String(created.id)
 
@@ -873,7 +897,7 @@ open
                               )}
                             </div>
                             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                              {(template.pageFormat ?? 'A4')} ·{' '}
+                              {template.pageFormat ?? 'A4'} ·{' '}
                               {template.pageOrientation ?? 'portrait'}
                             </p>
                           </div>

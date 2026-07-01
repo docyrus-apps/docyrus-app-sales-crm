@@ -55,7 +55,7 @@ import { FileAttachments } from '@/components/shared/file-attachments'
 import { useBaseCountryCollection } from '@/collections'
 import { useDeal, useUpdateDeal } from '@/hooks/use-deals'
 import { useCompanies } from '@/hooks/use-companies'
-import { useContacts } from '@/hooks/use-contacts'
+import { useContacts, useUpdateContact } from '@/hooks/use-contacts'
 import { useEnumEntities } from '@/hooks/use-enums'
 import { useRecordActivities } from '@/hooks/use-record-activities'
 import { useSalesOrders } from '@/hooks/use-sales-orders'
@@ -203,6 +203,7 @@ export function DealDetail() {
   const navigate = useNavigate({ from: '/deals/$dealId' })
   const { data: deal, isLoading } = useDeal(dealId)
   const updateDeal = useUpdateDeal()
+  const updateContact = useUpdateContact()
   const dialer = useDialer()
   const webphone = useWebphone()
   const countriesCollection = useBaseCountryCollection()
@@ -652,6 +653,15 @@ export function DealDetail() {
     [orgContacts]
   )
 
+  const unlinkContact = async (contact: { id?: string }) => {
+    if (!contact.id) return
+
+    await updateContact.mutateAsync({
+      contactId: contact.id,
+      data: { organization: null }
+    })
+  }
+
   const tabs = useMemo<Array<RecordDetailTab>>(() => {
     return [
       {
@@ -735,6 +745,7 @@ export function DealDetail() {
                 search: { tab: 'overview' }
               })}
             onEmail={c => c.email && window.open(`mailto:${c.email}`)}
+            onRemoveContact={unlinkContact}
             onCall={c => webphone.enabled
                 ? dialer.open({
                     recordLabel: c.name,
@@ -906,7 +917,8 @@ export function DealDetail() {
     ordersGridProps,
     dealQuotes,
     dealQuotesLoading,
-    dealId
+    dealId,
+    unlinkContact
   ])
 
   const attributeActions = (

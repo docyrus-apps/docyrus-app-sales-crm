@@ -248,40 +248,14 @@ export function useLeadConvertConversion(
     }
   )
 
-  const requireEnumValue = (
+  const optionalEnumValue = (
     options: Array<{ id: string; name: string }>,
-    name: string,
-    label: string
-  ) => {
-    const id = optionByName(options, name)
+    name: string
+  ) => optionByName(options, name)
 
-    if (!id) {
-      throw new Error(
-        t('leads.convert.validation.enumOptionMissing', {
-          field: label,
-          value: name
-        })
-      )
-    }
+  const conversionStateValue = (state: string) => optionalEnumValue(conversionStateOptions, state)
 
-    return id
-  }
-
-  const conversionStateValue = (state: string) => requireEnumValue(
-      conversionStateOptions,
-      state,
-      t('leads.convert.field.conversionState', {
-        defaultValue: 'Conversion state'
-      })
-    )
-
-  const conversionModeValue = (selectedMode: LeadConvertConversionMode) => requireEnumValue(
-      conversionModeOptions,
-      selectedMode,
-      t('leads.convert.field.conversionMode', {
-        defaultValue: 'Conversion mode'
-      })
-    )
+  const conversionModeValue = (selectedMode: LeadConvertConversionMode) => optionalEnumValue(conversionModeOptions, selectedMode)
 
   const updateLead = async (data: Record<string, unknown>) => {
     if (!client || !lead?.id) throw new Error(t('leads.failedToLoad'))
@@ -593,7 +567,7 @@ export function useLeadConvertConversion(
       contactId?: string;
       dealId?: string;
       me: CurrentUserResponse | null;
-      convertedLeadStatusValue: string;
+      convertedLeadStatusValue?: string;
       linkedWork: LinkedWorkMigrationResult | null;
     }
 
@@ -606,7 +580,7 @@ export function useLeadConvertConversion(
         getRelationId(lead.converted_contact) ?? selectedContactId ?? undefined,
       dealId: getRelationId(lead.converted_deal),
       me: null,
-      convertedLeadStatusValue: '',
+      convertedLeadStatusValue: undefined,
       linkedWork: null
     }
 
@@ -633,10 +607,9 @@ export function useLeadConvertConversion(
         shouldRun: () => true,
         run: async () => {
           state.me = await client.get('/v1/users/me').catch(() => null)
-          state.convertedLeadStatusValue = requireEnumValue(
+          state.convertedLeadStatusValue = optionalEnumValue(
             leadStatusOptions,
-            'Converted',
-            t('leads.status', { defaultValue: 'Lead status' })
+            'Converted'
           )
           await updateLead({
             conversion_state: conversionStateValue('in_progress'),

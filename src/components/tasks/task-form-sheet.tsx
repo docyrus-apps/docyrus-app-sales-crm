@@ -98,6 +98,19 @@ function parseOptionalDate(value: string | undefined): Date | undefined {
   return Number.isNaN(date.getTime()) ? undefined : date
 }
 
+function getUserLabel(user: any): string {
+  const fullName = [user?.firstname, user?.lastname].filter(Boolean).join(' ')
+
+  return fullName || user?.name || user?.email || user?.id || ''
+}
+
+function normalizeMultiComboboxValue(value: unknown): Array<string> {
+  if (Array.isArray(value)) return value.filter(Boolean).map(String)
+  if (typeof value === 'string' && value) return [value]
+
+  return []
+}
+
 function buildTaskFormDefaults(task: any): TaskFormData {
   return {
     subject: task?.subject || '',
@@ -189,11 +202,11 @@ export function TaskFormSheet({
     setEndDate(parseOptionalDate(initialValues.end_date))
     setSubmitError(null)
   }, [
-    form,
-    initialValues,
-    open,
-    mode
-  ])
+form,
+initialValues,
+open,
+mode
+])
 
   useEffect(() => {
     form.setFieldValue(
@@ -211,10 +224,12 @@ export function TaskFormSheet({
     value: company.id
   }))
 
-  const userOptions = users.map((user: any) => ({
-    label: `${user.firstname} ${user.lastname}`,
-    value: user.id
-  }))
+  const userOptions = users
+    .map((user: any) => ({
+      label: getUserLabel(user),
+      value: user.id
+    }))
+    .filter(option => option.value && option.label)
   const priorityComboboxOptions = priorityOptions.map((option: any) => ({
     label: option.label,
     value: option.value
@@ -531,18 +546,19 @@ export function TaskFormSheet({
                 </Label>
                 <MultiCombobox
                   value={field.state.value || []}
-                  onValueChange={value => field.handleChange(value)}
+                  onValueChange={value => field.handleChange(normalizeMultiComboboxValue(value))}
                   multiple>
                   <ComboboxAnchor>
                     <ComboboxBadgeList>
                       {(field.state.value || []).map((followerId: string) => {
                         const user = users.find((u: any) => u.id === followerId)
+                        const label = user ? getUserLabel(user) : followerId
 
-                        return user ? (
+                        return label ? (
                           <ComboboxBadgeItem
                             key={followerId}
                             value={followerId}>
-                            {user.firstname} {user.lastname}
+                            {label}
                           </ComboboxBadgeItem>
                         ) : null
                       })}

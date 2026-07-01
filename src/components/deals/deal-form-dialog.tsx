@@ -79,6 +79,10 @@ export function DealFormDialog({
     'customer_type',
     enumOptions
   )
+  const { options: reasonForLostOptions = [] } = useEnumOptions(
+    'reason_for_lost',
+    enumOptions
+  )
   const countriesCollection = useBaseCountryCollection()
   const { data: countries = [] } = useQuery({
     queryKey: ['base-country-options'],
@@ -102,6 +106,12 @@ export function DealFormDialog({
       value: option.value
     })
   )
+  const reasonForLostComboboxOptions = reasonForLostOptions.map(
+    (option: any) => ({
+      label: option.label,
+      value: option.value
+    })
+  )
   const initialValues = useMemo<DealFormData>(
     () => ({
       organization: getRelationValue(deal?.organization),
@@ -113,6 +123,7 @@ export function DealFormDialog({
       expected_closing_date: deal?.expected_closing_date || undefined,
       lead_source: getRelationValue(deal?.lead_source),
       customer_type: getRelationValue(deal?.customer_type),
+      reason_for_lost: getRelationValue(deal?.reason_for_lost),
       country: getRelationValue(deal?.country),
       hot_prospect: deal?.hot_prospect || false,
       record_owner: getRelationValue(deal?.record_owner)
@@ -178,17 +189,21 @@ mode
   }, [selectedDate, form])
 
   const companyOptions = companies.map((company: any) => ({
-    label: company.name,
+    label: company.name || company.email || company.id,
     value: company.id
   }))
 
   const contactOptions = contacts.map((contact: any) => ({
-    label: contact.name,
+    label: contact.name || contact.email || contact.mobile || contact.id,
     value: contact.id
   }))
 
   const userOptions = users.map((user: any) => ({
-    label: `${user.firstname} ${user.lastname}`,
+    label:
+      [user.firstname, user.lastname].filter(Boolean).join(' ') ||
+      user.name ||
+      user.email ||
+      user.id,
     value: user.id
   }))
 
@@ -471,6 +486,37 @@ mode
               )}
             </form.Field>
 
+            {/* Reason For Lost Field */}
+            <form.Field name="reason_for_lost">
+              {field => (
+                <Field>
+                  <Label htmlFor={field.name}>
+                    {t('deals.reasonForLost', {
+                      defaultValue: 'Reason for Lost'
+                    })}
+                  </Label>
+                  <Combobox
+                    options={reasonForLostComboboxOptions}
+                    value={field.state.value}
+                    onValueChange={value => field.handleChange(value)}
+                    placeholder={t('deals.reasonForLost', {
+                      defaultValue: 'Reason for Lost'
+                    })}
+                    emptyText={t('common.noResults', {
+                      defaultValue: 'No results'
+                    })} />
+                  {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : field.state.meta.errors[0]?.message ||
+                          t('common.validationError')}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
+
             {/* Country Field */}
             <form.Field name="country">
               {field => (
@@ -555,8 +601,9 @@ mode
                   <div className="flex items-center space-x-2">
                     <Switch
                       id={field.name}
-                      checked={field.state.value}
-                      onCheckedChange={field.handleChange} />
+                      type="button"
+                      checked={Boolean(field.state.value)}
+                      onCheckedChange={checked => field.handleChange(Boolean(checked))} />
                     <Label htmlFor={field.name} className="cursor-pointer">
                       {t('deals.form.hotProspectLabel')}
                     </Label>

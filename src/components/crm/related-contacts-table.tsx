@@ -8,6 +8,7 @@ import {
   Phone,
   Plus,
   Search,
+  Trash2,
   Users
 } from 'lucide-react'
 
@@ -43,6 +44,7 @@ export interface RelatedContactsTableProps {
   onCall: (contact: RelatedContact) => void;
   onSms?: (contact: RelatedContact) => void;
   onMeeting?: (contact: RelatedContact) => void;
+  onRemoveContact?: (contact: RelatedContact) => void;
 }
 
 const GRID_COLS =
@@ -74,7 +76,8 @@ export function RelatedContactsTable({
   onEmail,
   onCall,
   onSms,
-  onMeeting
+  onMeeting,
+  onRemoveContact
 }: RelatedContactsTableProps) {
   const { t } = useTranslation()
   const resolvedAddLabel = addLabel ?? t('relatedTables.contacts.add')
@@ -221,6 +224,15 @@ c.job_title
                         <DropdownMenuItem onClick={() => onMeeting(contact)}>
                           <CalendarPlus className="size-4 text-amber-500" />
                           {t('relatedTables.contacts.scheduleMeeting')}
+                        </DropdownMenuItem>
+                      )}
+                      {onRemoveContact && (
+                        <DropdownMenuItem
+                          onClick={() => onRemoveContact(contact)}>
+                          <Trash2 className="size-4 text-red-500" />
+                          {t('relatedTables.contacts.remove', {
+                            defaultValue: 'Remove from list'
+                          })}
                         </DropdownMenuItem>
                       )}
                     </DropdownMenuContent>

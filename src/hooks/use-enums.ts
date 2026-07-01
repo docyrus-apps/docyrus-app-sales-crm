@@ -159,6 +159,216 @@ const BUNDLED_ENUM_FALLBACKS: Record<
           color: 'pink',
           icon: 'fal bullseye-pointer'
         }
+      ],
+      reason_for_lost: [
+        {
+          id: 'df324de0-6812-11ee-bbc7-658038978072',
+          name: 'Price',
+          color: 'red'
+        },
+        {
+          id: 'e3a649d0-6812-11ee-bbc7-658038978072',
+          name: 'Feature',
+          color: 'orange'
+        },
+        {
+          id: 'edb95430-6812-11ee-bbc7-658038978072',
+          name: 'Competition',
+          color: 'violet'
+        },
+        {
+          id: 'f0cad9f0-6812-11ee-bbc7-658038978072',
+          name: 'Other',
+          color: 'slate'
+        }
+      ]
+    },
+    leads: {
+      lead_status: [
+        {
+          id: '019c48d0-5dfe-7cb8-a008-a149924e0641',
+          name: 'New',
+          color: 'cyan',
+          sortOrder: 10
+        },
+        {
+          id: '019c48d0-5dfe-7cb8-a008-a149924e0642',
+          name: 'Contacted',
+          color: 'blue',
+          sortOrder: 20
+        },
+        {
+          id: '019c48d0-5dfe-7cb8-a008-a149924e0643',
+          name: 'Qualified',
+          color: 'green',
+          sortOrder: 30
+        },
+        {
+          id: '019c48d0-5dfe-7cb8-a008-a149924e0644',
+          name: 'Proposal Sent',
+          color: 'violet',
+          sortOrder: 32
+        },
+        {
+          id: '019c48d0-5dfe-7cb8-a008-a149924e0645',
+          name: 'Trial Started',
+          color: 'amber',
+          sortOrder: 34
+        },
+        {
+          id: '019c48d0-5dfe-7cb8-a008-a149924e0646',
+          name: 'Current Customer',
+          color: 'sky',
+          sortOrder: 36
+        },
+        {
+          id: '019c48d0-5dfe-7cb8-a008-a149924e0647',
+          name: 'Converted',
+          color: 'emerald',
+          sortOrder: 90,
+          isFinalOption: true
+        },
+        {
+          id: '019c48d0-5dfe-7cb8-a008-a149924e0648',
+          name: 'Disqualified',
+          color: 'red',
+          sortOrder: 100,
+          isFinalOption: true
+        }
+      ],
+      lead_source: [
+        {
+          id: 'a051cec0-6812-11ee-bbc7-658038978072',
+          name: 'Social Media',
+          color: 'pink'
+        },
+        {
+          id: '8c9c5620-6812-11ee-bbc7-658038978072',
+          name: 'Website',
+          color: 'cyan'
+        },
+        {
+          id: 'a65eba30-6812-11ee-bbc7-658038978072',
+          name: 'Customer Reference',
+          color: 'amber'
+        },
+        {
+          id: 'afc7c8f0-6812-11ee-bbc7-658038978072',
+          name: 'Conference, Event',
+          color: 'violet'
+        },
+        {
+          id: '9d5d9500-6812-11ee-bbc7-658038978072',
+          name: 'Partner',
+          color: 'orange'
+        }
+      ],
+      lead_type: [
+        {
+          id: '258759d0-d563-11ee-9e7e-7be4640b805e',
+          name: 'New Customer',
+          color: 'lime',
+          icon: 'fal chart-line-up'
+        },
+        {
+          id: '3eb211c0-d563-11ee-9e7e-7be4640b805e',
+          name: 'Existing Customer',
+          color: 'amber',
+          icon: 'fal money-bill-transfer'
+        }
+      ],
+      lost_reason: [
+        {
+          id: 'df324de0-6812-11ee-bbc7-658038978072',
+          name: 'Price',
+          color: 'red'
+        },
+        {
+          id: 'e3a649d0-6812-11ee-bbc7-658038978072',
+          name: 'Feature',
+          color: 'orange'
+        },
+        {
+          id: 'edb95430-6812-11ee-bbc7-658038978072',
+          name: 'Competition',
+          color: 'violet'
+        },
+        {
+          id: 'f0cad9f0-6812-11ee-bbc7-658038978072',
+          name: 'Other',
+          color: 'slate'
+        }
+      ],
+      conversion_state: [
+        {
+          id: '019e166c-370b-7693-932a-6fa41a7b5bf1',
+          name: 'in_progress',
+          color: 'blue'
+        },
+        {
+          id: '019e166c-370b-7693-932a-6fa41a7b5bf2',
+          name: 'completed',
+          color: 'emerald',
+          isFinalOption: true
+        },
+        {
+          id: '019e166c-370b-7693-932a-6fa41a7b5bf3',
+          name: 'partial',
+          color: 'amber'
+        },
+        {
+          id: '019e166c-370b-7693-932a-6fa41a7b5bf4',
+          name: 'failed',
+          color: 'red',
+          isFinalOption: true
+        }
+      ],
+      conversion_mode: [
+        {
+          id: '019e166f-b3e3-7221-b8b4-1af9ca535b21',
+          name: 'company_contact_deal',
+          color: 'blue'
+        },
+        {
+          id: '019e166f-b3e3-7221-b8b4-1af9ca535b22',
+          name: 'contact_deal',
+          color: 'violet'
+        }
+      ]
+    },
+    product: {
+      category: [
+        {
+          id: '019c48d0-64d0-7b74-a977-b4a2bdc00001',
+          name: 'Software',
+          color: 'blue'
+        },
+        {
+          id: '019c48d0-64d0-7b74-a977-b4a2bdc00002',
+          name: 'Services',
+          color: 'emerald'
+        },
+        {
+          id: '019c48d0-64d0-7b74-a977-b4a2bdc00003',
+          name: 'Hardware',
+          color: 'orange'
+        },
+        {
+          id: '019c48d0-64d0-7b74-a977-b4a2bdc00004',
+          name: 'Subscription',
+          color: 'violet'
+        },
+        {
+          id: '019c48d0-64d0-7b74-a977-b4a2bdc00005',
+          name: 'Consulting',
+          color: 'cyan'
+        }
+      ],
+      Unit: [
+        {
+          id: '22eb8f50-6841-11ee-a2b2-5f277eac2fd9',
+          name: 'Adet'
+        }
       ]
     }
   }

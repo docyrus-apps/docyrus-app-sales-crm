@@ -17,6 +17,7 @@ export const dealFormSchema = z.object({
   expected_closing_date: z.string().optional(),
   lead_source: z.string().optional(),
   customer_type: z.string().optional(),
+  reason_for_lost: z.string().optional(),
   country: z.string().optional(),
   hot_prospect: z.boolean().optional(),
   record_owner: z.string().optional()
