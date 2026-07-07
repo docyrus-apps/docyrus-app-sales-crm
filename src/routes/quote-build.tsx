@@ -28,10 +28,19 @@ import {
   HtmlTemplateEditor,
   numberToWordsTR
 } from '@/components/docyrus/html-template-editor'
-import { createEditorTemplateEngine } from '@/components/docyrus/html-template-editor/lib/editor-template-engine'
-import { htmlTemplateToPdf } from '@/components/docyrus/html-template-editor/lib/html-to-pdf'
 import { QuoteLineItems } from '@/components/quotes/quote-line-items'
 import { QuoteEmailDialog } from '@/components/quotes/quote-email-dialog'
+import {
+  EMPTY_DOC,
+  normalizeQuoteDoc,
+  type QuoteDocFields
+} from '@/components/quotes/quote-doc'
+import {
+  buildQuoteData,
+  compileQuotePdfBytes,
+  compileQuotePdfFile,
+  quotePdfFileName
+} from '@/components/quotes/quote-pdf'
 import { PageContainer } from '@/components/layout/page-container'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -90,28 +99,6 @@ function getRelationId(value?: { id?: string } | string | null): string | null {
   return value.id ?? null
 }
 
-interface QuoteDocFields {
-  docTitle: string;
-  validUntil: string;
-  billingEmail: string;
-  billingAddress: string;
-  intro: string;
-  terms: string;
-  templateBody: string;
-  templateBodyTemplateId: string;
-}
-
-const EMPTY_DOC: QuoteDocFields = {
-  docTitle: '',
-  validUntil: '',
-  billingEmail: '',
-  billingAddress: '',
-  intro: '',
-  terms: '',
-  templateBody: '',
-  templateBodyTemplateId: ''
-}
-
 function readStored<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback
   try {
@@ -135,20 +122,6 @@ function moveStored(fromKey: string, toKey: string) {
   } catch {
     /* ignore */
   }
-}
-
-function normalizeQuoteDoc(value: unknown): QuoteDocFields | null {
-  if (!value) return null
-  if (typeof value === 'string') {
-    try {
-      return normalizeQuoteDoc(JSON.parse(value))
-    } catch {
-      return null
-    }
-  }
-  if (typeof value !== 'object') return null
-
-  return { ...EMPTY_DOC, ...(value as Partial<QuoteDocFields>) }
 }
 
 type CustomerOption = { id: string; name: string }
@@ -327,19 +300,17 @@ export function QuoteBuild() {
       : t('quotes.untitledQuote', { defaultValue: 'Teklif' }))
 
   useSetDetailBreadcrumbTitle(quoteTitle)
-  // Sanitized file name for the header "Download PDF" action.
-  const pdfFileName = `${
-    quoteTitle.replace(/[\\/:*?"<>|]+/g, '_').trim() || 'teklif'
-  }.pdf`
+  // Sanitized file name for the "Download PDF" + mail attachment actions.
+  const pdfFileName = quotePdfFileName(quoteTitle)
   const [template, setTemplate] = useState<string>(() => {
     if (typeof window === 'undefined') return ''
 
     return window.localStorage.getItem(`quote-template:${storageId}`) || ''
   })
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
-    () => (typeof window === 'undefined'
+    () => typeof window === 'undefined'
         ? null
-        : window.localStorage.getItem(`quote-template-id:${storageId}`))
+        : window.localStorage.getItem(`quote-template-id:${storageId}`)
   )
   /*
    * Tracks which template id's body is loaded into `template`, so a backend
@@ -479,83 +450,40 @@ export function QuoteBuild() {
 
   const customerEmail = doc.billingEmail || (company as any)?.email || ''
 
-  const dataJson = useMemo(() => {
-    const lineItems = (items ?? []).map((item: any) => ({
-      name: getRelationName(item.product) ?? '',
-      qty: Number(item.qty ?? 0),
-      unitPrice: Number(item.unit_price ?? 0),
-      discount: Number(item.discount ?? 0),
-      taxRate: Number(item.tax_rate ?? 0),
-      net: Number(item.net_total ?? 0),
-      gross: Number(item.gross_total ?? item.total ?? 0)
-    }))
-
-    return JSON.stringify(
-      {
-        quote: {
-          title: doc.docTitle || quoteTitle,
-          no: '',
-          date: formatDate(
-            (order as any)?.created_on ?? new Date().toISOString()
-          ),
-          validUntil: doc.validUntil ? formatDate(doc.validUntil) : ''
-        },
-        customer: {
-          name: customerName ?? '',
-          address: doc.billingAddress || (company as any)?.address || '',
-          taxNumber: (company as any)?.tax_number ?? '',
-          email: customerEmail,
-          phone: (company as any)?.phone ?? ''
-        },
-        intro: doc.intro,
-        terms: doc.terms,
-        currency: DEFAULT_CURRENCY,
+  const quoteData = useMemo(
+    () => buildQuoteData({
+        order,
+        items,
+        company,
+        doc,
+        customerName,
+        title: quoteTitle,
+        formatDate,
         locale: documentLocale,
-        lineItems,
-        totals: {
-          subtotal: Number(order?.sub_total ?? 0),
-          tax: Number(order?.tax_total ?? 0),
-          grandTotal: Number(order?.grand_total ?? 0)
-        }
-      },
-      null,
-      2
-    )
-  }, [
-    items,
-    order,
-    company,
-    customerName,
-    customerEmail,
-    quoteTitle,
-    id,
-    formatDate,
-    documentLocale,
-    doc
-  ])
+        currency: DEFAULT_CURRENCY
+      }),
+    [
+      order,
+      items,
+      company,
+      doc,
+      customerName,
+      quoteTitle,
+      formatDate,
+      documentLocale
+    ]
+  )
 
-  /*
-   * Isolated engine for the header "Download PDF" action (same helpers as the
-   * editor preview, so the downloaded PDF matches what's on screen).
-   */
-  const pdfEngine = useMemo(
-    () => createEditorTemplateEngine({ extraHelpers: { numberToWordsTR } }),
-    []
+  const dataJson = useMemo(
+    () => JSON.stringify(quoteData, null, 2),
+    [quoteData]
   )
 
   const handleDownloadPdf = useCallback(async () => {
     if (pdfBusy) return
     setPdfBusy(true)
     try {
-      let data: unknown = {}
-
-      try {
-        data = JSON.parse(dataJson)
-      } catch {
-        data = {}
-      }
-      const html = await pdfEngine.compileTpl(template)(data)
-      const bytes = await htmlTemplateToPdf(html)
+      const bytes = await compileQuotePdfBytes(template, quoteData)
       const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' })
       const url = URL.createObjectURL(blob)
       const anchor = document.createElement('a')
@@ -567,20 +495,26 @@ export function QuoteBuild() {
       anchor.remove()
       window.setTimeout(() => URL.revokeObjectURL(url), 1000)
     } catch {
-      toast.error(
-        t('quotes.pdfFailed', { defaultValue: 'PDF oluşturulamadı' })
-      )
+      toast.error(t('quotes.pdfFailed', { defaultValue: 'PDF oluşturulamadı' }))
     } finally {
       setPdfBusy(false)
     }
   }, [
 pdfBusy,
-dataJson,
 template,
+quoteData,
 pdfFileName,
-pdfEngine,
 t
 ])
+
+  /*
+   * Compiles the current quote into a PDF File for the email attachment flow —
+   * same engine/helpers as the preview, so the attached PDF matches the screen.
+   */
+  const getQuoteAttachment = useCallback(
+    () => compileQuotePdfFile(template, quoteData, pdfFileName),
+    [template, quoteData, pdfFileName]
+  )
 
   const handleSave = async () => {
     if (!customerId) {
@@ -737,7 +671,7 @@ t
                               )}
                             </div>
                             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                              {(preset.pageFormat ?? 'A4')} ·{' '}
+                              {preset.pageFormat ?? 'A4'} ·{' '}
                               {preset.pageOrientation ?? 'portrait'}
                             </p>
                           </div>
@@ -989,7 +923,10 @@ t
         onOpenChange={setMailOpen}
         to={customerEmail}
         subject={doc.docTitle || quoteTitle}
-        body={doc.intro} />
+        body={doc.intro}
+        recordId={isNew ? undefined : id}
+        attachmentName={pdfFileName}
+        getAttachment={isNew ? undefined : getQuoteAttachment} />
     </PageContainer>
   )
 }

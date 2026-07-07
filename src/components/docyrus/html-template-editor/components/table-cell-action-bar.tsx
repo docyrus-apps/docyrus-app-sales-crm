@@ -1,41 +1,37 @@
-'use client';
+'use client'
 
 // @ts-nocheck
 /* eslint-disable */
-import { useState } from 'react';
+import { useState } from 'react'
 
-import { BracesIcon, CodeIcon } from 'lucide-react';
-import {
-  useEditorRef,
-  useEditorSelector,
-  useReadOnly
-} from 'platejs/react';
+import { BracesIcon, CodeIcon } from 'lucide-react'
+import { useEditorRef, useEditorSelector, useReadOnly } from 'platejs/react'
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'
 import {
   Command,
   CommandGroup,
   CommandItem,
-  CommandList
-} from '@/components/ui/command';
+  CommandList,
+} from '@/components/ui/command'
 import {
   Popover,
   PopoverAnchor,
   PopoverContent,
-  PopoverTrigger
-} from '@/components/ui/popover';
+  PopoverTrigger,
+} from '@/components/ui/popover'
 
 import {
   HBS_BLOCK_CLOSE_KEY,
   HBS_BLOCK_OPEN_KEY,
   HBS_VARIABLE_KEY,
   HBS_VARIABLE_MARK_KEYS,
-  type HandlebarsBlockHelper
-} from '../types';
-import { useHbsContext } from '../lib/hbs-context';
+  type HandlebarsBlockHelper,
+} from '../types'
+import { useHbsContext } from '../lib/hbs-context'
 
-import { BlockHelperForm } from './block-helper-form';
-import { VariablePicker } from './variable-picker';
+import { BlockHelperForm } from './block-helper-form'
+import { VariablePicker } from './variable-picker'
 
 /*
  * Floating action bar that appears above the active `<td>` / `<th>` cell
@@ -58,9 +54,9 @@ import { VariablePicker } from './variable-picker';
  * `lib/serialize.ts`'s `serializeChildren` and the thead/tbody heuristic).
  */
 export function TableCellActionBar() {
-  const editor = useEditorRef();
-  const readOnly = useReadOnly();
-  const { helpers } = useHbsContext();
+  const editor = useEditorRef()
+  const readOnly = useReadOnly()
+  const { helpers } = useHbsContext()
 
   /*
    * Locate the deepest `<td>` / `<th>` ancestor of the current selection.
@@ -70,30 +66,32 @@ export function TableCellActionBar() {
    */
   const cellEntry = useEditorSelector(
     (e) => {
-      if (!e.selection || readOnly) return null;
+      if (!e.selection || readOnly) return null
       const entry = e.api.above({
         match: (n: unknown) => {
-          if (!n || typeof n !== 'object' || !('type' in n)) return false;
-          const t = (n as { type: unknown }).type;
+          if (!n || typeof n !== 'object' || !('type' in n)) return false
+          const t = (n as { type: unknown }).type
 
-          return t === 'td' || t === 'th';
-        }
-      });
+          return t === 'td' || t === 'th'
+        },
+      })
 
-      return entry ?? null;
+      return entry ?? null
     },
-    [readOnly]
-  );
+    [readOnly],
+  )
 
-  const anchorElement = cellEntry ? editor.api.toDOMNode(cellEntry[0]) : null;
+  const anchorElement = cellEntry ? editor.api.toDOMNode(cellEntry[0]) : null
 
   /*
    * Sub-popover state for the two actions. Only one is open at a time;
    * opening one closes the other so the bar UI stays uncluttered.
    */
-  const [openAction, setOpenAction] = useState<'variable' | 'block' | null>(null);
+  const [openAction, setOpenAction] = useState<'variable' | 'block' | null>(
+    null,
+  )
 
-  if (!anchorElement) return null;
+  if (!anchorElement) return null
 
   return (
     <Popover open={!!anchorElement} modal={false}>
@@ -103,7 +101,7 @@ export function TableCellActionBar() {
         align="start"
         sideOffset={6}
         collisionPadding={8}
-        onOpenAutoFocus={e => e.preventDefault()}
+        onOpenAutoFocus={(e) => e.preventDefault()}
         /*
          * `z-40` keeps the bar *below* its own sub-popovers (variable
          * picker / block helper form, which inherit Radix's default
@@ -119,51 +117,55 @@ export function TableCellActionBar() {
          * selection out of the cell. Each button still handles its own
          * click normally.
          */
-        onMouseDown={e => e.preventDefault()}>
+        onMouseDown={(e) => e.preventDefault()}
+      >
         <VariableAction
           open={openAction === 'variable'}
-          onOpenChange={next => setOpenAction(next ? 'variable' : null)} />
+          onOpenChange={(next) => setOpenAction(next ? 'variable' : null)}
+        />
         <BlockAction
           helpers={helpers}
           open={openAction === 'block'}
-          onOpenChange={next => setOpenAction(next ? 'block' : null)} />
+          onOpenChange={(next) => setOpenAction(next ? 'block' : null)}
+        />
       </PopoverContent>
     </Popover>
-  );
+  )
 }
 
 interface ActionPopoverProps {
-  open: boolean;
-  onOpenChange: (next: boolean) => void;
+  open: boolean
+  onOpenChange: (next: boolean) => void
 }
 
 function VariableAction({ open, onOpenChange }: ActionPopoverProps) {
-  const editor = useEditorRef();
-  const { variables } = useHbsContext();
+  const editor = useEditorRef()
+  const { variables } = useHbsContext()
 
   function insertVariable(name: string) {
-    editor.tf.focus();
+    editor.tf.focus()
     /*
      * Apply Slate's pending text-mark state to the new chip so the user's
      * pre-toggled bold/italic/etc. carries onto the inserted variable.
      * Mirrors the behavior in `InsertVariablePopover`.
      */
-    const pendingMarks = (editor as { marks?: Record<string, unknown> }).marks ?? {};
-    const variableMarks: Record<string, true> = {};
+    const pendingMarks =
+      (editor as { marks?: Record<string, unknown> }).marks ?? {}
+    const variableMarks: Record<string, true> = {}
 
     for (const key of HBS_VARIABLE_MARK_KEYS) {
-      if (pendingMarks[key]) variableMarks[key] = true;
+      if (pendingMarks[key]) variableMarks[key] = true
     }
     editor.tf.insertNodes([
       {
         type: HBS_VARIABLE_KEY,
         name,
         ...variableMarks,
-        children: [{ text: '' }]
+        children: [{ text: '' }],
       },
-      { text: ' ' }
-    ]);
-    onOpenChange(false);
+      { text: ' ' },
+    ])
+    onOpenChange(false)
   }
 
   return (
@@ -174,7 +176,8 @@ function VariableAction({ open, onOpenChange }: ActionPopoverProps) {
           variant="ghost"
           className="h-7 gap-1.5 px-2 text-xs font-medium text-blue-600 hover:bg-blue-50 hover:text-blue-700 dark:text-blue-400 dark:hover:bg-blue-900/20"
           title="Insert variable into this cell"
-          aria-label="Insert variable into this cell">
+          aria-label="Insert variable into this cell"
+        >
           <BracesIcon className="size-3.5" />
           Değişken
         </Button>
@@ -192,35 +195,37 @@ function VariableAction({ open, onOpenChange }: ActionPopoverProps) {
         side="bottom"
         sideOffset={6}
         collisionPadding={8}
-        onMouseDown={e => e.stopPropagation()}>
+        onMouseDown={(e) => e.stopPropagation()}
+      >
         <VariablePicker variables={variables} onSelect={insertVariable} />
       </PopoverContent>
     </Popover>
-  );
+  )
 }
 
 interface BlockActionProps extends ActionPopoverProps {
-  helpers: HandlebarsBlockHelper[];
+  helpers: HandlebarsBlockHelper[]
 }
 
 function BlockAction({ helpers, open, onOpenChange }: BlockActionProps) {
-  const editor = useEditorRef();
-  const [selectedHelper, setSelectedHelper] = useState<HandlebarsBlockHelper | null>(null);
-  const [expression, setExpression] = useState('');
+  const editor = useEditorRef()
+  const [selectedHelper, setSelectedHelper] =
+    useState<HandlebarsBlockHelper | null>(null)
+  const [expression, setExpression] = useState('')
 
   function reset() {
-    setSelectedHelper(null);
-    setExpression('');
+    setSelectedHelper(null)
+    setExpression('')
   }
 
   function handleSelectHelper(helper: HandlebarsBlockHelper) {
-    setSelectedHelper(helper);
-    setExpression(helper.defaultExpression ?? '');
+    setSelectedHelper(helper)
+    setExpression(helper.defaultExpression ?? '')
   }
 
   function handleInsert() {
-    if (!selectedHelper) return;
-    editor.tf.focus();
+    if (!selectedHelper) return
+    editor.tf.focus()
     /*
      * Insert the `{{#helper expr}}` + space + `{{/helper}}` pair at the
      * cursor inside the cell. Same payload shape as `InsertBlockPopover`
@@ -232,22 +237,22 @@ function BlockAction({ helpers, open, onOpenChange }: BlockActionProps) {
         type: HBS_BLOCK_OPEN_KEY,
         helper: selectedHelper.name,
         expression: expression.trim(),
-        children: [{ text: '' }]
+        children: [{ text: '' }],
       },
       { text: ' ' },
       {
         type: HBS_BLOCK_CLOSE_KEY,
         helper: selectedHelper.name,
-        children: [{ text: '' }]
-      }
-    ]);
-    onOpenChange(false);
-    reset();
+        children: [{ text: '' }],
+      },
+    ])
+    onOpenChange(false)
+    reset()
   }
 
   function handleOpenChange(next: boolean) {
-    onOpenChange(next);
-    if (!next) reset();
+    onOpenChange(next)
+    if (!next) reset()
   }
 
   return (
@@ -258,7 +263,8 @@ function BlockAction({ helpers, open, onOpenChange }: BlockActionProps) {
           variant="ghost"
           className="h-7 gap-1.5 px-2 text-xs font-medium text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:text-amber-400 dark:hover:bg-amber-900/20"
           title="Wrap cell content with a block helper"
-          aria-label="Wrap cell content with a block helper">
+          aria-label="Wrap cell content with a block helper"
+        >
           <CodeIcon className="size-3.5" />
           Blok
         </Button>
@@ -270,23 +276,27 @@ function BlockAction({ helpers, open, onOpenChange }: BlockActionProps) {
         side="bottom"
         sideOffset={6}
         collisionPadding={8}
-        onMouseDown={e => e.stopPropagation()}>
+        onMouseDown={(e) => e.stopPropagation()}
+      >
         {!selectedHelper ? (
           <Command>
             <CommandList className="max-h-56">
               <CommandGroup heading="Block Helpers">
-                {helpers.map(h => (
+                {helpers.map((h) => (
                   <CommandItem
                     key={h.name}
                     value={h.name}
                     onSelect={() => handleSelectHelper(h)}
-                    className="cursor-pointer">
+                    className="cursor-pointer"
+                  >
                     <span className="flex flex-1 items-center gap-2">
                       <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs font-semibold">
                         {`{{#${h.name}}}`}
                       </code>
                       {h.description && (
-                        <span className="text-xs text-muted-foreground">{h.description}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {h.description}
+                        </span>
                       )}
                     </span>
                   </CommandItem>
@@ -302,9 +312,10 @@ function BlockAction({ helpers, open, onOpenChange }: BlockActionProps) {
             onBack={reset}
             onCancel={() => handleOpenChange(false)}
             onSubmit={handleInsert}
-            submitLabel="Insert Block" />
+            submitLabel="Insert Block"
+          />
         )}
       </PopoverContent>
     </Popover>
-  );
+  )
 }

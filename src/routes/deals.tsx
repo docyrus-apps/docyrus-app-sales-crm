@@ -343,10 +343,9 @@ t
           ? row.contact_person?.name
           : row.contact_person
       const dealValue = row.deal_value ?? row.expected_revenue ?? 0
-      const closeDateLabel =
-        row.expected_closing_date
-          ? formatDate(row.expected_closing_date)
-          : t('deals.noCloseDate', 'No close date')
+      const closeDateLabel = row.expected_closing_date
+        ? formatDate(row.expected_closing_date)
+        : t('deals.noCloseDate', 'No close date')
 
       return (
         <div className="space-y-2">

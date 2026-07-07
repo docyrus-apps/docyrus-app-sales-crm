@@ -42,7 +42,8 @@ function unwrap<T>(response: unknown): T {
 
 /** True when the request failed because the templates route isn't deployed. */
 export function isTemplatesRouteAbsent(error: unknown): boolean {
-  const status = (error as { status?: number; statusCode?: number })?.status ??
+  const status =
+    (error as { status?: number; statusCode?: number })?.status ??
     (error as { statusCode?: number })?.statusCode
 
   return status === 404
@@ -84,9 +85,7 @@ export async function getQuoteTemplate(
   client: RestApiClient,
   id: string
 ): Promise<QuoteTemplateDetail> {
-  const row = unwrap<Record<string, unknown>>(
-    await client.get(`${BASE}/${id}`)
-  )
+  const row = unwrap<Record<string, unknown>>(await client.get(`${BASE}/${id}`))
 
   return {
     ...toMeta(row),

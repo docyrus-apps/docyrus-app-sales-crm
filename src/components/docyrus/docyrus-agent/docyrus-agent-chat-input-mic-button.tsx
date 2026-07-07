@@ -1,48 +1,53 @@
-'use client';
+'use client'
 
 // @ts-nocheck
 /* eslint-disable */
 import {
-  type ComponentType, type ReactNode, useCallback, useMemo, useRef
-} from 'react';
+  type ComponentType,
+  type ReactNode,
+  useCallback,
+  useMemo,
+  useRef,
+} from 'react'
 
-import { type SpeechRecognitionTranscriptChunks } from '@/hooks/docyrus/use-speech-recognition';
+import { type SpeechRecognitionTranscriptChunks } from '@/hooks/docyrus/use-speech-recognition'
 import {
   PromptInputButton,
-  usePromptInputController
-} from '@/components/ai-elements/prompt-input';
+  usePromptInputController,
+} from '@/components/ai-elements/prompt-input'
 import {
   Tooltip,
   TooltipContent,
-  TooltipTrigger
-} from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
-import { Mic } from 'lucide-react';
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
+import { Mic } from 'lucide-react'
 
-import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation';
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
-const RECORDING_CLASSES = 'bg-destructive/10 text-destructive ring-1 ring-destructive/30 hover:bg-destructive/20';
+const RECORDING_CLASSES =
+  'bg-destructive/10 text-destructive ring-1 ring-destructive/30 hover:bg-destructive/20'
 
 export interface DocyrusAgentChatInputMicButtonProps {
   /** Recording flag (controlled). */
-  isRecording: boolean;
+  isRecording: boolean
   /** Fires when the user toggles the button. */
-  onToggle: () => void;
+  onToggle: () => void
   /** Hide the button when the underlying API is unavailable. Defaults to `true`. */
-  isSupported?: boolean;
+  isSupported?: boolean
   /** Disable the button. */
-  disabled?: boolean;
+  disabled?: boolean
   /** Override the icon. */
-  icon?: ComponentType<{ className?: string }>;
+  icon?: ComponentType<{ className?: string }>
   /** Override the recording badge (defaults to a pulsing dot). Set to `null` to hide. */
-  recordingBadge?: ReactNode | null;
+  recordingBadge?: ReactNode | null
   /** Override the active state styling. */
-  recordingClassName?: string;
+  recordingClassName?: string
   /** Tooltip when idle. */
-  tooltipIdle?: string;
+  tooltipIdle?: string
   /** Tooltip when recording. */
-  tooltipRecording?: string;
-  className?: string;
+  tooltipRecording?: string
+  className?: string
 }
 
 /**
@@ -63,15 +68,22 @@ export const DocyrusAgentChatInputMicButton = ({
   recordingClassName,
   tooltipIdle,
   tooltipRecording,
-  className
+  className,
 }: DocyrusAgentChatInputMicButtonProps) => {
-  const { t } = useUiTranslation();
+  const { t } = useUiTranslation()
 
-  if (!isSupported) return null;
+  if (!isSupported) return null
 
-  const label = isRecording ? (tooltipRecording ?? t('ui.agent.tools.stopRecording', 'Stop recording')) : (tooltipIdle ?? t('ui.agent.tools.microphone', 'Microphone'));
+  const label = isRecording
+    ? (tooltipRecording ?? t('ui.agent.tools.stopRecording', 'Stop recording'))
+    : (tooltipIdle ?? t('ui.agent.tools.microphone', 'Microphone'))
 
-  const badge = recordingBadge === null ? null : recordingBadge ?? <span className="absolute -right-1 -top-1 size-2 animate-pulse rounded-full bg-destructive" />;
+  const badge =
+    recordingBadge === null
+      ? null
+      : (recordingBadge ?? (
+          <span className="absolute -right-1 -top-1 size-2 animate-pulse rounded-full bg-destructive" />
+        ))
 
   return (
     <Tooltip>
@@ -82,51 +94,52 @@ export const DocyrusAgentChatInputMicButton = ({
           className={cn(
             'relative transition-all duration-200',
             isRecording && (recordingClassName ?? RECORDING_CLASSES),
-            className
+            className,
           )}
           disabled={disabled}
           variant="ghost"
-          onClick={onToggle}>
+          onClick={onToggle}
+        >
           <Icon className="size-4" />
           {isRecording && badge}
         </PromptInputButton>
       </TooltipTrigger>
       <TooltipContent side="top">{label}</TooltipContent>
     </Tooltip>
-  );
-};
+  )
+}
 
 export interface UseDocyrusAgentMicTranscriptionArgs {
   /**
    * Separator placed between baseline / final / interim when joining. Defaults to a single
    * space. Use `'\n'` for newline-separated insertion. Ignored when `merge` is provided.
    */
-  separator?: string;
+  separator?: string
   /**
    * Fully custom merge strategy. Receives the captured baseline + the current session's
    * cumulative `final` and pending `interim` chunks, and must return the new textarea value.
    * Use this to insert at cursor position, format with punctuation, append on a new line
    * after each sentence, etc.
    */
-  merge?: (args: { baseline: string; final: string; interim: string }) => string;
+  merge?: (args: { baseline: string; final: string; interim: string }) => string
   /**
    * When `true`, clears the textarea on `onStart` instead of capturing the existing value
    * as the baseline. Defaults to `false`.
    */
-  clearOnStart?: boolean;
+  clearOnStart?: boolean
 }
 
 export interface DocyrusAgentMicSpeechHandlers {
-  onStart: () => void;
-  onEnd: () => void;
-  onTranscript: (chunks: SpeechRecognitionTranscriptChunks) => void;
+  onStart: () => void
+  onEnd: () => void
+  onTranscript: (chunks: SpeechRecognitionTranscriptChunks) => void
 }
 
 export interface UseDocyrusAgentMicTranscriptionResult {
   /** Spread into `useSpeechRecognition({ ...speechHandlers })`. */
-  speechHandlers: DocyrusAgentMicSpeechHandlers;
+  speechHandlers: DocyrusAgentMicSpeechHandlers
   /** Manually clear the captured baseline (e.g. after a custom commit flow). */
-  resetBaseline: () => void;
+  resetBaseline: () => void
 }
 
 /**
@@ -150,52 +163,54 @@ export interface UseDocyrusAgentMicTranscriptionResult {
 export const useDocyrusAgentMicTranscription = ({
   separator = ' ',
   merge,
-  clearOnStart = false
+  clearOnStart = false,
 }: UseDocyrusAgentMicTranscriptionArgs = {}): UseDocyrusAgentMicTranscriptionResult => {
-  const controller = usePromptInputController();
-  const baselineRef = useRef<string | null>(null);
-  const mergeRef = useRef(merge);
-  const separatorRef = useRef(separator);
+  const controller = usePromptInputController()
+  const baselineRef = useRef<string | null>(null)
+  const mergeRef = useRef(merge)
+  const separatorRef = useRef(separator)
 
-  mergeRef.current = merge;
-  separatorRef.current = separator;
+  mergeRef.current = merge
+  separatorRef.current = separator
 
   const resetBaseline = useCallback(() => {
-    baselineRef.current = null;
-  }, []);
+    baselineRef.current = null
+  }, [])
 
   const speechHandlers = useMemo<DocyrusAgentMicSpeechHandlers>(
     () => ({
       onStart: () => {
         if (clearOnStart) {
-          baselineRef.current = '';
-          controller.textInput.setInput('');
+          baselineRef.current = ''
+          controller.textInput.setInput('')
 
-          return;
+          return
         }
 
-        baselineRef.current = controller.textInput.value;
+        baselineRef.current = controller.textInput.value
       },
       onEnd: () => {
-        baselineRef.current = null;
+        baselineRef.current = null
       },
       onTranscript: ({ final, interim }) => {
-        const baseline = baselineRef.current ?? '';
+        const baseline = baselineRef.current ?? ''
 
         if (mergeRef.current) {
-          controller.textInput.setInput(mergeRef.current({ baseline, final, interim }));
+          controller.textInput.setInput(
+            mergeRef.current({ baseline, final, interim }),
+          )
 
-          return;
+          return
         }
 
-        const sep = separatorRef.current;
-        const parts = [baseline, final, interim].filter(Boolean);
+        const sep = separatorRef.current
+        const parts = [baseline, final, interim].filter(Boolean)
 
-        controller.textInput.setInput(parts.join(sep));
-      }
+        controller.textInput.setInput(parts.join(sep))
+      },
     }),
-    [controller, clearOnStart]
-  );
+    [controller, clearOnStart],
+  )
 
-  return { speechHandlers, resetBaseline };
-};
+  return { speechHandlers, resetBaseline }
+}

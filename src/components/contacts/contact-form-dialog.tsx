@@ -102,11 +102,11 @@ export function ContactFormDialog({
     form.reset(initialValues)
     setSubmitError(null)
   }, [
-    form,
-    initialValues,
-    open,
-    mode
-  ])
+form,
+initialValues,
+open,
+mode
+])
 
   const companyOptions = companies.map((company: any) => ({
     label: company.name,

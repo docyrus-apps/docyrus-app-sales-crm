@@ -1010,6 +1010,12 @@
     "draftSaved": "Draft saved",
     "saveFailed": "Failed to save quote",
     "pdfFailed": "Failed to export PDF",
+    "mailSent": "Email sent",
+    "mailFailed": "Failed to send email",
+    "attachmentName": "Quote.pdf",
+    "attachmentWillAttach": "Will be attached as PDF",
+    "attachmentPreparing": "Preparing…",
+    "attachmentFailed": "Could not attach",
     "templateNames": {
       "standard": "Standard",
       "executive": "Executive",

@@ -1,51 +1,64 @@
 // @ts-nocheck
 /* eslint-disable */
-import Handlebars from 'handlebars';
+import Handlebars from 'handlebars'
 
 /*
  * Locale-aware currency formatting used by quote/invoice templates.
  * Format: ₺1.250,00 (TR), $1,250.00 (US), €1.250,00 (EU)
  */
-export function formatCurrency(value: unknown, currency: unknown, locale: unknown): string {
-  const amount = Number(value);
+export function formatCurrency(
+  value: unknown,
+  currency: unknown,
+  locale: unknown,
+): string {
+  const amount = Number(value)
 
-  if (!Number.isFinite(amount)) return '';
+  if (!Number.isFinite(amount)) return ''
 
-  const c = typeof currency === 'string' && currency ? currency : 'USD';
-  const l = typeof locale === 'string' && locale ? locale : c === 'TRY' ? 'tr-TR' : 'en-US';
+  const c = typeof currency === 'string' && currency ? currency : 'USD'
+  const l =
+    typeof locale === 'string' && locale
+      ? locale
+      : c === 'TRY'
+        ? 'tr-TR'
+        : 'en-US'
 
   try {
     return new Intl.NumberFormat(l, {
       style: 'currency',
       currency: c,
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount);
+      maximumFractionDigits: 2,
+    }).format(amount)
   } catch {
-    return amount.toFixed(2);
+    return amount.toFixed(2)
   }
 }
 
-export function formatNumber(value: unknown, locale: unknown, fractionDigits: unknown): string {
-  const amount = Number(value);
+export function formatNumber(
+  value: unknown,
+  locale: unknown,
+  fractionDigits: unknown,
+): string {
+  const amount = Number(value)
 
-  if (!Number.isFinite(amount)) return '';
-  const l = typeof locale === 'string' && locale ? locale : 'en-US';
-  const fd = Number(fractionDigits);
-  const digits = Number.isFinite(fd) ? fd : 2;
+  if (!Number.isFinite(amount)) return ''
+  const l = typeof locale === 'string' && locale ? locale : 'en-US'
+  const fd = Number(fractionDigits)
+  const digits = Number.isFinite(fd) ? fd : 2
 
   return new Intl.NumberFormat(l, {
     minimumFractionDigits: digits,
-    maximumFractionDigits: digits
-  }).format(amount);
+    maximumFractionDigits: digits,
+  }).format(amount)
 }
 
 export function formatPercent(value: unknown): string {
-  const amount = Number(value);
+  const amount = Number(value)
 
-  if (!Number.isFinite(amount)) return '';
+  if (!Number.isFinite(amount)) return ''
 
-  return `%${formatNumber(amount, 'en-US', amount % 1 === 0 ? 0 : 2)}`;
+  return `%${formatNumber(amount, 'en-US', amount % 1 === 0 ? 0 : 2)}`
 }
 
 /*
@@ -54,26 +67,30 @@ export function formatPercent(value: unknown): string {
  *   YYYY-MM-DD  →  2026-05-21
  *   DD MMM YYYY →  21 May 2026 (locale-aware)
  */
-export function formatDate(value: unknown, format: unknown, locale: unknown): string {
-  if (value == null || value === '') return '';
-  const d = value instanceof Date ? value : new Date(value as string | number);
+export function formatDate(
+  value: unknown,
+  format: unknown,
+  locale: unknown,
+): string {
+  if (value == null || value === '') return ''
+  const d = value instanceof Date ? value : new Date(value as string | number)
 
-  if (Number.isNaN(d.getTime())) return String(value);
+  if (Number.isNaN(d.getTime())) return String(value)
 
-  const f = typeof format === 'string' && format ? format : 'DD.MM.YYYY';
-  const l = typeof locale === 'string' && locale ? locale : 'en-US';
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const yyyy = String(d.getFullYear());
-  const longMonth = d.toLocaleDateString(l, { month: 'long' });
-  const shortMonth = d.toLocaleDateString(l, { month: 'short' });
+  const f = typeof format === 'string' && format ? format : 'DD.MM.YYYY'
+  const l = typeof locale === 'string' && locale ? locale : 'en-US'
+  const dd = String(d.getDate()).padStart(2, '0')
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const yyyy = String(d.getFullYear())
+  const longMonth = d.toLocaleDateString(l, { month: 'long' })
+  const shortMonth = d.toLocaleDateString(l, { month: 'short' })
 
   return f
     .replace(/YYYY/g, yyyy)
     .replace(/MMMM/g, longMonth)
     .replace(/MMM/g, shortMonth)
     .replace(/MM/g, mm)
-    .replace(/DD/g, dd);
+    .replace(/DD/g, dd)
 }
 
 /*
@@ -99,119 +116,140 @@ export function formatDate(value: unknown, format: unknown, locale: unknown): st
  * Use at every place where float results get accumulated or displayed.
  */
 export function roundDecimal(n: number, places = 2): number {
-  if (!Number.isFinite(n)) return n;
-  const factor = 10 ** places;
+  if (!Number.isFinite(n)) return n
+  const factor = 10 ** places
 
-  return Math.round((n + Number.EPSILON) * factor) / factor;
+  return Math.round((n + Number.EPSILON) * factor) / factor
 }
 
 export function toNum(v: unknown): number {
-  const n = Number(v);
+  const n = Number(v)
 
-  return Number.isFinite(n) ? n : 0;
+  return Number.isFinite(n) ? n : 0
 }
 
 export function multiply(a: unknown, b: unknown): number {
-  return toNum(a) * toNum(b);
+  return toNum(a) * toNum(b)
 }
 
 export function add(...args: unknown[]): number {
-  const nums = args.slice(0, -1).map(toNum);
+  const nums = args.slice(0, -1).map(toNum)
 
-  return nums.reduce((acc, n) => acc + n, 0);
+  return nums.reduce((acc, n) => acc + n, 0)
 }
 
 export function subtract(a: unknown, b: unknown): number {
-  return toNum(a) - toNum(b);
+  return toNum(a) - toNum(b)
 }
 
 export function divide(a: unknown, b: unknown): number {
-  const denom = toNum(b);
+  const denom = toNum(b)
 
-  return denom === 0 ? 0 : toNum(a) / denom;
+  return denom === 0 ? 0 : toNum(a) / denom
 }
 
 export function sumProperty(items: unknown, key: unknown): number {
-  if (!Array.isArray(items) || typeof key !== 'string') return 0;
-  const raw = items.reduce((acc, it) => acc + toNum((it as Record<string, unknown>)?.[key]), 0);
+  if (!Array.isArray(items) || typeof key !== 'string') return 0
+  const raw = items.reduce(
+    (acc, it) => acc + toNum((it as Record<string, unknown>)?.[key]),
+    0,
+  )
 
-  return roundDecimal(raw);
+  return roundDecimal(raw)
 }
 
 export function avgProperty(items: unknown, key: unknown): number {
-  if (!Array.isArray(items) || items.length === 0 || typeof key !== 'string') return 0;
+  if (!Array.isArray(items) || items.length === 0 || typeof key !== 'string')
+    return 0
 
-  return roundDecimal(sumProperty(items, key) / items.length);
+  return roundDecimal(sumProperty(items, key) / items.length)
 }
 
 export function minProperty(items: unknown, key: unknown): number {
-  if (!Array.isArray(items) || items.length === 0 || typeof key !== 'string') return 0;
-  let m = Infinity;
+  if (!Array.isArray(items) || items.length === 0 || typeof key !== 'string')
+    return 0
+  let m = Infinity
 
   for (const it of items) {
-    const n = toNum((it as Record<string, unknown>)?.[key]);
+    const n = toNum((it as Record<string, unknown>)?.[key])
 
-    if (n < m) m = n;
+    if (n < m) m = n
   }
 
-  return m === Infinity ? 0 : m;
+  return m === Infinity ? 0 : m
 }
 
 export function maxProperty(items: unknown, key: unknown): number {
-  if (!Array.isArray(items) || items.length === 0 || typeof key !== 'string') return 0;
-  let m = -Infinity;
+  if (!Array.isArray(items) || items.length === 0 || typeof key !== 'string')
+    return 0
+  let m = -Infinity
 
   for (const it of items) {
-    const n = toNum((it as Record<string, unknown>)?.[key]);
+    const n = toNum((it as Record<string, unknown>)?.[key])
 
-    if (n > m) m = n;
+    if (n > m) m = n
   }
 
-  return m === -Infinity ? 0 : m;
+  return m === -Infinity ? 0 : m
 }
 
 export function countItems(items: unknown): number {
-  return Array.isArray(items) ? items.length : 0;
+  return Array.isArray(items) ? items.length : 0
 }
 
-export function lineNet(qty: unknown, unitPrice: unknown, discountPct: unknown): number {
-  return roundDecimal(toNum(qty) * toNum(unitPrice) * (1 - toNum(discountPct) / 100));
+export function lineNet(
+  qty: unknown,
+  unitPrice: unknown,
+  discountPct: unknown,
+): number {
+  return roundDecimal(
+    toNum(qty) * toNum(unitPrice) * (1 - toNum(discountPct) / 100),
+  )
 }
 
-export function lineTotalWithTax(qty: unknown, unitPrice: unknown, discountPct: unknown, taxPct: unknown): number {
-  const net = lineNet(qty, unitPrice, discountPct);
+export function lineTotalWithTax(
+  qty: unknown,
+  unitPrice: unknown,
+  discountPct: unknown,
+  taxPct: unknown,
+): number {
+  const net = lineNet(qty, unitPrice, discountPct)
 
-  return roundDecimal(net + (net * toNum(taxPct)) / 100);
+  return roundDecimal(net + (net * toNum(taxPct)) / 100)
 }
 
 interface QuoteItem {
-  qty?: number;
-  unitPrice?: number;
-  discountPct?: number;
-  taxPct?: number;
+  qty?: number
+  unitPrice?: number
+  discountPct?: number
+  taxPct?: number
 }
 
 export function sumLineNets(items: unknown): number {
-  if (!Array.isArray(items)) return 0;
+  if (!Array.isArray(items)) return 0
 
-  return roundDecimal((items as QuoteItem[]).reduce(
-    (acc, it) => acc + lineNet(it.qty, it.unitPrice, it.discountPct),
-    0
-  ));
+  return roundDecimal(
+    (items as QuoteItem[]).reduce(
+      (acc, it) => acc + lineNet(it.qty, it.unitPrice, it.discountPct),
+      0,
+    ),
+  )
 }
 
 export function sumLineTaxes(items: unknown): number {
-  if (!Array.isArray(items)) return 0;
+  if (!Array.isArray(items)) return 0
 
-  return roundDecimal((items as QuoteItem[]).reduce((acc, it) => {
-    const net = lineNet(it.qty, it.unitPrice, it.discountPct);
+  return roundDecimal(
+    (items as QuoteItem[]).reduce((acc, it) => {
+      const net = lineNet(it.qty, it.unitPrice, it.discountPct)
 
-    return acc + (net * toNum(it.taxPct)) / 100;
-  }, 0));
+      return acc + (net * toNum(it.taxPct)) / 100
+    }, 0),
+  )
 }
 
 export function sumGrandTotal(items: unknown): number {
-  return roundDecimal(sumLineNets(items) + sumLineTaxes(items));
+  return roundDecimal(sumLineNets(items) + sumLineTaxes(items))
 }
 
 /*
@@ -222,43 +260,75 @@ export function sumGrandTotal(items: unknown): number {
  * variants the dialog can target via its "Akıllı toplam" presets.
  */
 
-export function lineNetKeyed(row: unknown, qtyKey: unknown, priceKey: unknown, discountKey: unknown): number {
-  if (typeof row !== 'object' || row === null) return 0;
-  const r = row as Record<string, unknown>;
-  const qty = toNum(r[String(qtyKey)]);
-  const price = toNum(r[String(priceKey)]);
-  const discount = discountKey ? toNum(r[String(discountKey)]) : 0;
+export function lineNetKeyed(
+  row: unknown,
+  qtyKey: unknown,
+  priceKey: unknown,
+  discountKey: unknown,
+): number {
+  if (typeof row !== 'object' || row === null) return 0
+  const r = row as Record<string, unknown>
+  const qty = toNum(r[String(qtyKey)])
+  const price = toNum(r[String(priceKey)])
+  const discount = discountKey ? toNum(r[String(discountKey)]) : 0
 
   /*
    * Round each per-row net so the eventual sum reflects what an accountant
    * would compute line by line (and so cumulative IEEE-754 drift can't move
    * the displayed total by ₺0,01).
    */
-  return roundDecimal(qty * price * (1 - discount / 100));
+  return roundDecimal(qty * price * (1 - discount / 100))
 }
 
-export function sumLineNetsKeyed(items: unknown, qtyKey: unknown, priceKey: unknown, discountKey: unknown): number {
-  if (!Array.isArray(items)) return 0;
+export function sumLineNetsKeyed(
+  items: unknown,
+  qtyKey: unknown,
+  priceKey: unknown,
+  discountKey: unknown,
+): number {
+  if (!Array.isArray(items)) return 0
 
-  return roundDecimal(items.reduce((acc: number, it) => acc + lineNetKeyed(it, qtyKey, priceKey, discountKey), 0));
-}
-
-export function sumLineTaxesKeyed(items: unknown, qtyKey: unknown, priceKey: unknown, discountKey: unknown, taxKey: unknown): number {
-  if (!Array.isArray(items)) return 0;
-
-  return roundDecimal(items.reduce((acc: number, it) => {
-    const net = lineNetKeyed(it, qtyKey, priceKey, discountKey);
-    const tax = taxKey ? toNum((it as Record<string, unknown>)?.[String(taxKey)]) : 0;
-
-    return acc + (net * tax) / 100;
-  }, 0));
-}
-
-export function sumLineGrossKeyed(items: unknown, qtyKey: unknown, priceKey: unknown, discountKey: unknown, taxKey: unknown): number {
   return roundDecimal(
-    sumLineNetsKeyed(items, qtyKey, priceKey, discountKey)
-    + sumLineTaxesKeyed(items, qtyKey, priceKey, discountKey, taxKey)
-  );
+    items.reduce(
+      (acc: number, it) =>
+        acc + lineNetKeyed(it, qtyKey, priceKey, discountKey),
+      0,
+    ),
+  )
+}
+
+export function sumLineTaxesKeyed(
+  items: unknown,
+  qtyKey: unknown,
+  priceKey: unknown,
+  discountKey: unknown,
+  taxKey: unknown,
+): number {
+  if (!Array.isArray(items)) return 0
+
+  return roundDecimal(
+    items.reduce((acc: number, it) => {
+      const net = lineNetKeyed(it, qtyKey, priceKey, discountKey)
+      const tax = taxKey
+        ? toNum((it as Record<string, unknown>)?.[String(taxKey)])
+        : 0
+
+      return acc + (net * tax) / 100
+    }, 0),
+  )
+}
+
+export function sumLineGrossKeyed(
+  items: unknown,
+  qtyKey: unknown,
+  priceKey: unknown,
+  discountKey: unknown,
+  taxKey: unknown,
+): number {
+  return roundDecimal(
+    sumLineNetsKeyed(items, qtyKey, priceKey, discountKey) +
+      sumLineTaxesKeyed(items, qtyKey, priceKey, discountKey, taxKey),
+  )
 }
 
 /*
@@ -278,180 +348,200 @@ export function sumLineGrossKeyed(items: unknown, qtyKey: unknown, priceKey: unk
  * a stored formula to be a code-injection vector.
  */
 
-type ExprToken
-  = | { type: 'NUMBER'; value: number }
-    | { type: 'IDENT'; value: string }
-    | { type: 'OP'; value: '+' | '-' | '*' | '/' | '%' }
-    | { type: 'LPAREN' }
-    | { type: 'RPAREN' };
+type ExprToken =
+  | { type: 'NUMBER'; value: number }
+  | { type: 'IDENT'; value: string }
+  | { type: 'OP'; value: '+' | '-' | '*' | '/' | '%' }
+  | { type: 'LPAREN' }
+  | { type: 'RPAREN' }
 
-type ExprNode
-  = | { kind: 'num'; value: number }
-    | { kind: 'ident'; name: string }
-    | {
-      kind: 'binop'; op: '+' | '-' | '*' | '/' | '%'; left: ExprNode; right: ExprNode;
+type ExprNode =
+  | { kind: 'num'; value: number }
+  | { kind: 'ident'; name: string }
+  | {
+      kind: 'binop'
+      op: '+' | '-' | '*' | '/' | '%'
+      left: ExprNode
+      right: ExprNode
     }
-    | { kind: 'unary'; op: '-'; operand: ExprNode };
+  | { kind: 'unary'; op: '-'; operand: ExprNode }
 
 function tokenizeExpr(input: string): ExprToken[] {
-  const tokens: ExprToken[] = [];
-  let i = 0;
+  const tokens: ExprToken[] = []
+  let i = 0
 
   while (i < input.length) {
-    const ch = input[i] ?? '';
+    const ch = input[i] ?? ''
 
     if (/\s/.test(ch)) {
-      i += 1;
-      continue;
+      i += 1
+      continue
     }
     if (/[0-9]/.test(ch) || (ch === '.' && /[0-9]/.test(input[i + 1] ?? ''))) {
-      let j = i;
+      let j = i
 
-      while (j < input.length && /[0-9.]/.test(input[j] ?? '')) j += 1;
-      tokens.push({ type: 'NUMBER', value: Number(input.slice(i, j)) });
-      i = j;
-      continue;
+      while (j < input.length && /[0-9.]/.test(input[j] ?? '')) j += 1
+      tokens.push({ type: 'NUMBER', value: Number(input.slice(i, j)) })
+      i = j
+      continue
     }
     if (/[a-zA-Z_$]/.test(ch)) {
-      let j = i;
+      let j = i
 
-      while (j < input.length && /[a-zA-Z0-9_$]/.test(input[j] ?? '')) j += 1;
-      tokens.push({ type: 'IDENT', value: input.slice(i, j) });
-      i = j;
-      continue;
+      while (j < input.length && /[a-zA-Z0-9_$]/.test(input[j] ?? '')) j += 1
+      tokens.push({ type: 'IDENT', value: input.slice(i, j) })
+      i = j
+      continue
     }
     if (ch === '+' || ch === '-' || ch === '*' || ch === '/' || ch === '%') {
-      tokens.push({ type: 'OP', value: ch });
-      i += 1;
-      continue;
+      tokens.push({ type: 'OP', value: ch })
+      i += 1
+      continue
     }
     if (ch === '(') {
-      tokens.push({ type: 'LPAREN' });
-      i += 1;
-      continue;
+      tokens.push({ type: 'LPAREN' })
+      i += 1
+      continue
     }
     if (ch === ')') {
-      tokens.push({ type: 'RPAREN' });
-      i += 1;
-      continue;
+      tokens.push({ type: 'RPAREN' })
+      i += 1
+      continue
     }
-    i += 1;
+    i += 1
   }
 
-  return tokens;
+  return tokens
 }
 
 function parseExpr(tokens: ExprToken[]): ExprNode {
-  let pos = 0;
-  const peek = () => tokens[pos];
-  const advance = () => tokens[pos++];
+  let pos = 0
+  const peek = () => tokens[pos]
+  const advance = () => tokens[pos++]
 
   function parseAddSub(): ExprNode {
-    let left = parseMulDiv();
+    let left = parseMulDiv()
 
     while (true) {
-      const t = peek();
+      const t = peek()
 
-      if (!t || t.type !== 'OP' || (t.value !== '+' && t.value !== '-')) break;
-      advance();
-      const right = parseMulDiv();
+      if (!t || t.type !== 'OP' || (t.value !== '+' && t.value !== '-')) break
+      advance()
+      const right = parseMulDiv()
 
       left = {
-        kind: 'binop', op: t.value, left, right
-      };
+        kind: 'binop',
+        op: t.value,
+        left,
+        right,
+      }
     }
 
-    return left;
+    return left
   }
 
   function parseMulDiv(): ExprNode {
-    let left = parseUnary();
+    let left = parseUnary()
 
     while (true) {
-      const t = peek();
+      const t = peek()
 
-      if (!t || t.type !== 'OP' || (t.value !== '*' && t.value !== '/' && t.value !== '%')) break;
-      advance();
-      const right = parseUnary();
+      if (
+        !t ||
+        t.type !== 'OP' ||
+        (t.value !== '*' && t.value !== '/' && t.value !== '%')
+      )
+        break
+      advance()
+      const right = parseUnary()
 
       left = {
-        kind: 'binop', op: t.value, left, right
-      };
+        kind: 'binop',
+        op: t.value,
+        left,
+        right,
+      }
     }
 
-    return left;
+    return left
   }
 
   function parseUnary(): ExprNode {
-    const t = peek();
+    const t = peek()
 
     if (t?.type === 'OP' && t.value === '-') {
-      advance();
+      advance()
 
-      return { kind: 'unary', op: '-', operand: parseUnary() };
+      return { kind: 'unary', op: '-', operand: parseUnary() }
     }
     if (t?.type === 'OP' && t.value === '+') {
-      advance();
+      advance()
 
-      return parseUnary();
+      return parseUnary()
     }
 
-    return parseAtom();
+    return parseAtom()
   }
 
   function parseAtom(): ExprNode {
-    const t = advance();
+    const t = advance()
 
-    if (!t) return { kind: 'num', value: 0 };
-    if (t.type === 'NUMBER') return { kind: 'num', value: t.value };
-    if (t.type === 'IDENT') return { kind: 'ident', name: t.value };
+    if (!t) return { kind: 'num', value: 0 }
+    if (t.type === 'NUMBER') return { kind: 'num', value: t.value }
+    if (t.type === 'IDENT') return { kind: 'ident', name: t.value }
     if (t.type === 'LPAREN') {
-      const inner = parseAddSub();
-      const next = peek();
+      const inner = parseAddSub()
+      const next = peek()
 
-      if (next?.type === 'RPAREN') advance();
+      if (next?.type === 'RPAREN') advance()
 
-      return inner;
+      return inner
     }
 
-    return { kind: 'num', value: 0 };
+    return { kind: 'num', value: 0 }
   }
 
-  return parseAddSub();
+  return parseAddSub()
 }
 
 function evalExprNode(node: ExprNode, row: Record<string, unknown>): number {
   switch (node.kind) {
     case 'num':
-      return node.value;
+      return node.value
 
     case 'ident':
-      return toNum(row[node.name]);
+      return toNum(row[node.name])
 
     case 'unary':
-      return -evalExprNode(node.operand, row);
+      return -evalExprNode(node.operand, row)
 
     case 'binop': {
-      const l = evalExprNode(node.left, row);
-      const r = evalExprNode(node.right, row);
+      const l = evalExprNode(node.left, row)
+      const r = evalExprNode(node.right, row)
 
       switch (node.op) {
-        case '+': return l + r;
+        case '+':
+          return l + r
 
-        case '-': return l - r;
+        case '-':
+          return l - r
 
-        case '*': return l * r;
+        case '*':
+          return l * r
 
-        case '/': return r === 0 ? 0 : l / r;
+        case '/':
+          return r === 0 ? 0 : l / r
 
-        case '%': return r === 0 ? 0 : l % r;
+        case '%':
+          return r === 0 ? 0 : l % r
 
-        default: return 0;
+        default:
+          return 0
       }
     }
 
     default:
-      return 0;
+      return 0
   }
 }
 
@@ -459,17 +549,20 @@ function evalExprNode(node: ExprNode, row: Record<string, unknown>): number {
  * Public expression evaluator. Errors swallow to 0 so a typo doesn't blow
  * up the entire template render.
  */
-export function evaluateExpression(expression: string, row: Record<string, unknown>): number {
-  if (!expression) return 0;
+export function evaluateExpression(
+  expression: string,
+  row: Record<string, unknown>,
+): number {
+  if (!expression) return 0
   try {
-    const tokens = tokenizeExpr(expression);
+    const tokens = tokenizeExpr(expression)
 
-    if (tokens.length === 0) return 0;
-    const ast = parseExpr(tokens);
+    if (tokens.length === 0) return 0
+    const ast = parseExpr(tokens)
 
-    return evalExprNode(ast, row);
+    return evalExprNode(ast, row)
   } catch {
-    return 0;
+    return 0
   }
 }
 
@@ -482,15 +575,22 @@ export function evaluateExpression(expression: string, row: Record<string, unkno
  * helpers above.
  */
 export function sumLineExpr(items: unknown, expression: unknown): number {
-  if (!Array.isArray(items) || typeof expression !== 'string' || !expression.trim()) return 0;
-  let sum = 0;
+  if (
+    !Array.isArray(items) ||
+    typeof expression !== 'string' ||
+    !expression.trim()
+  )
+    return 0
+  let sum = 0
 
   for (const row of items) {
-    if (typeof row !== 'object' || row === null) continue;
-    sum += roundDecimal(evaluateExpression(expression, row as Record<string, unknown>));
+    if (typeof row !== 'object' || row === null) continue
+    sum += roundDecimal(
+      evaluateExpression(expression, row as Record<string, unknown>),
+    )
   }
 
-  return roundDecimal(sum);
+  return roundDecimal(sum)
 }
 
 /*
@@ -509,106 +609,106 @@ export function sumLineExpr(items: unknown, expression: unknown): number {
 function applyTerm(acc: number, op: string, value: number): number {
   switch (op) {
     case 'mul':
-      return acc * value;
+      return acc * value
 
     case 'div':
-      return value === 0 ? 0 : acc / value;
+      return value === 0 ? 0 : acc / value
 
     case 'comp':
-      return acc * (1 - value / 100);
+      return acc * (1 - value / 100)
 
     case 'prem':
-      return acc * (1 + value / 100);
+      return acc * (1 + value / 100)
 
     case 'pct':
-      return acc * (value / 100);
+      return acc * (value / 100)
 
     default:
-      return acc;
+      return acc
   }
 }
 
 export function sumLineGeneric(items: unknown, spec: unknown): number {
-  if (!Array.isArray(items) || typeof spec !== 'string' || !spec) return 0;
+  if (!Array.isArray(items) || typeof spec !== 'string' || !spec) return 0
   const terms = spec
     .split('|')
     .map((part) => {
-      const [op, key] = part.split(':');
+      const [op, key] = part.split(':')
 
-      return { op: (op ?? '').trim(), key: (key ?? '').trim() };
+      return { op: (op ?? '').trim(), key: (key ?? '').trim() }
     })
-    .filter(t => t.op && t.key);
+    .filter((t) => t.op && t.key)
 
-  if (terms.length === 0) return 0;
+  if (terms.length === 0) return 0
 
-  let sum = 0;
+  let sum = 0
 
   for (const row of items) {
-    if (typeof row !== 'object' || row === null) continue;
-    let line = 1;
+    if (typeof row !== 'object' || row === null) continue
+    let line = 1
 
     for (const t of terms) {
-      const value = toNum((row as Record<string, unknown>)[t.key]);
+      const value = toNum((row as Record<string, unknown>)[t.key])
 
-      line = applyTerm(line, t.op, value);
+      line = applyTerm(line, t.op, value)
     }
-    sum += roundDecimal(line);
+    sum += roundDecimal(line)
   }
 
-  return roundDecimal(sum);
+  return roundDecimal(sum)
 }
 
 /* Comparison helpers — useful inside {{#if}} branches. */
 export function eq(a: unknown, b: unknown): boolean {
-  return a === b;
+  return a === b
 }
 export function gt(a: unknown, b: unknown): boolean {
-  return toNum(a) > toNum(b);
+  return toNum(a) > toNum(b)
 }
 export function lt(a: unknown, b: unknown): boolean {
-  return toNum(a) < toNum(b);
+  return toNum(a) < toNum(b)
 }
 
-let registered = false;
+let registered = false
 
 /**
  * Idempotent helper registration. Handlebars module is a singleton — call this
  * once at runtime before compiling any template that uses these helpers.
  */
 export function registerHandlebarsHelpers(): void {
-  if (registered) return;
-  registered = true;
+  if (registered) return
+  registered = true
 
-  Handlebars.registerHelper('formatCurrency', formatCurrency);
-  Handlebars.registerHelper('formatNumber', formatNumber);
-  Handlebars.registerHelper('formatPercent', formatPercent);
-  Handlebars.registerHelper('formatDate', formatDate);
+  Handlebars.registerHelper('formatCurrency', formatCurrency)
+  Handlebars.registerHelper('formatNumber', formatNumber)
+  Handlebars.registerHelper('formatPercent', formatPercent)
+  Handlebars.registerHelper('formatDate', formatDate)
 
-  Handlebars.registerHelper('multiply', multiply);
-  Handlebars.registerHelper('add', add);
-  Handlebars.registerHelper('subtract', subtract);
-  Handlebars.registerHelper('divide', divide);
+  Handlebars.registerHelper('multiply', multiply)
+  Handlebars.registerHelper('add', add)
+  Handlebars.registerHelper('subtract', subtract)
+  Handlebars.registerHelper('divide', divide)
 
-  Handlebars.registerHelper('sumProperty', sumProperty);
-  Handlebars.registerHelper('avgProperty', avgProperty);
-  Handlebars.registerHelper('minProperty', minProperty);
-  Handlebars.registerHelper('maxProperty', maxProperty);
-  Handlebars.registerHelper('countItems', countItems);
-  Handlebars.registerHelper('lineNet', lineNet);
-  Handlebars.registerHelper('lineTotal', lineTotalWithTax);
-  Handlebars.registerHelper('sumLineNets', sumLineNets);
-  Handlebars.registerHelper('sumLineTaxes', sumLineTaxes);
-  Handlebars.registerHelper('sumGrandTotal', sumGrandTotal);
-  Handlebars.registerHelper('lineNetKeyed', lineNetKeyed);
-  Handlebars.registerHelper('sumLineNetsKeyed', sumLineNetsKeyed);
-  Handlebars.registerHelper('sumLineTaxesKeyed', sumLineTaxesKeyed);
-  Handlebars.registerHelper('sumLineGrossKeyed', sumLineGrossKeyed);
-  Handlebars.registerHelper('sumLineGeneric', sumLineGeneric);
-  Handlebars.registerHelper('sumLineExpr', sumLineExpr);
+  Handlebars.registerHelper('sumProperty', sumProperty)
+  Handlebars.registerHelper('avgProperty', avgProperty)
+  Handlebars.registerHelper('minProperty', minProperty)
+  Handlebars.registerHelper('maxProperty', maxProperty)
+  Handlebars.registerHelper('countItems', countItems)
+  Handlebars.registerHelper('lineNet', lineNet)
+  Handlebars.registerHelper('lineTotal', lineTotalWithTax)
+  Handlebars.registerHelper('sumLineNets', sumLineNets)
+  Handlebars.registerHelper('sumLineTaxes', sumLineTaxes)
+  Handlebars.registerHelper('sumGrandTotal', sumGrandTotal)
+  Handlebars.registerHelper('lineNetKeyed', lineNetKeyed)
+  Handlebars.registerHelper('sumLineNetsKeyed', sumLineNetsKeyed)
+  Handlebars.registerHelper('sumLineTaxesKeyed', sumLineTaxesKeyed)
+  Handlebars.registerHelper('sumLineGrossKeyed', sumLineGrossKeyed)
+  Handlebars.registerHelper('sumLineGeneric', sumLineGeneric)
+  Handlebars.registerHelper('sumLineExpr', sumLineExpr)
 
-  Handlebars.registerHelper('eq', eq);
-  Handlebars.registerHelper('gt', gt);
-  Handlebars.registerHelper('lt', lt);
+  Handlebars.registerHelper('eq', eq)
+  Handlebars.registerHelper('gt', gt)
+  Handlebars.registerHelper('lt', lt)
 }
 
 /**
@@ -617,10 +717,10 @@ export function registerHandlebarsHelpers(): void {
  * so callers can hot-swap implementations during HMR.
  */
 export function registerExtraHelpers(
-  helpers: Record<string, (...args: unknown[]) => unknown>
+  helpers: Record<string, (...args: unknown[]) => unknown>,
 ): void {
   for (const [name, fn] of Object.entries(helpers)) {
-    Handlebars.registerHelper(name, fn as never);
+    Handlebars.registerHelper(name, fn as never)
   }
 }
 
@@ -631,14 +731,54 @@ export function registerExtraHelpers(
  * instead. We keep them as documentation here.
  */
 export const TEMPLATE_HELPERS_DOCS = [
-  { name: 'formatCurrency', sample: '{{formatCurrency total currency}}', description: 'Locale-aware money formatting (₺/€/$)' },
-  { name: 'formatNumber', sample: '{{formatNumber value}}', description: 'Locale-aware number with thousands separators' },
-  { name: 'formatPercent', sample: '{{formatPercent value}}', description: 'Display value as percent (5 → %5)' },
-  { name: 'formatDate', sample: '{{formatDate date "DD.MM.YYYY"}}', description: 'Format ISO date with DD/MM/YYYY tokens' },
-  { name: 'multiply', sample: '{{multiply qty unitPrice}}', description: 'Multiply two values' },
-  { name: 'lineNet', sample: '{{lineNet qty unitPrice discountPct}}', description: 'Net line total after discount' },
-  { name: 'lineTotal', sample: '{{lineTotal qty unitPrice discountPct taxPct}}', description: 'Gross line total with tax' },
-  { name: 'sumLineNets', sample: '{{sumLineNets items}}', description: 'Sum of all line nets (subtotal)' },
-  { name: 'sumLineTaxes', sample: '{{sumLineTaxes items}}', description: 'Sum of all line taxes' },
-  { name: 'sumGrandTotal', sample: '{{sumGrandTotal items}}', description: 'Net + tax for all lines' }
-] as const;
+  {
+    name: 'formatCurrency',
+    sample: '{{formatCurrency total currency}}',
+    description: 'Locale-aware money formatting (₺/€/$)',
+  },
+  {
+    name: 'formatNumber',
+    sample: '{{formatNumber value}}',
+    description: 'Locale-aware number with thousands separators',
+  },
+  {
+    name: 'formatPercent',
+    sample: '{{formatPercent value}}',
+    description: 'Display value as percent (5 → %5)',
+  },
+  {
+    name: 'formatDate',
+    sample: '{{formatDate date "DD.MM.YYYY"}}',
+    description: 'Format ISO date with DD/MM/YYYY tokens',
+  },
+  {
+    name: 'multiply',
+    sample: '{{multiply qty unitPrice}}',
+    description: 'Multiply two values',
+  },
+  {
+    name: 'lineNet',
+    sample: '{{lineNet qty unitPrice discountPct}}',
+    description: 'Net line total after discount',
+  },
+  {
+    name: 'lineTotal',
+    sample: '{{lineTotal qty unitPrice discountPct taxPct}}',
+    description: 'Gross line total with tax',
+  },
+  {
+    name: 'sumLineNets',
+    sample: '{{sumLineNets items}}',
+    description: 'Sum of all line nets (subtotal)',
+  },
+  {
+    name: 'sumLineTaxes',
+    sample: '{{sumLineTaxes items}}',
+    description: 'Sum of all line taxes',
+  },
+  {
+    name: 'sumGrandTotal',
+    sample: '{{sumGrandTotal items}}',
+    description: 'Net + tax for all lines',
+  },
+] as const

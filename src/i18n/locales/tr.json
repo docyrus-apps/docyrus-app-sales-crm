@@ -1010,6 +1010,12 @@
     "draftSaved": "Taslak kaydedildi",
     "saveFailed": "Teklif kaydedilemedi",
     "pdfFailed": "PDF oluşturulamadı",
+    "mailSent": "E-posta gönderildi",
+    "mailFailed": "E-posta gönderilemedi",
+    "attachmentName": "Teklif.pdf",
+    "attachmentWillAttach": "PDF olarak eklenecek",
+    "attachmentPreparing": "Hazırlanıyor…",
+    "attachmentFailed": "Eklenemedi",
     "templateNames": {
       "standard": "Standart",
       "executive": "Kurumsal",

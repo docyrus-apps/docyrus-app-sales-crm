@@ -52,6 +52,8 @@ Their list grids use the same row action pattern as the CRM workspaces: an inlin
 
 The Quote (Teklif) feature is detail-centric: a quote opens in an Attio-style detail screen, line items are authored in a dedicated tab, and a separate build/compose screen produces the PDF. See [[architecture#Quote Builder & PDF]] for storage.
 
+A standalone **rebuild guide for external developers** (data sources, all REST endpoints, the template merge-data contract, the pricing→line-item→template pipeline, client-side PDF, the email-attachment flow, + a Handlebars-verified example template) lives at `docs/quote-system-guide.md`.
+
 Quotes reuse `sales_order` + `sales_order_item` (no separate entity). Data vs document is separated on purpose: line items are the single source of truth, edited ONLY in the Detail "Line Items" tab; the build screen renders pricing read-only and composes presentation.
 
 - **Teklifler list** — the single CRM nav item "Teklifler" (`quotes.title`) → the `sales_order` list (`src/routes/sales-orders.tsx`). A row's normal open goes to Detail, the three-dot menu adds "Open builder" → the build screen, and "Yeni Teklif" opens the wide create wizard modal in-place. The separate "Teklif Oluştur" nav item is retired.

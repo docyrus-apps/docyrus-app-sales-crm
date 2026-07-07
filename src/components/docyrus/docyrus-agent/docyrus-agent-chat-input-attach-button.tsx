@@ -1,23 +1,23 @@
-'use client';
+'use client'
 
 // @ts-nocheck
 /* eslint-disable */
-import { type ReactNode } from 'react';
+import { type ReactNode } from 'react'
 
 import {
   PromptInputButton,
-  usePromptInputAttachments
-} from '@/components/ai-elements/prompt-input';
-import { PlusIcon } from 'lucide-react';
+  usePromptInputAttachments,
+} from '@/components/ai-elements/prompt-input'
+import { PlusIcon } from 'lucide-react'
 
-import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation';
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 export interface DocyrusAgentChatInputAttachButtonProps {
-  className?: string;
+  className?: string
   /** Replace the default `+` icon. */
-  children?: ReactNode;
+  children?: ReactNode
   /** Override the default aria-label / tooltip text. */
-  label?: string;
+  label?: string
 }
 
 /**
@@ -27,19 +27,20 @@ export interface DocyrusAgentChatInputAttachButtonProps {
 export const DocyrusAgentChatInputAttachButton = ({
   className,
   children,
-  label
+  label,
 }: DocyrusAgentChatInputAttachButtonProps) => {
-  const { t } = useUiTranslation();
-  const attachments = usePromptInputAttachments();
+  const { t } = useUiTranslation()
+  const attachments = usePromptInputAttachments()
 
-  const resolvedLabel = label ?? t('ui.agent.attachFile', 'Attach file');
+  const resolvedLabel = label ?? t('ui.agent.attachFile', 'Attach file')
 
   return (
     <PromptInputButton
       aria-label={resolvedLabel}
       className={className}
-      onClick={() => attachments.openFileDialog()}>
+      onClick={() => attachments.openFileDialog()}
+    >
       {children ?? <PlusIcon className="size-4" />}
     </PromptInputButton>
-  );
-};
+  )
+}

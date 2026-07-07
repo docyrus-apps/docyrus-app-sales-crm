@@ -1,22 +1,22 @@
-'use client';
+'use client'
 
 // @ts-nocheck
 /* eslint-disable */
-import { type ComponentProps } from 'react';
+import { type ComponentProps } from 'react'
 
-import { PromptInputSubmit } from '@/components/ai-elements/prompt-input';
+import { PromptInputSubmit } from '@/components/ai-elements/prompt-input'
 
-import { useDocyrusAgent } from './docyrus-agent-context';
+import { useDocyrusAgent } from './docyrus-agent-context'
 
 export type DocyrusAgentChatInputSubmitProps = Omit<
   ComponentProps<typeof PromptInputSubmit>,
   'status' | 'onStop'
 > & {
   /** Override the streaming status from context. */
-  status?: ComponentProps<typeof PromptInputSubmit>['status'];
+  status?: ComponentProps<typeof PromptInputSubmit>['status']
   /** Override the stop callback from context. */
-  onStop?: ComponentProps<typeof PromptInputSubmit>['onStop'];
-};
+  onStop?: ComponentProps<typeof PromptInputSubmit>['onStop']
+}
 
 /**
  * Submit / stop button bound to the agent context. Reads `chatStatus` + `onStopGeneration`
@@ -27,12 +27,13 @@ export const DocyrusAgentChatInputSubmit = ({
   onStop,
   ...rest
 }: DocyrusAgentChatInputSubmitProps) => {
-  const { chatStatus, onStopGeneration } = useDocyrusAgent();
+  const { chatStatus, onStopGeneration } = useDocyrusAgent()
 
   return (
     <PromptInputSubmit
       {...rest}
       onStop={onStop ?? onStopGeneration}
-      status={status ?? chatStatus} />
-  );
-};
+      status={status ?? chatStatus}
+    />
+  )
+}

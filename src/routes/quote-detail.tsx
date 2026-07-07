@@ -29,6 +29,7 @@ import { PageContainer } from '@/components/layout/page-container'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { useSalesOrder, useUpdateSalesOrder } from '@/hooks/use-sales-orders'
+import { useQuotePdf } from '@/hooks/use-quote-pdf'
 import { useCompanies } from '@/hooks/use-companies'
 import { useEnumEntities } from '@/hooks/use-enums'
 import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
@@ -118,6 +119,7 @@ export function QuoteDetail() {
   const id = quoteId ?? ''
 
   const { data: order, isLoading } = useSalesOrder(quoteId)
+  const quotePdf = useQuotePdf(id)
   const updateOrder = useUpdateSalesOrder()
   const { data: companies = [] } = useCompanies({ columns: ['id', 'name'] })
   const { data: statusEntities = [] } = useEnumEntities('status', {
@@ -403,7 +405,10 @@ t
         open={mailOpen}
         onOpenChange={setMailOpen}
         to={(order?.organization as any)?.email ?? ''}
-        subject={quoteTitle} />
+        subject={quoteTitle}
+        recordId={id || undefined}
+        attachmentName={quotePdf.fileName}
+        getAttachment={quotePdf.ready ? quotePdf.generate : undefined} />
     </PageContainer>
   )
 }
