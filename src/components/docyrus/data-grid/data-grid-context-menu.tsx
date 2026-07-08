@@ -226,6 +226,7 @@ function ContextMenuImpl<TData>({
 
   return (
     <DropdownMenu
+      modal={false}
       open={contextMenu.open}
       onOpenChange={onContextMenuOpenChange}
     >

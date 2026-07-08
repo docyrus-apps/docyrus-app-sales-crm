@@ -57,7 +57,12 @@ export function getDataGridRowActionsColumn<TData>({
           >
             <Eye className="size-3.5" />
           </Button>
-          <DropdownMenu>
+          {/*
+            * modal={false}: menu actions can navigate; a modal menu leaves
+            * `pointer-events: none` stuck on <body> when navigation unmounts
+            * it mid-close, freezing all clicks app-wide.
+            */}
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button
                 type="button"

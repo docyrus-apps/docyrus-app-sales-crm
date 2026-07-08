@@ -206,7 +206,13 @@ export function KanbanCard<TData>({
           ) : null}
         </div>
         {menu.length > 0 ? (
-          <DropdownMenu>
+          /*
+           * modal={false}: menu items navigate (open/edit). A modal menu puts
+           * `pointer-events: none` on <body> while open, and when a menu item
+           * unmounts the board via route navigation, Radix never restores the
+           * style — the whole app becomes unclickable until a hard reload.
+           */
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"

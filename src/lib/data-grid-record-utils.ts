@@ -60,8 +60,13 @@ export async function saveGridChanges<TData extends { id?: string }>(
   const updates: Array<Promise<unknown>> = []
 
   for (const change of changes) {
-    const row = gridData[change.rowIndex]
-    const rowId = row?.id
+    // Prefer the authoritative rowId carried on the change itself. The
+    // positional `gridData[change.rowIndex]` lookup is fragile: once the grid
+    // is sorted/grouped/paginated (or refetched), `rowIndex` no longer lines
+    // up with `gridData`, so the lookup returns the wrong row or `undefined`
+    // and the update is silently skipped — the edit appears saved but never
+    // persists. Fall back to the positional lookup only when rowId is absent.
+    const rowId = change.rowId ?? gridData[change.rowIndex]?.id
 
     if (!rowId) continue
 

@@ -286,6 +286,31 @@ declare module '@tanstack/react-router' {
   }
 }
 
+/*
+ * Safety net for a Radix footgun: modal menus/dialogs set
+ * `pointer-events: none` on <body> while open. If a menu item triggers route
+ * navigation, the menu unmounts before Radix restores the style and the whole
+ * app becomes unclickable until a reload. The primary fixes pass
+ * `modal={false}` on menus that navigate; this guard catches any remaining
+ * case by clearing a stale lock after navigation settles, but only when no
+ * modal content is actually open.
+ */
+router.subscribe('onResolved', () => {
+  window.setTimeout(() => {
+    const { body } = document
+
+    if (body.style.pointerEvents !== 'none') return
+
+    const hasOpenModal = document.querySelector(
+      '[data-state="open"][role="dialog"], [data-state="open"][role="menu"], [data-state="open"][role="alertdialog"], [data-state="open"][data-slot*="content"]'
+    )
+
+    if (!hasOpenModal) {
+      body.style.pointerEvents = ''
+    }
+  }, 350)
+})
+
 const oauthScopes = (
   import.meta.env.VITE_OAUTH2_SCOPES || 'openid profile offline_access'
 )

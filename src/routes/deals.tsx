@@ -72,6 +72,23 @@ interface DealDialogState {
 const APP_SLUG = 'base_crm'
 const DATA_SOURCE_SLUG = 'deal'
 
+/*
+ * Pipeline display order for the stage kanban columns. Module-level so its
+ * identity is stable across renders (an inline array would re-trigger the
+ * kanban's column memo every render and loop).
+ */
+const DEAL_STAGE_ORDER = [
+  'New',
+  'Budget',
+  'Follow - Up',
+  'Demo',
+  'Proposal',
+  'Negotiation',
+  'Won',
+  'Lost',
+  'Cancelled'
+]
+
 const DEAL_GRID_COLUMN_OVERRIDES: Record<
   string,
   Partial<ColumnDef<BaseCrmDealsEntity>>
@@ -329,6 +346,11 @@ t
       list: params => collection.list(params)
     },
     groupByFieldSlug: 'stage',
+    /*
+     * Pipeline display order for the stage columns. The `deal.stage` options
+     * aren't reliably ordered in the data-source metadata, so name them here.
+     */
+    enumGroupOrder: DEAL_STAGE_ORDER,
     avatarColumn: 'stage',
     titleColumn: 'autonumber_id',
     descriptionColumn: 'name',
@@ -378,22 +400,18 @@ t
       )
     },
     onCardOpen: onView,
-    onCardEdit: onOpenEdit,
+    /*
+     * No Edit action on kanban cards: "Open page" already reaches the detail
+     * (which edits inline), and opening the edit dialog from inside the modal
+     * card menu left `pointer-events: none` stuck on <body> — freezing every
+     * click in the app until reload.
+     */
     onCardClick: onView,
     cardMenuItems: (_row, defaults) => {
       const openItem = defaults.find(item => item.key === 'open')
-      const editItem = defaults.find(item => item.key === 'edit')
       const deleteItem = defaults.find(item => item.key === 'delete')
 
       return [
-        ...(editItem
-          ? [
-              {
-                ...editItem,
-                icon: <Pencil className="size-4" />
-              }
-            ]
-          : []),
         ...(openItem
           ? [
               {

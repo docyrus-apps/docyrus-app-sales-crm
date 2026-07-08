@@ -174,6 +174,13 @@ export interface UseDocyrusKanbanOptions<
    * with at least one item. Default `true` (show all).
    */
   showAllColumns?: boolean
+  /**
+   * Optional display order for enum columns, given as a list of option
+   * **names** (case-insensitive). Columns whose name isn't listed sort last.
+   * Useful for pipeline-style ordering when the data source metadata doesn't
+   * carry a reliable `sort_order` for the group-by field's options.
+   */
+  enumGroupOrder?: Array<string>
 
   /* ----------------------------- Card contract ------------------------- */
 
@@ -310,6 +317,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
     dateGroupBy: dateGroupByProp = 'day',
     userGroupBy: userGroupByProp = 'user',
     showAllColumns: showAllColumnsProp = true,
+    enumGroupOrder,
     avatarColumn,
     titleColumn,
     descriptionColumn,
@@ -563,11 +571,39 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
 
   /* --------------------------- column derivation ------------------------ */
 
+  /*
+   * Stabilize the caller-provided enum order by *content*. Callers commonly
+   * pass an inline array literal, which is a fresh reference every render;
+   * using it directly as a memo dependency would recompute the columns (and,
+   * downstream, `kanbanValue` → the `setLiveValue` effect) on every render and
+   * spin an infinite loop. Keying on the joined string makes it change only
+   * when the actual order changes.
+   */
+  const enumGroupOrderKey = (enumGroupOrder ?? []).join(' ')
+  const stableEnumGroupOrder = useMemo(
+    () => enumGroupOrder,
+    [enumGroupOrderKey],
+  )
+
   const allColumnsMeta = useMemo<Array<DocyrusKanbanColumnMeta>>(() => {
     if (!groupByField) return []
 
     if (groupByKind === 'enum') {
-      return extractEnumColumns(groupByField)
+      /*
+       * Columns come from the field's own option definitions when present,
+       * merged with the option values actually seen in the data. The data
+       * pass is essential: the data-source metadata endpoint does not inline
+       * options for some field types (notably `field-status`), and its
+       * cached option ids can drift from what records actually store — in
+       * either case the field pass alone yields zero (or non-matching)
+       * columns and every row falls into "Uncategorized". Deriving from the
+       * expanded values guarantees the columns key on the ids the rows use.
+       */
+      return mergeEnumColumns(
+        extractEnumColumns(groupByField),
+        collectEnumColumnsFromItems(items, groupByField.slug),
+        stableEnumGroupOrder,
+      )
     }
 
     if (groupByKind === 'user') {
@@ -579,7 +615,7 @@ export function useDocyrusKanban<TData extends Record<string, unknown>>(
     }
 
     return []
-  }, [groupByField, groupByKind, items, userGroupBy, dateGroupBy])
+  }, [groupByField, groupByKind, items, userGroupBy, dateGroupBy, stableEnumGroupOrder])
 
   const columnsItems = useMemo<Record<string, Array<TData>>>(() => {
     const map: Record<string, Array<TData>> = {}
@@ -1420,6 +1456,104 @@ function extractEnumColumns(
   })
 
   return result
+}
+
+/**
+ * Derive enum columns from the option values actually present in the rows.
+ * Reads the expanded enum object (`{ id, name, color, icon }`) so the column
+ * ids match exactly the ids the rows store — the reliable source of truth
+ * when field metadata is missing or stale.
+ */
+function collectEnumColumnsFromItems<TData>(
+  items: Array<TData>,
+  slug: string,
+): Array<DocyrusKanbanColumnMeta> {
+  const map = new Map<string, DocyrusKanbanColumnMeta>()
+
+  for (const item of items) {
+    const value = (item as Record<string, unknown>)[slug]
+
+    if (!value) continue
+
+    let id: string | null = null
+    let label: string | null = null
+    let color: string | null = null
+    let icon: string | null = null
+
+    if (typeof value === 'string') {
+      id = value
+      label = value
+    } else if (typeof value === 'object') {
+      const obj = value as Record<string, unknown>
+
+      id =
+        typeof obj.id === 'string'
+          ? obj.id
+          : typeof obj.slug === 'string'
+            ? obj.slug
+            : typeof obj.value === 'string'
+              ? obj.value
+              : null
+      label =
+        typeof obj.name === 'string'
+          ? obj.name
+          : typeof obj.label === 'string'
+            ? obj.label
+            : id
+      color = typeof obj.color === 'string' ? obj.color : null
+      icon = typeof obj.icon === 'string' ? obj.icon : null
+    }
+
+    if (!id || map.has(id)) continue
+
+    map.set(id, { id, label: label ?? id, color, icon, isFinal: false, count: 0 })
+  }
+
+  return Array.from(map.values())
+}
+
+/**
+ * Merge field-defined enum columns with data-derived ones (dedup by id,
+ * field definition wins but is enriched with color/icon/label from data when
+ * missing), then optionally order by a caller-supplied list of option names.
+ */
+function mergeEnumColumns(
+  fromField: Array<DocyrusKanbanColumnMeta>,
+  fromData: Array<DocyrusKanbanColumnMeta>,
+  order?: Array<string>,
+): Array<DocyrusKanbanColumnMeta> {
+  const byId = new Map<string, DocyrusKanbanColumnMeta>()
+
+  for (const col of fromField) byId.set(col.id, col)
+
+  for (const col of fromData) {
+    const existing = byId.get(col.id)
+
+    if (existing) {
+      byId.set(col.id, {
+        ...existing,
+        color: existing.color ?? col.color,
+        icon: existing.icon ?? col.icon,
+        label: existing.label || col.label,
+      })
+    } else {
+      byId.set(col.id, col)
+    }
+  }
+
+  const merged = Array.from(byId.values())
+
+  if (order && order.length > 0) {
+    const rank = (name: string) => {
+      const i = order.findIndex((o) => o.toLowerCase() === name.toLowerCase())
+
+      return i === -1 ? Number.POSITIVE_INFINITY : i
+    }
+
+    merged.sort((a, b) => rank(a.label) - rank(b.label))
+  }
+
+  return merged
 }
 
 function collectUserColumns<TData>(

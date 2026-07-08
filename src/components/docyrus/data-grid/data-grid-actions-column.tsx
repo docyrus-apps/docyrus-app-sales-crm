@@ -110,7 +110,13 @@ export function DataGridRowActions<TData>({
         <DocyrusIcon icon="huge square-arrow-expand-01" size="sm" />
       </Button>
       {visibleActions.length > 0 ? (
-        <DropdownMenu>
+        /*
+         * modal={false}: actions here navigate (view/detail). A modal menu
+         * sets `pointer-events: none` on <body>; navigating from a menu item
+         * unmounts the menu before Radix restores the style and the whole
+         * app becomes unclickable until reload.
+         */
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <Button
               type="button"
