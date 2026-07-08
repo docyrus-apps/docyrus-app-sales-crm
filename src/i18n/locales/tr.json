@@ -243,6 +243,7 @@
     "errorLoading": "Fırsatlar yüklenirken hata oluştu",
     "emptyTitle": "Henüz fırsat yok",
     "emptyDescription": "Başlamak için ilk fırsatınızı oluşturun",
+    "dealName": "Fırsat Adı",
     "stage": "Aşama",
     "dealId": "Fırsat No",
     "dealDetails": "Fırsat Detayları",

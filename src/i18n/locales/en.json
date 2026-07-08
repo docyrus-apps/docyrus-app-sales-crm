@@ -243,6 +243,7 @@
     "errorLoading": "Error loading deals",
     "emptyTitle": "No deals yet",
     "emptyDescription": "Create your first deal to get started",
+    "dealName": "Deal Name",
     "stage": "Stage",
     "dealId": "Deal ID",
     "dealDetails": "Deal Details",

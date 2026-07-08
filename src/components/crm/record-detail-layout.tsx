@@ -60,6 +60,7 @@ import {
   EditableRecordDetailField
 } from '@/components/docyrus/editable-record-detail'
 import { DialerPanel, useDialer } from '@/components/dialer/dialer-widget'
+import { RecordEditForm } from '@/components/crm/record-edit-form'
 
 const INITIAL_VISIBLE_FIELDS = 4
 
@@ -464,38 +465,26 @@ function RecordAttributePanel({
 
       {!readOnly && (
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="flex max-h-[85vh] max-w-lg flex-col">
             <DialogHeader>
               <DialogTitle>
                 {editTitle ?? t('recordDetail.editDetails')}
               </DialogTitle>
             </DialogHeader>
-            <div className="max-h-[70vh] overflow-auto pr-1">
-              <EditableRecordDetail
+            {/* A plain always-editable form — not the inline click-to-edit
+                cells, whose floating portal editor detaches on scroll inside a
+                dialog. Remounted per open (key) so it seeds fresh values. */}
+            {editOpen && (
+              <RecordEditForm
+                key={recordVersion}
                 fields={detailFields}
+                fieldSlugs={fieldSlugs}
                 record={record}
-                readOnly={false}
-                trackChanges
-                actionBarSideOffset={8}
-                onSave={handleModalSave}>
-                <div className="space-y-0.5">
-                  {fieldSlugs.map(slug => fieldRenderers?.[slug] ? (
-                      <div key={slug} className="space-y-1 py-1">
-                        <div className="text-[13px] font-medium text-muted-foreground">
-                          {fieldBySlug.get(slug)?.field.name}
-                        </div>
-                        {fieldRenderers[slug]({
-                          record,
-                          save: handleFieldSave,
-                          readOnly: readOnly ?? false
-                        })}
-                      </div>
-                    ) : (
-                      <EditableRecordDetailField key={slug} slug={slug} />
-                    ))}
-                </div>
-              </EditableRecordDetail>
-            </div>
+                fieldRenderers={fieldRenderers}
+                onSave={handleModalSave}
+                onFieldSave={handleFieldSave}
+                onCancel={() => setEditOpen(false)} />
+            )}
           </DialogContent>
         </Dialog>
       )}

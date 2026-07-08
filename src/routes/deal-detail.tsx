@@ -67,6 +67,7 @@ import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
 import { mergeCurrentEnumOption } from '@/lib/enum-options'
 
 const FIELD_SLUGS = [
+  'name',
   'stage',
   'deal_value',
   'expected_revenue',
@@ -343,6 +344,13 @@ export function DealDetail() {
   const detailFields = useMemo<Array<RecordDetailField>>(
     () => [
       {
+        field: makeField(
+          'name',
+          t('deals.dealName', { defaultValue: 'Deal Name' }),
+          'field-text'
+        )
+      },
+      {
         field: makeField('stage', t('deals.stage'), 'field-status'),
         enumOptions: mergeCurrentEnumOption(
           mapEnumEntitiesToOptions(stageEntities),
@@ -501,6 +509,7 @@ export function DealDetail() {
     if (!deal) return {}
 
     return {
+      name: deal.name ?? '',
       stage: getFieldValue(deal.stage),
       deal_value: deal.deal_value ?? null,
       expected_revenue: deal.expected_revenue ?? null,
