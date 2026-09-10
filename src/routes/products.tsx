@@ -29,6 +29,7 @@ import { useUpdateProduct } from '@/hooks/use-products'
 import { useDocyrusDataGrid } from '@/hooks/docyrus/use-docyrus-data-grid'
 import { useSeedDefaultViews } from '@/hooks/use-seed-default-views'
 import { useDocyrusDataImportWizard } from '@/hooks/use-docyrus-data-import-wizard'
+import { useImportFileUploader } from '@/hooks/use-import-file-uploader'
 import { saveGridChanges } from '@/lib/data-grid-record-utils'
 import {
   createSystemViews,
@@ -178,20 +179,24 @@ function ProductsPageInner({
   )
 
   const openWizardRef = useRef<() => void>(() => {})
+  const uploadImportFile = useImportFileUploader()
 
+  // No uploader means the wizard cannot complete a run, so no entry point.
   const importToolbarButton = useMemo(
-    () => (
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="gap-1.5"
-        onClick={() => openWizardRef.current()}>
-        <Upload className="size-4" />
-        {t('common.import', 'Import')}
-      </Button>
-    ),
-    [t]
+    () => uploadImportFile
+      ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => openWizardRef.current()}>
+            <Upload className="size-4" />
+            {t('common.import', 'Import')}
+          </Button>
+        )
+      : null,
+    [t, uploadImportFile]
   )
 
   const {
@@ -234,6 +239,7 @@ function ProductsPageInner({
     appSlug: APP_SLUG,
     dataSourceSlug: DATA_SOURCE_SLUG,
     fields: dataSource?.fields,
+    uploadFile: uploadImportFile,
     onImported: reload
   })
 
