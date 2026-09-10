@@ -554,10 +554,27 @@ function DealsPageInner({
                   <p className="mt-2 text-sm text-muted-foreground">
                     {t('deals.emptyDescription')}
                   </p>
-                  <MotionButton className="mt-4" onClick={onOpenCreate}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    {t('deals.createDeal')}
-                  </MotionButton>
+                  {/*
+                    Import belongs here too: with no records the grid — and the
+                    toolbar that carries the Import button — never renders,
+                    which is exactly when a bulk import is most useful.
+                  */}
+                  <div className="mt-4 flex items-center gap-2">
+                    <MotionButton onClick={onOpenCreate}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      {t('deals.createDeal')}
+                    </MotionButton>
+                    {uploadImportFile && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => openWizardRef.current()}
+                      >
+                        <Upload className="mr-2 h-4 w-4" />
+                        {t('common.import', 'Import')}
+                      </Button>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ) : (

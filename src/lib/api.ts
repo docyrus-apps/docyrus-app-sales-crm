@@ -3,6 +3,27 @@ import type { RestApiClient } from '@docyrus/api-client'
 // Module-level API client instance, set by the React app once DocyrusAuthProvider is ready
 let apiClient: RestApiClient | null = null
 
+/*
+ * Keys that mark a body as a result object rather than a `{ success, data }`
+ * envelope.
+ *
+ * The API only wraps a service result when it has no `data` key of its own;
+ * otherwise it merges the envelope flat (`{ success, ...result }`). The import
+ * endpoint hits that second path, so its rows arrive under `data` with
+ * `totalSuccessfulRecords`, `duplicates` and `error` as siblings. Collapsing
+ * such a body to `data` keeps the rows and throws the outcome away — that is
+ * what made the import wizard report 0 records for an import that had just
+ * created them.
+ *
+ * Deliberately narrow: only bodies carrying one of these keys are left intact,
+ * so every other response — list payloads included — unwraps exactly as before.
+ */
+const RESULT_MARKER_KEYS = [
+  'totalSuccessfulRecords',
+  'totalWarningRecords',
+  'duplicates',
+]
+
 export function setApiClient(client: RestApiClient) {
   apiClient = client
 
@@ -52,7 +73,8 @@ export function setApiClient(client: RestApiClient) {
         response.data &&
         typeof response.data === 'object' &&
         !Array.isArray(response.data) &&
-        'data' in response.data
+        'data' in response.data &&
+        !RESULT_MARKER_KEYS.some((key) => key in (response.data as object))
       ) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore

@@ -611,15 +611,30 @@ function PhoneOptions({
       <Label className="text-xs text-muted-foreground">
         {t('ui.dataImportWizard.mapping.phoneFormat', 'Default country code')}
       </Label>
-      <Input
-        value={format}
-        onChange={(e) =>
-          onPatch({
-            fieldOptions: { ...entry.fieldOptions, format: e.target.value },
-          })
-        }
-        placeholder="+90"
-      />
+      <div className="grid gap-1">
+        <Input
+          value={format}
+          onChange={(e) =>
+            onPatch({
+              fieldOptions: { ...entry.fieldOptions, format: e.target.value },
+            })
+          }
+          placeholder="+90"
+        />
+        {/*
+          The importer reads a country code off the front of each value before
+          this default is considered, and a local number like `0532 111 22 33`
+          is read as country `+53` with the rest kept — the number loses its
+          first digits. Saying so here is the only place it can be caught, since
+          the file is parsed server-side after this step.
+        */}
+        <p className="text-xs text-muted-foreground">
+          {t(
+            'ui.dataImportWizard.mapping.phoneFormatHint',
+            'Write numbers with their country code (+90 532 111 22 33). A leading 0 is read as part of the country code and digits get dropped.',
+          )}
+        </p>
+      </div>
 
       <Label className="text-xs text-muted-foreground">
         {t(

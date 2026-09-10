@@ -319,6 +319,22 @@ function SalesOrdersPageInner({
               <p className="mt-2 text-sm text-muted-foreground">
                 {t('salesOrders.emptyDescription')}
               </p>
+              {/*
+                Import belongs here too: with no records the grid — and the
+                toolbar that carries the Import button — never renders, which
+                is exactly when a bulk import is most useful.
+              */}
+              {uploadImportFile && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-4"
+                  onClick={() => openWizardRef.current()}
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  {t('common.import', 'Import')}
+                </Button>
+              )}
             </CardContent>
           </Card>
         )}

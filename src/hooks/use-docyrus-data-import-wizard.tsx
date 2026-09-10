@@ -218,9 +218,29 @@ function defaultEndpoint(
   return endpoints?.[key] ?? `${base}${fallback}`
 }
 
+/*
+ * Strip the API's `{ success, data }` envelope when it is still there —
+ * `RestApiClient` often has already done it.
+ *
+ * A `data` key alone does not make something an envelope, and this is not
+ * hypothetical: the analyse payload keeps its rows under `data` next to
+ * `columns` and `fileName`, and the import result carries `data`, `success`,
+ * `columns` and `totalSuccessfulRecords` side by side. Unwrapping either one
+ * returns the bare rows array and drops everything else, which is why the
+ * wizard used to report a file with no columns and an import with no records.
+ *
+ * So an envelope is recognised by what it does NOT carry: nothing beyond
+ * `data`, `success` and `message`.
+ */
+const ENVELOPE_KEYS = new Set(['data', 'success', 'message'])
+
 function unwrap<T>(response: unknown): T {
   if (response && typeof response === 'object' && 'data' in response) {
-    return (response as { data: T }).data
+    const keys = Object.keys(response)
+
+    if (keys.every((key) => ENVELOPE_KEYS.has(key))) {
+      return (response as { data: T }).data
+    }
   }
 
   return response as T
@@ -376,9 +396,28 @@ export function useDocyrusDataImportWizard(
       if (!isControlled) {
         dispatch({ type: next ? 'open' : 'close' })
       }
+
+      /*
+       * Closing ends the run. Without this the next open resumes an abandoned
+       * one — same file, same mapping, same result screen — which reads as the
+       * wizard being stuck rather than as state that was kept on purpose.
+       */
+      if (!next) {
+        dispatch({ type: 'reset' })
+        uploadMutation.reset()
+        analyseMutation.reset()
+        importMutation.reset()
+      }
+
       onOpenChange?.(next)
     },
-    [isControlled, onOpenChange],
+    [
+      isControlled,
+      onOpenChange,
+      uploadMutation,
+      analyseMutation,
+      importMutation,
+    ],
   )
 
   const openWizard = useCallback(() => setOpen(true), [setOpen])
