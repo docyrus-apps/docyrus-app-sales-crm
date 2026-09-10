@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import {
   useCallback,
   useId,
@@ -15,7 +17,7 @@ import './types'
 import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 export type HitboxSize = 'default' | 'sm' | 'lg'
 

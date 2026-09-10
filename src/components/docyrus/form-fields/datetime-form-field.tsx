@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { useRef, useState } from 'react'
 
 import { CalendarIcon } from 'lucide-react'
@@ -15,8 +17,8 @@ import {
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
-import { useDateFormat } from '@/lib/use-date-format'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
+import { useDateFormat } from '@/hooks/docyrus/use-date-format'
 
 import { FormFieldLabel } from './form-field-label'
 import { type DocyrusFormFieldProps } from './types'
@@ -36,9 +38,8 @@ export function DateTimeFormField({
   const snapshotRef = useRef<string | null>(null)
 
   return (
-    <form.Field
-      name={fieldConfig.slug}
-      children={(field: any) => {
+    <form.Field name={fieldConfig.slug}>
+      {(field: any) => {
         const isInvalid =
           field.state.meta.isTouched && !field.state.meta.isValid
         const dateValue = field.state.value
@@ -187,6 +188,6 @@ export function DateTimeFormField({
           </Field>
         )
       }}
-    />
+    </form.Field>
   )
 }

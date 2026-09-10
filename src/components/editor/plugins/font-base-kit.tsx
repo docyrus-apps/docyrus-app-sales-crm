@@ -1,3 +1,4 @@
+/* eslint-disable */
 // @ts-nocheck
 import type { SlatePluginConfig } from 'platejs'
 

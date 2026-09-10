@@ -1,13 +1,13 @@
-'use client';
+'use client'
 
 // @ts-nocheck
 /* eslint-disable */
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'
 
-import { type DocyrusAgentProps } from './types';
+import { type DocyrusAgentProps } from './types'
 
-import { DocyrusAgentProvider } from './docyrus-agent-context';
-import { DocyrusAgentChat } from './docyrus-agent-chat';
+import { DocyrusAgentProvider } from './docyrus-agent-context'
+import { DocyrusAgentChat } from './docyrus-agent-chat'
 
 export const DocyrusAgent = ({
   agent,
@@ -31,7 +31,7 @@ export const DocyrusAgent = ({
   initialFeatureFlags,
   featureFlags,
   onFeatureFlagsChange,
-  className
+  className,
 }: DocyrusAgentProps) => (
   <DocyrusAgentProvider
     acceptFileTypes={acceptFileTypes}
@@ -51,13 +51,15 @@ export const DocyrusAgent = ({
     onStopGeneration={onStopGeneration}
     showMessageActions={showMessageActions}
     sources={sources}
-    suggestions={suggestions}>
+    suggestions={suggestions}
+  >
     <div className={cn('flex h-full flex-col bg-background', className)}>
       <DocyrusAgentChat
         chatInput={chatInput}
         chatTrailing={chatTrailing}
         headerLeading={headerLeading}
-        headerTrailing={headerTrailing} />
+        headerTrailing={headerTrailing}
+      />
     </div>
   </DocyrusAgentProvider>
-);
+)

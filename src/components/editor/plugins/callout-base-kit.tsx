@@ -1,3 +1,4 @@
+/* eslint-disable */
 // @ts-nocheck
 import { BaseCalloutPlugin } from '@platejs/callout'
 

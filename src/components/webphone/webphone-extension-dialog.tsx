@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react'
+
+import type { WebphoneAgentProfile } from '@/lib/webphone/types'
+
 import { Eye, EyeOff } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+
 import { useWebphone } from './webphone-context'
+
 import {
   useCreateMyAgentTelephonyProfile,
   useMyAgentTelephonyProfile,
-  useUpdateMyAgentTelephonyProfile,
+  useUpdateMyAgentTelephonyProfile
 } from '@/hooks/use-webphone-profile'
 import { useMyInfo } from '@/hooks/use-users'
-import type { WebphoneAgentProfile } from '@/lib/webphone/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,12 +21,12 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog'
 
 interface WebphoneExtensionDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 /**
@@ -36,7 +40,7 @@ interface WebphoneExtensionDialogProps {
  */
 export function WebphoneExtensionDialog({
   open,
-  onOpenChange,
+  onOpenChange
 }: WebphoneExtensionDialogProps) {
   const { t } = useTranslation()
   const { data: profile, isLoading } = useMyAgentTelephonyProfile()
@@ -55,9 +59,11 @@ export function WebphoneExtensionDialog({
   const hasSavedPassword = !!profile?.sip_password
   const isSaving = update.isPending || create.isPending
 
-  // Prefill all fields from the user's own profile when the dialog opens,
-  // including the stored SIP password (masked behind the reveal toggle).
-  // Re-mask on every open so the secret is never shown until the user asks.
+  /*
+   * Prefill all fields from the user's own profile when the dialog opens,
+   * including the stored SIP password (masked behind the reveal toggle).
+   * Re-mask on every open so the secret is never shown until the user asks.
+   */
   useEffect(() => {
     if (!open) return
     setExtension(profile?.extension ?? '')
@@ -81,8 +87,9 @@ export function WebphoneExtensionDialog({
         extension: extension.trim(),
         pbx_user_id: username.trim() || undefined,
         sip_password: password.trim() || undefined,
-        display_name: displayName.trim() || undefined,
+        display_name: displayName.trim() || undefined
       })
+
       requestConnect({
         id: created.id ?? '',
         enabled: true,
@@ -90,25 +97,27 @@ export function WebphoneExtensionDialog({
         extension: extension.trim(),
         pbx_user_id: username.trim(),
         sip_password: password.trim(),
-        display_name: displayName.trim(),
+        display_name: displayName.trim()
       } satisfies WebphoneAgentProfile)
       onOpenChange(false)
+
       return
     }
 
     const nextProfile = {
-      ...profile!,
+      ...profile,
       extension: extension.trim(),
       pbx_user_id: username.trim(),
       display_name: displayName.trim(),
-      sip_password: password.trim() || profile!.sip_password,
+      sip_password: password.trim() || profile.sip_password
     }
+
     await update.mutateAsync({
-      profileId: profile!.id,
+      profileId: profile.id,
       extension: nextProfile.extension,
       pbx_user_id: nextProfile.pbx_user_id,
       display_name: nextProfile.display_name,
-      sip_password: password.trim() || undefined,
+      sip_password: password.trim() || undefined
     })
     requestConnect(nextProfile)
     onOpenChange(false)
@@ -145,8 +154,7 @@ export function WebphoneExtensionDialog({
                   id="ext-extension"
                   value={extension}
                   inputMode="tel"
-                  onChange={(event) => setExtension(event.target.value)}
-                />
+                  onChange={event => setExtension(event.target.value)} />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="ext-username">
@@ -156,8 +164,7 @@ export function WebphoneExtensionDialog({
                   id="ext-username"
                   value={username}
                   placeholder={extension || undefined}
-                  onChange={(event) => setUsername(event.target.value)}
-                />
+                  onChange={event => setUsername(event.target.value)} />
                 <p className="text-xs text-muted-foreground">
                   {t('webphone.extension.usernameHint')}
                 </p>
@@ -175,20 +182,18 @@ export function WebphoneExtensionDialog({
                   autoComplete="off"
                   className="pr-9"
                   value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                />
+                  onChange={event => setPassword(event.target.value)} />
                 <button
                   type="button"
-                  onClick={() => setShowPassword((current) => !current)}
+                  onClick={() => setShowPassword(current => !current)}
                   className="absolute inset-y-0 right-0 flex items-center px-2.5 text-muted-foreground transition-colors hover:text-foreground"
                   aria-label={t(
                     showPassword
                       ? 'webphone.extension.hidePassword'
-                      : 'webphone.extension.showPassword',
+                      : 'webphone.extension.showPassword'
                   )}
                   aria-pressed={showPassword}
-                  tabIndex={-1}
-                >
+                  tabIndex={-1}>
                   {showPassword ? (
                     <EyeOff className="size-4" />
                   ) : (
@@ -210,16 +215,14 @@ export function WebphoneExtensionDialog({
               <Input
                 id="ext-display"
                 value={displayName}
-                onChange={(event) => setDisplayName(event.target.value)}
-              />
+                onChange={event => setDisplayName(event.target.value)} />
             </div>
 
             <div className="flex justify-end gap-2">
               <Button
                 variant="ghost"
                 onClick={() => onOpenChange(false)}
-                disabled={isSaving}
-              >
+                disabled={isSaving}>
                 {t('common.cancel')}
               </Button>
               <Button onClick={onSave} disabled={!canSave || isSaving}>

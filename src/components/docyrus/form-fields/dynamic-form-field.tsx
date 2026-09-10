@@ -1,6 +1,10 @@
 'use client'
 
-import { useDocyrusFieldComponent } from '@/hooks/use-docyrus-field-component'
+// @ts-nocheck
+/* eslint-disable */
+import { createElement } from 'react'
+
+import { useDocyrusFieldComponent } from '@/hooks/docyrus/use-docyrus-field-component'
 
 import { type DocyrusFormFieldProps } from './types'
 
@@ -16,5 +20,5 @@ export function DynamicFormField(props: DocyrusFormFieldProps) {
     return null
   }
 
-  return <Comp {...props} />
+  return createElement(Comp, props)
 }

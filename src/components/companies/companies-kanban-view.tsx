@@ -1,24 +1,28 @@
 import { useMemo, useState } from 'react'
+
+import type { UniqueIdentifier } from '@dnd-kit/core'
+
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Building2 } from 'lucide-react'
-import type { UniqueIdentifier } from '@dnd-kit/core'
+
 import {
   Kanban,
   KanbanBoard,
   KanbanColumn,
   KanbanItem,
-  KanbanOverlay,
+  KanbanOverlay
 } from '@/components/ui/kanban'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
 interface CompaniesKanbanViewProps {
-  companies: Array<any>
+  companies: Array<any>;
 }
 
 function getStatusName(company: any, noStatusLabel: string): string {
   if (!company.status) return noStatusLabel
+
   return typeof company.status === 'object'
     ? company.status.name || noStatusLabel
     : company.status
@@ -30,11 +34,14 @@ export function CompaniesKanbanView({ companies }: CompaniesKanbanViewProps) {
 
   const initialColumns = useMemo(() => {
     const grouped: Record<string, Array<any>> = {}
+
     for (const company of companies) {
       const status = getStatusName(company, noStatusLabel)
+
       grouped[status] ??= []
       grouped[status].push(company)
     }
+
     return grouped
   }, [companies, noStatusLabel])
 
@@ -51,15 +58,13 @@ export function CompaniesKanbanView({ companies }: CompaniesKanbanViewProps) {
       value={columns}
       onValueChange={setColumns}
       getItemValue={(item: any) => item.id}
-      flatCursor
-    >
+      flatCursor>
       <KanbanBoard className="pb-4">
         {Object.entries(columns).map(([columnId, items]) => (
           <KanbanColumn
             key={columnId}
             value={columnId}
-            className="w-80 shrink-0"
-          >
+            className="w-80 shrink-0">
             <div className="flex items-center justify-between px-1 pb-2">
               <h3 className="text-sm font-semibold">{columnId}</h3>
               <Badge variant="secondary" className="text-xs">
@@ -71,8 +76,7 @@ export function CompaniesKanbanView({ companies }: CompaniesKanbanViewProps) {
                 <Link
                   to="/companies/$companyId"
                   params={{ companyId: company.id }}
-                  search={{ tab: 'overview' }}
-                >
+                  search={{ tab: 'overview' }}>
                   <Card className="cursor-pointer hover:shadow-md transition-shadow">
                     <CardHeader className="pb-2">
                       <div className="flex items-start gap-3">

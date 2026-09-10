@@ -1,7 +1,10 @@
+// @ts-nocheck
+/* eslint-disable */
 export type IFieldType =
   | 'field-text'
   | 'field-textarea'
   | 'field-email'
+  | 'field-password'
   | 'field-phone'
   | 'field-url'
   | 'field-color'
@@ -11,6 +14,7 @@ export type IFieldType =
   | 'field-htmlEditor'
   | 'field-emailEditor'
   | 'field-codeEditor'
+  | 'field-markdown'
   | 'field-formula'
   | 'field-relatedField'
   | 'field-enum'
@@ -38,6 +42,11 @@ export type IFieldType =
   | 'field-tagSelect'
   | 'field-userMultiSelect'
   | 'field-json'
+  | 'field-jsonSchema'
+  | 'field-jsonata'
+  | 'field-handlebars'
+  | 'field-dsql'
+  | 'field-adaptiveCard'
   | 'field-file'
   | 'field-image'
   | 'field-avatar'

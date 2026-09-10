@@ -1,10 +1,13 @@
+import { useTranslation } from 'react-i18next'
+import type { ICollectionListParams } from '@/collections/types'
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import type { ICollectionListParams } from '@/collections/types'
+
 import { useBaseCrmLeadsCollection } from '@/collections'
 
 interface UseLeadsOptions {
-  enabled?: boolean
+  enabled?: boolean;
 }
 
 export const LEAD_LIST_COLUMNS = [
@@ -31,7 +34,7 @@ export const LEAD_LIST_COLUMNS = [
   'converted_on',
   'conversion_state',
   'conversion_mode',
-  'created_on',
+  'created_on'
 ]
 
 export const LEAD_DETAIL_COLUMNS = [
@@ -68,7 +71,7 @@ export const LEAD_DETAIL_COLUMNS = [
   'conversion_state',
   'conversion_mode',
   'conversion_error_message',
-  'created_on',
+  'created_on'
 ]
 
 /**
@@ -76,7 +79,7 @@ export const LEAD_DETAIL_COLUMNS = [
  */
 export function useLeads(
   params?: ICollectionListParams,
-  options: UseLeadsOptions = {},
+  options: UseLeadsOptions = {}
 ) {
   const leadsCollection = useBaseCrmLeadsCollection()
 
@@ -86,11 +89,12 @@ export function useLeads(
       const response = await leadsCollection.list({
         ...params,
         columns: params?.columns || LEAD_LIST_COLUMNS,
-        orderBy: params?.orderBy || 'created_on DESC',
+        orderBy: params?.orderBy || 'created_on DESC'
       })
+
       return response
     },
-    enabled: options.enabled,
+    enabled: options.enabled
   })
 }
 
@@ -107,11 +111,12 @@ export function useLead(leadId: string | undefined) {
         throw new Error('Lead ID is required')
       }
       const response = await leadsCollection.get(leadId, {
-        columns: LEAD_DETAIL_COLUMNS,
+        columns: LEAD_DETAIL_COLUMNS
       })
+
       return response
     },
-    enabled: !!leadId,
+    enabled: !!leadId
   })
 }
 
@@ -119,21 +124,29 @@ export function useLead(leadId: string | undefined) {
  * Hook to create a new lead
  */
 export function useCreateLead() {
+  const { t } = useTranslation()
   const leadsCollection = useBaseCrmLeadsCollection()
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (data: any) => {
       const response = await leadsCollection.create(data)
+
       return response
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] })
-      toast.success('Lead created successfully')
+      /*
+       * The per-record audit timeline lives under its own query key, so a
+       * successful write left the Activity tab showing stale history until a
+       * full page reload. Refresh it alongside the entity caches.
+       */
+      queryClient.invalidateQueries({ queryKey: ['record-activities'] })
+      toast.success(t('leads.createdSuccess'))
     },
     onError: (error: any) => {
-      toast.error(error?.message || 'Failed to create lead')
-    },
+      toast.error(error?.message || t('leads.createError'))
+    }
   })
 }
 
@@ -141,22 +154,30 @@ export function useCreateLead() {
  * Hook to update a lead
  */
 export function useUpdateLead() {
+  const { t } = useTranslation()
   const leadsCollection = useBaseCrmLeadsCollection()
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async ({ leadId, data }: { leadId: string; data: any }) => {
       const response = await leadsCollection.update(leadId, data)
+
       return response
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['leads'] })
       queryClient.invalidateQueries({ queryKey: ['leads', variables.leadId] })
-      toast.success('Lead updated successfully')
+      /*
+       * The per-record audit timeline lives under its own query key, so a
+       * successful write left the Activity tab showing stale history until a
+       * full page reload. Refresh it alongside the entity caches.
+       */
+      queryClient.invalidateQueries({ queryKey: ['record-activities'] })
+      toast.success(t('leads.updatedSuccess'))
     },
     onError: (error: any) => {
-      toast.error(error?.message || 'Failed to update lead')
-    },
+      toast.error(error?.message || t('leads.updateError'))
+    }
   })
 }
 
@@ -164,6 +185,7 @@ export function useUpdateLead() {
  * Hook to delete a lead
  */
 export function useDeleteLead() {
+  const { t } = useTranslation()
   const leadsCollection = useBaseCrmLeadsCollection()
   const queryClient = useQueryClient()
 
@@ -173,11 +195,17 @@ export function useDeleteLead() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] })
-      toast.success('Lead deleted successfully')
+      /*
+       * The per-record audit timeline lives under its own query key, so a
+       * successful write left the Activity tab showing stale history until a
+       * full page reload. Refresh it alongside the entity caches.
+       */
+      queryClient.invalidateQueries({ queryKey: ['record-activities'] })
+      toast.success(t('leads.deletedSuccess'))
     },
     onError: (error: any) => {
-      toast.error(error?.message || 'Failed to delete lead')
-    },
+      toast.error(error?.message || t('leads.deleteError'))
+    }
   })
 }
 
@@ -185,6 +213,7 @@ export function useDeleteLead() {
  * Hook to delete multiple leads
  */
 export function useDeleteLeads() {
+  const { t } = useTranslation()
   const leadsCollection = useBaseCrmLeadsCollection()
   const queryClient = useQueryClient()
 
@@ -194,10 +223,16 @@ export function useDeleteLeads() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] })
-      toast.success('Leads deleted successfully')
+      /*
+       * The per-record audit timeline lives under its own query key, so a
+       * successful write left the Activity tab showing stale history until a
+       * full page reload. Refresh it alongside the entity caches.
+       */
+      queryClient.invalidateQueries({ queryKey: ['record-activities'] })
+      toast.success(t('leads.bulkDeletedSuccess'))
     },
     onError: (error: any) => {
-      toast.error(error?.message || 'Failed to delete leads')
-    },
+      toast.error(error?.message || t('leads.bulkDeleteError'))
+    }
   })
 }

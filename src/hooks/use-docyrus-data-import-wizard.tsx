@@ -1,15 +1,32 @@
 'use client'
 
 import {
+  type ReactElement,
   useCallback,
   useEffect,
   useMemo,
   useReducer,
-  useRef,
-  type ReactElement,
+  useRef
 } from 'react'
 
+import { type DocyrusFieldLike } from './use-docyrus-field-component'
+
+import type {
+  AnalysedFile,
+  DataImportWizardProps,
+  ImportPayloadOptions,
+  ImportResultPayload,
+  ImportWizardStep,
+  UploadedFileInfo,
+  WizardMappingMap
+} from '@/components/docyrus/data-import-wizard'
+
 import { useMutation } from '@tanstack/react-query'
+
+import {
+  type UseDocyrusDataViewSelectOptions,
+  useDocyrusDataViewSelect
+} from './use-docyrus-data-view-select'
 
 import {
   DataImportWizard,
@@ -18,26 +35,13 @@ import {
   buildUniqueDataPayload,
   collectUniqueDataLookups,
   isEnumLikeType,
-  slugify,
-  type AnalysedFile,
-  type DataImportWizardProps,
-  type ImportPayloadOptions,
-  type ImportResultPayload,
-  type ImportWizardStep,
-  type UploadedFileInfo,
-  type WizardMappingMap,
+  slugify
 } from '@/components/docyrus/data-import-wizard'
 
-import {
-  useDocyrusDataViewSelect,
-  type UseDocyrusDataViewSelectOptions,
-} from './use-docyrus-data-view-select'
-import { type DocyrusFieldLike } from './use-docyrus-field-component'
-
 interface ImportEndpoints {
-  upload?: string
-  analyse?: string
-  import?: string
+  upload?: string;
+  analyse?: string;
+  import?: string;
 }
 
 export interface UseDocyrusDataImportWizardOptions extends Pick<
@@ -49,16 +53,16 @@ export interface UseDocyrusDataImportWizardOptions extends Pick<
    * data source fetch — pass the same field array your `useDocyrusDataGrid`
    * call relies on.
    */
-  fields?: ReadonlyArray<DocyrusFieldLike>
+  fields?: ReadonlyArray<DocyrusFieldLike>;
   /** Field slugs that must be mapped before the user can leave the mapping step. */
-  requiredFieldSlugs?: ReadonlyArray<string>
+  requiredFieldSlugs?: ReadonlyArray<string>;
   /**
    * Field slugs covered by unique indexes. When omitted the hook reads them
    * from the analyse endpoint response (the import API knows them).
    */
-  uniqueFieldSlugs?: ReadonlyArray<string>
+  uniqueFieldSlugs?: ReadonlyArray<string>;
   /** Override the three import endpoints (e.g. for tenant-specific routing). */
-  endpoints?: ImportEndpoints
+  endpoints?: ImportEndpoints;
   /**
    * Replace the upload phase entirely. When provided the hook calls this
    * instead of POSTing multipart `FormData` to the upload endpoint, and the
@@ -70,67 +74,67 @@ export interface UseDocyrusDataImportWizardOptions extends Pick<
    * work (it needs the storage credentials and the tenant context), so it stays
    * out of this hook.
    */
-  uploadFile?: (file: File) => Promise<UploadedFileInfo>
+  uploadFile?: (file: File) => Promise<UploadedFileInfo>;
   /** Number of rows shown in the preview step. Default 10. */
-  previewRowCount?: number
+  previewRowCount?: number;
   /** Default 20 MB. */
-  maxFileSizeBytes?: number
+  maxFileSizeBytes?: number;
   /** Default `['xlsx','xls','csv']`. */
-  acceptedExtensions?: ReadonlyArray<string>
+  acceptedExtensions?: ReadonlyArray<string>;
   /** Optional default mapping seed — overrides auto-mapping. */
-  initialMapping?: WizardMappingMap
+  initialMapping?: WizardMappingMap;
   /** When false the hook returns `wizard: null` (use as a feature flag). */
-  enabled?: boolean
+  enabled?: boolean;
   /** Controlled open state. When omitted the hook owns the open flag. */
-  open?: boolean
+  open?: boolean;
   /** Called whenever the open state changes (controlled or not). */
-  onOpenChange?: (open: boolean) => void
+  onOpenChange?: (open: boolean) => void;
   /** Fires after a successful import. The result payload mirrors the API response. */
-  onImported?: (result: ImportResultPayload) => void
+  onImported?: (result: ImportResultPayload) => void;
   /** Fires whenever any of the three phases throws. */
-  onError?: (error: Error, phase: 'upload' | 'analyse' | 'import') => void
+  onError?: (error: Error, phase: 'upload' | 'analyse' | 'import') => void;
   /** Override the wizard header title. */
-  title?: DataImportWizardProps['title']
+  title?: DataImportWizardProps['title'];
   /** Override the wizard header description. */
-  description?: DataImportWizardProps['description']
+  description?: DataImportWizardProps['description'];
 }
 
 export interface UseDocyrusDataImportWizardResult {
-  open: boolean
-  openWizard: () => void
-  closeWizard: () => void
-  resetWizard: () => void
+  open: boolean;
+  openWizard: () => void;
+  closeWizard: () => void;
+  resetWizard: () => void;
 
-  step: ImportWizardStep
-  setStep: (next: ImportWizardStep) => void
+  step: ImportWizardStep;
+  setStep: (next: ImportWizardStep) => void;
 
   /** Render this once next to the trigger button — already wired. */
-  wizard: ReactElement | null
+  wizard: ReactElement | null;
 
   /** Imperative escape hatches — useful for custom flows or tests. */
-  uploadAsync: (file: File) => Promise<UploadedFileInfo>
-  analyseAsync: (fileName: string) => Promise<AnalysedFile>
-  importAsync: () => Promise<ImportResultPayload>
+  uploadAsync: (file: File) => Promise<UploadedFileInfo>;
+  analyseAsync: (fileName: string) => Promise<AnalysedFile>;
+  importAsync: () => Promise<ImportResultPayload>;
 
-  uploadedFile: UploadedFileInfo | null
-  analysedFile: AnalysedFile | null
-  importResult: ImportResultPayload | null
-  fields: ReadonlyArray<DocyrusFieldLike>
-  isUploading: boolean
-  isAnalysing: boolean
-  isImporting: boolean
-  error: Error | null
+  uploadedFile: UploadedFileInfo | null;
+  analysedFile: AnalysedFile | null;
+  importResult: ImportResultPayload | null;
+  fields: ReadonlyArray<DocyrusFieldLike>;
+  isUploading: boolean;
+  isAnalysing: boolean;
+  isImporting: boolean;
+  error: Error | null;
 }
 
 interface WizardState {
-  open: boolean
-  step: ImportWizardStep
-  file: File | null
-  uploadedFile: UploadedFileInfo | null
-  analysedFile: AnalysedFile | null
-  mapping: WizardMappingMap
-  upsertUniqueFields: boolean
-  importResult: ImportResultPayload | null
+  open: boolean;
+  step: ImportWizardStep;
+  file: File | null;
+  uploadedFile: UploadedFileInfo | null;
+  analysedFile: AnalysedFile | null;
+  mapping: WizardMappingMap;
+  upsertUniqueFields: boolean;
+  importResult: ImportResultPayload | null;
 }
 
 type WizardAction =
@@ -141,13 +145,13 @@ type WizardAction =
   | { type: 'pickFile'; file: File }
   | { type: 'setUploadedFile'; uploadedFile: UploadedFileInfo }
   | {
-      type: 'setAnalysedFile'
-      analysedFile: AnalysedFile
-      mapping: WizardMappingMap
+      type: 'setAnalysedFile';
+      analysedFile: AnalysedFile;
+      mapping: WizardMappingMap;
     }
-  | { type: 'setMapping'; mapping: WizardMappingMap }
-  | { type: 'setUpsert'; value: boolean }
-  | { type: 'setImportResult'; result: ImportResultPayload }
+    | { type: 'setMapping'; mapping: WizardMappingMap }
+    | { type: 'setUpsert'; value: boolean }
+    | { type: 'setImportResult'; result: ImportResultPayload }
 
 const INITIAL_STATE: WizardState = {
   open: false,
@@ -157,7 +161,7 @@ const INITIAL_STATE: WizardState = {
   analysedFile: null,
   mapping: {},
   upsertUniqueFields: false,
-  importResult: null,
+  importResult: null
 }
 
 function reducer(state: WizardState, action: WizardAction): WizardState {
@@ -181,7 +185,7 @@ function reducer(state: WizardState, action: WizardAction): WizardState {
         uploadedFile: null,
         analysedFile: null,
         mapping: {},
-        importResult: null,
+        importResult: null
       }
 
     case 'setUploadedFile':
@@ -192,7 +196,7 @@ function reducer(state: WizardState, action: WizardAction): WizardState {
         ...state,
         analysedFile: action.analysedFile,
         mapping: action.mapping,
-        step: 'mapping',
+        step: 'mapping'
       }
 
     case 'setMapping':
@@ -213,7 +217,7 @@ function defaultEndpoint(
   base: string,
   endpoints: ImportEndpoints | undefined,
   key: keyof ImportEndpoints,
-  fallback: string,
+  fallback: string
 ): string {
   return endpoints?.[key] ?? `${base}${fallback}`
 }
@@ -238,7 +242,7 @@ function unwrap<T>(response: unknown): T {
   if (response && typeof response === 'object' && 'data' in response) {
     const keys = Object.keys(response)
 
-    if (keys.every((key) => ENVELOPE_KEYS.has(key))) {
+    if (keys.every(key => ENVELOPE_KEYS.has(key))) {
       return (response as { data: T }).data
     }
   }
@@ -246,11 +250,7 @@ function unwrap<T>(response: unknown): T {
   return response as T
 }
 
-const DEFAULT_ACCEPTED_EXTENSIONS: ReadonlyArray<string> = [
-  'xlsx',
-  'xls',
-  'csv',
-]
+const DEFAULT_ACCEPTED_EXTENSIONS: ReadonlyArray<string> = ['xlsx', 'xls', 'csv']
 const DEFAULT_MAX_FILE_SIZE = 20 * 1024 * 1024
 
 /**
@@ -264,7 +264,7 @@ const DEFAULT_MAX_FILE_SIZE = 20 * 1024 * 1024
  * needed.
  */
 export function useDocyrusDataImportWizard(
-  options: UseDocyrusDataImportWizardOptions,
+  options: UseDocyrusDataImportWizardOptions
 ): UseDocyrusDataImportWizardResult {
   const {
     client,
@@ -286,7 +286,7 @@ export function useDocyrusDataImportWizard(
     onImported,
     onError,
     title,
-    description,
+    description
   } = options
 
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE)
@@ -298,7 +298,7 @@ export function useDocyrusDataImportWizard(
    * source fetch entirely — saves a network round-trip and keeps the data
    * grid + import wizard sharing one source of truth.
    */
-  const fieldFetchEnabled = enabled && !providedFields
+  const fieldFetchEnabled = enabled && open && !providedFields
   const dataViewSelect = useDocyrusDataViewSelect({
     client,
     appSlug,
@@ -306,6 +306,7 @@ export function useDocyrusDataImportWizard(
     appId,
     enabled: fieldFetchEnabled,
     persistActiveView: false,
+    prefetchRelationOptions: false
   })
 
   const fields = useMemo<ReadonlyArray<DocyrusFieldLike>>(() => {
@@ -320,19 +321,19 @@ export function useDocyrusDataImportWizard(
 
   const apiBase = useMemo(
     () => `/v1/apps/${appSlug}/data-sources/${dataSourceSlug}`,
-    [appSlug, dataSourceSlug],
+    [appSlug, dataSourceSlug]
   )
   const uploadUrl = defaultEndpoint(
     apiBase,
     endpoints,
     'upload',
-    '/import/upload',
+    '/import/upload'
   )
   const analyseUrl = defaultEndpoint(
     apiBase,
     endpoints,
     'analyse',
-    '/import/details',
+    '/import/details'
   )
   const importUrl = defaultEndpoint(apiBase, endpoints, 'import', '/import')
 
@@ -347,21 +348,21 @@ export function useDocyrusDataImportWizard(
       const response = await client.post<unknown>(uploadUrl, body)
 
       return unwrap<UploadedFileInfo>(response)
-    },
+    }
   })
 
   const analyseMutation = useMutation({
     mutationFn: async (fileName: string) => {
       const response = await client.get<unknown>(analyseUrl, { fileName })
       const payload = unwrap<{
-        data?: ReadonlyArray<Record<string, unknown>>
-        rows?: ReadonlyArray<Record<string, unknown>>
-        fileName: string
-        filePath?: string
-        columns: ReadonlyArray<string>
-        uniqueFieldIds?: ReadonlyArray<string>
-        uniqueFieldSlugs?: ReadonlyArray<string>
-        dataSourceRecord?: unknown
+        data?: ReadonlyArray<Record<string, unknown>>;
+        rows?: ReadonlyArray<Record<string, unknown>>;
+        fileName: string;
+        filePath?: string;
+        columns: ReadonlyArray<string>;
+        uniqueFieldIds?: ReadonlyArray<string>;
+        uniqueFieldSlugs?: ReadonlyArray<string>;
+        dataSourceRecord?: unknown;
       }>(response)
 
       const rows = payload.rows ?? payload.data ?? []
@@ -373,22 +374,22 @@ export function useDocyrusDataImportWizard(
         rows,
         uniqueFieldIds: payload.uniqueFieldIds ?? [],
         uniqueFieldSlugs: payload.uniqueFieldSlugs ?? [],
-        dataSourceRecord: payload.dataSourceRecord,
+        dataSourceRecord: payload.dataSourceRecord
       }
 
       return analysed
-    },
+    }
   })
 
   const importMutation = useMutation({
     mutationFn: async (body: {
-      fileName: string
-      options: ImportPayloadOptions
+      fileName: string;
+      options: ImportPayloadOptions;
     }) => {
       const response = await client.post<unknown>(importUrl, body)
 
       return unwrap<ImportResultPayload>(response)
-    },
+    }
   })
 
   const setOpen = useCallback(
@@ -412,12 +413,12 @@ export function useDocyrusDataImportWizard(
       onOpenChange?.(next)
     },
     [
-      isControlled,
-      onOpenChange,
-      uploadMutation,
-      analyseMutation,
-      importMutation,
-    ],
+isControlled,
+onOpenChange,
+uploadMutation,
+analyseMutation,
+importMutation
+]
   )
 
   const openWizard = useCallback(() => setOpen(true), [setOpen])
@@ -449,16 +450,22 @@ export function useDocyrusDataImportWizard(
               dispatch({ type: 'setAnalysedFile', analysedFile, mapping })
             },
             onError: (err) => {
-              onError?.(err as Error, 'analyse')
-            },
+              onError?.(err, 'analyse')
+            }
           })
         },
         onError: (err) => {
-          onError?.(err as Error, 'upload')
-        },
+          onError?.(err, 'upload')
+        }
       })
     },
-    [uploadMutation, analyseMutation, fields, initialMapping, onError],
+    [
+uploadMutation,
+analyseMutation,
+fields,
+initialMapping,
+onError
+]
   )
 
   const handleAnalyse = useCallback(() => {
@@ -476,8 +483,8 @@ export function useDocyrusDataImportWizard(
           dispatch({ type: 'setAnalysedFile', analysedFile, mapping })
         },
         onError: (err) => {
-          onError?.(err as Error, 'analyse')
-        },
+          onError?.(err, 'analyse')
+        }
       })
 
       return
@@ -493,7 +500,7 @@ export function useDocyrusDataImportWizard(
     onError,
     state.analysedFile,
     state.file,
-    state.uploadedFile,
+    state.uploadedFile
   ])
 
   const handleConfirmMapping = useCallback(() => {
@@ -520,14 +527,14 @@ export function useDocyrusDataImportWizard(
     const enumLookups = collectUniqueDataLookups(
       state.mapping,
       fields,
-      state.analysedFile,
-    ).filter((spec) => isEnumLikeType(String(spec.field.type)))
+      state.analysedFile
+    ).filter(spec => isEnumLikeType(String(spec.field.type)))
     const resolvedById: Record<string, Record<string, string | null>> = {}
 
     for (const spec of enumLookups) {
       const resolved: Record<string, string | null> = {}
       const enumOptions: Array<Record<string, unknown>> = Array.isArray(
-        spec.field.enums,
+        spec.field.enums
       )
         ? (spec.field.enums as Array<Record<string, unknown>>)
         : Array.isArray(spec.field.options)
@@ -558,13 +565,13 @@ export function useDocyrusDataImportWizard(
       state.mapping,
       fields,
       state.upsertUniqueFields,
-      uniqueData,
+      uniqueData
     )
 
     importMutation.mutate(
       {
         fileName: state.analysedFile.fileName,
-        options: payload,
+        options: payload
       },
       {
         onSuccess: (result) => {
@@ -572,9 +579,9 @@ export function useDocyrusDataImportWizard(
           onImported?.(result)
         },
         onError: (err) => {
-          onError?.(err as Error, 'import')
-        },
-      },
+          onError?.(err, 'import')
+        }
+      }
     )
   }, [
     fields,
@@ -583,7 +590,7 @@ export function useDocyrusDataImportWizard(
     onError,
     state.analysedFile,
     state.mapping,
-    state.upsertUniqueFields,
+    state.upsertUniqueFields
   ])
 
   const handleMappingChange = useCallback((next: WizardMappingMap) => {
@@ -597,22 +604,17 @@ export function useDocyrusDataImportWizard(
   const requiredFieldSlugsKey = requiredFieldSlugs.join(',')
   const stableRequiredFieldSlugs = useMemo(
     () => requiredFieldSlugs,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [requiredFieldSlugsKey],
+
+    [requiredFieldSlugsKey]
   )
 
   const uniqueFieldSlugs = useMemo<ReadonlyArray<string>>(
-    () =>
-      providedUniqueFieldSlugs ?? state.analysedFile?.uniqueFieldSlugs ?? [],
-    [providedUniqueFieldSlugs, state.analysedFile],
+    () => providedUniqueFieldSlugs ?? state.analysedFile?.uniqueFieldSlugs ?? [],
+    [providedUniqueFieldSlugs, state.analysedFile]
   )
 
   const error = useMemo<Error | null>(() => {
-    return (
-      (uploadMutation.error as Error | null) ??
-      (analyseMutation.error as Error | null) ??
-      (importMutation.error as Error | null)
-    )
+    return uploadMutation.error ?? analyseMutation.error ?? importMutation.error
   }, [uploadMutation.error, analyseMutation.error, importMutation.error])
 
   const wasOpenRef = useRef(open)
@@ -632,7 +634,7 @@ export function useDocyrusDataImportWizard(
   useEffect(() => {
     if (!state.analysedFile || fields.length === 0) return
     const hasAnyMapped = Object.values(state.mapping).some(
-      (entry) => entry.targetSlug,
+      entry => entry.targetSlug
     )
 
     if (hasAnyMapped) return
@@ -640,10 +642,15 @@ export function useDocyrusDataImportWizard(
     const next =
       initialMapping ?? buildAutoMapping(state.analysedFile.columns, fields)
 
-    if (Object.values(next).some((entry) => entry.targetSlug)) {
+    if (Object.values(next).some(entry => entry.targetSlug)) {
       dispatch({ type: 'setMapping', mapping: next })
     }
-  }, [fields, state.analysedFile, state.mapping, initialMapping])
+  }, [
+fields,
+state.analysedFile,
+state.mapping,
+initialMapping
+])
 
   const wizardElement = useMemo<ReactElement | null>(() => {
     if (!enabled) return null
@@ -664,9 +671,9 @@ export function useDocyrusDataImportWizard(
         isUploading={uploadMutation.isPending}
         isAnalysing={analyseMutation.isPending}
         isImporting={importMutation.isPending}
-        uploadError={(uploadMutation.error as Error | null) ?? null}
-        analyseError={(analyseMutation.error as Error | null) ?? null}
-        importError={(importMutation.error as Error | null) ?? null}
+        uploadError={uploadMutation.error ?? null}
+        analyseError={analyseMutation.error ?? null}
+        importError={importMutation.error ?? null}
         mapping={state.mapping}
         onMappingChange={handleMappingChange}
         upsertUniqueFields={state.upsertUniqueFields}
@@ -682,8 +689,7 @@ export function useDocyrusDataImportWizard(
         description={description}
         previewRowCount={previewRowCount}
         maxFileSizeBytes={maxFileSizeBytes}
-        acceptedExtensions={acceptedExtensions}
-      />
+        acceptedExtensions={acceptedExtensions} />
     )
   }, [
     acceptedExtensions,
@@ -719,7 +725,7 @@ export function useDocyrusDataImportWizard(
     title,
     uniqueFieldSlugs,
     uploadMutation.error,
-    uploadMutation.isPending,
+    uploadMutation.isPending
   ])
 
   /*
@@ -728,11 +734,11 @@ export function useDocyrusDataImportWizard(
    */
   const uploadAsync = useCallback(
     (file: File) => uploadMutation.mutateAsync(file),
-    [uploadMutation],
+    [uploadMutation]
   )
   const analyseAsync = useCallback(
     (fileName: string) => analyseMutation.mutateAsync(fileName),
-    [analyseMutation],
+    [analyseMutation]
   )
   const importAsync = useCallback(async () => {
     if (!state.analysedFile) {
@@ -747,19 +753,19 @@ export function useDocyrusDataImportWizard(
     const payload = buildImportOptions(
       state.mapping,
       fields,
-      state.upsertUniqueFields,
+      state.upsertUniqueFields
     )
 
     return importMutation.mutateAsync({
       fileName: state.analysedFile.fileName,
-      options: payload,
+      options: payload
     })
   }, [
     importMutation,
     fields,
     state.analysedFile,
     state.mapping,
-    state.upsertUniqueFields,
+    state.upsertUniqueFields
   ])
 
   return {
@@ -780,6 +786,6 @@ export function useDocyrusDataImportWizard(
     isUploading: uploadMutation.isPending,
     isAnalysing: analyseMutation.isPending,
     isImporting: importMutation.isPending,
-    error,
+    error
   }
 }

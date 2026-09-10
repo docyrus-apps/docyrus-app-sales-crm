@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react'
+
+import type { WebphoneRuntimeSettings } from '@/lib/webphone/types'
+
 import { CheckCircle2, Lock, Pencil, TriangleAlert } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+
 import { useWebphone } from './webphone-context'
+
 import {
   useUpdateWebphoneRuntimeSettings,
-  useWebphoneRuntimeSettings,
+  useWebphoneRuntimeSettings
 } from '@/hooks/use-webphone-config'
 import { DEFAULT_VERIMOR_RUNTIME } from '@/lib/webphone/runtime'
-import type { WebphoneRuntimeSettings } from '@/lib/webphone/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,17 +23,17 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogTitle
 } from '@/components/ui/alert-dialog'
 
 const TEXT_FIELDS: Array<{
-  key: keyof WebphoneRuntimeSettings
-  labelKey: string
+  key: keyof WebphoneRuntimeSettings;
+  labelKey: string;
 }> = [
   { key: 'wssUrl', labelKey: 'webphone.settings.wssUrl' },
   { key: 'pbxHost', labelKey: 'webphone.settings.pbxHost' },
   { key: 'realm', labelKey: 'webphone.settings.realm' },
-  { key: 'registrarServer', labelKey: 'webphone.settings.registrarServer' },
+  { key: 'registrarServer', labelKey: 'webphone.settings.registrarServer' }
 ]
 
 /** Compact readiness banner: green when ready, amber with the missing items. */
@@ -53,7 +57,7 @@ export function WebphoneReadinessSummary() {
         {t('webphone.settings.readinessMissing')}
       </div>
       <ul className="ml-6 list-disc text-xs text-muted-foreground">
-        {readinessReasons.map((reason) => (
+        {readinessReasons.map(reason => (
           <li key={reason}>
             {t(`webphone.readiness.${reason}`, { defaultValue: reason })}
           </li>
@@ -64,7 +68,7 @@ export function WebphoneReadinessSummary() {
 }
 
 interface WebphoneSettingsFormProps {
-  onSaved?: () => void
+  onSaved?: () => void;
 }
 
 /**
@@ -82,7 +86,7 @@ export function WebphoneSettingsForm({ onSaved }: WebphoneSettingsFormProps) {
   const { data, isLoading } = useWebphoneRuntimeSettings()
   const update = useUpdateWebphoneRuntimeSettings()
   const [draft, setDraft] = useState<WebphoneRuntimeSettings>(
-    DEFAULT_VERIMOR_RUNTIME,
+    DEFAULT_VERIMOR_RUNTIME
   )
   const [editing, setEditing] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -91,8 +95,7 @@ export function WebphoneSettingsForm({ onSaved }: WebphoneSettingsFormProps) {
     if (data) setDraft(data)
   }, [data])
 
-  const updateField = (key: keyof WebphoneRuntimeSettings, value: string) =>
-    setDraft((current) => ({ ...current, [key]: value }))
+  const updateField = (key: keyof WebphoneRuntimeSettings, value: string) => setDraft(current => ({ ...current, [key]: value }))
 
   const save = async () => {
     await update.mutateAsync(draft)
@@ -112,15 +115,14 @@ export function WebphoneSettingsForm({ onSaved }: WebphoneSettingsFormProps) {
       )}
 
       <div className="grid gap-4 md:grid-cols-2">
-        {TEXT_FIELDS.map((field) => (
+        {TEXT_FIELDS.map(field => (
           <div key={field.key} className="space-y-1.5">
             <Label htmlFor={`webphone-${field.key}`}>{t(field.labelKey)}</Label>
             <Input
               id={`webphone-${field.key}`}
               value={String(draft[field.key] ?? '')}
               disabled={!editing}
-              onChange={(event) => updateField(field.key, event.target.value)}
-            />
+              onChange={event => updateField(field.key, event.target.value)} />
           </div>
         ))}
       </div>
@@ -134,8 +136,7 @@ export function WebphoneSettingsForm({ onSaved }: WebphoneSettingsFormProps) {
                 if (data) setDraft(data)
                 setEditing(false)
               }}
-              disabled={update.isPending}
-            >
+              disabled={update.isPending}>
               {t('common.cancel')}
             </Button>
             <Button onClick={save} disabled={update.isPending || isLoading}>
@@ -166,8 +167,7 @@ export function WebphoneSettingsForm({ onSaved }: WebphoneSettingsFormProps) {
               onClick={() => {
                 setEditing(true)
                 setConfirmOpen(false)
-              }}
-            >
+              }}>
               {t('webphone.settings.editConfirm')}
             </AlertDialogAction>
           </AlertDialogFooter>

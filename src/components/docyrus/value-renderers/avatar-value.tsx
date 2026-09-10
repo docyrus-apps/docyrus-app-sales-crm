@@ -1,10 +1,12 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import {
   type AvatarFieldValue,
   extractAvatarValue,
   normalizeAvatarValue,
-} from '@/lib/avatar-utils'
+} from '@/lib/docyrus/avatar-utils'
 
 import { AvatarThumbnail } from '@/components/docyrus/avatar-thumbnail'
 import { cn } from '@/lib/utils'

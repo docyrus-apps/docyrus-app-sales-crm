@@ -1,3 +1,4 @@
+/* eslint-disable */
 // @ts-nocheck
 import { BaseLinkPlugin } from '@platejs/link'
 

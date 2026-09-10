@@ -1,63 +1,63 @@
 /* eslint-disable */
 // @ts-nocheck
-'use client';
+'use client'
 
-import React from 'react';
+import React from 'react'
 
 import type {
   DropdownMenuItemProps,
   DropdownMenuProps,
-} from '@radix-ui/react-dropdown-menu';
+} from '@radix-ui/react-dropdown-menu'
 
-import { useComposedRef } from '@udecode/cn';
-import { debounce } from 'es-toolkit';
-import { CheckIcon, EraserIcon, PlusIcon } from 'lucide-react';
+import { useComposedRef } from '@udecode/cn'
+import { debounce } from 'es-toolkit'
+import { CheckIcon, EraserIcon, PlusIcon } from 'lucide-react'
 import {
   type PlateEditor,
   useEditorRef,
   useEditorSelector,
-} from 'platejs/react';
+} from 'platejs/react'
 
-import { buttonVariants } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
+} from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 
-import { ToolbarButton, ToolbarMenuGroup } from './toolbar';
+import { ToolbarButton, ToolbarMenuGroup } from './toolbar'
 
-const MAX_CUSTOM_COLORS = 19;
-const HEX_COLOR_RE = /^#[\da-f]{6}$/i;
+const MAX_CUSTOM_COLORS = 19
+const HEX_COLOR_RE = /^#[\da-f]{6}$/i
 
 function normalizeColor(color: string): string {
-  return color.toLowerCase();
+  return color.toLowerCase()
 }
 
 function isValidHexColor(color: string): boolean {
-  return HEX_COLOR_RE.test(color);
+  return HEX_COLOR_RE.test(color)
 }
 
 function computeIsBrightColor(hex: string): boolean {
-  if (!isValidHexColor(hex)) return false;
+  if (!isValidHexColor(hex)) return false
 
-  const r = Number.parseInt(hex.slice(1, 3), 16);
-  const g = Number.parseInt(hex.slice(3, 5), 16);
-  const b = Number.parseInt(hex.slice(5, 7), 16);
+  const r = Number.parseInt(hex.slice(1, 3), 16)
+  const g = Number.parseInt(hex.slice(3, 5), 16)
+  const b = Number.parseInt(hex.slice(5, 7), 16)
 
-  return (r * 299 + g * 587 + b * 114) / 1000 > 130;
+  return (r * 299 + g * 587 + b * 114) / 1000 > 130
 }
 
 function getEditorColorMarks(editor: PlateEditor, nodeType: string): string[] {
-  const usedColors = new Set<string>();
+  const usedColors = new Set<string>()
 
   for (const [node] of editor.api.nodes({
     at: [],
@@ -66,11 +66,11 @@ function getEditorColorMarks(editor: PlateEditor, nodeType: string): string[] {
       typeof (n as Record<string, unknown>)[nodeType] === 'string',
     mode: 'all',
   })) {
-    const color = (node as Record<string, unknown>)[nodeType] as string;
-    usedColors.add(normalizeColor(color));
+    const color = (node as Record<string, unknown>)[nodeType] as string
+    usedColors.add(normalizeColor(color))
   }
 
-  return Array.from(usedColors);
+  return Array.from(usedColors)
 }
 
 export function FontColorToolbarButton({
@@ -78,116 +78,113 @@ export function FontColorToolbarButton({
   nodeType,
   tooltip,
 }: {
-  nodeType: string;
-  tooltip?: string;
+  nodeType: string
+  tooltip?: string
 } & DropdownMenuProps) {
-  const editor = useEditorRef();
+  const editor = useEditorRef()
 
-  const selectionDefined = useEditorSelector(
-    (editor) => !!editor.selection,
-    []
-  );
+  const selectionDefined = useEditorSelector((editor) => !!editor.selection, [])
 
   const color = useEditorSelector(
     (editor) => editor.api.mark(nodeType) as string,
-    [nodeType]
-  );
+    [nodeType],
+  )
 
-  const [selectedColor, setSelectedColor] = React.useState<string>();
-  const [updatedColor, setUpdatedColor] = React.useState<string>();
-  const [open, setOpen] = React.useState(false);
-  const [colorsQueue, setColorsQueue] = React.useState<string[]>([]);
+  const [selectedColor, setSelectedColor] = React.useState<string>()
+  const [updatedColor, setUpdatedColor] = React.useState<string>()
+  const [open, setOpen] = React.useState(false)
+  const [colorsQueue, setColorsQueue] = React.useState<string[]>([])
 
   const recordColorUsage = React.useCallback((color: string) => {
-    const normalized = normalizeColor(color);
+    const normalized = normalizeColor(color)
 
-    if (!isValidHexColor(normalized)) return;
+    if (!isValidHexColor(normalized)) return
 
     setColorsQueue((prev) => {
       const filtered = prev
         .filter((c) => c !== normalized)
         .filter(
-          (c) => !DEFAULT_COLORS.some((dc) => normalizeColor(dc.value) === c)
-        );
+          (c) => !DEFAULT_COLORS.some((dc) => normalizeColor(dc.value) === c),
+        )
 
-      return [normalized, ...filtered].slice(0, 30);
-    });
-  }, []);
+      return [normalized, ...filtered].slice(0, 30)
+    })
+  }, [])
 
   const appendColors = React.useCallback((colors: string[]) => {
     setColorsQueue((prev) => {
-      const normalized = colors.map(normalizeColor).filter(isValidHexColor);
-      const existingSet = new Set(prev);
+      const normalized = colors.map(normalizeColor).filter(isValidHexColor)
+      const existingSet = new Set(prev)
       const newColors = normalized
         .filter((c) => !existingSet.has(c))
         .filter(
-          (c) => !DEFAULT_COLORS.some((dc) => normalizeColor(dc.value) === c)
-        );
+          (c) => !DEFAULT_COLORS.some((dc) => normalizeColor(dc.value) === c),
+        )
 
-      return [...newColors, ...prev].slice(0, 30);
-    });
-  }, []);
+      return [...newColors, ...prev].slice(0, 30)
+    })
+  }, [])
 
   const onToggle = React.useCallback(
     (value = !open) => {
-      setOpen(value);
+      setOpen(value)
 
       if (value) {
-        const colorUsed = getEditorColorMarks(editor, nodeType);
-        appendColors(colorUsed);
+        const colorUsed = getEditorColorMarks(editor, nodeType)
+        appendColors(colorUsed)
 
         if (selectedColor) {
-          recordColorUsage(normalizeColor(selectedColor));
+          recordColorUsage(normalizeColor(selectedColor))
         }
       }
       if (!value) {
-        setUpdatedColor(undefined);
+        setUpdatedColor(undefined)
 
         if (editor.selection) {
           setTimeout(() => {
-            editor.tf.focus();
-          }, 100);
+            editor.tf.focus()
+          }, 100)
         }
       }
     },
-    [open, editor, nodeType, appendColors, selectedColor, recordColorUsage]
-  );
+    [open, editor, nodeType, appendColors, selectedColor, recordColorUsage],
+  )
 
   const updateColor = React.useCallback(
     (value: string) => {
       if (editor.selection) {
-        setSelectedColor(value);
-        setUpdatedColor(value);
+        setSelectedColor(value)
+        setUpdatedColor(value)
 
-        editor.tf.select(editor.selection);
-        editor.tf.addMarks({ [nodeType]: value });
+        editor.tf.select(editor.selection)
+        editor.tf.addMarks({ [nodeType]: value })
       }
     },
-    [editor, nodeType]
-  );
+    [editor, nodeType],
+  )
 
   const updateColorAndClose = React.useCallback(
     (value: string) => {
-      updateColor(value);
-      onToggle();
+      updateColor(value)
+      onToggle()
     },
-    [onToggle, updateColor]
-  );
+    [onToggle, updateColor],
+  )
 
   const clearColor = React.useCallback(() => {
     if (editor.selection) {
-      editor.tf.select(editor.selection);
-      editor.tf.removeMarks(nodeType);
-      onToggle();
+      editor.tf.select(editor.selection)
+      editor.tf.removeMarks(nodeType)
+      onToggle()
     }
-  }, [editor, onToggle, nodeType]);
+  }, [editor, onToggle, nodeType])
 
   React.useEffect(() => {
     if (selectionDefined) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- Preserve the mark color while menu focus clears editor selection.
-      setSelectedColor(color);
+      setSelectedColor(color)
     }
-  }, [color, selectionDefined]);
+  }, [color, selectionDefined])
 
   return (
     <DropdownMenu modal onOpenChange={onToggle} open={open}>
@@ -211,7 +208,7 @@ export function FontColorToolbarButton({
         />
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }
 
 function PureColorPicker({
@@ -227,15 +224,15 @@ function PureColorPicker({
   updatedColor,
   ...props
 }: React.ComponentProps<'div'> & {
-  colors: TColor[];
-  colorsQueue: string[];
-  customColors: TColor[];
-  clearColor: () => void;
-  recordColorUsage: (color: string) => void;
-  updateColor: (color: string) => void;
-  updateCustomColor: (color: string) => void;
-  color?: string;
-  updatedColor?: string;
+  colors: TColor[]
+  colorsQueue: string[]
+  customColors: TColor[]
+  clearColor: () => void
+  recordColorUsage: (color: string) => void
+  updateColor: (color: string) => void
+  updateCustomColor: (color: string) => void
+  color?: string
+  updatedColor?: string
 }) {
   return (
     <div className={cn('flex flex-col', className)} {...props}>
@@ -269,7 +266,7 @@ function PureColorPicker({
         </ToolbarMenuGroup>
       )}
     </div>
-  );
+  )
 }
 
 const ColorPicker = React.memo(
@@ -279,8 +276,8 @@ const ColorPicker = React.memo(
     prev.colors === next.colors &&
     prev.colorsQueue === next.colorsQueue &&
     prev.customColors === next.customColors &&
-    prev.updatedColor === next.updatedColor
-);
+    prev.updatedColor === next.updatedColor,
+)
 
 function ColorCustom({
   className,
@@ -294,16 +291,16 @@ function ColorCustom({
   updatedColor,
   ...props
 }: {
-  colors: TColor[];
-  colorsQueue: string[];
-  customColors: TColor[];
-  recordColorUsage: (color: string) => void;
-  updateColor: (color: string) => void;
-  updateCustomColor: (color: string) => void;
-  color?: string;
-  updatedColor?: string;
+  colors: TColor[]
+  colorsQueue: string[]
+  customColors: TColor[]
+  recordColorUsage: (color: string) => void
+  updateColor: (color: string) => void
+  updateCustomColor: (color: string) => void
+  color?: string
+  updatedColor?: string
 } & React.ComponentPropsWithoutRef<'div'>) {
-  const [value, setValue] = React.useState<string>(color || '#000000');
+  const [value, setValue] = React.useState<string>(color || '#000000')
 
   const fullCustomColors = React.useMemo(
     () =>
@@ -312,14 +309,14 @@ function ColorCustom({
         .filter(
           (c) =>
             !DEFAULT_COLORS.some(
-              (dc) => normalizeColor(dc.value) === normalizeColor(c)
-            )
+              (dc) => normalizeColor(dc.value) === normalizeColor(c),
+            ),
         )
         .filter(
           (c) =>
             !DEFAULT_CUSTOM_COLORS.some(
-              (dc) => normalizeColor(dc.value) === normalizeColor(c)
-            )
+              (dc) => normalizeColor(dc.value) === normalizeColor(c),
+            ),
         )
         .map((c) => ({
           isBrightColor: computeIsBrightColor(c),
@@ -328,32 +325,32 @@ function ColorCustom({
         }))
         .slice(
           0,
-          MAX_CUSTOM_COLORS - customColors.length - (updatedColor ? 1 : 0)
+          MAX_CUSTOM_COLORS - customColors.length - (updatedColor ? 1 : 0),
         ),
-    [colorsQueue, customColors, updatedColor]
-  );
+    [colorsQueue, customColors, updatedColor],
+  )
 
   const isColorInCollections = React.useCallback(
     (targetColor: string) =>
       colors.some(
-        (c) => normalizeColor(c.value) === normalizeColor(targetColor)
+        (c) => normalizeColor(c.value) === normalizeColor(targetColor),
       ) ||
       customColors.some(
-        (c) => normalizeColor(c.value) === normalizeColor(targetColor)
+        (c) => normalizeColor(c.value) === normalizeColor(targetColor),
       ) ||
       fullCustomColors.some(
-        (c) => normalizeColor(c.value) === normalizeColor(targetColor)
+        (c) => normalizeColor(c.value) === normalizeColor(targetColor),
       ),
-    [colors, customColors, fullCustomColors]
-  );
+    [colors, customColors, fullCustomColors],
+  )
 
   const customColor = React.useMemo(() => {
     if (!updatedColor || isColorInCollections(updatedColor)) {
-      return null;
+      return null
     }
 
-    return updatedColor;
-  }, [isColorInCollections, updatedColor]);
+    return updatedColor
+  }, [isColorInCollections, updatedColor])
 
   const computedColors = React.useMemo(
     () =>
@@ -368,20 +365,20 @@ function ColorCustom({
             ...fullCustomColors,
           ]
         : [...customColors, ...fullCustomColors],
-    [customColor, fullCustomColors, customColors]
-  );
+    [customColor, fullCustomColors, customColors],
+  )
 
   const updateCustomColorDebounced = React.useMemo(
     () => debounce((value: string) => updateCustomColor(value), 100),
-    [updateCustomColor]
-  );
+    [updateCustomColor],
+  )
 
   React.useEffect(
     () => () => {
-      updateCustomColorDebounced.cancel();
+      updateCustomColorDebounced.cancel()
     },
-    [updateCustomColorDebounced]
-  );
+    [updateCustomColorDebounced],
+  )
 
   return (
     <div className={cn('flex flex-col gap-4', className)} {...props}>
@@ -389,15 +386,15 @@ function ColorCustom({
         color={color}
         colors={computedColors}
         updateColor={(c) => {
-          updateColor(c);
-          recordColorUsage(normalizeColor(c));
+          updateColor(c)
+          recordColorUsage(normalizeColor(c))
         }}
       >
         <ColorInput
           className="col-start-10"
           onChange={(e) => {
-            setValue(e.target.value);
-            updateCustomColorDebounced(e.target.value);
+            setValue(e.target.value)
+            updateCustomColorDebounced(e.target.value)
           }}
           value={value}
         >
@@ -407,10 +404,10 @@ function ColorCustom({
                 size: 'icon',
                 variant: 'outline',
               }),
-              'flex size-8 items-center justify-center rounded-full'
+              'flex size-8 items-center justify-center rounded-full',
             )}
             onSelect={(e) => {
-              e.preventDefault();
+              e.preventDefault()
             }}
           >
             <span className="sr-only">Custom</span>
@@ -419,7 +416,7 @@ function ColorCustom({
         </ColorInput>
       </ColorDropdownMenuItems>
     </div>
-  );
+  )
 }
 
 function ColorInput({
@@ -428,21 +425,21 @@ function ColorInput({
   value = '#000000',
   ...props
 }: React.ComponentProps<'input'> & { className?: string }) {
-  const inputRef = React.useRef<HTMLInputElement | null>(null);
+  const inputRef = React.useRef<HTMLInputElement | null>(null)
 
   return (
     <div className={cn('flex flex-col items-center', className)}>
       {React.Children.map(children, (child) => {
-        if (!child) return child;
+        if (!child) return child
 
         return React.cloneElement(
           child as React.ReactElement<{
-            onClick: () => void;
+            onClick: () => void
           }>,
           {
             onClick: () => inputRef.current?.click(),
-          }
-        );
+          },
+        )
       })}
       <input
         {...props}
@@ -452,14 +449,14 @@ function ColorInput({
         value={value}
       />
     </div>
-  );
+  )
 }
 
 type TColor = {
-  isBrightColor: boolean;
-  name: string;
-  value: string;
-};
+  isBrightColor: boolean
+  name: string
+  value: string
+}
 
 function ColorDropdownMenuItem({
   className,
@@ -470,11 +467,11 @@ function ColorDropdownMenuItem({
   value,
   ...props
 }: {
-  isBrightColor: boolean;
-  isSelected: boolean;
-  value: string;
-  updateColor: (color: string) => void;
-  name?: string;
+  isBrightColor: boolean
+  isSelected: boolean
+  value: string
+  updateColor: (color: string) => void
+  name?: string
 } & DropdownMenuItemProps) {
   const content = (
     <DropdownMenuItem
@@ -485,18 +482,18 @@ function ColorDropdownMenuItem({
         }),
         'my-1 flex size-6 items-center justify-center rounded-full border border-muted border-solid p-0 transition-all hover:scale-125',
         !isBrightColor && 'border-transparent text-white',
-        className
+        className,
       )}
       style={{ backgroundColor: value }}
       onSelect={(e) => {
-        e.preventDefault();
-        updateColor(value);
+        e.preventDefault()
+        updateColor(value)
       }}
       {...props}
     >
       {isSelected ? <CheckIcon className="!size-3" strokeWidth={3} /> : null}
     </DropdownMenuItem>
-  );
+  )
 
   return name ? (
     <Tooltip>
@@ -505,7 +502,7 @@ function ColorDropdownMenuItem({
     </Tooltip>
   ) : (
     content
-  );
+  )
 }
 
 export function ColorDropdownMenuItems({
@@ -515,15 +512,15 @@ export function ColorDropdownMenuItems({
   updateColor,
   ...props
 }: {
-  colors: TColor[];
-  updateColor: (color: string) => void;
-  color?: string;
+  colors: TColor[]
+  updateColor: (color: string) => void
+  color?: string
 } & React.ComponentProps<'div'>) {
   return (
     <div
       className={cn(
         'grid grid-cols-[repeat(10,1fr)] place-items-center gap-x-1',
-        className
+        className,
       )}
       {...props}
     >
@@ -543,7 +540,7 @@ export function ColorDropdownMenuItems({
         {props.children}
       </TooltipProvider>
     </div>
-  );
+  )
 }
 
 export const DEFAULT_COLORS = [
@@ -953,7 +950,7 @@ export const DEFAULT_COLORS = [
     name: 'dark magenta 3',
     value: '#4C1130',
   },
-];
+]
 
 const DEFAULT_CUSTOM_COLORS = [
   {
@@ -981,4 +978,4 @@ const DEFAULT_CUSTOM_COLORS = [
     name: 'dark magenta 3',
     value: '#4C1130',
   },
-];
+]

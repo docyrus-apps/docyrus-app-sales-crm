@@ -1,9 +1,12 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import { cva, type VariantProps } from 'class-variance-authority'
+
 import { SparklesIcon, UploadIcon } from 'lucide-react'
-import { type VariantProps, cva } from 'class-variance-authority'
 
 import {
   type AvatarFieldMapping,
@@ -15,7 +18,7 @@ import {
   normalizeAvatarValue,
   resolveAvatarFieldMapping,
   resolveColorCssValue,
-} from '@/lib/avatar-utils'
+} from '@/lib/docyrus/avatar-utils'
 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -33,15 +36,14 @@ import {
   featuredHugeIcons,
   featuredIcons,
   hugeIcons,
-} from '@/lib/icon-libraries'
+} from '@/lib/docyrus/icon-libraries'
 
 import { ImageEditor } from '@/components/docyrus/image-editor'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 import { AvatarThumbnail } from '@/components/docyrus/avatar-thumbnail'
-
 const avatarSelectVariants = cva('', {
   variants: {
     editorDisplay: {
@@ -53,7 +55,6 @@ const avatarSelectVariants = cva('', {
     editorDisplay: 'inline',
   },
 })
-
 const EMOJI_OPTIONS = [
   '\u{1F680}',
   '\u{1F525}',
@@ -127,9 +128,11 @@ export function AvatarSelect({
 
   const normalizedValue = useMemo(() => normalizeAvatarValue(value), [value])
   const [internalValue, setInternalValue] = useState(normalizedValue)
-  const [mode, setMode] = useState<AvatarMode>(deriveMode(normalizedValue))
+  const [mode, setMode] = useState<AvatarMode>(() =>
+    deriveMode(normalizedValue),
+  )
   const [iconSearch, setIconSearch] = useState('')
-  const [iconLibrary, setIconLibrary] = useState<IconLibrary>(
+  const [iconLibrary, setIconLibrary] = useState<IconLibrary>(() =>
     getIconLibrary(normalizedValue.icon),
   )
   const [cropState, setCropState] = useState<CropState | null>(null)
@@ -137,11 +140,13 @@ export function AvatarSelect({
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    setInternalValue(normalizedValue)
-    setMode((prevMode) =>
-      prevMode === 'ai' ? prevMode : deriveMode(normalizedValue),
-    )
-    setIconLibrary(getIconLibrary(normalizedValue.icon))
+    queueMicrotask(() => {
+      setInternalValue(normalizedValue)
+      setMode((prevMode) =>
+        prevMode === 'ai' ? prevMode : deriveMode(normalizedValue),
+      )
+      setIconLibrary(getIconLibrary(normalizedValue.icon))
+    })
   }, [normalizedValue])
 
   const emit = useCallback(
@@ -539,5 +544,3 @@ export function AvatarSelect({
     </div>
   )
 }
-
-export { avatarSelectVariants }

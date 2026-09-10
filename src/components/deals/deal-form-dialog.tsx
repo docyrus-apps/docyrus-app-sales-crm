@@ -1,17 +1,25 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
-import { useEffect, useState } from 'react'
+import { useDateFnsLocale } from '@/hooks/use-date-fns-locale'
+import { useFormErrorReset } from '@/hooks/use-form-store'
+import { resolveFieldErrorMessage } from '@/lib/form-field-error'
+import { useCountryOptions } from '@/hooks/use-country-options'
+import { useEffect, useMemo, useState } from 'react'
+
+import type { DealFormData } from '@/schemas/deal-schema'
+
 import { useForm } from '@tanstack/react-form'
 import { zodValidator } from '@tanstack/zod-form-adapter'
 import { useTranslation } from 'react-i18next'
 import { CalendarIcon, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { format } from 'date-fns'
-import type { DealFormData } from '@/schemas/deal-schema'
+
 import { Button } from '@/components/animate-ui/components/buttons/button'
 import { AwesomeDialog } from '@/components/docyrus/awesome-dialog'
 import { AwesomeDialogHeader } from '@/components/docyrus/awesome-dialog/awesome-dialog-header'
 import { AwesomeDialogBody } from '@/components/docyrus/awesome-dialog/awesome-dialog-body'
 import { AwesomeDialogFooter } from '@/components/docyrus/awesome-dialog/awesome-dialog-footer'
-import { SelectFormField } from '@/components/docyrus/form-fields/select-form-field'
+import { FormSubmitAlert } from '@/components/crm/form-submit-alert'
+import { EnumComboboxField } from '@/components/docyrus/form-fields/enum-combobox-field'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,7 +30,7 @@ import { Calendar } from '@/components/ui/calendar'
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
+  PopoverTrigger
 } from '@/components/ui/popover'
 import { dealFormSchema } from '@/schemas/deal-schema'
 import { useCreateDeal, useUpdateDeal } from '@/hooks/use-deals'
@@ -31,13 +39,23 @@ import { useContacts } from '@/hooks/use-contacts'
 import { useUsers } from '@/hooks/use-users'
 import { useEnumOptions } from '@/hooks/use-enums'
 import { cn } from '@/lib/utils'
+import {
+  getSubmitFailureMessage,
+  validateSubmitValues
+} from '@/lib/form-submit-feedback'
 
 interface DealFormDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  deal?: any
-  mode: 'create' | 'edit'
-  onSubmitSuccess?: () => void | Promise<void>
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  deal?: any;
+  mode: 'create' | 'edit';
+  onSubmitSuccess?: () => void | Promise<void>;
+}
+
+function getRelationValue(value: any): string {
+  if (value && typeof value === 'object') return value.id || ''
+
+  return value || ''
 }
 
 export function DealFormDialog({
@@ -45,123 +63,191 @@ export function DealFormDialog({
   onOpenChange,
   deal,
   mode,
-  onSubmitSuccess,
+  onSubmitSuccess
 }: DealFormDialogProps) {
   const { t } = useTranslation()
+  const dateLocale = useDateFnsLocale()
   const createDeal = useCreateDeal()
   const updateDeal = useUpdateDeal()
   const { data: companies = [] } = useCompanies()
   const { data: contacts = [] } = useContacts()
   const { data: users = [] } = useUsers()
-  const { options: stageOptions = [] } = useEnumOptions('stage')
-  const { options: leadSourceOptions = [] } = useEnumOptions('lead_source')
-  const { options: customerTypeOptions = [] } = useEnumOptions('customer_type')
-  const { options: countryOptions = [] } = useEnumOptions('country')
-
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    deal?.expected_closing_date
-      ? new Date(deal.expected_closing_date)
-      : undefined,
+  const enumOptions = { appSlug: 'base_crm', dataSourceSlug: 'deal' }
+  const { options: stageOptions = [] } = useEnumOptions('stage', enumOptions)
+  const { options: leadSourceOptions = [] } = useEnumOptions(
+    'lead_source',
+    enumOptions
   )
-
-  const form = useForm<DealFormData>({
-    defaultValues: {
-      organization:
-        deal?.organization && typeof deal.organization === 'object'
-          ? deal.organization.id
-          : deal?.organization || '',
-      contact_person:
-        deal?.contact_person && typeof deal.contact_person === 'object'
-          ? deal.contact_person.id
-          : deal?.contact_person || '',
-      stage:
-        deal?.stage && typeof deal.stage === 'object'
-          ? deal.stage.id
-          : deal?.stage || '',
+  const { options: customerTypeOptions = [] } = useEnumOptions(
+    'customer_type',
+    enumOptions
+  )
+  const { options: reasonForLostOptions = [] } = useEnumOptions(
+    'reason_for_lost',
+    enumOptions
+  )
+  const countries = useCountryOptions()
+  const countryOptions = countries.map(country => ({
+    label: country.name,
+    value: country.id ?? ''
+  }))
+  const leadSourceComboboxOptions = leadSourceOptions.map((option: any) => ({
+    label: option.label,
+    value: option.value,
+    color: option.color,
+    icon: option.icon
+  }))
+  const customerTypeComboboxOptions = customerTypeOptions.map(
+    (option: any) => ({
+      label: option.label,
+      value: option.value,
+      color: option.color,
+      icon: option.icon
+    })
+  )
+  const reasonForLostComboboxOptions = reasonForLostOptions.map(
+    (option: any) => ({
+      label: option.label,
+      value: option.value,
+      color: option.color,
+      icon: option.icon
+    })
+  )
+  const initialValues = useMemo<DealFormData>(
+    () => ({
+      organization: getRelationValue(deal?.organization),
+      contact_person: getRelationValue(deal?.contact_person),
+      stage: getRelationValue(deal?.stage),
       deal_value: deal?.deal_value || undefined,
       expected_revenue: deal?.expected_revenue || undefined,
       close_probability: deal?.close_probability || undefined,
       expected_closing_date: deal?.expected_closing_date || undefined,
-      lead_source:
-        deal?.lead_source && typeof deal.lead_source === 'object'
-          ? deal.lead_source.id
-          : deal?.lead_source || '',
-      customer_type:
-        deal?.customer_type && typeof deal.customer_type === 'object'
-          ? deal.customer_type.id
-          : deal?.customer_type || '',
-      country:
-        deal?.country && typeof deal.country === 'object'
-          ? deal.country.id
-          : deal?.country || '',
+      lead_source: getRelationValue(deal?.lead_source),
+      customer_type: getRelationValue(deal?.customer_type),
+      reason_for_lost: getRelationValue(deal?.reason_for_lost),
+      country: getRelationValue(deal?.country),
       hot_prospect: deal?.hot_prospect || false,
-      record_owner:
-        deal?.record_owner && typeof deal.record_owner === 'object'
-          ? deal.record_owner.id
-          : deal?.record_owner || '',
-    },
+      record_owner: getRelationValue(deal?.record_owner)
+    }),
+    [deal]
+  )
+
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>()
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
+  const form = useForm<DealFormData>({
+    formId: `deal-form-${mode}-${deal?.id ?? 'new'}`,
+    defaultValues: initialValues,
     validatorAdapter: zodValidator(),
     validators: {
       onChange: dealFormSchema,
+      onSubmit: dealFormSchema
     },
     onSubmit: async ({ value }) => {
-      // Clean up empty strings (convert to undefined for UUID fields)
-      const cleanedData = Object.fromEntries(
-        Object.entries(value).map(([key, val]) => [
-          key,
-          val === '' ? undefined : val,
-        ]),
-      )
+      try {
+        setSubmitError(null)
+        // Clean up empty strings (convert to undefined for UUID fields)
+        const cleanedData = Object.fromEntries(
+          Object.entries(value).map(([key, val]) => [key, val === '' ? undefined : val])
+        )
 
-      if (mode === 'create') {
-        await createDeal.mutateAsync(cleanedData)
-      } else if (deal?.id) {
-        await updateDeal.mutateAsync({ dealId: deal.id, data: cleanedData })
+        if (mode === 'create') {
+          await createDeal.mutateAsync(cleanedData)
+        } else if (deal?.id) {
+          await updateDeal.mutateAsync({ dealId: deal.id, data: cleanedData })
+        }
+
+        await onSubmitSuccess?.()
+        onOpenChange(false)
+      } catch (error) {
+        setSubmitError(getSubmitFailureMessage(error, t))
       }
-
-      await onSubmitSuccess?.()
-      onOpenChange(false)
-    },
+    }
   })
 
   useEffect(() => {
-    if (selectedDate) {
-      form.setFieldValue('expected_closing_date', selectedDate.toISOString())
-    }
+    if (!open) return
+
+    form.reset(initialValues)
+    setSelectedDate(
+      initialValues.expected_closing_date
+        ? new Date(initialValues.expected_closing_date)
+        : undefined
+    )
+    setSubmitError(null)
+  }, [
+form,
+initialValues,
+open,
+mode
+])
+
+  useFormErrorReset(form.store, setSubmitError)
+
+  useEffect(() => {
+    form.setFieldValue(
+      'expected_closing_date',
+      selectedDate ? selectedDate.toISOString() : undefined
+    )
   }, [selectedDate, form])
 
   const companyOptions = companies.map((company: any) => ({
-    label: company.name,
-    value: company.id,
+    label: company.name || company.email || company.id,
+    value: company.id
   }))
 
   const contactOptions = contacts.map((contact: any) => ({
-    label: contact.name,
-    value: contact.id,
+    label: contact.name || contact.email || contact.mobile || contact.id,
+    value: contact.id
   }))
 
   const userOptions = users.map((user: any) => ({
-    label: `${user.firstname} ${user.lastname}`,
-    value: user.id,
+    label:
+      [user.firstname, user.lastname].filter(Boolean).join(' ') ||
+      user.name ||
+      user.email ||
+      user.id,
+    value: user.id
   }))
 
   const isSubmitting = createDeal.isPending || updateDeal.isPending
+  const fieldLabels = {
+    organization: t('deals.form.organizationLabel'),
+    stage: t('deals.form.stageLabel')
+  }
+  const handleFormSubmit = () => {
+    const validationMessage = validateSubmitValues(
+      dealFormSchema,
+      form.state.values,
+      fieldLabels,
+      t
+    )
+
+    if (validationMessage) {
+      setSubmitError(validationMessage)
+      toast.error(validationMessage)
+
+      return
+    }
+
+    setSubmitError(null)
+    void form.handleSubmit()
+  }
 
   return (
     <AwesomeDialog
       open={open}
       onOpenChange={onOpenChange}
-      container="modal"
-      size="lg"
-    >
+      container={mode === 'create' ? 'sheet' : 'modal'}
+      side="right"
+      size={mode === 'create' ? 'xl' : 'lg'}>
       <form
         onSubmit={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          form.handleSubmit()
+          handleFormSubmit()
         }}
-        className="flex flex-col flex-1 overflow-hidden"
-      >
+        className="flex flex-col flex-1 overflow-hidden">
         <AwesomeDialogHeader
           title={
             mode === 'create'
@@ -172,14 +258,16 @@ export function DealFormDialog({
             mode === 'create'
               ? t('deals.form.createDescription')
               : t('deals.form.editDescription')
-          }
-        />
+          } />
 
         <AwesomeDialogBody className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <FormSubmitAlert
+            title={t('common.validationError')}
+            message={submitError} />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {/* Organization Field */}
             <form.Field name="organization">
-              {(field) => (
+              {field => (
                 <Field>
                   <Label htmlFor={field.name}>
                     {t('deals.form.organizationLabel')}{' '}
@@ -188,16 +276,12 @@ export function DealFormDialog({
                   <Combobox
                     options={companyOptions}
                     value={field.state.value}
-                    onValueChange={(value) => field.handleChange(value)}
+                    onValueChange={value => field.handleChange(value)}
                     placeholder={t('deals.form.organizationPlaceholder')}
-                    emptyText={t('deals.form.organizationEmpty')}
-                  />
+                    emptyText={t('deals.form.organizationEmpty')} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
+                      {resolveFieldErrorMessage(field.state.meta.errors[0], t)}
                     </p>
                   )}
                 </Field>
@@ -205,24 +289,26 @@ export function DealFormDialog({
             </form.Field>
 
             {/* Stage Field */}
-            <SelectFormField
+            <EnumComboboxField
+              required
               field={{
+                id: 'stage',
                 slug: 'stage',
                 name: t('deals.form.stageLabel'),
-                readOnly: false,
+                type: 'field-status',
+                readOnly: false
               }}
               form={form}
               enumOptions={stageOptions.map((opt: any) => ({
                 id: opt.value,
                 name: opt.label,
                 color: opt.color,
-                icon: opt.icon,
-              }))}
-            />
+                icon: opt.icon
+              }))} />
 
             {/* Deal Value Field */}
             <form.Field name="deal_value">
-              {(field) => (
+              {field => (
                 <Field>
                   <Label htmlFor={field.name}>
                     {t('deals.form.dealValueLabel')}
@@ -231,20 +317,14 @@ export function DealFormDialog({
                     id={field.name}
                     type="number"
                     value={field.state.value ?? ''}
-                    onChange={(e) =>
-                      field.handleChange(
-                        e.target.value ? Number(e.target.value) : undefined,
-                      )
-                    }
+                    onChange={e => field.handleChange(
+                        e.target.value ? Number(e.target.value) : undefined
+                      )}
                     placeholder="0.00"
-                    step="0.01"
-                  />
+                    step="0.01" />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
+                      {resolveFieldErrorMessage(field.state.meta.errors[0], t)}
                     </p>
                   )}
                 </Field>
@@ -253,7 +333,7 @@ export function DealFormDialog({
 
             {/* Expected Revenue Field */}
             <form.Field name="expected_revenue">
-              {(field) => (
+              {field => (
                 <Field>
                   <Label htmlFor={field.name}>
                     {t('deals.form.expectedRevenueLabel')}
@@ -262,20 +342,14 @@ export function DealFormDialog({
                     id={field.name}
                     type="number"
                     value={field.state.value ?? ''}
-                    onChange={(e) =>
-                      field.handleChange(
-                        e.target.value ? Number(e.target.value) : undefined,
-                      )
-                    }
+                    onChange={e => field.handleChange(
+                        e.target.value ? Number(e.target.value) : undefined
+                      )}
                     placeholder="0.00"
-                    step="0.01"
-                  />
+                    step="0.01" />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
+                      {resolveFieldErrorMessage(field.state.meta.errors[0], t)}
                     </p>
                   )}
                 </Field>
@@ -284,8 +358,8 @@ export function DealFormDialog({
 
             {/* Close Probability Field */}
             <form.Field name="close_probability">
-              {(field) => (
-                <Field className="col-span-2">
+              {field => (
+                <Field className="md:col-span-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor={field.name}>
                       {t('deals.form.closeProbabilityLabel')}:{' '}
@@ -294,17 +368,13 @@ export function DealFormDialog({
                   </div>
                   <Slider
                     value={[field.state.value || 0]}
-                    onValueChange={(value) => field.handleChange(value[0])}
+                    onValueChange={value => field.handleChange(value[0])}
                     max={100}
                     step={5}
-                    className="mt-2"
-                  />
+                    className="mt-2" />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
+                      {resolveFieldErrorMessage(field.state.meta.errors[0], t)}
                     </p>
                   )}
                 </Field>
@@ -313,7 +383,7 @@ export function DealFormDialog({
 
             {/* Expected Closing Date Field */}
             <form.Field name="expected_closing_date">
-              {(field) => (
+              {field => (
                 <Field>
                   <Label htmlFor={field.name}>
                     {t('deals.form.expectedClosingDateLabel')}
@@ -324,12 +394,11 @@ export function DealFormDialog({
                         variant="outline"
                         className={cn(
                           'w-full justify-start text-left font-normal',
-                          !selectedDate && 'text-muted-foreground',
-                        )}
-                      >
+                          !selectedDate && 'text-muted-foreground'
+                        )}>
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {selectedDate ? (
-                          format(selectedDate, 'PPP')
+                          format(selectedDate, 'PPP', { locale: dateLocale })
                         ) : (
                           <span>{t('common.pickADate')}</span>
                         )}
@@ -340,16 +409,12 @@ export function DealFormDialog({
                         mode="single"
                         selected={selectedDate}
                         onSelect={setSelectedDate}
-                        initialFocus
-                      />
+                        initialFocus />
                     </PopoverContent>
                   </Popover>
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
+                      {resolveFieldErrorMessage(field.state.meta.errors[0], t)}
                     </p>
                   )}
                 </Field>
@@ -357,56 +422,108 @@ export function DealFormDialog({
             </form.Field>
 
             {/* Lead Source Field */}
-            <SelectFormField
-              field={{
-                slug: 'lead_source',
-                name: t('deals.form.leadSourceLabel'),
-                readOnly: false,
-              }}
-              form={form}
-              enumOptions={leadSourceOptions.map((opt: any) => ({
-                id: opt.value,
-                name: opt.label,
-                color: opt.color,
-                icon: opt.icon,
-              }))}
-            />
+            <form.Field name="lead_source">
+              {field => (
+                <Field>
+                  <Label htmlFor={field.name}>
+                    {t('deals.form.leadSourceLabel')}
+                  </Label>
+                  <Combobox
+                    options={leadSourceComboboxOptions}
+                    value={field.state.value}
+                    onValueChange={value => field.handleChange(value)}
+                    placeholder={t('deals.form.leadSourceLabel')}
+                    emptyText={t('common.noResults', {
+                      defaultValue: 'No results'
+                    })} />
+                  {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {resolveFieldErrorMessage(field.state.meta.errors[0], t)}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
 
             {/* Customer Type Field */}
-            <SelectFormField
-              field={{
-                slug: 'customer_type',
-                name: t('deals.form.customerTypeLabel'),
-                readOnly: false,
-              }}
-              form={form}
-              enumOptions={customerTypeOptions.map((opt: any) => ({
-                id: opt.value,
-                name: opt.label,
-                color: opt.color,
-                icon: opt.icon,
-              }))}
-            />
+            <form.Field name="customer_type">
+              {field => (
+                <Field>
+                  <Label htmlFor={field.name}>
+                    {t('deals.form.customerTypeLabel')}
+                  </Label>
+                  <Combobox
+                    options={customerTypeComboboxOptions}
+                    value={field.state.value}
+                    onValueChange={value => field.handleChange(value)}
+                    placeholder={t('deals.form.customerTypeLabel')}
+                    emptyText={t('common.noResults', {
+                      defaultValue: 'No results'
+                    })} />
+                  {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {resolveFieldErrorMessage(field.state.meta.errors[0], t)}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
+
+            {/* Reason For Lost Field */}
+            <form.Field name="reason_for_lost">
+              {field => (
+                <Field>
+                  <Label htmlFor={field.name}>
+                    {t('deals.reasonForLost', {
+                      defaultValue: 'Reason for Lost'
+                    })}
+                  </Label>
+                  <Combobox
+                    options={reasonForLostComboboxOptions}
+                    value={field.state.value}
+                    onValueChange={value => field.handleChange(value)}
+                    placeholder={t('deals.reasonForLost', {
+                      defaultValue: 'Reason for Lost'
+                    })}
+                    emptyText={t('common.noResults', {
+                      defaultValue: 'No results'
+                    })} />
+                  {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {resolveFieldErrorMessage(field.state.meta.errors[0], t)}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
 
             {/* Country Field */}
-            <SelectFormField
-              field={{
-                slug: 'country',
-                name: t('deals.form.countryLabel'),
-                readOnly: false,
-              }}
-              form={form}
-              enumOptions={countryOptions.map((opt: any) => ({
-                id: opt.value,
-                name: opt.label,
-                color: opt.color,
-                icon: opt.icon,
-              }))}
-            />
+            <form.Field name="country">
+              {field => (
+                <Field>
+                  <Label htmlFor={field.name}>
+                    {t('deals.form.countryLabel')}
+                  </Label>
+                  <Combobox
+                    options={countryOptions}
+                    value={field.state.value}
+                    onValueChange={value => field.handleChange(value)}
+                    placeholder={t('deals.form.countryLabel')}
+                    emptyText={t('common.noResults', {
+                      defaultValue: 'No results'
+                    })} />
+                  {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {resolveFieldErrorMessage(field.state.meta.errors[0], t)}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
 
             {/* Contact Person Field */}
             <form.Field name="contact_person">
-              {(field) => (
+              {field => (
                 <Field>
                   <Label htmlFor={field.name}>
                     {t('deals.form.contactPersonLabel')}
@@ -414,16 +531,12 @@ export function DealFormDialog({
                   <Combobox
                     options={contactOptions}
                     value={field.state.value}
-                    onValueChange={(value) => field.handleChange(value)}
+                    onValueChange={value => field.handleChange(value)}
                     placeholder={t('deals.form.contactPersonPlaceholder')}
-                    emptyText={t('deals.form.contactPersonEmpty')}
-                  />
+                    emptyText={t('deals.form.contactPersonEmpty')} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
+                      {resolveFieldErrorMessage(field.state.meta.errors[0], t)}
                     </p>
                   )}
                 </Field>
@@ -432,7 +545,7 @@ export function DealFormDialog({
 
             {/* Record Owner Field */}
             <form.Field name="record_owner">
-              {(field) => (
+              {field => (
                 <Field>
                   <Label htmlFor={field.name}>
                     {t('deals.form.recordOwnerLabel')}
@@ -440,16 +553,12 @@ export function DealFormDialog({
                   <Combobox
                     options={userOptions}
                     value={field.state.value}
-                    onValueChange={(value) => field.handleChange(value)}
+                    onValueChange={value => field.handleChange(value)}
                     placeholder={t('deals.form.recordOwnerPlaceholder')}
-                    emptyText={t('deals.form.recordOwnerEmpty')}
-                  />
+                    emptyText={t('deals.form.recordOwnerEmpty')} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
+                      {resolveFieldErrorMessage(field.state.meta.errors[0], t)}
                     </p>
                   )}
                 </Field>
@@ -458,24 +567,21 @@ export function DealFormDialog({
 
             {/* Hot Prospect Field */}
             <form.Field name="hot_prospect">
-              {(field) => (
-                <Field className="col-span-2">
+              {field => (
+                <Field className="md:col-span-2">
                   <div className="flex items-center space-x-2">
                     <Switch
                       id={field.name}
-                      checked={field.state.value}
-                      onCheckedChange={field.handleChange}
-                    />
+                      type="button"
+                      checked={Boolean(field.state.value)}
+                      onCheckedChange={checked => field.handleChange(Boolean(checked))} />
                     <Label htmlFor={field.name} className="cursor-pointer">
                       {t('deals.form.hotProspectLabel')}
                     </Label>
                   </div>
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
+                      {resolveFieldErrorMessage(field.state.meta.errors[0], t)}
                     </p>
                   )}
                 </Field>
@@ -489,15 +595,13 @@ export function DealFormDialog({
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
-          >
+            disabled={isSubmitting}>
             {t('common.cancel')}
           </Button>
           <Button
             className="cursor-pointer"
             type="submit"
-            disabled={isSubmitting}
-          >
+            disabled={isSubmitting}>
             {isSubmitting && (
               <Loader2 className="cursor-pointer mr-2 h-4 w-4 animate-spin" />
             )}

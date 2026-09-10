@@ -1,11 +1,12 @@
+import { useTheme } from '@docyrus/theme-provider'
+
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
-import { useTheme } from '@docyrus/theme-provider'
 
 export function ThemeSelector() {
   const { colorTheme, setColorTheme, availableThemes } = useTheme()
@@ -16,7 +17,7 @@ export function ThemeSelector() {
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        {availableThemes.map((theme) => (
+        {availableThemes.map(theme => (
           <SelectItem key={theme.id} value={theme.id}>
             {theme.name}
           </SelectItem>

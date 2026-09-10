@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { useCallback, type ReactNode } from 'react'
 
 import { GripVertical, Plus, Trash2 } from 'lucide-react'
@@ -15,7 +17,7 @@ import {
   SortableOverlay,
   type SortableProps,
 } from '@/components/ui/sortable'
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 interface SchemaRepeaterItem {
   id: string

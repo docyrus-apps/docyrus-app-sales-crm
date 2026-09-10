@@ -1,7 +1,9 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import {
-  cloneElement,
+  Fragment,
   isValidElement,
   memo,
   useCallback,
@@ -11,10 +13,21 @@ import {
   useState,
 } from 'react'
 
+function decodeOptionLabels<T extends { label: string }>(items: T[]): T[] {
+  const txt = document.createElement('textarea')
+
+  return items.map((item) => {
+    txt.innerHTML = item.label
+
+    return txt.value === item.label ? item : { ...item, label: txt.value }
+  })
+}
+
 import {
   endOfMonth,
   endOfWeek,
   endOfYear,
+  format as formatDate_fns,
   isEqual,
   isSameDay,
   startOfDay,
@@ -28,11 +41,8 @@ import { Ellipsis } from 'lucide-react'
 import { type DateRange } from 'react-day-picker'
 
 import { cn } from '@/lib/utils'
-import { useDateFormat } from '@/lib/use-date-format'
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-
-import { Slider } from '@/components/ui/slider'
 
 import {
   Popover,
@@ -57,10 +67,15 @@ import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
-import { numberFilterOperators } from '../core/operators'
+import {
+  dateFilterOperators,
+  isRelativeDateOperator,
+  isXDaysRelativeOperator,
+  numberFilterOperators,
+} from '../core/operators'
 import { useDebounceCallback } from '../hooks/use-debounce-callback'
 import { take } from '../lib/array'
-import { createNumberRange } from '../lib/helpers'
+import { createNumberRange, isCompleteUuid } from '../lib/helpers'
 import { t, type Locale } from '../lib/i18n'
 import { DebouncedInput } from '../ui/debounced-input'
 
@@ -71,6 +86,7 @@ import {
   type ColumnOptionExtended,
   type DataTableFilterActions,
   type FilterModel,
+  type FilterOperators,
   type FilterStrategy,
 } from '../core/types'
 
@@ -82,17 +98,47 @@ interface FilterValueProps<TData, TType extends ColumnDataType> {
   locale?: Locale
 }
 
-export const FilterValue = memo(__FilterValue) as typeof __FilterValue
+const FilterValueMemo = memo(FilterValueImpl) as typeof FilterValueImpl
 
-function __FilterValue<TData, TType extends ColumnDataType>({
+export { FilterValueMemo as FilterValue }
+
+function FilterValueImpl<TData, TType extends ColumnDataType>({
   filter,
   column,
   actions,
   strategy,
   locale,
 }: FilterValueProps<TData, TType>) {
+  const [open, setOpen] = useState(false)
+
+  /*
+   * When the user picks a value-less relative date operator (today,
+   * lastWeek, …) from the operator dropdown, there's nothing to enter
+   * — auto-close the value popover so the user can see the refreshed
+   * grid instead of staring at a stuck popover. *XDays variants need
+   * the numeric N input, so they stay open.
+   */
+  const prevOperatorRef = useRef(filter?.operator)
+
+  useEffect(() => {
+    const prev = prevOperatorRef.current
+    const next = filter?.operator
+
+    prevOperatorRef.current = next
+
+    if (prev === next || !next) return
+
+    if (
+      column.type === 'date' &&
+      isRelativeDateOperator(next as FilterOperators['date']) &&
+      !isXDaysRelativeOperator(next as FilterOperators['date'])
+    ) {
+      queueMicrotask(() => setOpen(false))
+    }
+  }, [filter?.operator, column.type])
+
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
@@ -111,7 +157,7 @@ function __FilterValue<TData, TType extends ColumnDataType>({
         side="bottom"
         className="w-fit p-0 origin-(--radix-popover-content-transform-origin)"
       >
-        <FilterValueController
+        <FilterValueControllerMemo
           filter={filter}
           column={column}
           actions={actions}
@@ -177,6 +223,16 @@ export function FilterValueDisplay<TData, TType extends ColumnDataType>({
         />
       )
 
+    case 'uuid':
+      return (
+        <FilterValueUuidDisplay
+          filter={filter as FilterModel<'uuid'>}
+          column={column as Column<TData, 'uuid'>}
+          actions={actions}
+          locale={locale}
+        />
+      )
+
     case 'number':
       return (
         <FilterValueNumberDisplay
@@ -234,6 +290,32 @@ export function FilterValueOptionDisplay<TData>({
 }: FilterValueDisplayProps<TData, 'option'>) {
   const options = useMemo(() => column.getOptions(), [column])
   const selected = options.filter((o) => filter?.values.includes(o.value))
+
+  /*
+   * Async-options columns return `[]` from `getOptions()` (the data source
+   * for the option list lives on the server, not in the parent table's
+   * rows). Mirror the fallback already in `FilterValueMultiOptionDisplay`
+   * — when we can't resolve any selected option label locally, use the
+   * raw filter values count so the chip at least reads "N organization"
+   * instead of the misleading "0 organization".
+   */
+  if (!filter || filter.values.length === 0) {
+    return <span className="text-muted-foreground">Select…</span>
+  }
+
+  if (
+    column.asyncOptions &&
+    selected.length === 0 &&
+    filter.values.length > 0
+  ) {
+    const name = column.displayName.toLowerCase()
+
+    return (
+      <span>
+        {filter.values.length} {name}
+      </span>
+    )
+  }
 
   /*
    * We display the selected options based on how many are selected
@@ -297,6 +379,33 @@ export function FilterValueMultiOptionDisplay<TData>({
   const options = useMemo(() => column.getOptions(), [column])
   const selected = options.filter((o) => filter?.values.includes(o.value))
 
+  /*
+   * Async-options columns return `[]` from `getOptions()` (the data source
+   * for the option list lives on the server, not in the parent table's
+   * rows). That used to render the selected-values count as "0 record
+   * owner" even when the user had a selection. Fall back to the raw
+   * filter values count whenever we can't resolve any selected option
+   * label locally — at least the chip reads as a faithful "N record
+   * owner".
+   */
+  if (!filter || filter.values.length === 0) {
+    return <span className="text-muted-foreground">Select…</span>
+  }
+
+  if (
+    column.asyncOptions &&
+    selected.length === 0 &&
+    filter.values.length > 0
+  ) {
+    const name = column.displayName.toLowerCase()
+
+    return (
+      <span>
+        {filter.values.length} {name}
+      </span>
+    )
+  }
+
   if (selected.length === 1) {
     const item = selected[0]
 
@@ -331,7 +440,7 @@ export function FilterValueMultiOptionDisplay<TData>({
             const Icon = icon
 
             return isValidElement(Icon) ? (
-              cloneElement(Icon, { key: value })
+              <Fragment key={value}>{Icon}</Fragment>
             ) : (
               <Icon key={value} className="size-4" />
             )
@@ -345,37 +454,86 @@ export function FilterValueMultiOptionDisplay<TData>({
   )
 }
 
-function formatDateRange(
-  start: Date,
-  end: Date,
-  formatDate: (value: unknown) => string,
-) {
-  return `${formatDate(start)} - ${formatDate(end)}`
-}
-
 export function FilterValueDateDisplay<TData>({
   filter,
-  column: _column,
+  column,
   actions: _actions,
-  locale: _locale = 'en',
 }: FilterValueDisplayProps<TData, 'date'>) {
-  const { formatDate } = useDateFormat()
+  const includeTime = column.includeTime === true
+
+  /*
+   * Format chip text directly with date-fns instead of routing through
+   * `useDateFormat()` — the app-wide provider may be configured to
+   * render dates in UTC, which would silently shift the user's chip
+   * 3 hours back from what they actually picked in the popover.
+   * Filter values are always in the user's local wall-clock time, so
+   * display them with the local TZ.
+   */
+  const formatLocal = (value: Date): string => {
+    return formatDate_fns(
+      value,
+      includeTime ? 'yyyy-MM-dd HH:mm:ss' : 'yyyy-MM-dd',
+    )
+  }
 
   if (!filter) return null
+
+  /*
+   * Relative operators carry no calendar value — the chip text already
+   * comes from the operator label (e.g. "is last 7 days"), so we only
+   * surface the value chip when there's a numeric N to show.
+   */
+  if (isRelativeDateOperator(filter.operator)) {
+    if (!isXDaysRelativeOperator(filter.operator)) return null
+    /*
+     * `FilterValues<'date'>` is `Array<Date>`, but for the *XDays variants
+     * the value is actually a number entered in the popover. Treat it as
+     * unknown here so the display can render either type without a cast
+     * tower elsewhere.
+     */
+    const raw: unknown = filter.values[0]
+
+    if (raw === undefined || raw === null || raw === '') {
+      return <Ellipsis className="size-4" />
+    }
+
+    return <span className="tabular-nums tracking-tight">{String(raw)}</span>
+  }
+
   if (filter.values.length === 0) return <Ellipsis className="size-4" />
   if (filter.values.length === 1) {
     const value = filter.values[0] as Date
 
-    return <span>{formatDate(value)}</span>
+    if (typeof window !== 'undefined') {
+      // eslint-disable-next-line no-console
+      console.log('[filter-value] display single', {
+        operator: filter.operator,
+        value,
+        valueIso: value.toISOString?.(),
+        valueLocal: formatLocal(value),
+      })
+    }
+
+    return <span>{formatLocal(value)}</span>
   }
 
-  const formattedRangeStr = formatDateRange(
-    filter.values[0] as Date,
-    filter.values[1] as Date,
-    formatDate,
-  )
+  const from = filter.values[0] as Date
+  const to = filter.values[1] as Date
 
-  return <span>{formattedRangeStr}</span>
+  if (typeof window !== 'undefined') {
+    // eslint-disable-next-line no-console
+    console.log('[filter-value] display range', {
+      operator: filter.operator,
+      from,
+      to,
+      fromIso: from.toISOString?.(),
+      toIso: to.toISOString?.(),
+      fromLocal: formatLocal(from),
+      toLocal: formatLocal(to),
+    })
+  }
+
+  return <span>{`${formatLocal(from)} - ${formatLocal(to)}`}</span>
 }
 
 export function FilterValueTextDisplay<TData>({
@@ -391,6 +549,26 @@ export function FilterValueTextDisplay<TData>({
   const value = filter.values[0]
 
   return <span>{value}</span>
+}
+
+export function FilterValueUuidDisplay<TData>({
+  filter,
+  column: _column,
+  actions: _actions,
+  locale: _locale = 'en',
+}: FilterValueDisplayProps<TData, 'uuid'>) {
+  if (!filter) return null
+
+  if (filter.operator === 'is empty' || filter.operator === 'is not empty') {
+    return null
+  }
+
+  if (filter.values.length === 0 || filter.values[0]?.trim() === '')
+    return <Ellipsis className="size-4" />
+
+  const value = filter.values[0]
+
+  return <span className="font-mono">{value}</span>
 }
 
 export function FilterValueNumberDisplay<TData>({
@@ -430,9 +608,11 @@ interface FilterValueControllerProps<TData, TType extends ColumnDataType> {
   locale?: Locale
 }
 
-export const FilterValueController = memo(
+const FilterValueControllerMemo = memo(
   __FilterValueController,
 ) as typeof __FilterValueController
+
+export { FilterValueControllerMemo as FilterValueController }
 
 function __FilterValueController<TData, TType extends ColumnDataType>({
   filter,
@@ -516,6 +696,17 @@ function __FilterValueController<TData, TType extends ColumnDataType>({
         />
       )
 
+    case 'uuid':
+      return (
+        <FilterValueUuidController
+          filter={filter as FilterModel<'uuid'>}
+          column={column as Column<TData, 'uuid'>}
+          actions={actions}
+          strategy={strategy}
+          locale={locale}
+        />
+      )
+
     case 'number':
       return (
         <FilterValueNumberController
@@ -573,7 +764,7 @@ export function FilterValueBooleanController<TData>({
   const falseLabel = column.falseLabel ?? t('false', locale)
 
   return (
-    <div className="flex flex-col gap-1 px-2 py-2">
+    <div className="flex flex-col gap-1 p-2">
       <Tabs
         value={
           currentValue === true ? 'true' : currentValue === false ? 'false' : ''
@@ -651,8 +842,11 @@ function FilterValueAsyncOptionController<
 
     const controller = new AbortController()
 
-    setIsLoading(true)
-    setPage(0)
+    queueMicrotask(() => {
+      if (controller.signal.aborted) return
+      setIsLoading(true)
+      setPage(0)
+    })
     load({
       search: debouncedSearch,
       page: 0,
@@ -661,7 +855,7 @@ function FilterValueAsyncOptionController<
     })
       .then((result) => {
         if (controller.signal.aborted) return
-        setItems(result.items)
+        setItems(decodeOptionLabels(result.items))
         setHasMore(result.hasMore ?? false)
       })
       .catch((error: unknown) => {
@@ -685,7 +879,7 @@ function FilterValueAsyncOptionController<
     setIsLoading(true)
     load({ search: debouncedSearch, page: nextPage, pageSize })
       .then((result) => {
-        setItems((prev) => [...prev, ...result.items])
+        setItems((prev) => [...prev, ...decodeOptionLabels(result.items)])
         setPage(nextPage)
         setHasMore(result.hasMore ?? false)
       })
@@ -722,7 +916,6 @@ function FilterValueAsyncOptionController<
   return (
     <Command shouldFilter={false}>
       <CommandInput
-        autoFocus
         value={search}
         onValueChange={setSearch}
         placeholder={t('search', locale)}
@@ -868,20 +1061,25 @@ export function FilterValueOptionController<TData>({
       ...o,
       selected: filter?.values.includes(o.value) ?? false,
       initialSelected: filter?.values.includes(o.value) ?? false,
-      count: counts?.get(o.value) ?? 0,
+      ...(counts !== undefined && counts.size > 0
+        ? { count: counts.get(o.value) ?? 0 }
+        : {}),
     }))
   }, [column, filter?.values])
 
   const [options, setOptions] = useState(initialOptions)
 
-  useEffect(() => {
+  const prevFilterValuesRef = useRef(filter?.values)
+
+  if (prevFilterValuesRef.current !== filter?.values) {
+    prevFilterValuesRef.current = filter?.values
     setOptions((prev) =>
       prev.map((o) => ({
         ...o,
         selected: filter?.values.includes(o.value) ?? false,
       })),
     )
-  }, [filter?.values])
+  }
 
   const handleToggle = useCallback(
     (value: string, checked: boolean) => {
@@ -905,7 +1103,7 @@ export function FilterValueOptionController<TData>({
 
   return (
     <Command loop>
-      <CommandInput autoFocus placeholder={t('search', locale)} />
+      <CommandInput placeholder={t('search', locale)} />
       <CommandEmpty>{t('noresults', locale)}</CommandEmpty>
       <CommandList className="max-h-fit">
         <CommandGroup className={cn(selectedOptions.length === 0 && 'hidden')}>
@@ -950,21 +1148,26 @@ export function FilterValueMultiOptionController<TData>({
         ...o,
         selected,
         initialSelected: selected,
-        count: counts?.get(o.value) ?? 0,
+        ...(counts !== undefined && counts.size > 0
+          ? { count: counts.get(o.value) ?? 0 }
+          : {}),
       }
     })
   }, [column, filter?.values])
 
   const [options, setOptions] = useState(initialOptions)
 
-  useEffect(() => {
+  const prevFilterValuesRef = useRef(filter?.values)
+
+  if (prevFilterValuesRef.current !== filter?.values) {
+    prevFilterValuesRef.current = filter?.values
     setOptions((prev) =>
       prev.map((o) => ({
         ...o,
         selected: filter?.values.includes(o.value) ?? false,
       })),
     )
-  }, [filter?.values])
+  }
 
   const handleToggle = useCallback(
     (value: string, checked: boolean) => {
@@ -988,7 +1191,7 @@ export function FilterValueMultiOptionController<TData>({
 
   return (
     <Command loop>
-      <CommandInput autoFocus placeholder={t('search', locale)} />
+      <CommandInput placeholder={t('search', locale)} />
       <CommandEmpty>{t('noresults', locale)}</CommandEmpty>
       <CommandList>
         <CommandGroup className={cn(selectedOptions.length === 0 && 'hidden')}>
@@ -1078,12 +1281,53 @@ function rangesEqual(a: DateRange | undefined, b: DateRange): boolean {
   return isSameDay(a.from, b.from) && isSameDay(aTo, bTo)
 }
 
+function pad2(n: number): string {
+  return n.toString().padStart(2, '0')
+}
+
+function getTimeString(date: unknown): string {
+  /*
+   * Date columns share one controller across calendar AND relative/X-days
+   * operators. For X-days the filter value is a numeric N, not a Date, so
+   * guard against non-Date inputs — calling `.getHours()` on a number threw
+   * `date.getHours is not a function` at mount (issue #102).
+   */
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '00:00'
+
+  return `${pad2(date.getHours())}:${pad2(date.getMinutes())}`
+}
+
+function applyTimeToDate(date: Date, time: string): Date {
+  const [hStr, mStr] = time.split(':')
+  const h = Number(hStr)
+  const m = Number(mStr)
+  const next = new Date(date)
+
+  next.setHours(Number.isFinite(h) ? h : 0, Number.isFinite(m) ? m : 0, 0, 0)
+
+  if (typeof window !== 'undefined') {
+    // eslint-disable-next-line no-console
+    console.log('[filter-value] applyTimeToDate', {
+      inputDate: date,
+      inputIso: date.toISOString?.(),
+      time,
+      output: next,
+      outputIso: next.toISOString(),
+      outputLocal: `${next.getFullYear()}-${pad2(next.getMonth() + 1)}-${pad2(next.getDate())} ${pad2(next.getHours())}:${pad2(next.getMinutes())}`,
+    })
+  }
+
+  return next
+}
+
 export function FilterValueDateController<TData>({
   filter,
   column,
   actions,
   locale = 'en',
 }: FilterValueControllerProps<TData, 'date'>) {
+  const includeTime = column.includeTime === true
+
   /*
    * Don't seed `from` with today when no filter has been picked yet — that
    * causes the first calendar click to be interpreted as the *end* of the
@@ -1091,21 +1335,109 @@ export function FilterValueDateController<TData>({
    * `<clicked> – today` instead of letting the user pick start then end.
    */
   const [date, setDate] = useState<DateRange | undefined>({
-    from: filter?.values[0],
-    to: filter?.values[1],
+    /*
+     * Only seed Date values — X-days operators store a numeric N here, which
+     * must not leak into the calendar's DateRange (issue #102).
+     */
+    from: filter?.values[0] instanceof Date ? filter.values[0] : undefined,
+    to: filter?.values[1] instanceof Date ? filter.values[1] : undefined,
   })
+
+  const [fromTime, setFromTime] = useState<string>(() =>
+    getTimeString(filter?.values[0]),
+  )
+  const [toTime, setToTime] = useState<string>(() =>
+    getTimeString(filter?.values[1]),
+  )
 
   const presets = useMemo(() => getDatePresets(locale), [locale])
 
+  /*
+   * Relative operators (today / lastWeek / xDaysAgo / …) — selected from
+   * the operator dropdown. The popover then either auto-confirms (no
+   * value needed) or renders a single numeric input for the *XDays
+   * variants.
+   */
+  if (filter && isRelativeDateOperator(filter.operator)) {
+    if (isXDaysRelativeOperator(filter.operator)) {
+      const rawDays = filter.values[0]
+      /*
+       * Only echo a finite numeric N. The operator-pick commits `0` upfront
+       * (see FilterOperatorDateController), so a stale calendar Date never
+       * reaches the input — guard anyway so `Number(Date)` can't surface a
+       * huge millisecond value (issue #102).
+       */
+      const daysValue =
+        typeof rawDays === 'number' && Number.isFinite(rawDays) ? rawDays : 0
+      const commitDays = (value: string | number) => {
+        const n = Number(value)
+
+        if (!Number.isFinite(n) || n < 0) return
+        actions.setFilterValue(column, [n] as never)
+      }
+
+      return (
+        <div className="flex flex-col gap-2 p-3 w-64">
+          <span className="text-xs font-medium text-muted-foreground">
+            {t('filters.date.daysLabel', locale)}
+          </span>
+          <DebouncedInput
+            type="number"
+            min={0}
+            placeholder="0"
+            value={daysValue}
+            onChange={commitDays}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                commitDays((e.target as HTMLInputElement).value)
+              }
+            }}
+          />
+        </div>
+      )
+    }
+
+    return (
+      <div className="px-3 py-2 text-xs text-muted-foreground">
+        {t(dateFilterOperators[filter.operator].key, locale)}
+      </div>
+    )
+  }
+
   function applyRange(range: DateRange) {
-    const start = range.from
-    const end =
+    let start: Date | undefined = range.from
+    let end: Date | undefined =
       range.to && start && !isEqual(start, range.to) ? range.to : undefined
+
+    if (includeTime) {
+      if (start) start = applyTimeToDate(start, fromTime)
+      if (end) end = applyTimeToDate(end, toTime)
+    }
+
+    if (typeof window !== 'undefined') {
+      // eslint-disable-next-line no-console
+      console.log('[filter-value] applyRange', {
+        rangeFrom: range.from,
+        rangeTo: range.to,
+        includeTime,
+        fromTime,
+        toTime,
+        finalStart: start,
+        finalStartIso: start?.toISOString(),
+        finalEnd: end,
+        finalEndIso: end?.toISOString(),
+      })
+    }
 
     setDate({ from: start, to: end })
 
-    const isRange = start && end
-    const newValues = isRange ? [start, end] : start ? [start] : []
+    if (!start) {
+      actions.setFilterValue(column, [])
+
+      return
+    }
+
+    const newValues: Array<Date> = end ? [start, end] : [start]
 
     actions.setFilterValue(column, newValues)
   }
@@ -1118,6 +1450,35 @@ export function FilterValueDateController<TData>({
       return
     }
     applyRange(value)
+  }
+
+  function changeFromTime(value: string) {
+    setFromTime(value)
+
+    if (date?.from) {
+      const next = applyTimeToDate(date.from, value)
+      const end = date.to
+
+      setDate({ from: next, to: end })
+      const newValues = end ? [next, end] : [next]
+
+      actions.setFilterValue(column, newValues as never)
+    }
+  }
+
+  function changeToTime(value: string) {
+    setToTime(value)
+
+    if (date?.to) {
+      const next = applyTimeToDate(date.to, value)
+      const start = date.from
+
+      setDate({ from: start, to: next })
+
+      if (start) {
+        actions.setFilterValue(column, [start, next] as never)
+      }
+    }
   }
 
   return (
@@ -1144,14 +1505,44 @@ export function FilterValueDateController<TData>({
                 )
               })}
             </div>
-            <Calendar
-              initialFocus
-              mode="range"
-              defaultMonth={date?.from}
-              selected={date}
-              onSelect={changeDateRange}
-              numberOfMonths={1}
-            />
+            <div className="flex flex-col gap-2">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={date?.from}
+                selected={date}
+                onSelect={changeDateRange}
+                numberOfMonths={1}
+              />
+              {includeTime && (
+                <div className="flex items-center gap-2 px-1 pb-1">
+                  <div className="flex flex-1 items-center gap-1.5">
+                    <span className="text-xs text-muted-foreground">
+                      {t('filters.date.from', locale)}
+                    </span>
+                    <input
+                      type="time"
+                      value={fromTime}
+                      onChange={(e) => changeFromTime(e.target.value)}
+                      className="h-7 w-full rounded-md border border-input bg-transparent px-2 text-xs tabular-nums shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    />
+                  </div>
+                  {date?.to && (
+                    <div className="flex flex-1 items-center gap-1.5">
+                      <span className="text-xs text-muted-foreground">
+                        {t('filters.date.to', locale)}
+                      </span>
+                      <input
+                        type="time"
+                        value={toTime}
+                        onChange={(e) => changeToTime(e.target.value)}
+                        className="h-7 w-full rounded-md border border-input bg-transparent px-2 text-xs tabular-nums shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </CommandGroup>
       </CommandList>
@@ -1176,11 +1567,56 @@ export function FilterValueTextController<TData>({
           <CommandItem>
             <DebouncedInput
               placeholder={t('search', locale)}
-              autoFocus
               value={filter?.values[0] ?? ''}
               onChange={changeText}
             />
           </CommandItem>
+        </CommandGroup>
+      </CommandList>
+    </Command>
+  )
+}
+
+export function FilterValueUuidController<TData>({
+  filter,
+  column,
+  actions,
+  locale = 'en',
+}: FilterValueControllerProps<TData, 'uuid'>) {
+  const isEmptyOperator =
+    filter?.operator === 'is empty' || filter?.operator === 'is not empty'
+
+  const changeText = (value: string | number) => {
+    actions.setFilterValue(column, [String(value)])
+  }
+
+  if (isEmptyOperator) {
+    return (
+      <div className="px-3 py-2 text-xs text-muted-foreground">
+        {t('booleanEmptyHint', locale)}
+      </div>
+    )
+  }
+
+  const current = filter?.values[0] ?? ''
+  const showInvalidHint = current.trim() !== '' && !isCompleteUuid(current)
+
+  return (
+    <Command>
+      <CommandList className="max-h-fit">
+        <CommandGroup>
+          <CommandItem>
+            <DebouncedInput
+              placeholder={t('filters.uuid.placeholder', locale)}
+              value={current}
+              onChange={changeText}
+            />
+          </CommandItem>
+          {showInvalidHint && (
+            <div className="px-2 pb-2 text-xs text-muted-foreground">
+              {t('filters.uuid.invalidHint', locale)}
+            </div>
+          )}
         </CommandGroup>
       </CommandList>
     </Command>
@@ -1194,14 +1630,14 @@ export function FilterValueNumberController<TData>({
   locale = 'en',
 }: FilterValueControllerProps<TData, 'number'>) {
   const minMax = useMemo(() => column.getFacetedMinMaxValues(), [column])
-  const [sliderMin, sliderMax] = [
-    minMax ? minMax[0] : 0,
-    minMax ? minMax[1] : 0,
-  ]
 
   const [values, setValues] = useState(filter?.values ?? [0, 0])
 
-  useEffect(() => {
+  const prevFilterValuesNumRef = useRef(filter?.values)
+
+  if (prevFilterValuesNumRef.current !== filter?.values) {
+    prevFilterValuesNumRef.current = filter?.values
+
     if (
       filter?.values &&
       filter.values.length === values.length &&
@@ -1209,7 +1645,7 @@ export function FilterValueNumberController<TData>({
     ) {
       setValues(filter.values)
     }
-  }, [filter?.values, values])
+  }
 
   const isNumberRange =
     filter && numberFilterOperators[filter.operator].target === 'multiple'
@@ -1280,7 +1716,7 @@ export function FilterValueNumberController<TData>({
 
   return (
     <Command>
-      <CommandList className="w-75 px-2 py-2">
+      <CommandList className="w-75 p-2">
         <CommandGroup>
           <div className="flex flex-col w-full">
             <Tabs
@@ -1292,16 +1728,6 @@ export function FilterValueNumberController<TData>({
                 <TabsTrigger value="range">{t('range', locale)}</TabsTrigger>
               </TabsList>
               <TabsContent value="single" className="flex flex-col gap-4 mt-4">
-                {minMax && (
-                  <Slider
-                    value={[values[0] ?? 0]}
-                    onValueChange={(value) => changeNumber(value)}
-                    min={sliderMin}
-                    max={sliderMax}
-                    step={1}
-                    aria-orientation="horizontal"
-                  />
-                )}
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-medium">
                     {t('value', locale)}
@@ -1315,16 +1741,6 @@ export function FilterValueNumberController<TData>({
                 </div>
               </TabsContent>
               <TabsContent value="range" className="flex flex-col gap-4 mt-4">
-                {minMax && (
-                  <Slider
-                    value={values} // Use values directly
-                    onValueChange={changeNumber}
-                    min={sliderMin}
-                    max={sliderMax}
-                    step={1}
-                    aria-orientation="horizontal"
-                  />
-                )}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium">

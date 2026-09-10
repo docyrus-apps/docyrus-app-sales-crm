@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import {
   useCallback,
   useEffect,
@@ -11,6 +13,7 @@ import {
   type ReactNode,
 } from 'react'
 
+import { type DataForm } from '@docyrus/app-utils'
 import {
   type ColumnSort,
   type SortDirection,
@@ -23,9 +26,11 @@ import {
   CircleMinus,
   CirclePlus,
   Columns3,
+  Copy,
   EllipsisVertical,
   Eye,
   EyeOff,
+  FileText,
   GripVertical,
   Layers,
   Loader2,
@@ -117,13 +122,13 @@ import {
 import { SchemaRepeater } from '@/components/docyrus/schema-repeater'
 import { isColumnGroupable } from '@/components/docyrus/data-grid/lib/data-grid-grouping'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 import {
   allIcons,
   featuredHugeIcons,
   featuredIcons,
   hugeIcons,
-} from '@/lib/icon-libraries'
+} from '@/lib/docyrus/icon-libraries'
 import {
   applyViewToTable,
   getColumnLabel,
@@ -196,6 +201,13 @@ interface DataGridViewSelectProps<TData> extends ComponentProps<'div'> {
   onViewReorder?: (orderedViewIds: Array<string>) => void
   hiddenViewIds?: Array<string>
   fields?: Array<FullField>
+  /**
+   * Saved forms available on the data source (from `expand=forms`). When
+   * provided (and non-empty), the view editor shows a **Form** section where
+   * the user binds one of these forms to the view via `SavedDataGridView.formId`.
+   * Omitted / empty → the Form section is hidden.
+   */
+  forms?: Array<DataForm>
   editable?: boolean
   disabled?: boolean
   placeholder?: string
@@ -236,6 +248,7 @@ function DataGridViewSelect<TData>({
   onViewReorder,
   hiddenViewIds,
   fields,
+  forms,
   editable = false,
   disabled,
   placeholder,
@@ -326,6 +339,24 @@ function DataGridViewSelect<TData>({
     [views],
   )
 
+  const onDuplicateView = useCallback(
+    (view: SavedDataGridView) => {
+      if (!onViewCreate) return
+
+      const copySuffix = t('ui.dataGridView.copySuffix', '(Copy)')
+      const duplicate: SavedDataGridView = {
+        ...view,
+        id: getGeneratedViewId(),
+        name: `${view.name} ${copySuffix}`,
+        isSystem: false,
+        isDefault: false,
+      }
+
+      onViewCreate(duplicate, { afterViewId: view.id })
+    },
+    [t, onViewCreate],
+  )
+
   const visibleViews = useMemo(() => {
     if (!hiddenViewIds || hiddenViewIds.length === 0) return views
 
@@ -414,6 +445,7 @@ function DataGridViewSelect<TData>({
           onViewHide={onViewHide}
           onViewUnhide={onViewUnhide}
           onViewDelete={onViewDelete}
+          onDuplicateView={onViewCreate ? onDuplicateView : undefined}
           className={className}
           {...props}
         />
@@ -428,6 +460,7 @@ function DataGridViewSelect<TData>({
             onDelete={onViewDelete}
             onViewSwitch={onEditorViewSwitch}
             fields={fields}
+            forms={forms}
             defaultRowGroupingColumn={defaultRowGroupingColumn}
             isSaving={isSaving}
             disabled={disabled}
@@ -509,6 +542,9 @@ function DataGridViewSelect<TData>({
                         onViewDelete={editable ? onViewDelete : undefined}
                         onAddViewAfter={openEditorForCreate}
                         onAddViewBefore={openEditorForCreate}
+                        onDuplicateView={
+                          editable && onViewCreate ? onDuplicateView : undefined
+                        }
                         onManageAllViews={openManageDialog}
                         editable={editable}
                         disabled={disabled}
@@ -547,6 +583,7 @@ function DataGridViewSelect<TData>({
           onDelete={onViewDelete}
           onViewSwitch={onEditorViewSwitch}
           fields={fields}
+          forms={forms}
           defaultRowGroupingColumn={defaultRowGroupingColumn}
           isSaving={isSaving}
           disabled={disabled}
@@ -587,6 +624,7 @@ interface ActiveViewMenuProps {
   onViewDelete?: (viewId: string) => void
   onAddViewAfter: (position: { afterViewId: string }) => void
   onAddViewBefore: (position: { beforeViewId: string }) => void
+  onDuplicateView?: (view: SavedDataGridView) => void
   onManageAllViews: () => void
   editable?: boolean
   disabled?: boolean
@@ -603,6 +641,7 @@ function ActiveViewMenu({
   onViewDelete,
   onAddViewAfter,
   onAddViewBefore,
+  onDuplicateView,
   onManageAllViews,
   editable = true,
   disabled,
@@ -696,6 +735,14 @@ function ActiveViewMenu({
                   <Plus />
                   {t('ui.dataGridView.addViewBefore', 'Add View Before')}
                 </DropdownMenuItem>
+                {onDuplicateView && (
+                  <DropdownMenuItem
+                    onSelect={() => onDuplicateView(activeView)}
+                  >
+                    <Copy />
+                    {t('ui.dataGridView.duplicateView', 'Duplicate view')}
+                  </DropdownMenuItem>
+                )}
               </>
             )}
             {canEdit && onViewDelete && (
@@ -1123,6 +1170,7 @@ interface DropdownVariantProps extends ComponentProps<'div'> {
   onViewHide?: (viewId: string) => void
   onViewUnhide?: (viewId: string) => void
   onViewDelete?: (viewId: string) => void
+  onDuplicateView?: (view: SavedDataGridView) => void
 }
 
 function DropdownVariant({
@@ -1139,6 +1187,7 @@ function DropdownVariant({
   onViewHide,
   onViewUnhide,
   onViewDelete,
+  onDuplicateView,
   className,
   ...props
 }: DropdownVariantProps) {
@@ -1240,6 +1289,7 @@ function DropdownVariant({
           onViewDelete={onViewDelete}
           onAddViewAfter={onOpenCreate}
           onAddViewBefore={onOpenCreate}
+          onDuplicateView={onDuplicateView}
           onManageAllViews={onOpenManage}
           disabled={disabled}
         />
@@ -1268,6 +1318,7 @@ interface ViewEditorDialogProps<TData> extends Omit<
   onCancel?: () => void
   onViewSwitch?: (viewId: string) => void
   fields?: Array<FullField>
+  forms?: Array<DataForm>
   defaultRowGroupingColumn?: string
   /**
    * `true` while a save request is in flight. The dialog stays open with a
@@ -1291,9 +1342,6 @@ function createEmptyDraft(): Omit<SavedDataGridView, 'id'> {
     columnFilters: [],
     grouping: [],
     filterQuery: { ...DEFAULT_FILTER_QUERY },
-    pagingEnabled: true,
-    pagingMode: 'standard',
-    pageSize: DATA_GRID_DEFAULT_PAGE_SIZE,
   }
 }
 
@@ -1364,6 +1412,7 @@ function ViewEditorDialog<TData>({
   onCancel,
   onViewSwitch,
   fields,
+  forms,
   defaultRowGroupingColumn,
   isSaving,
   disabled,
@@ -1408,9 +1457,9 @@ function ViewEditorDialog<TData>({
   const [draftRowHeight, setDraftRowHeight] = useState<RowHeightValue>('short')
   const [draftDisplayMode, setDraftDisplayMode] =
     useState<DataGridDisplayMode>('table')
-  const [draftPagingEnabled, setDraftPagingEnabled] = useState<boolean>(true)
+  const [draftPagingEnabled, setDraftPagingEnabled] = useState<boolean>(false)
   const [draftPagingMode, setDraftPagingMode] =
-    useState<DataGridPagingMode>('standard')
+    useState<DataGridPagingMode>('virtual-scroll')
   const [draftPageSize, setDraftPageSize] = useState<number>(
     DATA_GRID_DEFAULT_PAGE_SIZE,
   )
@@ -1419,6 +1468,7 @@ function ViewEditorDialog<TData>({
   const [draftReadOnlyColumns, setDraftReadOnlyColumns] = useState<
     Array<string>
   >([])
+  const [draftFormId, setDraftFormId] = useState<string | undefined>(undefined)
 
   const initDraft = useCallback(() => {
     if (value) {
@@ -1438,13 +1488,14 @@ function ViewEditorDialog<TData>({
       setDraftGrouping(value.grouping?.[0])
       setDraftRowHeight(value.rowHeight ?? 'short')
       setDraftDisplayMode(value.displayMode ?? 'table')
-      setDraftPagingEnabled(value.pagingEnabled ?? true)
-      setDraftPagingMode('standard')
+      setDraftPagingEnabled(value.pagingEnabled ?? false)
+      setDraftPagingMode(value.pagingMode ?? 'virtual-scroll')
       setDraftPageSize(value.pageSize ?? DATA_GRID_DEFAULT_PAGE_SIZE)
       setDraftInlineEditingEnabled(value.inlineEditingEnabled ?? false)
       setDraftReadOnlyColumns(
         value.readOnlyColumns ? [...value.readOnlyColumns] : [],
       )
+      setDraftFormId(value.formId)
     } else {
       const empty = createEmptyDraft()
 
@@ -1458,11 +1509,12 @@ function ViewEditorDialog<TData>({
       setDraftGrouping(undefined)
       setDraftRowHeight(table.options.meta?.rowHeight ?? 'short')
       setDraftDisplayMode(table.options.meta?.displayMode ?? 'table')
-      setDraftPagingEnabled(empty.pagingEnabled ?? true)
-      setDraftPagingMode(empty.pagingMode ?? 'standard')
+      setDraftPagingEnabled(false)
+      setDraftPagingMode('virtual-scroll')
       setDraftPageSize(DATA_GRID_DEFAULT_PAGE_SIZE)
       setDraftInlineEditingEnabled(false)
       setDraftReadOnlyColumns([])
+      setDraftFormId(undefined)
     }
 
     setDraftColumns(buildDraftColumns(table, value))
@@ -1470,13 +1522,13 @@ function ViewEditorDialog<TData>({
 
   const prevOpenRef = useRef(open)
 
-  useEffect(() => {
-    if (open && !prevOpenRef.current) {
+  if (open !== prevOpenRef.current) {
+    prevOpenRef.current = open
+
+    if (open) {
       initDraft()
     }
-
-    prevOpenRef.current = open
-  }, [open, initDraft])
+  }
 
   const onDialogOpenChange = useCallback(
     (nextOpen: boolean) => {
@@ -1537,6 +1589,8 @@ function ViewEditorDialog<TData>({
         draftInlineEditingEnabled && draftReadOnlyColumns.length > 0
           ? [...draftReadOnlyColumns]
           : undefined,
+      columnOptions: table.options.meta?.columnOptions ?? value?.columnOptions,
+      formId: draftFormId || undefined,
     }
 
     onSave?.(savedView)
@@ -1570,10 +1624,12 @@ function ViewEditorDialog<TData>({
     draftGrouping,
     draftRowHeight,
     draftDisplayMode,
+    draftFormId,
     value,
     onSave,
     onOpenChange,
     isSaving,
+    table.options.meta?.columnOptions,
   ])
 
   /*
@@ -1592,7 +1648,7 @@ function ViewEditorDialog<TData>({
 
     if (pendingSaveRef.current) {
       pendingSaveRef.current = false
-      onOpenChange(false)
+      queueMicrotask(() => onOpenChange(false))
     }
   }, [isSaving, onOpenChange])
 
@@ -1625,12 +1681,6 @@ function ViewEditorDialog<TData>({
     },
     [],
   )
-
-  const onPagingEnabledChange = useCallback((enabled: boolean) => {
-    setDraftPagingEnabled(enabled)
-
-    if (enabled) setDraftPagingMode('standard')
-  }, [])
 
   const canSave = draftName.trim().length > 0
 
@@ -1741,12 +1791,15 @@ function ViewEditorDialog<TData>({
           onGroupingChange={setDraftGrouping}
           onRowHeightChange={setDraftRowHeight}
           onDisplayModeChange={setDraftDisplayMode}
-          onPagingEnabledChange={onPagingEnabledChange}
+          onPagingEnabledChange={setDraftPagingEnabled}
           onPagingModeChange={setDraftPagingMode}
           onPageSizeChange={setDraftPageSize}
           onInlineEditingEnabledChange={setDraftInlineEditingEnabled}
           onReadOnlyColumnsChange={setDraftReadOnlyColumns}
+          draftFormId={draftFormId}
+          onFormChange={setDraftFormId}
           fields={fields}
+          forms={forms}
           defaultRowGroupingColumn={defaultRowGroupingColumn}
           disabled={disabled}
         />
@@ -1801,6 +1854,7 @@ const SECTION_IDS = {
   rowGrouping: 'rowGrouping',
   paging: 'paging',
   inlineEditing: 'inlineEditing',
+  form: 'form',
   filters: 'filters',
   rowColorRules: 'rowColorRules',
   cellColorRules: 'cellColorRules',
@@ -1850,7 +1904,10 @@ interface EditorBodyProps<TData> {
   onPageSizeChange: (size: number) => void
   onInlineEditingEnabledChange: (enabled: boolean) => void
   onReadOnlyColumnsChange: (columns: Array<string>) => void
+  draftFormId: string | undefined
+  onFormChange: (formId: string | undefined) => void
   fields?: Array<FullField>
+  forms?: Array<DataForm>
   defaultRowGroupingColumn?: string
   disabled?: boolean
 }
@@ -1892,7 +1949,10 @@ function EditorBody<TData>({
   onPageSizeChange,
   onInlineEditingEnabledChange,
   onReadOnlyColumnsChange,
+  draftFormId,
+  onFormChange,
   fields,
+  forms,
   defaultRowGroupingColumn,
   disabled,
 }: EditorBodyProps<TData>) {
@@ -1903,6 +1963,7 @@ function EditorBody<TData>({
   )
 
   const hasFilters = fields && fields.length > 0
+  const hasForms = Boolean(forms && forms.length > 0)
 
   const sections = useMemo(() => {
     const base: Array<{ id: string; label: string; icon: typeof Settings2 }> = [
@@ -1938,6 +1999,14 @@ function EditorBody<TData>({
       },
     ]
 
+    if (hasForms) {
+      base.push({
+        id: SECTION_IDS.form,
+        label: t('ui.dataGridView.form', 'Form'),
+        icon: FileText,
+      })
+    }
+
     if (hasFilters) {
       base.push({
         id: SECTION_IDS.filters,
@@ -1960,7 +2029,7 @@ function EditorBody<TData>({
     )
 
     return base
-  }, [hasFilters, t])
+  }, [hasForms, hasFilters, t])
 
   const scrollToSection = useCallback((sectionId: string) => {
     const el = scrollRef.current?.querySelector(`[data-section="${sectionId}"]`)
@@ -2094,6 +2163,18 @@ function EditorBody<TData>({
             />
           </div>
 
+          {forms && forms.length > 0 && (
+            <div data-section={SECTION_IDS.form}>
+              <FormSection
+                id={id}
+                forms={forms}
+                value={draftFormId}
+                onChange={onFormChange}
+                disabled={disabled}
+              />
+            </div>
+          )}
+
           {hasFilters && (
             <div data-section={SECTION_IDS.filters}>
               <FilterSection
@@ -2202,7 +2283,6 @@ function TitleSection({
             placeholder={t('ui.dataGridView.viewNamePlaceholder', 'View name')}
             disabled={disabled}
             className="flex-1"
-            autoFocus
           />
         </div>
       </div>
@@ -3080,6 +3160,104 @@ function PagingSection({
 
 /*
  * ---------------------------------------------------------------------------
+ * FormSection — bind a saved Docyrus form to this view
+ * ---------------------------------------------------------------------------
+ */
+
+/*
+ * Radix `Select` can't represent an empty selection with a `value=""` item, so
+ * "no form bound" is carried by this sentinel and mapped back to `undefined`.
+ */
+const FORM_NONE_VALUE = '__none__'
+
+interface FormSectionProps {
+  id: string
+  forms: Array<DataForm>
+  value: string | undefined
+  onChange: (formId: string | undefined) => void
+  disabled?: boolean
+}
+
+function FormSection({
+  id,
+  forms,
+  value,
+  onChange,
+  disabled,
+}: FormSectionProps) {
+  const { t } = useUiTranslation()
+
+  const activeForms = useMemo(
+    () => forms.filter((form) => form.archived !== true),
+    [forms],
+  )
+
+  /*
+   * Fall back to "none" when the bound form no longer exists (e.g. deleted or
+   * archived since the view was saved) so the trigger never shows a stale id.
+   */
+  const selectValue =
+    value && activeForms.some((form) => form.id === value)
+      ? value
+      : FORM_NONE_VALUE
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div>
+        <h3 className="text-sm font-semibold">
+          {t('ui.dataGridView.form', 'Form')}
+        </h3>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {t(
+            'ui.dataGridView.formDescription',
+            'Bind a saved form to this view. Record create / edit surfaces open this form when the view is active.',
+          )}
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={`${id}-form`}>
+          {t('ui.dataGridView.formSelectLabel', 'Form layout')}
+        </Label>
+        <Select
+          value={selectValue}
+          onValueChange={(next) =>
+            onChange(next === FORM_NONE_VALUE ? undefined : next)
+          }
+          disabled={disabled}
+        >
+          <SelectTrigger id={`${id}-form`} size="sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={FORM_NONE_VALUE}>
+              {t('ui.dataGridView.formNone', 'No form (default layout)')}
+            </SelectItem>
+            {activeForms.map((form) => (
+              <SelectItem key={form.id} value={form.id}>
+                {form.name ||
+                  form.title ||
+                  t('ui.dataGridView.formUntitled', 'Untitled form')}
+                {form.is_default
+                  ? ` ${t('ui.dataGridView.formDefaultSuffix', '(default)')}`
+                  : ''}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          {t(
+            'ui.dataGridView.formHint',
+            'When no form is bound, the record layout falls back to the data source fields in a single column.',
+          )}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+/*
+ * ---------------------------------------------------------------------------
  * InlineEditingSection — toggle inline cell editing + per-column read-only
  * ---------------------------------------------------------------------------
  */
@@ -3215,7 +3393,7 @@ function InlineEditingSection({
           </div>
         </div>
 
-        <ul className="flex max-h-72 flex-col gap-1 overflow-y-auto px-2 py-2">
+        <ul className="flex max-h-72 flex-col gap-1 overflow-y-auto p-2">
           {columns.map((column) => {
             const isForced = column.forcedReadOnly === true
             const isExplicitReadOnly = explicitSet.has(column.id)

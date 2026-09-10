@@ -1,5 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ICollectionListParams } from '@/collections/types'
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+
 import { useBaseCrmSalesOrderItemCollection } from '@/collections'
 
 export function useSalesOrderItems(params?: ICollectionListParams) {
@@ -20,53 +22,55 @@ export function useSalesOrderItems(params?: ICollectionListParams) {
           'tax_rate',
           'total',
           'gross_total',
-          'net_total',
+          'net_total'
         ],
-        orderBy: params?.orderBy || 'created_on DESC',
+        orderBy: params?.orderBy || 'created_on DESC'
       })
+
       return response
     },
-    enabled: !!params,
+    enabled: !!params
   })
 }
 
 export function useCreateSalesOrderItem() {
   const salesOrderItemCollection = useBaseCrmSalesOrderItemCollection()
   const queryClient = useQueryClient()
+
   return useMutation({
-    mutationFn: async (data: Record<string, any>) =>
-      await salesOrderItemCollection.create(data),
+    mutationFn: async (data: Record<string, any>) => await salesOrderItemCollection.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sales-order-items'] })
-    },
+    }
   })
 }
 
 export function useUpdateSalesOrderItem() {
   const salesOrderItemCollection = useBaseCrmSalesOrderItemCollection()
   const queryClient = useQueryClient()
+
   return useMutation({
     mutationFn: async ({
       itemId,
-      data,
+      data
     }: {
-      itemId: string
-      data: Record<string, any>
+      itemId: string;
+      data: Record<string, any>;
     }) => await salesOrderItemCollection.update(itemId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sales-order-items'] })
-    },
+    }
   })
 }
 
 export function useDeleteSalesOrderItem() {
   const salesOrderItemCollection = useBaseCrmSalesOrderItemCollection()
   const queryClient = useQueryClient()
+
   return useMutation({
-    mutationFn: async (itemId: string) =>
-      await salesOrderItemCollection.delete(itemId),
+    mutationFn: async (itemId: string) => await salesOrderItemCollection.delete(itemId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sales-order-items'] })
-    },
+    }
   })
 }

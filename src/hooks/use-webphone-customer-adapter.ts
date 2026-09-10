@@ -1,11 +1,20 @@
 import { useCallback, useMemo } from 'react'
-import { useNavigate } from '@tanstack/react-router'
-import { useBaseContactCollection } from '@/collections'
-import type { BaseContactEntity } from '@/collections/base-contact.collection'
-import { normalizePhoneForMatch } from '@/lib/webphone/phone'
-import type { CustomerAdapter, CustomerMatch } from '@/lib/webphone/types'
 
-const CONTACT_COLUMNS = ['id', 'name', 'email', 'mobile'] as Array<string>
+import type { BaseContactEntity } from '@/collections/base-contact.collection'
+
+import { useNavigate } from '@tanstack/react-router'
+
+import { useBaseContactCollection } from '@/collections'
+import { normalizePhoneForMatch } from '@/lib/webphone/phone'
+
+import { type CustomerAdapter, type CustomerMatch } from '@/lib/webphone/types'
+
+const CONTACT_COLUMNS = [
+'id',
+'name',
+'email',
+'mobile'
+] as Array<string>
 
 function contactToMatch(row: BaseContactEntity): CustomerMatch {
   return {
@@ -15,7 +24,7 @@ function contactToMatch(row: BaseContactEntity): CustomerMatch {
     phone: row.mobile ?? undefined,
     email: row.email ?? undefined,
     sourceAppSlug: 'base',
-    sourceDataSourceSlug: 'contact',
+    sourceDataSourceSlug: 'contact'
   }
 }
 
@@ -31,6 +40,7 @@ export function useWebphoneCustomerAdapter(): CustomerAdapter {
   const findByPhone = useCallback(
     async (phone: string) => {
       const normalized = normalizePhoneForMatch(phone)
+
       if (!normalized) return []
 
       const rows = await contacts.list({
@@ -41,15 +51,15 @@ export function useWebphoneCustomerAdapter(): CustomerAdapter {
             { field: 'mobile', operator: 'eq', value: phone },
             { field: 'mobile', operator: 'eq', value: normalized },
             { field: 'mobile', operator: 'eq', value: `+${normalized}` },
-            { field: 'mobile', operator: 'like', value: normalized.slice(-10) },
-          ],
+            { field: 'mobile', operator: 'like', value: normalized.slice(-10) }
+          ]
         },
-        limit: 10,
+        limit: 10
       })
 
-      return rows.filter((row) => row.id).map(contactToMatch)
+      return rows.filter(row => row.id).map(contactToMatch)
     },
-    [contacts],
+    [contacts]
   )
 
   return useMemo<CustomerAdapter>(
@@ -57,6 +67,7 @@ export function useWebphoneCustomerAdapter(): CustomerAdapter {
       findByPhone,
       async getById(id: string) {
         const row = await contacts.get(id, { columns: CONTACT_COLUMNS })
+
         return row.id ? contactToMatch(row) : null
       },
       getDialablePhone(record: unknown) {
@@ -64,15 +75,16 @@ export function useWebphoneCustomerAdapter(): CustomerAdapter {
         const value =
           (record as { mobile?: unknown }).mobile ??
           (record as { phone?: unknown }).phone
+
         return typeof value === 'string' && value.trim() ? value : null
       },
       openCustomerCard(match: CustomerMatch) {
         navigate({
           to: '/contacts/$contactId',
-          params: { contactId: match.id },
+          params: { contactId: match.id }
         })
-      },
+      }
     }),
-    [findByPhone, contacts, navigate],
+    [findByPhone, contacts, navigate]
   )
 }

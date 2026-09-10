@@ -29,8 +29,8 @@ const TR_ONES = [
   'Altı',
   'Yedi',
   'Sekiz',
-  'Dokuz'
-] as const;
+  'Dokuz',
+] as const
 
 const TR_TENS = [
   '',
@@ -42,66 +42,61 @@ const TR_TENS = [
   'Altmış',
   'Yetmiş',
   'Seksen',
-  'Doksan'
-] as const;
+  'Doksan',
+] as const
 
-const TR_SCALES = [
-  '',
-  'Bin',
-  'Milyon',
-  'Milyar',
-  'Trilyon'
-] as const;
+const TR_SCALES = ['', 'Bin', 'Milyon', 'Milyar', 'Trilyon'] as const
 
 const TR_CURRENCY_NAMES: Record<string, { major: string; minor: string }> = {
   TRY: { major: 'Türk Lirası', minor: 'Kuruş' },
   USD: { major: 'ABD Doları', minor: 'Cent' },
   EUR: { major: 'Euro', minor: 'Cent' },
-  GBP: { major: 'İngiliz Sterlini', minor: 'Penny' }
-};
+  GBP: { major: 'İngiliz Sterlini', minor: 'Penny' },
+}
 
 function trChunkToWords(n: number): string {
-  const parts: string[] = [];
-  const h = Math.floor(n / 100);
-  const t = Math.floor((n % 100) / 10);
-  const o = n % 10;
+  const parts: string[] = []
+  const h = Math.floor(n / 100)
+  const t = Math.floor((n % 100) / 10)
+  const o = n % 10
 
-  if (h > 0) parts.push(h === 1 ? 'Yüz' : `${TR_ONES[h]} Yüz`);
-  if (t > 0) parts.push(TR_TENS[t] ?? '');
-  if (o > 0) parts.push(TR_ONES[o] ?? '');
+  if (h > 0) parts.push(h === 1 ? 'Yüz' : `${TR_ONES[h]} Yüz`)
+  if (t > 0) parts.push(TR_TENS[t] ?? '')
+  if (o > 0) parts.push(TR_ONES[o] ?? '')
 
-  return parts.join(' ').trim();
+  return parts.join(' ').trim()
 }
 
 function trIntegerToWords(value: number): string {
-  if (value === 0) return 'Sıfır';
-  if (value < 0) return `Eksi ${trIntegerToWords(-value)}`;
+  if (value === 0) return 'Sıfır'
+  if (value < 0) return `Eksi ${trIntegerToWords(-value)}`
 
-  let n = Math.floor(value);
-  let scaleIdx = 0;
-  let result = '';
+  let n = Math.floor(value)
+  let scaleIdx = 0
+  let result = ''
 
   while (n > 0) {
-    const chunk = n % 1000;
+    const chunk = n % 1000
 
     if (chunk > 0) {
-      let chunkWords = trChunkToWords(chunk);
+      let chunkWords = trChunkToWords(chunk)
 
       /*
        * "Bir Bin" → "Bin": singular thousand omits "bir" (but singular
        * million / milyar / trilyon KEEPS bir, so we only special-case scaleIdx=1).
        */
-      if (scaleIdx === 1 && chunk === 1) chunkWords = '';
-      const scale = TR_SCALES[scaleIdx] ?? '';
-      const piece = `${chunkWords}${chunkWords && scale ? ' ' : ''}${scale}`.trim();
+      if (scaleIdx === 1 && chunk === 1) chunkWords = ''
+      const scale = TR_SCALES[scaleIdx] ?? ''
+      const piece =
+        `${chunkWords}${chunkWords && scale ? ' ' : ''}${scale}`.trim()
 
-      result = `${piece}${result ? ` ${result}` : ''}`;
+      result = `${piece}${result ? ` ${result}` : ''}`
     }
-    n = Math.floor(n / 1000);
-    scaleIdx += 1;
+    n = Math.floor(n / 1000)
+    scaleIdx += 1
   }
 
-  return result;
+  return result
 }
 
 /**
@@ -113,21 +108,21 @@ function trIntegerToWords(value: number): string {
  *   numberToWordsTR(1500, "JPY")       → "Bin Beş Yüz JPY" (unknown code passes through)
  */
 export function numberToWordsTR(value: unknown, currency: unknown): string {
-  const amount = Number(value);
+  const amount = Number(value)
 
-  if (!Number.isFinite(amount)) return '';
-  const code = typeof currency === 'string' && currency ? currency : 'TRY';
-  const names = TR_CURRENCY_NAMES[code] ?? { major: code, minor: '' };
+  if (!Number.isFinite(amount)) return ''
+  const code = typeof currency === 'string' && currency ? currency : 'TRY'
+  const names = TR_CURRENCY_NAMES[code] ?? { major: code, minor: '' }
 
-  const intPart = Math.floor(Math.abs(amount));
-  const decPart = Math.round((Math.abs(amount) - intPart) * 100);
-  const intWords = trIntegerToWords(intPart);
-  const decWords = decPart > 0 ? trIntegerToWords(decPart) : '';
+  const intPart = Math.floor(Math.abs(amount))
+  const decPart = Math.round((Math.abs(amount) - intPart) * 100)
+  const intWords = trIntegerToWords(intPart)
+  const decWords = decPart > 0 ? trIntegerToWords(decPart) : ''
 
-  const sign = amount < 0 ? 'Eksi ' : '';
-  const major = `${sign}${intWords} ${names.major}`.trim();
+  const sign = amount < 0 ? 'Eksi ' : ''
+  const major = `${sign}${intWords} ${names.major}`.trim()
 
-  if (decPart === 0 || !names.minor) return major;
+  if (decPart === 0 || !names.minor) return major
 
-  return `${major} ${decWords} ${names.minor}`;
+  return `${major} ${decWords} ${names.minor}`
 }

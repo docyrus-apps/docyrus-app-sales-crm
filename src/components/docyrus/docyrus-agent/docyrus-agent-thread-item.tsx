@@ -1,8 +1,8 @@
-'use client';
+'use client'
 
 // @ts-nocheck
 /* eslint-disable */
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useState } from 'react'
 
 import {
   AlertDialog,
@@ -12,36 +12,37 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
-import {
-  MoreVertical, Pencil, Trash2
-} from 'lucide-react';
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import { cn } from '@/lib/utils'
+import { MoreVertical, Pencil, Trash2 } from 'lucide-react'
 
-import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation';
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
-import { type DocyrusAgentThread } from '@/hooks/docyrus/use-docyrus-agent-threads';
+import { type DocyrusAgentThread } from '@/hooks/docyrus/use-docyrus-agent-threads'
 
 export interface DocyrusAgentThreadItemProps {
-  thread: DocyrusAgentThread;
-  isActive?: boolean;
-  onSelect?: (thread: DocyrusAgentThread) => void;
-  onRename?: (thread: DocyrusAgentThread, subject: string) => void | Promise<void>;
-  onDelete?: (thread: DocyrusAgentThread) => void | Promise<void>;
+  thread: DocyrusAgentThread
+  isActive?: boolean
+  onSelect?: (thread: DocyrusAgentThread) => void
+  onRename?: (
+    thread: DocyrusAgentThread,
+    subject: string,
+  ) => void | Promise<void>
+  onDelete?: (thread: DocyrusAgentThread) => void | Promise<void>
   /** Hide the actions dropdown — useful for read-only displays. */
-  hideActions?: boolean;
+  hideActions?: boolean
   /** Override the meta row shown beneath the title when the item is active. */
-  meta?: ReactNode;
-  className?: string;
+  meta?: ReactNode
+  className?: string
 }
 
 /**
@@ -56,56 +57,61 @@ export const DocyrusAgentThreadItem = ({
   onDelete,
   hideActions,
   meta,
-  className
+  className,
 }: DocyrusAgentThreadItemProps) => {
-  const { t } = useUiTranslation();
-  const [renameOpen, setRenameOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [hovered, setHovered] = useState(false);
-  const [draft, setDraft] = useState(thread.title);
+  const { t } = useUiTranslation()
+  const [renameOpen, setRenameOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [hovered, setHovered] = useState(false)
+  const [draft, setDraft] = useState(thread.title)
 
-  const showExtras = isActive || hovered || menuOpen;
+  const showExtras = isActive || hovered || menuOpen
 
   const handleRenameSubmit = async () => {
-    const next = draft.trim();
+    const next = draft.trim()
 
     if (!next || next === thread.title) {
-      setRenameOpen(false);
+      setRenameOpen(false)
 
-      return;
+      return
     }
 
-    await onRename?.(thread, next);
-    setRenameOpen(false);
-  };
+    await onRename?.(thread, next)
+    setRenameOpen(false)
+  }
 
   const defaultMeta = (
     <div
       className={cn(
         'mt-0.5 items-baseline justify-between gap-2 text-xs text-muted-foreground',
-        showExtras ? 'flex' : 'hidden'
-      )}>
+        showExtras ? 'flex' : 'hidden',
+      )}
+    >
       <span className="truncate">{formatDate(thread.updatedAt)}</span>
-      {thread.createdByName && <span className="truncate">{thread.createdByName}</span>}
+      {thread.createdByName && (
+        <span className="truncate">{thread.createdByName}</span>
+      )}
     </div>
-  );
+  )
 
   return (
     <div
       className={cn(
         'relative w-full max-w-full cursor-pointer overflow-hidden rounded-md px-2 py-2 transition-colors',
         isActive ? 'bg-muted/60' : 'hover:bg-muted/40',
-        className
+        className,
       )}
       onClick={() => onSelect?.(thread)}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}>
+      onMouseLeave={() => setHovered(false)}
+    >
       <p
         className={cn(
           'truncate text-sm',
-          isActive ? 'font-medium text-foreground' : 'text-foreground'
-        )}>
+          isActive ? 'font-medium text-foreground' : 'text-foreground',
+        )}
+      >
         {thread.title}
       </p>
       {meta ?? defaultMeta}
@@ -117,24 +123,27 @@ export const DocyrusAgentThreadItem = ({
               aria-label="Thread actions"
               className={cn(
                 'absolute right-1 top-1.5 size-6 transition-opacity',
-                showExtras ? 'opacity-100' : 'pointer-events-none opacity-0'
+                showExtras ? 'opacity-100' : 'pointer-events-none opacity-0',
               )}
               size="icon"
               variant="ghost"
-              onClick={event => event.stopPropagation()}>
+              onClick={(event) => event.stopPropagation()}
+            >
               <MoreVertical className="size-3.5" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
             className="w-40"
-            onClick={event => event.stopPropagation()}>
+            onClick={(event) => event.stopPropagation()}
+          >
             {onRename && (
               <DropdownMenuItem
                 onSelect={() => {
-                  setDraft(thread.title);
-                  setRenameOpen(true);
-                }}>
+                  setDraft(thread.title)
+                  setRenameOpen(true)
+                }}
+              >
                 <Pencil className="size-4" />
                 {t('ui.agent.rename', 'Rename')}
               </DropdownMenuItem>
@@ -142,7 +151,8 @@ export const DocyrusAgentThreadItem = ({
             {onDelete && (
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
-                onSelect={() => setDeleteOpen(true)}>
+                onSelect={() => setDeleteOpen(true)}
+              >
                 <Trash2 className="size-4" />
                 {t('ui.agent.delete', 'Delete')}
               </DropdownMenuItem>
@@ -152,19 +162,24 @@ export const DocyrusAgentThreadItem = ({
       )}
 
       <AlertDialog open={renameOpen} onOpenChange={setRenameOpen}>
-        <AlertDialogContent onClick={event => event.stopPropagation()}>
+        <AlertDialogContent onClick={(event) => event.stopPropagation()}>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('ui.agent.renameThread', 'Rename thread')}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t('ui.agent.renameThread', 'Rename thread')}
+            </AlertDialogTitle>
           </AlertDialogHeader>
           <Input
             autoFocus
             value={draft}
-            onChange={event => setDraft(event.target.value)}
+            onChange={(event) => setDraft(event.target.value)}
             onKeyDown={(event) => {
-              if (event.key === 'Enter') void handleRenameSubmit();
-            }} />
+              if (event.key === 'Enter') void handleRenameSubmit()
+            }}
+          />
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('ui.common.cancel', 'Cancel')}</AlertDialogCancel>
+            <AlertDialogCancel>
+              {t('ui.common.cancel', 'Cancel')}
+            </AlertDialogCancel>
             <AlertDialogAction onClick={() => void handleRenameSubmit()}>
               {t('ui.common.save', 'Save')}
             </AlertDialogAction>
@@ -173,37 +188,42 @@ export const DocyrusAgentThreadItem = ({
       </AlertDialog>
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <AlertDialogContent onClick={event => event.stopPropagation()}>
+        <AlertDialogContent onClick={(event) => event.stopPropagation()}>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('ui.agent.deleteThread', 'Delete thread?')}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t('ui.agent.deleteThread', 'Delete thread?')}
+            </AlertDialogTitle>
             <AlertDialogDescription>
               {t(
                 'ui.agent.deleteThreadDescription',
-                'This will permanently remove the conversation and its messages.'
+                'This will permanently remove the conversation and its messages.',
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('ui.common.cancel', 'Cancel')}</AlertDialogCancel>
+            <AlertDialogCancel>
+              {t('ui.common.cancel', 'Cancel')}
+            </AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={async () => {
-                await onDelete?.(thread);
-                setDeleteOpen(false);
-              }}>
+                await onDelete?.(thread)
+                setDeleteOpen(false)
+              }}
+            >
               {t('ui.agent.delete', 'Delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  );
-};
+  )
+}
 
 function formatDate(date: Date): string {
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
 
-  return `${day}.${month}.${year}`;
+  return `${day}.${month}.${year}`
 }

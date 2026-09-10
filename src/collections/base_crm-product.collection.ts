@@ -26,11 +26,20 @@ export interface BaseCrmProductEntity {
   /** Unit Price */
   unit_price?: number
 
+  /** Unit Price Currency */
+  __unit_price_currency?: 'TRY' | 'USD' | 'EUR'
+
   /** Unit */
   Unit?: { id: string; name: string } | any
 
   /** Product Code */
   product_code?: string
+
+  /** Product Name */
+  name?: string
+
+  /** Category */
+  category?: { id: string; name: string } | any
 
   /** Tax */
   tax?: number

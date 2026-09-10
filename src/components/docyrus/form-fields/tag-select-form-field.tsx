@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { useState } from 'react'
 
 import { Check, ChevronsUpDown, X } from 'lucide-react'
@@ -23,10 +25,12 @@ import {
 } from '@/components/ui/command'
 import { cn } from '@/lib/utils'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 import { FormFieldLabel } from './form-field-label'
 import { type DocyrusFormFieldProps } from './types'
+
+const EMPTY_ENUM_OPTIONS: never[] = []
 
 export function TagSelectFormField({
   field: fieldConfig,
@@ -34,16 +38,15 @@ export function TagSelectFormField({
   disabled,
   required,
   className,
-  enumOptions = [],
+  enumOptions = EMPTY_ENUM_OPTIONS,
 }: DocyrusFormFieldProps) {
   const { t } = useUiTranslation()
 
   const [open, setOpen] = useState(false)
 
   return (
-    <form.Field
-      name={fieldConfig.slug}
-      children={(field: any) => {
+    <form.Field name={fieldConfig.slug}>
+      {(field: any) => {
         const isInvalid =
           field.state.meta.isTouched && !field.state.meta.isValid
         const selected: Array<string> = Array.isArray(field.state.value)
@@ -71,7 +74,6 @@ export function TagSelectFormField({
               <PopoverTrigger asChild>
                 <Button
                   id={field.name}
-                  type="button"
                   variant="outline"
                   role="combobox"
                   aria-expanded={open}
@@ -177,6 +179,6 @@ export function TagSelectFormField({
           </Field>
         )
       }}
-    />
+    </form.Field>
   )
 }

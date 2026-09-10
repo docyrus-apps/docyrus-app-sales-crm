@@ -13,6 +13,30 @@
   }
 }
 
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  form :is(
+      [data-slot='input'],
+      [data-slot='textarea'],
+      [data-slot='select-trigger'],
+      [role='combobox']
+    ):not(:disabled) {
+    transition:
+      border-color 140ms ease,
+      box-shadow 140ms ease,
+      background-color 140ms ease;
+  }
+
+  form :is(
+      [data-slot='input'],
+      [data-slot='textarea'],
+      [data-slot='select-trigger'],
+      [role='combobox']
+    ):not(:disabled):hover {
+    border-color: color-mix(in srgb, var(--foreground) 18%, var(--border));
+    box-shadow: 0 2px 7px color-mix(in srgb, var(--foreground) 6%, transparent);
+  }
+}
+
 @source "./tailwind-safelist.txt";
 
 @plugin "tailwindcss-animate";

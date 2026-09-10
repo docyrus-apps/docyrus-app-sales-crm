@@ -21,6 +21,6 @@ export const isSupabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY)
  */
 export function createStorageClient(accessToken: string): SupabaseClient {
   return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    accessToken: async () => accessToken,
+    accessToken: async () => accessToken
   })
 }

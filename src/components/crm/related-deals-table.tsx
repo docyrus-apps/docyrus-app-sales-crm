@@ -1,26 +1,34 @@
 import { useMemo, useState } from 'react'
 
-import { CalendarClock, Search, Target } from 'lucide-react'
+import { CalendarClock, Plus, Search, Target } from 'lucide-react'
 
 import { useTranslation } from 'react-i18next'
 
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 export interface RelatedDeal {
-  id?: string
-  name?: string
-  stage?: { name?: string } | string
-  deal_value?: number
-  expected_closing_date?: string
+  id?: string;
+  name?: string;
+  stage?: { name?: string } | string;
+  deal_value?: number;
+  expected_closing_date?: string;
 }
 
 export interface RelatedDealsTableProps {
-  deals: Array<RelatedDeal>
-  isLoading?: boolean
-  searchPlaceholder?: string
-  emptyLabel?: string
-  onOpenDeal: (id: string) => void
+  deals: Array<RelatedDeal>;
+  isLoading?: boolean;
+  searchPlaceholder?: string;
+  emptyLabel?: string;
+  addLabel?: string;
+  onOpenDeal: (id: string) => void;
+  /**
+   * Optional. When provided the toolbar and the empty state offer an "add"
+   * affordance, matching RelatedContactsTable — without it the Deals tab was
+   * the only related tab with no way to create a record from the parent.
+   */
+  onAddDeal?: () => void;
 }
 
 const GRID_COLS =
@@ -37,11 +45,14 @@ export function RelatedDealsTable({
   isLoading,
   searchPlaceholder,
   emptyLabel,
+  addLabel,
   onOpenDeal,
+  onAddDeal
 }: RelatedDealsTableProps) {
   const { t } = useTranslation()
   const resolvedSearchPlaceholder =
     searchPlaceholder ?? t('relatedTables.deals.search')
+  const resolvedAddLabel = addLabel ?? t('relatedTables.deals.add')
   const resolvedEmptyLabel = emptyLabel ?? t('relatedTables.deals.empty')
   const [query, setQuery] = useState('')
 
@@ -62,26 +73,34 @@ export function RelatedDealsTable({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {/* Toolbar */}
-      <div className="px-4 py-2.5">
-        <div className="relative">
+      {/* Toolbar — search + add */}
+      <div className="flex items-center gap-2 px-4 py-2.5">
+        <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={event => setQuery(event.target.value)}
             placeholder={resolvedSearchPlaceholder}
-            className="h-8 border-none bg-muted/50 pl-8 text-[13px] shadow-none focus-visible:ring-1"
-          />
+            className="h-8 border-none bg-muted/50 pl-8 text-[13px] shadow-none focus-visible:ring-1" />
         </div>
+        {onAddDeal && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 shrink-0 gap-1.5"
+            onClick={onAddDeal}>
+            <Plus className="size-3.5" />
+            {resolvedAddLabel}
+          </Button>
+        )}
       </div>
 
       {/* Header */}
       <div
         className={cn(
           GRID_COLS,
-          'px-4 pb-2 pt-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70',
-        )}
-      >
+          'px-4 pb-2 pt-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70'
+        )}>
         <span>{t('relatedTables.deals.deal')}</span>
         <span>{t('relatedTables.deals.stage')}</span>
         <span>{t('relatedTables.deals.value')}</span>
@@ -97,8 +116,7 @@ export function RelatedDealsTable({
             {Array.from({ length: 4 }).map((_, index) => (
               <div
                 key={index}
-                className="h-11 animate-pulse rounded-lg bg-muted/40"
-              />
+                className="h-11 animate-pulse rounded-lg bg-muted/40" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
@@ -109,6 +127,16 @@ export function RelatedDealsTable({
             <p className="text-[13px] text-muted-foreground">
               {query ? t('relatedTables.deals.noMatch') : resolvedEmptyLabel}
             </p>
+            {!query && onAddDeal && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5"
+                onClick={onAddDeal}>
+                <Plus className="size-3.5" />
+                {resolvedAddLabel}
+              </Button>
+            )}
           </div>
         ) : (
           <div className="space-y-0.5">
@@ -132,9 +160,8 @@ export function RelatedDealsTable({
                   }}
                   className={cn(
                     GRID_COLS,
-                    'group cursor-pointer rounded-lg px-2 py-2 text-sm transition-colors hover:bg-muted/60',
-                  )}
-                >
+                    'group cursor-pointer rounded-lg px-2 py-2 text-sm transition-colors hover:bg-muted/60'
+                  )}>
                   <div className="flex min-w-0 items-center gap-2.5">
                     <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
                       <Target className="size-3.5" />

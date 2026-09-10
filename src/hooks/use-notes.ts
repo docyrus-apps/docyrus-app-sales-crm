@@ -1,6 +1,9 @@
+import { useTranslation } from 'react-i18next'
+import type { ICollectionListParams } from '@/collections/types'
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import type { ICollectionListParams } from '@/collections/types'
+
 import { useUserTodoCollection } from '@/collections/user-todo.collection'
 
 export function useNotes(params?: ICollectionListParams) {
@@ -20,29 +23,37 @@ export function useNotes(params?: ICollectionListParams) {
           'sort_order',
           'type',
           'archived',
-          'created_by',
+          'created_by'
         ],
         filters: {
           rules: [{ field: 'archived', operator: 'eq', value: false }],
-          combinator: 'and',
+          combinator: 'and'
         },
-        orderBy: [{ field: 'sort_order', direction: 'asc' }],
+        orderBy: [{ field: 'sort_order', direction: 'asc' }]
       })
+
       return response
-    },
+    }
   })
 }
 
 export function useCreateNote() {
+  const { t } = useTranslation()
   const todoCollection = useUserTodoCollection()
   const queryClient = useQueryClient()
+
   return useMutation({
     mutationFn: async (data: any) => await todoCollection.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes'] })
-      toast.success('Note created successfully')
+      /*
+       * The per-record audit timeline lives under its own query key, so a
+       * successful write left the Activity tab showing stale history until a
+       * full page reload. Refresh it alongside the entity caches.
+       */
+      queryClient.invalidateQueries({ queryKey: ['record-activities'] })
+      toast.success(t('notes.createdSuccess'))
     },
-    onError: (error: any) =>
-      toast.error(error?.message || 'Failed to create note'),
+    onError: (error: any) => toast.error(error?.message || t('notes.createError'))
   })
 }

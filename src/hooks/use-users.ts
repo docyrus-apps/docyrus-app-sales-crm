@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+
 import { useUsersCollection } from '@/collections'
 
 /**
@@ -11,8 +12,9 @@ export function useUsers() {
     queryKey: ['users'],
     queryFn: async () => {
       const response = await usersCollection.getUsers()
+
       return response
-    },
+    }
   })
 }
 
@@ -26,7 +28,10 @@ export function useMyInfo() {
     queryKey: ['users', 'me'],
     queryFn: async () => {
       const response = await usersCollection.getMyInfo()
+
       return response
     },
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000
   })
 }

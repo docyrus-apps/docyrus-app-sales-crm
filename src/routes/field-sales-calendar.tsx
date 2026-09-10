@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+
 import { useTranslation } from 'react-i18next'
 import {
   addMonths,
@@ -9,10 +10,11 @@ import {
   isSameMonth,
   parseISO,
   startOfMonth,
-  startOfWeek,
+  startOfWeek
 } from 'date-fns'
 import { useQuery } from '@tanstack/react-query'
 import { CalendarDays } from 'lucide-react'
+
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
 import { Badge } from '@/components/ui/badge'
@@ -24,21 +26,21 @@ import { getFieldSalesPlanStatusCode, getStatusMeta } from '@/lib/field-sales'
 import { useBaseTaskCollection } from '@/collections'
 
 type PlanRecord = {
-  id?: string
-  subject?: string
-  start_date?: string
-  end_date?: string
-  status?: unknown
-  organization?: any
-  contact?: any
+  id?: string;
+  subject?: string;
+  start_date?: string;
+  end_date?: string;
+  status?: unknown;
+  organization?: any;
+  contact?: any;
 }
 
 type TaskRecord = {
-  id?: string
-  name?: string
-  start_date?: string
-  end_date?: string
-  status?: unknown
+  id?: string;
+  name?: string;
+  start_date?: string;
+  end_date?: string;
+  status?: unknown;
 }
 
 function getDateToken(value: string | undefined) {
@@ -54,28 +56,34 @@ export function FieldSalesCalendarPage() {
 
   const { data: tasks = [] } = useQuery({
     queryKey: ['field-sales', 'calendar', 'tasks'],
-    queryFn: async () =>
-      taskCollection.list({
-        columns: ['id', 'name', 'start_date', 'end_date', 'status'],
+    queryFn: async () => taskCollection.list({
+        columns: [
+'id',
+'name',
+'start_date',
+'end_date',
+'status'
+],
         orderBy: 'start_date ASC',
-        limit: 500,
-      }),
+        limit: 500
+      })
   })
 
   const monthDays = useMemo(() => {
     const rangeStart = startOfWeek(startOfMonth(currentMonth), {
-      weekStartsOn: 1,
+      weekStartsOn: 1
     })
     const rangeEnd = endOfWeek(endOfMonth(currentMonth), { weekStartsOn: 1 })
+
     return eachDayOfInterval({ start: rangeStart, end: rangeEnd })
   }, [currentMonth])
 
   const selectedToken = format(selectedDate, 'yyyy-MM-dd')
   const selectedPlans = (plans as Array<PlanRecord>).filter(
-    (plan) => getDateToken(plan.start_date) === selectedToken,
+    plan => getDateToken(plan.start_date) === selectedToken
   )
   const selectedTasks = (tasks as Array<TaskRecord>).filter(
-    (task) => getDateToken(task.start_date) === selectedToken,
+    task => getDateToken(task.start_date) === selectedToken
   )
 
   return (
@@ -83,35 +91,29 @@ export function FieldSalesCalendarPage() {
       <PageHeader
         title={t('fieldSales.calendar.title')}
         icon={<CalendarDays className="h-4 w-4 text-cyan-500" />}
-        titleSuffix={
-          <Badge variant="secondary">{format(currentMonth, 'MMMM yyyy')}</Badge>
-        }
+        titleSuffix={<Badge variant="secondary">{format(currentMonth, 'MMMM yyyy')}</Badge>}
         actions={
           <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentMonth((value) => addMonths(value, -1))}
-            >
+              onClick={() => setCurrentMonth(value => addMonths(value, -1))}>
               {t('fieldSales.common.previous')}
             </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentMonth(new Date())}
-            >
+              onClick={() => setCurrentMonth(new Date())}>
               {t('fieldSales.common.today')}
             </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentMonth((value) => addMonths(value, 1))}
-            >
+              onClick={() => setCurrentMonth(value => addMonths(value, 1))}>
               {t('fieldSales.common.next')}
             </Button>
           </div>
-        }
-      />
+        } />
       <PageContainer className="grid gap-4 overflow-x-hidden px-3 sm:px-4 lg:px-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <Card>
           <CardHeader>
@@ -123,9 +125,9 @@ export function FieldSalesCalendarPage() {
                 <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {(
                     t('fieldSales.calendar.weekdaysShort', {
-                      returnObjects: true,
-                    }) as string[]
-                  ).map((label) => (
+                      returnObjects: true
+                    }) as Array<string>
+                  ).map(label => (
                     <div key={label} className="px-2 py-2">
                       {label}
                     </div>
@@ -135,19 +137,20 @@ export function FieldSalesCalendarPage() {
                   {monthDays.map((day) => {
                     const dayToken = format(day, 'yyyy-MM-dd')
                     const dayPlans = (plans as Array<PlanRecord>).filter(
-                      (plan) => getDateToken(plan.start_date) === dayToken,
+                      plan => getDateToken(plan.start_date) === dayToken
                     )
                     const visitCount = dayPlans.filter((plan) => {
                       const statusCode = getFieldSalesPlanStatusCode(
-                        plan.status,
+                        plan.status
                       )
+
                       return (
                         statusCode === 'checked_in' ||
                         statusCode === 'completed'
                       )
                     }).length
                     const dayTasks = (tasks as Array<TaskRecord>).filter(
-                      (task) => getDateToken(task.start_date) === dayToken,
+                      task => getDateToken(task.start_date) === dayToken
                     )
                     const isSelected = selectedToken === dayToken
 
@@ -160,8 +163,7 @@ export function FieldSalesCalendarPage() {
                           isSelected
                             ? 'border-primary bg-primary/5'
                             : 'hover:border-primary/30 hover:bg-muted/40'
-                        } ${!isSameMonth(day, currentMonth) ? 'opacity-50' : ''}`}
-                      >
+                        } ${!isSameMonth(day, currentMonth) ? 'opacity-50' : ''}`}>
                         <div className="text-sm font-semibold">
                           {format(day, 'dd')}
                         </div>
@@ -208,11 +210,10 @@ export function FieldSalesCalendarPage() {
                       {t('fieldSales.calendar.noPlansForDay')}
                     </div>
                   ) : (
-                    selectedPlans.map((plan) => (
+                    selectedPlans.map(plan => (
                       <div
                         key={plan.id}
-                        className="rounded-xl border px-3 py-3"
-                      >
+                        className="rounded-xl border px-3 py-3">
                         <div className="font-medium">
                           {plan.subject || t('fieldSales.common.plan')}
                         </div>
@@ -240,11 +241,10 @@ export function FieldSalesCalendarPage() {
                       {t('fieldSales.calendar.noTasksForDay')}
                     </div>
                   ) : (
-                    selectedTasks.map((task) => (
+                    selectedTasks.map(task => (
                       <div
                         key={task.id}
-                        className="rounded-xl border px-3 py-3"
-                      >
+                        className="rounded-xl border px-3 py-3">
                         <div className="font-medium">
                           {task.name || t('fieldSales.common.task')}
                         </div>

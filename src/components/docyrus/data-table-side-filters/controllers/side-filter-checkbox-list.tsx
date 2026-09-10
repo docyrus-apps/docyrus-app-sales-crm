@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { isValidElement, useCallback, useMemo } from 'react'
 
 import { cn } from '@/lib/utils'

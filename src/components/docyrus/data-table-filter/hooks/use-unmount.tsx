@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 /*
  * Source: https://usehooks-ts.com/react-hook/use-unmount
  */

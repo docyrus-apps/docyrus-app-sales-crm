@@ -1,5 +1,6 @@
 'use client'
 
+import { useDateFnsLocale } from '@/hooks/use-date-fns-locale'
 import {
   forwardRef,
   useCallback,
@@ -65,6 +66,7 @@ interface StatusDraft {
 
 export const StatusSection = forwardRef<SectionHandle, StatusSectionProps>(
   ({ statusOptions = [], disabled }, ref) => {
+    const dateLocale = useDateFnsLocale()
     const [popoverOpen, setPopoverOpen] = useState(false)
     const [datePickerOpen, setDatePickerOpen] = useState(false)
 
@@ -303,7 +305,7 @@ export const StatusSection = forwardRef<SectionHandle, StatusSectionProps>(
                           >
                             <CalendarIcon className="mr-2 size-3.5" />
                             {draft.followupDate
-                              ? format(draft.followupDate, 'PPP')
+                              ? format(draft.followupDate, 'PPP', { locale: dateLocale })
                               : 'Pick a date'}
                           </Button>
                         </PopoverTrigger>

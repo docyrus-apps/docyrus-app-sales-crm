@@ -1,27 +1,29 @@
-'use client';
+'use client'
 
 // @ts-nocheck
 /* eslint-disable */
-import { useEffect } from 'react';
+import { useEffect } from 'react'
 
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 
-import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation';
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
-import { useDocyrusAgent } from './docyrus-agent-context';
-import { DocyrusAgentActionList } from './docyrus-agent-action-list';
-import { DocyrusAgentActionParams } from './docyrus-agent-action-params';
-import { DocyrusAgentChatInput } from './docyrus-agent-chat-input';
-import { DocyrusAgentChatMessages } from './docyrus-agent-chat-messages';
-import { DocyrusAgentHeader } from './docyrus-agent-header';
+import { useDocyrusAgent } from './docyrus-agent-context'
+import { DocyrusAgentActionList } from './docyrus-agent-action-list'
+import { DocyrusAgentActionParams } from './docyrus-agent-action-params'
+import { DocyrusAgentChatInput } from './docyrus-agent-chat-input'
+import { DocyrusAgentChatMessages } from './docyrus-agent-chat-messages'
+import { DocyrusAgentHeader } from './docyrus-agent-header'
 
 export interface DocyrusAgentActionPanelProps {
-  className?: string;
+  className?: string
 }
 
-export const DocyrusAgentActionPanel = ({ className }: DocyrusAgentActionPanelProps) => {
-  const { t } = useUiTranslation();
+export const DocyrusAgentActionPanel = ({
+  className,
+}: DocyrusAgentActionPanelProps) => {
+  const { t } = useUiTranslation()
   const {
     agent,
     actions,
@@ -29,28 +31,23 @@ export const DocyrusAgentActionPanel = ({ className }: DocyrusAgentActionPanelPr
     actionPanelView,
     selectedAction,
     setSelectedAction,
-    setActionPanelView
-  } = useDocyrusAgent();
+    setActionPanelView,
+  } = useDocyrusAgent()
 
   useEffect(() => {
-    const firstAction = actions[0];
+    const firstAction = actions[0]
 
     if (actions.length === 1 && firstAction?.isDefault && !selectedAction) {
-      setSelectedAction(firstAction);
+      setSelectedAction(firstAction)
       if (firstAction.params && firstAction.params.length > 0) {
-        setActionPanelView('action-params');
+        setActionPanelView('action-params')
       } else {
-        setActionPanelView('executing');
+        setActionPanelView('executing')
       }
     }
-  }, [
-    actions,
-    selectedAction,
-    setSelectedAction,
-    setActionPanelView
-  ]);
+  }, [actions, selectedAction, setSelectedAction, setActionPanelView])
 
-  const showChat = actionPanelView === 'executing' && selectedAction?.opensChat;
+  const showChat = actionPanelView === 'executing' && selectedAction?.opensChat
 
   return (
     <div className={cn('flex h-full flex-col', className)}>
@@ -58,9 +55,15 @@ export const DocyrusAgentActionPanel = ({ className }: DocyrusAgentActionPanelPr
 
       {sources.length > 0 && (
         <div className="flex flex-wrap gap-1.5 border-b px-5 py-2">
-          <span className="text-muted-foreground text-xs">{t('ui.agent.sources', 'Sources')}:</span>
+          <span className="text-muted-foreground text-xs">
+            {t('ui.agent.sources', 'Sources')}:
+          </span>
           {sources.map((source, i) => (
-            <Badge className="text-[10px]" key={`${source.type}-${String(i)}`} variant="secondary">
+            <Badge
+              className="text-[10px]"
+              key={`${source.type}-${String(i)}`}
+              variant="secondary"
+            >
               {source.label ?? source.type}
             </Badge>
           ))}
@@ -84,5 +87,5 @@ export const DocyrusAgentActionPanel = ({ className }: DocyrusAgentActionPanelPr
         </div>
       )}
     </div>
-  );
-};
+  )
+}

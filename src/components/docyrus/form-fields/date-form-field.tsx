@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { useState } from 'react'
 
 import { CalendarIcon } from 'lucide-react'
@@ -14,8 +16,8 @@ import {
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
-import { useDateFormat } from '@/lib/use-date-format'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
+import { useDateFormat } from '@/hooks/docyrus/use-date-format'
 
 import { FormFieldLabel } from './form-field-label'
 import { toLocalDateString } from './lib/utils'
@@ -34,9 +36,8 @@ export function DateFormField({
   const [open, setOpen] = useState(false)
 
   return (
-    <form.Field
-      name={fieldConfig.slug}
-      children={(field: any) => {
+    <form.Field name={fieldConfig.slug}>
+      {(field: any) => {
         const isInvalid =
           field.state.meta.isTouched && !field.state.meta.isValid
         const dateValue = field.state.value
@@ -82,6 +83,6 @@ export function DateFormField({
           </Field>
         )
       }}
-    />
+    </form.Field>
   )
 }

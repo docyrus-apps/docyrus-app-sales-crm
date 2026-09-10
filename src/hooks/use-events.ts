@@ -1,6 +1,9 @@
+import { useTranslation } from 'react-i18next'
+import type { EventFormData } from '@/schemas/event-schema'
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import type { EventFormData } from '@/schemas/event-schema'
+
 import { useBaseEventCollection } from '@/collections/base-event.collection'
 
 export function useEvents(filters?: any) {
@@ -8,8 +11,7 @@ export function useEvents(filters?: any) {
 
   return useQuery({
     queryKey: ['events', filters],
-    queryFn: () =>
-      eventCollection.list({
+    queryFn: () => eventCollection.list({
         columns: [
           'id',
           'subject',
@@ -18,11 +20,11 @@ export function useEvents(filters?: any) {
           'end_date',
           'calendar',
           'event_notes',
-          'created_on',
+          'created_on'
         ],
         filters,
-        orderBy: 'created_on DESC',
-      }),
+        orderBy: 'created_on DESC'
+      })
   })
 }
 
@@ -33,6 +35,7 @@ export function useEvent(eventId: string | undefined) {
     queryKey: ['events', eventId],
     queryFn: () => {
       if (!eventId) throw new Error('Event ID is required')
+
       return eventCollection.get(eventId, {
         columns: [
           'id',
@@ -42,11 +45,11 @@ export function useEvent(eventId: string | undefined) {
           'end_date',
           'calendar',
           'event_notes',
-          'created_on',
-        ],
+          'created_on'
+        ]
       })
     },
-    enabled: !!eventId,
+    enabled: !!eventId
   })
 }
 
@@ -61,14 +64,18 @@ export type RecordEventRelation = 'contact' | 'organization' | 'lead' | 'deal'
  */
 export function useRecordEvents(
   relation: RecordEventRelation,
-  recordId: string | undefined,
+  recordId: string | undefined
 ) {
   const eventCollection = useBaseEventCollection()
 
   return useQuery({
-    queryKey: ['events', 'record', relation, recordId],
-    queryFn: () =>
-      eventCollection.list({
+    queryKey: [
+'events',
+'record',
+relation,
+recordId
+],
+    queryFn: () => eventCollection.list({
         columns: [
           'id',
           'subject',
@@ -77,18 +84,19 @@ export function useRecordEvents(
           'end_date',
           'calendar(id,name)',
           'record_owner(id,firstname,lastname,email)',
-          'created_on',
+          'created_on'
         ],
         filters: {
-          rules: [{ field: relation, operator: '=', value: recordId }],
+          rules: [{ field: relation, operator: '=', value: recordId }]
         },
-        orderBy: 'created_on DESC',
+        orderBy: 'created_on DESC'
       }),
-    enabled: !!recordId,
+    enabled: !!recordId
   })
 }
 
 export function useCreateEvent() {
+  const { t } = useTranslation()
   const eventCollection = useBaseEventCollection()
   const queryClient = useQueryClient()
 
@@ -96,30 +104,41 @@ export function useCreateEvent() {
     mutationFn: (data: EventFormData) => eventCollection.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] })
-      toast.success('Event created successfully')
+      /*
+       * The per-record audit timeline lives under its own query key, so a
+       * successful write left the Activity tab showing stale history until a
+       * full page reload. Refresh it alongside the entity caches.
+       */
+      queryClient.invalidateQueries({ queryKey: ['record-activities'] })
+      toast.success(t('events.createdSuccess'))
     },
-    onError: (error: any) =>
-      toast.error(error?.message || 'Failed to create event'),
+    onError: (error: any) => toast.error(error?.message || t('events.createError'))
   })
 }
 
 export function useUpdateEvent() {
+  const { t } = useTranslation()
   const eventCollection = useBaseEventCollection()
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ eventId, data }: { eventId: string; data: EventFormData }) =>
-      eventCollection.update(eventId, data),
+    mutationFn: ({ eventId, data }: { eventId: string; data: EventFormData }) => eventCollection.update(eventId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] })
-      toast.success('Event updated successfully')
+      /*
+       * The per-record audit timeline lives under its own query key, so a
+       * successful write left the Activity tab showing stale history until a
+       * full page reload. Refresh it alongside the entity caches.
+       */
+      queryClient.invalidateQueries({ queryKey: ['record-activities'] })
+      toast.success(t('events.updatedSuccess'))
     },
-    onError: (error: any) =>
-      toast.error(error?.message || 'Failed to update event'),
+    onError: (error: any) => toast.error(error?.message || t('events.updateError'))
   })
 }
 
 export function useDeleteEvent() {
+  const { t } = useTranslation()
   const eventCollection = useBaseEventCollection()
   const queryClient = useQueryClient()
 
@@ -127,9 +146,14 @@ export function useDeleteEvent() {
     mutationFn: (eventId: string) => eventCollection.delete(eventId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] })
-      toast.success('Event deleted successfully')
+      /*
+       * The per-record audit timeline lives under its own query key, so a
+       * successful write left the Activity tab showing stale history until a
+       * full page reload. Refresh it alongside the entity caches.
+       */
+      queryClient.invalidateQueries({ queryKey: ['record-activities'] })
+      toast.success(t('events.deletedSuccess'))
     },
-    onError: (error: any) =>
-      toast.error(error?.message || 'Failed to delete event'),
+    onError: (error: any) => toast.error(error?.message || t('events.deleteError'))
   })
 }

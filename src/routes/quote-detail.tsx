@@ -1,24 +1,26 @@
 import { useMemo, useState } from 'react'
+
+import {
+  type EnumOption,
+  type IField
+} from '@/components/docyrus/form-fields/types'
+
+import type { RecordDetailTab } from '@/components/crm/record-detail-layout'
+
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import {
-  Eye,
-  FileText,
-  Mail,
-  MessageSquare,
-  Package,
-  Pencil,
-} from 'lucide-react'
+import { FileText, Mail, MessageSquare, Package } from 'lucide-react'
 
 import {
   RecordDetailLayout,
-  RecordTabPlaceholder,
-  type RecordDetailTab,
+  RecordTabPlaceholder
 } from '@/components/crm/record-detail-layout'
+
 import {
   type FieldChange,
-  type RecordDetailField,
+  type RecordDetailField
 } from '@/components/docyrus/editable-record-detail'
+
 import { QuoteLineItems } from '@/components/quotes/quote-line-items'
 import { QuoteEmailDialog } from '@/components/quotes/quote-email-dialog'
 import { CommentsPanel } from '@/components/shared/comments-panel'
@@ -27,10 +29,11 @@ import { PageContainer } from '@/components/layout/page-container'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { useSalesOrder, useUpdateSalesOrder } from '@/hooks/use-sales-orders'
+import { useQuotePdf } from '@/hooks/use-quote-pdf'
 import { useCompanies } from '@/hooks/use-companies'
 import { useEnumEntities } from '@/hooks/use-enums'
-import type { EnumOption, IField } from '@/components/docyrus/form-fields/types'
 import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
+import { mergeCurrentEnumOption } from '@/lib/enum-options'
 
 const FIELD_SLUGS = [
   'organization',
@@ -38,16 +41,22 @@ const FIELD_SLUGS = [
   'deal',
   'sub_total',
   'tax_total',
-  'grand_total',
+  'grand_total'
 ]
 
 function makeField(
   slug: string,
   name: string,
   type: IField['type'] = 'field-text',
-  extra: Partial<IField> = {},
+  extra: Partial<IField> = {}
 ): IField {
-  return { id: slug, name, slug, type, ...extra }
+  return {
+    id: slug,
+    name,
+    slug,
+    type,
+    ...extra
+  }
 }
 
 function getInitials(value: string) {
@@ -55,14 +64,14 @@ function getInitials(value: string) {
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
+    .map(part => part[0]?.toUpperCase() ?? '')
     .join('')
 
   return initials || 'TK'
 }
 
 function getRelationName(
-  value?: { name?: string } | string | null,
+  value?: { name?: string } | string | null
 ): string | undefined {
   if (!value) return undefined
   if (typeof value === 'object') return value.name
@@ -88,17 +97,17 @@ function getFieldValue(value: unknown): string | number | boolean | null {
 
 function mapEnumEntitiesToOptions(
   items: Array<{
-    id: string
-    name: string
-    color?: string | null
-    icon?: string | null
-  }>,
+    id: string;
+    name: string;
+    color?: string | null;
+    icon?: string | null;
+  }>
 ): Array<EnumOption> {
-  return items.map((item) => ({
+  return items.map(item => ({
     id: item.id,
     name: item.name,
     color: item.color ?? undefined,
-    icon: item.icon ?? undefined,
+    icon: item.icon ?? undefined
   }))
 }
 
@@ -110,11 +119,12 @@ export function QuoteDetail() {
   const id = quoteId ?? ''
 
   const { data: order, isLoading } = useSalesOrder(quoteId)
+  const quotePdf = useQuotePdf(id)
   const updateOrder = useUpdateSalesOrder()
   const { data: companies = [] } = useCompanies({ columns: ['id', 'name'] })
   const { data: statusEntities = [] } = useEnumEntities('status', {
     appSlug: 'base_crm',
-    dataSourceSlug: 'sales_order',
+    dataSourceSlug: 'sales_order'
   })
 
   const [activeTab, setActiveTab] = useState('overview')
@@ -126,6 +136,7 @@ export function QuoteDetail() {
     if (typeof window === 'undefined' || !id) return ''
     try {
       const raw = window.localStorage.getItem(`quote-doc:${id}`)
+
       return raw ? String(JSON.parse(raw).docTitle ?? '') : ''
     } catch {
       return ''
@@ -144,57 +155,69 @@ export function QuoteDetail() {
         field: makeField(
           'organization',
           t('salesOrders.organization', { defaultValue: 'Customer' }),
-          'field-select',
+          'field-select'
         ),
-        enumOptions: companies.map((company: any) => ({
-          id: company.id,
-          name: company.name,
-        })),
-        required: true,
+        enumOptions: mergeCurrentEnumOption(
+          companies.map((company: any) => ({
+            id: company.id,
+            name: company.name
+          })),
+          order?.organization
+        ),
+        required: true
       },
       {
         field: makeField(
           'status',
           t('salesOrders.status', { defaultValue: 'Status' }),
-          statusEntities.length > 0 ? 'field-status' : 'field-text',
+          statusEntities.length > 0 ? 'field-status' : 'field-text'
         ),
-        enumOptions: mapEnumEntitiesToOptions(statusEntities),
-        readOnly: statusEntities.length === 0,
+        enumOptions: mergeCurrentEnumOption(
+          mapEnumEntitiesToOptions(statusEntities),
+          order?.status
+        ),
+        readOnly: statusEntities.length === 0
       },
       {
         field: makeField(
           'deal',
           t('deals.title', { defaultValue: 'Deal' }),
-          'field-text',
+          'field-text'
         ),
-        readOnly: true,
+        readOnly: true
       },
       {
         field: makeField(
           'sub_total',
           t('salesOrders.subtotal', { defaultValue: 'Subtotal' }),
-          'field-number',
+          'field-number'
         ),
-        readOnly: true,
+        readOnly: true
       },
       {
         field: makeField(
           'tax_total',
           t('salesOrders.taxTotal', { defaultValue: 'Tax' }),
-          'field-number',
+          'field-number'
         ),
-        readOnly: true,
+        readOnly: true
       },
       {
         field: makeField(
           'grand_total',
           t('salesOrders.grandTotal', { defaultValue: 'Grand Total' }),
-          'field-number',
+          'field-number'
         ),
-        readOnly: true,
-      },
+        readOnly: true
+      }
     ],
-    [companies, statusEntities, t],
+    [
+companies,
+order?.organization,
+order?.status,
+statusEntities,
+t
+]
   )
 
   const flatRecord = useMemo<Record<string, unknown>>(() => {
@@ -206,56 +229,41 @@ export function QuoteDetail() {
       deal: dealName ?? '',
       sub_total: order.sub_total ?? null,
       tax_total: order.tax_total ?? null,
-      grand_total: order.grand_total ?? null,
+      grand_total: order.grand_total ?? null
     }
   }, [order, dealName])
 
   const handleInlineSave = async (
     changes: Array<FieldChange>,
-    _values: Record<string, unknown>,
+    _values: Record<string, unknown>
   ) => {
     if (!quoteId || changes.length === 0) return
 
     const payload = Object.fromEntries(
-      changes.map((change) => [
-        change.fieldSlug,
-        change.newValue === '' ? undefined : change.newValue,
-      ]),
+      changes.map(change => [change.fieldSlug, change.newValue === '' ? undefined : change.newValue])
     )
 
     await updateOrder.mutateAsync({ orderId: quoteId, data: payload })
   }
 
-  const goBuild = () =>
-    navigate({ to: '/quotes/$quoteId/build', params: { quoteId: id } })
+  const goBuild = () => navigate({ to: '/quotes/$quoteId/build', params: { quoteId: id } })
 
   const attributeActions = (
-    <div className="flex items-center justify-end gap-1.5">
+    <div className="flex w-full items-center justify-between gap-2">
       <Button
-        size="icon"
+        size="sm"
         variant="outline"
-        className="size-7"
-        title={t('quotes.editInBuilder', { defaultValue: 'Edit in builder' })}
-        onClick={goBuild}
-      >
-        <Pencil className="size-3.5" />
+        className="h-7 border-sky-200 bg-sky-50/80 px-2 text-[13px] font-medium text-sky-700 shadow-none hover:bg-sky-100 hover:text-sky-800 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300 dark:hover:bg-sky-900/40"
+        title={t('quotes.printPreview', { defaultValue: 'Print/Preview' })}
+        onClick={goBuild}>
+        {t('quotes.printPreview', { defaultValue: 'Print/Preview' })}
       </Button>
       <Button
         size="icon"
-        variant="outline"
-        className="size-7"
-        title={t('quotes.preview', { defaultValue: 'Preview' })}
-        onClick={goBuild}
-      >
-        <Eye className="size-3.5" />
-      </Button>
-      <Button
-        size="icon"
-        variant="outline"
+        variant="ghost"
         className="size-7"
         title={t('quotes.sendMail', { defaultValue: 'Send mail' })}
-        onClick={() => setMailOpen(true)}
-      >
+        onClick={() => setMailOpen(true)}>
         <Mail className="size-3.5" />
       </Button>
     </div>
@@ -273,26 +281,26 @@ export function QuoteDetail() {
               {[
                 {
                   label: t('salesOrders.organization', {
-                    defaultValue: 'Customer',
+                    defaultValue: 'Customer'
                   }),
-                  value: customerName ?? t('common.na', { defaultValue: '—' }),
+                  value: customerName ?? t('common.na', { defaultValue: '—' })
                 },
                 {
                   label: t('salesOrders.grandTotal', {
-                    defaultValue: 'Grand Total',
+                    defaultValue: 'Grand Total'
                   }),
                   value:
                     typeof order?.grand_total === 'number'
                       ? order.grand_total.toLocaleString()
-                      : '—',
+                      : '—'
                 },
                 {
                   label: t('salesOrders.status', { defaultValue: 'Status' }),
                   value:
                     getRelationName(order?.status) ??
-                    t('common.na', { defaultValue: '—' }),
-                },
-              ].map((kpi) => (
+                    t('common.na', { defaultValue: '—' })
+                }
+              ].map(kpi => (
                 <div key={kpi.label} className="rounded-xl border p-3">
                   <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70">
                     {kpi.label}
@@ -307,13 +315,12 @@ export function QuoteDetail() {
               variant="outline"
               size="sm"
               className="gap-1.5"
-              onClick={() => setActiveTab('line-items')}
-            >
+              onClick={() => setActiveTab('line-items')}>
               <Package className="size-4" />
               {t('quotes.editLineItems', { defaultValue: 'Edit line items' })}
             </Button>
           </div>
-        ),
+        )
       },
       {
         value: 'line-items',
@@ -327,11 +334,10 @@ export function QuoteDetail() {
             ) : (
               <RecordTabPlaceholder
                 icon={<Package className="size-5" />}
-                title={t('common.na', { defaultValue: '—' })}
-              />
+                title={t('common.na', { defaultValue: '—' })} />
             )}
           </div>
-        ),
+        )
       },
       {
         value: 'comments',
@@ -343,10 +349,9 @@ export function QuoteDetail() {
             <CommentsPanel
               appSlug="base_crm"
               dataSource="sales_order"
-              recordId={id}
-            />
+              recordId={id} />
           </div>
-        ),
+        )
       },
       {
         value: 'files',
@@ -358,13 +363,18 @@ export function QuoteDetail() {
             <FileAttachments
               appSlug="base_crm"
               dataSource="sales_order"
-              recordId={id}
-            />
+              recordId={id} />
           </div>
-        ),
-      },
+        )
+      }
     ],
-    [customerName, id, order, quoteId, t],
+    [
+customerName,
+id,
+order,
+quoteId,
+t
+]
   )
 
   return (
@@ -386,17 +396,19 @@ export function QuoteDetail() {
         record={flatRecord}
         onInlineSave={handleInlineSave}
         editTitle={t('common.editAll', { defaultValue: 'Edit All' })}
+        showAttributeEditAllButton={false}
         attributeActions={attributeActions}
         tabs={tabs}
         activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
+        onTabChange={setActiveTab} />
       <QuoteEmailDialog
         open={mailOpen}
         onOpenChange={setMailOpen}
         to={(order?.organization as any)?.email ?? ''}
         subject={quoteTitle}
-      />
+        recordId={id || undefined}
+        attachmentName={quotePdf.fileName}
+        getAttachment={quotePdf.ready ? quotePdf.generate : undefined} />
     </PageContainer>
   )
 }

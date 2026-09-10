@@ -17,6 +17,15 @@ const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       theme={theme as ToasterProps['theme']}
+      /*
+       * Toasts default to the bottom-right, which is exactly where every
+       * AwesomeDialog puts its Cancel/Save footer — a toast then sat on top of
+       * the buttons and swallowed the clicks. Move them out of that corner and
+       * give the user an explicit dismiss affordance.
+       */
+      position="top-right"
+      duration={4000}
+      closeButton
       className="toaster group"
       icons={{
         success: <CircleCheckIcon className="size-4" />,

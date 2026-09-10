@@ -1,12 +1,15 @@
 'use client'
 
-import { useCallback, useMemo, type ReactNode } from 'react'
+import { type ReactNode, useCallback, useMemo } from 'react'
 
 import { type RestApiClient } from '@docyrus/api-client'
+
+import type { DateFormatFn } from './use-date-format'
+
 import { getTenantPreferences } from '@docyrus/app-utils'
 import { useQuery } from '@tanstack/react-query'
 
-import { DateFormatProvider, type DateFormatFn } from './use-date-format'
+import { DateFormatProvider } from './use-date-format'
 
 /*
  * Tenant-aware date formatting bridge.
@@ -56,7 +59,7 @@ function parseDateValue(value: unknown): Date | null {
     return new Date(
       Number(dateOnly[1]),
       Number(dateOnly[2]) - 1,
-      Number(dateOnly[3]),
+      Number(dateOnly[3])
     )
   }
 
@@ -73,7 +76,7 @@ function rawFallback(value: unknown): string {
 
 function createIntlFormatter(
   locale: string | undefined,
-  options: Intl.DateTimeFormatOptions,
+  options: Intl.DateTimeFormatOptions
 ): Intl.DateTimeFormat {
   try {
     return new Intl.DateTimeFormat(locale, options)
@@ -83,13 +86,13 @@ function createIntlFormatter(
 }
 
 export interface DocyrusDateFormatProviderProps {
-  client: RestApiClient
-  children: ReactNode
+  client: RestApiClient;
+  children: ReactNode;
 }
 
 export function DocyrusDateFormatProvider({
   client,
-  children,
+  children
 }: DocyrusDateFormatProviderProps) {
   /*
    * Tenant preferences rarely change within a session, so cache them
@@ -101,7 +104,7 @@ export function DocyrusDateFormatProvider({
     queryKey: ['docyrus', 'tenantPreferences'],
     queryFn: () => getTenantPreferences(client),
     staleTime: 5 * 60_000,
-    gcTime: 30 * 60_000,
+    gcTime: 30 * 60_000
   })
 
   const locale =
@@ -110,36 +113,33 @@ export function DocyrusDateFormatProvider({
       : undefined
 
   const dateFormatter = useMemo(
-    () =>
-      createIntlFormatter(locale, {
+    () => createIntlFormatter(locale, {
         year: 'numeric',
         month: '2-digit',
-        day: '2-digit',
+        day: '2-digit'
       }),
-    [locale],
+    [locale]
   )
 
   const dateTimeFormatter = useMemo(
-    () =>
-      createIntlFormatter(locale, {
+    () => createIntlFormatter(locale, {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
-        hour12: false,
+        hour12: false
       }),
-    [locale],
+    [locale]
   )
 
   const timeFormatter = useMemo(
-    () =>
-      createIntlFormatter(locale, {
+    () => createIntlFormatter(locale, {
         hour: '2-digit',
         minute: '2-digit',
-        hour12: false,
+        hour12: false
       }),
-    [locale],
+    [locale]
   )
 
   const formatDate = useCallback<DateFormatFn>(
@@ -148,7 +148,7 @@ export function DocyrusDateFormatProvider({
 
       return date ? dateFormatter.format(date) : rawFallback(value)
     },
-    [dateFormatter],
+    [dateFormatter]
   )
 
   const formatDateTime = useCallback<DateFormatFn>(
@@ -157,7 +157,7 @@ export function DocyrusDateFormatProvider({
 
       return date ? dateTimeFormatter.format(date) : rawFallback(value)
     },
-    [dateTimeFormatter],
+    [dateTimeFormatter]
   )
 
   const formatTime = useCallback<DateFormatFn>(
@@ -166,15 +166,14 @@ export function DocyrusDateFormatProvider({
 
       return date ? timeFormatter.format(date) : rawFallback(value)
     },
-    [timeFormatter],
+    [timeFormatter]
   )
 
   return (
     <DateFormatProvider
       formatDate={formatDate}
       formatDateTime={formatDateTime}
-      formatTime={formatTime}
-    >
+      formatTime={formatTime}>
       {children}
     </DateFormatProvider>
   )

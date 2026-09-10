@@ -1,17 +1,411 @@
 import { useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { useEnumsCollection } from '@/collections'
+
 import type { EnumEntity } from '@/collections/enums.collection'
-import type { CellSelectOption } from '@/components/docyrus/data-grid/types'
+
+import { useQuery } from '@tanstack/react-query'
+import { createDataSourceClient } from '@docyrus/app-utils'
+import { useDocyrusClient } from '@docyrus/signin'
+
+import { useEnumsCollection } from '@/collections'
+
+import { type CellSelectOption } from '@/components/docyrus/data-grid/types'
+
 import { QUERY_CONFIG } from '@/lib/constants'
 
 interface UseEnumsOptions {
-  enabled?: boolean
+  enabled?: boolean;
 }
 
 interface UseEnumEntitiesOptions extends UseEnumsOptions {
-  appSlug?: string
-  dataSourceSlug?: string
+  appSlug?: string;
+  dataSourceSlug?: string;
+}
+
+interface RawDataSourceRecord {
+  fields?: Array<RawFieldRecord>;
+}
+
+interface RawFieldRecord {
+  slug?: string;
+  enums?: Array<RawEditorOption> | null;
+  options?: {
+    editorOptions?: {
+      data?: Array<RawEditorOption>;
+    };
+  } | null;
+}
+
+interface RawEditorOption {
+  id?: string | null;
+  value?: string | null;
+  name?: string | null;
+  label?: string | null;
+  description?: string | null;
+  color?: string | null;
+  icon?: string | null;
+  active?: boolean | null;
+  parent?: string | null;
+  no?: number | null;
+  sortOrder?: number | null;
+  sort_order?: number | null;
+  isFinalOption?: boolean | null;
+  is_final_option?: boolean | null;
+}
+
+const BUNDLED_ENUM_FALLBACKS: Record<
+  string,
+  Record<string, Record<string, Array<RawEditorOption>>>
+> = {
+  base_crm: {
+    deal: {
+      stage: [
+        {
+          id: 'f028a780-6807-11ee-a9c0-d7a17977c62a',
+          name: 'New',
+          color: 'cyan',
+          icon: 'fal circle-check'
+        },
+        {
+          id: '077c7c90-6808-11ee-a9c0-d7a17977c62a',
+          name: 'Lost',
+          color: 'red',
+          icon: 'fal thumbs-up'
+        },
+        {
+          id: '0aba9090-6808-11ee-a9c0-d7a17977c62a',
+          name: 'Budget',
+          color: 'rose',
+          icon: 'fal money-bill-1'
+        },
+        {
+          id: 'f75b7550-6807-11ee-a9c0-d7a17977c62a',
+          name: 'Follow - Up',
+          color: 'orange',
+          icon: 'fal arrow-right-to-line'
+        },
+        {
+          id: '01c1f6e0-6808-11ee-a9c0-d7a17977c62a',
+          name: 'Negotiation',
+          color: 'green',
+          icon: 'fal podium-star'
+        },
+        {
+          id: 'fd77a300-6807-11ee-a9c0-d7a17977c62a',
+          name: 'Demo',
+          color: 'violet',
+          icon: 'fal paper-plane'
+        },
+        {
+          id: 'fb413b00-6807-11ee-a9c0-d7a17977c62a',
+          name: 'Proposal',
+          color: 'cyan',
+          icon: 'fal calendar-star'
+        },
+        {
+          id: '046c5660-6808-11ee-a9c0-d7a17977c62a',
+          name: 'Won',
+          color: 'sky',
+          icon: 'fal thumbs-up'
+        },
+        {
+          id: 'b4be0350-6809-11ee-b4f8-9b1c62bfef41',
+          name: 'Cancelled',
+          color: 'slate',
+          icon: 'fal circle-minus'
+        }
+      ],
+      lead_source: [
+        {
+          id: '5b727460-d533-11ee-8252-d7365c188dc3',
+          name: 'Email',
+          color: 'lime',
+          icon: 'fal mailbox'
+        },
+        {
+          id: '4dcf3e60-d533-11ee-8252-d7365c188dc3',
+          name: 'Chat',
+          color: 'rose',
+          icon: 'fal comments-question-check'
+        },
+        {
+          id: '543e4700-d533-11ee-8252-d7365c188dc3',
+          name: 'Social Media',
+          color: 'yellow',
+          icon: 'fal laptop-mobile'
+        },
+        {
+          id: '506308a0-d533-11ee-8252-d7365c188dc3',
+          name: 'Ads',
+          color: 'purple',
+          icon: 'fal headset'
+        },
+        {
+          id: '5976a460-d533-11ee-8252-d7365c188dc3',
+          name: 'Website',
+          color: 'sky',
+          icon: 'fal computer-mouse'
+        }
+      ],
+      customer_type: [
+        {
+          id: 'a439c2e0-6808-11ee-a9c0-d7a17977c62a',
+          name: 'New Business',
+          color: 'blue',
+          icon: 'fal business-time'
+        },
+        {
+          id: 'a79c4ed0-6808-11ee-a9c0-d7a17977c62a',
+          name: 'Existing Business',
+          color: 'pink',
+          icon: 'fal bullseye-pointer'
+        }
+      ],
+      reason_for_lost: [
+        {
+          id: 'df324de0-6812-11ee-bbc7-658038978072',
+          name: 'Price',
+          color: 'red',
+          icon: 'fal tag'
+        },
+        {
+          id: 'e3a649d0-6812-11ee-bbc7-658038978072',
+          name: 'Feature',
+          color: 'orange',
+          icon: 'fal puzzle-piece'
+        },
+        {
+          id: 'edb95430-6812-11ee-bbc7-658038978072',
+          name: 'Competition',
+          color: 'violet',
+          icon: 'fal swords'
+        },
+        {
+          id: 'f0cad9f0-6812-11ee-bbc7-658038978072',
+          name: 'Other',
+          color: 'slate',
+          icon: 'fal ellipsis'
+        }
+      ]
+    },
+    leads: {
+      lead_status: [
+        {
+          id: '019c48d0-5dfe-7cb8-a008-a149924e0641',
+          name: 'New',
+          color: 'cyan',
+          icon: 'fal sparkles',
+          sortOrder: 10
+        },
+        {
+          id: '019c48d0-5dfe-7cb8-a008-a149924e0642',
+          name: 'Contacted',
+          color: 'blue',
+          icon: 'fal phone',
+          sortOrder: 20
+        },
+        {
+          id: '019c48d0-5dfe-7cb8-a008-a149924e0643',
+          name: 'Qualified',
+          color: 'green',
+          icon: 'fal badge-check',
+          sortOrder: 30
+        },
+        {
+          id: '019c48d0-5dfe-7cb8-a008-a149924e0644',
+          name: 'Proposal Sent',
+          color: 'violet',
+          icon: 'fal paper-plane',
+          sortOrder: 32
+        },
+        {
+          id: '019c48d0-5dfe-7cb8-a008-a149924e0645',
+          name: 'Trial Started',
+          color: 'amber',
+          icon: 'fal flask',
+          sortOrder: 34
+        },
+        {
+          id: '019c48d0-5dfe-7cb8-a008-a149924e0646',
+          name: 'Current Customer',
+          color: 'sky',
+          icon: 'fal user-check',
+          sortOrder: 36
+        },
+        {
+          id: '019c48d0-5dfe-7cb8-a008-a149924e0647',
+          name: 'Converted',
+          color: 'emerald',
+          icon: 'fal circle-check',
+          sortOrder: 90,
+          isFinalOption: true
+        },
+        {
+          id: '019c48d0-5dfe-7cb8-a008-a149924e0648',
+          name: 'Disqualified',
+          color: 'red',
+          icon: 'fal circle-xmark',
+          sortOrder: 100,
+          isFinalOption: true
+        }
+      ],
+      lead_source: [
+        {
+          id: 'a051cec0-6812-11ee-bbc7-658038978072',
+          name: 'Social Media',
+          color: 'pink',
+          icon: 'fal share-nodes'
+        },
+        {
+          id: '8c9c5620-6812-11ee-bbc7-658038978072',
+          name: 'Website',
+          color: 'cyan',
+          icon: 'fal globe'
+        },
+        {
+          id: 'a65eba30-6812-11ee-bbc7-658038978072',
+          name: 'Customer Reference',
+          color: 'amber',
+          icon: 'fal users'
+        },
+        {
+          id: 'afc7c8f0-6812-11ee-bbc7-658038978072',
+          name: 'Conference, Event',
+          color: 'violet',
+          icon: 'fal calendar-star'
+        },
+        {
+          id: '9d5d9500-6812-11ee-bbc7-658038978072',
+          name: 'Partner',
+          color: 'orange',
+          icon: 'fal handshake'
+        }
+      ],
+      lead_type: [
+        {
+          id: '258759d0-d563-11ee-9e7e-7be4640b805e',
+          name: 'New Customer',
+          color: 'lime',
+          icon: 'fal chart-line-up'
+        },
+        {
+          id: '3eb211c0-d563-11ee-9e7e-7be4640b805e',
+          name: 'Existing Customer',
+          color: 'amber',
+          icon: 'fal money-bill-transfer'
+        }
+      ],
+      lost_reason: [
+        {
+          id: 'df324de0-6812-11ee-bbc7-658038978072',
+          name: 'Price',
+          color: 'red',
+          icon: 'fal tag'
+        },
+        {
+          id: 'e3a649d0-6812-11ee-bbc7-658038978072',
+          name: 'Feature',
+          color: 'orange',
+          icon: 'fal puzzle-piece'
+        },
+        {
+          id: 'edb95430-6812-11ee-bbc7-658038978072',
+          name: 'Competition',
+          color: 'violet',
+          icon: 'fal swords'
+        },
+        {
+          id: 'f0cad9f0-6812-11ee-bbc7-658038978072',
+          name: 'Other',
+          color: 'slate',
+          icon: 'fal ellipsis'
+        }
+      ],
+      conversion_state: [
+        {
+          id: '019e166c-370b-7693-932a-6fa41a7b5bf1',
+          name: 'in_progress',
+          color: 'blue',
+          icon: 'fal spinner'
+        },
+        {
+          id: '019e166c-370b-7693-932a-6fa41a7b5bf2',
+          name: 'completed',
+          color: 'emerald',
+          icon: 'fal circle-check',
+          isFinalOption: true
+        },
+        {
+          id: '019e166c-370b-7693-932a-6fa41a7b5bf3',
+          name: 'partial',
+          color: 'amber',
+          icon: 'fal circle-half-stroke'
+        },
+        {
+          id: '019e166c-370b-7693-932a-6fa41a7b5bf4',
+          name: 'failed',
+          color: 'red',
+          icon: 'fal triangle-exclamation',
+          isFinalOption: true
+        }
+      ],
+      conversion_mode: [
+        {
+          id: '019e166f-b3e3-7221-b8b4-1af9ca535b21',
+          name: 'company_contact_deal',
+          color: 'blue',
+          icon: 'fal buildings'
+        },
+        {
+          id: '019e166f-b3e3-7221-b8b4-1af9ca535b22',
+          name: 'contact_deal',
+          color: 'violet',
+          icon: 'fal address-card'
+        }
+      ]
+    },
+    product: {
+      category: [
+        {
+          id: '019c48d0-64d0-7b74-a977-b4a2bdc00001',
+          name: 'Software',
+          color: 'blue',
+          icon: 'fal package'
+        },
+        {
+          id: '019c48d0-64d0-7b74-a977-b4a2bdc00002',
+          name: 'Services',
+          color: 'emerald',
+          icon: 'fal briefcase'
+        },
+        {
+          id: '019c48d0-64d0-7b74-a977-b4a2bdc00003',
+          name: 'Hardware',
+          color: 'orange',
+          icon: 'fal microchip'
+        },
+        {
+          id: '019c48d0-64d0-7b74-a977-b4a2bdc00004',
+          name: 'Subscription',
+          color: 'violet',
+          icon: 'fal arrows-rotate'
+        },
+        {
+          id: '019c48d0-64d0-7b74-a977-b4a2bdc00005',
+          name: 'Consulting',
+          color: 'cyan',
+          icon: 'fal messages'
+        }
+      ],
+      Unit: [
+        {
+          id: '22eb8f50-6841-11ee-a2b2-5f277eac2fd9',
+          name: 'Adet',
+          color: 'slate',
+          icon: 'fal cube'
+        }
+      ]
+    }
+  }
 }
 
 /**
@@ -25,10 +419,11 @@ export function useEnums(options: UseEnumsOptions = {}) {
     queryKey: ['enums'],
     queryFn: async () => {
       const response = await enumsCollection.getEnums()
+
       return response
     },
     enabled: options.enabled,
-    staleTime: QUERY_CONFIG.STALE_TIME.ENUMS,
+    staleTime: QUERY_CONFIG.STALE_TIME.ENUMS
   })
 }
 
@@ -47,16 +442,92 @@ function sortEnums(left: EnumEntity, right: EnumEntity) {
   return left.name.localeCompare(right.name)
 }
 
+function normalizeNullableString(value: string | null | undefined) {
+  if (!value || value === 'null') return null
+
+  return value
+}
+
+function normalizeFieldOption(
+  option: RawEditorOption,
+  index: number,
+  context: {
+    appSlug: string;
+    dataSourceSlug: string;
+    fieldSlug: string;
+  }
+): EnumEntity | null {
+  const id = option.id ?? option.value
+  const name = option.name ?? option.label
+
+  if (!id || !name) return null
+
+  const order = option.sortOrder ?? option.sort_order ?? index + 1
+
+  return {
+    id,
+    name,
+    description: option.description ?? null,
+    color: normalizeNullableString(option.color),
+    icon: normalizeNullableString(option.icon),
+    active: option.active ?? true,
+    parent: option.parent ?? null,
+    no: option.no ?? index + 1,
+    sortOrder: order,
+    isFinalOption: option.isFinalOption ?? option.is_final_option ?? null,
+    appSlug: context.appSlug,
+    dataSourceSlug: context.dataSourceSlug,
+    fieldSlug: context.fieldSlug
+  }
+}
+
+function getBundledFallbackOptions(
+  appSlug: string,
+  dataSourceSlug: string,
+  fieldSlug: string
+) {
+  return BUNDLED_ENUM_FALLBACKS[appSlug]?.[dataSourceSlug]?.[fieldSlug] ?? []
+}
+
+function useDataSourceFieldsWithOptions(
+  appSlug: string | undefined,
+  dataSourceSlug: string | undefined,
+  enabled: boolean
+) {
+  const client = useDocyrusClient()
+  const dataSourcesClient = useMemo(
+    () => (client ? createDataSourceClient(client) : null),
+    [client]
+  )
+
+  return useQuery({
+    queryKey: ['data-source-fields-with-options', appSlug, dataSourceSlug],
+    queryFn: async () => {
+      if (!dataSourcesClient || !appSlug || !dataSourceSlug) return []
+
+      const dataSource = (await dataSourcesClient.getBySlug(
+        appSlug,
+        dataSourceSlug,
+        { expand: 'enums' }
+      )) as RawDataSourceRecord
+
+      return dataSource.fields ?? []
+    },
+    enabled: enabled && Boolean(dataSourcesClient && appSlug && dataSourceSlug),
+    staleTime: QUERY_CONFIG.STALE_TIME.ENUMS
+  })
+}
+
 export function useEnumEntities(
   fieldName: string,
-  options: UseEnumEntitiesOptions = {},
+  options: UseEnumEntitiesOptions = {}
 ) {
   const {
     data: enums,
     isLoading,
-    error,
+    error
   } = useEnums({
-    enabled: options.enabled,
+    enabled: options.enabled
   })
 
   const entities = useMemo(() => {
@@ -84,12 +555,65 @@ export function useEnumEntities(
     }
 
     return [...matches].sort(sortEnums)
-  }, [enums, fieldName, options.appSlug, options.dataSourceSlug])
+  }, [
+enums,
+fieldName,
+options.appSlug,
+options.dataSourceSlug
+])
+
+  const shouldLoadFieldOptions =
+    options.enabled !== false &&
+    Boolean(options.appSlug && options.dataSourceSlug && enums) &&
+    !isLoading &&
+    !error &&
+    entities.length === 0
+
+  const { data: fieldsWithOptions = [], isLoading: areFieldOptionsLoading } =
+    useDataSourceFieldsWithOptions(
+      options.appSlug,
+      options.dataSourceSlug,
+      shouldLoadFieldOptions
+    )
+
+  const fieldOptionEntities = useMemo(() => {
+    if (!options.appSlug || !options.dataSourceSlug) return []
+
+    const field = fieldsWithOptions.find(item => item.slug === fieldName)
+    const fieldOptions = Array.isArray(field?.enums)
+      ? field.enums
+      : field?.options?.editorOptions?.data
+    const rawOptions = fieldOptions?.length
+      ? fieldOptions
+      : getBundledFallbackOptions(
+          options.appSlug,
+          options.dataSourceSlug,
+          fieldName
+        )
+
+    return rawOptions
+      .map((option, index) => {
+        return normalizeFieldOption(option, index, {
+          appSlug: options.appSlug!,
+          dataSourceSlug: options.dataSourceSlug!,
+          fieldSlug: fieldName
+        })
+      })
+      .filter((option): option is EnumEntity => Boolean(option))
+      .sort(sortEnums)
+  }, [
+fieldName,
+fieldsWithOptions,
+options.appSlug,
+options.dataSourceSlug
+])
+
+  const effectiveEntities = entities.length > 0 ? entities : fieldOptionEntities
 
   return {
-    data: entities,
-    isLoading,
-    error,
+    data: effectiveEntities,
+    isLoading: isLoading || (shouldLoadFieldOptions && areFieldOptionsLoading),
+    error
   }
 }
 
@@ -99,37 +623,37 @@ export function useEnumEntities(
  */
 export function useEnumOptions(
   fieldName: string,
-  options: UseEnumEntitiesOptions = {},
+  options: UseEnumEntitiesOptions = {}
 ) {
   const {
     data: entities,
     isLoading,
-    error,
+    error
   } = useEnumEntities(fieldName, options)
 
-  const enumOptions = useMemo(
-    () =>
-      entities.map((option) => ({
-        label: option.name,
-        value: option.id,
-      })),
-    [entities],
-  )
+  const enumOptions = useMemo(() => {
+    return entities.map(option => ({
+      label: option.name,
+      value: option.id,
+      color: option.color,
+      icon: option.icon
+    }))
+  }, [entities])
 
   return {
     options: enumOptions,
     isLoading,
-    error,
+    error
   }
 }
 
 export function mapEnumEntitiesToCellOptions(
-  entities: Array<EnumEntity>,
+  entities: Array<EnumEntity>
 ): Array<CellSelectOption> {
-  return entities.map((option) => ({
+  return entities.map(option => ({
     label: option.name,
     value: option.id,
     color: option.color ?? undefined,
-    iconStr: option.icon ?? undefined,
+    iconStr: option.icon ?? undefined
   }))
 }

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+
 import { useTranslation } from 'react-i18next'
 import {
   Building2,
@@ -9,9 +10,10 @@ import {
   Mail,
   MapPin,
   Phone,
-  ShoppingCart,
+  ShoppingCart
 } from 'lucide-react'
-import { useCompany, useCompanies } from '@/hooks/use-companies'
+
+import { useCompanies, useCompany } from '@/hooks/use-companies'
 import { useContacts } from '@/hooks/use-contacts'
 import { useDeals } from '@/hooks/use-deals'
 import { useLeads } from '@/hooks/use-leads'
@@ -25,28 +27,28 @@ import {
   Sheet,
   SheetContent,
   SheetHeader,
-  SheetTitle,
+  SheetTitle
 } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getStatusMeta } from '@/lib/field-sales'
 
 export interface ActiveFieldSalesVisit {
-  source: 'plan' | 'company'
-  organizationId: string
-  organizationName: string
-  planId?: string
-  startedAtMs: number
-  checkInTimeIso: string
-  checkInLocation?: Record<string, unknown> | null
-  note?: string
+  source: 'plan' | 'company';
+  organizationId: string;
+  organizationName: string;
+  planId?: string;
+  startedAtMs: number;
+  checkInTimeIso: string;
+  checkInLocation?: Record<string, unknown> | null;
+  note?: string;
 }
 
 interface FieldSalesVisitSheetProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  visit: ActiveFieldSalesVisit | null
-  elapsedLabel: string
-  onStartOrder: () => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  visit: ActiveFieldSalesVisit | null;
+  elapsedLabel: string;
+  onStartOrder: () => void;
 }
 
 function StatCard({ title, value }: { title: string; value: string | number }) {
@@ -67,15 +69,23 @@ export function FieldSalesVisitSheet({
   onOpenChange,
   visit,
   elapsedLabel,
-  onStartOrder,
+  onStartOrder
 }: FieldSalesVisitSheetProps) {
   const { t } = useTranslation()
   const [orderDialogOpen, setOrderDialogOpen] = useState(false)
   const { data: company } = useCompany(visit?.organizationId)
   const { data: companies = [] } = useCompanies({
-    columns: ['id', 'name', 'phone', 'email', 'address', 'website', 'status'],
+    columns: [
+'id',
+'name',
+'phone',
+'email',
+'address',
+'website',
+'status'
+],
     limit: 300,
-    orderBy: 'name ASC',
+    orderBy: 'name ASC'
   })
   const organization =
     company ||
@@ -85,20 +95,26 @@ export function FieldSalesVisitSheet({
   const { data: contacts = [] } = useContacts(
     visit?.organizationId
       ? {
-          columns: ['id', 'name', 'job_title', 'email', 'mobile'],
+          columns: [
+'id',
+'name',
+'job_title',
+'email',
+'mobile'
+],
           filters: {
             rules: [
               {
                 field: 'organization',
                 operator: '=',
-                value: visit.organizationId,
-              },
-            ],
+                value: visit.organizationId
+              }
+            ]
           },
           orderBy: 'created_on DESC',
-          limit: 50,
+          limit: 50
         }
-      : undefined,
+      : undefined
   )
 
   const { data: deals = [] } = useDeals(
@@ -109,41 +125,47 @@ export function FieldSalesVisitSheet({
             'name',
             'deal_value',
             'stage',
-            'expected_closing_date',
+            'expected_closing_date'
           ],
           filters: {
             rules: [
               {
                 field: 'organization',
                 operator: '=',
-                value: visit.organizationId,
-              },
-            ],
+                value: visit.organizationId
+              }
+            ]
           },
           orderBy: 'created_on DESC',
-          limit: 20,
+          limit: 20
         }
       : undefined,
-    { enabled: !!visit?.organizationId },
+    { enabled: !!visit?.organizationId }
   )
 
   const { data: leads = [] } = useLeads(
     visit?.organizationId
       ? {
-          columns: ['id', 'title', 'lead_status', 'email', 'phone'],
+          columns: [
+'id',
+'title',
+'lead_status',
+'email',
+'phone'
+],
           filters: {
             rules: [
               {
                 field: 'company_name',
                 operator: '=',
-                value: visit.organizationId,
-              },
-            ],
+                value: visit.organizationId
+              }
+            ]
           },
           orderBy: 'created_on DESC',
-          limit: 20,
+          limit: 20
         }
-      : undefined,
+      : undefined
   )
 
   const { data: salesOrders = [] } = useSalesOrders(
@@ -156,31 +178,28 @@ export function FieldSalesVisitSheet({
             'sub_total',
             'tax_total',
             'grand_total',
-            'created_on',
+            'created_on'
           ],
           filters: {
             rules: [
               {
                 field: 'organization',
                 operator: '=',
-                value: visit.organizationId,
-              },
-            ],
+                value: visit.organizationId
+              }
+            ]
           },
           orderBy: 'created_on DESC',
-          limit: 20,
+          limit: 20
         }
-      : undefined,
+      : undefined
   )
 
   const completedOrders = useMemo(
-    () =>
-      salesOrders.filter((order: any) =>
-        getStatusMeta(order.status)
+    () => salesOrders.filter((order: any) => getStatusMeta(order.status)
           .name.toLocaleLowerCase('tr')
-          .includes('delivered'),
-      ).length,
-    [salesOrders],
+          .includes('delivered')).length,
+    [salesOrders]
   )
 
   return (
@@ -191,7 +210,8 @@ export function FieldSalesVisitSheet({
             <div className="flex items-start justify-between gap-4">
               <div>
                 <SheetTitle className="text-xl">
-                  {visit?.organizationName || t('fieldSales.visitSheet.defaultTitle')}
+                  {visit?.organizationName ||
+                    t('fieldSales.visitSheet.defaultTitle')}
                 </SheetTitle>
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                   <Badge variant="secondary">
@@ -210,8 +230,7 @@ export function FieldSalesVisitSheet({
                   onClick={() => {
                     setOrderDialogOpen(true)
                     onStartOrder()
-                  }}
-                >
+                  }}>
                   <ShoppingCart className="mr-2 h-4 w-4" />
                   {t('fieldSales.visitSheet.createOrder')}
                 </Button>
@@ -224,20 +243,16 @@ export function FieldSalesVisitSheet({
               <div className="grid gap-3 md:grid-cols-4">
                 <StatCard
                   title={t('fieldSales.visitSheet.contacts')}
-                  value={contacts.length}
-                />
+                  value={contacts.length} />
                 <StatCard
                   title={t('fieldSales.visitSheet.openOpportunities')}
-                  value={deals.length}
-                />
+                  value={deals.length} />
                 <StatCard
                   title={t('fieldSales.visitSheet.leads')}
-                  value={leads.length}
-                />
+                  value={leads.length} />
                 <StatCard
                   title={t('fieldSales.visitSheet.deliveredOrders')}
-                  value={completedOrders}
-                />
+                  value={completedOrders} />
               </div>
 
               <Card>
@@ -395,7 +410,7 @@ export function FieldSalesVisitSheet({
                           <div>
                             <div className="font-medium">
                               {t('fieldSales.visitSheet.orderNumber', {
-                                id: order.id?.slice(0, 8),
+                                id: order.id?.slice(0, 8)
                               })}
                             </div>
                             <div className="mt-1 text-sm text-muted-foreground">
@@ -424,8 +439,7 @@ export function FieldSalesVisitSheet({
           open={orderDialogOpen}
           onOpenChange={setOrderDialogOpen}
           organizationId={visit.organizationId}
-          organizationName={visit.organizationName}
-        />
+          organizationName={visit.organizationName} />
       ) : null}
     </>
   )

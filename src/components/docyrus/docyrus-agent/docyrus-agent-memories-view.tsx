@@ -1,80 +1,84 @@
-'use client';
+'use client'
 
 // @ts-nocheck
 /* eslint-disable */
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useState } from 'react'
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
-import {
-  ArrowLeft, Brain, Plus, Search
-} from 'lucide-react';
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { cn } from '@/lib/utils'
+import { ArrowLeft, Brain, Plus, Search } from 'lucide-react'
 
-import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation';
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
-import { type DocyrusAgentMemoryLevel } from './docyrus-agent-memory-candidate-row';
-import { DEFAULT_MEMORY_LEVELS } from './docyrus-agent-memory-extraction-dialog';
+import { type DocyrusAgentMemoryLevel } from './docyrus-agent-memory-candidate-row'
+import { DEFAULT_MEMORY_LEVELS } from './docyrus-agent-memory-extraction-dialog'
 import {
   type DocyrusAgentMemoryFormState,
-  EMPTY_MEMORY_FORM
-} from './docyrus-agent-memory-form';
-import { DocyrusAgentMemoryFormDialog } from './docyrus-agent-memory-form-dialog';
+  EMPTY_MEMORY_FORM,
+} from './docyrus-agent-memory-form'
+import { DocyrusAgentMemoryFormDialog } from './docyrus-agent-memory-form-dialog'
 import {
   type DocyrusAgentMemory,
-  DocyrusAgentMemoryRow
-} from './docyrus-agent-memory-row';
+  DocyrusAgentMemoryRow,
+} from './docyrus-agent-memory-row'
 
 export interface DocyrusAgentMemoriesViewProps {
-  memories: ReadonlyArray<DocyrusAgentMemory>;
-  loading?: boolean;
-  saving?: boolean;
-  deletingId?: string | null;
-  error?: string | null;
-  levels?: ReadonlyArray<DocyrusAgentMemoryLevel>;
+  memories: ReadonlyArray<DocyrusAgentMemory>
+  loading?: boolean
+  saving?: boolean
+  deletingId?: string | null
+  error?: string | null
+  levels?: ReadonlyArray<DocyrusAgentMemoryLevel>
   /** Default form values for a fresh memory. */
-  defaultMemoryFormValue?: DocyrusAgentMemoryFormState;
+  defaultMemoryFormValue?: DocyrusAgentMemoryFormState
 
   /** Fires when the back arrow is pressed. */
-  onBack?: () => void;
+  onBack?: () => void
   /** Persist a new memory. Called from the create form dialog. */
-  onCreate?: (form: DocyrusAgentMemoryFormState) => void | Promise<void>;
+  onCreate?: (form: DocyrusAgentMemoryFormState) => void | Promise<void>
   /** Persist edits to an existing memory. Called from the edit form dialog. */
-  onUpdate?: (memory: DocyrusAgentMemory, form: DocyrusAgentMemoryFormState) => void | Promise<void>;
+  onUpdate?: (
+    memory: DocyrusAgentMemory,
+    form: DocyrusAgentMemoryFormState,
+  ) => void | Promise<void>
   /** Delete a memory. */
-  onDelete?: (memory: DocyrusAgentMemory) => void | Promise<void>;
+  onDelete?: (memory: DocyrusAgentMemory) => void | Promise<void>
 
   /** Override the local search filter — supply when filtering server-side. */
-  searchQuery?: string;
-  onSearchQueryChange?: (query: string) => void;
+  searchQuery?: string
+  onSearchQueryChange?: (query: string) => void
   /** Hide the built-in search input entirely. */
-  hideSearch?: boolean;
+  hideSearch?: boolean
   /** Hide the built-in "New memory" button — useful when adding the action elsewhere. */
-  hideCreateButton?: boolean;
+  hideCreateButton?: boolean
   /** Hide the back arrow (e.g. when the view is the only page on the panel). */
-  hideBackButton?: boolean;
+  hideBackButton?: boolean
 
   /** Override the per-row presentation. */
-  renderRow?: (memory: DocyrusAgentMemory, helpers: DocyrusAgentMemoriesViewRowHelpers) => ReactNode;
+  renderRow?: (
+    memory: DocyrusAgentMemory,
+    helpers: DocyrusAgentMemoriesViewRowHelpers,
+  ) => ReactNode
   /** Override the heading. */
-  title?: ReactNode;
+  title?: ReactNode
   /** Replace the empty state. */
-  emptyState?: ReactNode;
+  emptyState?: ReactNode
   /** Replace the loading state. */
-  loadingState?: ReactNode;
+  loadingState?: ReactNode
   /** Replace the error block. */
-  errorState?: (error: string) => ReactNode;
+  errorState?: (error: string) => ReactNode
   /** Slot rendered between the search and the list (e.g. filters / tabs). */
-  beforeList?: ReactNode;
+  beforeList?: ReactNode
   /** Slot rendered between the title and the "New memory" button. */
-  headerTrailing?: ReactNode;
-  className?: string;
+  headerTrailing?: ReactNode
+  className?: string
 }
 
 export interface DocyrusAgentMemoriesViewRowHelpers {
-  onEdit: (memory: DocyrusAgentMemory) => void;
-  onDelete?: (memory: DocyrusAgentMemory) => void;
-  isDeleting: boolean;
+  onEdit: (memory: DocyrusAgentMemory) => void
+  onDelete?: (memory: DocyrusAgentMemory) => void
+  isDeleting: boolean
 }
 
 /**
@@ -107,52 +111,59 @@ export const DocyrusAgentMemoriesView = ({
   errorState,
   beforeList,
   headerTrailing,
-  className
+  className,
 }: DocyrusAgentMemoriesViewProps) => {
-  const { t } = useUiTranslation();
+  const { t } = useUiTranslation()
 
-  const [internalQuery, setInternalQuery] = useState('');
-  const searchQuery = controlledQuery ?? internalQuery;
+  const [internalQuery, setInternalQuery] = useState('')
+  const searchQuery = controlledQuery ?? internalQuery
   const setSearchQuery = (next: string) => {
     if (onSearchQueryChange) {
-      onSearchQueryChange(next);
+      onSearchQueryChange(next)
 
-      return;
+      return
     }
-    setInternalQuery(next);
-  };
+    setInternalQuery(next)
+  }
 
-  const [formDialogOpen, setFormDialogOpen] = useState(false);
-  const [editingMemory, setEditingMemory] = useState<DocyrusAgentMemory | null>(null);
+  const [formDialogOpen, setFormDialogOpen] = useState(false)
+  const [editingMemory, setEditingMemory] = useState<DocyrusAgentMemory | null>(
+    null,
+  )
 
   const openCreate = () => {
-    setEditingMemory(null);
-    setFormDialogOpen(true);
-  };
+    setEditingMemory(null)
+    setFormDialogOpen(true)
+  }
 
   const openEdit = (memory: DocyrusAgentMemory) => {
-    setEditingMemory(memory);
-    setFormDialogOpen(true);
-  };
+    setEditingMemory(memory)
+    setFormDialogOpen(true)
+  }
 
   const filterLocally = (list: ReadonlyArray<DocyrusAgentMemory>) => {
-    if (!searchQuery.trim()) return list;
-    const q = searchQuery.toLowerCase();
+    if (!searchQuery.trim()) return list
+    const q = searchQuery.toLowerCase()
 
-    return list.filter(m => m.title.toLowerCase().includes(q) || m.content.toLowerCase().includes(q));
-  };
+    return list.filter(
+      (m) =>
+        m.title.toLowerCase().includes(q) ||
+        m.content.toLowerCase().includes(q),
+    )
+  }
 
-  const filtered = controlledQuery !== undefined ? memories : filterLocally(memories);
+  const filtered =
+    controlledQuery !== undefined ? memories : filterLocally(memories)
 
   const handleFormSubmit = async (form: DocyrusAgentMemoryFormState) => {
     if (editingMemory) {
-      await onUpdate?.(editingMemory, form);
+      await onUpdate?.(editingMemory, form)
     } else {
-      await onCreate?.(form);
+      await onCreate?.(form)
     }
-    setFormDialogOpen(false);
-    setEditingMemory(null);
-  };
+    setFormDialogOpen(false)
+    setEditingMemory(null)
+  }
 
   return (
     <div className={cn('flex h-full flex-col overflow-hidden', className)}>
@@ -163,7 +174,8 @@ export const DocyrusAgentMemoriesView = ({
             variant="ghost"
             size="icon"
             className="size-7 text-muted-foreground hover:text-foreground"
-            onClick={onBack}>
+            onClick={onBack}
+          >
             <ArrowLeft className="size-4" />
           </Button>
         </div>
@@ -190,37 +202,48 @@ export const DocyrusAgentMemoriesView = ({
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               className="pl-9"
-              placeholder={t('ui.agent.memories.searchPlaceholder', 'Search memories…')}
+              placeholder={t(
+                'ui.agent.memories.searchPlaceholder',
+                'Search memories…',
+              )}
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)} />
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
         )}
 
         {beforeList}
 
-        {error && (errorState?.(error) ?? (
-          <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-            {error}
-          </div>
-        ))}
+        {error &&
+          (errorState?.(error) ?? (
+            <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+              {error}
+            </div>
+          ))}
 
-        {loading ? (loadingState ?? (
-          <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-            {t('ui.agent.memories.loading', 'Loading memories…')}
-          </div>
-        )) : filtered.length === 0 ? (emptyState ?? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
-            <Brain className="size-10 opacity-30" />
-            <p className="text-sm">{t('ui.agent.memories.empty', 'No memories yet')}</p>
-          </div>
-        )) : (
+        {loading ? (
+          (loadingState ?? (
+            <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+              {t('ui.agent.memories.loading', 'Loading memories…')}
+            </div>
+          ))
+        ) : filtered.length === 0 ? (
+          (emptyState ?? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
+              <Brain className="size-10 opacity-30" />
+              <p className="text-sm">
+                {t('ui.agent.memories.empty', 'No memories yet')}
+              </p>
+            </div>
+          ))
+        ) : (
           <div className="flex flex-col gap-2">
             {filtered.map((memory) => {
               const helpers: DocyrusAgentMemoriesViewRowHelpers = {
                 isDeleting: deletingId === memory.id,
                 onDelete,
-                onEdit: openEdit
-              };
+                onEdit: openEdit,
+              }
 
               return (
                 <div key={memory.id}>
@@ -229,10 +252,11 @@ export const DocyrusAgentMemoriesView = ({
                       memory={memory}
                       isDeleting={helpers.isDeleting}
                       onClick={openEdit}
-                      onDelete={onDelete} />
+                      onDelete={onDelete}
+                    />
                   )}
                 </div>
-              );
+              )
             })}
           </div>
         )}
@@ -245,7 +269,8 @@ export const DocyrusAgentMemoriesView = ({
         levels={levels}
         saving={saving}
         defaultValue={defaultMemoryFormValue}
-        onSubmit={handleFormSubmit} />
+        onSubmit={handleFormSubmit}
+      />
     </div>
-  );
-};
+  )
+}

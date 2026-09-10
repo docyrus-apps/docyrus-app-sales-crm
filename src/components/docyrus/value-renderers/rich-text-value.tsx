@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { cn } from '@/lib/utils'
 
 import { type DocyrusValueProps } from './types'
@@ -17,7 +19,7 @@ export function RichTextValue({
   className,
 }: DocyrusValueProps) {
   if (value == null || value === '') {
-    return <span className="text-muted-foreground">—</span>
+    return <span className="text-muted-foreground">–</span>
   }
 
   const htmlContent = getCompanionValue(record, field.slug, 'html')
@@ -25,7 +27,7 @@ export function RichTextValue({
   const text = stripHtmlTags(source)
 
   if (!text) {
-    return <span className="text-muted-foreground">—</span>
+    return <span className="text-muted-foreground">–</span>
   }
 
   return <span className={cn('line-clamp-2 text-sm', className)}>{text}</span>

@@ -1,17 +1,20 @@
-// Phone normalization helpers shared by matching, storage and dialing.
-// Matching is digit-based with a last-10 fallback so `0544...`, `+90544...`
-// and spaced formats resolve to the same customer (kit Risk 2).
+/*
+ * Phone normalization helpers shared by matching, storage and dialing.
+ * Matching is digit-based with a last-10 fallback so `0544...`, `+90544...`
+ * and spaced formats resolve to the same customer (kit Risk 2).
+ */
 
 export function normalizePhoneForMatch(
-  value: string | undefined | null,
+  value: string | undefined | null
 ): string {
   if (!value) return ''
+
   return value.replace(/\D/g, '')
 }
 
 export function samePhone(
   left: string | undefined | null,
-  right: string | undefined | null,
+  right: string | undefined | null
 ): boolean {
   const l = normalizePhoneForMatch(left)
   const r = normalizePhoneForMatch(right)
@@ -27,10 +30,12 @@ export function samePhone(
 
 /** E.164-ish storage format: `+` plus digits when we have at least 7 digits. */
 export function normalizePhoneForStorage(
-  value: string | undefined | null,
+  value: string | undefined | null
 ): string | undefined {
   const digits = normalizePhoneForMatch(value)
+
   if (digits.length >= 7) return `+${digits}`
+
   return value?.trim() || undefined
 }
 
@@ -40,6 +45,8 @@ export function toDialableTarget(value: string | undefined | null): string {
   const trimmed = value.trim()
   const hasPlus = trimmed.startsWith('+')
   const digits = normalizePhoneForMatch(trimmed)
+
   if (!digits) return ''
+
   return hasPlus ? `+${digits}` : digits
 }

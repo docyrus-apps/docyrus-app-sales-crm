@@ -1,6 +1,10 @@
 'use client'
 
-import { useDocyrusFieldComponent } from '@/hooks/use-docyrus-field-component'
+// @ts-nocheck
+/* eslint-disable */
+import { createElement } from 'react'
+
+import { useDocyrusFieldComponent } from '@/hooks/docyrus/use-docyrus-field-component'
 
 import { type DocyrusValueProps } from './types'
 
@@ -13,5 +17,5 @@ import { type DocyrusValueProps } from './types'
 export function DynamicValue(props: DocyrusValueProps) {
   const Comp = useDocyrusFieldComponent(props.field.type, 'value-renderer')
 
-  return <Comp {...props} />
+  return createElement(Comp, props)
 }

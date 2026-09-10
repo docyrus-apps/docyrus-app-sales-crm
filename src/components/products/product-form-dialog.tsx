@@ -1,36 +1,46 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
+import { useFormErrorReset } from '@/hooks/use-form-store'
+import { useEffect, useMemo, useState } from 'react'
+
+import type { ProductFormData } from '@/schemas/product-schema'
+
 import { useForm } from '@tanstack/react-form'
 import { zodValidator } from '@tanstack/zod-form-adapter'
 import { useTranslation } from 'react-i18next'
 import { Loader2 } from 'lucide-react'
-import type { ProductFormData } from '@/schemas/product-schema'
+import { toast } from 'sonner'
+
 import { Button } from '@/components/animate-ui/components/buttons/button'
 import {
   AwesomeDialog,
   AwesomeDialogBody,
   AwesomeDialogFooter,
-  AwesomeDialogHeader,
+  AwesomeDialogHeader
 } from '@/components/docyrus/awesome-dialog'
+import { FormSubmitAlert } from '@/components/crm/form-submit-alert'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Combobox } from '@/components/ui/combobox-simple'
 import { productFormSchema } from '@/schemas/product-schema'
 import { useCreateProduct, useUpdateProduct } from '@/hooks/use-products'
 import { useEnumOptions } from '@/hooks/use-enums'
+import {
+  getSubmitFailureMessage,
+  validateSubmitValues
+} from '@/lib/form-submit-feedback'
 
 interface ProductFormDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  product?: any
-  mode: 'create' | 'edit'
-  onSubmitSuccess?: () => void | Promise<void>
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  product?: any;
+  mode: 'create' | 'edit';
+  onSubmitSuccess?: () => void | Promise<void>;
+}
+
+function getRelationValue(value: any): string {
+  if (value && typeof value === 'object') return value.id || ''
+
+  return value || ''
 }
 
 export function ProductFormDialog({
@@ -38,72 +48,127 @@ export function ProductFormDialog({
   onOpenChange,
   product,
   mode,
-  onSubmitSuccess,
+  onSubmitSuccess
 }: ProductFormDialogProps) {
   const { t } = useTranslation()
   const createProduct = useCreateProduct()
   const updateProduct = useUpdateProduct()
-  const { options: unitOptions = [] } = useEnumOptions('Unit')
-  const { options: categoryOptions = [] } = useEnumOptions('category')
+  const enumOptions = { appSlug: 'base_crm', dataSourceSlug: 'product' }
+  const { options: unitOptions = [] } = useEnumOptions('Unit', enumOptions)
+  const { options: categoryOptions = [] } = useEnumOptions(
+    'category',
+    enumOptions
+  )
+  const initialValues = useMemo<ProductFormData>(
+    () => ({
+      name: product?.name || '',
+      product_code: product?.product_code || '',
+      Unit: getRelationValue(product?.Unit),
+      unit_price: product?.unit_price || undefined,
+      __unit_price_currency: product?.__unit_price_currency || 'TRY',
+      category: getRelationValue(product?.category),
+      tax: product?.tax || undefined
+    }),
+    [product]
+  )
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const form = useForm<ProductFormData>({
-    defaultValues: {
-      product_code: product?.product_code || '',
-      Unit:
-        typeof product?.Unit === 'object'
-          ? product.Unit.id
-          : product?.Unit || '',
-      unit_price: product?.unit_price || undefined,
-      category:
-        typeof product?.category === 'object'
-          ? product.category.id
-          : product?.category || '',
-      tax: product?.tax || undefined,
-    },
+    formId: `product-form-${mode}-${product?.id ?? 'new'}`,
+    defaultValues: initialValues,
     validatorAdapter: zodValidator(),
     validators: {
-      onSubmit: productFormSchema,
+      onChange: productFormSchema,
+      onSubmit: productFormSchema
     },
     onSubmit: async ({ value }) => {
-      // Clean up empty strings (convert to undefined for UUID fields)
-      const cleanedData = Object.fromEntries(
-        Object.entries(value).map(([key, val]) => [
-          key,
-          val === '' ? undefined : val,
-        ]),
-      )
+      try {
+        setSubmitError(null)
+        // Clean up empty strings (convert to undefined for UUID fields)
+        const cleanedData = Object.fromEntries(
+          Object.entries(value).map(([key, val]) => [key, val === '' ? undefined : val])
+        )
 
-      if (mode === 'create') {
-        await createProduct.mutateAsync(cleanedData)
-      } else if (product?.id) {
-        await updateProduct.mutateAsync({
-          productId: product.id,
-          data: cleanedData,
-        })
+        if (mode === 'create') {
+          await createProduct.mutateAsync(cleanedData)
+        } else if (product?.id) {
+          await updateProduct.mutateAsync({
+            productId: product.id,
+            data: cleanedData
+          })
+        }
+
+        await onSubmitSuccess?.()
+        onOpenChange(false)
+      } catch (error) {
+        setSubmitError(getSubmitFailureMessage(error, t))
       }
-
-      await onSubmitSuccess?.()
-      onOpenChange(false)
-    },
+    }
   })
 
+  useEffect(() => {
+    if (!open) return
+    form.reset(initialValues)
+    setSubmitError(null)
+  }, [
+form,
+initialValues,
+open,
+mode
+])
+
+  useFormErrorReset(form.store, setSubmitError)
+
   const isSubmitting = createProduct.isPending || updateProduct.isPending
+  const categoryComboboxOptions = categoryOptions.map((option: any) => ({
+    label: option.label,
+    value: option.value,
+    color: option.color,
+    icon: option.icon
+  }))
+  const unitComboboxOptions = unitOptions.map((option: any) => ({
+    label: option.label,
+    value: option.value,
+    color: option.color,
+    icon: option.icon
+  }))
+  const fieldLabels = {
+    name: t('products.form.productNameLabel'),
+    product_code: t('products.form.productCodeLabel')
+  }
+  const handleFormSubmit = () => {
+    const validationMessage = validateSubmitValues(
+      productFormSchema,
+      form.state.values,
+      fieldLabels,
+      t
+    )
+
+    if (validationMessage) {
+      setSubmitError(validationMessage)
+      toast.error(validationMessage)
+
+      return
+    }
+
+    setSubmitError(null)
+    void form.handleSubmit()
+  }
 
   return (
     <AwesomeDialog
       open={open}
       onOpenChange={onOpenChange}
-      container="modal"
-      size="lg"
-    >
+      container={mode === 'create' ? 'sheet' : 'modal'}
+      side="right"
+      size={mode === 'create' ? 'xl' : 'lg'}>
       <form
         onSubmit={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          form.handleSubmit()
+          handleFormSubmit()
         }}
-        className="flex flex-col flex-1 overflow-hidden"
-      >
+        className="flex flex-col flex-1 overflow-hidden">
         <AwesomeDialogHeader
           title={
             mode === 'create'
@@ -114,14 +179,41 @@ export function ProductFormDialog({
             mode === 'create'
               ? t('products.form.createDescription')
               : t('products.form.editDescription')
-          }
-        />
-        <AwesomeDialogBody>
-          <div className="grid grid-cols-2 gap-4">
+          } />
+        <AwesomeDialogBody className="space-y-4">
+          <FormSubmitAlert
+            title={t('common.validationError')}
+            message={submitError} />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {/* Product Name Field */}
+            <form.Field name="name">
+              {field => (
+                <Field>
+                  <Label htmlFor={field.name}>
+                    {t('products.form.productNameLabel')}{' '}
+                    <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id={field.name}
+                    value={field.state.value}
+                    onChange={e => field.handleChange(e.target.value)}
+                    placeholder={t('products.form.productNamePlaceholder')} />
+                  {field.state.meta.errors?.[0] && (
+                    <p className="text-sm text-destructive">
+                      {typeof field.state.meta.errors[0] === 'string'
+                        ? field.state.meta.errors[0]
+                        : (field.state.meta.errors[0] as any)?.message ||
+                          t('common.validationError')}
+                    </p>
+                  )}
+                </Field>
+              )}
+            </form.Field>
+
             {/* Product Code Field */}
             <form.Field name="product_code">
-              {(field) => (
-                <Field className="col-span-2">
+              {field => (
+                <Field>
                   <Label htmlFor={field.name}>
                     {t('products.form.productCodeLabel')}{' '}
                     <span className="text-destructive">*</span>
@@ -129,9 +221,8 @@ export function ProductFormDialog({
                   <Input
                     id={field.name}
                     value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder={t('products.form.productCodePlaceholder')}
-                  />
+                    onChange={e => field.handleChange(e.target.value)}
+                    placeholder={t('products.form.productCodePlaceholder')} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
                       {typeof field.state.meta.errors[0] === 'string'
@@ -146,28 +237,19 @@ export function ProductFormDialog({
 
             {/* Category Field */}
             <form.Field name="category">
-              {(field) => (
+              {field => (
                 <Field>
                   <Label htmlFor={field.name}>
                     {t('products.form.categoryLabel')}
                   </Label>
-                  <Select
+                  <Combobox
+                    options={categoryComboboxOptions}
                     value={field.state.value}
                     onValueChange={field.handleChange}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue
-                        placeholder={t('products.form.categoryPlaceholder')}
-                      />
-                    </SelectTrigger>
-                    <SelectContent position="popper" sideOffset={4}>
-                      {categoryOptions.map((option: any) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder={t('products.form.categoryPlaceholder')}
+                    emptyText={t('common.noResults', {
+                      defaultValue: 'No results'
+                    })} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
                       {typeof field.state.meta.errors[0] === 'string'
@@ -182,28 +264,19 @@ export function ProductFormDialog({
 
             {/* Unit Field */}
             <form.Field name="Unit">
-              {(field) => (
+              {field => (
                 <Field>
                   <Label htmlFor={field.name}>
                     {t('products.form.unitLabel')}
                   </Label>
-                  <Select
+                  <Combobox
+                    options={unitComboboxOptions}
                     value={field.state.value}
                     onValueChange={field.handleChange}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue
-                        placeholder={t('products.form.unitPlaceholder')}
-                      />
-                    </SelectTrigger>
-                    <SelectContent position="popper" sideOffset={4}>
-                      {unitOptions.map((option: any) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder={t('products.form.unitPlaceholder')}
+                    emptyText={t('common.noResults', {
+                      defaultValue: 'No results'
+                    })} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
                       {typeof field.state.meta.errors[0] === 'string'
@@ -218,23 +291,35 @@ export function ProductFormDialog({
 
             {/* Unit Price Field */}
             <form.Field name="unit_price">
-              {(field) => (
+              {field => (
                 <Field>
                   <Label htmlFor={field.name}>
                     {t('products.form.unitPriceLabel')}
                   </Label>
-                  <Input
-                    id={field.name}
-                    type="number"
-                    value={field.state.value ?? ''}
-                    onChange={(e) =>
-                      field.handleChange(
-                        e.target.value ? Number(e.target.value) : undefined,
-                      )
-                    }
-                    placeholder="0.00"
-                    step="0.01"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      id={field.name}
+                      type="number"
+                      value={field.state.value ?? ''}
+                      onChange={e => field.handleChange(
+                          e.target.value ? Number(e.target.value) : undefined
+                        )}
+                      placeholder="0.00"
+                      step="0.01"
+                      className="min-w-0 flex-1" />
+                    <form.Field name="__unit_price_currency">
+                      {currencyField => (
+                        <Combobox
+                          options={[{ label: '₺ TRY', value: 'TRY' }, { label: '$ USD', value: 'USD' }, { label: '€ EUR', value: 'EUR' }]}
+                          value={currencyField.state.value}
+                          onValueChange={value => currencyField.handleChange(
+                              value as ProductFormData['__unit_price_currency']
+                            )}
+                          className="w-28 shrink-0"
+                          placeholder={t('products.form.currencyPlaceholder')} />
+                      )}
+                    </form.Field>
+                  </div>
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
                       {typeof field.state.meta.errors[0] === 'string'
@@ -249,7 +334,7 @@ export function ProductFormDialog({
 
             {/* Tax Field */}
             <form.Field name="tax">
-              {(field) => (
+              {field => (
                 <Field>
                   <Label htmlFor={field.name}>
                     {t('products.form.taxLabel')}
@@ -258,16 +343,13 @@ export function ProductFormDialog({
                     id={field.name}
                     type="number"
                     value={field.state.value ?? ''}
-                    onChange={(e) =>
-                      field.handleChange(
-                        e.target.value ? Number(e.target.value) : undefined,
-                      )
-                    }
+                    onChange={e => field.handleChange(
+                        e.target.value ? Number(e.target.value) : undefined
+                      )}
                     placeholder="0"
                     step="1"
                     min="0"
-                    max="100"
-                  />
+                    max="100" />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
                       {typeof field.state.meta.errors[0] === 'string'
@@ -287,8 +369,7 @@ export function ProductFormDialog({
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
-          >
+            disabled={isSubmitting}>
             {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={isSubmitting}>

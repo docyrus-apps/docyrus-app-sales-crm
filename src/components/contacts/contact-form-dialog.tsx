@@ -1,14 +1,21 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
+import { useFormErrorReset } from '@/hooks/use-form-store'
+import { resolveFieldErrorMessage } from '@/lib/form-field-error'
+import { useEffect, useMemo, useState } from 'react'
+
+import type { ContactFormData } from '@/schemas/contact-schema'
+
 import { useForm } from '@tanstack/react-form'
 import { zodValidator } from '@tanstack/zod-form-adapter'
 import { useTranslation } from 'react-i18next'
 import { Loader2 } from 'lucide-react'
-import type { ContactFormData } from '@/schemas/contact-schema'
+import { toast } from 'sonner'
+
 import { Button } from '@/components/animate-ui/components/buttons/button'
 import { AwesomeDialog } from '@/components/docyrus/awesome-dialog'
 import { AwesomeDialogHeader } from '@/components/docyrus/awesome-dialog/awesome-dialog-header'
 import { AwesomeDialogBody } from '@/components/docyrus/awesome-dialog/awesome-dialog-body'
 import { AwesomeDialogFooter } from '@/components/docyrus/awesome-dialog/awesome-dialog-footer'
+import { FormSubmitAlert } from '@/components/crm/form-submit-alert'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,13 +24,23 @@ import { PhoneInput } from '@/components/ui/phone-input'
 import { contactFormSchema } from '@/schemas/contact-schema'
 import { useCreateContact, useUpdateContact } from '@/hooks/use-contacts'
 import { useCompanies } from '@/hooks/use-companies'
+import {
+  getSubmitFailureMessage,
+  validateSubmitValues
+} from '@/lib/form-submit-feedback'
 
 interface ContactFormDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  contact?: any
-  mode: 'create' | 'edit'
-  onSubmitSuccess?: () => void | Promise<void>
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  contact?: any;
+  mode: 'create' | 'edit';
+  onSubmitSuccess?: () => void | Promise<void>;
+}
+
+function getRelationValue(value: any): string {
+  if (value && typeof value === 'object') return value.id || ''
+
+  return value || ''
 }
 
 export function ContactFormDialog({
@@ -31,73 +48,112 @@ export function ContactFormDialog({
   onOpenChange,
   contact,
   mode,
-  onSubmitSuccess,
+  onSubmitSuccess
 }: ContactFormDialogProps) {
   const { t } = useTranslation()
   const createContact = useCreateContact()
   const updateContact = useUpdateContact()
   const { data: companies = [] } = useCompanies()
-
-  const form = useForm<ContactFormData>({
-    defaultValues: {
+  const initialValues = useMemo<ContactFormData>(
+    () => ({
       name: contact?.name || '',
       job_title: contact?.job_title || '',
       email: contact?.email || '',
       mobile: contact?.mobile || '',
-      organization:
-        typeof contact?.organization === 'object'
-          ? contact.organization.id
-          : contact?.organization || '',
-    },
+      organization: getRelationValue(contact?.organization)
+    }),
+    [contact]
+  )
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
+  const form = useForm<ContactFormData>({
+    formId: `contact-form-${mode}-${contact?.id ?? 'new'}`,
+    defaultValues: initialValues,
     validatorAdapter: zodValidator(),
     validators: {
       onChange: contactFormSchema,
+      onSubmit: contactFormSchema
     },
     onSubmit: async ({ value }) => {
-      // Clean up empty strings (convert to undefined for UUID fields)
-      const cleanedData = Object.fromEntries(
-        Object.entries(value).map(([key, val]) => [
-          key,
-          val === '' ? undefined : val,
-        ]),
-      )
+      try {
+        setSubmitError(null)
+        // Clean up empty strings (convert to undefined for UUID fields)
+        const cleanedData = Object.fromEntries(
+          Object.entries(value).map(([key, val]) => [key, val === '' ? undefined : val])
+        )
 
-      if (mode === 'create') {
-        await createContact.mutateAsync(cleanedData)
-      } else if (contact?.id) {
-        await updateContact.mutateAsync({
-          contactId: contact.id,
-          data: cleanedData,
-        })
+        if (mode === 'create') {
+          await createContact.mutateAsync(cleanedData)
+        } else if (contact?.id) {
+          await updateContact.mutateAsync({
+            contactId: contact.id,
+            data: cleanedData
+          })
+        }
+
+        await onSubmitSuccess?.()
+        onOpenChange(false)
+      } catch (error) {
+        setSubmitError(getSubmitFailureMessage(error, t))
       }
-
-      await onSubmitSuccess?.()
-      onOpenChange(false)
-    },
+    }
   })
+
+  useEffect(() => {
+    if (!open) return
+    form.reset(initialValues)
+    setSubmitError(null)
+  }, [
+form,
+initialValues,
+open,
+mode
+])
+
+  useFormErrorReset(form.store, setSubmitError)
 
   const companyOptions = companies.map((company: any) => ({
     label: company.name,
-    value: company.id,
+    value: company.id
   }))
 
   const isSubmitting = createContact.isPending || updateContact.isPending
+  const fieldLabels = {
+    name: t('contacts.form.nameLabel')
+  }
+  const handleFormSubmit = () => {
+    const validationMessage = validateSubmitValues(
+      contactFormSchema,
+      form.state.values,
+      fieldLabels,
+      t
+    )
+
+    if (validationMessage) {
+      setSubmitError(validationMessage)
+      toast.error(validationMessage)
+
+      return
+    }
+
+    setSubmitError(null)
+    void form.handleSubmit()
+  }
 
   return (
     <AwesomeDialog
       open={open}
       onOpenChange={onOpenChange}
-      container="modal"
-      size="lg"
-    >
+      container={mode === 'create' ? 'sheet' : 'modal'}
+      side="right"
+      size={mode === 'create' ? 'xl' : 'lg'}>
       <form
         onSubmit={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          form.handleSubmit()
+          handleFormSubmit()
         }}
-        className="flex flex-col flex-1 overflow-hidden"
-      >
+        className="flex flex-col flex-1 overflow-hidden">
         <AwesomeDialogHeader
           title={
             mode === 'create'
@@ -108,15 +164,21 @@ export function ContactFormDialog({
             mode === 'create'
               ? t('contacts.form.createDescription')
               : t('contacts.form.editDescription')
-          }
-        />
+          } />
 
         <AwesomeDialogBody>
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {submitError ? (
+              <div className="md:col-span-2">
+                <FormSubmitAlert
+                  title={t('common.validationError')}
+                  message={submitError} />
+              </div>
+            ) : null}
             {/* Name Field */}
             <form.Field name="name">
-              {(field) => (
-                <Field>
+              {field => (
+                <Field className="md:col-span-2">
                   <Label htmlFor={field.name}>
                     {t('contacts.form.nameLabel')}{' '}
                     <span className="text-destructive">*</span>
@@ -124,15 +186,11 @@ export function ContactFormDialog({
                   <Input
                     id={field.name}
                     value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder={t('contacts.form.namePlaceholder')}
-                  />
+                    onChange={e => field.handleChange(e.target.value)}
+                    placeholder={t('contacts.form.namePlaceholder')} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
+                      {resolveFieldErrorMessage(field.state.meta.errors[0], t)}
                     </p>
                   )}
                 </Field>
@@ -141,7 +199,7 @@ export function ContactFormDialog({
 
             {/* Job Title Field */}
             <form.Field name="job_title">
-              {(field) => (
+              {field => (
                 <Field>
                   <Label htmlFor={field.name}>
                     {t('contacts.form.jobTitleLabel')}
@@ -149,15 +207,11 @@ export function ContactFormDialog({
                   <Input
                     id={field.name}
                     value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder={t('contacts.form.jobTitlePlaceholder')}
-                  />
+                    onChange={e => field.handleChange(e.target.value)}
+                    placeholder={t('contacts.form.jobTitlePlaceholder')} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
+                      {resolveFieldErrorMessage(field.state.meta.errors[0], t)}
                     </p>
                   )}
                 </Field>
@@ -166,7 +220,7 @@ export function ContactFormDialog({
 
             {/* Email Field */}
             <form.Field name="email">
-              {(field) => (
+              {field => (
                 <Field>
                   <Label htmlFor={field.name}>
                     {t('contacts.form.emailLabel')}
@@ -175,15 +229,11 @@ export function ContactFormDialog({
                     id={field.name}
                     type="email"
                     value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder={t('contacts.form.emailPlaceholder')}
-                  />
+                    onChange={e => field.handleChange(e.target.value)}
+                    placeholder={t('contacts.form.emailPlaceholder')} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
+                      {resolveFieldErrorMessage(field.state.meta.errors[0], t)}
                     </p>
                   )}
                 </Field>
@@ -192,22 +242,20 @@ export function ContactFormDialog({
 
             {/* Mobile Field */}
             <form.Field name="mobile">
-              {(field) => (
+              {field => (
                 <Field>
                   <Label htmlFor={field.name}>
                     {t('contacts.form.mobileLabel')}
                   </Label>
                   <PhoneInput
+                    id={field.name}
                     value={field.state.value}
-                    onChange={field.handleChange}
-                    placeholder={t('contacts.form.mobilePlaceholder')}
-                  />
+                    invalid={Boolean(field.state.meta.errors?.[0])}
+                    onValueChange={field.handleChange}
+                    placeholder={t('contacts.form.mobilePlaceholder')} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
+                      {resolveFieldErrorMessage(field.state.meta.errors[0], t)}
                     </p>
                   )}
                 </Field>
@@ -216,7 +264,7 @@ export function ContactFormDialog({
 
             {/* Organization Field */}
             <form.Field name="organization">
-              {(field) => (
+              {field => (
                 <Field>
                   <Label htmlFor={field.name}>
                     {t('contacts.form.organizationLabel')}
@@ -224,16 +272,12 @@ export function ContactFormDialog({
                   <Combobox
                     options={companyOptions}
                     value={field.state.value}
-                    onValueChange={(value) => field.handleChange(value)}
+                    onValueChange={value => field.handleChange(value)}
                     placeholder={t('contacts.form.organizationPlaceholder')}
-                    emptyText={t('contacts.form.organizationEmpty')}
-                  />
+                    emptyText={t('contacts.form.organizationEmpty')} />
                   {field.state.meta.errors?.[0] && (
                     <p className="text-sm text-destructive">
-                      {typeof field.state.meta.errors[0] === 'string'
-                        ? field.state.meta.errors[0]
-                        : field.state.meta.errors[0]?.message ||
-                          t('common.validationError')}
+                      {resolveFieldErrorMessage(field.state.meta.errors[0], t)}
                     </p>
                   )}
                 </Field>
@@ -247,8 +291,7 @@ export function ContactFormDialog({
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
-          >
+            disabled={isSubmitting}>
             {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={isSubmitting}>

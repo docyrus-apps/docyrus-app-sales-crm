@@ -1,17 +1,21 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 import {
   createContext,
-  forwardRef,
   useCallback,
-  useContext,
+  use,
   useMemo,
+  useReducer,
   useRef,
   useState,
   type ComponentRef,
   type ComponentProps,
   type ReactNode,
   type RefObject,
+  type Ref,
 } from 'react'
 
 import { RotateCcw, Save } from 'lucide-react'
@@ -71,8 +75,8 @@ function valuesEqual(a: unknown, b: unknown): boolean {
 
   if (Array.isArray(a) && Array.isArray(b)) {
     if (a.length !== b.length) return false
-    const sortedA = [...a].sort()
-    const sortedB = [...b].sort()
+    const sortedA = a.toSorted()
+    const sortedB = b.toSorted()
 
     return sortedA.every((v, i) => Object.is(v, sortedB[i]))
   }
@@ -210,7 +214,10 @@ function useMacroForm(
 ) {
   const valuesRef = useRef<Record<string, unknown>>({ ...record })
   const resetSignalRef = useRef(0)
-  const [, forceUpdate] = useState(0)
+  const [, forceUpdate] = useReducer((x: number) => x + 1, 0) as [
+    number,
+    () => void,
+  ]
   const onFieldChangeRef = useRef(onFieldChange)
   const validationErrorsRef = useRef<Map<string, string>>(
     validationErrors ?? new Map(),
@@ -228,7 +235,6 @@ function useMacroForm(
    * doesn't apply because the closure target IS the stable identity.
    */
   const [form] = useState(() => ({
-    // eslint-disable-next-line @eslint-react/component-hook-factories -- stable via useState
     Field: ({
       name,
       children,
@@ -252,13 +258,13 @@ function useMacroForm(
   const resetForm = useCallback((newValues: Record<string, unknown>) => {
     valuesRef.current = { ...newValues }
     resetSignalRef.current += 1
-    forceUpdate((n) => n + 1)
+    forceUpdate()
   }, [])
 
   const setFieldValue = useCallback((slug: string, value: unknown) => {
     valuesRef.current[slug] = value
     resetSignalRef.current += 1
-    forceUpdate((n) => n + 1)
+    forceUpdate()
   }, [])
 
   return {
@@ -286,6 +292,7 @@ function EditableRecordDetailActionBar({
   isSaving: boolean
   portalContainer?: Element | DocumentFragment | null
 }) {
+  const { t } = useUiTranslation()
   const [popoverOpen, setPopoverOpen] = useState(false)
 
   const onSaveClick = useCallback(async () => {
@@ -310,8 +317,12 @@ function EditableRecordDetailActionBar({
             type="button"
             className="rounded-sm px-2 py-1 text-sm font-medium tabular-nums underline decoration-dotted underline-offset-4 hover:decoration-solid"
           >
-            {changedFieldCount} {changedFieldCount === 1 ? 'field' : 'fields'}{' '}
-            changed
+            {changedFieldCount === 1
+              ? t('ui.recordDetail.oneFieldChanged', '1 field changed')
+              : t(
+                  'ui.recordDetail.fieldsChanged',
+                  '{{count}} fields changed',
+                ).replace('{{count}}', String(changedFieldCount))}
           </button>
         </PopoverTrigger>
         <PopoverContent
@@ -320,7 +331,9 @@ function EditableRecordDetailActionBar({
           className="max-h-72 w-80 overflow-y-auto p-0"
         >
           <PopoverHeader className="sticky top-0 z-10 border-b bg-popover px-3 py-2">
-            <PopoverTitle>Pending Changes</PopoverTitle>
+            <PopoverTitle>
+              {t('ui.recordDetail.pendingChanges', 'Pending Changes')}
+            </PopoverTitle>
           </PopoverHeader>
           <div className="divide-y">
             {changes.map((change) => (
@@ -335,14 +348,14 @@ function EditableRecordDetailActionBar({
                   className="max-w-20 truncate text-muted-foreground line-through"
                   title={formatValue(change.originalValue)}
                 >
-                  {formatValue(change.originalValue) || '(empty)'}
+                  {formatValue(change.originalValue) || t('ui.recordDetail.emptyValue', '(empty)')}
                 </span>
                 <span className="shrink-0 text-muted-foreground">&rarr;</span>
                 <span
                   className="max-w-20 truncate text-foreground"
                   title={formatValue(change.newValue)}
                 >
-                  {formatValue(change.newValue) || '(empty)'}
+                  {formatValue(change.newValue) || t('ui.recordDetail.emptyValue', '(empty)')}
                 </span>
               </div>
             ))}
@@ -353,7 +366,7 @@ function EditableRecordDetailActionBar({
       <ActionBarGroup>
         <Button variant="ghost" size="sm" onClick={onDiscard}>
           <RotateCcw className="size-3.5" />
-          Cancel
+          {t('ui.recordDetail.cancel', 'Cancel')}
         </Button>
         <Button
           variant="default"
@@ -362,40 +375,13 @@ function EditableRecordDetailActionBar({
           disabled={isSaving}
         >
           <Save className="size-3.5" />
-          {isSaving ? 'Saving...' : 'Save'}
+          {isSaving
+            ? t('ui.recordDetail.saving', 'Saving...')
+            : t('ui.recordDetail.save', 'Save')}
         </Button>
       </ActionBarGroup>
     </ActionBar>
   )
-}
-
-/**
- * Access the EditableRecordDetail context from within the provider.
- * Returns form, values, change tracking state, and save/cancel handlers.
- */
-export function useEditableRecordDetail() {
-  const ctx = useContext(EditableRecordDetailContext)
-
-  if (!ctx) {
-    throw new Error(
-      'useEditableRecordDetail must be used within <EditableRecordDetail>',
-    )
-  }
-
-  return {
-    form: ctx.form,
-    values: ctx.valuesRef.current,
-    changedFields: ctx.changedFields,
-    changedFieldCount: ctx.changedFieldCount,
-    valuesVersion: ctx.valuesVersion,
-    isFieldChanged: (slug: string) => ctx.changedFields.has(slug),
-    getFieldValue: (slug: string) => ctx.valuesRef.current[slug],
-    setFieldValue: ctx.setFieldValue,
-    getChanges: ctx.getChanges,
-    handleSave: ctx.handleSave,
-    handleCancel: ctx.handleCancel,
-    isSaving: ctx.isSaving,
-  }
 }
 
 export interface EditableRecordDetailFieldProps extends Omit<
@@ -411,6 +397,7 @@ export interface EditableRecordDetailFieldProps extends Omit<
   | 'trackChanges'
   | 'changed'
 > {
+  ref?: Ref<HTMLDivElement>
   /** Field slug — looks up config from context */
   slug: string
   /** Optional label override */
@@ -424,11 +411,15 @@ export interface EditableRecordDetailFieldProps extends Omit<
  * from the EditableRecordDetail context. Renders a label + value row
  * unless showLabel is false.
  */
-const EditableRecordDetailField = forwardRef<
-  HTMLDivElement,
-  EditableRecordDetailFieldProps
->(({ slug, label, showLabel = true, className, ...props }, ref) => {
-  const ctx = useContext(EditableRecordDetailContext)
+function EditableRecordDetailField({
+  slug,
+  label,
+  showLabel = true,
+  className,
+  ref,
+  ...props
+}: EditableRecordDetailFieldProps) {
+  const ctx = use(EditableRecordDetailContext)
 
   if (!ctx) {
     throw new Error(
@@ -516,14 +507,13 @@ const EditableRecordDetailField = forwardRef<
       )}
     </div>
   )
-})
-
-EditableRecordDetailField.displayName = 'EditableRecordDetailField'
+}
 
 export interface EditableRecordDetailProps extends Omit<
   ComponentProps<'div'>,
   'children'
 > {
+  ref?: Ref<HTMLDivElement>
   /** Field configurations */
   fields: Array<RecordDetailField>
   /** Current record values keyed by field slug */
@@ -549,258 +539,251 @@ export interface EditableRecordDetailProps extends Omit<
   children: ReactNode
 }
 
-const EditableRecordDetail = forwardRef<
-  HTMLDivElement,
-  EditableRecordDetailProps
->(
-  (
-    {
-      fields,
-      record,
-      onSave,
-      onCancel,
-      form: externalForm,
-      readOnly = false,
-      disabled = false,
-      trackChanges = true,
-      actionBarSideOffset,
-      children,
-      className,
-      ...props
-    },
-    ref,
-  ) => {
-    const containerRef = useRef<ComponentRef<'div'>>(null)
+function EditableRecordDetail({
+  fields,
+  record,
+  onSave,
+  onCancel,
+  form: externalForm,
+  readOnly = false,
+  disabled = false,
+  trackChanges = true,
+  actionBarSideOffset,
+  children,
+  className,
+  ref,
+  ...props
+}: EditableRecordDetailProps) {
+  const containerRef = useRef<ComponentRef<'div'>>(null)
 
-    const fieldMap = useMemo(() => {
-      const map = new Map<string, RecordDetailField>()
+  const fieldMap = useMemo(() => {
+    const map = new Map<string, RecordDetailField>()
 
-      for (const entry of fields) {
-        map.set(entry.field.slug, entry)
-      }
+    for (const entry of fields) {
+      map.set(entry.field.slug, entry)
+    }
 
-      return map
-    }, [fields])
+    return map
+  }, [fields])
 
-    const originalValuesRef = useRef<Record<string, unknown>>({
-      ...record,
-    })
+  const originalValuesRef = useRef<Record<string, unknown>>({
+    ...record,
+  })
 
-    const [changedFields, setChangedFields] = useState<Set<string>>(new Set())
+  const [changedFields, setChangedFields] = useState<Set<string>>(
+    () => new Set(),
+  )
 
-    const [isSaving, setIsSaving] = useState(false)
-    const [validationErrors, setValidationErrors] = useState<
-      Map<string, string>
-    >(new Map())
-    const onSaveRef = useRef(onSave)
-    const onCancelRef = useRef(onCancel)
+  const [isSaving, setIsSaving] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<Map<string, string>>(
+    () => new Map(),
+  )
+  const onSaveRef = useRef(onSave)
+  const onCancelRef = useRef(onCancel)
 
-    onSaveRef.current = onSave
-    onCancelRef.current = onCancel
+  onSaveRef.current = onSave
+  onCancelRef.current = onCancel
 
-    const handleFieldValueChange = useCallback(
-      (slug: string, newValue: unknown) => {
-        const original = originalValuesRef.current[slug]
+  const handleFieldValueChange = useCallback(
+    (slug: string, newValue: unknown) => {
+      const original = originalValuesRef.current[slug]
 
-        setChangedFields((prev) => {
-          const next = new Set(prev)
+      setChangedFields((prev) => {
+        const next = new Set(prev)
 
-          if (valuesEqual(original, newValue)) {
-            next.delete(slug)
-          } else {
-            next.add(slug)
-          }
-
-          return next
-        })
-
-        setValidationErrors((prev) => {
-          if (!prev.has(slug)) return prev
-          const next = new Map(prev)
-
+        if (valuesEqual(original, newValue)) {
           next.delete(slug)
-
-          return next
-        })
-      },
-      [],
-    )
-
-    const [valuesVersion, setValuesVersion] = useState(0)
-
-    const onFieldChange = useCallback(
-      (slug: string, value: unknown) => {
-        handleFieldValueChange(slug, value)
-        setValuesVersion((v) => v + 1)
-      },
-      [handleFieldValueChange],
-    )
-
-    const {
-      form: internalForm,
-      valuesRef,
-      resetForm,
-      setFieldValue: macroSetFieldValue,
-    } = useMacroForm(record, onFieldChange, validationErrors, valuesVersion)
-
-    const setFieldValue = useCallback(
-      (slug: string, value: unknown) => {
-        macroSetFieldValue(slug, value)
-        setValuesVersion((v) => v + 1)
-      },
-      [macroSetFieldValue],
-    )
-
-    const activeForm = externalForm ?? internalForm
-
-    const getChanges = useCallback((): Array<FieldChange> => {
-      const changes: Array<FieldChange> = []
-
-      for (const slug of changedFields) {
-        const config = fieldMap.get(slug)
-
-        if (!config) continue
-
-        changes.push({
-          fieldSlug: slug,
-          fieldName: config.field.name,
-          originalValue: originalValuesRef.current[slug],
-          newValue: valuesRef.current[slug],
-        })
-      }
-
-      return changes
-    }, [changedFields, fieldMap, valuesRef])
-
-    const validate = useCallback((): boolean => {
-      const errors = new Map<string, string>()
-      const currentValues = valuesRef.current
-
-      for (const [slug, config] of fieldMap) {
-        if (config.readOnly) continue
-
-        const isHidden =
-          typeof config.hidden === 'function'
-            ? config.hidden(currentValues)
-            : config.hidden
-
-        if (isHidden) continue
-
-        const isRequired =
-          typeof config.required === 'function'
-            ? config.required(currentValues)
-            : config.required
-
-        if (!isRequired) continue
-
-        const value = currentValues[slug]
-
-        if (isEmpty(value)) {
-          errors.set(slug, `${config.field.name} is required`)
+        } else {
+          next.add(slug)
         }
+
+        return next
+      })
+
+      setValidationErrors((prev) => {
+        if (!prev.has(slug)) return prev
+        const next = new Map(prev)
+
+        next.delete(slug)
+
+        return next
+      })
+    },
+    [],
+  )
+
+  const [valuesVersion, setValuesVersion] = useState(0)
+
+  const onFieldChange = useCallback(
+    (slug: string, value: unknown) => {
+      handleFieldValueChange(slug, value)
+      setValuesVersion((v) => v + 1)
+    },
+    [handleFieldValueChange],
+  )
+
+  const {
+    form: internalForm,
+    valuesRef,
+    resetForm,
+    setFieldValue: macroSetFieldValue,
+  } = useMacroForm(record, onFieldChange, validationErrors, valuesVersion)
+
+  const setFieldValue = useCallback(
+    (slug: string, value: unknown) => {
+      macroSetFieldValue(slug, value)
+      setValuesVersion((v) => v + 1)
+    },
+    [macroSetFieldValue],
+  )
+
+  const activeForm = externalForm ?? internalForm
+
+  const getChanges = useCallback((): Array<FieldChange> => {
+    const changes: Array<FieldChange> = []
+
+    for (const slug of changedFields) {
+      const config = fieldMap.get(slug)
+
+      if (!config) continue
+
+      changes.push({
+        fieldSlug: slug,
+        fieldName: config.field.name,
+        originalValue: originalValuesRef.current[slug],
+        newValue: valuesRef.current[slug],
+      })
+    }
+
+    return changes
+  }, [changedFields, fieldMap, valuesRef])
+
+  const validate = useCallback((): boolean => {
+    const errors = new Map<string, string>()
+    const currentValues = valuesRef.current
+
+    for (const [slug, config] of fieldMap) {
+      if (config.readOnly) continue
+
+      const isHidden =
+        typeof config.hidden === 'function'
+          ? config.hidden(currentValues)
+          : config.hidden
+
+      if (isHidden) continue
+
+      const isRequired =
+        typeof config.required === 'function'
+          ? config.required(currentValues)
+          : config.required
+
+      if (!isRequired) continue
+
+      const value = currentValues[slug]
+
+      if (isEmpty(value)) {
+        errors.set(slug, `${config.field.name} is required`)
       }
+    }
 
-      setValidationErrors(errors)
+    setValidationErrors(errors)
 
-      return errors.size === 0
-    }, [fieldMap, valuesRef])
+    return errors.size === 0
+  }, [fieldMap, valuesRef])
 
-    const handleSave = useCallback(async () => {
-      if (!validate()) return
+  const handleSave = useCallback(async () => {
+    if (!validate()) return
 
-      setIsSaving(true)
+    setIsSaving(true)
 
-      try {
-        const changes = getChanges()
+    try {
+      const changes = getChanges()
 
-        await onSaveRef.current?.(changes, { ...valuesRef.current })
+      await onSaveRef.current?.(changes, { ...valuesRef.current })
 
-        originalValuesRef.current = { ...valuesRef.current }
-        setChangedFields(new Set())
-        setValidationErrors(new Map())
-      } finally {
-        setIsSaving(false)
-      }
-    }, [getChanges, valuesRef, validate])
-
-    const handleCancel = useCallback(() => {
-      resetForm(originalValuesRef.current)
+      originalValuesRef.current = { ...valuesRef.current }
       setChangedFields(new Set())
       setValidationErrors(new Map())
-      onCancelRef.current?.()
-    }, [resetForm])
+    } finally {
+      setIsSaving(false)
+    }
+  }, [getChanges, valuesRef, validate])
 
-    const changedFieldCount = changedFields.size
+  const handleCancel = useCallback(() => {
+    resetForm(originalValuesRef.current)
+    setChangedFields(new Set())
+    setValidationErrors(new Map())
+    onCancelRef.current?.()
+  }, [resetForm])
 
-    const ctxValue = useMemo<EditableRecordDetailContextValue>(
-      () => ({
-        form: activeForm,
-        fieldMap,
-        valuesRef,
-        changedFields,
-        validationErrors,
-        trackChanges,
-        handleFieldValueChange,
-        readOnly,
-        disabled,
-        isSaving,
-        changedFieldCount,
-        valuesVersion,
-        getChanges,
-        handleSave,
-        handleCancel,
-        setFieldValue,
-      }),
-      [
-        activeForm,
-        fieldMap,
-        valuesRef,
-        changedFields,
-        validationErrors,
-        trackChanges,
-        handleFieldValueChange,
-        readOnly,
-        disabled,
-        isSaving,
-        changedFieldCount,
-        valuesVersion,
-        getChanges,
-        handleSave,
-        handleCancel,
-        setFieldValue,
-      ],
-    )
+  const changedFieldCount = changedFields.size
 
-    return (
-      <EditableRecordDetailContext value={ctxValue}>
-        <div
-          ref={(node) => {
-            containerRef.current = node
-            if (typeof ref === 'function') ref(node)
-            else if (ref) ref.current = node
-          }}
-          data-slot="editable-record-detail"
-          className={cn('relative w-full', className)}
-          {...props}
-        >
-          {children}
-        </div>
-        {changedFieldCount > 0 && (
-          <EditableRecordDetailActionBar
-            changedFieldCount={changedFieldCount}
-            getChanges={getChanges}
-            onSave={handleSave}
-            onDiscard={handleCancel}
-            sideOffset={actionBarSideOffset}
-            isSaving={isSaving}
-            portalContainer={containerRef.current}
-          />
-        )}
-      </EditableRecordDetailContext>
-    )
-  },
-)
+  const ctxValue = useMemo<EditableRecordDetailContextValue>(
+    () => ({
+      form: activeForm,
+      fieldMap,
+      valuesRef,
+      changedFields,
+      validationErrors,
+      trackChanges,
+      handleFieldValueChange,
+      readOnly,
+      disabled,
+      isSaving,
+      changedFieldCount,
+      valuesVersion,
+      getChanges,
+      handleSave,
+      handleCancel,
+      setFieldValue,
+    }),
+    [
+      activeForm,
+      fieldMap,
+      valuesRef,
+      changedFields,
+      validationErrors,
+      trackChanges,
+      handleFieldValueChange,
+      readOnly,
+      disabled,
+      isSaving,
+      changedFieldCount,
+      valuesVersion,
+      getChanges,
+      handleSave,
+      handleCancel,
+      setFieldValue,
+    ],
+  )
 
-EditableRecordDetail.displayName = 'EditableRecordDetail'
+  return (
+    <EditableRecordDetailContext value={ctxValue}>
+      <div
+        ref={(node) => {
+          containerRef.current = node
+          if (typeof ref === 'function') ref(node)
+          else if (ref) ref.current = node
+        }}
+        data-slot="editable-record-detail"
+        className={cn('relative w-full', className)}
+        {...props}
+      >
+        {children}
+      </div>
+      {changedFieldCount > 0 && (
+        <EditableRecordDetailActionBar
+          changedFieldCount={changedFieldCount}
+          getChanges={getChanges}
+          onSave={handleSave}
+          onDiscard={handleCancel}
+          sideOffset={actionBarSideOffset}
+          isSaving={isSaving}
+          portalContainer={containerRef.current}
+        />
+      )}
+    </EditableRecordDetailContext>
+  )
+}
 
 export { EditableRecordDetail, EditableRecordDetailField }

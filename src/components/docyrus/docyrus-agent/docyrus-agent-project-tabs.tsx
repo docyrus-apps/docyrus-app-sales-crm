@@ -1,33 +1,31 @@
-'use client';
+'use client'
 
 // @ts-nocheck
 /* eslint-disable */
-import { type ReactNode } from 'react';
+import { type ReactNode } from 'react'
 
-import {
-  Tabs, TabsContent, TabsList, TabsTrigger
-} from '@/components/ui/tabs';
-import { cn } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { cn } from '@/lib/utils'
 
-import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation';
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
-export type DocyrusAgentProjectDetailTab = 'sessions' | 'works' | 'documents';
+export type DocyrusAgentProjectDetailTab = 'sessions' | 'works' | 'documents'
 
 export interface DocyrusAgentProjectTabsProps {
   /** Slot for the Sessions tab body. */
-  sessionsContent: ReactNode;
+  sessionsContent: ReactNode
   /** Slot for the Works tab body. Omit to disable the tab. */
-  worksContent?: ReactNode;
+  worksContent?: ReactNode
   /** Slot for the Documents tab body. Omit to disable the tab. */
-  documentsContent?: ReactNode;
+  documentsContent?: ReactNode
   /** Override labels. */
-  sessionsLabel?: ReactNode;
-  worksLabel?: ReactNode;
-  documentsLabel?: ReactNode;
+  sessionsLabel?: ReactNode
+  worksLabel?: ReactNode
+  documentsLabel?: ReactNode
   /** Controlled active tab. Defaults to `'sessions'`. */
-  value?: DocyrusAgentProjectDetailTab;
-  onValueChange?: (tab: DocyrusAgentProjectDetailTab) => void;
-  className?: string;
+  value?: DocyrusAgentProjectDetailTab
+  onValueChange?: (tab: DocyrusAgentProjectDetailTab) => void
+  className?: string
 }
 
 /**
@@ -44,15 +42,16 @@ export const DocyrusAgentProjectTabs = ({
   documentsLabel,
   value,
   onValueChange,
-  className
+  className,
 }: DocyrusAgentProjectTabsProps) => {
-  const { t } = useUiTranslation();
+  const { t } = useUiTranslation()
 
   return (
     <Tabs
       className={cn('flex flex-col gap-4', className)}
       value={value ?? 'sessions'}
-      onValueChange={v => onValueChange?.(v as DocyrusAgentProjectDetailTab)}>
+      onValueChange={(v) => onValueChange?.(v as DocyrusAgentProjectDetailTab)}
+    >
       <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="sessions">
           {sessionsLabel ?? t('ui.agent.sessions', 'Sessions')}
@@ -65,9 +64,15 @@ export const DocyrusAgentProjectTabs = ({
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent className="m-0" value="sessions">{sessionsContent}</TabsContent>
-      <TabsContent className="m-0" value="works">{worksContent}</TabsContent>
-      <TabsContent className="m-0" value="documents">{documentsContent}</TabsContent>
+      <TabsContent className="m-0" value="sessions">
+        {sessionsContent}
+      </TabsContent>
+      <TabsContent className="m-0" value="works">
+        {worksContent}
+      </TabsContent>
+      <TabsContent className="m-0" value="documents">
+        {documentsContent}
+      </TabsContent>
     </Tabs>
-  );
-};
+  )
+}

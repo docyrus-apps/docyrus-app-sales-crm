@@ -1,10 +1,11 @@
 import { StrictMode } from 'react'
+
 import ReactDOM from 'react-dom/client'
 import {
   RouterProvider,
   createRootRoute,
   createRoute,
-  createRouter,
+  createRouter
 } from '@tanstack/react-router'
 import { DocyrusAuthProvider } from '@docyrus/signin'
 import { DocyrusDevtools } from '@docyrus/devtools'
@@ -33,12 +34,12 @@ import { CalendarPage } from './routes/calendar.tsx'
 import { Products } from './routes/products.tsx'
 import { SalesOrders } from './routes/sales-orders.tsx'
 import { SalesOrderDetail } from './routes/sales-order-detail.tsx'
+import { QuoteCreatePage } from './routes/quote-create.tsx'
 import { QuoteDetail } from './routes/quote-detail.tsx'
 import { QuoteBuild } from './routes/quote-build.tsx'
 import { Contacts } from './routes/contacts.tsx'
 import { ContactDetail } from './routes/contact-detail.tsx'
 import { Activities } from './routes/activities.tsx'
-import { Reports } from './routes/reports.tsx'
 import { AppConfigPage } from './routes/app-config.tsx'
 import { CallsPage } from './routes/calls.tsx'
 import { FieldSalesPlansPage } from './routes/field-sales-plans.tsx'
@@ -47,19 +48,19 @@ import { FieldSalesCalendarPage } from './routes/field-sales-calendar.tsx'
 import { ModuleGuard } from './components/shared/module-guard.tsx'
 
 const rootRoute = createRootRoute({
-  component: App,
+  component: App
 })
 
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  component: Dashboard,
+  component: Dashboard
 })
 
 const dealsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/deals',
-  component: Deals,
+  component: Deals
 })
 
 const dealDetailRoute = createRoute({
@@ -67,14 +68,14 @@ const dealDetailRoute = createRoute({
   path: '/deals/$dealId',
   component: DealDetail,
   validateSearch: (search: Record<string, unknown>) => ({
-    tab: (search.tab as string) || 'overview',
-  }),
+    tab: (search.tab as string) || 'overview'
+  })
 })
 
 const leadsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/leads',
-  component: Leads,
+  component: Leads
 })
 
 const leadDetailRoute = createRoute({
@@ -82,14 +83,14 @@ const leadDetailRoute = createRoute({
   path: '/leads/$leadId',
   component: LeadDetail,
   validateSearch: (search: Record<string, unknown>) => ({
-    tab: (search.tab as string) || 'overview',
-  }),
+    tab: (search.tab as string) || 'overview'
+  })
 })
 
 const companiesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/companies',
-  component: Companies,
+  component: Companies
 })
 
 const companyDetailRoute = createRoute({
@@ -97,14 +98,14 @@ const companyDetailRoute = createRoute({
   path: '/companies/$companyId',
   component: CompanyDetail,
   validateSearch: (search: Record<string, unknown>) => ({
-    tab: (search.tab as string) || 'overview',
-  }),
+    tab: (search.tab as string) || 'overview'
+  })
 })
 
 const contactsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/contacts',
-  component: Contacts,
+  component: Contacts
 })
 
 const contactDetailRoute = createRoute({
@@ -112,85 +113,79 @@ const contactDetailRoute = createRoute({
   path: '/contacts/$contactId',
   component: ContactDetail,
   validateSearch: (search: Record<string, unknown>) => ({
-    tab: (search.tab as string) || 'overview',
-  }),
+    tab: (search.tab as string) || 'overview'
+  })
 })
 
 const tasksRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/tasks',
-  component: Tasks,
+  component: Tasks
 })
 
 const calendarRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/calendar',
-  component: CalendarPage,
+  component: CalendarPage
 })
 
 const productsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/products',
-  component: Products,
+  component: Products
 })
 
 const salesOrdersRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/sales-orders',
-  component: SalesOrders,
+  component: SalesOrders
 })
 
 const salesOrderDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/sales-orders/$orderId',
-  component: SalesOrderDetail,
+  component: SalesOrderDetail
 })
 
 const quoteNewRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/quotes/new',
-  component: QuoteBuild,
+  component: QuoteCreatePage,
   validateSearch: (
-    search: Record<string, unknown>,
+    search: Record<string, unknown>
   ): {
-    organization?: string
-    organizationName?: string
-    deal?: string
+    organization?: string;
+    organizationName?: string;
+    deal?: string;
   } => ({
     organization: (search.organization as string) || undefined,
     organizationName: (search.organizationName as string) || undefined,
-    deal: (search.deal as string) || undefined,
-  }),
+    deal: (search.deal as string) || undefined
+  })
 })
 
 const quoteEditRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/quotes/$quoteId',
-  component: QuoteDetail,
+  component: QuoteDetail
 })
 
 const quoteBuildRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/quotes/$quoteId/build',
-  component: QuoteBuild,
+  component: QuoteBuild
 })
 
 const activitiesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/activities',
-  component: Activities,
-})
-
-const reportsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/reports',
-  component: Reports,
+  component: Activities
 })
 
 const appConfigRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/app-config',
-  component: AppConfigPage,
+  component: AppConfigPage
 })
 
 const callsRoute = createRoute({
@@ -200,7 +195,7 @@ const callsRoute = createRoute({
     <ModuleGuard module="webphone">
       <CallsPage />
     </ModuleGuard>
-  ),
+  )
 })
 
 const fieldSalesPlansRoute = createRoute({
@@ -210,7 +205,7 @@ const fieldSalesPlansRoute = createRoute({
     <ModuleGuard module="fieldSales">
       <FieldSalesPlansPage />
     </ModuleGuard>
-  ),
+  )
 })
 
 const fieldSalesApprovalsRoute = createRoute({
@@ -220,7 +215,7 @@ const fieldSalesApprovalsRoute = createRoute({
     <ModuleGuard module="fieldSales">
       <FieldSalesApprovalsPage />
     </ModuleGuard>
-  ),
+  )
 })
 
 const fieldSalesCalendarRoute = createRoute({
@@ -230,7 +225,7 @@ const fieldSalesCalendarRoute = createRoute({
     <ModuleGuard module="fieldSales">
       <FieldSalesCalendarPage />
     </ModuleGuard>
-  ),
+  )
 })
 
 const oauthRedirectPath = resolveOauthRedirectPath()
@@ -244,7 +239,7 @@ const authCallbackRoute = createRoute({
         <div className="animate-pulse">Completing sign in...</div>
       </div>
     </div>
-  ),
+  )
 })
 
 const routeTree = rootRoute.addChildren([
@@ -266,31 +261,55 @@ const routeTree = rootRoute.addChildren([
   quoteEditRoute,
   quoteBuildRoute,
   activitiesRoute,
-  reportsRoute,
   appConfigRoute,
   callsRoute,
   fieldSalesPlansRoute,
   fieldSalesApprovalsRoute,
   fieldSalesCalendarRoute,
-  authCallbackRoute,
+  authCallbackRoute
 ])
 
 const router = createRouter({
   routeTree,
   context: {
-    ...TanStackQueryProvider.getContext(),
+    ...TanStackQueryProvider.getContext()
   },
   defaultPreload: 'intent',
   scrollRestoration: true,
   defaultStructuralSharing: true,
-  defaultPreloadStaleTime: 0,
+  defaultPreloadStaleTime: 0
 })
 
 declare module '@tanstack/react-router' {
   interface Register {
-    router: typeof router
+    router: typeof router;
   }
 }
+
+/*
+ * Safety net for a Radix footgun: modal menus/dialogs set
+ * `pointer-events: none` on <body> while open. If a menu item triggers route
+ * navigation, the menu unmounts before Radix restores the style and the whole
+ * app becomes unclickable until a reload. The primary fixes pass
+ * `modal={false}` on menus that navigate; this guard catches any remaining
+ * case by clearing a stale lock after navigation settles, but only when no
+ * modal content is actually open.
+ */
+router.subscribe('onResolved', () => {
+  window.setTimeout(() => {
+    const { body } = document
+
+    if (body.style.pointerEvents !== 'none') return
+
+    const hasOpenModal = document.querySelector(
+      '[data-state="open"][role="dialog"], [data-state="open"][role="menu"], [data-state="open"][role="alertdialog"], [data-state="open"][data-slot*="content"]'
+    )
+
+    if (!hasOpenModal) {
+      body.style.pointerEvents = ''
+    }
+  }, 350)
+})
 
 const oauthScopes = (
   import.meta.env.VITE_OAUTH2_SCOPES || 'openid profile offline_access'
@@ -334,6 +353,7 @@ function resolveAllowedHostOrigins(): Array<string> {
 
   if (ancestorOrigins && ancestorOrigins.length > 0) {
     const parentOrigin = ancestorOrigins[0]
+
     if (parentOrigin) {
       origins.add(parentOrigin)
     }
@@ -359,34 +379,31 @@ const forceMode =
     : undefined
 
 const rootElement = document.getElementById('app')
+
 if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
+
   root.render(
     <StrictMode>
       <ThemeProvider
         modeStorageKey="app-theme"
         colorThemeStorageKey="app-color-theme"
         defaultColorTheme="docyrus-default"
-        disableTransitionOnChange
-      >
+        disableTransitionOnChange>
         <DocyrusAuthProvider
           apiUrl={import.meta.env.VITE_API_BASE_URL}
           clientId={import.meta.env.VITE_OAUTH2_CLIENT_ID}
           redirectUri={oauthRedirectUri}
           scopes={oauthScopes}
           callbackPath={oauthRedirectPath}
-          allowedHostOrigins={
-            allowedHostOrigins.length > 0 ? allowedHostOrigins : undefined
-          }
+          allowedHostOrigins={allowedHostOrigins.length > 0 ? allowedHostOrigins : undefined}
           forceMode={forceMode}
-          syncRouteToHost
-        >
+          syncRouteToHost>
           <TanStackQueryProvider.Provider>
             {/* @docyrus: [[architecture#Root Runtime Tooling]] */}
             <DocyrusDevtools
               queryClient={TanStackQueryProvider.queryClient}
-              openApiSpecPath="/openapi.json"
-            >
+              openApiSpecPath="/openapi.json">
               <DocyrusDevtoolsClientRegistration />
               <I18nextProvider i18n={i18n}>
                 <I18nDirectionProvider>
@@ -399,11 +416,13 @@ if (rootElement && !rootElement.innerHTML) {
           </TanStackQueryProvider.Provider>
         </DocyrusAuthProvider>
       </ThemeProvider>
-    </StrictMode>,
+    </StrictMode>
   )
 }
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+/*
+ * If you want to start measuring performance in your app, pass a function
+ * to log results (for example: reportWebVitals(console.log))
+ * or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+ */
 reportWebVitals()

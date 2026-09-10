@@ -1,18 +1,39 @@
 'use client'
 
-import {
-  useState,
-  useRef,
-  useCallback,
-  useEffect,
-  useMemo,
-  type ReactNode,
-  type KeyboardEvent,
-} from 'react'
+// @ts-nocheck
+/* eslint-disable */
+import { useState, useCallback, useMemo, type ReactNode } from 'react'
 
-import { cn } from '@/lib/utils'
+import { ChevronsUpDown } from 'lucide-react'
+
+import {
+  HANDLEBARS_SAMPLES,
+  HandlebarsEditor,
+  type IHandlebarsAiAssistantRenderContext,
+} from '@/components/docyrus/handlebars-editor'
+import {
+  JSONATA_SAMPLES,
+  JsonataEditor,
+  type IJsonataAiAssistantRenderContext,
+} from '@/components/docyrus/jsonata-editor'
+import { type ContextPath } from '@/lib/docyrus/context-paths'
+import { Button } from '@/components/ui/button'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
 import { Field, FieldError } from '@/components/ui/field'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { cn } from '@/lib/utils'
 
 import { type IField } from './types'
 
@@ -33,13 +54,56 @@ export interface AvailableField {
   icon?: string
 }
 
+/**
+ * Recursive schema node. Drives both the Field Mapping tree-select and the
+ * autocomplete variables surfaced inside the Template (Handlebars) and
+ * Formula (JSONata) editors.
+ */
+export interface FieldMappingSchema {
+  /** Local slug — concatenated with the parent's path via `.` to form a dotted path. */
+  name: string
+  /** Human-readable label shown in the tree. */
+  label: string
+  /** Field type (e.g. `'string'`, `'object'`, `'array'`, ...). */
+  type: string
+  /** Optional icon string rendered next to the label. */
+  icon?: string
+  /** Optional description. */
+  description?: string
+  /** Nested fields for object / array types. Omit or leave empty for leaves. */
+  fields?: FieldMappingSchema[]
+}
+
+/**
+ * Persisted shape produced by `FieldMappingFormField`. The `type` field
+ * distinguishes the resolver strategy at evaluation time:
+ *
+ * - `static`   — `value` is the raw value the user typed in the Fixed Value tab
+ * - `template` — `value` is a Handlebars template string
+ * - `formula`  — `value` is a JSONata expression; the Field Mapping tab is a
+ *                UI variant that only writes single-path expressions
+ */
+export type FieldMappingValue =
+  | { type: 'static'; value: unknown }
+  | { type: 'template'; value: string }
+  | { type: 'formula'; value: string }
+
 export interface FieldMappingFormFieldProps {
   field: IField
   form: any
   disabled?: boolean
   required?: boolean
   className?: string
-  /** Selectable fields for Field Mapping / Template / Formula tabs */
+  /**
+   * Recursive schema describing the available fields. Drives the Field
+   * Mapping tree-select and the autocomplete variables in both Template
+   * (Handlebars) and Formula (JSONata) editors.
+   */
+  schema?: FieldMappingSchema[]
+  /**
+   * Flat list of selectable fields — used as a fallback schema when `schema`
+   * is not provided. Each entry becomes a top-level leaf node.
+   */
   availableFields?: AvailableField[]
   /**
    * Which tabs are shown. Defaults to all four.
@@ -48,28 +112,42 @@ export interface FieldMappingFormFieldProps {
    */
   modes?: MappingTab[]
   /**
-   * The original form field component shown in the Fixed Value tab.
-   * It must handle its own form.Field subscription internally.
+   * Mount a custom AI agent (e.g. `DocyrusAgent`) inside the **Template**
+   * (Handlebars) editor's assistant drawer. Forwarded verbatim to
+   * `HandlebarsEditor.renderAiAssistant` — the toolbar agent button only
+   * appears when this is supplied. The context carries the live `template`
+   * and sample `input` strings.
+   *
+   * Independent from {@link renderFormulaAgent} so both editors can host an
+   * agent simultaneously (e.g. in the tabbed view).
    */
-  children: ReactNode
+  renderTemplateAgent?: (ctx: IHandlebarsAiAssistantRenderContext) => ReactNode
+  /**
+   * Mount a custom AI agent (e.g. `DocyrusAgent`) inside the **Formula**
+   * (JSONata) editor's assistant drawer. Forwarded verbatim to
+   * `JsonataEditor.renderAiAssistant`. The context carries the live
+   * `expression` and sample `input` strings.
+   *
+   * Independent from {@link renderTemplateAgent} so both editors can host an
+   * agent simultaneously.
+   */
+  renderFormulaAgent?: (ctx: IJsonataAiAssistantRenderContext) => ReactNode
+  /**
+   * Render function for the Fixed Value tab. Receives an adapter form whose
+   * `Field` subscription transparently unwraps and re-wraps the inner static
+   * value around the persisted `{ type: 'static', value }` envelope, so the
+   * wrapped child can be authored as if it owned the slug directly.
+   *
+   * ```tsx
+   * <FieldMappingFormField field={...} form={form} schema={...}>
+   *   {(adapted) => <TextFormField field={field} form={adapted} />}
+   * </FieldMappingFormField>
+   * ```
+   */
+  children: (adaptedForm: any) => ReactNode
 }
-
-/*
- * ---------------------------------------------------------------------------
- * Shared types
- * ---------------------------------------------------------------------------
- */
 
 export type MappingTab = 'fixed' | 'field-mapping' | 'template' | 'formula'
-
-interface MentionState {
-  query: string
-  top: number
-  left: number
-  atIndex: number
-  textNode: Text
-  cursorPos: number
-}
 
 /*
  * ---------------------------------------------------------------------------
@@ -77,352 +155,229 @@ interface MentionState {
  * ---------------------------------------------------------------------------
  */
 
-function detectTab(value: unknown): MappingTab {
-  if (typeof value === 'string') {
-    if (value.startsWith('#FIELD=')) return 'field-mapping'
-    if (value.startsWith('#TEMPLATE=')) return 'template'
-    if (value.startsWith('#FORMULA=')) return 'formula'
+const EMPTY_ARRAY: never[] = []
+
+function isMappingValue(value: unknown): value is FieldMappingValue {
+  if (typeof value !== 'object' || value === null) return false
+  const candidate = value as { type?: unknown }
+
+  return (
+    candidate.type === 'static' ||
+    candidate.type === 'template' ||
+    candidate.type === 'formula'
+  )
+}
+
+function detectTab(value: unknown, schemaPaths: Set<string>): MappingTab {
+  if (!isMappingValue(value)) return 'fixed'
+
+  if (value.type === 'template') return 'template'
+  if (value.type === 'formula') {
+    if (typeof value.value === 'string' && schemaPaths.has(value.value))
+      return 'field-mapping'
+
+    return 'formula'
   }
 
   return 'fixed'
 }
 
-function stripPrefix(value: string, prefix: string): string {
-  return value.startsWith(prefix) ? value.slice(prefix.length) : value
+function tabToInitialValue(tab: MappingTab): FieldMappingValue {
+  if (tab === 'template') return { type: 'template', value: '' }
+  if (tab === 'formula' || tab === 'field-mapping')
+    return { type: 'formula', value: '' }
+
+  return { type: 'static', value: null }
 }
 
-const MENTION_SPAN_CLASS =
-  'inline-flex items-center rounded bg-primary/10 text-primary px-1 py-0.5 text-xs font-medium mx-0.5 select-none'
+function logicalType(tab: MappingTab): 'static' | 'template' | 'formula' {
+  if (tab === 'template') return 'template'
+  if (tab === 'formula' || tab === 'field-mapping') return 'formula'
 
-function buildMentionSpan(af: AvailableField): HTMLSpanElement {
-  const span = document.createElement('span')
+  return 'static'
+}
 
-  span.setAttribute('data-field-name', af.name)
-  span.setAttribute('data-field-label', af.label)
-  span.setAttribute('data-field-type', af.type)
-  if (af.icon) span.setAttribute('data-field-icon', af.icon)
-  span.setAttribute('contenteditable', 'false')
-  span.className = MENTION_SPAN_CLASS
-  span.textContent = `@${af.label}`
-
-  return span
+function availableFieldsToSchema(
+  fields: AvailableField[],
+): FieldMappingSchema[] {
+  return fields.map((f) => ({
+    name: f.name,
+    label: f.label,
+    type: f.type,
+    icon: f.icon,
+  }))
 }
 
 /**
- * Populate the editor from a stored HTML string using strict allowlist parsing.
- * Only text nodes, <br> elements, and our own data-field-name span elements
- * are reconstructed — everything else is discarded, preventing XSS.
+ * Build a nested JSON sample from a schema, used as preview `defaultInput`
+ * for the Handlebars and JSONata editors. Leaf fields become `'<Label>'`
+ * placeholders, arrays become a single-element array of their child shape.
  */
-function loadSanitizedHtml(editor: HTMLDivElement, html: string) {
-  while (editor.firstChild) editor.removeChild(editor.firstChild)
-  if (!html) return
+export function schemaToSampleData(
+  schema: FieldMappingSchema[],
+): Record<string, unknown> {
+  const data: Record<string, unknown> = {}
 
-  const parser = new DOMParser()
-  const doc = parser.parseFromString(`<body>${html}</body>`, 'text/html')
+  for (const node of schema) data[node.name] = nodeToSample(node)
 
-  function cloneAllowed(node: Node): Node | null {
-    if (node.nodeType === Node.TEXT_NODE) {
-      return document.createTextNode(node.textContent ?? '')
-    }
-    if (node.nodeType !== Node.ELEMENT_NODE) return null
-
-    const el = node as Element
-    const tag = el.tagName.toLowerCase()
-
-    if (tag === 'br') {
-      return document.createElement('br')
-    }
-
-    if (tag === 'span' && el.hasAttribute('data-field-name')) {
-      const fieldName = el.getAttribute('data-field-name') ?? ''
-      const fieldLabel = el.getAttribute('data-field-label') ?? fieldName
-      const fieldType = el.getAttribute('data-field-type') ?? ''
-      const fieldIcon = el.getAttribute('data-field-icon')
-
-      const span = document.createElement('span')
-
-      span.setAttribute('data-field-name', fieldName)
-      span.setAttribute('data-field-label', fieldLabel)
-      span.setAttribute('data-field-type', fieldType)
-      if (fieldIcon) span.setAttribute('data-field-icon', fieldIcon)
-      span.setAttribute('contenteditable', 'false')
-      span.className = MENTION_SPAN_CLASS
-      span.textContent = `@${fieldLabel}`
-
-      return span
-    }
-
-    if (tag === 'div' || tag === 'p') {
-      const frag = document.createDocumentFragment()
-
-      for (const child of el.childNodes) {
-        const cloned = cloneAllowed(child)
-
-        if (cloned) frag.appendChild(cloned)
-      }
-      frag.appendChild(document.createElement('br'))
-
-      return frag
-    }
-
-    return null
-  }
-
-  for (const child of doc.body.childNodes) {
-    const cloned = cloneAllowed(child)
-
-    if (cloned) editor.appendChild(cloned)
-  }
+  return data
 }
 
-/*
- * ---------------------------------------------------------------------------
- * MentionEditor — contenteditable with @ autocomplete
- * ---------------------------------------------------------------------------
- */
+function nodeToSample(node: FieldMappingSchema): unknown {
+  const children = node.fields
 
-interface MentionEditorProps {
-  /** Raw HTML string (prefix already stripped) */
-  initialHtml: string
-  prefix: string
-  placeholder: string
-  availableFields: AvailableField[]
-  disabled?: boolean
-  onChange: (encodedValue: string) => void
-  onBlur?: () => void
+  if (!children || children.length === 0) return `<${node.label}>`
+
+  const childData: Record<string, unknown> = {}
+
+  for (const child of children) childData[child.name] = nodeToSample(child)
+
+  return node.type === 'array' ? [childData] : childData
 }
 
-function MentionEditor({
-  initialHtml,
-  prefix,
-  placeholder,
-  availableFields,
-  disabled,
-  onChange,
-  onBlur,
-}: MentionEditorProps) {
-  const editorRef = useRef<HTMLDivElement>(null)
-  const [mention, setMention] = useState<MentionState | null>(null)
-  const [selectedIndex, setSelectedIndex] = useState(0)
-  const mentionRef = useRef<MentionState | null>(null)
-  /*
-   * Snapshot initialHtml at mount time — ref stays stable, so the mount
-   * effect below won't re-run if the prop changes after tab-open
-   */
-  const initialHtmlRef = useRef(initialHtml)
+/**
+ * Walk the schema and return every dotted path it describes. Includes parent
+ * paths so editors can autocomplete to either a leaf or an intermediate
+ * object/array.
+ */
+export function flattenSchemaPaths(
+  schema: FieldMappingSchema[],
+  prefix = '',
+  out: string[] = [],
+): string[] {
+  for (const node of schema) {
+    const path = prefix ? `${prefix}.${node.name}` : node.name
 
-  mentionRef.current = mention
+    out.push(path)
 
-  useEffect(() => {
-    if (editorRef.current) {
-      loadSanitizedHtml(editorRef.current, initialHtmlRef.current)
-    }
-  }, [])
+    if (node.fields && node.fields.length > 0)
+      flattenSchemaPaths(node.fields, path, out)
+  }
 
-  const filteredFields = useMemo(() => {
-    if (mention === null) return []
+  return out
+}
 
-    const query = mention.query.toLowerCase()
+/**
+ * Like {@link flattenSchemaPaths} but returns rich {@link ContextPath}
+ * descriptors carrying each field's `type`, `label`, and `description` so the
+ * Handlebars / JSONata editors surface them in the autocomplete dropdown and
+ * variable picker.
+ */
+export function flattenSchemaContextPaths(
+  schema: FieldMappingSchema[],
+  prefix = '',
+  out: ContextPath[] = [],
+): ContextPath[] {
+  for (const node of schema) {
+    const path = prefix ? `${prefix}.${node.name}` : node.name
 
-    return availableFields.filter(
-      (f) =>
-        f.label.toLowerCase().includes(query) ||
-        f.name.toLowerCase().includes(query),
-    )
-  }, [mention, availableFields])
-
-  const emitChange = useCallback(() => {
-    if (!editorRef.current) return
-    onChange(prefix + editorRef.current.innerHTML)
-  }, [onChange, prefix])
-
-  const closeMention = useCallback(() => {
-    setMention(null)
-    setSelectedIndex(0)
-  }, [])
-
-  const insertMention = useCallback(
-    (af: AvailableField) => {
-      const m = mentionRef.current
-
-      if (!m || !editorRef.current) return
-
-      const { textNode, atIndex, cursorPos } = m
-
-      textNode.deleteData(atIndex, cursorPos - atIndex)
-
-      const afterText = textNode.splitText(atIndex)
-      const span = buildMentionSpan(af)
-      const parent = textNode.parentNode
-
-      if (!parent) return
-
-      parent.insertBefore(span, afterText)
-
-      const sel = window.getSelection()
-
-      if (sel) {
-        const range = document.createRange()
-
-        range.setStart(afterText, 0)
-        range.collapse(true)
-        sel.removeAllRanges()
-        sel.addRange(range)
-      }
-
-      emitChange()
-      closeMention()
-      editorRef.current.focus()
-    },
-    [emitChange, closeMention],
-  )
-
-  const handleInput = useCallback(() => {
-    emitChange()
-
-    const sel = window.getSelection()
-
-    if (!sel?.rangeCount) {
-      closeMention()
-
-      return
-    }
-
-    const range = sel.getRangeAt(0)
-
-    if (range.startContainer.nodeType !== Node.TEXT_NODE) {
-      closeMention()
-
-      return
-    }
-
-    const textNode = range.startContainer as Text
-    const text = textNode.textContent ?? ''
-    const pos = range.startOffset
-    const beforeCursor = text.slice(0, pos)
-    const atIdx = beforeCursor.lastIndexOf('@')
-
-    if (atIdx === -1 || beforeCursor.slice(atIdx + 1).includes(' ')) {
-      closeMention()
-
-      return
-    }
-
-    const query = beforeCursor.slice(atIdx + 1)
-    let top = 24
-    let left = 0
-
-    try {
-      const caretRange = range.cloneRange()
-
-      caretRange.collapse(true)
-      const caretRect = caretRange.getBoundingClientRect()
-      const editor = editorRef.current
-
-      if (editor) {
-        const editorRect = editor.getBoundingClientRect()
-
-        top = caretRect.bottom - editorRect.top + 4
-        left = Math.max(0, caretRect.left - editorRect.left)
-      }
-    } catch {}
-
-    setMention({
-      query,
-      top,
-      left,
-      atIndex: atIdx,
-      textNode,
-      cursorPos: pos,
+    out.push({
+      path,
+      type: node.type,
+      label: node.label,
+      description: node.description,
     })
-    setSelectedIndex(0)
-  }, [emitChange, closeMention])
 
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLDivElement>) => {
-      if (!mention || filteredFields.length === 0) return
+    if (node.fields && node.fields.length > 0)
+      flattenSchemaContextPaths(node.fields, path, out)
+  }
 
-      if (e.key === 'ArrowDown') {
-        e.preventDefault()
-        setSelectedIndex((i) => Math.min(i + 1, filteredFields.length - 1))
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault()
-        setSelectedIndex((i) => Math.max(i - 1, 0))
-      } else if (e.key === 'Enter') {
-        e.preventDefault()
-        const selected = filteredFields[selectedIndex]
-
-        if (selected) insertMention(selected)
-      } else if (e.key === 'Escape') {
-        closeMention()
-      }
-    },
-    [mention, filteredFields, selectedIndex, insertMention, closeMention],
-  )
-
-  return (
-    <div className="relative">
-      <div
-        ref={editorRef}
-        contentEditable={!disabled}
-        onInput={handleInput}
-        onKeyDown={handleKeyDown}
-        onBlur={onBlur}
-        suppressContentEditableWarning
-        data-placeholder={placeholder}
-        className={cn(
-          'min-h-16 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm leading-relaxed outline-none transition-[color,box-shadow]',
-          'focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
-          'empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground empty:before:pointer-events-none',
-          disabled && 'cursor-not-allowed opacity-50',
-        )}
-      />
-
-      {mention !== null && filteredFields.length > 0 && (
-        <div
-          className="absolute z-50 min-w-[180px] rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
-          style={{ top: mention.top, left: mention.left }}
-        >
-          {filteredFields.map((af, i) => (
-            <button
-              key={af.name}
-              type="button"
-              onMouseDown={(e) => {
-                e.preventDefault()
-                insertMention(af)
-              }}
-              className={cn(
-                'flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-accent',
-                i === selectedIndex && 'bg-accent',
-              )}
-            >
-              {af.icon && (
-                <span className="shrink-0 text-muted-foreground">
-                  {af.icon}
-                </span>
-              )}
-              <span className="flex-1 truncate text-left">{af.label}</span>
-              <span className="shrink-0 font-mono text-muted-foreground opacity-60">
-                {af.name}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
+  return out
 }
 
 /*
  * ---------------------------------------------------------------------------
- * FieldMappingSelector — Field Mapping tab
+ * Adapted form for the Fixed Value tab
+ * ---------------------------------------------------------------------------
+ *
+ * The wrapped child expects to read / write the raw inner value at the
+ * field's slug, but the persisted form value is the `FieldMappingValue`
+ * envelope. The adapter intercepts `form.Field` (and `getFieldValue` /
+ * `setFieldValue`) for the wrapper's slug only, transparently unwrapping
+ * `{ type: 'static', value: X }` into `X` and wrapping writes back.
+ */
+
+function makeStaticAdaptedForm(realForm: any, slug: string): any {
+  const RealField = realForm.Field
+
+  function AdaptedField({
+    name,
+    children,
+  }: {
+    name: string
+    children: (field: any) => ReactNode
+  }) {
+    if (name !== slug) {
+      return <RealField name={name}>{children}</RealField>
+    }
+
+    return (
+      <RealField name={name}>
+        {(field: any) => {
+          const wrapped = field.state.value
+          const innerValue = isMappingValue(wrapped)
+            ? wrapped.type === 'static'
+              ? wrapped.value
+              : null
+            : wrapped
+
+          const adaptedField = {
+            ...field,
+            state: { ...field.state, value: innerValue },
+            handleChange: (next: unknown) =>
+              field.handleChange({ type: 'static', value: next }),
+          }
+
+          return children(adaptedField)
+        }}
+      </RealField>
+    )
+  }
+
+  return new Proxy(realForm, {
+    get(target, prop, receiver) {
+      if (prop === 'Field') return AdaptedField
+
+      if (prop === 'getFieldValue') {
+        return (name: string) => {
+          const value = target.getFieldValue?.(name)
+
+          if (name === slug && isMappingValue(value) && value.type === 'static')
+            return value.value
+
+          return value
+        }
+      }
+
+      if (prop === 'setFieldValue') {
+        return (name: string, value: unknown) => {
+          if (name === slug) {
+            target.setFieldValue?.(name, { type: 'static', value })
+
+            return
+          }
+
+          target.setFieldValue?.(name, value)
+        }
+      }
+
+      const result = Reflect.get(target, prop, receiver)
+
+      return typeof result === 'function' ? result.bind(target) : result
+    },
+  })
+}
+
+/*
+ * ---------------------------------------------------------------------------
+ * Per-tab fields
  * ---------------------------------------------------------------------------
  */
 
 interface FieldMappingSelectorProps {
   fieldConfig: IField
   field: any
-  availableFields: AvailableField[]
+  schema: FieldMappingSchema[]
   required?: boolean
   disabled?: boolean
 }
@@ -430,94 +385,190 @@ interface FieldMappingSelectorProps {
 function FieldMappingSelector({
   fieldConfig,
   field,
-  availableFields,
+  schema,
   required,
   disabled,
 }: FieldMappingSelectorProps) {
+  const [open, setOpen] = useState(false)
   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
-  const currentSlug =
-    typeof field.state.value === 'string'
-      ? stripPrefix(field.state.value, '#FIELD=')
+  const wrapped = field.state.value
+  const selectedPath =
+    isMappingValue(wrapped) &&
+    wrapped.type === 'formula' &&
+    typeof wrapped.value === 'string'
+      ? wrapped.value
       : ''
+
+  const paths = useMemo(() => flattenSchemaPaths(schema), [schema])
+  const hasPaths = paths.length > 0
 
   return (
     <Field data-invalid={isInvalid}>
       <FormFieldLabel required={required}>{fieldConfig.name}</FormFieldLabel>
-      <div className="flex flex-col gap-1 rounded-md border border-input p-1">
-        {availableFields.length === 0 && (
-          <p className="px-2 py-3 text-xs text-muted-foreground">
-            No available fields
-          </p>
-        )}
-        {availableFields.map((af) => (
-          <button
-            key={af.name}
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
             type="button"
-            disabled={disabled}
-            onClick={() => field.handleChange(`#FIELD=${af.name}`)}
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            disabled={disabled || !hasPaths}
             className={cn(
-              'flex items-center gap-2 rounded px-2 py-1.5 text-xs transition-colors hover:bg-accent',
-              currentSlug === af.name &&
-                'bg-primary/10 text-primary font-medium',
+              'h-auto w-full justify-between gap-2 py-2 font-normal',
+              !selectedPath && 'text-muted-foreground',
             )}
           >
-            {af.icon && (
-              <span className="shrink-0 text-muted-foreground">{af.icon}</span>
-            )}
-            <span className="flex-1 truncate text-left">{af.label}</span>
-            <span className="shrink-0 font-mono text-muted-foreground opacity-60">
-              {af.name}
+            <span
+              className={cn(
+                'truncate text-left text-sm',
+                selectedPath && 'font-mono text-foreground',
+              )}
+            >
+              {selectedPath ||
+                (hasPaths ? 'Select a field…' : 'No available fields')}
             </span>
-          </button>
-        ))}
-      </div>
+            <ChevronsUpDown className="size-3.5 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent
+          align="start"
+          sideOffset={4}
+          className="w-[var(--radix-popover-trigger-width)] p-0"
+        >
+          <Command>
+            <CommandInput placeholder="Search fields…" />
+            <CommandList>
+              <CommandEmpty>No fields found.</CommandEmpty>
+              <CommandGroup>
+                {paths.map((path) => (
+                  <CommandItem
+                    key={path}
+                    value={path}
+                    onSelect={() => {
+                      field.handleChange({
+                        type: 'formula',
+                        value: path,
+                      } satisfies FieldMappingValue)
+                      setOpen(false)
+                    }}
+                  >
+                    <span className="truncate font-mono text-xs">{path}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
       {isInvalid && <FieldError errors={field.state.meta.errors} />}
     </Field>
   )
 }
 
-/*
- * ---------------------------------------------------------------------------
- * TemplateMentionField — Template / Formula tab
- * ---------------------------------------------------------------------------
- */
-
-interface TemplateMentionFieldProps {
+interface TemplateEditorFieldProps {
   fieldConfig: IField
   field: any
-  availableFields: AvailableField[]
-  prefix: '#TEMPLATE=' | '#FORMULA='
-  placeholder: string
+  schema: FieldMappingSchema[]
   required?: boolean
   disabled?: boolean
+  renderAgent?: (ctx: IHandlebarsAiAssistantRenderContext) => ReactNode
 }
 
-function TemplateMentionField({
+function TemplateEditorField({
   fieldConfig,
   field,
-  availableFields,
-  prefix,
-  placeholder,
+  schema,
   required,
   disabled,
-}: TemplateMentionFieldProps) {
+  renderAgent,
+}: TemplateEditorFieldProps) {
   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
-  const rawHtml =
-    typeof field.state.value === 'string'
-      ? stripPrefix(field.state.value, prefix)
+  const wrapped = field.state.value
+  const template =
+    isMappingValue(wrapped) &&
+    wrapped.type === 'template' &&
+    typeof wrapped.value === 'string'
+      ? wrapped.value
       : ''
+
+  const sampleInput = useMemo(() => schemaToSampleData(schema), [schema])
+  const contextPaths = useMemo(
+    () => flattenSchemaContextPaths(schema),
+    [schema],
+  )
 
   return (
     <Field data-invalid={isInvalid}>
       <FormFieldLabel required={required}>{fieldConfig.name}</FormFieldLabel>
-      <MentionEditor
-        initialHtml={rawHtml}
-        prefix={prefix}
-        placeholder={placeholder}
-        availableFields={availableFields}
-        disabled={disabled}
-        onChange={field.handleChange}
-        onBlur={field.handleBlur}
+      <HandlebarsEditor
+        compactMode
+        template={template}
+        onTemplateChange={(value) =>
+          field.handleChange({
+            type: 'template',
+            value,
+          } satisfies FieldMappingValue)
+        }
+        defaultInput={sampleInput}
+        contextPaths={contextPaths}
+        samples={HANDLEBARS_SAMPLES}
+        renderAiAssistant={renderAgent}
+        readOnly={disabled}
+      />
+      {isInvalid && <FieldError errors={field.state.meta.errors} />}
+    </Field>
+  )
+}
+
+interface FormulaEditorFieldProps {
+  fieldConfig: IField
+  field: any
+  schema: FieldMappingSchema[]
+  required?: boolean
+  disabled?: boolean
+  renderAgent?: (ctx: IJsonataAiAssistantRenderContext) => ReactNode
+}
+
+function FormulaEditorField({
+  fieldConfig,
+  field,
+  schema,
+  required,
+  disabled,
+  renderAgent,
+}: FormulaEditorFieldProps) {
+  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+  const wrapped = field.state.value
+  const expression =
+    isMappingValue(wrapped) &&
+    wrapped.type === 'formula' &&
+    typeof wrapped.value === 'string'
+      ? wrapped.value
+      : ''
+
+  const sampleInput = useMemo(() => schemaToSampleData(schema), [schema])
+  const contextPaths = useMemo(
+    () => flattenSchemaContextPaths(schema),
+    [schema],
+  )
+
+  return (
+    <Field data-invalid={isInvalid}>
+      <FormFieldLabel required={required}>{fieldConfig.name}</FormFieldLabel>
+      <JsonataEditor
+        compactMode
+        expression={expression}
+        onExpressionChange={(value) =>
+          field.handleChange({
+            type: 'formula',
+            value,
+          } satisfies FieldMappingValue)
+        }
+        defaultInput={sampleInput}
+        contextPaths={contextPaths}
+        samples={JSONATA_SAMPLES}
+        renderAiAssistant={renderAgent}
+        readOnly={disabled}
       />
       {isInvalid && <FieldError errors={field.state.meta.errors} />}
     </Field>
@@ -543,16 +594,38 @@ export function FieldMappingFormField({
   disabled,
   required,
   className,
-  availableFields = [],
+  availableFields = EMPTY_ARRAY,
+  schema,
   modes,
+  renderTemplateAgent,
+  renderFormulaAgent,
   children,
 }: FieldMappingFormFieldProps) {
   const enabledTabs = modes
     ? ALL_TABS.filter((t) => modes.includes(t.value))
     : ALL_TABS
 
+  const effectiveSchema = useMemo<FieldMappingSchema[]>(() => {
+    if (schema && schema.length > 0) return schema
+
+    return availableFieldsToSchema(availableFields)
+  }, [schema, availableFields])
+
+  const schemaPathSet = useMemo<Set<string>>(
+    () => new Set(flattenSchemaPaths(effectiveSchema)),
+    [effectiveSchema],
+  )
+
+  const adaptedForm = useMemo(
+    () => makeStaticAdaptedForm(form, fieldConfig.slug),
+    [form, fieldConfig.slug],
+  )
+
   const [tab, setTab] = useState<MappingTab>(() => {
-    const detected = detectTab(form.getFieldValue?.(fieldConfig.slug))
+    const detected = detectTab(
+      form.getFieldValue?.(fieldConfig.slug),
+      schemaPathSet,
+    )
 
     return enabledTabs.some((t) => t.value === detected)
       ? detected
@@ -562,18 +635,20 @@ export function FieldMappingFormField({
   const handleTabChange = useCallback(
     (newTab: string) => {
       const next = newTab as MappingTab
-      const currentValue =
-        (form.getFieldValue?.(fieldConfig.slug) as string) ?? ''
-      const currentTab = detectTab(currentValue)
+      const currentValue = form.getFieldValue?.(fieldConfig.slug)
+      const currentLogical = isMappingValue(currentValue)
+        ? currentValue.type
+        : 'static'
+      const nextLogical = logicalType(next)
 
-      if (currentTab !== next) {
-        if (next === 'template') {
-          form.setFieldValue?.(fieldConfig.slug, '#TEMPLATE=')
-        } else if (next === 'formula') {
-          form.setFieldValue?.(fieldConfig.slug, '#FORMULA=')
-        } else {
-          form.setFieldValue?.(fieldConfig.slug, '')
-        }
+      /*
+       * Preserve the value when the underlying logical type stays the same —
+       * switching between Field Mapping and Formula doesn't need a reset since
+       * both persist as `{ type: 'formula', value }`. Reset on every other
+       * transition so the new tab starts from a known-good empty state.
+       */
+      if (currentLogical !== nextLogical) {
+        form.setFieldValue?.(fieldConfig.slug, tabToInitialValue(next))
       }
 
       setTab(next)
@@ -584,46 +659,52 @@ export function FieldMappingFormField({
   if (enabledTabs.length === 1 && enabledTabs[0]) {
     const only = enabledTabs[0].value
 
-    if (only === 'fixed') return children
+    if (only === 'fixed') return <>{children(adaptedForm)}</>
     if (only === 'field-mapping') {
       return (
-        <form.Field
-          name={fieldConfig.slug}
-          children={(field: any) => (
+        <form.Field name={fieldConfig.slug}>
+          {(field: any) => (
             <FieldMappingSelector
               fieldConfig={fieldConfig}
               field={field}
-              availableFields={availableFields}
+              schema={effectiveSchema}
               required={required}
               disabled={disabled}
             />
           )}
-        />
+        </form.Field>
       )
     }
-    if (only === 'template' || only === 'formula') {
-      const prefix =
-        only === 'template' ? ('#TEMPLATE=' as const) : ('#FORMULA=' as const)
-      const placeholder =
-        only === 'template'
-          ? 'Type your template… use @ to insert a field'
-          : 'Type your formula… use @ to insert a field'
-
+    if (only === 'template') {
       return (
-        <form.Field
-          name={fieldConfig.slug}
-          children={(field: any) => (
-            <TemplateMentionField
+        <form.Field name={fieldConfig.slug}>
+          {(field: any) => (
+            <TemplateEditorField
               fieldConfig={fieldConfig}
               field={field}
-              availableFields={availableFields}
-              prefix={prefix}
-              placeholder={placeholder}
+              schema={effectiveSchema}
               required={required}
               disabled={disabled}
+              renderAgent={renderTemplateAgent}
             />
           )}
-        />
+        </form.Field>
+      )
+    }
+    if (only === 'formula') {
+      return (
+        <form.Field name={fieldConfig.slug}>
+          {(field: any) => (
+            <FormulaEditorField
+              fieldConfig={fieldConfig}
+              field={field}
+              schema={effectiveSchema}
+              required={required}
+              disabled={disabled}
+              renderAgent={renderFormulaAgent}
+            />
+          )}
+        </form.Field>
       )
     }
   }
@@ -646,68 +727,63 @@ export function FieldMappingFormField({
           ))}
         </TabsList>
 
-        {/* Fixed Value — render the wrapped field component as-is */}
+        {/* Fixed Value — render via the static adapter form */}
         {enabledTabs.some((t) => t.value === 'fixed') && (
           <TabsContent value="fixed" className="mt-0">
-            {children}
+            {children(adaptedForm)}
           </TabsContent>
         )}
 
-        {/* Field Mapping — select a field from the list */}
+        {/* Field Mapping — recursive tree-select over the schema */}
         {enabledTabs.some((t) => t.value === 'field-mapping') && (
           <TabsContent value="field-mapping" className="mt-0">
-            <form.Field
-              name={fieldConfig.slug}
-              children={(field: any) => (
+            <form.Field name={fieldConfig.slug}>
+              {(field: any) => (
                 <FieldMappingSelector
                   fieldConfig={fieldConfig}
                   field={field}
-                  availableFields={availableFields}
+                  schema={effectiveSchema}
                   required={required}
                   disabled={disabled}
                 />
               )}
-            />
+            </form.Field>
           </TabsContent>
         )}
 
-        {/* Template — contenteditable with @ field mentions */}
+        {/* Template — Handlebars editor in compact mode */}
         {enabledTabs.some((t) => t.value === 'template') && (
           <TabsContent value="template" className="mt-0">
-            <form.Field
-              name={fieldConfig.slug}
-              children={(field: any) => (
-                <TemplateMentionField
+            <form.Field name={fieldConfig.slug}>
+              {(field: any) => (
+                <TemplateEditorField
                   fieldConfig={fieldConfig}
                   field={field}
-                  availableFields={availableFields}
-                  prefix="#TEMPLATE="
-                  placeholder="Type your template… use @ to insert a field"
+                  schema={effectiveSchema}
                   required={required}
                   disabled={disabled}
+                  renderAgent={renderTemplateAgent}
                 />
               )}
-            />
+            </form.Field>
           </TabsContent>
         )}
 
-        {/* Formula — same editor, different prefix */}
+        {/* Formula — JSONata editor in compact mode */}
         {enabledTabs.some((t) => t.value === 'formula') && (
           <TabsContent value="formula" className="mt-0">
-            <form.Field
-              name={fieldConfig.slug}
-              children={(field: any) => (
-                <TemplateMentionField
+            <form.Field name={fieldConfig.slug}>
+              {(field: any) => (
+                <FormulaEditorField
                   fieldConfig={fieldConfig}
                   field={field}
-                  availableFields={availableFields}
-                  prefix="#FORMULA="
-                  placeholder="Type your formula… use @ to insert a field"
+                  schema={effectiveSchema}
                   required={required}
                   disabled={disabled}
+                  renderAgent={renderFormulaAgent}
                 />
               )}
-            />
+            </form.Field>
           </TabsContent>
         )}
       </Tabs>

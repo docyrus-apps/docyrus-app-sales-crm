@@ -6,40 +6,40 @@ export type DataExportFormat = 'csv' | 'json' | 'markdown' | 'xlsx'
 
 export interface DataExportColumn<TData> {
   /** Stable column id (also used as the JSON object key when format = 'json'). */
-  id: string
+  id: string;
   /** Header label rendered in CSV / Markdown / Excel. */
-  header: string
+  header: string;
   /**
    * Pull the raw cell value for this column from a row. Defaults to
    * `row[id]` when omitted.
    */
-  accessor?: (row: TData) => unknown
+  accessor?: (row: TData) => unknown;
   /**
    * Optional formatter run after `accessor` to coerce the raw value into the
    * string written to the file. The default formatter renders primitives
    * verbatim and `JSON.stringify`s objects/arrays.
    */
-  formatter?: (value: unknown, row: TData) => string
+  formatter?: (value: unknown, row: TData) => string;
 }
 
 export interface UseDataExportOptions<TData> {
   /** Column projection. Order is preserved in the output. */
-  columns: Array<DataExportColumn<TData>>
+  columns: Array<DataExportColumn<TData>>;
   /** File name without extension. Default `'export'`. */
-  fileName?: string
+  fileName?: string;
   /** Sheet name for xlsx. Default `'Sheet1'`. */
-  sheetName?: string
+  sheetName?: string;
   /** Prepend a UTF-8 BOM to CSV output (helps Excel detect encoding). Default `true`. */
-  csvBom?: boolean
+  csvBom?: boolean;
 }
 
 export interface DataExportResult {
   /** MIME type written to the Blob. */
-  mimeType: string
+  mimeType: string;
   /** File extension including leading dot. */
-  extension: string
+  extension: string;
   /** Final file name (`<fileName><extension>`). */
-  fileName: string
+  fileName: string;
 }
 
 export interface UseDataExportResult<TData> {
@@ -50,9 +50,9 @@ export interface UseDataExportResult<TData> {
    */
   exportData: (
     rows: Array<TData>,
-    format: DataExportFormat,
-  ) => Promise<DataExportResult | null>
-  isExporting: boolean
+    format: DataExportFormat
+  ) => Promise<DataExportResult | null>;
+  isExporting: boolean;
 }
 
 const FORMAT_META: Record<
@@ -65,18 +65,18 @@ const FORMAT_META: Record<
   xlsx: {
     extension: '.xlsx',
     mimeType:
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  }
 }
 
 export function useDataExport<TData>(
-  options: UseDataExportOptions<TData>,
+  options: UseDataExportOptions<TData>
 ): UseDataExportResult<TData> {
   const {
     columns,
     fileName = 'export',
     sheetName = 'Sheet1',
-    csvBom = true,
+    csvBom = true
   } = options
 
   const [isExporting, setIsExporting] = useState(false)
@@ -91,7 +91,7 @@ export function useDataExport<TData>(
         const meta = FORMAT_META[format]
         const resolvedFileName = `${fileName}${meta.extension}`
 
-        const projected = rows.map((row) => projectRow(row, columns))
+        const projected = rows.map(row => projectRow(row, columns))
 
         let blob: Blob
 
@@ -116,13 +116,18 @@ export function useDataExport<TData>(
         return {
           mimeType: meta.mimeType,
           extension: meta.extension,
-          fileName: resolvedFileName,
+          fileName: resolvedFileName
         }
       } finally {
         setIsExporting(false)
       }
     },
-    [columns, fileName, sheetName, csvBom],
+    [
+columns,
+fileName,
+sheetName,
+csvBom
+]
   )
 
   return { exportData, isExporting }
@@ -130,7 +135,7 @@ export function useDataExport<TData>(
 
 function projectRow<TData>(
   row: TData,
-  columns: Array<DataExportColumn<TData>>,
+  columns: Array<DataExportColumn<TData>>
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {}
 
@@ -172,12 +177,10 @@ function escapeCsvCell(value: unknown): string {
 function buildCsv<TData>(
   columns: Array<DataExportColumn<TData>>,
   rows: Array<Record<string, unknown>>,
-  withBom: boolean,
+  withBom: boolean
 ): string {
-  const header = columns.map((column) => escapeCsvCell(column.header)).join(',')
-  const lines = rows.map((row) =>
-    columns.map((column) => escapeCsvCell(row[column.id])).join(','),
-  )
+  const header = columns.map(column => escapeCsvCell(column.header)).join(',')
+  const lines = rows.map(row => columns.map(column => escapeCsvCell(row[column.id])).join(','))
   const body = [header, ...lines].join('\r\n')
 
   return withBom ? `﻿${body}` : body
@@ -192,13 +195,12 @@ function escapeMarkdownCell(value: unknown): string {
 
 function buildMarkdown<TData>(
   columns: Array<DataExportColumn<TData>>,
-  rows: Array<Record<string, unknown>>,
+  rows: Array<Record<string, unknown>>
 ): string {
-  const header = `| ${columns.map((column) => escapeMarkdownCell(column.header)).join(' | ')} |`
+  const header = `| ${columns.map(column => escapeMarkdownCell(column.header)).join(' | ')} |`
   const divider = `| ${columns.map(() => '---').join(' | ')} |`
   const body = rows.map(
-    (row) =>
-      `| ${columns.map((column) => escapeMarkdownCell(row[column.id])).join(' | ')} |`,
+    row => `| ${columns.map(column => escapeMarkdownCell(row[column.id])).join(' | ')} |`
   )
 
   return [header, divider, ...body].join('\n')
@@ -207,13 +209,11 @@ function buildMarkdown<TData>(
 async function buildXlsxBlob<TData>(
   columns: Array<DataExportColumn<TData>>,
   rows: Array<Record<string, unknown>>,
-  sheetName: string,
+  sheetName: string
 ): Promise<Blob> {
   const xlsx = await import('xlsx')
-  const headerRow = columns.map((column) => column.header)
-  const bodyRows = rows.map((row) =>
-    columns.map((column) => normalizeXlsxValue(row[column.id])),
-  )
+  const headerRow = columns.map(column => column.header)
+  const bodyRows = rows.map(row => columns.map(column => normalizeXlsxValue(row[column.id])))
   const sheet = xlsx.utils.aoa_to_sheet([headerRow, ...bodyRows])
   const book = xlsx.utils.book_new()
 
@@ -221,16 +221,16 @@ async function buildXlsxBlob<TData>(
 
   const buffer = xlsx.write(book, {
     bookType: 'xlsx',
-    type: 'array',
+    type: 'array'
   }) as ArrayBuffer
 
   return new Blob([buffer], {
-    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   })
 }
 
 function normalizeXlsxValue(
-  value: unknown,
+  value: unknown
 ): string | number | boolean | Date | null {
   if (value === null || value === undefined) return null
   if (typeof value === 'string') return value

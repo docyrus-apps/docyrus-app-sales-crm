@@ -13,6 +13,10 @@
     "noResults": "No results found.",
     "unexpectedError": "An unexpected error occurred",
     "validationError": "Validation error",
+    "formInvalidMessage": "Please fix the highlighted fields before saving.",
+    "formInvalidFieldMessage": "{{field}}: {{message}}",
+    "formSaveFailed": "Could not save this record. Please check the form.",
+    "requiredFieldMessage": "This field is required.",
     "error": "Error",
     "na": "N/A",
     "unknown": "Unknown",
@@ -22,6 +26,8 @@
     "pickADate": "Pick a date",
     "time": "Time",
     "back": "Back",
+    "previous": "Previous",
+    "next": "Next",
     "detail": "Detail",
     "home": "Home",
     "comingSoon": "Coming soon",
@@ -40,7 +46,8 @@
     "editAll": "Edit All",
     "viewAll": "View all",
     "notAvailableYet": "Not available yet",
-    "select": "Select"
+    "select": "Select",
+    "unnamedRecord": "(unnamed)"
   },
   "nav": {
     "home": "Home",
@@ -237,6 +244,7 @@
     "errorLoading": "Error loading deals",
     "emptyTitle": "No deals yet",
     "emptyDescription": "Create your first deal to get started",
+    "dealName": "Deal Name",
     "stage": "Stage",
     "dealId": "Deal ID",
     "dealDetails": "Deal Details",
@@ -274,7 +282,19 @@
       "title": "Deal Products",
       "empty": "No products added yet",
       "qty": "Qty",
-      "tax": "Tax"
+      "tax": "Tax",
+      "addPlaceholder": "Add product...",
+      "columns": {
+        "category": "Category",
+        "product": "Product",
+        "tax": "Tax",
+        "unitPrice": "List price"
+      },
+      "emptySearch": "No products found",
+      "emptyTitle": "No products selected",
+      "interestedTitle": "Interested products",
+      "removeProduct": "Remove product",
+      "searchPlaceholder": "Search products..."
     },
     "orders": {
       "title": "Related Sales Orders",
@@ -329,7 +349,15 @@
     "untitledDeal": "Untitled Deal",
     "contacts": {
       "empty": "No contacts for this organization"
-    }
+    },
+    "createdSuccess": "Deal created successfully",
+    "createError": "Failed to create deal",
+    "updatedSuccess": "Deal updated successfully",
+    "updateError": "Failed to update deal",
+    "deletedSuccess": "Deal deleted successfully",
+    "deleteError": "Failed to delete deal",
+    "bulkDeletedSuccess": "Deals deleted successfully",
+    "bulkDeleteError": "Failed to delete deals"
   },
   "leads": {
     "title": "Leads",
@@ -635,7 +663,15 @@
       "readOnlyNotice": "Bu lead dönüştürüldü, alanlar salt okunur."
     },
     "viewLead": "View lead",
-    "owner": "Owner"
+    "owner": "Owner",
+    "createdSuccess": "Lead created successfully",
+    "createError": "Failed to create lead",
+    "updatedSuccess": "Lead updated successfully",
+    "updateError": "Failed to update lead",
+    "deletedSuccess": "Lead deleted successfully",
+    "deleteError": "Failed to delete lead",
+    "bulkDeletedSuccess": "Leads deleted successfully",
+    "bulkDeleteError": "Failed to delete leads"
   },
   "companies": {
     "title": "Companies",
@@ -728,7 +764,17 @@
     "uploadLogo": "Upload logo",
     "viewCompany": "View company",
     "location": "Location",
-    "untitled": "Untitled Company"
+    "untitled": "Untitled Company",
+    "logoUpdatedSuccess": "Logo updated",
+    "logoUploadError": "Failed to upload logo",
+    "createdSuccess": "Company created successfully",
+    "createError": "Failed to create company",
+    "updatedSuccess": "Company updated successfully",
+    "updateError": "Failed to update company",
+    "deletedSuccess": "Company deleted successfully",
+    "deleteError": "Failed to delete company",
+    "bulkDeletedSuccess": "Companies deleted successfully",
+    "bulkDeleteError": "Failed to delete companies"
   },
   "contacts": {
     "title": "Contacts",
@@ -791,7 +837,13 @@
       "call": "Call"
     },
     "new": "New Contact",
-    "viewContact": "View contact"
+    "viewContact": "View contact",
+    "createdSuccess": "Contact created successfully",
+    "createError": "Failed to create contact",
+    "updatedSuccess": "Contact updated successfully",
+    "updateError": "Failed to update contact",
+    "deletedSuccess": "Contact deleted successfully",
+    "deleteError": "Failed to delete contact"
   },
   "tasks": {
     "title": "Tasks",
@@ -834,6 +886,9 @@
       "organizationLabel": "Organization",
       "organizationPlaceholder": "Select organization...",
       "organizationEmpty": "No organization found",
+      "dealLabel": "Deal",
+      "dealPlaceholder": "Select deal...",
+      "dealEmpty": "No deal found",
       "startDateLabel": "Start Date",
       "dueDateLabel": "Due Date",
       "recordOwnerLabel": "Record Owner",
@@ -846,7 +901,13 @@
       "updateButton": "Update Task"
     },
     "viewTask": "View task",
-    "errorLoading": "Unable to load tasks"
+    "errorLoading": "Unable to load tasks",
+    "createdSuccess": "Task created successfully",
+    "createError": "Failed to create task",
+    "updatedSuccess": "Task updated successfully",
+    "updateError": "Failed to update task",
+    "deletedSuccess": "Task deleted successfully",
+    "deleteError": "Failed to delete task"
   },
   "events": {
     "title": "Events",
@@ -882,7 +943,13 @@
       "createButton": "Create Event",
       "updateButton": "Update Event"
     },
-    "defaultCalendarName": "General"
+    "defaultCalendarName": "General",
+    "createdSuccess": "Event created successfully",
+    "createError": "Failed to create event",
+    "updatedSuccess": "Event updated successfully",
+    "updateError": "Failed to update event",
+    "deletedSuccess": "Event deleted successfully",
+    "deleteError": "Failed to delete event"
   },
   "calendar": {
     "title": "Calendar"
@@ -908,6 +975,8 @@
       "editTitle": "Edit Product",
       "createDescription": "Enter the details for the new product",
       "editDescription": "Update the product information",
+      "productNameLabel": "Product Name",
+      "productNamePlaceholder": "Enter product name...",
       "productCodeLabel": "Product Code",
       "productCodePlaceholder": "Enter product code...",
       "categoryLabel": "Category",
@@ -915,12 +984,19 @@
       "unitLabel": "Unit",
       "unitPlaceholder": "Select unit...",
       "unitPriceLabel": "Unit Price",
+      "currencyPlaceholder": "Select currency...",
       "taxLabel": "Tax (%)",
       "createButton": "Create Product",
       "updateButton": "Update Product"
     },
     "openProduct": "Open product",
-    "errorLoading": "Unable to load products"
+    "errorLoading": "Unable to load products",
+    "createdSuccess": "Product created successfully",
+    "createError": "Failed to create product",
+    "updatedSuccess": "Product updated successfully",
+    "updateError": "Failed to update product",
+    "deletedSuccess": "Product deleted successfully",
+    "deleteError": "Failed to delete product"
   },
   "salesOrders": {
     "title": "Sales Orders",
@@ -950,7 +1026,13 @@
       "grandTotal": "Grand Total",
       "created": "Created"
     },
-    "viewOrder": "View order"
+    "viewOrder": "View order",
+    "createdSuccess": "Sales order created successfully",
+    "createError": "Failed to create sales order",
+    "updatedSuccess": "Sales order updated successfully",
+    "updateError": "Failed to update sales order",
+    "deletedSuccess": "Sales order deleted successfully",
+    "deleteError": "Failed to delete sales order"
   },
   "quotes": {
     "navTitle": "Create Quote",
@@ -964,7 +1046,9 @@
     "date": "Date",
     "columnQuote": "Quote",
     "preview": "Preview",
+    "printPreview": "Print/Preview",
     "sendMail": "Send mail",
+    "downloadPdf": "Download PDF",
     "mailComingSoon": "Quote email sending will be wired with templates.",
     "editLineItems": "Edit line items",
     "openBuilder": "Open builder",
@@ -980,6 +1064,7 @@
     "content": "Content",
     "lineItemsSummary": "{{count}} item(s) · {{total}}",
     "templates": "Templates",
+    "selectedTemplate": "Selected template",
     "createQuote": "Create quote",
     "updateQuote": "Update",
     "saveBeforeMail": "Create the quote to send mail",
@@ -1001,10 +1086,48 @@
     "draftSaved": "Draft saved",
     "saveFailed": "Failed to save quote",
     "pdfFailed": "Failed to export PDF",
+    "mailSent": "Email sent",
+    "mailFailed": "Failed to send email",
+    "attachmentName": "Quote.pdf",
+    "attachmentWillAttach": "Will be attached as PDF",
+    "attachmentPreparing": "Preparing…",
+    "attachmentFailed": "Could not attach",
     "templateNames": {
       "standard": "Standard",
+      "executive": "Executive",
+      "custom": "Custom",
       "minimal": "Simple"
-    }
+    },
+    "wizard": {
+      "title": "New quote",
+      "description": "Choose the customer, price the offer, then select the document template.",
+      "stepCustomer": "Customer",
+      "stepPricing": "Pricing",
+      "stepTemplate": "Template",
+      "customerTitle": "Customer and basics",
+      "customerHelp": "Start with the account. Link a deal when this quote belongs to an opportunity.",
+      "linkedDeal": "Linked deal",
+      "optional": "Optional",
+      "selectDeal": "Select deal",
+      "searchDeal": "Search deals...",
+      "noDeals": "No deals found",
+      "customerPreviewTitle": "Keep the setup short",
+      "customerPreviewDescription": "The wizard only asks for the fields needed to create a usable quote. Everything else can be refined from the detail page or builder.",
+      "pricingTitle": "Line items",
+      "pricingHelp": "Add products, quantities, discounts and VAT before creating the quote.",
+      "pricingRequired": "Add at least one quote line first",
+      "productRequired": "Select a product for every quote line",
+      "lineCount": "{{count}} line(s)",
+      "templateTitle": "Choose a template",
+      "templateHelp": "The selected template is saved for the quote and opens in the builder later.",
+      "defaultTemplate": "Default",
+      "standardTemplateDescription": "Classic quote layout with customer, table and totals.",
+      "executiveTemplateDescription": "Formal proposal style with a strong total section.",
+      "minimalTemplateDescription": "Compact quote layout focused on lines and total.",
+      "footerHint": "Create a quote in three short steps"
+    },
+    "noTemplates": "No templates found",
+    "send": "Send"
   },
   "activities": {
     "title": "Activities",
@@ -1051,7 +1174,13 @@
     "unknownDate": "Unknown",
     "systemUser": "System",
     "unknownUser": "Unknown",
-    "previous": "Previous"
+    "previous": "Previous",
+    "createdSuccess": "Activity created successfully",
+    "createError": "Failed to create activity",
+    "updatedSuccess": "Activity updated successfully",
+    "updateError": "Failed to update activity",
+    "deletedSuccess": "Activity deleted successfully",
+    "deleteError": "Failed to delete activity"
   },
   "emails": {
     "title": "Emails",
@@ -1061,13 +1190,36 @@
   "notes": {
     "title": "Notes",
     "emptyTitle": "No notes yet",
-    "emptyDescription": "Your todo notes will appear here",
+    "emptyDescription": "Create a note to keep record-specific context here.",
+    "new": "New",
+    "newNote": "New Note",
+    "editNote": "Edit Note",
+    "recordNotes": "Record notes",
+    "searchPlaceholder": "Search notes",
+    "titlePlaceholder": "Note title",
+    "bodyPlaceholder": "Write a note...",
+    "noPreview": "No preview available.",
+    "unsaved": "Unsaved",
+    "empty": "No notes yet.",
+    "noResults": "No notes match your search.",
+    "missingRecord": "Save the record before adding notes.",
+    "loadError": "Notes could not be loaded.",
+    "deleteTitle": "Delete note?",
+    "deleteDescription": "This note will be removed from this record. It is archived in Docyrus instead of being permanently deleted.",
     "columns": {
       "done": "Done",
       "title": "Title",
       "priority": "Priority",
       "dueDate": "Due Date"
-    }
+    },
+    "createdSuccess": "Note created successfully",
+    "createError": "Failed to create note",
+    "savedSuccess": "Note saved",
+    "saveError": "Failed to save note",
+    "updatedSuccess": "Note updated",
+    "updateError": "Failed to update note",
+    "deletedSuccess": "Note deleted",
+    "deleteError": "Failed to delete note"
   },
   "reports": {
     "title": "Reports",
@@ -1157,7 +1309,10 @@
     "updatedSuccess": "Comment updated successfully",
     "updatedError": "Failed to update comment",
     "deletedSuccess": "Comment deleted successfully",
-    "deletedError": "Failed to delete comment"
+    "deletedError": "Failed to delete comment",
+    "unknownAuthor": "Unknown",
+    "deleteConfirmTitle": "Delete comment?",
+    "deleteConfirmDescription": "This comment will be permanently deleted. This action cannot be undone."
   },
   "files": {
     "title": "Files",
@@ -1169,7 +1324,9 @@
     "uploadError": "Failed to upload file",
     "deleteSuccess": "File deleted successfully",
     "deleteError": "Failed to delete file",
-    "downloadError": "Failed to download file"
+    "downloadError": "Failed to download file",
+    "dropHint": "Drag & drop files here, or",
+    "chooseFiles": "Choose files"
   },
   "table": {
     "noResults": "No results.",
@@ -1683,7 +1840,19 @@
       "sendEmail": "Send email",
       "call": "Call",
       "sendSms": "Send SMS",
-      "scheduleMeeting": "Schedule meeting"
+      "scheduleMeeting": "Schedule meeting",
+      "addExistingDescription": "Choose an existing contact or create a new one.",
+      "addExistingTitle": "Add contact",
+      "existingContact": "Existing contact",
+      "linkError": "Contact could not be linked.",
+      "linkExisting": "Link contact",
+      "missingOrganization": "Select a company before adding contacts.",
+      "noAvailableContacts": "No available contacts found",
+      "remove": "Remove from list",
+      "selectContact": "Search contacts...",
+      "selectExisting": "Select a contact first.",
+      "removeConfirmTitle": "Remove contact from this company?",
+      "removeConfirmDescription": "The contact stays in your CRM; only the link to this company is removed."
     },
     "deals": {
       "search": "Search deals…",
@@ -1692,7 +1861,8 @@
       "stage": "Stage",
       "value": "Value",
       "closeDate": "Close date",
-      "noMatch": "No deals match your search."
+      "noMatch": "No deals match your search.",
+      "add": "New Deal"
     }
   },
   "ui": {
@@ -1871,7 +2041,20 @@
       "toggleFilterMenu": "Toggle the filter menu",
       "toggleSortMenu": "Toggle the sort menu",
       "tryDifferentTerm": "Try searching for a different term.",
-      "undoLastAction": "Undo last action"
+      "undoLastAction": "Undo last action",
+      "dataGrid": "Data grid",
+      "fields": "Fields",
+      "fieldsDescription": "Toggle which fields appear in the table and on each card.",
+      "fieldsEmpty": "No matching fields",
+      "fieldsHideAll": "Hide all",
+      "fieldsSearchPlaceholder": "Search fields…",
+      "fieldsShowAll": "Show all",
+      "fieldsTitle": "Visible fields",
+      "openRelation": "Open related record",
+      "removeSortRule": "Remove sort rule",
+      "reorderColumn": "Reorder {column} column",
+      "reorderSortRule": "Reorder sort rule",
+      "showAutonumber": "Show autonumber"
     },
     "emailComposer": {
       "from": "From",
@@ -1992,7 +2175,16 @@
       "systemView": "System view",
       "toggleColumnVisibility": "Toggle {column} visibility",
       "viewDescriptionPlaceholder": "Optional description",
-      "willUseDefaultGrouping": "Saving without a grouping column will use the default ({label})."
+      "willUseDefaultGrouping": "Saving without a grouping column will use the default ({label}).",
+      "copySuffix": "(Copy)",
+      "duplicateView": "Duplicate view",
+      "form": "Form",
+      "formDefaultSuffix": "(default)",
+      "formDescription": "Bind a saved form to this view. Record create / edit surfaces open this form when the view is active.",
+      "formHint": "When no form is bound, the record layout falls back to the data source fields in a single column.",
+      "formNone": "No form (default layout)",
+      "formSelectLabel": "Form layout",
+      "formUntitled": "Untitled form"
     },
     "formField": {
       "iconFontAwesome": "Font Awesome",
@@ -2321,6 +2513,75 @@
     },
     "calendar": {
       "addEvent": "Add Event"
+    },
+    "recordDelete": {
+      "title": "Confirm Deletion",
+      "descriptionOne": "Are you sure you want to delete this item? This action cannot be undone. Please confirm your choice.",
+      "descriptionMany": "Are you sure you want to delete these {{count}} items? This action cannot be undone. Please confirm your choice.",
+      "cancel": "Cancel",
+      "confirm": "Delete",
+      "deleting": "Deleting...",
+      "forAllTables": "For All Tables",
+      "relatedTable": "Related Docybase",
+      "action": "Action",
+      "keepRelated": "Remove Relation And Keep",
+      "deleteRelated": "Delete Related Records"
+    },
+    "formFields": {
+      "passwordHide": "Hide password",
+      "passwordShow": "Show password"
+    },
+    "treeSelect": {
+      "removeItem": "Remove item"
+    },
+    "treeView": {
+      "check": "Check",
+      "clearSelection": "Clear selection",
+      "noItemsFound": "No items found",
+      "searchPlaceholder": "Search...",
+      "selected": "selected",
+      "uncheck": "Uncheck"
+    },
+    "recordDetail": {
+      "oneFieldChanged": "1 field changed",
+      "fieldsChanged": "{{count}} fields changed",
+      "pendingChanges": "Pending Changes",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving...",
+      "emptyValue": "(empty)"
+    },
+    "recordActivity": {
+      "oneEvent": "1 event",
+      "events": "{{count}} events"
     }
+  },
+  "validation": {
+    "categoryRequired": "Category is required",
+    "closeProbabilityRange": "Close probability must be between 0 and 100",
+    "companyNameRequired": "Company name is required",
+    "contactNameRequired": "Contact name is required",
+    "countryRequired": "Country is required",
+    "dealValuePositive": "Deal value must be positive",
+    "dueDateBeforeStart": "Due date cannot be before start date",
+    "endDateBeforeStart": "End date cannot be before start date",
+    "endDateAfterStart": "End date must be after start date",
+    "estimatedValuePositive": "Estimated value must be positive",
+    "expectedRevenuePositive": "Expected revenue must be positive",
+    "invalidUrl": "Invalid URL",
+    "invalidCompanyEmail": "Invalid company email address",
+    "invalidEmail": "Invalid email address",
+    "nameRequired": "Name is required",
+    "organizationRequired": "Organization is required",
+    "productCodeRequired": "Product code is required",
+    "productRequired": "Product is required",
+    "productNameRequired": "Product name is required",
+    "quantityMin": "Quantity must be at least 1",
+    "relatedDealRequired": "Related deal is required",
+    "relatedSalesOrderRequired": "Related sales order is required",
+    "stageRequired": "Stage is required",
+    "subjectRequired": "Subject is required",
+    "taxRange": "Tax must be between 0 and 100",
+    "unitPricePositive": "Unit price must be positive"
   }
 }

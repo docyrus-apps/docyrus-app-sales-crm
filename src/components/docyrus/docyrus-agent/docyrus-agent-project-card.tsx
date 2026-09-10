@@ -1,36 +1,34 @@
-'use client';
+'use client'
 
 // @ts-nocheck
 /* eslint-disable */
-import { type ReactNode } from 'react';
+import { type ReactNode } from 'react'
 
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import {
-  Eye, Pencil, Trash2
-} from 'lucide-react';
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import { Eye, Pencil, Trash2 } from 'lucide-react'
 
-import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation';
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
-import { type DocyrusAgentProject } from '@/hooks/docyrus/use-docyrus-agent-projects';
+import { type DocyrusAgentProject } from '@/hooks/docyrus/use-docyrus-agent-projects'
 
 export interface DocyrusAgentProjectCardProps {
-  project: DocyrusAgentProject;
+  project: DocyrusAgentProject
   /** Fires when the View button is pressed. */
-  onSelect?: (project: DocyrusAgentProject) => void;
+  onSelect?: (project: DocyrusAgentProject) => void
   /** Fires when the Edit button is pressed. */
-  onEdit?: (project: DocyrusAgentProject) => void;
+  onEdit?: (project: DocyrusAgentProject) => void
   /** Fires when the Delete button is pressed. */
-  onDelete?: (project: DocyrusAgentProject) => void;
+  onDelete?: (project: DocyrusAgentProject) => void
   /** Replace the card header (default: name + description). */
-  header?: ReactNode;
+  header?: ReactNode
   /** Replace the description below the name. Set to `null` to hide. */
-  description?: ReactNode | null;
+  description?: ReactNode | null
   /** Slot rendered between the header and the action footer. */
-  body?: ReactNode;
+  body?: ReactNode
   /** Replace the action footer entirely (View / Edit / Delete) with custom buttons. */
-  actions?: ReactNode;
-  className?: string;
+  actions?: ReactNode
+  className?: string
 }
 
 /**
@@ -46,25 +44,32 @@ export const DocyrusAgentProjectCard = ({
   description,
   body,
   actions,
-  className
+  className,
 }: DocyrusAgentProjectCardProps) => {
-  const { t } = useUiTranslation();
+  const { t } = useUiTranslation()
 
-  const resolvedDescription = description === null ? null : description ?? (
-    project.description ? (
-      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{project.description}</p>
-    ) : null
-  );
+  const resolvedDescription =
+    description === null
+      ? null
+      : (description ??
+        (project.description ? (
+          <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+            {project.description}
+          </p>
+        ) : null))
 
   return (
     <div
       className={cn(
         'flex flex-col gap-3 rounded-lg border bg-card p-4 transition-shadow hover:shadow-md',
-        className
-      )}>
+        className,
+      )}
+    >
       {header ?? (
         <div className="flex min-w-0 flex-col">
-          <h3 className="line-clamp-2 font-medium text-card-foreground">{project.name}</h3>
+          <h3 className="line-clamp-2 font-medium text-card-foreground">
+            {project.name}
+          </h3>
           {resolvedDescription}
         </div>
       )}
@@ -77,7 +82,8 @@ export const DocyrusAgentProjectCard = ({
                 className="h-7 px-2 text-xs text-primary hover:bg-primary/10 hover:text-primary/80"
                 size="sm"
                 variant="ghost"
-                onClick={() => onSelect(project)}>
+                onClick={() => onSelect(project)}
+              >
                 <Eye className="size-3.5" />
                 {t('ui.common.view', 'View')}
               </Button>
@@ -87,7 +93,8 @@ export const DocyrusAgentProjectCard = ({
                 className="h-7 px-2 text-xs text-primary hover:bg-primary/10 hover:text-primary/80"
                 size="sm"
                 variant="ghost"
-                onClick={() => onEdit(project)}>
+                onClick={() => onEdit(project)}
+              >
                 <Pencil className="size-3.5" />
                 {t('ui.common.edit', 'Edit')}
               </Button>
@@ -98,7 +105,8 @@ export const DocyrusAgentProjectCard = ({
                 className="ml-auto size-7 text-destructive hover:bg-destructive/10 hover:text-destructive"
                 size="icon"
                 variant="ghost"
-                onClick={() => onDelete(project)}>
+                onClick={() => onDelete(project)}
+              >
                 <Trash2 className="size-3.5" />
               </Button>
             )}
@@ -106,5 +114,5 @@ export const DocyrusAgentProjectCard = ({
         )}
       </div>
     </div>
-  );
-};
+  )
+}

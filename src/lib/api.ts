@@ -18,11 +18,7 @@ let apiClient: RestApiClient | null = null
  * Deliberately narrow: only bodies carrying one of these keys are left intact,
  * so every other response — list payloads included — unwraps exactly as before.
  */
-const RESULT_MARKER_KEYS = [
-  'totalSuccessfulRecords',
-  'totalWarningRecords',
-  'duplicates',
-]
+const RESULT_MARKER_KEYS = ['totalSuccessfulRecords', 'totalWarningRecords', 'duplicates']
 
 export function setApiClient(client: RestApiClient) {
   apiClient = client
@@ -51,8 +47,9 @@ export function setApiClient(client: RestApiClient) {
           'formulas',
           'childQueries',
           'pivot',
-          'distinctColumns',
+          'distinctColumns'
         ] as const
+
         for (const key of jsonKeys) {
           if (
             params[key] !== undefined &&
@@ -65,6 +62,7 @@ export function setApiClient(client: RestApiClient) {
 
         config.params = params
       }
+
       return config
     },
     response: (response) => {
@@ -74,23 +72,24 @@ export function setApiClient(client: RestApiClient) {
         typeof response.data === 'object' &&
         !Array.isArray(response.data) &&
         'data' in response.data &&
-        !RESULT_MARKER_KEYS.some((key) => key in (response.data as object))
+        !RESULT_MARKER_KEYS.some(key => key in (response.data as object))
       ) {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         response.data = response.data.data
       }
+
       return response
-    },
+    }
   })
 }
 
 export function getApiClient(): RestApiClient {
   if (!apiClient) {
     throw new Error(
-      'API client not initialized. Ensure DocyrusAuthProvider is mounted.',
+      'API client not initialized. Ensure DocyrusAuthProvider is mounted.'
     )
   }
+
   return apiClient
 }
 

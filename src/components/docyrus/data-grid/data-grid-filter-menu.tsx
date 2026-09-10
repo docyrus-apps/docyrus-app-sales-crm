@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import {
   useCallback,
   useEffect,
@@ -15,9 +17,12 @@ import {
   type Table,
 } from '@tanstack/react-table'
 
+import { endOfDay, format, startOfDay } from 'date-fns'
+
 import {
   CalendarIcon,
   CheckSquare2,
+  Fingerprint,
   Hash,
   ListFilter,
   Type,
@@ -35,10 +40,11 @@ import {
   DataTableFilter,
   useDataTableFilters,
 } from '@/components/docyrus/data-table-filter'
+import { isCompleteUuid } from '@/components/docyrus/data-table-filter/lib/helpers'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 import { type FilterOperator, type FilterValue } from './types'
 
@@ -67,6 +73,134 @@ type DataTableOperator =
   | 'exclude if all'
   | 'is empty'
   | 'is not empty'
+  /*
+   * Relative-date operators — shared 1:1 between client and grid
+   * because they're conceptually a "value-less" comparison the
+   * backend resolves against today at query time.
+   */
+  | 'today'
+  | 'tomorrow'
+  | 'yesterday'
+  | 'last7Days'
+  | 'last15Days'
+  | 'last30Days'
+  | 'last60Days'
+  | 'last90Days'
+  | 'last120Days'
+  | 'next7Days'
+  | 'next15Days'
+  | 'next30Days'
+  | 'next60Days'
+  | 'next90Days'
+  | 'next120Days'
+  | 'lastWeek'
+  | 'thisWeek'
+  | 'nextWeek'
+  | 'lastMonth'
+  | 'thisMonth'
+  | 'nextMonth'
+  | 'beforeToday'
+  | 'afterToday'
+  | 'lastYear'
+  | 'thisYear'
+  | 'nextYear'
+  | 'firstQuarter'
+  | 'secondQuarter'
+  | 'thirdQuarter'
+  | 'fourthQuarter'
+  | 'last3Months'
+  | 'last6Months'
+  | 'xDaysAgo'
+  | 'xDaysLater'
+  | 'beforeLastXDays'
+  | 'inLastXDays'
+  | 'afterLastXDays'
+  | 'inNextXDays'
+
+const RELATIVE_DATE_OPERATORS = new Set<DataTableOperator>([
+  'today',
+  'tomorrow',
+  'yesterday',
+  'last7Days',
+  'last15Days',
+  'last30Days',
+  'last60Days',
+  'last90Days',
+  'last120Days',
+  'next7Days',
+  'next15Days',
+  'next30Days',
+  'next60Days',
+  'next90Days',
+  'next120Days',
+  'lastWeek',
+  'thisWeek',
+  'nextWeek',
+  'lastMonth',
+  'thisMonth',
+  'nextMonth',
+  'beforeToday',
+  'afterToday',
+  'lastYear',
+  'thisYear',
+  'nextYear',
+  'firstQuarter',
+  'secondQuarter',
+  'thirdQuarter',
+  'fourthQuarter',
+  'last3Months',
+  'last6Months',
+  'xDaysAgo',
+  'xDaysLater',
+  'beforeLastXDays',
+  'inLastXDays',
+  'afterLastXDays',
+  'inNextXDays',
+])
+
+const X_DAYS_RELATIVE_DATE_OPERATORS = new Set<DataTableOperator>([
+  'xDaysAgo',
+  'xDaysLater',
+  'beforeLastXDays',
+  'inLastXDays',
+  'afterLastXDays',
+  'inNextXDays',
+])
+
+/**
+ * Cell variants whose underlying column stores an ARRAY of values (Postgres
+ * `uuid[]` / `text[]` — e.g. the `followers` system column, multi-select /
+ * tag-select / user-multi-select pickers). They all surface in the filter UI
+ * as the `multiOption` data type, but the backend rejects the scalar
+ * operators (`=` / `in` / `not in`) on array columns with a 500. They must
+ * serialize to the array-membership operators (`contains any` / `contains all`
+ * / `not contains`) instead — see `toGridOperator` + `toServerRule`.
+ *
+ * Scalar reference variants (`user` / `relation`) deliberately stay OUT of
+ * this set: each record holds a single value, so the many-to-one `=` / `in`
+ * matching is correct and must not change.
+ */
+const ARRAY_BACKED_VARIANTS = new Set([
+  'multi-select',
+  'tag-select',
+  'user-multi-select',
+])
+
+function isArrayBackedVariant(variant?: string): boolean {
+  return variant !== undefined && ARRAY_BACKED_VARIANTS.has(variant)
+}
+
+/**
+ * `duration` columns persist a raw seconds count on the wire but render as
+ * `HH:MM` and are filtered in decimal hours from the UI. We convert at the
+ * DTF⇄grid boundary (×3600 forward, ÷3600 reverse + faceted accessor) so a
+ * user typing "8" matches 8 hours instead of 8 seconds.
+ */
+const SECONDS_PER_HOUR = 3600
+
+function isDurationVariant(variant?: string): boolean {
+  return variant === 'duration'
+}
 
 interface DataGridFilterMenuProps<TData> extends ComponentProps<'div'> {
   table: Table<TData>
@@ -148,9 +282,17 @@ function getColumnType(variant?: string): ColumnDataType | null {
     case 'icon':
 
     case 'time':
-
-    case 'uuid':
       return 'text'
+
+    /*
+     * uuid (identity / PK) columns filter by exact equality only. Treating
+     * them as `text` wired `contains` → SQL `LIKE`, which Postgres rejects on
+     * `uuid` columns (`operator does not exist: uuid ~~* unknown`) and 500'd
+     * on every keystroke. The dedicated `uuid` type offers `is` / `is not` /
+     * `is empty` / `is not empty` and only emits a rule for a complete UUID.
+     */
+    case 'uuid':
+      return 'uuid'
 
     case 'file':
 
@@ -176,6 +318,9 @@ function getColumnIcon(type: ColumnDataType) {
 
     case 'multiOption':
       return CheckSquare2
+
+    case 'uuid':
+      return Fingerprint
 
     default:
       return Type
@@ -233,6 +378,15 @@ function getColumnValue<TData>(
 function toStringValue(value: unknown): string | undefined {
   if (value === null || value === undefined || value === '') return undefined
 
+  /*
+   * `String({})` returns "[object Object]" — a truthy string that then
+   * sails downstream as a real filter value and corrupts the API
+   * payload. Reject any non-Date object/array up front so the placeholder
+   * `column.setFilterValue({})` seed from data-grid-column-header
+   * normalizes to "no value" instead of "[object Object]".
+   */
+  if (typeof value === 'object' && !(value instanceof Date)) return undefined
+
   return String(value)
 }
 
@@ -249,17 +403,39 @@ function toNumberValue(value: unknown): number | undefined {
   return undefined
 }
 
+/*
+ * Matches date-only strings like `2026-06-04` (no time component, no `T`).
+ * `new Date('2026-06-04')` parses as UTC midnight — wrong in any UTC− locale.
+ * We detect this pattern and reconstruct as local midnight instead.
+ */
+const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/
+
 function toDateValue(value: unknown): Date | undefined {
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
     return value
   }
 
-  if (typeof value === 'string' || typeof value === 'number') {
+  if (typeof value === 'string') {
+    if (DATE_ONLY_RE.test(value)) {
+      const [year, month, day] = value.split('-').map(Number) as [
+        number,
+        number,
+        number,
+      ]
+      const local = new Date(year, month - 1, day)
+
+      return Number.isNaN(local.getTime()) ? undefined : local
+    }
+
     const parsed = new Date(value)
 
-    if (!Number.isNaN(parsed.getTime())) {
-      return parsed
-    }
+    return Number.isNaN(parsed.getTime()) ? undefined : parsed
+  }
+
+  if (typeof value === 'number') {
+    const parsed = new Date(value)
+
+    return Number.isNaN(parsed.getTime()) ? undefined : parsed
   }
 
   return undefined
@@ -305,11 +481,25 @@ function toDataTableOperator(
         case 'isBetween':
           return 'is between'
 
+        case 'isNotBetween':
+          return 'is not between'
+
         default:
           return 'is'
       }
 
     case 'date':
+      /*
+       * Relative date operators (today / lastWeek / xDaysAgo / …) and
+       * their snake_case backend twins are passed through 1:1 — same
+       * string is valid on both sides.
+       */
+      if (
+        operator &&
+        RELATIVE_DATE_OPERATORS.has(operator as DataTableOperator)
+      ) {
+        return operator as DataTableOperator
+      }
       switch (operator) {
         case 'notEquals':
           return 'is not'
@@ -328,6 +518,9 @@ function toDataTableOperator(
 
         case 'isBetween':
           return 'is between'
+
+        case 'isNotBetween':
+          return 'is not between'
 
         default:
           return 'is'
@@ -354,12 +547,16 @@ function toDataTableOperator(
           return 'exclude'
 
         case 'isAnyOf':
+
+        case 'includesAny':
           return 'include any of'
 
         case 'includesAll':
           return 'include all of'
 
         case 'isNoneOf':
+
+        case 'excludesAnyOf':
           return 'exclude if any of'
 
         case 'excludesIfAll':
@@ -371,7 +568,28 @@ function toDataTableOperator(
 
     case 'boolean':
       switch (operator) {
+        case 'isEmpty':
+          return 'is empty'
+
+        case 'isNotEmpty':
+          return 'is not empty'
+
+        /*
+         * Canonicalize both `isTrue` and `isFalse` to the generic `is`
+         * operator — the actual truth lives in `values[0]` (the DTF boolean
+         * toggle's representation). Mapping `isFalse → 'is not'` here made the
+         * round-trip unstable once the forward path became value-aware (the
+         * truth would get flipped twice). See `dataTableFiltersToColumnFilters`.
+         */
         case 'isFalse':
+
+        default:
+          return 'is'
+      }
+
+    case 'uuid':
+      switch (operator) {
+        case 'notEquals':
           return 'is not'
 
         case 'isEmpty':
@@ -389,6 +607,7 @@ function toDataTableOperator(
 function toGridOperator(
   type: ColumnDataType,
   operator: DataTableOperator,
+  isArrayColumn = false,
 ): FilterOperator {
   switch (type) {
     case 'text':
@@ -412,15 +631,19 @@ function toGridOperator(
           return 'greaterThanOrEqual'
 
         case 'is between':
+          return 'isBetween'
 
         case 'is not between':
-          return 'isBetween'
+          return 'isNotBetween'
 
         default:
           return 'equals'
       }
 
     case 'date':
+      if (RELATIVE_DATE_OPERATORS.has(operator)) {
+        return operator as FilterOperator
+      }
       switch (operator) {
         case 'is not':
           return 'notEquals'
@@ -438,9 +661,10 @@ function toGridOperator(
           return 'onOrBefore'
 
         case 'is between':
+          return 'isBetween'
 
         case 'is not between':
-          return 'isBetween'
+          return 'isNotBetween'
 
         default:
           return 'equals'
@@ -462,6 +686,33 @@ function toGridOperator(
       }
 
     case 'multiOption':
+      /*
+       * Array-backed columns (multi-select / tag-select / user-multi-select,
+       * e.g. `followers` uuid[]) serialize to the array-membership operators
+       * — the scalar `is` / `isAnyOf` (`=` / `in`) path 500s on the backend.
+       * Scalar reference columns (`user` / `relation`) keep `is` / `isAnyOf`.
+       */
+      if (isArrayColumn) {
+        switch (operator) {
+          case 'exclude':
+
+          case 'exclude if any of':
+            return 'excludesAnyOf'
+
+          case 'exclude if all':
+            return 'excludesIfAll'
+
+          case 'include all of':
+            return 'includesAll'
+
+          case 'include any of':
+
+          case 'include':
+
+          default:
+            return 'includesAny'
+        }
+      }
       switch (operator) {
         case 'exclude':
           return 'isNot'
@@ -496,17 +747,34 @@ function toGridOperator(
         default:
           return 'isTrue'
       }
+
+    case 'uuid':
+      switch (operator) {
+        case 'is not':
+          return 'notEquals'
+
+        case 'is empty':
+          return 'isEmpty'
+
+        case 'is not empty':
+          return 'isNotEmpty'
+
+        default:
+          return 'equals'
+      }
   }
 }
 
 function columnFiltersToDataTableFilters(
   filters: Array<ColumnFilter>,
   columnTypeById: Map<string, ColumnDataType>,
+  columnIsDurationById: Map<string, boolean>,
 ): FiltersState {
   const mapped: FiltersState = []
 
   for (const filter of filters) {
     const type = columnTypeById.get(filter.id)
+    const isDuration = columnIsDurationById.get(filter.id) === true
 
     if (!type) continue
 
@@ -520,7 +788,7 @@ function columnFiltersToDataTableFilters(
     const operator = toDataTableOperator(type, value.operator)
     const values: Array<string | number | Date> = []
 
-    if (type === 'text') {
+    if (type === 'text' || type === 'uuid') {
       const normalized = toStringValue(value.value)
 
       if (normalized) {
@@ -529,8 +797,10 @@ function columnFiltersToDataTableFilters(
     }
 
     if (type === 'number') {
-      const start = toNumberValue(value.value)
-      const end = toNumberValue(value.endValue)
+      const fromWire = (n: number | undefined) =>
+        n === undefined ? undefined : isDuration ? n / SECONDS_PER_HOUR : n
+      const start = fromWire(toNumberValue(value.value))
+      const end = fromWire(toNumberValue(value.endValue))
 
       if (operator === 'is between' || operator === 'is not between') {
         if (start !== undefined) values.push(start)
@@ -541,14 +811,43 @@ function columnFiltersToDataTableFilters(
     }
 
     if (type === 'date') {
-      const start = toDateValue(value.value)
-      const end = toDateValue(value.endValue)
+      if (RELATIVE_DATE_OPERATORS.has(operator)) {
+        /*
+         * Relative operators carry a numeric `N` value only for the
+         * *XDays variants. Everything else has no value at all and
+         * stays as an empty `values` array.
+         */
+        if (X_DAYS_RELATIVE_DATE_OPERATORS.has(operator)) {
+          const n = toNumberValue(value.value)
 
-      if (operator === 'is between' || operator === 'is not between') {
-        if (start) values.push(start)
-        if (end) values.push(end)
-      } else if (start) {
-        values.push(start)
+          if (n !== undefined) values.push(n)
+        }
+      } else {
+        const start = toDateValue(value.value)
+        const end = toDateValue(value.endValue)
+
+        if (typeof window !== 'undefined') {
+          // eslint-disable-next-line no-console
+          console.log(
+            '[data-grid-filter-menu] columnFiltersToDataTableFilters date',
+            {
+              columnId: filter.id,
+              rawValue: value.value,
+              rawEndValue: value.endValue,
+              parsedStart: start,
+              parsedStartIso: start?.toISOString(),
+              parsedEnd: end,
+              parsedEndIso: end?.toISOString(),
+            },
+          )
+        }
+
+        if (operator === 'is between' || operator === 'is not between') {
+          if (start) values.push(start)
+          if (end) values.push(end)
+        } else if (start) {
+          values.push(start)
+        }
       }
     }
 
@@ -575,17 +874,73 @@ function columnFiltersToDataTableFilters(
   return mapped
 }
 
+/*
+ * Operators whose right-hand date is an *end* boundary. For date-only
+ * columns, these must snap to 23:59:59 instead of 00:00:00 so the picked
+ * day is fully included (a `<=` against 00:00:00 drops every record
+ * created after midnight on that day).
+ */
+const END_SIDE_DATE_OPERATORS = new Set<FilterOperator>([
+  'isBetween',
+  'before',
+  'onOrBefore',
+])
+
+/**
+ * Serialize a `Date` for the server filter payload while preserving the
+ * user's local timezone. We deliberately avoid `.toISOString()` here —
+ * that converts to UTC, so a user picking 17:00 in UTC+3 becomes 14:00
+ * on the server after PostgreSQL casts the `+03:00` offset into a naive
+ * timestamp (issue #66 follow-up). Emitting a timezone-naive string
+ * (`2026-04-16T17:00:00`) keeps the wall-clock hour the user actually
+ * chose all the way through to the database comparison.
+ *
+ * For date-only columns (`includeTime=false`):
+ *   - start-side operators snap to 00:00:00 (startOfDay)
+ *   - end-side operators snap to 23:59:59 (endOfDay) so the picked day
+ *     is fully included — previously snapping end bounds to 00:00:00
+ *     dropped all records created after midnight on the boundary day.
+ */
+function serializeDateForServer(
+  value: Date,
+  includeTime: boolean,
+  operator: FilterOperator,
+  isEnd = false,
+): string {
+  let target = value
+
+  if (!includeTime) {
+    target =
+      (isEnd || END_SIDE_DATE_OPERATORS.has(operator)) && isEnd
+        ? endOfDay(value)
+        : startOfDay(value)
+  }
+
+  return format(target, "yyyy-MM-dd'T'HH:mm:ss")
+}
+
 function dataTableFiltersToColumnFilters(
   filters: FiltersState,
   columnTypeById: Map<string, ColumnDataType>,
+  columnIncludeTimeById: Map<string, boolean>,
+  columnIsArrayById: Map<string, boolean>,
+  columnIsDurationById: Map<string, boolean>,
 ): Array<ColumnFilter> {
   return filters.flatMap((filter): Array<ColumnFilter> => {
     const type = columnTypeById.get(filter.columnId)
+    const includeTime = columnIncludeTimeById.get(filter.columnId) === true
+    const isArrayColumn = columnIsArrayById.get(filter.columnId) === true
+    const isDuration = columnIsDurationById.get(filter.columnId) === true
 
     if (!type) return []
 
-    const operator = toGridOperator(type, filter.operator as DataTableOperator)
+    const operator = toGridOperator(
+      type,
+      filter.operator as DataTableOperator,
+      isArrayColumn,
+    )
     const values = filter.values as Array<string | number | Date>
+    let emittedOperator: FilterOperator = operator
     let value: FilterValue['value']
     let endValue: FilterValue['endValue']
 
@@ -593,11 +948,28 @@ function dataTableFiltersToColumnFilters(
       value = toStringValue(values[0])
     }
 
-    if (type === 'number') {
-      const start = toNumberValue(values[0])
-      const end = toNumberValue(values[1])
+    if (type === 'uuid') {
+      /*
+       * Only emit a server rule for a COMPLETE uuid. A partial value 500s on
+       * the backend (`invalid input syntax for type uuid`), so leave `value`
+       * undefined while the user is mid-type — `toServerRule` then drops the
+       * `=` / `!=` rule instead of querying. The `isEmpty` / `isNotEmpty`
+       * operators carry no value and are serialized to `empty` / `not empty`.
+       */
+      if (operator === 'equals' || operator === 'notEquals') {
+        const candidate = toStringValue(values[0])
 
-      if (operator === 'isBetween') {
+        value = isCompleteUuid(candidate) ? candidate.trim() : undefined
+      }
+    }
+
+    if (type === 'number') {
+      const toWire = (n: number | undefined) =>
+        n === undefined ? undefined : isDuration ? n * SECONDS_PER_HOUR : n
+      const start = toWire(toNumberValue(values[0]))
+      const end = toWire(toNumberValue(values[1]))
+
+      if (operator === 'isBetween' || operator === 'isNotBetween') {
         value = start
         endValue = end
       } else {
@@ -606,14 +978,51 @@ function dataTableFiltersToColumnFilters(
     }
 
     if (type === 'date') {
-      const start = toDateValue(values[0])
-      const end = toDateValue(values[1])
-
-      if (operator === 'isBetween') {
-        value = start?.toISOString()
-        endValue = end?.toISOString()
+      if (RELATIVE_DATE_OPERATORS.has(operator as DataTableOperator)) {
+        if (X_DAYS_RELATIVE_DATE_OPERATORS.has(operator as DataTableOperator)) {
+          value = toNumberValue(values[0])
+        }
       } else {
-        value = start?.toISOString()
+        const start = toDateValue(values[0])
+        const end = toDateValue(values[1])
+
+        if (operator === 'isBetween' || operator === 'isNotBetween') {
+          value = start
+            ? serializeDateForServer(start, includeTime, operator)
+            : undefined
+          endValue = end
+            ? serializeDateForServer(end, includeTime, operator, true)
+            : undefined
+        } else if (
+          (operator === 'equals' || operator === 'notEquals') &&
+          includeTime &&
+          start
+        ) {
+          /*
+           * Datetime (timestamp) columns: `is` / `is not` mean day-granularity,
+           * NOT exact-second equality against the picked midnight (issue #106).
+           * A real timestamp never equals `<day>T00:00:00`, so `=` returned 0
+           * rows and `!=` returned everything. Carry the day's [start, end]
+           * bounds so `toServerRule` expands `is` → `between` and `is not` →
+           * an OR group (`< start OR > end`). The operator stays
+           * `equals` / `notEquals` so the chip keeps reading "is" / "is not"
+           * and a saved filter re-hydrates as "is" rather than "is between".
+           * Date-only columns (`includeTime === false`) fall through to the
+           * single-value path below — `= '<day>T00:00:00'` already day-matches
+           * a date-typed column.
+           */
+          value = serializeDateForServer(startOfDay(start), true, operator)
+          endValue = serializeDateForServer(
+            endOfDay(start),
+            true,
+            operator,
+            true,
+          )
+        } else {
+          value = start
+            ? serializeDateForServer(start, includeTime, operator)
+            : undefined
+        }
       }
     }
 
@@ -630,7 +1039,9 @@ function dataTableFiltersToColumnFilters(
         operator === 'isAnyOf' ||
         operator === 'isNoneOf' ||
         operator === 'includesAll' ||
-        operator === 'excludesIfAll'
+        operator === 'excludesIfAll' ||
+        operator === 'includesAny' ||
+        operator === 'excludesAnyOf'
       ) {
         value = toStringArray(values)
       } else {
@@ -641,10 +1052,22 @@ function dataTableFiltersToColumnFilters(
     if (type === 'boolean') {
       if (operator === 'isEmpty' || operator === 'isNotEmpty') {
         value = undefined
-      } else if (operator === 'isFalse') {
-        value = 'false'
       } else {
-        value = 'true'
+        /*
+         * The DTF boolean toggle stores the pick in `values[0]`
+         * (`true` / `false`) under a generic `is` operator, so
+         * `toGridOperator` can only ever resolve `isTrue`. XOR the
+         * operator-derived truth with `values[0]` so picking "False"
+         * wires `isFalse` instead of silently filtering True.
+         */
+        const operatorTrue = operator !== 'isFalse'
+        const first = values[0] as unknown
+        const valueFalse = first === false || first === 'false'
+
+        emittedOperator = (valueFalse ? !operatorTrue : operatorTrue)
+          ? 'isTrue'
+          : 'isFalse'
+        value = undefined
       }
     }
 
@@ -652,7 +1075,7 @@ function dataTableFiltersToColumnFilters(
       {
         id: filter.columnId,
         value: {
-          operator,
+          operator: emittedOperator,
           value,
           endValue,
         } satisfies FilterValue,
@@ -740,8 +1163,21 @@ export function DataGridFilterMenu<TData>({
   const tableData = table.options.data
   const { columnFilters } = table.getState()
 
+  /**
+   * Depend on `getAllColumns()` (TanStack memoizes it and only returns a new
+   * reference when the column defs change), NOT on the referentially stable
+   * `table` instance. Data-source fields load asynchronously, so on a fresh
+   * page load the filter menu first renders before the columns (and their cell
+   * `variant`s) register. A memo keyed on `[table]` alone would freeze on that
+   * empty/partial snapshot, leaving `columnTypeById` stale — array-backed fields
+   * (`field-userMultiSelect` / multiSelect / tagSelect, e.g. `followers`) would
+   * then serialize as a scalar `=` filter instead of `contains any` + array,
+   * producing malformed-array-literal 500s on the backend.
+   */
+  const allColumns = table.getAllColumns()
+
   const columnsConfig = useMemo(() => {
-    const filterableColumns = table.getAllColumns().filter((column) => {
+    const filterableColumns = allColumns.filter((column) => {
       if (!column.getCanFilter() || column.id === 'select') return false
 
       const meta = column.columnDef.meta as { filterable?: boolean } | undefined
@@ -766,11 +1202,21 @@ export function DataGridFilterMenu<TData>({
       const isBoolean =
         type === 'boolean' &&
         (cellMeta?.variant === 'checkbox' || cellMeta?.variant === 'switch')
+      const isDateTime = type === 'date' && cellMeta?.variant === 'datetime'
+      const isDuration = isDurationVariant(cellMeta?.variant)
 
       return {
         id: column.id,
-        displayName: getColumnLabel(column),
-        accessor: (row: TData) => getColumnValue(column, row),
+        displayName: isDuration
+          ? `${getColumnLabel(column)} (h)`
+          : getColumnLabel(column),
+        accessor: (row: TData) => {
+          const raw = getColumnValue(column, row)
+
+          return isDuration && typeof raw === 'number'
+            ? raw / SECONDS_PER_HOUR
+            : raw
+        },
         icon: getColumnIcon(type),
         type,
         ...(options ? { options } : {}),
@@ -781,17 +1227,58 @@ export function DataGridFilterMenu<TData>({
         ...(isBoolean && cellMeta.falseLabel
           ? { falseLabel: cellMeta.falseLabel }
           : {}),
+        ...(isDateTime ? { includeTime: true } : {}),
       } satisfies ColumnConfig<TData>
     })
-  }, [table, tableData, getAsyncOptions])
+  }, [allColumns, tableData, getAsyncOptions])
 
   const columnTypeById = useMemo(() => {
     return new Map(columnsConfig.map((column) => [column.id, column.type]))
   }, [columnsConfig])
 
+  const columnIncludeTimeById = useMemo(() => {
+    return new Map(
+      columnsConfig.map((column) => [column.id, column.includeTime === true]),
+    )
+  }, [columnsConfig])
+
+  /*
+   * Which filterable columns are array-backed (uuid[] / text[] — multi-select
+   * / tag-select / user-multi-select, e.g. `followers`). Drives the
+   * variant-aware operator mapping in `dataTableFiltersToColumnFilters` so
+   * these serialize to `contains any` / `not contains` instead of the scalar
+   * `=` / `in` that the backend rejects with a 500.
+   */
+  const columnIsArrayById = useMemo(() => {
+    return new Map(
+      allColumns.map((column) => [
+        column.id,
+        isArrayBackedVariant(column.columnDef.meta?.cell?.variant),
+      ]),
+    )
+  }, [allColumns])
+
+  /*
+   * Which filterable columns are `duration` variants (seconds on the wire,
+   * filtered in decimal hours). Drives the ×/÷3600 conversion in
+   * `dataTableFiltersToColumnFilters` / `columnFiltersToDataTableFilters`.
+   */
+  const columnIsDurationById = useMemo(() => {
+    return new Map(
+      allColumns.map((column) => [
+        column.id,
+        isDurationVariant(column.columnDef.meta?.cell?.variant),
+      ]),
+    )
+  }, [allColumns])
+
   const filtersFromTable = useMemo(() => {
-    return columnFiltersToDataTableFilters(columnFilters, columnTypeById)
-  }, [columnFilters, columnTypeById])
+    return columnFiltersToDataTableFilters(
+      columnFilters,
+      columnTypeById,
+      columnIsDurationById,
+    )
+  }, [columnFilters, columnTypeById, columnIsDurationById])
 
   const [filters, setFilters] = useState<FiltersState>(filtersFromTable)
 
@@ -800,7 +1287,7 @@ export function DataGridFilterMenu<TData>({
     const nextKey = getFiltersKey(filtersFromTable)
 
     if (currentKey !== nextKey) {
-      setFilters(filtersFromTable)
+      queueMicrotask(() => setFilters(filtersFromTable))
     }
   }, [filters, filtersFromTable])
 
@@ -811,18 +1298,38 @@ export function DataGridFilterMenu<TData>({
           typeof updater === 'function' ? updater(currentFilters) : updater
 
         table.setColumnFilters(
-          dataTableFiltersToColumnFilters(nextFilters, columnTypeById),
+          dataTableFiltersToColumnFilters(
+            nextFilters,
+            columnTypeById,
+            columnIncludeTimeById,
+            columnIsArrayById,
+            columnIsDurationById,
+          ),
         )
 
         return nextFilters
       })
     },
-    [table, columnTypeById],
+    [
+      table,
+      columnTypeById,
+      columnIncludeTimeById,
+      columnIsArrayById,
+      columnIsDurationById,
+    ],
   )
 
+  /*
+   * Server-paginated grids (manualFiltering=true) only have the current page
+   * in memory. Feeding that page to the facet engine produces counts that sum
+   * to the page size, not the full dataset — misleading the user. Pass an
+   * empty data array so the facet map stays empty (size=0); the badge hides
+   * itself via the `counts.size > 0` guard in FilterValueOptionController.
+   * Options lists still come from `columnsConfig.options`, which is unaffected.
+   */
   const filterState = useDataTableFilters({
     strategy: 'client',
-    data: tableData,
+    data: table.options.manualFiltering ? [] : tableData,
     columnsConfig,
     filters,
     onFiltersChange,

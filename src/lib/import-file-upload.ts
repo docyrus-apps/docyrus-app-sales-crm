@@ -76,7 +76,7 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
  * decides how to validate an incoming token.
  */
 export function isTenantStorageToken(
-  token: string | null | undefined,
+  token: string | null | undefined
 ): boolean {
   if (!token) return false
 
@@ -88,17 +88,19 @@ export function isTenantStorageToken(
 export async function uploadImportFile({
   file,
   tenantNo,
-  accessToken,
+  accessToken
 }: {
-  file: File
-  tenantNo: string
-  accessToken: string
+  file: File;
+  tenantNo: string;
+  accessToken: string;
 }): Promise<{ fileName: string; filePath: string }> {
   const fileName = buildImportFileName(file.name)
   const filePath = `tenant-${tenantNo}/tmp/import/${fileName}`
 
-  // `upsert` lets a re-run overwrite the previous attempt instead of failing on
-  // a name that is already taken.
+  /*
+   * `upsert` lets a re-run overwrite the previous attempt instead of failing on
+   * a name that is already taken.
+   */
   const { error } = await createStorageClient(accessToken)
     .storage.from(STORAGE_BUCKET)
     .upload(filePath, file, { cacheControl: CACHE_CONTROL, upsert: true })

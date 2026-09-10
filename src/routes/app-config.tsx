@@ -1,13 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
+
+import type { AppModuleKey, AppModulesConfig } from '@/lib/app-config'
+
 import {
   CheckCircle2,
   MapPinned,
   Phone,
   Settings2,
   SlidersHorizontal,
-  TriangleAlert,
+  TriangleAlert
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+
 import { PageContainer } from '@/components/layout/page-container'
 import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
@@ -17,30 +21,26 @@ import { Skeleton } from '@/components/ui/skeleton'
 import {
   Tooltip,
   TooltipContent,
-  TooltipTrigger,
+  TooltipTrigger
 } from '@/components/ui/tooltip'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog'
-import {
-  type AppModuleKey,
-  type AppModulesConfig,
-  DEFAULT_APP_MODULES_CONFIG,
-} from '@/lib/app-config'
+import { DEFAULT_APP_MODULES_CONFIG } from '@/lib/app-config'
 import { useAppModules, useUpdateAppModules } from '@/hooks/use-app-config'
 import { useWebphone } from '@/components/webphone/webphone-context'
 import { WebphoneSettingsForm } from '@/components/webphone/webphone-settings-form'
 import { FieldSalesSettingsForm } from '@/components/field-sales/field-sales-settings-form'
 
 type ModuleMeta = {
-  key: AppModuleKey
-  icon: typeof MapPinned
-  titleKey: string
-  descriptionKey: string
+  key: AppModuleKey;
+  icon: typeof MapPinned;
+  titleKey: string;
+  descriptionKey: string;
 }
 
 const MODULES: Array<ModuleMeta> = [
@@ -48,19 +48,19 @@ const MODULES: Array<ModuleMeta> = [
     key: 'fieldSales',
     icon: MapPinned,
     titleKey: 'appConfig.modules.fieldSales.title',
-    descriptionKey: 'appConfig.modules.fieldSales.description',
+    descriptionKey: 'appConfig.modules.fieldSales.description'
   },
   {
     key: 'webphone',
     icon: Phone,
     titleKey: 'appConfig.modules.webphone.title',
-    descriptionKey: 'appConfig.modules.webphone.description',
-  },
+    descriptionKey: 'appConfig.modules.webphone.description'
+  }
 ]
 
 interface ModuleStatus {
-  complete: boolean
-  issues: Array<string>
+  complete: boolean;
+  issues: Array<string>;
 }
 
 function ModuleStatusIndicator({ complete, issues }: ModuleStatus) {
@@ -75,8 +75,7 @@ function ModuleStatusIndicator({ complete, issues }: ModuleStatus) {
             complete
               ? t('appConfig.status.complete')
               : t('appConfig.status.incomplete')
-          }
-        >
+          }>
           {complete ? (
             <CheckCircle2 className="size-4 text-emerald-500" />
           ) : (
@@ -92,7 +91,7 @@ function ModuleStatusIndicator({ complete, issues }: ModuleStatus) {
             <div>{t('appConfig.status.incomplete')}</div>
             {issues.length > 0 && (
               <ul className="ml-3 list-disc text-xs">
-                {issues.map((issue) => (
+                {issues.map(issue => (
                   <li key={issue}>{issue}</li>
                 ))}
               </ul>
@@ -111,7 +110,7 @@ export function AppConfigPage() {
   const webphone = useWebphone()
 
   const [draft, setDraft] = useState<AppModulesConfig>(
-    DEFAULT_APP_MODULES_CONFIG,
+    DEFAULT_APP_MODULES_CONFIG
   )
   const [settingsModal, setSettingsModal] = useState<AppModuleKey | null>(null)
 
@@ -119,12 +118,11 @@ export function AppConfigPage() {
     if (data) setDraft(data)
   }, [data])
 
-  const toggle = (key: AppModuleKey, value: boolean) =>
-    setDraft((current) => ({ ...current, [key]: value }))
+  const toggle = (key: AppModuleKey, value: boolean) => setDraft(current => ({ ...current, [key]: value }))
 
   const dirty = data
     ? (Object.keys(draft) as Array<AppModuleKey>).some(
-        (key) => draft[key] !== data[key],
+        key => draft[key] !== data[key]
       )
     : false
 
@@ -136,16 +134,14 @@ export function AppConfigPage() {
     () => ({
       webphone: {
         complete: webphone.ready,
-        issues: webphone.readinessReasons.map((reason) =>
-          t(`webphone.readiness.${reason}`, { defaultValue: reason }),
-        ),
+        issues: webphone.readinessReasons.map(reason => t(`webphone.readiness.${reason}`, { defaultValue: reason }))
       },
       fieldSales: {
         complete: true,
-        issues: [],
-      },
+        issues: []
+      }
     }),
-    [webphone.ready, webphone.readinessReasons, t],
+    [webphone.ready, webphone.readinessReasons, t]
   )
 
   return (
@@ -156,12 +152,10 @@ export function AppConfigPage() {
         actions={
           <Button
             onClick={save}
-            disabled={updateModules.isPending || isLoading || !dirty}
-          >
+            disabled={updateModules.isPending || isLoading || !dirty}>
             {updateModules.isPending ? t('common.saving') : t('common.save')}
           </Button>
-        }
-      />
+        } />
       <PageContainer className="space-y-4">
         {isLoading ? (
           <Skeleton className="h-64 w-full" />
@@ -176,11 +170,11 @@ export function AppConfigPage() {
             <CardContent className="space-y-3">
               {MODULES.map((module) => {
                 const status = statusByModule[module.key]
+
                 return (
                   <div
                     key={module.key}
-                    className="flex items-center justify-between gap-4 rounded-xl border px-4 py-3"
-                  >
+                    className="flex items-center justify-between gap-4 rounded-xl border px-4 py-3">
                     <div className="flex min-w-0 items-start gap-3">
                       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                         <module.icon className="h-4 w-4" />
@@ -197,8 +191,7 @@ export function AppConfigPage() {
                         <>
                           <ModuleStatusIndicator
                             complete={status.complete}
-                            issues={status.issues}
-                          />
+                            issues={status.issues} />
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
@@ -206,8 +199,7 @@ export function AppConfigPage() {
                                 size="icon"
                                 className="size-7 text-muted-foreground"
                                 onClick={() => setSettingsModal(module.key)}
-                                aria-label={t('appConfig.settings.open')}
-                              >
+                                aria-label={t('appConfig.settings.open')}>
                                 <Settings2 className="size-4" />
                               </Button>
                             </TooltipTrigger>
@@ -219,11 +211,8 @@ export function AppConfigPage() {
                       )}
                       <Switch
                         checked={draft[module.key]}
-                        onCheckedChange={(checked) =>
-                          toggle(module.key, checked)
-                        }
-                        aria-label={t(module.titleKey)}
-                      />
+                        onCheckedChange={checked => toggle(module.key, checked)}
+                        aria-label={t(module.titleKey)} />
                     </div>
                   </div>
                 )
@@ -237,8 +226,7 @@ export function AppConfigPage() {
         open={settingsModal !== null}
         onOpenChange={(open) => {
           if (!open) setSettingsModal(null)
-        }}
-      >
+        }}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>

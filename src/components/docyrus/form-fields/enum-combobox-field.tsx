@@ -34,9 +34,8 @@ import { type DocyrusFormFieldProps, type EnumOption } from './types'
  * Replaces the plain Radix `<Select>` so that — per the detail-page design —
  * every non-status single-select (and relation) reads as the same clean,
  * searchable, "Location-style" combobox: trigger that mirrors the value,
- * cmdk search, options rendered via `EnumOptionDisplay` (plain text unless the
- * option carries both an icon and a colour). Status keeps its coloured chip
- * via `StatusFormField`; this component is intentionally chip-free.
+ * cmdk search, options rendered via `EnumOptionDisplay` with the same coloured
+ * chip language used by read-only values.
  */
 export function EnumComboboxField({
   field: fieldConfig,
@@ -81,7 +80,7 @@ export function EnumComboboxField({
           className="min-w-0 flex-1"
           style={depth > 0 ? { paddingLeft: `${depth * 1}rem` } : undefined}
         >
-          <EnumOptionDisplay option={option} variant="inline" />
+          <EnumOptionDisplay option={option} variant="chip" />
         </span>
       </CommandItem>
     ))
@@ -117,10 +116,11 @@ export function EnumComboboxField({
                   className="h-auto min-h-9 w-full justify-between font-normal"
                 >
                   {selectedOption ? (
-                    <span className="min-w-0 truncate">
+                    <span className="flex min-w-0 flex-1">
                       <EnumOptionDisplay
                         option={selectedOption}
-                        variant="inline"
+                        variant="chip"
+                        className="max-w-full"
                       />
                     </span>
                   ) : (

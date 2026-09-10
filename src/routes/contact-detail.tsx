@@ -1,5 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { useMemo } from 'react'
+
+import type { EnumOption, IField } from '@/components/docyrus/form-fields/types'
+
+import { type RecordDetailTab } from '@/components/crm/record-detail-layout'
+
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import {
@@ -13,20 +17,21 @@ import {
   Phone,
   PhoneCall,
   StickyNote,
-  User,
+  User
 } from 'lucide-react'
+
 import { PageContainer } from '@/components/layout/page-container'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   RecordDetailLayout,
   RecordKpiCard,
-  RecordTabPlaceholder,
-  type RecordDetailTab,
+  RecordTabPlaceholder
 } from '@/components/crm/record-detail-layout'
 import { RelatedDealsTable } from '@/components/crm/related-deals-table'
 import { RecordActivityPanel } from '@/components/docyrus/record-activity-panel'
 import { RecordTasksPanel } from '@/components/crm/record-tasks-panel'
+import { RecordNotesPanel } from '@/components/crm/record-notes-panel'
 import { ContactNameField } from '@/components/crm/contact-name-field'
 import { useDialer } from '@/components/dialer/dialer-widget'
 import { useWebphone } from '@/components/webphone/webphone-context'
@@ -40,43 +45,49 @@ import { useRecordActivities } from '@/hooks/use-record-activities'
 import { useEnumEntities } from '@/hooks/use-enums'
 import { CommentsPanel } from '@/components/shared/comments-panel'
 import { FileAttachments } from '@/components/shared/file-attachments'
+import { mergeCurrentEnumOption } from '@/lib/enum-options'
+
 import {
   type FieldChange,
-  type RecordDetailField,
+  type RecordDetailField
 } from '@/components/docyrus/editable-record-detail'
-import type { EnumOption, IField } from '@/components/docyrus/form-fields/types'
 
 const FIELD_SLUGS = [
   'name',
-  'job_title',
+  'organization',
   'email',
   'mobile',
-  'organization',
-  'contact_type',
+  'job_title',
   'contact_status',
+  'contact_type'
 ]
 
 function makeField(
   slug: string,
   name: string,
-  type: IField['type'] = 'field-text',
+  type: IField['type'] = 'field-text'
 ): IField {
-  return { id: slug, name, slug, type }
+  return {
+    id: slug,
+    name,
+    slug,
+    type
+  }
 }
 
 function toOptions(
   items: Array<{
-    id: string
-    name: string
-    color?: string | null
-    icon?: string | null
-  }>,
+    id: string;
+    name: string;
+    color?: string | null;
+    icon?: string | null;
+  }>
 ): Array<EnumOption> {
-  return items.map((item) => ({
+  return items.map(item => ({
     id: item.id,
     name: item.name,
     color: item.color ?? undefined,
-    icon: item.icon ?? undefined,
+    icon: item.icon ?? undefined
   }))
 }
 
@@ -88,7 +99,7 @@ function getInitials(value?: string): string {
       .split(/\s+/)
       .filter(Boolean)
       .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase() ?? '')
+      .map(part => part[0]?.toUpperCase() ?? '')
       .join('') || '#'
   )
 }
@@ -127,7 +138,7 @@ export function ContactDetail() {
 
   const { data: companies = [] } = useCompanies({
     columns: ['id', 'name'],
-    orderBy: 'name ASC',
+    orderBy: 'name ASC'
   })
 
   const { data: deals = [], isLoading: dealsLoading } = useDeals(
@@ -138,16 +149,14 @@ export function ContactDetail() {
             'name',
             'stage',
             'deal_value',
-            'expected_closing_date',
+            'expected_closing_date'
           ],
           filters: {
-            rules: [
-              { field: 'contact_person', operator: '=', value: contactId },
-            ],
+            rules: [{ field: 'contact_person', operator: '=', value: contactId }]
           },
-          orderBy: 'created_on desc',
+          orderBy: 'created_on desc'
         }
-      : undefined,
+      : undefined
   )
 
   const { data: activities = [], isLoading: activitiesLoading } =
@@ -156,15 +165,36 @@ export function ContactDetail() {
   const contactEnumOpts = { appSlug: 'base', dataSourceSlug: 'contact' }
   const { data: typeEntities = [] } = useEnumEntities(
     'contact_type',
-    contactEnumOpts,
+    contactEnumOpts
   )
   const { data: statusEntities = [] } = useEnumEntities(
     'contact_status',
-    contactEnumOpts,
+    contactEnumOpts
   )
 
   const typeEditable = typeEntities.length > 0
   const statusEditable = statusEntities.length > 0
+  const organizationOptions = useMemo<Array<EnumOption>>(
+    () => mergeCurrentEnumOption(
+        companies.map((company: any) => ({
+          id: company.id,
+          name: company.name
+        })),
+        contact?.organization
+      ),
+    [companies, contact?.organization]
+  )
+  const typeOptions = useMemo(
+    () => mergeCurrentEnumOption(toOptions(typeEntities), contact?.contact_type),
+    [typeEntities, contact?.contact_type]
+  )
+  const statusOptions = useMemo(
+    () => mergeCurrentEnumOption(
+        toOptions(statusEntities),
+        contact?.contact_status
+      ),
+    [statusEntities, contact?.contact_status]
+  )
 
   const detailFields = useMemo<Array<RecordDetailField>>(
     () => [
@@ -176,33 +206,37 @@ export function ContactDetail() {
         field: makeField(
           'organization',
           t('contacts.organization'),
-          'field-select',
+          'field-select'
         ),
-        enumOptions: companies.map((company: any) => ({
-          id: company.id,
-          name: company.name,
-        })),
+        enumOptions: organizationOptions
       },
       {
         field: makeField(
           'contact_type',
           t('contacts.type', { defaultValue: 'Type' }),
-          typeEditable ? 'field-select' : 'field-text',
+          typeEditable ? 'field-select' : 'field-text'
         ),
-        enumOptions: toOptions(typeEntities),
-        readOnly: !typeEditable,
+        enumOptions: typeOptions,
+        readOnly: !typeEditable
       },
       {
         field: makeField(
           'contact_status',
           t('contacts.status', { defaultValue: 'Status' }),
-          statusEditable ? 'field-status' : 'field-text',
+          statusEditable ? 'field-status' : 'field-text'
         ),
-        enumOptions: toOptions(statusEntities),
-        readOnly: !statusEditable,
-      },
+        enumOptions: statusOptions,
+        readOnly: !statusEditable
+      }
     ],
-    [t, companies, typeEditable, statusEditable, typeEntities, statusEntities],
+    [
+      t,
+      organizationOptions,
+      typeEditable,
+      statusEditable,
+      typeOptions,
+      statusOptions
+    ]
   )
 
   const flatRecord = useMemo<Record<string, unknown>>(() => {
@@ -219,21 +253,18 @@ export function ContactDetail() {
         : relationName(contact.contact_type),
       contact_status: statusEditable
         ? relationId(contact.contact_status)
-        : relationName(contact.contact_status),
+        : relationName(contact.contact_status)
     }
   }, [contact, typeEditable, statusEditable])
 
   const handleInlineSave = async (
     changes: Array<FieldChange>,
-    _values: Record<string, unknown>,
+    _values: Record<string, unknown>
   ) => {
     if (!contactId || changes.length === 0) return
 
     const payload = Object.fromEntries(
-      changes.map((change) => [
-        change.fieldSlug,
-        change.newValue === '' ? null : change.newValue,
-      ]),
+      changes.map(change => [change.fieldSlug, change.newValue === '' ? null : change.newValue])
     )
 
     await updateContact.mutateAsync({ contactId, data: payload })
@@ -243,7 +274,7 @@ export function ContactDetail() {
   const contactName =
     contact?.name?.trim() ||
     t('contacts.untitled', {
-      defaultValue: 'Untitled Contact',
+      defaultValue: 'Untitled Contact'
     })
 
   useSetDetailBreadcrumbTitle(contact ? contactName : null)
@@ -260,41 +291,36 @@ export function ContactDetail() {
               <RecordKpiCard
                 label={t('contacts.organization')}
                 value={organizationName ?? '—'}
-                icon={<Building2 className="size-3.5" />}
-              />
+                icon={<Building2 className="size-3.5" />} />
               <RecordKpiCard
                 label={t('contacts.tabs.deals', { defaultValue: 'Deals' })}
                 value={deals.length}
-                icon={<Briefcase className="size-3.5" />}
-              />
+                icon={<Briefcase className="size-3.5" />} />
               <RecordKpiCard
                 label={t('contacts.jobTitle')}
-                value={contact?.job_title || '—'}
-              />
+                value={contact?.job_title || '—'} />
             </div>
 
             <div className="rounded-xl border p-3">
               <div className="mb-2 flex items-center justify-between">
                 <h3 className="text-[13px] font-semibold">
                   {t('contacts.recentActivity', {
-                    defaultValue: 'Recent activity',
+                    defaultValue: 'Recent activity'
                   })}
                 </h3>
                 <button
                   type="button"
                   onClick={() => handleTabChange('activity')}
-                  className="text-xs font-medium text-muted-foreground hover:text-foreground"
-                >
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground">
                   {t('common.viewAll', { defaultValue: 'View all' })}
                 </button>
               </div>
               <RecordActivityPanel
                 activities={activities.slice(0, 2)}
-                isLoading={activitiesLoading}
-              />
+                isLoading={activitiesLoading} />
             </div>
           </div>
-        ),
+        )
       },
       {
         value: 'activity',
@@ -304,9 +330,8 @@ export function ContactDetail() {
           <RecordActivityPanel
             activities={activities}
             isLoading={activitiesLoading}
-            filterable
-          />
-        ),
+            filterable />
+        )
       },
       ...(webphone.enabled
         ? [
@@ -319,16 +344,14 @@ export function ContactDetail() {
                   <div className="flex justify-end">
                     <WebphoneCallButton
                       phone={contact?.mobile}
-                      contactId={contactId}
-                    />
+                      contactId={contactId} />
                   </div>
                   <WebphoneCustomerCalls
                     contactId={contactId}
-                    phone={contact?.mobile ?? undefined}
-                  />
+                    phone={contact?.mobile ?? undefined} />
                 </div>
-              ),
-            } satisfies RecordDetailTab,
+              )
+            } satisfies RecordDetailTab
           ]
         : []),
       {
@@ -339,18 +362,15 @@ export function ContactDetail() {
         bare: true,
         content: (
           <RelatedDealsTable
-            deals={deals as any}
+            deals={deals}
             isLoading={dealsLoading}
             emptyLabel={t('companies.deals.empty')}
-            onOpenDeal={(id) =>
-              navigate({
+            onOpenDeal={id => navigate({
                 to: '/deals/$dealId',
                 params: { dealId: id },
-                search: { tab: 'activity' },
-              })
-            }
-          />
-        ),
+                search: { tab: 'activity' }
+              })} />
+        )
       },
       {
         value: 'emails',
@@ -360,13 +380,12 @@ export function ContactDetail() {
           <RecordTabPlaceholder
             icon={<Mail className="size-5" />}
             title={t('common.notAvailableYet', {
-              defaultValue: 'Not available yet',
+              defaultValue: 'Not available yet'
             })}
             description={t('contacts.emailsComingSoon', {
-              defaultValue: 'Email history will appear here once connected.',
-            })}
-          />
-        ),
+              defaultValue: 'Email history will appear here once connected.'
+            })} />
+        )
       },
       {
         value: 'comments',
@@ -378,24 +397,22 @@ export function ContactDetail() {
             <CommentsPanel
               appSlug="base"
               dataSource="contact"
-              recordId={contactId!}
-            />
+              recordId={contactId!} />
           </div>
-        ),
+        )
       },
       {
         value: 'notes',
         label: t('contacts.tabs.notes', { defaultValue: 'Notes' }),
         icon: <StickyNote className="size-3.5" />,
+        bare: true,
         content: (
-          <RecordTabPlaceholder
-            icon={<StickyNote className="size-5" />}
-            title={t('common.comingSoon', { defaultValue: 'Coming soon' })}
-            description={t('common.notesComingSoon', {
-              defaultValue: 'Notes will be available here soon.',
-            })}
-          />
-        ),
+          <RecordNotesPanel
+            appSlug="base"
+            dataSource="contact"
+            recordId={contactId}
+            recordLabel={contactName} />
+        )
       },
       {
         value: 'tasks',
@@ -404,7 +421,7 @@ export function ContactDetail() {
         bare: true,
         content: (
           <RecordTasksPanel parentField="contact" parentId={contactId} />
-        ),
+        )
       },
       {
         value: 'files',
@@ -416,13 +433,11 @@ export function ContactDetail() {
             <FileAttachments
               appSlug="base"
               dataSource="contact"
-              recordId={contactId!}
-            />
+              recordId={contactId!} />
           </div>
-        ),
-      },
+        )
+      }
     ]
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     t,
     organizationName,
@@ -433,21 +448,21 @@ export function ContactDetail() {
     contact?.job_title,
     contact?.mobile,
     contactId,
-    webphone.enabled,
+    contactName,
+    webphone.enabled
   ])
 
   // Open the webphone call composer pre-filled with this contact's mobile.
-  const openCallComposer = () =>
-    dialer.open({
+  const openCallComposer = () => dialer.open({
       recordLabel: contactName,
       targets: [
         {
           label: contactName,
           sublabel: contact?.job_title || organizationName || undefined,
           number: contact?.mobile,
-          contactId,
-        },
-      ],
+          contactId
+        }
+      ]
     })
 
   const attributeActions = (
@@ -456,8 +471,7 @@ export function ContactDetail() {
         variant="ghost"
         size="sm"
         className="h-7 gap-1.5 text-[13px]"
-        onClick={() => handleTabChange('notes')}
-      >
+        onClick={() => handleTabChange('notes')}>
         <StickyNote className="size-3.5" />
         {t('contacts.actions.note', { defaultValue: 'Note' })}
       </Button>
@@ -467,12 +481,9 @@ export function ContactDetail() {
           size="icon"
           className="size-7"
           disabled={!contact?.email}
-          onClick={() =>
-            contact?.email && window.open(`mailto:${contact.email}`)
-          }
+          onClick={() => contact?.email && window.open(`mailto:${contact.email}`)}
           aria-label={t('contacts.actions.email', { defaultValue: 'Email' })}
-          title={t('contacts.actions.email', { defaultValue: 'Email' })}
-        >
+          title={t('contacts.actions.email', { defaultValue: 'Email' })}>
           <Mail className="size-3.5" />
         </Button>
         <Button
@@ -480,12 +491,9 @@ export function ContactDetail() {
           size="icon"
           className="size-7"
           disabled={!contact?.mobile}
-          onClick={() =>
-            contact?.mobile && window.open(`sms:${contact.mobile}`)
-          }
+          onClick={() => contact?.mobile && window.open(`sms:${contact.mobile}`)}
           aria-label={t('contacts.actions.sms', { defaultValue: 'SMS' })}
-          title={t('contacts.actions.sms', { defaultValue: 'SMS' })}
-        >
+          title={t('contacts.actions.sms', { defaultValue: 'SMS' })}>
           <MessageSquare className="size-3.5" />
         </Button>
         {webphone.enabled && (
@@ -495,8 +503,7 @@ export function ContactDetail() {
             className="size-7 text-emerald-600"
             onClick={openCallComposer}
             aria-label={t('contacts.actions.call', { defaultValue: 'Call' })}
-            title={t('contacts.actions.call', { defaultValue: 'Call' })}
-          >
+            title={t('contacts.actions.call', { defaultValue: 'Call' })}>
             <Phone className="size-3.5" />
           </Button>
         )}
@@ -527,9 +534,8 @@ export function ContactDetail() {
           name: ({ record, save }) => (
             <ContactNameField
               name={record.name as string | undefined}
-              onSave={(name) => save({ name })}
-            />
-          ),
+              onSave={name => save({ name })} />
+          )
         }}
         attributeActions={attributeActions}
         dialerTrigger={
@@ -538,16 +544,14 @@ export function ContactDetail() {
               type="button"
               onClick={openCallComposer}
               aria-label={t('common.callContact')}
-              className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
-            >
+              className="flex size-8 shrink-0 items-center justify-center rounded-md border text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30">
               <Phone className="size-4" />
             </button>
           ) : undefined
         }
         tabs={tabs}
         activeTab={activeTab}
-        onTabChange={handleTabChange}
-      />
+        onTabChange={handleTabChange} />
     </PageContainer>
   )
 }

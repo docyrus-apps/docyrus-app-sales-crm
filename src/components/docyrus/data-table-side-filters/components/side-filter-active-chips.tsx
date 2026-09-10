@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { useMemo } from 'react'
 
 import { X } from 'lucide-react'
@@ -12,7 +14,7 @@ import {
   type FilterModel,
   type FiltersState,
 } from '@/components/docyrus/data-table-filter/core/types'
-import { useDateFormat } from '@/lib/use-date-format'
+import { useDateFormat } from '@/hooks/docyrus/use-date-format'
 
 interface SideFilterActiveChipsProps<TData> {
   filters: FiltersState

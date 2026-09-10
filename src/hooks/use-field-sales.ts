@@ -1,18 +1,21 @@
 import { useMemo } from 'react'
+
+import type { BaseEventEntity } from '@/collections/base-event.collection'
+
 import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useDocyrusClient } from '@docyrus/signin'
 import { createAppConfigClient } from '@docyrus/app-utils'
 import { toast } from 'sonner'
+
 import {
   useBaseCrmPlanApprovalCollection,
-  useBaseEventCollection,
+  useBaseEventCollection
 } from '@/collections'
-import type { BaseEventEntity } from '@/collections/base-event.collection'
 import {
   FIELD_SALES_APP_ID,
   getDateKey,
-  getFieldSalesConfig,
+  getFieldSalesConfig
 } from '@/lib/field-sales'
 
 export function useFieldSalesConfig() {
@@ -24,11 +27,12 @@ export function useFieldSalesConfig() {
     queryFn: async () => {
       const configClient = createAppConfigClient(client!, FIELD_SALES_APP_ID)
       const config = await configClient.get().catch(() => null)
+
       return getFieldSalesConfig(
         (config?.data?.fieldSales as Record<string, unknown> | undefined) ??
-          undefined,
+        undefined
       )
-    },
+    }
   })
 }
 
@@ -43,7 +47,7 @@ export function useUpdateFieldSalesConfig() {
       const current = await configClient.get().catch(() => null)
       const merged = {
         ...(current?.data ?? {}),
-        fieldSales: nextConfig,
+        fieldSales: nextConfig
       }
 
       return configClient.upsert({ data: merged })
@@ -54,7 +58,7 @@ export function useUpdateFieldSalesConfig() {
     },
     onError: (error: any) => {
       toast.error(error?.message || t('fieldSales.messages.settingsSaveError'))
-    },
+    }
   })
 }
 
@@ -78,7 +82,7 @@ const PLAN_COLUMNS = [
   'description',
   'plan_approval(id,label,approval_status,revision_message)',
   'record_owner(id,firstname,lastname,email)',
-  'created_on',
+  'created_on'
 ] as Array<string>
 
 const APPROVAL_COLUMNS = [
@@ -90,13 +94,13 @@ const APPROVAL_COLUMNS = [
   'revision_message',
   'plan_owner(id,firstname,lastname,email)',
   'approved_by(id,firstname,lastname,email)',
-  'created_on',
+  'created_on'
 ] as Array<string>
 
 type FieldSalesPlanRecord = BaseEventEntity & {
-  status?: BaseEventEntity['plan_status']
-  event_type?: BaseEventEntity['plan_type']
-  weekly_plan?: BaseEventEntity['plan_approval']
+  status?: BaseEventEntity['plan_status'];
+  event_type?: BaseEventEntity['plan_type'];
+  weekly_plan?: BaseEventEntity['plan_approval'];
 }
 
 function isFieldSalesPlanRecord(record: BaseEventEntity) {
@@ -104,13 +108,13 @@ function isFieldSalesPlanRecord(record: BaseEventEntity) {
 }
 
 function mapEventToFieldSalesPlan(
-  record: BaseEventEntity,
+  record: BaseEventEntity
 ): FieldSalesPlanRecord {
   return {
     ...record,
     status: record.plan_status,
     event_type: record.plan_type,
-    weekly_plan: record.plan_approval,
+    weekly_plan: record.plan_approval
   }
 }
 
@@ -151,13 +155,13 @@ export function useFieldSalesPlans() {
       const records = await collection.list({
         columns: PLAN_COLUMNS,
         orderBy: 'start_date ASC',
-        limit: 1000,
+        limit: 1000
       })
 
       return records
-        .filter((record) => isFieldSalesPlanRecord(record))
-        .map((record) => mapEventToFieldSalesPlan(record))
-    },
+        .filter(record => isFieldSalesPlanRecord(record))
+        .map(record => mapEventToFieldSalesPlan(record))
+    }
   })
 }
 
@@ -166,12 +170,11 @@ export function useFieldSalesApprovals() {
 
   return useQuery({
     queryKey: ['field-sales', 'approvals'],
-    queryFn: async () =>
-      collection.list({
+    queryFn: async () => collection.list({
         columns: APPROVAL_COLUMNS,
         orderBy: 'created_on DESC',
-        limit: 200,
-      }),
+        limit: 200
+      })
   })
 }
 
@@ -181,8 +184,7 @@ export function useCreateFieldSalesPlan() {
   const { t } = useTranslation()
 
   return useMutation({
-    mutationFn: async (data: Record<string, unknown>) =>
-      collection.create(mapFieldSalesPlanPayload(data)),
+    mutationFn: async (data: Record<string, unknown>) => collection.create(mapFieldSalesPlanPayload(data)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['field-sales', 'plans'] })
       queryClient.invalidateQueries({ queryKey: ['events'] })
@@ -190,7 +192,7 @@ export function useCreateFieldSalesPlan() {
     },
     onError: (error: any) => {
       toast.error(error?.message || t('fieldSales.messages.planCreationError'))
-    },
+    }
   })
 }
 
@@ -202,10 +204,10 @@ export function useUpdateFieldSalesPlan() {
   return useMutation({
     mutationFn: async ({
       planId,
-      data,
+      data
     }: {
-      planId: string
-      data: Record<string, unknown>
+      planId: string;
+      data: Record<string, unknown>;
     }) => collection.update(planId, mapFieldSalesPlanPayload(data)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['field-sales', 'plans'] })
@@ -215,7 +217,7 @@ export function useUpdateFieldSalesPlan() {
     },
     onError: (error: any) => {
       toast.error(error?.message || t('fieldSales.messages.planUpdateError'))
-    },
+    }
   })
 }
 
@@ -234,7 +236,7 @@ export function useDeleteFieldSalesPlan() {
     },
     onError: (error: any) => {
       toast.error(error?.message || t('fieldSales.messages.planDeletionError'))
-    },
+    }
   })
 }
 
@@ -244,15 +246,16 @@ export function useCreateFieldSalesApproval() {
   const { t } = useTranslation()
 
   return useMutation({
-    mutationFn: async (data: Record<string, unknown>) =>
-      collection.create(data),
+    mutationFn: async (data: Record<string, unknown>) => collection.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['field-sales', 'approvals'] })
       toast.success(t('fieldSales.messages.planSubmittedForApproval'))
     },
     onError: (error: any) => {
-      toast.error(error?.message || t('fieldSales.messages.planSubmissionError'))
-    },
+      toast.error(
+        error?.message || t('fieldSales.messages.planSubmissionError')
+      )
+    }
   })
 }
 
@@ -264,10 +267,10 @@ export function useUpdateFieldSalesApproval() {
   return useMutation({
     mutationFn: async ({
       approvalId,
-      data,
+      data
     }: {
-      approvalId: string
-      data: Record<string, unknown>
+      approvalId: string;
+      data: Record<string, unknown>;
     }) => collection.update(approvalId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['field-sales', 'approvals'] })
@@ -275,8 +278,10 @@ export function useUpdateFieldSalesApproval() {
       toast.success(t('fieldSales.messages.approvalUpdated'))
     },
     onError: (error: any) => {
-      toast.error(error?.message || t('fieldSales.messages.approvalUpdateError'))
-    },
+      toast.error(
+        error?.message || t('fieldSales.messages.approvalUpdateError')
+      )
+    }
   })
 }
 
@@ -284,7 +289,7 @@ export function useFieldSalesCurrentApproval(
   approvals: Array<any>,
   ownerId: string | undefined,
   startDate: string,
-  endDate: string,
+  endDate: string
 ) {
   return useMemo(() => {
     const startKey = startDate ? getDateKey(startDate) : ''
@@ -310,5 +315,10 @@ export function useFieldSalesCurrentApproval(
         )
       }) ?? null
     )
-  }, [approvals, ownerId, startDate, endDate])
+  }, [
+approvals,
+ownerId,
+startDate,
+endDate
+])
 }

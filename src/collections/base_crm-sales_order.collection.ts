@@ -40,6 +40,12 @@ export interface BaseCrmSalesOrderEntity {
 
   /** Grand Total */
   grand_total?: number
+
+  /** Quote Template ID */
+  quote_template_id?: string
+
+  /** Quote Document JSON */
+  quote_doc_json?: Record<string, any>
 }
 
 export function useBaseCrmSalesOrderCollection() {

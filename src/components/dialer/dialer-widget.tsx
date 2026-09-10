@@ -1,11 +1,11 @@
 import {
+  type ReactNode,
   createContext,
   use,
   useCallback,
   useEffect,
   useMemo,
-  useState,
-  type ReactNode,
+  useState
 } from 'react'
 
 import { PanelRightClose, Phone, TriangleAlert } from 'lucide-react'
@@ -23,29 +23,29 @@ import { useWebphone } from '@/components/webphone/webphone-context'
  */
 export interface DialTarget {
   /** Display name (contact / person / company line) */
-  label: string
+  label: string;
   /** Optional secondary line (job title, "Main line", relation) */
-  sublabel?: string
+  sublabel?: string;
   /** Number to dial — targets without one are shown disabled. */
-  number?: string | null
-  contactId?: string
-  leadId?: string
+  number?: string | null;
+  contactId?: string;
+  leadId?: string;
 }
 
 export interface DialerPayload {
   /** Title shown at the top of the composer (the record's name). */
-  recordLabel?: string
-  avatarUrl?: string
+  recordLabel?: string;
+  avatarUrl?: string;
   /** One or more numbers the user can place the call to. */
-  targets: Array<DialTarget>
+  targets: Array<DialTarget>;
 }
 
 interface DialerContextValue {
-  isOpen: boolean
-  payload: DialerPayload | null
+  isOpen: boolean;
+  payload: DialerPayload | null;
   /** Open the side composer pre-filled with the record's call target(s). */
-  open: (payload: DialerPayload) => void
-  close: () => void
+  open: (payload: DialerPayload) => void;
+  close: () => void;
 }
 
 const DialerContext = createContext<DialerContextValue | null>(null)
@@ -70,13 +70,25 @@ export function DialerProvider({ children }: { children: ReactNode }) {
     setIsOpen(true)
   }, [])
 
-  // Keep the payload after closing so the slide-out exit animation still has
-  // content to render; it's replaced on the next open().
+  /*
+   * Keep the payload after closing so the slide-out exit animation still has
+   * content to render; it's replaced on the next open().
+   */
   const close = useCallback(() => setIsOpen(false), [])
 
   const value = useMemo<DialerContextValue>(
-    () => ({ isOpen, payload, open, close }),
-    [isOpen, payload, open, close],
+    () => ({
+      isOpen,
+      payload,
+      open,
+      close
+    }),
+    [
+isOpen,
+payload,
+open,
+close
+]
   )
 
   return <DialerContext value={value}>{children}</DialerContext>
@@ -90,7 +102,7 @@ function getInitials(name?: string): string {
     .split(' ')
     .filter(Boolean)
     .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
+    .map(part => part[0]?.toUpperCase() ?? '')
     .join('')
 }
 
@@ -117,6 +129,7 @@ export function DialerPanel() {
   const dialable = useMemo(() => targets.filter(hasNumber), [targets])
 
   const [selected, setSelected] = useState(0)
+
   // Reset the selection whenever a new record is loaded into the composer.
   useEffect(() => {
     setSelected(0)
@@ -132,10 +145,11 @@ export function DialerPanel() {
 
   const startCall = () => {
     const number = current?.number?.trim()
+
     if (!canStart || !number) return
     void dial(number, {
       contactId: current?.contactId,
-      leadId: current?.leadId,
+      leadId: current?.leadId
     })
     close()
   }
@@ -146,8 +160,7 @@ export function DialerPanel() {
         type="button"
         onClick={close}
         aria-label={t('common.close', { defaultValue: 'Close' })}
-        className="absolute right-2 top-2 z-10 flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-      >
+        className="absolute right-2 top-2 z-10 flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
         <PanelRightClose className="size-4" />
       </button>
 
@@ -157,8 +170,7 @@ export function DialerPanel() {
           <img
             src={payload.avatarUrl}
             alt={recordLabel ?? ''}
-            className="size-16 rounded-full object-cover"
-          />
+            className="size-16 rounded-full object-cover" />
         ) : (
           <div className="flex size-16 items-center justify-center rounded-full bg-muted text-xl font-semibold text-foreground/70">
             {getInitials(recordLabel)}
@@ -199,17 +211,15 @@ export function DialerPanel() {
                     'flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left transition-colors hover:bg-muted/60',
                     index === selected
                       ? 'border-emerald-500/50 bg-emerald-500/5'
-                      : 'border-border',
-                  )}
-                >
+                      : 'border-border'
+                  )}>
                   <span
                     className={cn(
                       'flex size-4 shrink-0 items-center justify-center rounded-full border',
                       index === selected
                         ? 'border-emerald-500'
-                        : 'border-muted-foreground/40',
-                    )}
-                  >
+                        : 'border-muted-foreground/40'
+                    )}>
                     {index === selected && (
                       <span className="size-2 rounded-full bg-emerald-500" />
                     )}
@@ -248,8 +258,7 @@ export function DialerPanel() {
           type="button"
           onClick={startCall}
           disabled={!canStart}
-          className="h-12 w-full bg-emerald-600 text-base font-semibold text-white hover:bg-emerald-700 disabled:bg-muted disabled:text-muted-foreground"
-        >
+          className="h-12 w-full bg-emerald-600 text-base font-semibold text-white hover:bg-emerald-700 disabled:bg-muted disabled:text-muted-foreground">
           <Phone className="size-5" />
           {t('webphone.dialer.startCall', { defaultValue: 'Start Call' })}
         </Button>
@@ -257,8 +266,7 @@ export function DialerPanel() {
           type="button"
           variant="outline"
           onClick={close}
-          className="h-11 w-full"
-        >
+          className="h-11 w-full">
           {t('common.cancel', { defaultValue: 'Cancel' })}
         </Button>
       </div>

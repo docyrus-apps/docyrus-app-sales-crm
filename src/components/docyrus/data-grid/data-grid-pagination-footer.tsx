@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { useMemo, type ComponentProps } from 'react'
 
 import { type Table } from '@tanstack/react-table'
@@ -20,7 +22,7 @@ import {
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 import { DATA_GRID_PAGE_SIZE_OPTIONS } from './types'
 

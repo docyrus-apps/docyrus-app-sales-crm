@@ -1,26 +1,33 @@
-import { useEnumEntities } from '@/hooks/use-enums'
+import type {
+  LeadConvertStepDetail,
+  LeadConvertStepState
+} from '@/components/leads/lead-convert-utils'
+
 import { useQueryClient } from '@tanstack/react-query'
+
 import { toast } from 'sonner'
+
+import { useEnumEntities } from '@/hooks/use-enums'
+
 import {
   getRelationId,
   getRelationName,
   isLeadConvertedRecord,
-  normalizeConversionKey,
+  normalizeConversionKey
 } from '@/lib/lead-conversion'
 import { optionByName } from '@/components/leads/use-lead-convert-enum-mappings'
 import {
   firstItem,
   getErrorMessage,
   logLeadConvertEvent,
-  unwrapItems,
-  type LeadConvertStepDetail,
-  type LeadConvertStepState,
+  unwrapItems
 } from '@/components/leads/lead-convert-utils'
-import type { LeadConvertPendingChange } from '@/components/leads/lead-convert-change-confirm-dialog'
-import type {
-  LeadConvertConversionMode,
-  LeadConvertExtraFieldsState,
-  LeadConvertForm,
+
+import { type LeadConvertPendingChange } from '@/components/leads/lead-convert-change-confirm-dialog'
+import {
+  type LeadConvertConversionMode,
+  type LeadConvertExtraFieldsState,
+  type LeadConvertForm
 } from '@/components/leads/lead-convert-tabs'
 
 type ConvertTarget = 'company' | 'contact' | 'deal'
@@ -28,16 +35,16 @@ type FieldMeta = { slug?: string }
 type DataSourceMeta = { fields?: Array<FieldMeta> }
 type CurrentUserResponse = { id?: string }
 type LinkedWorkMigrationResult = {
-  attemptedCount: number
-  updatedCount: number
-  failedCount: number
-  warningCount: number
+  attemptedCount: number;
+  updatedCount: number;
+  failedCount: number;
+  warningCount: number;
 }
 
 export type LeadConvertMissingField = {
-  tab: ConvertTarget
-  fieldKey: string
-  label: string
+  tab: ConvertTarget;
+  fieldKey: string;
+  label: string;
 }
 
 type DocyrusClient = any
@@ -45,24 +52,24 @@ type DocyrusDataSourceClient = {
   getBySlug: (
     app: string,
     slug: string,
-    options?: { expand?: string },
-  ) => Promise<DataSourceMeta | null>
+    options?: { expand?: string }
+  ) => Promise<DataSourceMeta | null>;
 }
 type NavigateFn = (args: any) => unknown
 
 function getFieldSlugs(dataSource?: DataSourceMeta | null) {
   return new Set(
-    (dataSource?.fields ?? []).map((field) => field.slug).filter(Boolean),
+    (dataSource?.fields ?? []).map(field => field.slug).filter(Boolean)
   )
 }
 
 function hasAllFields(slugs: Set<string | undefined>, fields: Array<string>) {
-  return fields.every((field) => slugs.has(field))
+  return fields.every(field => slugs.has(field))
 }
 
 function pickDefined(payload: Record<string, unknown>) {
   return Object.fromEntries(
-    Object.entries(payload).filter(([, value]) => value !== undefined),
+    Object.entries(payload).filter(([, value]) => value !== undefined)
   )
 }
 
@@ -79,6 +86,7 @@ function getMultiRelationIds(value: unknown): Array<string> | undefined {
     ) {
       return [item.id]
     }
+
     return []
   })
 
@@ -86,61 +94,61 @@ function getMultiRelationIds(value: unknown): Array<string> | undefined {
 }
 
 export interface UseLeadConvertConversionOptions {
-  client: DocyrusClient | null
-  lead: any
-  t: (key: string, params?: Record<string, unknown>) => string
-  navigate: NavigateFn
-  onClose: () => void
+  client: DocyrusClient | null;
+  lead: any;
+  t: (key: string, params?: Record<string, unknown>) => string;
+  navigate: NavigateFn;
+  onClose: () => void;
 
-  form: LeadConvertForm
-  mode: LeadConvertConversionMode
-  extraFields: LeadConvertExtraFieldsState
-  selectedCompanyId: string | null
-  selectedContactId: string | null
-  duplicatesChecked: boolean
-  changesConfirmed: boolean
-  modeLabels: Record<LeadConvertConversionMode, string>
+  form: LeadConvertForm;
+  mode: LeadConvertConversionMode;
+  extraFields: LeadConvertExtraFieldsState;
+  selectedCompanyId: string | null;
+  selectedContactId: string | null;
+  duplicatesChecked: boolean;
+  changesConfirmed: boolean;
+  modeLabels: Record<LeadConvertConversionMode, string>;
 
-  effectiveCompanyIndustryId: string
-  effectiveCompanySizeId: string
-  effectiveStageId: string
-  effectiveLeadSourceId: string
-  effectiveCustomerTypeId: string
-  mappedDealLeadSourceId: string | undefined
-  mappedCustomerTypeId: string | undefined
+  effectiveCompanyIndustryId: string;
+  effectiveCompanySizeId: string;
+  effectiveStageId: string;
+  effectiveLeadSourceId: string;
+  effectiveCustomerTypeId: string;
+  mappedDealLeadSourceId: string | undefined;
+  mappedCustomerTypeId: string | undefined;
 
-  setIsWorking: (working: boolean) => void
-  setErrorMessage: (message: string | null) => void
-  setStep: (key: string, state: LeadConvertStepState) => void
-  setStepDetail: (key: string, details: Array<LeadConvertStepDetail>) => void
-  addStepDetail: (key: string, detail: LeadConvertStepDetail) => void
-  setPendingChanges: (changes: Array<LeadConvertPendingChange> | null) => void
+  setIsWorking: (working: boolean) => void;
+  setErrorMessage: (message: string | null) => void;
+  setStep: (key: string, state: LeadConvertStepState) => void;
+  setStepDetail: (key: string, details: Array<LeadConvertStepDetail>) => void;
+  addStepDetail: (key: string, detail: LeadConvertStepDetail) => void;
+  setPendingChanges: (changes: Array<LeadConvertPendingChange> | null) => void;
 
   findDuplicates: (args: {
-    form: LeadConvertForm
-    mode: LeadConvertConversionMode
-  }) => Promise<void>
-  findMissingField: () => LeadConvertMissingField | null
-  focusMissingField: (tab: ConvertTarget, fieldKey: string) => void
-  findChangedFromLead: () => Array<LeadConvertPendingChange>
-  scrollProgressIntoView: () => void
+    form: LeadConvertForm;
+    mode: LeadConvertConversionMode;
+  }) => Promise<void>;
+  findMissingField: () => LeadConvertMissingField | null;
+  focusMissingField: (tab: ConvertTarget, fieldKey: string) => void;
+  findChangedFromLead: () => Array<LeadConvertPendingChange>;
+  scrollProgressIntoView: () => void;
 
-  createDataSourceClient: (client: DocyrusClient) => DocyrusDataSourceClient
+  createDataSourceClient: (client: DocyrusClient) => DocyrusDataSourceClient;
 }
 
 export interface UseLeadConvertConversionResult {
-  runConversion: (options?: { skipChangeCheck?: boolean }) => Promise<void>
+  runConversion: (options?: { skipChangeCheck?: boolean }) => Promise<void>;
 }
 
 function detail(
   tone: LeadConvertStepDetail['tone'],
-  label: string,
+  label: string
 ): LeadConvertStepDetail {
   return { tone, label }
 }
 
 export function useLeadConvertConversion(
-  opts: UseLeadConvertConversionOptions,
+  opts: UseLeadConvertConversionOptions
 ): UseLeadConvertConversionResult {
   const {
     client,
@@ -174,129 +182,102 @@ export function useLeadConvertConversion(
     focusMissingField,
     findChangedFromLead,
     scrollProgressIntoView,
-    createDataSourceClient,
+    createDataSourceClient
   } = opts
 
   const queryClient = useQueryClient()
 
   const { data: leadStatusOptions = [] } = useEnumEntities('lead_status', {
     appSlug: 'base_crm',
-    dataSourceSlug: 'leads',
+    dataSourceSlug: 'leads'
   })
   const { data: conversionStateOptions = [] } = useEnumEntities(
     'conversion_state',
     {
       appSlug: 'base_crm',
-      dataSourceSlug: 'leads',
-    },
+      dataSourceSlug: 'leads'
+    }
   )
   const { data: conversionModeOptions = [] } = useEnumEntities(
     'conversion_mode',
     {
       appSlug: 'base_crm',
-      dataSourceSlug: 'leads',
-    },
+      dataSourceSlug: 'leads'
+    }
   )
   const { data: leadFieldLeadSourceOptions = [] } = useEnumEntities(
     'lead_source',
     {
       appSlug: 'base_crm',
-      dataSourceSlug: 'leads',
-    },
+      dataSourceSlug: 'leads'
+    }
   )
   const { data: dealFieldLeadSourceOptions = [] } = useEnumEntities(
     'lead_source',
     {
       appSlug: 'base_crm',
-      dataSourceSlug: 'deal',
-    },
+      dataSourceSlug: 'deal'
+    }
   )
   const { data: leadCompanyIndustryOptions = [] } = useEnumEntities(
     'company_industry',
     {
       appSlug: 'base_crm',
-      dataSourceSlug: 'leads',
-    },
+      dataSourceSlug: 'leads'
+    }
   )
   const { data: organizationIndustryOptions = [] } = useEnumEntities(
     'industry',
     {
       appSlug: 'base',
-      dataSourceSlug: 'organization',
-    },
+      dataSourceSlug: 'organization'
+    }
   )
   const { data: leadCompanySizeOptions = [] } = useEnumEntities(
     'company_size',
     {
       appSlug: 'base_crm',
-      dataSourceSlug: 'leads',
-    },
+      dataSourceSlug: 'leads'
+    }
   )
   const { data: organizationCompanySizeOptions = [] } = useEnumEntities(
     'company_size',
     {
       appSlug: 'base',
-      dataSourceSlug: 'organization',
-    },
+      dataSourceSlug: 'organization'
+    }
   )
 
-  const requireEnumValue = (
+  const optionalEnumValue = (
     options: Array<{ id: string; name: string }>,
-    name: string,
-    label: string,
-  ) => {
-    const id = optionByName(options, name)
-    if (!id) {
-      throw new Error(
-        t('leads.convert.validation.enumOptionMissing', {
-          field: label,
-          value: name,
-        }),
-      )
-    }
+    name: string
+  ) => optionByName(options, name)
 
-    return id
-  }
+  const conversionStateValue = (state: string) => optionalEnumValue(conversionStateOptions, state)
 
-  const conversionStateValue = (state: string) =>
-    requireEnumValue(
-      conversionStateOptions,
-      state,
-      t('leads.convert.field.conversionState', {
-        defaultValue: 'Conversion state',
-      }),
-    )
-
-  const conversionModeValue = (selectedMode: LeadConvertConversionMode) =>
-    requireEnumValue(
-      conversionModeOptions,
-      selectedMode,
-      t('leads.convert.field.conversionMode', {
-        defaultValue: 'Conversion mode',
-      }),
-    )
+  const conversionModeValue = (selectedMode: LeadConvertConversionMode) => optionalEnumValue(conversionModeOptions, selectedMode)
 
   const updateLead = async (data: Record<string, unknown>) => {
     if (!client || !lead?.id) throw new Error(t('leads.failedToLoad'))
     await client.patch(
       `/v1/apps/base_crm/data-sources/leads/items/${lead.id}`,
-      pickDefined(data),
+      pickDefined(data)
     )
   }
 
   const mapEnumBetweenDataSources = (
     sourceId: string,
     sourceOptions: Array<{ id?: string; name?: string }>,
-    targetOptions: Array<{ id?: string; name?: string }>,
+    targetOptions: Array<{ id?: string; name?: string }>
   ) => {
     const sourceName = sourceOptions.find(
-      (option) => option.id === sourceId,
+      option => option.id === sourceId
     )?.name
+
     return sourceName ? optionByName(targetOptions, sourceName) : undefined
   }
 
-  const buildLeadFieldSyncPatch = () =>
-    pickDefined({
+  const buildLeadFieldSyncPatch = () => pickDefined({
       name: selectedContactId === null ? form.contactName : undefined,
       email: selectedContactId === null ? form.contactEmail : undefined,
       phone: selectedContactId === null ? form.contactPhone : undefined,
@@ -333,7 +314,7 @@ export function useLeadConvertConversion(
           ? mapEnumBetweenDataSources(
               form.companyIndustry,
               organizationIndustryOptions,
-              leadCompanyIndustryOptions,
+              leadCompanyIndustryOptions
             )
           : undefined,
       company_size:
@@ -343,18 +324,18 @@ export function useLeadConvertConversion(
           ? mapEnumBetweenDataSources(
               form.companySize,
               organizationCompanySizeOptions,
-              leadCompanySizeOptions,
+              leadCompanySizeOptions
             )
           : undefined,
       lead_source: form.dealLeadSourceId
         ? mapEnumBetweenDataSources(
             form.dealLeadSourceId,
             dealFieldLeadSourceOptions,
-            leadFieldLeadSourceOptions,
+            leadFieldLeadSourceOptions
           )
         : undefined,
       deal_value: form.dealValue ? Number(form.dealValue) : undefined,
-      contact_message: form.notes,
+      contact_message: form.notes
     })
 
   const fetchLatestLeadConversion = async () => {
@@ -369,15 +350,15 @@ export function useLeadConvertConversion(
           'converted_deal(id,name)',
           'conversion_state',
           'conversion_mode',
-          'conversion_error_message',
-        ],
+          'conversion_error_message'
+        ]
       })
       .catch(() => null)
   }
 
   const findExistingRecordFromLead = async (
     endpoint: string,
-    columns: string,
+    columns: string
   ) => {
     if (!client || !lead?.id) return undefined
 
@@ -385,9 +366,9 @@ export function useLeadConvertConversion(
       .get(endpoint, {
         columns,
         filters: {
-          rules: [{ field: 'source_lead', operator: '=', value: lead.id }],
+          rules: [{ field: 'source_lead', operator: '=', value: lead.id }]
         },
-        limit: 1,
+        limit: 1
       })
       .catch(() => [])
 
@@ -397,30 +378,33 @@ export function useLeadConvertConversion(
   const migrateLinkedWork = async ({
     organizationId,
     contactId,
-    dealId,
+    dealId
   }: {
-    organizationId?: string
-    contactId?: string
-    dealId?: string
+    organizationId?: string;
+    contactId?: string;
+    dealId?: string;
   }) => {
     const result: LinkedWorkMigrationResult = {
       attemptedCount: 0,
       updatedCount: 0,
       failedCount: 0,
-      warningCount: 0,
+      warningCount: 0
     }
+
     if (!client || !lead?.id) return result
 
     const dataSources = createDataSourceClient(client)
     const [taskDataSource, eventDataSource] = await Promise.all([
       dataSources.getBySlug('base', 'task', { expand: 'fields' }).catch(() => {
         result.warningCount += 1
+
         return null
       }),
       dataSources.getBySlug('base', 'event', { expand: 'fields' }).catch(() => {
         result.warningCount += 1
+
         return null
-      }),
+      })
     ])
 
     const updates: Array<Promise<unknown>> = []
@@ -432,12 +416,13 @@ export function useLeadConvertConversion(
         .get('/v1/apps/base/data-sources/task/items', {
           columns: 'id',
           filters: {
-            rules: [{ field: 'lead', operator: '=', value: lead.id }],
+            rules: [{ field: 'lead', operator: '=', value: lead.id }]
           },
-          limit: 200,
+          limit: 200
         })
         .catch(() => {
           result.warningCount += 1
+
           return []
         })
       const taskPatch = pickDefined({
@@ -445,7 +430,7 @@ export function useLeadConvertConversion(
           ? organizationId
           : undefined,
         contact: taskFields.has('contact') ? contactId : undefined,
-        deal: taskFields.has('deal') ? dealId : undefined,
+        deal: taskFields.has('deal') ? dealId : undefined
       })
 
       if (Object.keys(taskPatch).length > 0) {
@@ -456,7 +441,7 @@ export function useLeadConvertConversion(
             client
               .patch(
                 `/v1/apps/base/data-sources/task/items/${item.id}`,
-                taskPatch,
+                taskPatch
               )
               .then(
                 () => {
@@ -464,8 +449,8 @@ export function useLeadConvertConversion(
                 },
                 () => {
                   result.failedCount += 1
-                },
-              ),
+                }
+              )
           )
         }
       }
@@ -476,12 +461,13 @@ export function useLeadConvertConversion(
         .get('/v1/apps/base/data-sources/event/items', {
           columns: 'id',
           filters: {
-            rules: [{ field: 'lead', operator: '=', value: lead.id }],
+            rules: [{ field: 'lead', operator: '=', value: lead.id }]
           },
-          limit: 200,
+          limit: 200
         })
         .catch(() => {
           result.warningCount += 1
+
           return []
         })
       const eventPatch = pickDefined({
@@ -489,7 +475,7 @@ export function useLeadConvertConversion(
           ? organizationId
           : undefined,
         contact: eventFields.has('contact') ? contactId : undefined,
-        deal: eventFields.has('deal') ? dealId : undefined,
+        deal: eventFields.has('deal') ? dealId : undefined
       })
 
       if (Object.keys(eventPatch).length > 0) {
@@ -500,7 +486,7 @@ export function useLeadConvertConversion(
             client
               .patch(
                 `/v1/apps/base/data-sources/event/items/${item.id}`,
-                eventPatch,
+                eventPatch
               )
               .then(
                 () => {
@@ -508,8 +494,8 @@ export function useLeadConvertConversion(
                 },
                 () => {
                   result.failedCount += 1
-                },
-              ),
+                }
+              )
           )
         }
       }
@@ -518,6 +504,7 @@ export function useLeadConvertConversion(
     if (updates.length === 0) return result
 
     await Promise.all(updates)
+
     return result
   }
 
@@ -526,57 +513,62 @@ export function useLeadConvertConversion(
 
     const warnMissingField = (missing: LeadConvertMissingField) => {
       const message = t('leads.convert.validation.missingField', {
-        label: missing.label,
+        label: missing.label
       })
+
       setErrorMessage(null)
       setStep('precheck', 'warn')
-      setStepDetail('precheck', [
-        detail('warn', message),
-        detail('info', t('leads.convert.validation.completeHighlightedField')),
-      ])
+      setStepDetail('precheck', [detail('warn', message), detail('info', t('leads.convert.validation.completeHighlightedField'))])
       toast.warning(message)
       focusMissingField(missing.tab, missing.fieldKey)
     }
 
     const missingBeforePrecheck = findMissingField()
+
     if (missingBeforePrecheck) {
       warnMissingField(missingBeforePrecheck)
+
       return
     }
 
     if (!duplicatesChecked) {
       await findDuplicates({ form, mode })
+
       return
     }
 
     const missing = findMissingField()
+
     if (missing) {
       warnMissingField(missing)
+
       return
     }
 
     if (!options?.skipChangeCheck && !changesConfirmed) {
       const changes = findChangedFromLead()
+
       if (changes.length > 0) {
         setPendingChanges(changes)
+
         return
       }
     }
 
     scrollProgressIntoView()
 
-    await new Promise((resolve) => window.setTimeout(resolve, 350))
+    await new Promise(resolve => window.setTimeout(resolve, 350))
 
     setIsWorking(true)
     setErrorMessage(null)
 
     type ConversionStateValues = {
-      organizationId?: string
-      contactId?: string
-      dealId?: string
-      me: CurrentUserResponse | null
-      convertedLeadStatusValue: string
-      linkedWork: LinkedWorkMigrationResult | null
+      organizationId?: string;
+      contactId?: string;
+      dealId?: string;
+      me: CurrentUserResponse | null;
+      convertedLeadStatusValue?: string;
+      linkedWork: LinkedWorkMigrationResult | null;
     }
 
     const state: ConversionStateValues = {
@@ -588,8 +580,8 @@ export function useLeadConvertConversion(
         getRelationId(lead.converted_contact) ?? selectedContactId ?? undefined,
       dealId: getRelationId(lead.converted_deal),
       me: null,
-      convertedLeadStatusValue: '',
-      linkedWork: null,
+      convertedLeadStatusValue: undefined,
+      linkedWork: null
     }
 
     type StepKey =
@@ -601,10 +593,10 @@ export function useLeadConvertConversion(
       | 'lead'
 
     type StepDefinition = {
-      key: StepKey
-      shouldRun: () => boolean
-      onSkip?: () => void
-      run: () => Promise<void>
+      key: StepKey;
+      shouldRun: () => boolean;
+      onSkip?: () => void;
+      run: () => Promise<void>;
     }
 
     let activeStep: StepKey = 'lead'
@@ -615,53 +607,52 @@ export function useLeadConvertConversion(
         shouldRun: () => true,
         run: async () => {
           state.me = await client.get('/v1/users/me').catch(() => null)
-          state.convertedLeadStatusValue = requireEnumValue(
+          state.convertedLeadStatusValue = optionalEnumValue(
             leadStatusOptions,
-            'Converted',
-            t('leads.status', { defaultValue: 'Lead status' }),
+            'Converted'
           )
           await updateLead({
             conversion_state: conversionStateValue('in_progress'),
             conversion_mode: conversionModeValue(mode),
-            conversion_error_message: null,
+            conversion_error_message: null
           })
           addStepDetail(
             'precheck',
             detail(
               'info',
-              t('leads.convert.conversionMode', { mode: modeLabels[mode] }),
-            ),
+              t('leads.convert.conversionMode', { mode: modeLabels[mode] })
+            )
           )
           addStepDetail(
             'precheck',
-            detail('info', t('leads.convert.leadStatus')),
+            detail('info', t('leads.convert.leadStatus'))
           )
           setStep('precheck', 'done')
-        },
+        }
       },
       {
         key: 'organization',
         shouldRun: () => mode === 'company_contact_deal',
         onSkip: () => {
-          setStepDetail('organization', [
-            detail('neutral', t('leads.convert.result.skipped')),
-          ])
+          setStepDetail('organization', [detail('neutral', t('leads.convert.result.skipped'))])
           setStep('organization', 'skipped')
         },
         run: async () => {
           if (!state.organizationId) {
             const existingOrganization = await findExistingRecordFromLead(
               '/v1/apps/base/data-sources/organization/items',
-              'id,name',
+              'id,name'
             )
+
             state.organizationId = existingOrganization?.id
           }
           const isReusedOrg = Boolean(state.organizationId)
+
           if (!state.organizationId) {
             const orgExtras = Object.fromEntries(
               extraFields.company
-                .filter((field) => field.value !== '')
-                .map((field) => [field.slug, field.value]),
+                .filter(field => field.value !== '')
+                .map(field => [field.slug, field.value])
             )
             const organization = await client.post(
               '/v1/apps/base/data-sources/organization/items',
@@ -677,9 +668,10 @@ export function useLeadConvertConversion(
                 country: getRelationId(lead.countries),
                 record_owner: getRelationId(lead.record_owner),
                 source_lead: lead.id,
-                ...orgExtras,
-              },
+                ...orgExtras
+              }
             )
+
             state.organizationId = organization?.id
           }
           await updateLead({ converted_organization: state.organizationId })
@@ -688,42 +680,42 @@ export function useLeadConvertConversion(
               'success',
               isReusedOrg
                 ? t('leads.convert.result.reusedOrganization', {
-                    name: form.companyName,
+                    name: form.companyName
                   })
                 : t('leads.convert.result.newOrganization', {
-                    name: form.companyName,
-                  }),
+                    name: form.companyName
+                  })
             ),
             ...(state.organizationId
               ? [detail('neutral', `ID: ${state.organizationId}`)]
-              : []),
+              : [])
           ])
           setStep('organization', 'done')
-        },
+        }
       },
       {
         key: 'contact',
         shouldRun: () => true,
         onSkip: () => {
-          setStepDetail('contact', [
-            detail('neutral', t('leads.convert.result.skipped')),
-          ])
+          setStepDetail('contact', [detail('neutral', t('leads.convert.result.skipped'))])
           setStep('contact', 'skipped')
         },
         run: async () => {
           if (!state.contactId) {
             const existingContact = await findExistingRecordFromLead(
               '/v1/apps/base/data-sources/contact/items',
-              'id,name',
+              'id,name'
             )
+
             state.contactId = existingContact?.id
           }
           const isReusedContact = Boolean(state.contactId)
+
           if (!state.contactId) {
             const contactExtras = Object.fromEntries(
               extraFields.contact
-                .filter((field) => field.value !== '')
-                .map((field) => [field.slug, field.value]),
+                .filter(field => field.value !== '')
+                .map(field => [field.slug, field.value])
             )
             const contact = await client.post(
               '/v1/apps/base/data-sources/contact/items',
@@ -735,9 +727,10 @@ export function useLeadConvertConversion(
                 organization: state.organizationId,
                 record_owner: getRelationId(lead.record_owner),
                 source_lead: lead.id,
-                ...contactExtras,
-              },
+                ...contactExtras
+              }
             )
+
             state.contactId = contact?.id
           }
           await updateLead({ converted_contact: state.contactId })
@@ -746,18 +739,18 @@ export function useLeadConvertConversion(
               'success',
               isReusedContact
                 ? t('leads.convert.result.reusedContact', {
-                    name: form.contactName,
+                    name: form.contactName
                   })
                 : t('leads.convert.result.newContact', {
-                    name: form.contactName,
-                  }),
+                    name: form.contactName
+                  })
             ),
             ...(state.contactId
               ? [detail('neutral', `ID: ${state.contactId}`)]
-              : []),
+              : [])
           ])
           setStep('contact', 'done')
-        },
+        }
       },
       {
         key: 'deal',
@@ -766,19 +759,21 @@ export function useLeadConvertConversion(
           if (!state.dealId) {
             const existingDeal = await findExistingRecordFromLead(
               '/v1/apps/base_crm/data-sources/deal/items',
-              'id,name,stage(id,name),organization(id,name),source_lead(id,name)',
+              'id,name,stage(id,name),organization(id,name),source_lead(id,name)'
             )
+
             state.dealId = existingDeal?.id
           }
           const isReusedDeal = Boolean(state.dealId)
+
           if (!state.dealId) {
             const leadProductTagIds = getMultiRelationIds(
-              lead?.leads_products_tags,
+              lead?.leads_products_tags
             )
             const dealExtras = Object.fromEntries(
               extraFields.deal
-                .filter((field) => field.value !== '')
-                .map((field) => [field.slug, field.value]),
+                .filter(field => field.value !== '')
+                .map(field => [field.slug, field.value])
             )
             const deal = await client.post(
               '/v1/apps/base_crm/data-sources/deal/items',
@@ -795,9 +790,10 @@ export function useLeadConvertConversion(
                 qualification_notes: form.notes || undefined,
                 source_lead: lead.id,
                 deals_products_tags: leadProductTagIds,
-                ...dealExtras,
-              },
+                ...dealExtras
+              }
             )
+
             state.dealId = deal?.id
           }
           await updateLead({ converted_deal: state.dealId })
@@ -806,30 +802,31 @@ export function useLeadConvertConversion(
               'success',
               isReusedDeal
                 ? t('leads.convert.result.reusedDeal', { name: form.dealName })
-                : t('leads.convert.result.newDeal', { name: form.dealName }),
+                : t('leads.convert.result.newDeal', { name: form.dealName })
             ),
-            detail('info', t('leads.convert.result.stage')),
+            detail('info', t('leads.convert.result.stage'))
           ]
+
           if (mappedDealLeadSourceId)
             dealDetails.push(
-              detail('info', t('leads.convert.result.leadSourceMapped')),
+              detail('info', t('leads.convert.result.leadSourceMapped'))
             )
           if (mappedCustomerTypeId)
             dealDetails.push(
-              detail('info', t('leads.convert.result.customerTypeMapped')),
+              detail('info', t('leads.convert.result.customerTypeMapped'))
             )
           if (form.dealValue)
             dealDetails.push(
               detail(
                 'info',
                 t('leads.convert.result.estimatedValue', {
-                  value: form.dealValue,
-                }),
-              ),
+                  value: form.dealValue
+                })
+              )
             )
           setStepDetail('deal', dealDetails)
           setStep('deal', 'done')
-        },
+        }
       },
       {
         key: 'activity',
@@ -838,24 +835,27 @@ export function useLeadConvertConversion(
           const linkedWorkMigration = await migrateLinkedWork({
             organizationId: state.organizationId,
             contactId: state.contactId,
-            dealId: state.dealId,
+            dealId: state.dealId
           })
+
           state.linkedWork = linkedWorkMigration
           const linkedWorkHasWarning =
             linkedWorkMigration.failedCount > 0 ||
             linkedWorkMigration.warningCount > 0
           const linkedWorkDetails: Array<LeadConvertStepDetail> = []
+
           if (linkedWorkMigration.updatedCount > 0) {
             linkedWorkDetails.push(
-              detail('success', t('leads.convert.result.linkedWorkMoved')),
+              detail('success', t('leads.convert.result.linkedWorkMoved'))
             )
           }
           if (linkedWorkHasWarning) {
             const warning = t('leads.convert.result.linkedWorkWarning', {
               count:
                 linkedWorkMigration.failedCount +
-                linkedWorkMigration.warningCount,
+                linkedWorkMigration.warningCount
             })
+
             linkedWorkDetails.push(detail('warn', warning))
             toast.warning(warning)
             logLeadConvertEvent('warn', 'linked_work_migration_warning', {
@@ -867,12 +867,12 @@ export function useLeadConvertConversion(
               warningCount: linkedWorkMigration.warningCount,
               organizationId: state.organizationId,
               contactId: state.contactId,
-              dealId: state.dealId,
+              dealId: state.dealId
             })
           }
           if (linkedWorkDetails.length === 0) {
             linkedWorkDetails.push(
-              detail('neutral', t('leads.convert.result.noLinkedWork')),
+              detail('neutral', t('leads.convert.result.noLinkedWork'))
             )
           }
           setStepDetail('activity', linkedWorkDetails)
@@ -882,9 +882,9 @@ export function useLeadConvertConversion(
               ? 'warn'
               : linkedWorkMigration.updatedCount > 0
                 ? 'done'
-                : 'skipped',
+                : 'skipped'
           )
-        },
+        }
       },
       {
         key: 'lead',
@@ -900,49 +900,48 @@ export function useLeadConvertConversion(
             converted_by: state.me?.id,
             conversion_state: conversionStateValue('completed'),
             conversion_mode: conversionModeValue(mode),
-            conversion_error_message: null,
+            conversion_error_message: null
           })
           setStepDetail('lead', [
             detail('success', t('leads.convert.result.leadStatusConverted')),
             detail(
               'info',
               t('leads.convert.result.completedAt', {
-                date: new Date().toLocaleString(),
-              }),
-            ),
+                date: new Date().toLocaleString()
+              })
+            )
           ])
           setStep('lead', 'done')
-        },
-      },
+        }
+      }
     ]
 
     try {
       const latestLead = await fetchLatestLeadConversion()
       const latestDealId = getRelationId(latestLead?.converted_deal)
       const latestStateName = normalizeConversionKey(
-        getRelationName(latestLead?.conversion_state),
+        getRelationName(latestLead?.conversion_state)
       )
 
       if (latestLead && isLeadConvertedRecord(latestLead)) {
         setStep('lead', 'done')
-        setStepDetail('lead', [
-          detail('info', t('leads.convert.result.alreadyCompleted')),
-        ])
+        setStepDetail('lead', [detail('info', t('leads.convert.result.alreadyCompleted'))])
         toast.info(t('leads.convert.result.alreadyCompleted'))
         onClose()
         if (latestDealId) {
           void navigate({
             to: '/deals/$dealId',
-            params: { dealId: latestDealId },
+            params: { dealId: latestDealId }
           })
         }
+
         return
       }
 
       const latestHasAnyCreated = Boolean(
         getRelationId(latestLead?.converted_organization) ||
         getRelationId(latestLead?.converted_contact) ||
-        latestDealId,
+        latestDealId
       )
 
       if (
@@ -975,7 +974,7 @@ export function useLeadConvertConversion(
         queryClient.invalidateQueries({ queryKey: ['contacts'] }),
         queryClient.invalidateQueries({ queryKey: ['companies'] }),
         queryClient.invalidateQueries({ queryKey: ['tasks'] }),
-        queryClient.invalidateQueries({ queryKey: ['events'] }),
+        queryClient.invalidateQueries({ queryKey: ['events'] })
       ])
 
       logLeadConvertEvent('info', 'conversion_completed', {
@@ -987,12 +986,13 @@ export function useLeadConvertConversion(
         linkedWorkAttemptedCount: state.linkedWork?.attemptedCount ?? 0,
         linkedWorkUpdatedCount: state.linkedWork?.updatedCount ?? 0,
         linkedWorkFailedCount: state.linkedWork?.failedCount ?? 0,
-        linkedWorkWarningCount: state.linkedWork?.warningCount ?? 0,
+        linkedWorkWarningCount: state.linkedWork?.warningCount ?? 0
       })
 
       const successDealId = state.dealId
       const successOrganizationId = state.organizationId
       const successContactId = state.contactId
+
       toast.success(t('leads.convert.successMessage'), {
         description: (
           <div className="mt-2 flex flex-wrap gap-1.5">
@@ -1000,13 +1000,10 @@ export function useLeadConvertConversion(
               <button
                 type="button"
                 className="rounded border bg-background px-2 py-1 text-[11px] font-medium text-foreground shadow-sm hover:bg-accent"
-                onClick={() =>
-                  void navigate({
+                onClick={() => void navigate({
                     to: '/deals/$dealId',
-                    params: { dealId: successDealId },
-                  })
-                }
-              >
+                    params: { dealId: successDealId }
+                  })}>
                 {t('leads.convert.successAction.openDeal')}
               </button>
             ) : null}
@@ -1014,13 +1011,10 @@ export function useLeadConvertConversion(
               <button
                 type="button"
                 className="rounded border bg-background px-2 py-1 text-[11px] font-medium text-foreground shadow-sm hover:bg-accent"
-                onClick={() =>
-                  void navigate({
+                onClick={() => void navigate({
                     to: '/companies/$companyId',
-                    params: { companyId: successOrganizationId },
-                  })
-                }
-              >
+                    params: { companyId: successOrganizationId }
+                  })}>
                 {t('leads.convert.successAction.openCompany')}
               </button>
             ) : null}
@@ -1028,36 +1022,32 @@ export function useLeadConvertConversion(
               <button
                 type="button"
                 className="rounded border bg-background px-2 py-1 text-[11px] font-medium text-foreground shadow-sm hover:bg-accent"
-                onClick={() =>
-                  void navigate({
+                onClick={() => void navigate({
                     to: '/contacts/$contactId',
-                    params: { contactId: successContactId },
-                  })
-                }
-              >
+                    params: { contactId: successContactId }
+                  })}>
                 {t('leads.convert.successAction.openContact')}
               </button>
             ) : null}
           </div>
-        ),
+        )
       })
       onClose()
       if (state.dealId) {
         void navigate({
           to: '/deals/$dealId',
-          params: { dealId: state.dealId },
+          params: { dealId: state.dealId }
         })
       }
     } catch (error) {
       const message = getErrorMessage(error, t)
       const partial = Boolean(
-        state.organizationId || state.contactId || state.dealId,
+        state.organizationId || state.contactId || state.dealId
       )
+
       setErrorMessage(message)
       setStep(activeStep, 'failed')
-      setStepDetail(activeStep, [
-        detail('error', t('leads.convert.result.errorPrefix', { message })),
-      ])
+      setStepDetail(activeStep, [detail('error', t('leads.convert.result.errorPrefix', { message }))])
       logLeadConvertEvent('error', 'conversion_failed', {
         leadId: lead?.id,
         mode,
@@ -1066,14 +1056,14 @@ export function useLeadConvertConversion(
         message,
         organizationId: state.organizationId,
         contactId: state.contactId,
-        dealId: state.dealId,
+        dealId: state.dealId
       })
       await updateLead({
         converted_organization: state.organizationId,
         converted_contact: state.contactId,
         converted_deal: state.dealId,
         conversion_state: conversionStateValue(partial ? 'partial' : 'failed'),
-        conversion_error_message: message,
+        conversion_error_message: message
       }).catch(() => undefined)
       toast.error(message)
     } finally {

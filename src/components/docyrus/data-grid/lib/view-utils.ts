@@ -1,11 +1,14 @@
+// @ts-nocheck
+/* eslint-disable */
 import { type Column, type Table } from '@tanstack/react-table'
 
 import {
   DATA_GRID_DEFAULT_PAGE_SIZE,
   type DataGridDisplayMode,
-  type RowHeightValue,
   type SavedDataGridView,
 } from '../types'
+
+import { normalizeRowHeight } from './data-grid'
 
 export function getGeneratedViewId(): string {
   if (
@@ -48,6 +51,7 @@ export function captureViewSnapshot<TData>(
 ): Omit<SavedDataGridView, 'id' | 'name'> {
   const state = table.getState()
   const allLeafColumns = table.getAllLeafColumns()
+  const columnOptions = table.options.meta?.columnOptions
 
   return {
     columnVisibility: { ...state.columnVisibility },
@@ -64,6 +68,10 @@ export function captureViewSnapshot<TData>(
     sorting: [...state.sorting],
     columnFilters: [...state.columnFilters],
     grouping: [...state.grouping],
+    columnOptions:
+      columnOptions && Object.keys(columnOptions).length > 0
+        ? { ...columnOptions }
+        : undefined,
   }
 }
 
@@ -86,7 +94,7 @@ export function applyViewToTable<TData>(
   }
 
   if (view.rowHeight) {
-    table.options.meta?.onRowHeightChange?.(view.rowHeight as RowHeightValue)
+    table.options.meta?.onRowHeightChange?.(normalizeRowHeight(view.rowHeight))
   }
 
   if (view.displayMode) {
@@ -94,6 +102,8 @@ export function applyViewToTable<TData>(
       view.displayMode as DataGridDisplayMode,
     )
   }
+
+  table.options.meta?.onColumnOptionsReset?.(view.columnOptions ?? {})
 
   /*
    * Pagination: only partition rows when the view explicitly enables

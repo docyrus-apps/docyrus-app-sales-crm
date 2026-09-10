@@ -1,13 +1,23 @@
+import { useTranslation } from 'react-i18next'
+import type { ICollectionListParams } from '@/collections/types'
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import type { ICollectionListParams } from '@/collections/types'
+
 import { useBaseOrganizationCollection } from '@/collections'
 import { getApiClient } from '@/lib/api'
+
+interface UseCompaniesOptions {
+  enabled?: boolean;
+}
 
 /**
  * Hook to list companies (organizations) with optional filters
  */
-export function useCompanies(params?: ICollectionListParams) {
+export function useCompanies(
+  params?: ICollectionListParams,
+  options: UseCompaniesOptions = {}
+) {
   const organizationCollection = useBaseOrganizationCollection()
 
   return useQuery({
@@ -28,12 +38,14 @@ export function useCompanies(params?: ICollectionListParams) {
           'type',
           'address',
           'tax_number',
-          'created_on',
+          'created_on'
         ],
-        orderBy: params?.orderBy || 'created_on DESC',
+        orderBy: params?.orderBy || 'created_on DESC'
       })
+
       return response
     },
+    enabled: options.enabled
   })
 }
 
@@ -67,12 +79,13 @@ export function useCompany(companyId: string | undefined) {
           'tax_number',
           'district',
           'company_logo',
-          'created_on',
-        ],
+          'created_on'
+        ]
       })
+
       return response
     },
-    enabled: !!companyId,
+    enabled: !!companyId
   })
 }
 
@@ -81,12 +94,12 @@ export function useCompany(companyId: string | undefined) {
  * Mirrors the platform's image field value so it round-trips through update.
  */
 export interface CompanyLogoValue {
-  file_name: string
-  file_type: string
-  file_size: number
-  signed_url: string
-  source: string
-  file_data?: unknown
+  file_name: string;
+  file_type: string;
+  file_size: number;
+  signed_url: string;
+  source: string;
+  file_data?: unknown;
 }
 
 /**
@@ -96,25 +109,26 @@ export interface CompanyLogoValue {
  * which is the same shape `company_logo` is read back as.
  */
 export function useUploadCompanyLogo() {
+  const { t } = useTranslation()
   const organizationCollection = useBaseOrganizationCollection()
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async ({
       companyId,
-      file,
+      file
     }: {
-      companyId: string
-      file: File
+      companyId: string;
+      file: File;
     }) => {
       const apiClient = getApiClient()
       const formData = new FormData()
-      formData.append('files', file)
+
+      formData.append('file', file, file.name)
 
       const uploadResponse = await apiClient.post(
         '/v1/apps/base/data-sources/organization/files/upload',
-        formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } },
+        formData
       )
 
       // The endpoint may return the file object directly or wrapped in an array.
@@ -134,7 +148,7 @@ export function useUploadCompanyLogo() {
         file_size: uploaded.file_size ?? file.size,
         signed_url: uploaded.signed_url ?? '',
         source: uploaded.source ?? 'local',
-        file_data: uploaded.file_data ?? null,
+        file_data: uploaded.file_data ?? null
       }
 
       return organizationCollection.update(companyId, { company_logo: logo })
@@ -142,13 +156,19 @@ export function useUploadCompanyLogo() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['companies'] })
       queryClient.invalidateQueries({
-        queryKey: ['companies', variables.companyId],
+        queryKey: ['companies', variables.companyId]
       })
-      toast.success('Logo updated')
+      /*
+       * The per-record audit timeline lives under its own query key, so a
+       * successful write left the Activity tab showing stale history until a
+       * full page reload. Refresh it alongside the entity caches.
+       */
+      queryClient.invalidateQueries({ queryKey: ['record-activities'] })
+      toast.success(t('companies.logoUpdatedSuccess'))
     },
     onError: (error: any) => {
-      toast.error(error?.message || 'Failed to upload logo')
-    },
+      toast.error(error?.message || t('companies.logoUploadError'))
+    }
   })
 }
 
@@ -156,21 +176,29 @@ export function useUploadCompanyLogo() {
  * Hook to create a new company
  */
 export function useCreateCompany() {
+  const { t } = useTranslation()
   const organizationCollection = useBaseOrganizationCollection()
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (data: any) => {
       const response = await organizationCollection.create(data)
+
       return response
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['companies'] })
-      toast.success('Company created successfully')
+      /*
+       * The per-record audit timeline lives under its own query key, so a
+       * successful write left the Activity tab showing stale history until a
+       * full page reload. Refresh it alongside the entity caches.
+       */
+      queryClient.invalidateQueries({ queryKey: ['record-activities'] })
+      toast.success(t('companies.createdSuccess'))
     },
     onError: (error: any) => {
-      toast.error(error?.message || 'Failed to create company')
-    },
+      toast.error(error?.message || t('companies.createError'))
+    }
   })
 }
 
@@ -178,30 +206,38 @@ export function useCreateCompany() {
  * Hook to update a company
  */
 export function useUpdateCompany() {
+  const { t } = useTranslation()
   const organizationCollection = useBaseOrganizationCollection()
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async ({
       companyId,
-      data,
+      data
     }: {
-      companyId: string
-      data: any
+      companyId: string;
+      data: any;
     }) => {
       const response = await organizationCollection.update(companyId, data)
+
       return response
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['companies'] })
       queryClient.invalidateQueries({
-        queryKey: ['companies', variables.companyId],
+        queryKey: ['companies', variables.companyId]
       })
-      toast.success('Company updated successfully')
+      /*
+       * The per-record audit timeline lives under its own query key, so a
+       * successful write left the Activity tab showing stale history until a
+       * full page reload. Refresh it alongside the entity caches.
+       */
+      queryClient.invalidateQueries({ queryKey: ['record-activities'] })
+      toast.success(t('companies.updatedSuccess'))
     },
     onError: (error: any) => {
-      toast.error(error?.message || 'Failed to update company')
-    },
+      toast.error(error?.message || t('companies.updateError'))
+    }
   })
 }
 
@@ -209,6 +245,7 @@ export function useUpdateCompany() {
  * Hook to delete a company
  */
 export function useDeleteCompany() {
+  const { t } = useTranslation()
   const organizationCollection = useBaseOrganizationCollection()
   const queryClient = useQueryClient()
 
@@ -218,11 +255,17 @@ export function useDeleteCompany() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['companies'] })
-      toast.success('Company deleted successfully')
+      /*
+       * The per-record audit timeline lives under its own query key, so a
+       * successful write left the Activity tab showing stale history until a
+       * full page reload. Refresh it alongside the entity caches.
+       */
+      queryClient.invalidateQueries({ queryKey: ['record-activities'] })
+      toast.success(t('companies.deletedSuccess'))
     },
     onError: (error: any) => {
-      toast.error(error?.message || 'Failed to delete company')
-    },
+      toast.error(error?.message || t('companies.deleteError'))
+    }
   })
 }
 
@@ -230,6 +273,7 @@ export function useDeleteCompany() {
  * Hook to delete multiple companies
  */
 export function useDeleteCompanies() {
+  const { t } = useTranslation()
   const organizationCollection = useBaseOrganizationCollection()
   const queryClient = useQueryClient()
 
@@ -239,10 +283,16 @@ export function useDeleteCompanies() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['companies'] })
-      toast.success('Companies deleted successfully')
+      /*
+       * The per-record audit timeline lives under its own query key, so a
+       * successful write left the Activity tab showing stale history until a
+       * full page reload. Refresh it alongside the entity caches.
+       */
+      queryClient.invalidateQueries({ queryKey: ['record-activities'] })
+      toast.success(t('companies.bulkDeletedSuccess'))
     },
     onError: (error: any) => {
-      toast.error(error?.message || 'Failed to delete companies')
-    },
+      toast.error(error?.message || t('companies.bulkDeleteError'))
+    }
   })
 }

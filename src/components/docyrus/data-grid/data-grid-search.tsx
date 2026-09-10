@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import {
   memo,
   useCallback,
@@ -16,7 +18,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAsRef } from '@/hooks/use-as-ref'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 import { type SearchState } from './types'
 import { useDebouncedCallback } from './hooks/use-debounced-callback'

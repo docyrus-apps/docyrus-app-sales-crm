@@ -14,13 +14,13 @@ function tokenWithPayload(payload: Record<string, unknown>): string {
 describe('buildImportFileName', () => {
   it('slugifies the base and keeps the extension lowercase', () => {
     expect(buildImportFileName('Lead List 2026.XLSX')).toBe(
-      'lead-list-2026.xlsx',
+      'lead-list-2026.xlsx'
     )
   })
 
   it('strips diacritics so the name survives a storage path', () => {
     expect(buildImportFileName('Müşteri Şirketleri.csv')).toBe(
-      'musteri-sirketleri.csv',
+      'musteri-sirketleri.csv'
     )
   })
 
@@ -41,8 +41,8 @@ describe('isTenantStorageToken', () => {
   it('rejects an OAuth2 API token, which storage cannot authorize', () => {
     expect(
       isTenantStorageToken(
-        tokenWithPayload({ sub: 'user-1', cid: 'client-1', tid: 'tenant-1' }),
-      ),
+        tokenWithPayload({ sub: 'user-1', cid: 'client-1', tid: 'tenant-1' })
+      )
     ).toBe(false)
   })
 

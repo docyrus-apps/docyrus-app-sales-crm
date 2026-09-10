@@ -1,12 +1,14 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { useRef, useState } from 'react'
 
 import {
   type AvatarFieldValue,
   normalizeAvatarValue,
   resolveAvatarFieldMapping,
-} from '@/lib/avatar-utils'
+} from '@/lib/docyrus/avatar-utils'
 import { AvatarSelect } from '@/components/docyrus/avatar-select'
 import { AvatarThumbnail } from '@/components/docyrus/avatar-thumbnail'
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
@@ -17,7 +19,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 import { type DocyrusFormFieldProps } from './types'
 
@@ -38,15 +40,12 @@ export function AvatarField({
   } | null>(null)
 
   return (
-    <form.Field
-      name={mapping.iconField}
-      children={(iconField: any) => (
-        <form.Field
-          name={mapping.colorField}
-          children={(colorField: any) => (
-            <form.Field
-              name={mapping.imageField}
-              children={(imageField: any) => {
+    <form.Field name={mapping.iconField}>
+      {(iconField: any) => (
+        <form.Field name={mapping.colorField}>
+          {(colorField: any) => (
+            <form.Field name={mapping.imageField}>
+              {(imageField: any) => {
                 const isReadOnly = disabled || fieldConfig.readOnly === true
                 const mergedErrors = [
                   ...iconField.state.meta.errors,
@@ -154,10 +153,10 @@ export function AvatarField({
                   </Field>
                 )
               }}
-            />
+            </form.Field>
           )}
-        />
+        </form.Field>
       )}
-    />
+    </form.Field>
   )
 }

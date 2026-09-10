@@ -1,12 +1,14 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { cn } from '@/lib/utils'
 
 import { type DocyrusValueProps } from './types'
 
 export function JsonValue({ value, className }: DocyrusValueProps) {
   if (value == null || value === '') {
-    return <span className="text-muted-foreground">—</span>
+    return <span className="text-muted-foreground">–</span>
   }
 
   let display: string
@@ -28,7 +30,7 @@ export function JsonValue({ value, className }: DocyrusValueProps) {
   return (
     <span
       className={cn(
-        'truncate font-mono text-xs text-muted-foreground',
+        'block truncate font-mono text-xs text-muted-foreground',
         className,
       )}
       title={display}

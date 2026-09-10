@@ -1,14 +1,15 @@
 import type { ReactNode } from 'react'
+
 import { cn } from '@/lib/utils'
 
 interface PageHeaderProps {
-  title: ReactNode
-  section?: string
-  sectionUrl?: string
-  icon?: ReactNode
-  titleSuffix?: ReactNode
-  actions?: ReactNode
-  className?: string
+  title: ReactNode;
+  section?: string;
+  sectionUrl?: string;
+  icon?: ReactNode;
+  titleSuffix?: ReactNode;
+  actions?: ReactNode;
+  className?: string;
 }
 
 export function PageHeader({
@@ -16,15 +17,14 @@ export function PageHeader({
   icon,
   titleSuffix,
   actions,
-  className,
+  className
 }: PageHeaderProps) {
   return (
     <div
       className={cn(
         'flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between',
-        className,
-      )}
-    >
+        className
+      )}>
       <div className="flex min-w-0 items-start gap-3">
         {icon && (
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">

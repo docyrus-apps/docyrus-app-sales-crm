@@ -8,72 +8,72 @@ const COMPONENT_NAME_LOCAL = '__docyrusComponentAnnotateName'
 const CURRENT_FILE_PATH_LOCAL = '__docyrusComponentAnnotateCurrentFilePath'
 
 interface ComponentInfo {
-  name: string
-  hasRuntimeBindings: boolean
+  name: string;
+  hasRuntimeBindings: boolean;
 }
 
 interface BabelTypes {
-  isAssignmentPattern: (node: any) => boolean
-  isArrowFunctionExpression: (node: any) => boolean
-  isFunctionExpression: (node: any) => boolean
-  isIdentifier: (node: any) => boolean
-  isJSXAttribute: (node: any) => boolean
-  isJSXIdentifier: (node: any) => boolean
-  isJSXMemberExpression: (node: any) => boolean
-  isJSXNamespacedName: (node: any) => boolean
-  isObjectPattern: (node: any) => boolean
-  isRestElement: (node: any) => boolean
-  blockStatement: (body: Array<any>) => any
-  cloneNode: (node: any) => any
-  identifier: (name: string) => any
-  jsxAttribute: (name: any, value: any) => any
-  jsxExpressionContainer: (expression: any) => any
-  jsxIdentifier: (name: string) => any
-  logicalExpression: (operator: '||', left: any, right: any) => any
-  objectPattern: (properties: Array<any>) => any
+  isAssignmentPattern: (node: any) => boolean;
+  isArrowFunctionExpression: (node: any) => boolean;
+  isFunctionExpression: (node: any) => boolean;
+  isIdentifier: (node: any) => boolean;
+  isJSXAttribute: (node: any) => boolean;
+  isJSXIdentifier: (node: any) => boolean;
+  isJSXMemberExpression: (node: any) => boolean;
+  isJSXNamespacedName: (node: any) => boolean;
+  isObjectPattern: (node: any) => boolean;
+  isRestElement: (node: any) => boolean;
+  blockStatement: (body: Array<any>) => any;
+  cloneNode: (node: any) => any;
+  identifier: (name: string) => any;
+  jsxAttribute: (name: any, value: any) => any;
+  jsxExpressionContainer: (expression: any) => any;
+  jsxIdentifier: (name: string) => any;
+  logicalExpression: (operator: '||', left: any, right: any) => any;
+  objectPattern: (properties: Array<any>) => any;
   objectProperty: (
     key: any,
     value: any,
     computed?: boolean,
-    shorthand?: boolean,
-  ) => any
-  returnStatement: (argument: any) => any
-  stringLiteral: (value: string) => any
-  variableDeclaration: (kind: 'const', declarations: Array<any>) => any
-  variableDeclarator: (id: any, init: any) => any
+    shorthand?: boolean
+  ) => any;
+  returnStatement: (argument: any) => any;
+  stringLiteral: (value: string) => any;
+  variableDeclaration: (kind: 'const', declarations: Array<any>) => any;
+  variableDeclarator: (id: any, init: any) => any;
 }
 
 interface PluginObj {
   visitor: {
-    [key: string]: any
-  }
+    [key: string]: any;
+  };
 }
 
 interface BabelPath {
-  node: any
+  node: any;
 }
 
 interface BabelState {
   file: {
     opts: {
-      cwd?: string
-      filename?: string
-    }
-  }
-  relativeFilePath?: string
+      cwd?: string;
+      filename?: string;
+    };
+  };
+  relativeFilePath?: string;
 }
 
 export default function componentAnnotatePlugin({
-  types: t,
+  types: t
 }: {
-  types: BabelTypes
+  types: BabelTypes;
 }): PluginObj {
   const componentStack: Array<ComponentInfo> = []
 
   function getRelativeLocation(
     filePath: string,
     line: number,
-    column: number,
+    column: number
   ): string {
     return `${filePath}:${line}:${column}`
   }
@@ -92,10 +92,9 @@ export default function componentAnnotatePlugin({
 
   function hasAttribute(openingElement: any, attributeName: string): boolean {
     return openingElement.attributes.some(
-      (attribute: any) =>
-        t.isJSXAttribute(attribute) &&
+      (attribute: any) => t.isJSXAttribute(attribute) &&
         t.isJSXIdentifier(attribute.name) &&
-        attribute.name.name === attributeName,
+        attribute.name.name === attributeName
     )
   }
 
@@ -106,7 +105,7 @@ export default function componentAnnotatePlugin({
   function createExpressionAttribute(name: string, expression: any) {
     return t.jsxAttribute(
       t.jsxIdentifier(name),
-      t.jsxExpressionContainer(expression),
+      t.jsxExpressionContainer(expression)
     )
   }
 
@@ -115,31 +114,29 @@ export default function componentAnnotatePlugin({
       t.stringLiteral(attributeName),
       t.identifier(localName),
       false,
-      false,
+      false
     )
   }
 
   function insertBindingIntoPattern(
     pattern: any,
     attributeName: string,
-    localName: string,
+    localName: string
   ) {
     const alreadyBound = pattern.properties.some(
-      (property: any) => getPatternPropertyKeyName(property) === attributeName,
+      (property: any) => getPatternPropertyKeyName(property) === attributeName
     )
 
     if (alreadyBound) return
 
-    const restIndex = pattern.properties.findIndex((property: any) =>
-      t.isRestElement(property),
-    )
+    const restIndex = pattern.properties.findIndex((property: any) => t.isRestElement(property))
 
     const insertIndex = restIndex === -1 ? pattern.properties.length : restIndex
 
     pattern.properties.splice(
       insertIndex,
       0,
-      createBindingProperty(attributeName, localName),
+      createBindingProperty(attributeName, localName)
     )
   }
 
@@ -156,11 +153,11 @@ export default function componentAnnotatePlugin({
           createBindingProperty(COMPONENT_NAME_ATTR, COMPONENT_NAME_LOCAL),
           createBindingProperty(
             CURRENT_FILE_PATH_ATTR,
-            CURRENT_FILE_PATH_LOCAL,
-          ),
+            CURRENT_FILE_PATH_LOCAL
+          )
         ]),
-        t.cloneNode(propsIdentifier),
-      ),
+        t.cloneNode(propsIdentifier)
+      )
     ])
   }
 
@@ -168,10 +165,7 @@ export default function componentAnnotatePlugin({
     const firstParam = functionNode.params[0]
 
     if (!firstParam) {
-      functionNode.params[0] = t.objectPattern([
-        createBindingProperty(COMPONENT_NAME_ATTR, COMPONENT_NAME_LOCAL),
-        createBindingProperty(CURRENT_FILE_PATH_ATTR, CURRENT_FILE_PATH_LOCAL),
-      ])
+      functionNode.params[0] = t.objectPattern([createBindingProperty(COMPONENT_NAME_ATTR, COMPONENT_NAME_LOCAL), createBindingProperty(CURRENT_FILE_PATH_ATTR, CURRENT_FILE_PATH_LOCAL)])
 
       return true
     }
@@ -180,12 +174,12 @@ export default function componentAnnotatePlugin({
       insertBindingIntoPattern(
         firstParam,
         COMPONENT_NAME_ATTR,
-        COMPONENT_NAME_LOCAL,
+        COMPONENT_NAME_LOCAL
       )
       insertBindingIntoPattern(
         firstParam,
         CURRENT_FILE_PATH_ATTR,
-        CURRENT_FILE_PATH_LOCAL,
+        CURRENT_FILE_PATH_LOCAL
       )
 
       return true
@@ -198,12 +192,12 @@ export default function componentAnnotatePlugin({
       insertBindingIntoPattern(
         firstParam.left,
         COMPONENT_NAME_ATTR,
-        COMPONENT_NAME_LOCAL,
+        COMPONENT_NAME_LOCAL
       )
       insertBindingIntoPattern(
         firstParam.left,
         CURRENT_FILE_PATH_ATTR,
-        CURRENT_FILE_PATH_LOCAL,
+        CURRENT_FILE_PATH_LOCAL
       )
 
       return true
@@ -270,7 +264,7 @@ export default function componentAnnotatePlugin({
   function createRuntimeBackedValue(
     localName: string,
     fallbackValue: string,
-    hasRuntimeBindings: boolean,
+    hasRuntimeBindings: boolean
   ) {
     if (!hasRuntimeBindings) {
       return t.stringLiteral(fallbackValue)
@@ -279,21 +273,21 @@ export default function componentAnnotatePlugin({
     return t.logicalExpression(
       '||',
       t.identifier(localName),
-      t.stringLiteral(fallbackValue),
+      t.stringLiteral(fallbackValue)
     )
   }
 
   function annotateIntrinsicElement(
     openingElement: any,
     elementName: string,
-    state: BabelState,
+    state: BabelState
   ) {
     const currentComponent = getCurrentComponent()
     const { loc } = openingElement
     const componentPath = getRelativeLocation(
       state.relativeFilePath || '',
       loc?.start.line || 0,
-      loc?.start.column || 0,
+      loc?.start.column || 0
     )
 
     if (!hasAttribute(openingElement, COMPONENT_NAME_ATTR)) {
@@ -305,15 +299,15 @@ export default function componentAnnotatePlugin({
           createRuntimeBackedValue(
             COMPONENT_NAME_LOCAL,
             fallbackName,
-            Boolean(currentComponent?.hasRuntimeBindings),
-          ),
-        ),
+            Boolean(currentComponent?.hasRuntimeBindings)
+          )
+        )
       )
     }
 
     if (!hasAttribute(openingElement, COMPONENT_PATH_ATTR)) {
       openingElement.attributes.push(
-        createStringAttribute(COMPONENT_PATH_ATTR, componentPath),
+        createStringAttribute(COMPONENT_PATH_ATTR, componentPath)
       )
     }
 
@@ -324,9 +318,9 @@ export default function componentAnnotatePlugin({
           createRuntimeBackedValue(
             CURRENT_FILE_PATH_LOCAL,
             componentPath,
-            Boolean(currentComponent?.hasRuntimeBindings),
-          ),
-        ),
+            Boolean(currentComponent?.hasRuntimeBindings)
+          )
+        )
       )
     }
   }
@@ -334,24 +328,24 @@ export default function componentAnnotatePlugin({
   function annotateComponentUsage(
     openingElement: any,
     elementName: string,
-    state: BabelState,
+    state: BabelState
   ) {
     const { loc } = openingElement
     const currentFilePath = getRelativeLocation(
       state.relativeFilePath || '',
       loc?.start.line || 0,
-      loc?.start.column || 0,
+      loc?.start.column || 0
     )
 
     if (!hasAttribute(openingElement, COMPONENT_NAME_ATTR)) {
       openingElement.attributes.push(
-        createStringAttribute(COMPONENT_NAME_ATTR, elementName),
+        createStringAttribute(COMPONENT_NAME_ATTR, elementName)
       )
     }
 
     if (!hasAttribute(openingElement, CURRENT_FILE_PATH_ATTR)) {
       openingElement.attributes.push(
-        createStringAttribute(CURRENT_FILE_PATH_ATTR, currentFilePath),
+        createStringAttribute(CURRENT_FILE_PATH_ATTR, currentFilePath)
       )
     }
   }
@@ -359,7 +353,7 @@ export default function componentAnnotatePlugin({
   function enterComponent(componentName: string, functionNode: any) {
     componentStack.push({
       name: componentName,
-      hasRuntimeBindings: ensureRuntimeBindings(functionNode),
+      hasRuntimeBindings: ensureRuntimeBindings(functionNode)
     })
   }
 
@@ -384,7 +378,7 @@ export default function componentAnnotatePlugin({
           if (path.node.id && /^[A-Z]/.test(path.node.id.name)) {
             componentStack.pop()
           }
-        },
+        }
       },
 
       VariableDeclarator: {
@@ -407,7 +401,7 @@ export default function componentAnnotatePlugin({
           ) {
             componentStack.pop()
           }
-        },
+        }
       },
 
       JSXOpeningElement(path: BabelPath, state: BabelState) {
@@ -425,7 +419,7 @@ export default function componentAnnotatePlugin({
         }
 
         annotateComponentUsage(openingElement, elementName, state)
-      },
-    },
+      }
+    }
   }
 }

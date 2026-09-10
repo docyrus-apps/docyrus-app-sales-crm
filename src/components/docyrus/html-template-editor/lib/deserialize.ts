@@ -27,13 +27,13 @@
  * re-triggers foster parenting.
  */
 
-const RE_BLOCK_OPEN = /\{\{#(\w+)(?:\s+([^}]*))?\}\}/g;
-const RE_BLOCK_CLOSE = /\{\{\/(\w+)\}\}/g;
-const RE_ELSE = /\{\{else\}\}/g;
-const RE_VARIABLE = /\{\{([^#/!>^{}][^{}]*?)\}\}/;
+const RE_BLOCK_OPEN = /\{\{#(\w+)(?:\s+([^}]*))?\}\}/g
+const RE_BLOCK_CLOSE = /\{\{\/(\w+)\}\}/g
+const RE_ELSE = /\{\{else\}\}/g
+const RE_VARIABLE = /\{\{([^#/!>^{}][^{}]*?)\}\}/
 
-const COMMENT_OPEN_RE = /^HBS-OPEN:(\w+):(.*)$/;
-const COMMENT_CLOSE_RE = /^HBS-CLOSE:(\w+)$/;
+const COMMENT_OPEN_RE = /^HBS-OPEN:(\w+):(.*)$/
+const COMMENT_CLOSE_RE = /^HBS-CLOSE:(\w+)$/
 
 const FORMAT_TAG_TO_MARK: Record<string, string> = {
   strong: 'bold',
@@ -44,18 +44,21 @@ const FORMAT_TAG_TO_MARK: Record<string, string> = {
   s: 'strikethrough',
   strike: 'strikethrough',
   del: 'strikethrough',
-  code: 'code'
-};
+  code: 'code',
+}
 
 function replaceBlockMarkersWithComments(html: string): string {
   return html
-    .replace(RE_BLOCK_OPEN, (_, helper: string, expr = '') => (
-      `<!--HBS-OPEN:${helper}:${encodeURIComponent((expr as string).trim())}-->`
-    ))
-    .replace(RE_BLOCK_CLOSE, (_, helper: string) => (
-      `<!--HBS-CLOSE:${helper}-->`
-    ))
-    .replace(RE_ELSE, '<!--HBS-ELSE-->');
+    .replace(
+      RE_BLOCK_OPEN,
+      (_, helper: string, expr = '') =>
+        `<!--HBS-OPEN:${helper}:${encodeURIComponent((expr as string).trim())}-->`,
+    )
+    .replace(
+      RE_BLOCK_CLOSE,
+      (_, helper: string) => `<!--HBS-CLOSE:${helper}-->`,
+    )
+    .replace(RE_ELSE, '<!--HBS-ELSE-->')
 }
 
 /**
@@ -65,58 +68,65 @@ function replaceBlockMarkersWithComments(html: string): string {
  */
 function spanFromBlockMarkers(html: string): string {
   return html
-    .replace(RE_BLOCK_OPEN, (_, helper: string, expr = '') => (
-      `<span data-hbs="block_open" data-h="${helper}" data-e="${encodeURIComponent((expr as string).trim())}"></span>`
-    ))
-    .replace(RE_BLOCK_CLOSE, (_, helper: string) => (
-      `<span data-hbs="block_close" data-h="${helper}"></span>`
-    ))
-    .replace(RE_ELSE, '<span data-hbs="else"></span>');
+    .replace(
+      RE_BLOCK_OPEN,
+      (_, helper: string, expr = '') =>
+        `<span data-hbs="block_open" data-h="${helper}" data-e="${encodeURIComponent((expr as string).trim())}"></span>`,
+    )
+    .replace(
+      RE_BLOCK_CLOSE,
+      (_, helper: string) =>
+        `<span data-hbs="block_close" data-h="${helper}"></span>`,
+    )
+    .replace(RE_ELSE, '<span data-hbs="else"></span>')
 }
 
 function variableSpan(name: string, marks: Set<string>): string {
   const markAttrs = Array.from(marks)
-    .map(m => ` data-mark-${m}="1"`)
-    .join('');
+    .map((m) => ` data-mark-${m}="1"`)
+    .join('')
 
-  return `<span data-hbs="var" data-n="${encodeURIComponent(name.trim())}"${markAttrs}></span>`;
+  return `<span data-hbs="var" data-n="${encodeURIComponent(name.trim())}"${markAttrs}></span>`
 }
 
-function blockMarkerSpanFromComment(comment: Comment, doc: Document): Element | null {
-  const { data } = comment;
+function blockMarkerSpanFromComment(
+  comment: Comment,
+  doc: Document,
+): Element | null {
+  const { data } = comment
 
-  const openMatch = COMMENT_OPEN_RE.exec(data);
+  const openMatch = COMMENT_OPEN_RE.exec(data)
 
   if (openMatch) {
-    const span = doc.createElement('span');
+    const span = doc.createElement('span')
 
-    span.setAttribute('data-hbs', 'block_open');
-    span.setAttribute('data-h', openMatch[1] ?? '');
-    span.setAttribute('data-e', openMatch[2] ?? '');
+    span.setAttribute('data-hbs', 'block_open')
+    span.setAttribute('data-h', openMatch[1] ?? '')
+    span.setAttribute('data-e', openMatch[2] ?? '')
 
-    return span;
+    return span
   }
 
-  const closeMatch = COMMENT_CLOSE_RE.exec(data);
+  const closeMatch = COMMENT_CLOSE_RE.exec(data)
 
   if (closeMatch) {
-    const span = doc.createElement('span');
+    const span = doc.createElement('span')
 
-    span.setAttribute('data-hbs', 'block_close');
-    span.setAttribute('data-h', closeMatch[1] ?? '');
+    span.setAttribute('data-hbs', 'block_close')
+    span.setAttribute('data-h', closeMatch[1] ?? '')
 
-    return span;
+    return span
   }
 
   if (data === 'HBS-ELSE') {
-    const span = doc.createElement('span');
+    const span = doc.createElement('span')
 
-    span.setAttribute('data-hbs', 'else');
+    span.setAttribute('data-hbs', 'else')
 
-    return span;
+    return span
   }
 
-  return null;
+  return null
 }
 
 /**
@@ -129,16 +139,21 @@ function blockMarkerSpanFromComment(comment: Comment, doc: Document): Element | 
  * serialization (see `serializeChildren` in `serialize.ts`).
  */
 function isInsideTableSection(parent: Node | null): boolean {
-  if (!parent || parent.nodeType !== Node.ELEMENT_NODE) return false;
-  const tag = (parent as Element).tagName?.toLowerCase();
+  if (!parent || parent.nodeType !== Node.ELEMENT_NODE) return false
+  const tag = (parent as Element).tagName?.toLowerCase()
 
-  return tag === 'tbody' || tag === 'thead' || tag === 'tfoot' || tag === 'table';
+  return (
+    tag === 'tbody' || tag === 'thead' || tag === 'tfoot' || tag === 'table'
+  )
 }
 
-function blockMarkerElementFromComment(comment: Comment, doc: Document): Element | null {
-  const span = blockMarkerSpanFromComment(comment, doc);
+function blockMarkerElementFromComment(
+  comment: Comment,
+  doc: Document,
+): Element | null {
+  const span = blockMarkerSpanFromComment(comment, doc)
 
-  if (!span) return null;
+  if (!span) return null
 
   if (isInsideTableSection(comment.parentNode)) {
     /*
@@ -146,10 +161,10 @@ function blockMarkerElementFromComment(comment: Comment, doc: Document): Element
      * inside a table" and re-position it during emit even after slate
      * normalization has hoisted it next to (rather than inside) the table.
      */
-    span.setAttribute('data-hbs-table-anchored', '1');
+    span.setAttribute('data-hbs-table-anchored', '1')
   }
 
-  return span;
+  return span
 }
 
 /**
@@ -161,27 +176,27 @@ function blockMarkerElementFromComment(comment: Comment, doc: Document): Element
  * serializer knows to re-inject them back inside the table on emit.
  */
 function liftTableAnchoredChipsOutOfTables(container: Element): void {
-  const chips = container.querySelectorAll('span[data-hbs-table-anchored="1"]');
+  const chips = container.querySelectorAll('span[data-hbs-table-anchored="1"]')
 
   for (const chip of Array.from(chips)) {
-    let cursor: Element | null = chip.parentElement;
-    let table: Element | null = null;
+    let cursor: Element | null = chip.parentElement
+    let table: Element | null = null
 
     while (cursor) {
       if (cursor.tagName.toLowerCase() === 'table') {
-        table = cursor;
-        break;
+        table = cursor
+        break
       }
-      cursor = cursor.parentElement;
+      cursor = cursor.parentElement
     }
-    if (!table || !table.parentNode) continue;
+    if (!table || !table.parentNode) continue
 
-    const role = chip.getAttribute('data-hbs');
+    const role = chip.getAttribute('data-hbs')
 
     if (role === 'block_open' || role === 'else') {
-      table.parentNode.insertBefore(chip, table);
+      table.parentNode.insertBefore(chip, table)
     } else {
-      table.parentNode.insertBefore(chip, table.nextSibling);
+      table.parentNode.insertBefore(chip, table.nextSibling)
     }
   }
 }
@@ -198,16 +213,16 @@ function liftTableAnchoredChipsOutOfTables(container: Element): void {
  * `<table>`'s direct children).
  */
 function unwrapTableSections(container: Element): void {
-  const sections = container.querySelectorAll('thead, tbody, tfoot');
+  const sections = container.querySelectorAll('thead, tbody, tfoot')
 
   for (const section of Array.from(sections)) {
-    const parent = section.parentNode;
+    const parent = section.parentNode
 
-    if (!parent) continue;
+    if (!parent) continue
     while (section.firstChild) {
-      parent.insertBefore(section.firstChild, section);
+      parent.insertBefore(section.firstChild, section)
     }
-    parent.removeChild(section);
+    parent.removeChild(section)
   }
 }
 
@@ -224,20 +239,22 @@ function unwrapTableSections(container: Element): void {
  * before this cleanup ran.
  */
 function stripTableStructuralWhitespace(container: Element): void {
-  const containers = container.querySelectorAll('table, thead, tbody, tfoot, tr');
+  const containers = container.querySelectorAll(
+    'table, thead, tbody, tfoot, tr',
+  )
 
   for (const el of Array.from(containers)) {
     /*
      * `childNodes` is a live list — snapshot before mutation so the index
      * doesn't shift under us mid-iteration.
      */
-    const children = Array.from(el.childNodes);
+    const children = Array.from(el.childNodes)
 
     for (const child of children) {
-      if (child.nodeType !== Node.TEXT_NODE) continue;
-      const text = child.nodeValue ?? '';
+      if (child.nodeType !== Node.TEXT_NODE) continue
+      const text = child.nodeValue ?? ''
 
-      if (text.trim() === '') el.removeChild(child);
+      if (text.trim() === '') el.removeChild(child)
     }
   }
 }
@@ -250,67 +267,69 @@ function stripTableStructuralWhitespace(container: Element): void {
  * `{{#each}}` / `{{/each}}` were authored — including inside `<tbody>`.
  */
 function replaceHbsCommentsWithSpans(container: Element): void {
-  const doc = container.ownerDocument;
+  const doc = container.ownerDocument
 
-  if (!doc) return;
+  if (!doc) return
 
-  const walker = doc.createTreeWalker(container, NodeFilter.SHOW_COMMENT);
-  const comments: Comment[] = [];
-  let current = walker.nextNode();
+  const walker = doc.createTreeWalker(container, NodeFilter.SHOW_COMMENT)
+  const comments: Comment[] = []
+  let current = walker.nextNode()
 
   while (current) {
-    if ((current as Comment).data.startsWith('HBS-')) comments.push(current as Comment);
-    current = walker.nextNode();
+    if ((current as Comment).data.startsWith('HBS-'))
+      comments.push(current as Comment)
+    current = walker.nextNode()
   }
 
   for (const comment of comments) {
-    const replacement = blockMarkerElementFromComment(comment, doc);
+    const replacement = blockMarkerElementFromComment(comment, doc)
 
-    if (!replacement) continue;
-    comment.parentNode?.replaceChild(replacement, comment);
+    if (!replacement) continue
+    comment.parentNode?.replaceChild(replacement, comment)
   }
 }
 
 function processTextNodeInDom(textNode: Text): void {
-  let value = textNode.nodeValue ?? '';
+  let value = textNode.nodeValue ?? ''
 
-  if (!value.includes('{{')) return;
-  const { ownerDocument } = textNode;
+  if (!value.includes('{{')) return
+  const { ownerDocument } = textNode
 
-  if (!ownerDocument) return;
+  if (!ownerDocument) return
 
-  const marks = new Set<string>();
-  let node: Node | null = textNode.parentNode;
+  const marks = new Set<string>()
+  let node: Node | null = textNode.parentNode
 
   while (node && node.nodeType === Node.ELEMENT_NODE) {
-    const tagName = (node as Element).tagName?.toLowerCase();
+    const tagName = (node as Element).tagName?.toLowerCase()
 
-    if (tagName && tagName in FORMAT_TAG_TO_MARK) marks.add(FORMAT_TAG_TO_MARK[tagName] as string);
-    node = node.parentNode;
+    if (tagName && tagName in FORMAT_TAG_TO_MARK)
+      marks.add(FORMAT_TAG_TO_MARK[tagName] as string)
+    node = node.parentNode
   }
 
-  const fragment = ownerDocument.createDocumentFragment();
-  let match = RE_VARIABLE.exec(value);
+  const fragment = ownerDocument.createDocumentFragment()
+  let match = RE_VARIABLE.exec(value)
 
-  if (!match) return;
+  if (!match) return
 
   while (match) {
-    const before = value.slice(0, match.index);
+    const before = value.slice(0, match.index)
 
-    if (before) fragment.appendChild(ownerDocument.createTextNode(before));
-    const wrapper = ownerDocument.createElement('template');
+    if (before) fragment.appendChild(ownerDocument.createTextNode(before))
+    const wrapper = ownerDocument.createElement('template')
 
-    wrapper.innerHTML = variableSpan(match[1] ?? '', marks);
-    fragment.appendChild(wrapper.content);
-    value = value.slice(match.index + match[0].length);
-    match = RE_VARIABLE.exec(value);
+    wrapper.innerHTML = variableSpan(match[1] ?? '', marks)
+    fragment.appendChild(wrapper.content)
+    value = value.slice(match.index + match[0].length)
+    match = RE_VARIABLE.exec(value)
   }
-  if (value) fragment.appendChild(ownerDocument.createTextNode(value));
-  textNode.parentNode?.replaceChild(fragment, textNode);
+  if (value) fragment.appendChild(ownerDocument.createTextNode(value))
+  textNode.parentNode?.replaceChild(fragment, textNode)
 }
 
 export function preprocessHbsHtml(html: string): string {
-  if (!html || !html.trim()) return '<p></p>';
+  if (!html || !html.trim()) return '<p></p>'
 
   /*
    * Without a DOM (SSR), fall back to inline string replaces — we lose the
@@ -319,24 +338,23 @@ export function preprocessHbsHtml(html: string): string {
    * placeholder.
    */
   if (typeof document === 'undefined' || typeof DOMParser === 'undefined') {
-    return spanFromBlockMarkers(html).replace(
-      RE_VARIABLE,
-      (_, name: string) => variableSpan(name, new Set())
-    );
+    return spanFromBlockMarkers(html).replace(RE_VARIABLE, (_, name: string) =>
+      variableSpan(name, new Set()),
+    )
   }
 
-  const processed = replaceBlockMarkersWithComments(html);
+  const processed = replaceBlockMarkersWithComments(html)
 
-  const container = document.createElement('div');
+  const container = document.createElement('div')
 
-  container.innerHTML = processed;
+  container.innerHTML = processed
 
   /*
    * Comments → spans, done via DOM mutation after parse so foster parenting
    * doesn't displace the resulting `<span>` outside its surrounding table
    * section.
    */
-  replaceHbsCommentsWithSpans(container);
+  replaceHbsCommentsWithSpans(container)
 
   /*
    * Lift table-anchored chips out of `<tbody>` / `<thead>` / `<tfoot>` /
@@ -345,7 +363,7 @@ export function preprocessHbsHtml(html: string): string {
    * table on the way out. Runs BEFORE `unwrapTableSections` so anchoring
    * decisions are made against the original section structure.
    */
-  liftTableAnchoredChipsOutOfTables(container);
+  liftTableAnchoredChipsOutOfTables(container)
 
   /*
    * Unwrap `<thead>` / `<tbody>` / `<tfoot>` so `<tr>` rows become direct
@@ -353,7 +371,7 @@ export function preprocessHbsHtml(html: string): string {
    * the rows — without this the cells render as a single-column collapse
    * (visible as character-by-character vertical wrapping in the editor).
    */
-  unwrapTableSections(container);
+  unwrapTableSections(container)
 
   /*
    * Strip whitespace text nodes inside table structures — they confuse
@@ -362,18 +380,18 @@ export function preprocessHbsHtml(html: string): string {
    * because that step exposes the previously-hidden whitespace inside
    * tbody/thead/tfoot to the immediate `<table>` parent.
    */
-  stripTableStructuralWhitespace(container);
+  stripTableStructuralWhitespace(container)
 
-  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
-  const textNodes: Text[] = [];
-  let current = walker.nextNode();
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT)
+  const textNodes: Text[] = []
+  let current = walker.nextNode()
 
   while (current) {
-    textNodes.push(current as Text);
-    current = walker.nextNode();
+    textNodes.push(current as Text)
+    current = walker.nextNode()
   }
 
-  for (const textNode of textNodes) processTextNodeInDom(textNode);
+  for (const textNode of textNodes) processTextNodeInDom(textNode)
 
-  return container.innerHTML;
+  return container.innerHTML
 }

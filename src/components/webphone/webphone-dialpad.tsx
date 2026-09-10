@@ -1,18 +1,34 @@
 import { useState } from 'react'
+
 import { useQuery } from '@tanstack/react-query'
 import { Delete, Loader2, Phone, User } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+
 import { useWebphone } from './webphone-context'
+
 import { useWebphoneCustomerAdapter } from '@/hooks/use-webphone-customer-adapter'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
+  PopoverTrigger
 } from '@/components/ui/popover'
 
-const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#']
+const KEYS = [
+'1',
+'2',
+'3',
+'4',
+'5',
+'6',
+'7',
+'8',
+'9',
+'*',
+'0',
+'#'
+]
 const SEARCH_MIN_DIGITS = 7
 
 /**
@@ -37,7 +53,7 @@ export function WebphoneDialpad() {
     queryKey: ['webphone', 'dialpad-search', normalized],
     enabled: open && normalized.length >= SEARCH_MIN_DIGITS,
     staleTime: 30_000,
-    queryFn: () => adapter.findByPhone(value),
+    queryFn: () => adapter.findByPhone(value)
   })
   const matches = search.data ?? []
   const showSearch = normalized.length >= SEARCH_MIN_DIGITS
@@ -46,6 +62,7 @@ export function WebphoneDialpad() {
 
   const placeCall = async (phone?: string, contactId?: string) => {
     const target = (phone ?? trimmed).trim()
+
     if (!target || !canDial) return
     await dial(target, contactId ? { contactId } : undefined)
     setOpen(false)
@@ -59,8 +76,7 @@ export function WebphoneDialpad() {
           size="icon"
           variant="ghost"
           className="size-8"
-          aria-label={t('webphone.dialpad.title')}
-        >
+          aria-label={t('webphone.dialpad.title')}>
           <Phone className="size-4" />
         </Button>
       </PopoverTrigger>
@@ -68,23 +84,21 @@ export function WebphoneDialpad() {
         <div className="flex items-center gap-2">
           <Input
             value={value}
-            onChange={(event) => setValue(event.target.value)}
+            onChange={event => setValue(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === 'Enter') void placeCall()
             }}
             placeholder={t('webphone.dialpad.placeholder')}
             inputMode="tel"
             autoFocus
-            className="text-base tabular-nums"
-          />
+            className="text-base tabular-nums" />
           <Button
             size="icon"
             variant="ghost"
             className="size-9 shrink-0"
-            onClick={() => setValue((current) => current.slice(0, -1))}
+            onClick={() => setValue(current => current.slice(0, -1))}
             disabled={!value}
-            aria-label={t('webphone.dialpad.backspace')}
-          >
+            aria-label={t('webphone.dialpad.backspace')}>
             <Delete className="size-4" />
           </Button>
         </div>
@@ -101,14 +115,13 @@ export function WebphoneDialpad() {
                   {t('webphone.dialpad.matches')}
                 </div>
                 <div className="max-h-32 space-y-0.5 overflow-y-auto">
-                  {matches.map((match) => (
+                  {matches.map(match => (
                     <button
                       key={match.id}
                       type="button"
                       disabled={!canDial}
                       onClick={() => void placeCall(match.phone, match.id)}
-                      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent disabled:opacity-50"
-                    >
+                      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent disabled:opacity-50">
                       <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-muted">
                         <User className="size-3 text-muted-foreground" />
                       </span>
@@ -136,13 +149,12 @@ export function WebphoneDialpad() {
         )}
 
         <div className="grid grid-cols-3 gap-1.5">
-          {KEYS.map((key) => (
+          {KEYS.map(key => (
             <Button
               key={key}
               variant="outline"
               className="tabular-nums"
-              onClick={() => setValue((current) => current + key)}
-            >
+              onClick={() => setValue(current => current + key)}>
               {key}
             </Button>
           ))}
@@ -151,8 +163,7 @@ export function WebphoneDialpad() {
         <Button
           className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700"
           disabled={!trimmed || !canDial}
-          onClick={() => void placeCall()}
-        >
+          onClick={() => void placeCall()}>
           <Phone className="size-4" />
           {t('webphone.dialpad.call')}
         </Button>

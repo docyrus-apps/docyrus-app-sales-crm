@@ -10,37 +10,40 @@
  * inherits it.
  */
 
-export const RESULT_PREVIEW_MAX_CHARS = 2000;
-export const INPUT_PREVIEW_MAX_CHARS = 2000;
+export const RESULT_PREVIEW_MAX_CHARS = 2000
+export const INPUT_PREVIEW_MAX_CHARS = 2000
 
 export interface ITruncatedPreview {
-  preview: string;
-  truncated: boolean;
+  preview: string
+  truncated: boolean
 }
 
 export function truncate(value: string, max: number): ITruncatedPreview {
-  if (value.length <= max) return { preview: value, truncated: false };
+  if (value.length <= max) return { preview: value, truncated: false }
 
-  return { preview: `${value.slice(0, max)}…`, truncated: true };
+  return { preview: `${value.slice(0, max)}…`, truncated: true }
 }
 
 export function buildResultPreview(value: unknown): ITruncatedPreview {
-  let serialized: string;
+  let serialized: string
 
   try {
-    serialized = typeof value === 'string' ? value : JSON.stringify(value, null, 2) ?? String(value);
+    serialized =
+      typeof value === 'string'
+        ? value
+        : (JSON.stringify(value, null, 2) ?? String(value))
   } catch {
-    serialized = String(value);
+    serialized = String(value)
   }
 
-  return truncate(serialized, RESULT_PREVIEW_MAX_CHARS);
+  return truncate(serialized, RESULT_PREVIEW_MAX_CHARS)
 }
 
 export function resolveResultType(value: unknown): string {
-  if (value === null) return 'null';
-  if (Array.isArray(value)) return 'array';
+  if (value === null) return 'null'
+  if (Array.isArray(value)) return 'array'
 
-  return typeof value;
+  return typeof value
 }
 
 /**
@@ -48,12 +51,12 @@ export function resolveResultType(value: unknown): string {
  * JSON text. Strings pass through; objects/arrays are pretty-printed.
  */
 export function coerceInputToText(value: unknown): string | null {
-  if (value == null) return null;
-  if (typeof value === 'string') return value;
+  if (value == null) return null
+  if (typeof value === 'string') return value
 
   try {
-    return JSON.stringify(value, null, 2);
+    return JSON.stringify(value, null, 2)
   } catch {
-    return null;
+    return null
   }
 }

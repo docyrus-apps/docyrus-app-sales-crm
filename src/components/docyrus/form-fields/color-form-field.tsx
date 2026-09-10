@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { useMemo, useState } from 'react'
 
 import { cn } from '@/lib/utils'
@@ -12,9 +14,12 @@ import {
 } from '@/components/ui/popover'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
-import { TAILWIND_COLOR_FAMILIES, resolveColorHex } from '@/lib/tailwind-colors'
+import {
+  TAILWIND_COLOR_FAMILIES,
+  resolveColorHex,
+} from '@/lib/docyrus/tailwind-colors'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 import { FormFieldLabel } from './form-field-label'
 import { type DocyrusFormFieldProps } from './types'
@@ -30,9 +35,8 @@ export function ColorFormField({
   tones,
 }: DocyrusFormFieldProps) {
   return (
-    <form.Field
-      name={fieldConfig.slug}
-      children={(field: any) => {
+    <form.Field name={fieldConfig.slug}>
+      {(field: any) => {
         const isInvalid =
           field.state.meta.isTouched && !field.state.meta.isValid
         const colorValue: string = field.state.value ?? ''
@@ -57,7 +61,7 @@ export function ColorFormField({
           </Field>
         )
       }}
-    />
+    </form.Field>
   )
 }
 

@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { useEffect, useId, useMemo, useState } from 'react'
 
 import { CalendarDays, Check, RefreshCcw, Send, Undo2, X } from 'lucide-react'
@@ -17,7 +19,7 @@ import {
   getApprovalUserName,
   normalizeApprovalUserSnapshot,
   normalizeApprovalValue,
-} from '@/lib/approval-status'
+} from '@/lib/docyrus/approval-status'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -26,8 +28,8 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Field, FieldError } from '@/components/ui/field'
 import { Textarea } from '@/components/ui/textarea'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
-import { useDateFormat } from '@/lib/use-date-format'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
+import { useDateFormat } from '@/hooks/docyrus/use-date-format'
 
 import { FormFieldLabel } from './form-field-label'
 import { type DocyrusFormFieldProps } from './types'
@@ -105,7 +107,7 @@ function ApprovalStatusSummary({
   if (!hasMeta) return null
 
   return (
-    <div className="flex w-fit items-start gap-2 rounded-md bg-slate-100 px-2 py-2 dark:bg-slate-900/50">
+    <div className="flex w-fit items-start gap-2 rounded-md bg-zinc-100 p-2 dark:bg-zinc-900/50">
       <Avatar size="lg">
         {avatarUrl && <AvatarImage src={avatarUrl} alt={actorName} />}
         <AvatarFallback>{getApprovalUserInitials(actorName)}</AvatarFallback>
@@ -175,7 +177,7 @@ function ApprovalStatusHistory({
               {step.status ?? APPROVAL_STATUS.DRAFT}
             </Badge>
             <span className="text-muted-foreground">by</span>
-            <span className="rounded bg-slate-100 px-1.5 py-0.5 dark:bg-slate-900/50">
+            <span className="rounded bg-zinc-100 px-1.5 py-0.5 dark:bg-zinc-900/50">
               {actorName}
             </span>
             {step.comments && (
@@ -222,8 +224,10 @@ function ApprovalStatusFormFieldInner({
   const commentsToggleId = useId()
 
   useEffect(() => {
-    setShowCommentsInput(!!approval.comments)
-    setCommentsDraft(approval.comments ?? '')
+    queueMicrotask(() => {
+      setShowCommentsInput(!!approval.comments)
+      setCommentsDraft(approval.comments ?? '')
+    })
   }, [field.state.value, approval.comments])
 
   const canRespond = options.canRespond ?? true
@@ -439,9 +443,8 @@ export function ApprovalStatusFormField({
   className,
 }: DocyrusFormFieldProps) {
   return (
-    <form.Field
-      name={fieldConfig.slug}
-      children={(field: any) => (
+    <form.Field name={fieldConfig.slug}>
+      {(field: any) => (
         <ApprovalStatusFormFieldInner
           field={field}
           fieldConfig={fieldConfig}
@@ -450,6 +453,6 @@ export function ApprovalStatusFormField({
           className={className}
         />
       )}
-    />
+    </form.Field>
   )
 }

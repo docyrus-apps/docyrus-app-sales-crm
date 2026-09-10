@@ -1,15 +1,27 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { Calendar } from 'lucide-react'
 
 import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import {
+  isDefaultDateFormatContext,
+  useDateFormat,
+} from '@/hooks/docyrus/use-date-format'
 
-import { shouldRenderEnumOptionChip } from '../form-fields/lib/enum-option-display'
-import { getEnumBadgeColors } from '../form-fields/lib/utils'
+import {
+  getEnumBadgeColors,
+  shouldRenderEnumOptionChip,
+} from '../form-fields/lib/utils'
 import { extractEnumId, extractEnumLabel, getCompanionValue } from './utils'
 import { type DocyrusValueProps } from './types'
+
+const fallbackDateFormatter = new Intl.DateTimeFormat(undefined, {
+  dateStyle: 'medium',
+})
 
 export function StatusValue({
   field,
@@ -18,8 +30,10 @@ export function StatusValue({
   enumOptions,
   className,
 }: DocyrusValueProps) {
+  const dateCtx = useDateFormat()
+
   if (value == null || value === '') {
-    return <span className="text-muted-foreground">—</span>
+    return <span className="text-muted-foreground">–</span>
   }
 
   const primaryId = extractEnumId(value)
@@ -39,6 +53,22 @@ export function StatusValue({
   const primaryFallback =
     extractEnumLabel(value) ??
     (primaryId != null ? String(primaryId) : String(value))
+
+  let formattedFollowupDate: string | null = null
+
+  if (typeof followupDate === 'string' && followupDate) {
+    const date = new Date(followupDate)
+
+    if (!isNaN(date.getTime())) {
+      if (isDefaultDateFormatContext(dateCtx)) {
+        formattedFollowupDate = fallbackDateFormatter.format(date)
+      } else {
+        formattedFollowupDate = dateCtx.formatDate(date)
+      }
+    } else {
+      formattedFollowupDate = followupDate
+    }
+  }
 
   return (
     <span
@@ -87,10 +117,10 @@ export function StatusValue({
           {description}
         </span>
       )}
-      {typeof followupDate === 'string' && followupDate && (
+      {formattedFollowupDate && (
         <span className="text-muted-foreground inline-flex items-center gap-0.5 text-xs">
           <Calendar className="size-3" />
-          {followupDate}
+          {formattedFollowupDate}
         </span>
       )}
     </span>

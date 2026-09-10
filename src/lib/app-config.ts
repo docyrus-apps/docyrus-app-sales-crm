@@ -12,28 +12,28 @@ export type AppModuleKey = 'fieldSales' | 'webphone'
 
 export interface AppModulesConfig {
   /** Field sales workspace: planning, approvals, calendar, location action. */
-  fieldSales: boolean
+  fieldSales: boolean;
   /** Webphone / call center telephony surface (wired up in a later step). */
-  webphone: boolean
+  webphone: boolean;
 }
 
 export const DEFAULT_APP_MODULES_CONFIG: AppModulesConfig = {
   fieldSales: true,
-  webphone: false,
+  webphone: false
 }
 
 export function getAppModulesConfig(
-  value: Partial<AppModulesConfig> | null | undefined,
+  value: Partial<AppModulesConfig> | null | undefined
 ): AppModulesConfig {
   return {
     ...DEFAULT_APP_MODULES_CONFIG,
-    ...(value ?? {}),
+    ...(value ?? {})
   }
 }
 
 export function isModuleEnabled(
   modules: AppModulesConfig | undefined,
-  key: AppModuleKey,
+  key: AppModuleKey
 ): boolean {
   return modules ? modules[key] : DEFAULT_APP_MODULES_CONFIG[key]
 }

@@ -1,7 +1,8 @@
+import type { RecordActivity } from '@/components/docyrus/record-activity-panel/types'
+
 import { useQuery } from '@tanstack/react-query'
 
 import { getApiClient } from '@/lib/api'
-import type { RecordActivity } from '@/components/docyrus/record-activity-panel/types'
 
 /**
  * Per-record audit history (the change-log timeline) from the item
@@ -13,17 +14,22 @@ import type { RecordActivity } from '@/components/docyrus/record-activity-panel/
 export function useRecordActivities(
   appSlug: string,
   dataSourceSlug: string,
-  recordId: string | undefined,
+  recordId: string | undefined
 ) {
   return useQuery({
-    queryKey: ['record-activities', appSlug, dataSourceSlug, recordId],
+    queryKey: [
+'record-activities',
+appSlug,
+dataSourceSlug,
+recordId
+],
     queryFn: async () => {
       const client = getApiClient()
 
       return client.get<Array<RecordActivity>>(
-        `/v1/apps/${appSlug}/data-sources/${dataSourceSlug}/items/${recordId}/activities`,
+        `/v1/apps/${appSlug}/data-sources/${dataSourceSlug}/items/${recordId}/activities`
       )
     },
-    enabled: !!recordId,
+    enabled: !!recordId
   })
 }

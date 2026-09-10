@@ -1,11 +1,12 @@
 import { useTranslation } from 'react-i18next'
 import { Languages } from 'lucide-react'
+
 import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSub,
   DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
+  DropdownMenuSubTrigger
 } from '@/components/animate-ui/components/radix/dropdown-menu'
 
 const LANGUAGES = [
@@ -19,7 +20,7 @@ const LANGUAGES = [
   { code: 'pt', label: 'Português', flag: '🇵🇹' },
   { code: 'sl', label: 'Slovenščina', flag: '🇸🇮' },
   { code: 'el', label: 'Ελληνικά', flag: '🇬🇷' },
-  { code: 'ar', label: 'العربية', flag: '🇸🇦' },
+  { code: 'ar', label: 'العربية', flag: '🇸🇦' }
 ] as const
 
 export function LanguageSelector() {
@@ -35,9 +36,8 @@ export function LanguageSelector() {
       <DropdownMenuSubContent className="min-w-[180px]">
         <DropdownMenuRadioGroup
           value={currentLng}
-          onValueChange={(lng) => i18n.changeLanguage(lng)}
-        >
-          {LANGUAGES.map((lang) => (
+          onValueChange={lng => i18n.changeLanguage(lng)}>
+          {LANGUAGES.map(lang => (
             <DropdownMenuRadioItem key={lang.code} value={lang.code}>
               <span className="mr-2">{lang.flag}</span>
               {lang.label}

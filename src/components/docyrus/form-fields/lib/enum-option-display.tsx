@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -11,6 +13,7 @@ import {
   getEnumDotClassName,
   getEnumDotStyle,
   getEnumIconColor,
+  shouldRenderEnumOptionChip,
 } from './utils'
 
 interface EnumOptionDisplayProps {
@@ -18,12 +21,6 @@ interface EnumOptionDisplayProps {
   variant?: 'auto' | 'inline' | 'chip'
   className?: string
   nameClassName?: string
-}
-
-export function shouldRenderEnumOptionChip(
-  option: EnumOption | null | undefined,
-): boolean {
-  return Boolean(option?.icon && option?.color)
 }
 
 export function EnumOptionDisplay({

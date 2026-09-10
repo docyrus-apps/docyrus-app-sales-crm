@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import {
   useCallback,
   useEffect,
@@ -51,7 +53,7 @@ import {
 } from '@/components/ui/sortable'
 import { cn } from '@/lib/utils'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 const SORT_SHORTCUT_KEY = 's'
 const REMOVE_SORT_SHORTCUTS = new Set(['backspace', 'delete'])
@@ -434,6 +436,7 @@ function DataTableSortItem({
         </Select>
         <Button
           aria-controls={sortItemId}
+          aria-label={t('ui.dataGrid.removeSortRule', 'Remove sort rule')}
           variant="outline"
           size="icon"
           className="size-8 shrink-0 rounded"
@@ -443,6 +446,7 @@ function DataTableSortItem({
         </Button>
         <SortableItemHandle asChild>
           <Button
+            aria-label={t('ui.dataGrid.reorderSortRule', 'Reorder sort rule')}
             variant="outline"
             size="icon"
             className="size-8 shrink-0 rounded"

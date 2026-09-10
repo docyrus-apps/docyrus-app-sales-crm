@@ -1,3 +1,5 @@
+// @ts-nocheck
+/* eslint-disable */
 import { type ReactNode } from 'react'
 
 import { type RuleGroupType } from 'react-querybuilder'

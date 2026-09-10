@@ -1,40 +1,47 @@
 'use client'
 
 import {
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
   type CSSProperties,
   type ReactNode,
   type RefObject,
+  useCallback,
+  useMemo,
+  useRef,
+  useState
 } from 'react'
 
 import { type RestApiClient } from '@docyrus/api-client'
+
+import type {
+  DocyrusFormFieldProps,
+  EnumOption,
+  IField,
+  IFieldType
+} from '@/components/docyrus/form-fields/types'
+
 import {
   createDataSourceClient,
   type DataSource,
-  type DataSourceField,
+  type DataSourceField
 } from '@docyrus/app-utils'
 import { useMutation, useQuery } from '@tanstack/react-query'
 
 import {
   getCompanionFieldSlug,
-  isReadOnlyField,
+  isReadOnlyField
 } from '@/components/docyrus/form-fields/lib/utils'
 import {
-  type DocyrusFormFieldProps,
-  type EnumOption,
-  type IField,
-  type IFieldType,
-} from '@/components/docyrus/form-fields/types'
-import {
   EditableRecordDetail,
-  EditableRecordDetailField,
-  type FieldChange,
-  type RecordDetailField,
+  EditableRecordDetailField
 } from '@/components/docyrus/editable-record-detail'
-import { type DocyrusValueProps } from '@/components/docyrus/value-renderers/types'
+
+import {
+  type FieldChange,
+  type RecordDetailField
+} from '@/components/docyrus/editable-record-detail'
+
+import type { DocyrusValueProps } from '@/components/docyrus/value-renderers/types'
+
 import { FORM_FIELD_MAP } from '@/hooks/use-docyrus-field-component'
 
 import { cn } from '@/lib/utils'
@@ -52,23 +59,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   DocyrusFormViewMappedFormField,
   DocyrusFormViewMappedValueField,
-  MacroFormField,
+  MacroFormField
 } from '@/hooks/_internal/use-docyrus-form-view-fields'
 
 export interface DocyrusFormViewCollection<TItem extends object> {
   get?: (
     recordId: string,
-    params?: Record<string, unknown>,
-  ) => Promise<TItem | { data: TItem }>
-  create?: (data: Record<string, unknown>) => Promise<unknown>
-  update?: (recordId: string, data: Record<string, unknown>) => Promise<unknown>
+    params?: Record<string, unknown>
+  ) => Promise<TItem | { data: TItem }>;
+  create?: (data: Record<string, unknown>) => Promise<unknown>;
+  update?: (recordId: string, data: Record<string, unknown>) => Promise<unknown>;
 }
 
 export interface DocyrusFormViewGetParams {
-  columns?: string | Array<string>
-  expand?: string | Array<string>
-  expandTypes?: Array<'user' | 'enum' | 'relation'>
-  [key: string]: unknown
+  columns?: string | Array<string>;
+  expand?: string | Array<string>;
+  expandTypes?: Array<'user' | 'enum' | 'relation'>;
+  [key: string]: unknown;
 }
 
 export type DocyrusFormViewMode = 'create' | 'edit' | 'view'
@@ -78,36 +85,36 @@ export type DocyrusFormViewRenderMode = 'form' | 'value'
 export type DocyrusFormViewColSpan = 1 | 2 | 3 | 4 | 'full'
 
 export interface DocyrusFormViewLayoutFieldItem {
-  type: 'field'
-  slug: string
-  colSpan?: DocyrusFormViewColSpan
-  className?: string
+  type: 'field';
+  slug: string;
+  colSpan?: DocyrusFormViewColSpan;
+  className?: string;
 }
 
 interface DocyrusFormViewLayoutSectionBase {
-  id: string
-  variant: 'fieldset' | 'tabpanel' | 'tab'
-  title?: ReactNode
-  description?: ReactNode
-  className?: string
-  contentClassName?: string
-  colSpan?: DocyrusFormViewColSpan
+  id: string;
+  variant: 'fieldset' | 'tabpanel' | 'tab';
+  title?: ReactNode;
+  description?: ReactNode;
+  className?: string;
+  contentClassName?: string;
+  colSpan?: DocyrusFormViewColSpan;
 }
 
 export interface DocyrusFormViewFieldsetSection extends DocyrusFormViewLayoutSectionBase {
-  variant: 'fieldset'
-  items: Array<DocyrusFormViewLayoutItem>
+  variant: 'fieldset';
+  items: Array<DocyrusFormViewLayoutItem>;
 }
 
 export interface DocyrusFormViewTabSection extends DocyrusFormViewLayoutSectionBase {
-  variant: 'tab'
-  items: Array<DocyrusFormViewLayoutItem>
+  variant: 'tab';
+  items: Array<DocyrusFormViewLayoutItem>;
 }
 
 export interface DocyrusFormViewTabPanelSection extends DocyrusFormViewLayoutSectionBase {
-  variant: 'tabpanel'
-  items: Array<DocyrusFormViewTabSection>
-  defaultTabId?: string
+  variant: 'tabpanel';
+  items: Array<DocyrusFormViewTabSection>;
+  defaultTabId?: string;
 }
 
 export type DocyrusFormViewSection =
@@ -121,173 +128,173 @@ export type DocyrusFormViewLayoutItem =
   | DocyrusFormViewSection
 
 export interface DocyrusFormViewFieldLayout {
-  hidden?: boolean | ((values: Record<string, unknown>) => boolean)
-  required?: boolean | ((values: Record<string, unknown>) => boolean)
-  readOnly?: boolean
-  disabled?: boolean
-  colSpan?: DocyrusFormViewColSpan
-  className?: string
-  label?: ReactNode
-  description?: ReactNode
-  fieldProps?: Partial<DocyrusFormFieldProps>
-  valueProps?: Partial<DocyrusValueProps>
+  hidden?: boolean | ((values: Record<string, unknown>) => boolean);
+  required?: boolean | ((values: Record<string, unknown>) => boolean);
+  readOnly?: boolean;
+  disabled?: boolean;
+  colSpan?: DocyrusFormViewColSpan;
+  className?: string;
+  label?: ReactNode;
+  description?: ReactNode;
+  fieldProps?: Partial<DocyrusFormFieldProps>;
+  valueProps?: Partial<DocyrusValueProps>;
 }
 
 export interface DocyrusFormViewRenderFieldOptions {
-  mode?: DocyrusFormViewMode
-  wrapperClassName?: string
-  className?: string
-  label?: ReactNode
-  description?: ReactNode
+  mode?: DocyrusFormViewMode;
+  wrapperClassName?: string;
+  className?: string;
+  label?: ReactNode;
+  description?: ReactNode;
 }
 
 export interface DocyrusFormViewRenderLayoutOptions {
-  mode?: DocyrusFormViewMode
-  columns?: 1 | 2 | 3 | 4
-  className?: string
-  wrapperClassName?: string
-  fieldClassName?: string
+  mode?: DocyrusFormViewMode;
+  columns?: 1 | 2 | 3 | 4;
+  className?: string;
+  wrapperClassName?: string;
+  fieldClassName?: string;
 }
 
 export interface UseDocyrusFormViewOptions<TItem extends object> {
-  client: RestApiClient
-  appSlug: string
-  dataSourceSlug: string
-  itemId?: string
-  mode?: DocyrusFormViewMode
-  item?: Record<string, unknown> | null
-  collection?: DocyrusFormViewCollection<TItem>
-  enabled?: boolean
-  staleTime?: number
-  disabled?: boolean
-  defaultValues?: Record<string, unknown>
-  itemQueryParams?: DocyrusFormViewGetParams
-  fieldSlugs?: Array<string>
-  fieldOrder?: Array<string>
-  hiddenFieldSlugs?: Array<string>
-  fieldLayout?: Record<string, DocyrusFormViewFieldLayout>
-  layout?: Array<DocyrusFormViewLayoutItem>
-  mapField?: (field: DataSourceField, defaultMapped: IField) => IField | null
-  includeReadOnlyFields?: boolean
-  unsupportedFieldBehavior?: 'skip' | 'value'
-  gridColumns?: 1 | 2 | 3 | 4
-  clickToEdit?: boolean
-  resolveUserOptions?: boolean
-  resolveRelationOptions?: boolean
-  optionLimit?: number
-  enumOptions?: Record<string, Array<EnumOption>>
+  client: RestApiClient;
+  appSlug: string;
+  dataSourceSlug: string;
+  itemId?: string;
+  mode?: DocyrusFormViewMode;
+  item?: Record<string, unknown> | null;
+  collection?: DocyrusFormViewCollection<TItem>;
+  enabled?: boolean;
+  staleTime?: number;
+  disabled?: boolean;
+  defaultValues?: Record<string, unknown>;
+  itemQueryParams?: DocyrusFormViewGetParams;
+  fieldSlugs?: Array<string>;
+  fieldOrder?: Array<string>;
+  hiddenFieldSlugs?: Array<string>;
+  fieldLayout?: Record<string, DocyrusFormViewFieldLayout>;
+  layout?: Array<DocyrusFormViewLayoutItem>;
+  mapField?: (field: DataSourceField, defaultMapped: IField) => IField | null;
+  includeReadOnlyFields?: boolean;
+  unsupportedFieldBehavior?: 'skip' | 'value';
+  gridColumns?: 1 | 2 | 3 | 4;
+  clickToEdit?: boolean;
+  resolveUserOptions?: boolean;
+  resolveRelationOptions?: boolean;
+  optionLimit?: number;
+  enumOptions?: Record<string, Array<EnumOption>>;
   transformSubmit?: (
     payload: Record<string, unknown>,
     context: {
-      mode: DocyrusFormViewMode
-      itemId?: string
-      values: Record<string, unknown>
-      fields: Array<DocyrusFormViewField>
-      dataSource?: DataSource
-    },
-  ) => Record<string, unknown>
+      mode: DocyrusFormViewMode;
+      itemId?: string;
+      values: Record<string, unknown>;
+      fields: Array<DocyrusFormViewField>;
+      dataSource?: DataSource;
+    }
+  ) => Record<string, unknown>;
   onSubmit?: (
     payload: Record<string, unknown>,
     context: {
-      mode: DocyrusFormViewMode
-      itemId?: string
-      values: Record<string, unknown>
-      fields: Array<DocyrusFormViewField>
-      dataSource?: DataSource
-    },
-  ) => Promise<unknown> | unknown
-  onSubmitSuccess?: (result: unknown, payload: Record<string, unknown>) => void
-  onSubmitError?: (error: unknown, payload: Record<string, unknown>) => void
+      mode: DocyrusFormViewMode;
+      itemId?: string;
+      values: Record<string, unknown>;
+      fields: Array<DocyrusFormViewField>;
+      dataSource?: DataSource;
+    }
+  ) => Promise<unknown> | unknown;
+  onSubmitSuccess?: (result: unknown, payload: Record<string, unknown>) => void;
+  onSubmitError?: (error: unknown, payload: Record<string, unknown>) => void;
 }
 
 export interface DocyrusFormViewField {
-  slug: string
-  sourceField: DataSourceField
-  field: IField
-  enumOptions: Array<EnumOption>
-  value: unknown
-  required: boolean
-  hidden: boolean
-  readOnly: boolean
-  disabled: boolean
-  editable: boolean
-  renderMode: DocyrusFormViewRenderMode
-  colSpan?: DocyrusFormViewColSpan
-  className?: string
-  label?: ReactNode
-  description?: ReactNode
-  fieldProps?: Partial<DocyrusFormFieldProps>
-  valueProps?: Partial<DocyrusValueProps>
-  queryKeys: Array<string>
-  submitKeys: Array<string>
+  slug: string;
+  sourceField: DataSourceField;
+  field: IField;
+  enumOptions: Array<EnumOption>;
+  value: unknown;
+  required: boolean;
+  hidden: boolean;
+  readOnly: boolean;
+  disabled: boolean;
+  editable: boolean;
+  renderMode: DocyrusFormViewRenderMode;
+  colSpan?: DocyrusFormViewColSpan;
+  className?: string;
+  label?: ReactNode;
+  description?: ReactNode;
+  fieldProps?: Partial<DocyrusFormFieldProps>;
+  valueProps?: Partial<DocyrusValueProps>;
+  queryKeys: Array<string>;
+  submitKeys: Array<string>;
 }
 
 export interface UseDocyrusFormViewResult {
-  mode: DocyrusFormViewMode
-  dataSource: DataSource | undefined
-  item: Record<string, unknown>
+  mode: DocyrusFormViewMode;
+  dataSource: DataSource | undefined;
+  item: Record<string, unknown>;
   form: {
     Field: ({
       name,
-      children,
+      children
     }: {
-      name: string
-      children: (field: any) => ReactNode
-    }) => ReactNode
-  }
-  values: Record<string, unknown>
-  defaultValues: Record<string, unknown>
-  columns: Array<string>
-  fields: Array<DocyrusFormViewField>
-  allFields: Array<DocyrusFormViewField>
-  unsupportedFields: Array<DocyrusFormViewField>
-  validationErrors: Map<string, string>
-  isDirty: boolean
-  isLoading: boolean
-  isSubmitting: boolean
-  error: Error | null
-  setValue: (slug: string, value: unknown) => void
-  reset: () => void
-  submit: () => Promise<unknown>
-  refetch: () => void
+      name: string;
+      children: (field: any) => ReactNode;
+    }) => ReactNode;
+  };
+  values: Record<string, unknown>;
+  defaultValues: Record<string, unknown>;
+  columns: Array<string>;
+  fields: Array<DocyrusFormViewField>;
+  allFields: Array<DocyrusFormViewField>;
+  unsupportedFields: Array<DocyrusFormViewField>;
+  validationErrors: Map<string, string>;
+  isDirty: boolean;
+  isLoading: boolean;
+  isSubmitting: boolean;
+  error: Error | null;
+  setValue: (slug: string, value: unknown) => void;
+  reset: () => void;
+  submit: () => Promise<unknown>;
+  refetch: () => void;
   renderField: (
     slug: string,
-    options?: DocyrusFormViewRenderFieldOptions,
-  ) => ReactNode
-  renderLayout: (options?: DocyrusFormViewRenderLayoutOptions) => ReactNode
+    options?: DocyrusFormViewRenderFieldOptions
+  ) => ReactNode;
+  renderLayout: (options?: DocyrusFormViewRenderLayoutOptions) => ReactNode;
 }
 
 interface RemoteFieldOptionsResult {
-  users: Array<EnumOption>
-  relations: Record<string, Array<EnumOption>>
-  enums: Record<string, Array<EnumOption>>
+  users: Array<EnumOption>;
+  relations: Record<string, Array<EnumOption>>;
+  enums: Record<string, Array<EnumOption>>;
 }
 
 interface ClickToEditFieldConfig {
-  recordField: RecordDetailField
-  readOnly: boolean
-  disabled: boolean
-  submitKeys: Array<string>
-  label?: ReactNode
-  className?: string
+  recordField: RecordDetailField;
+  readOnly: boolean;
+  disabled: boolean;
+  submitKeys: Array<string>;
+  label?: ReactNode;
+  className?: string;
 }
 
 interface SortedClickToEditFieldConfig extends ClickToEditFieldConfig {
-  sortOrder: number
+  sortOrder: number;
 }
 
 interface SubmitMutationContext {
-  mode: DocyrusFormViewMode
-  itemId?: string
-  values: Record<string, unknown>
-  fields: Array<DocyrusFormViewField>
-  dataSource?: DataSource
+  mode: DocyrusFormViewMode;
+  itemId?: string;
+  values: Record<string, unknown>;
+  fields: Array<DocyrusFormViewField>;
+  dataSource?: DataSource;
 }
 
 interface SubmitMutationInput {
-  payload: Record<string, unknown>
-  context: SubmitMutationContext
-  forceUpdate?: boolean
+  payload: Record<string, unknown>;
+  context: SubmitMutationContext;
+  forceUpdate?: boolean;
 }
 
 /*
@@ -298,27 +305,27 @@ interface SubmitMutationInput {
 export interface LocalFormShape {
   Field: ({
     name,
-    children,
+    children
   }: {
-    name: string
-    children: (field: any) => ReactNode
-  }) => ReactNode
+    name: string;
+    children: (field: any) => ReactNode;
+  }) => ReactNode;
 }
 
 interface LocalFormState {
-  form: LocalFormShape
-  valuesRef: RefObject<Record<string, unknown>>
-  baselineRef: RefObject<Record<string, unknown>>
-  validationErrors: Map<string, string>
-  valuesVersion: number
-  setValue: (slug: string, value: unknown) => void
-  reset: () => void
+  form: LocalFormShape;
+  valuesRef: RefObject<Record<string, unknown>>;
+  baselineRef: RefObject<Record<string, unknown>>;
+  validationErrors: Map<string, string>;
+  valuesVersion: number;
+  setValue: (slug: string, value: unknown) => void;
+  reset: () => void;
   replaceValues: (
     nextValues: Record<string, unknown>,
-    updateBaseline?: boolean,
-  ) => void
-  setValidationErrors: (errors: Map<string, string>) => void
-  commit: (nextBaseline?: Record<string, unknown>) => void
+    updateBaseline?: boolean
+  ) => void;
+  setValidationErrors: (errors: Map<string, string>) => void;
+  commit: (nextBaseline?: Record<string, unknown>) => void;
 }
 
 function hasDocyrusFormFieldComponent(fieldType: IFieldType): boolean {
@@ -351,7 +358,7 @@ const TEXTUAL_FIELD_TYPES = new Set<IFieldType>([
   'field-status',
   'field-json',
   'field-docEditor',
-  'field-systemEnum',
+  'field-systemEnum'
 ])
 
 const ENUM_OPTION_FIELD_TYPES = new Set<IFieldType>([
@@ -361,7 +368,7 @@ const ENUM_OPTION_FIELD_TYPES = new Set<IFieldType>([
   'field-systemEnum',
   'field-status',
   'field-multiSelect',
-  'field-tagSelect',
+  'field-tagSelect'
 ])
 
 const LABEL_FIELD_CANDIDATES = [
@@ -375,11 +382,11 @@ const LABEL_FIELD_CANDIDATES = [
   'code',
   'email',
   'label',
-  'slug',
+  'slug'
 ] as const
 
 function useLocalDocyrusForm(
-  initialValues: Record<string, unknown>,
+  initialValues: Record<string, unknown>
 ): LocalFormState {
   const valuesRef = useRef<Record<string, unknown>>({ ...initialValues })
   const baselineRef = useRef<Record<string, unknown>>({ ...initialValues })
@@ -388,7 +395,7 @@ function useLocalDocyrusForm(
   const [valuesVersion, setValuesVersion] = useState(0)
   const initialValuesKey = useMemo(
     () => stableStringify(initialValues),
-    [initialValues],
+    [initialValues]
   )
 
   const onFieldChangeRef = useRef((slug: string, value: unknown) => {
@@ -399,7 +406,7 @@ function useLocalDocyrusForm(
       next.delete(slug)
       validationErrorsRef.current = next
     }
-    setValuesVersion((version) => version + 1)
+    setValuesVersion(version => version + 1)
   })
 
   /*
@@ -413,13 +420,12 @@ function useLocalDocyrusForm(
    * public surface (`<form.Field name="...">{(field) => ...}</form.Field>`).
    */
   const [form] = useState(() => ({
-    // eslint-disable-next-line @eslint-react/component-hook-factories -- stable via useState; see comment above
     Field: ({
       name,
-      children,
+      children
     }: {
-      name: string
-      children: (field: any) => ReactNode
+      name: string;
+      children: (field: any) => ReactNode;
     }) => (
       <MacroFormField
         slug={name}
@@ -427,11 +433,10 @@ function useLocalDocyrusForm(
         resetSignal={resetSignalRef.current}
         onFieldChange={onFieldChangeRef}
         validationErrors={validationErrorsRef}
-        valuesVersion={valuesVersion}
-      >
+        valuesVersion={valuesVersion}>
         {children}
       </MacroFormField>
-    ),
+    )
   }))
 
   const replaceValues = useCallback(
@@ -442,9 +447,9 @@ function useLocalDocyrusForm(
       }
       validationErrorsRef.current = new Map()
       resetSignalRef.current += 1
-      setValuesVersion((version) => version + 1)
+      setValuesVersion(version => version + 1)
     },
-    [],
+    []
   )
 
   /*
@@ -469,12 +474,12 @@ function useLocalDocyrusForm(
       next.delete(slug)
       validationErrorsRef.current = next
     }
-    setValuesVersion((version) => version + 1)
+    setValuesVersion(version => version + 1)
   }, [])
 
   const setValidationErrors = useCallback((errors: Map<string, string>) => {
     validationErrorsRef.current = new Map(errors)
-    setValuesVersion((version) => version + 1)
+    setValuesVersion(version => version + 1)
   }, [])
 
   const reset = useCallback(() => {
@@ -484,7 +489,7 @@ function useLocalDocyrusForm(
   const commit = useCallback((nextBaseline?: Record<string, unknown>) => {
     baselineRef.current = { ...(nextBaseline ?? valuesRef.current) }
     validationErrorsRef.current = new Map()
-    setValuesVersion((version) => version + 1)
+    setValuesVersion(version => version + 1)
   }, [])
 
   return {
@@ -497,7 +502,7 @@ function useLocalDocyrusForm(
     reset,
     replaceValues,
     setValidationErrors,
-    commit,
+    commit
   }
 }
 
@@ -534,7 +539,7 @@ export function useDocyrusFormView<
     transformSubmit,
     onSubmit,
     onSubmitSuccess,
-    onSubmitError,
+    onSubmitError
   } = options
 
   const mode: DocyrusFormViewMode = providedMode ?? (itemId ? 'edit' : 'create')
@@ -544,15 +549,20 @@ export function useDocyrusFormView<
 
   const dataSourcesClient = useMemo(
     () => createDataSourceClient(client),
-    [client],
+    [client]
   )
 
   const dataSourceQuery = useQuery({
-    queryKey: ['docyrus', 'formView', 'dataSource', appSlug, dataSourceSlug],
-    queryFn: () =>
-      dataSourcesClient.getBySlug(appSlug, dataSourceSlug, { expand: 'enums' }),
+    queryKey: [
+'docyrus',
+'formView',
+'dataSource',
+appSlug,
+dataSourceSlug
+],
+    queryFn: () => dataSourcesClient.getBySlug(appSlug, dataSourceSlug, { expand: 'enums' }),
     enabled: enabled && Boolean(appSlug) && Boolean(dataSourceSlug),
-    staleTime,
+    staleTime
   })
 
   const mappedFields = useMemo<
@@ -571,14 +581,13 @@ export function useDocyrusFormView<
         return { sourceField, field: mapped }
       })
       .filter(
-        (entry): entry is { sourceField: DataSourceField; field: IField } =>
-          entry !== null,
+        (entry): entry is { sourceField: DataSourceField; field: IField } => entry !== null
       )
   }, [dataSourceQuery.data?.fields, fieldSlugs, mapField])
 
   const baseColumns = useMemo(
-    () => buildFieldQueryColumns(mappedFields.map((entry) => entry.field)),
-    [mappedFields],
+    () => buildFieldQueryColumns(mappedFields.map(entry => entry.field)),
+    [mappedFields]
   )
   const columns = useMemo(() => {
     const extraColumns = normalizeColumnsInput(itemQueryParams?.columns)
@@ -595,7 +604,7 @@ export function useDocyrusFormView<
       dataSourceSlug,
       itemId,
       columns,
-      itemQueryParams,
+      itemQueryParams
     ],
     queryFn: async () => {
       if (!itemId) return {}
@@ -603,8 +612,8 @@ export function useDocyrusFormView<
         return unwrapRecord(
           await collection.get(itemId, {
             columns,
-            ...itemQueryParams,
-          }),
+            ...itemQueryParams
+          })
         )
       }
 
@@ -612,8 +621,8 @@ export function useDocyrusFormView<
         Record<string, unknown> | { data: Record<string, unknown> }
       >(`/v1/apps/${appSlug}/data-sources/${dataSourceSlug}/items/${itemId}`, {
         ...(itemQueryParams ?? {}),
-        columns: columns.join(', '),
-      } as Parameters<typeof client.get>[1])
+        columns: columns.join(', ')
+      })
 
       return unwrapRecord(response)
     },
@@ -623,33 +632,28 @@ export function useDocyrusFormView<
       !providedItem &&
       Boolean(itemId) &&
       columns.length > 0,
-    staleTime,
+    staleTime
   })
 
   const relationFields = useMemo(
-    () =>
-      mappedFields.filter(
-        ({ field }) =>
-          field.type === 'field-relation' &&
-          !enumOptionsOverrides?.[field.slug],
+    () => mappedFields.filter(
+        ({ field }) => field.type === 'field-relation' &&
+          !enumOptionsOverrides?.[field.slug]
       ),
-    [mappedFields, enumOptionsOverrides],
+    [mappedFields, enumOptionsOverrides]
   )
 
   const userFields = useMemo(
-    () =>
-      mappedFields.filter(
-        ({ field }) =>
-          (field.type === 'field-userSelect' ||
-            field.type === 'field-userMultiSelect') &&
-          !enumOptionsOverrides?.[field.slug],
+    () => mappedFields.filter(
+        ({ field }) => (field.type === 'field-userSelect' ||
+          field.type === 'field-userMultiSelect') &&
+          !enumOptionsOverrides?.[field.slug]
       ),
-    [mappedFields, enumOptionsOverrides],
+    [mappedFields, enumOptionsOverrides]
   )
 
   const enumFields = useMemo(
-    () =>
-      mappedFields.filter(({ field }) => {
+    () => mappedFields.filter(({ field }) => {
         if (!ENUM_OPTION_FIELD_TYPES.has(field.type)) {
           return false
         }
@@ -660,7 +664,7 @@ export function useDocyrusFormView<
 
         return extractStaticEnumOptions(field).length === 0
       }),
-    [mappedFields, enumOptionsOverrides],
+    [mappedFields, enumOptionsOverrides]
   )
 
   const remoteFieldOptionsQuery = useQuery<RemoteFieldOptionsResult>({
@@ -670,21 +674,21 @@ export function useDocyrusFormView<
       'remoteOptions',
       appSlug,
       dataSourceSlug,
-      mappedFields.map((entry) => ({
+      mappedFields.map(entry => ({
         slug: entry.field.slug,
         type: entry.field.type,
-        relationDataSourceId: entry.field.relationDataSourceId ?? null,
+        relationDataSourceId: entry.field.relationDataSourceId ?? null
       })),
       optionLimit,
       resolveUserOptions,
       resolveRelationOptions,
-      enumFields.map(({ field }) => field.slug),
+      enumFields.map(({ field }) => field.slug)
     ],
     queryFn: async () => {
       const result: RemoteFieldOptionsResult = {
         users: [],
         relations: {},
-        enums: {},
+        enums: {}
       }
 
       const [usersResponse, dataSourcesResponse, enumsResponse] =
@@ -696,13 +700,13 @@ export function useDocyrusFormView<
             ? client.get<{ data: Array<Record<string, unknown>> }>(
                 '/v1/apps/data-sources',
                 {
-                  expand: 'fields',
-                } as Parameters<typeof client.get>[1],
+                  expand: 'fields'
+                }
               )
             : Promise.resolve(null),
           enumFields.length > 0
             ? client.get<{ data: Record<string, unknown> }>('/v1/apps/enums')
-            : Promise.resolve(null),
+            : Promise.resolve(null)
         ])
 
       if (usersResponse) {
@@ -732,7 +736,7 @@ export function useDocyrusFormView<
             const targetAppSlug = pickString(
               targetRecord,
               'appSlug',
-              'app_slug',
+              'app_slug'
             )
             const targetSlug = pickString(targetRecord, 'slug')
 
@@ -744,7 +748,7 @@ export function useDocyrusFormView<
 
             const optionColumns = buildRelationOptionColumns(
               field,
-              targetFields,
+              targetFields
             )
 
             const relationItemsResponse = await client.get<
@@ -752,24 +756,22 @@ export function useDocyrusFormView<
               | { data: Array<Record<string, unknown>> }
             >(`/v1/apps/${targetAppSlug}/data-sources/${targetSlug}/items`, {
               columns: optionColumns.join(', '),
-              limit: optionLimit,
-            } as Parameters<typeof client.get>[1])
+              limit: optionLimit
+            })
 
             const items = unwrapArray(relationItemsResponse)
 
             result.relations[field.slug] = items
-              .map((record) =>
-                relationRecordToEnumOption(record, field, targetFields),
-              )
+              .map(record => relationRecordToEnumOption(record, field, targetFields))
               .filter((option): option is EnumOption => option !== null)
-          }),
+          })
         )
       }
 
       if (enumsResponse) {
         const enumAppTree = toRecord(toRecord(enumsResponse).data)[appSlug]
         const enumDataSourceTree = toRecord(
-          toRecord(enumAppTree)[dataSourceSlug],
+          toRecord(enumAppTree)[dataSourceSlug]
         )
 
         for (const { field } of enumFields) {
@@ -777,7 +779,7 @@ export function useDocyrusFormView<
           const fieldEnums = Array.isArray(rawFieldEnums) ? rawFieldEnums : []
 
           result.enums[field.slug] = fieldEnums
-            .map((item) => normalizeEnumOption(item))
+            .map(item => normalizeEnumOption(item))
             .filter((option): option is EnumOption => option !== null)
         }
       }
@@ -790,22 +792,21 @@ export function useDocyrusFormView<
       ((resolveUserOptions && userFields.length > 0) ||
         (resolveRelationOptions && relationFields.length > 0) ||
         enumFields.length > 0),
-    staleTime,
+    staleTime
   })
 
   const rawItem = useMemo(
     () => providedItem ?? itemQuery.data ?? {},
-    [providedItem, itemQuery.data],
+    [providedItem, itemQuery.data]
   )
 
   const mergedDefaultValues = useMemo(
-    () =>
-      buildInitialValues(
-        mappedFields.map((entry) => entry.field),
+    () => buildInitialValues(
+        mappedFields.map(entry => entry.field),
         rawItem,
-        providedDefaultValues,
+        providedDefaultValues
       ),
-    [mappedFields, rawItem, providedDefaultValues],
+    [mappedFields, rawItem, providedDefaultValues]
   )
   const localForm = useLocalDocyrusForm(mergedDefaultValues)
 
@@ -817,7 +818,7 @@ export function useDocyrusFormView<
 
   const resolvedFields = useMemo<Array<DocyrusFormViewField>>(() => {
     const orderLookup = new Map(
-      (fieldOrder ?? []).map((slug, index) => [slug, index]),
+      (fieldOrder ?? []).map((slug, index) => [slug, index])
     )
     const hiddenSlugSet = new Set(hiddenFieldSlugs ?? [])
 
@@ -826,7 +827,7 @@ export function useDocyrusFormView<
       const enumOptions = resolveEnumOptions(
         field,
         remoteFieldOptionsQuery.data,
-        enumOptionsOverrides,
+        enumOptionsOverrides
       )
       const required =
         resolveBooleanOrResolver(layout?.required, values) ??
@@ -868,7 +869,7 @@ export function useDocyrusFormView<
         submitKeys,
         supported,
         shouldShowValue,
-        sortOrder: orderLookup.get(field.slug) ?? Number.MAX_SAFE_INTEGER,
+        sortOrder: orderLookup.get(field.slug) ?? Number.MAX_SAFE_INTEGER
       }
     })
 
@@ -896,10 +897,8 @@ export function useDocyrusFormView<
           ...field
         }) => ({
           ...field,
-          renderMode: field.editable
-            ? 'form'
-            : ('value' as DocyrusFormViewRenderMode),
-        }),
+          renderMode: field.editable ? 'form' : 'value'
+        })
       )
   }, [
     mappedFields,
@@ -912,7 +911,7 @@ export function useDocyrusFormView<
     mode,
     disabled,
     includeReadOnlyFields,
-    unsupportedFieldBehavior,
+    unsupportedFieldBehavior
   ])
 
   const clickToEditFieldConfigs = useMemo<Array<ClickToEditFieldConfig>>(() => {
@@ -921,7 +920,7 @@ export function useDocyrusFormView<
     }
 
     const orderLookup = new Map(
-      (fieldOrder ?? []).map((slug, index) => [slug, index]),
+      (fieldOrder ?? []).map((slug, index) => [slug, index])
     )
     const hiddenSlugSet = new Set(hiddenFieldSlugs ?? [])
 
@@ -948,14 +947,14 @@ export function useDocyrusFormView<
           enumOptions: resolveEnumOptions(
             field,
             remoteFieldOptionsQuery.data,
-            enumOptionsOverrides,
+            enumOptionsOverrides
           ),
           readOnly,
           required: layout?.required ?? isFieldRequired(field),
           hidden:
             typeof layout?.hidden === 'function' ? layout.hidden : undefined,
           appSlug,
-          dataSourceSlug,
+          dataSourceSlug
         }
 
         const config: SortedClickToEditFieldConfig = {
@@ -965,7 +964,7 @@ export function useDocyrusFormView<
           submitKeys: getFieldSubmitKeys(field),
           label: layout?.label,
           className: layout?.className,
-          sortOrder: orderLookup.get(field.slug) ?? Number.MAX_SAFE_INTEGER,
+          sortOrder: orderLookup.get(field.slug) ?? Number.MAX_SAFE_INTEGER
         }
 
         return config
@@ -977,7 +976,7 @@ export function useDocyrusFormView<
         }
 
         return left.recordField.field.name.localeCompare(
-          right.recordField.field.name,
+          right.recordField.field.name
         )
       })
       .map(({ sortOrder: _sortOrder, ...entry }) => entry)
@@ -992,23 +991,19 @@ export function useDocyrusFormView<
     hiddenFieldSlugs,
     mappedFields,
     mode,
-    remoteFieldOptionsQuery.data,
+    remoteFieldOptionsQuery.data
   ])
 
   const resolvedFieldMap = useMemo(
-    () => new Map(resolvedFields.map((field) => [field.slug, field])),
-    [resolvedFields],
+    () => new Map(resolvedFields.map(field => [field.slug, field])),
+    [resolvedFields]
   )
 
   const clickToEditFieldConfigMap = useMemo(
-    () =>
-      new Map(
-        clickToEditFieldConfigs.map((config) => [
-          config.recordField.field.slug,
-          config,
-        ]),
+    () => new Map(
+        clickToEditFieldConfigs.map(config => [config.recordField.field.slug, config])
       ),
-    [clickToEditFieldConfigs],
+    [clickToEditFieldConfigs]
   )
 
   const resolvedLayoutItems = useMemo<Array<DocyrusFormViewLayoutItem>>(() => {
@@ -1016,35 +1011,33 @@ export function useDocyrusFormView<
       return []
     }
 
-    const visibleFieldSlugs = new Set(resolvedFields.map((field) => field.slug))
+    const visibleFieldSlugs = new Set(resolvedFields.map(field => field.slug))
     const normalizedItems = normalizeDocyrusFormViewLayoutItems(
       layout,
-      visibleFieldSlugs,
+      visibleFieldSlugs
     )
     const assignedFieldSlugs = new Set(
-      collectDocyrusFormViewLayoutFieldSlugs(normalizedItems),
+      collectDocyrusFormViewLayoutFieldSlugs(normalizedItems)
     )
     const unassignedFields = resolvedFields
-      .map((field) => field.slug)
-      .filter((slug) => !assignedFieldSlugs.has(slug))
+      .map(field => field.slug)
+      .filter(slug => !assignedFieldSlugs.has(slug))
 
     return [...normalizedItems, ...unassignedFields]
   }, [layout, resolvedFields])
 
   const unsupportedFields = useMemo(
-    () =>
-      resolvedFields.filter(
-        (field) =>
-          !field.editable &&
+    () => resolvedFields.filter(
+        field => !field.editable &&
           field.renderMode === 'value' &&
-          !hasDocyrusFormFieldComponent(field.field.type),
+          !hasDocyrusFormFieldComponent(field.field.type)
       ),
-    [resolvedFields],
+    [resolvedFields]
   )
 
   const isDirty = useMemo(
     () => !valuesMatch(values, localForm.baselineRef.current),
-    [localForm.baselineRef, values],
+    [localForm.baselineRef, values]
   )
 
   const validate = useCallback(() => {
@@ -1079,16 +1072,22 @@ export function useDocyrusFormView<
       itemId,
       values,
       fields: resolvedFields,
-      dataSource: dataSourceQuery.data,
+      dataSource: dataSourceQuery.data
     }),
-    [mode, itemId, values, resolvedFields, dataSourceQuery.data],
+    [
+mode,
+itemId,
+values,
+resolvedFields,
+dataSourceQuery.data
+]
   )
 
   const submitMutation = useMutation({
     mutationFn: async ({
       payload,
       context,
-      forceUpdate = false,
+      forceUpdate = false
     }: SubmitMutationInput) => {
       if (onSubmit) {
         return onSubmit(payload, context)
@@ -1101,7 +1100,7 @@ export function useDocyrusFormView<
 
         return client.post(
           `/v1/apps/${appSlug}/data-sources/${dataSourceSlug}/items`,
-          payload,
+          payload
         )
       }
 
@@ -1112,12 +1111,12 @@ export function useDocyrusFormView<
 
         return client.patch(
           `/v1/apps/${appSlug}/data-sources/${dataSourceSlug}/items/${context.itemId}`,
-          payload,
+          payload
         )
       }
 
       return payload
-    },
+    }
   })
 
   const executeSubmit = useCallback(
@@ -1125,14 +1124,14 @@ export function useDocyrusFormView<
       valuesSnapshot,
       payloadFields,
       context,
-      forceUpdate = false,
+      forceUpdate = false
     }: {
-      valuesSnapshot: Record<string, unknown>
+      valuesSnapshot: Record<string, unknown>;
       payloadFields: Array<
         Pick<DocyrusFormViewField, 'readOnly' | 'disabled' | 'submitKeys'>
-      >
-      context: SubmitMutationContext
-      forceUpdate?: boolean
+      >;
+      context: SubmitMutationContext;
+      forceUpdate?: boolean;
     }) => {
       const basePayload = buildSubmitPayload(payloadFields, valuesSnapshot)
       const payload = transformSubmit
@@ -1143,7 +1142,7 @@ export function useDocyrusFormView<
         const result = await submitMutation.mutateAsync({
           payload,
           context,
-          forceUpdate,
+          forceUpdate
         })
 
         if (forceUpdate) {
@@ -1174,8 +1173,8 @@ export function useDocyrusFormView<
       onSubmitSuccess,
       providedItem,
       submitMutation,
-      transformSubmit,
-    ],
+      transformSubmit
+    ]
   )
 
   const submit = useCallback(async () => {
@@ -1193,7 +1192,7 @@ export function useDocyrusFormView<
     return executeSubmit({
       valuesSnapshot: { ...localForm.valuesRef.current },
       payloadFields: resolvedFields,
-      context: submitContext,
+      context: submitContext
     })
   }, [
     executeSubmit,
@@ -1202,13 +1201,13 @@ export function useDocyrusFormView<
     onSubmitError,
     resolvedFields,
     submitContext,
-    validate,
+    validate
   ])
 
   const handleClickToEditSave = useCallback(
     async (
       changes: Array<FieldChange>,
-      nextValues: Record<string, unknown>,
+      nextValues: Record<string, unknown>
     ) => {
       if (changes.length === 0) {
         return
@@ -1219,14 +1218,14 @@ export function useDocyrusFormView<
         itemId,
         values: nextValues,
         fields: resolvedFields,
-        dataSource: dataSourceQuery.data,
+        dataSource: dataSourceQuery.data
       }
 
       await executeSubmit({
         valuesSnapshot: nextValues,
         payloadFields: clickToEditFieldConfigs,
         context: clickToEditContext,
-        forceUpdate: true,
+        forceUpdate: true
       })
     },
     [
@@ -1235,8 +1234,8 @@ export function useDocyrusFormView<
       executeSubmit,
       itemId,
       mode,
-      resolvedFields,
-    ],
+      resolvedFields
+    ]
   )
 
   const renderField = useCallback(
@@ -1255,8 +1254,7 @@ export function useDocyrusFormView<
             form={localForm.form}
             appSlug={appSlug}
             dataSourceSlug={dataSourceSlug}
-            className={renderOptions?.className}
-          />
+            className={renderOptions?.className} />
         )
       }
 
@@ -1267,8 +1265,7 @@ export function useDocyrusFormView<
           wrapperClassName={renderOptions?.wrapperClassName}
           className={renderOptions?.className}
           label={renderOptions?.label}
-          description={renderOptions?.description}
-        />
+          description={renderOptions?.description} />
       )
     },
     [
@@ -1277,8 +1274,8 @@ export function useDocyrusFormView<
       localForm.form,
       localForm.valuesRef,
       mode,
-      resolvedFieldMap,
-    ],
+      resolvedFieldMap
+    ]
   )
 
   const renderLayout = useCallback(
@@ -1292,11 +1289,11 @@ export function useDocyrusFormView<
       const rootItems =
         resolvedLayoutItems.length > 0
           ? resolvedLayoutItems
-          : resolvedFields.map((field) => field.slug)
+          : resolvedFields.map(field => field.slug)
 
       function renderLayoutItems(
         items: Array<DocyrusFormViewLayoutItem>,
-        path: string,
+        path: string
       ): Array<ReactNode> {
         return items.map((item, index) => {
           const itemKey = `${path}-${index}`
@@ -1316,7 +1313,7 @@ export function useDocyrusFormView<
       function renderFieldGridItem(
         slug: string,
         layoutItem: DocyrusFormViewLayoutFieldItem | undefined,
-        key: string,
+        key: string
       ): ReactNode {
         const resolved = resolvedFieldMap.get(slug)
 
@@ -1338,14 +1335,13 @@ export function useDocyrusFormView<
                   label={config.label}
                   className={cn(
                     config.className,
-                    renderOptions?.fieldClassName,
-                  )}
-                />
+                    renderOptions?.fieldClassName
+                  )} />
               )
             })()
           : renderField(slug, {
               mode: layoutMode,
-              wrapperClassName: renderOptions?.fieldClassName,
+              wrapperClassName: renderOptions?.fieldClassName
             })
 
         if (!fieldNode) {
@@ -1357,10 +1353,9 @@ export function useDocyrusFormView<
             key={key}
             className={cn(
               renderOptions?.wrapperClassName,
-              layoutItem?.className,
+              layoutItem?.className
             )}
-            style={getGridSpanStyle(layoutItem?.colSpan ?? resolved.colSpan)}
-          >
+            style={getGridSpanStyle(layoutItem?.colSpan ?? resolved.colSpan)}>
             {fieldNode}
           </div>
         )
@@ -1368,7 +1363,7 @@ export function useDocyrusFormView<
 
       function renderSectionHeader(
         title?: ReactNode,
-        description?: ReactNode,
+        description?: ReactNode
       ): ReactNode {
         if (!title && !description) {
           return null
@@ -1391,7 +1386,7 @@ export function useDocyrusFormView<
       function renderSectionGrid(
         items: Array<DocyrusFormViewLayoutItem>,
         path: string,
-        className?: string,
+        className?: string
       ): ReactNode {
         return (
           <div className={cn(getGridColumnsClassName(columnCount), className)}>
@@ -1402,21 +1397,19 @@ export function useDocyrusFormView<
 
       function renderSection(
         section: DocyrusFormViewSection,
-        key: string,
+        key: string
       ): ReactNode {
         if (section.variant === 'fieldset') {
           return (
             <div
               key={key}
               className={cn(renderOptions?.wrapperClassName)}
-              style={getGridSpanStyle(section.colSpan)}
-            >
+              style={getGridSpanStyle(section.colSpan)}>
               <FieldSet
                 className={cn(
                   'rounded-xl border border-border/60 p-4 md:p-5',
-                  section.className,
-                )}
-              >
+                  section.className
+                )}>
                 {section.title && <FieldLegend>{section.title}</FieldLegend>}
                 {section.description && (
                   <FieldDescription>{section.description}</FieldDescription>
@@ -1424,7 +1417,7 @@ export function useDocyrusFormView<
                 {renderSectionGrid(
                   section.items,
                   `${key}-fieldset`,
-                  section.contentClassName,
+                  section.contentClassName
                 )}
               </FieldSet>
             </div>
@@ -1432,14 +1425,14 @@ export function useDocyrusFormView<
         }
 
         if (section.variant === 'tabpanel') {
-          const tabs = section.items.filter((tab) => tab.variant === 'tab')
+          const tabs = section.items.filter(tab => tab.variant === 'tab')
 
           if (tabs.length === 0) {
             return null
           }
 
           const defaultTab =
-            tabs.find((tab) => tab.id === section.defaultTabId) ?? tabs[0]
+            tabs.find(tab => tab.id === section.defaultTabId) ?? tabs[0]
 
           if (!defaultTab) {
             return null
@@ -1451,20 +1444,17 @@ export function useDocyrusFormView<
             <div
               key={key}
               className={cn(renderOptions?.wrapperClassName)}
-              style={getGridSpanStyle(section.colSpan)}
-            >
+              style={getGridSpanStyle(section.colSpan)}>
               <div
                 className={cn(
                   'space-y-4 rounded-xl border border-border/60 p-4 md:p-5',
-                  section.className,
-                )}
-              >
+                  section.className
+                )}>
                 {renderSectionHeader(section.title, section.description)}
                 <Tabs defaultValue={defaultTabValue} className="gap-4">
                   <TabsList
                     variant="line"
-                    className="h-auto w-full justify-start overflow-x-auto rounded-none p-0"
-                  >
+                    className="h-auto w-full justify-start overflow-x-auto rounded-none p-0">
                     {tabs.map((tab) => {
                       const tabValue = getDocyrusFormViewTabValue(tab)
 
@@ -1472,8 +1462,7 @@ export function useDocyrusFormView<
                         <TabsTrigger
                           key={tabValue}
                           value={tabValue}
-                          className="flex-none px-3 py-2"
-                        >
+                          className="flex-none px-3 py-2">
                           {tab.title ?? tab.id}
                         </TabsTrigger>
                       )
@@ -1486,13 +1475,12 @@ export function useDocyrusFormView<
                       <TabsContent
                         key={tabValue}
                         value={tabValue}
-                        className={cn('space-y-4', tab.className)}
-                      >
+                        className={cn('space-y-4', tab.className)}>
                         {renderSectionHeader(undefined, tab.description)}
                         {renderSectionGrid(
                           tab.items,
                           `${key}-${tabValue}`,
-                          tab.contentClassName,
+                          tab.contentClassName
                         )}
                       </TabsContent>
                     )
@@ -1507,19 +1495,17 @@ export function useDocyrusFormView<
           <div
             key={key}
             className={cn(renderOptions?.wrapperClassName)}
-            style={getGridSpanStyle(section.colSpan)}
-          >
+            style={getGridSpanStyle(section.colSpan)}>
             <div
               className={cn(
                 'space-y-4 rounded-xl border border-border/60 p-4 md:p-5',
-                section.className,
-              )}
-            >
+                section.className
+              )}>
               {renderSectionHeader(section.title, section.description)}
               {renderSectionGrid(
                 section.items,
                 `${key}-tab`,
-                section.contentClassName,
+                section.contentClassName
               )}
             </div>
           </div>
@@ -1532,33 +1518,31 @@ export function useDocyrusFormView<
         structuredLayout = renderSectionGrid(
           rootItems,
           'layout-root',
-          shouldUseClickToEdit ? undefined : renderOptions?.className,
+          shouldUseClickToEdit ? undefined : renderOptions?.className
         )
       }
 
       if (shouldUseClickToEdit) {
         return (
           <EditableRecordDetail
-            fields={clickToEditFieldConfigs.map((config) => config.recordField)}
+            fields={clickToEditFieldConfigs.map(config => config.recordField)}
             record={values}
             onSave={handleClickToEditSave}
             disabled={disabled}
             className={cn(
               renderOptions?.className,
-              renderOptions?.wrapperClassName,
-            )}
-          >
+              renderOptions?.wrapperClassName
+            )}>
             {structuredLayout ??
-              clickToEditFieldConfigs.map((config) => (
+              clickToEditFieldConfigs.map(config => (
                 <EditableRecordDetailField
                   key={config.recordField.field.slug}
                   slug={config.recordField.field.slug}
                   label={config.label}
                   className={cn(
                     config.className,
-                    renderOptions?.fieldClassName,
-                  )}
-                />
+                    renderOptions?.fieldClassName
+                  )} />
               ))}
           </EditableRecordDetail>
         )
@@ -1572,18 +1556,16 @@ export function useDocyrusFormView<
         <div
           className={cn(
             getGridColumnsClassName(columnCount),
-            renderOptions?.className,
-          )}
-        >
-          {resolvedFields.map((field) => (
+            renderOptions?.className
+          )}>
+          {resolvedFields.map(field => (
             <div
               key={field.slug}
               className={cn(renderOptions?.wrapperClassName)}
-              style={getGridSpanStyle(field.colSpan)}
-            >
+              style={getGridSpanStyle(field.colSpan)}>
               {renderField(field.slug, {
                 mode: layoutMode,
-                wrapperClassName: renderOptions?.fieldClassName,
+                wrapperClassName: renderOptions?.fieldClassName
               })}
             </div>
           ))}
@@ -1602,8 +1584,8 @@ export function useDocyrusFormView<
       resolvedFieldMap,
       resolvedFields,
       resolvedLayoutItems,
-      values,
-    ],
+      values
+    ]
   )
 
   const refetch = useCallback(() => {
@@ -1619,12 +1601,11 @@ export function useDocyrusFormView<
     itemId,
     itemQuery,
     providedItem,
-    remoteFieldOptionsQuery,
+    remoteFieldOptionsQuery
   ])
 
-  const error = (dataSourceQuery.error ??
-    itemQuery.error ??
-    remoteFieldOptionsQuery.error) as Error | null
+  const error =
+    dataSourceQuery.error ?? itemQuery.error ?? remoteFieldOptionsQuery.error
 
   return {
     mode,
@@ -1650,7 +1631,7 @@ export function useDocyrusFormView<
     submit,
     refetch,
     renderField,
-    renderLayout,
+    renderLayout
   }
 }
 
@@ -1679,12 +1660,12 @@ function dataSourceFieldToIField(field: DataSourceField): IField {
       pickString(raw, 'nestedByProp', 'nested_by_prop') ??
       pickString(options ?? {}, 'nestedByProp', 'nested_by_prop') ??
       null,
-    itemMapping: normalizeItemMapping(raw, options),
+    itemMapping: normalizeItemMapping(raw, options)
   }
 }
 
 function mergeFieldOptions(
-  raw: Record<string, unknown>,
+  raw: Record<string, unknown>
 ): Record<string, unknown> | null {
   const directOptions = toRecord(raw.options)
   const directEditorOptions = toRecord(raw.editorOptions)
@@ -1692,7 +1673,7 @@ function mergeFieldOptions(
     ? toRecord(directOptions.editorOptions)
     : null
   const merged: Record<string, unknown> = {
-    ...(directOptions ?? {}),
+    ...(directOptions ?? {})
   }
 
   if (directEditorOptions && !('editorOptions' in merged)) {
@@ -1706,7 +1687,7 @@ function mergeFieldOptions(
 
 function normalizeAvatarMapping(
   raw: Record<string, unknown>,
-  options: Record<string, unknown> | null,
+  options: Record<string, unknown> | null
 ): IField['avatarMapping'] {
   const source = toRecord(raw.avatarMapping) ?? toRecord(options?.avatarMapping)
 
@@ -1715,13 +1696,13 @@ function normalizeAvatarMapping(
   return {
     iconField: pickString(source, 'iconField', 'icon_field') ?? null,
     colorField: pickString(source, 'colorField', 'color_field') ?? null,
-    imageField: pickString(source, 'imageField', 'image_field') ?? null,
+    imageField: pickString(source, 'imageField', 'image_field') ?? null
   }
 }
 
 function normalizeItemMapping(
   raw: Record<string, unknown>,
-  options: Record<string, unknown> | null,
+  options: Record<string, unknown> | null
 ): IField['itemMapping'] {
   const source = toRecord(raw.itemMapping) ?? toRecord(options?.itemMapping)
 
@@ -1732,7 +1713,7 @@ function normalizeItemMapping(
     colorField: pickString(source, 'colorField', 'color_field') ?? null,
     imageField: pickString(source, 'imageField', 'image_field') ?? null,
     descriptionField:
-      pickString(source, 'descriptionField', 'description_field') ?? null,
+      pickString(source, 'descriptionField', 'description_field') ?? null
   }
 }
 
@@ -1786,31 +1767,21 @@ function getFieldQueryKeys(field: IField): Array<string> {
 function getFieldSubmitKeys(field: IField): Array<string> {
   switch (field.type) {
     case 'field-money':
-      return uniqueStrings([
-        field.slug,
-        getCompanionFieldSlug(field.slug, 'currency'),
-      ])
+      return uniqueStrings([field.slug, getCompanionFieldSlug(field.slug, 'currency')])
 
     case 'field-phone':
-      return uniqueStrings([
-        field.slug,
-        getCompanionFieldSlug(field.slug, 'country'),
-      ])
+      return uniqueStrings([field.slug, getCompanionFieldSlug(field.slug, 'country')])
 
     case 'field-status':
       return uniqueStrings([
         field.slug,
         getCompanionFieldSlug(field.slug, 'secondary'),
         getCompanionFieldSlug(field.slug, 'description'),
-        getCompanionFieldSlug(field.slug, 'followup_date'),
+        getCompanionFieldSlug(field.slug, 'followup_date')
       ])
 
     case 'field-avatar':
-      return uniqueStrings([
-        field.avatarMapping?.iconField,
-        field.avatarMapping?.colorField,
-        field.avatarMapping?.imageField,
-      ])
+      return uniqueStrings([field.avatarMapping?.iconField, field.avatarMapping?.colorField, field.avatarMapping?.imageField])
 
     default:
       return field.slug ? [field.slug] : []
@@ -1820,7 +1791,7 @@ function getFieldSubmitKeys(field: IField): Array<string> {
 function buildInitialValues(
   fields: Array<IField>,
   item: Record<string, unknown>,
-  providedDefaults?: Record<string, unknown>,
+  providedDefaults?: Record<string, unknown>
 ): Record<string, unknown> {
   const values: Record<string, unknown> = {}
 
@@ -1848,7 +1819,7 @@ function buildInitialValues(
       const descriptionSlug = getCompanionFieldSlug(field.slug, 'description')
       const followupDateSlug = getCompanionFieldSlug(
         field.slug,
-        'followup_date',
+        'followup_date'
       )
 
       if (!(secondarySlug in values)) values[secondarySlug] = ''
@@ -1886,7 +1857,7 @@ function buildInitialValues(
       const countrySlug = getCompanionFieldSlug(field.slug, 'country')
       const legacyCountryCodeSlug = getCompanionFieldSlug(
         field.slug,
-        'country_code',
+        'country_code'
       )
 
       if (!values[countrySlug] && values[legacyCountryCodeSlug]) {
@@ -1900,7 +1871,7 @@ function buildInitialValues(
 
 function parseFieldDefaultValue(
   value: string | null | undefined,
-  type: IFieldType,
+  type: IFieldType
 ): unknown {
   if (value == null || value === '') {
     if (type === 'field-checkbox' || type === 'field-switch') return false
@@ -1971,7 +1942,7 @@ function parseFieldDefaultValue(
 function resolveEnumOptions(
   field: IField,
   remote: RemoteFieldOptionsResult | undefined,
-  overrides?: Record<string, Array<EnumOption>>,
+  overrides?: Record<string, Array<EnumOption>>
 ): Array<EnumOption> {
   if (overrides?.[field.slug]) {
     return overrides[field.slug] ?? []
@@ -2014,7 +1985,7 @@ function resolveEnumOptions(
 }
 
 function extractStaticEnumOptions(field: IField): Array<EnumOption> {
-  const raw = toRecord(field as unknown)
+  const raw = toRecord(field)
   const optionsObject = toRecord(field.options)
   const editorOptions = toRecord(optionsObject?.editorOptions)
   const source = ((): Array<unknown> => {
@@ -2027,18 +1998,18 @@ function extractStaticEnumOptions(field: IField): Array<EnumOption> {
   })()
 
   return source
-    .map((item) => normalizeEnumOption(item))
+    .map(item => normalizeEnumOption(item))
     .filter((option): option is EnumOption => option !== null)
 }
 
 function buildRelationOptionColumns(
   field: IField,
-  targetFields: Array<DataSourceField>,
+  targetFields: Array<DataSourceField>
 ): Array<string> {
   const targetSlugs = new Set(
     targetFields
-      .map((targetField) => pickString(toRecord(targetField), 'slug'))
-      .filter((slug): slug is string => Boolean(slug)),
+      .map(targetField => pickString(toRecord(targetField), 'slug'))
+      .filter((slug): slug is string => Boolean(slug))
   )
   const labelField = pickRelationLabelField(targetFields)
   const nestedByProp = field.nestedByProp ?? 'parent'
@@ -2049,38 +2020,35 @@ function buildRelationOptionColumns(
     field.itemMapping?.colorField,
     field.itemMapping?.imageField,
     field.itemMapping?.descriptionField,
-    field.nested ? nestedByProp : undefined,
+    field.nested ? nestedByProp : undefined
   ]
 
   const existingColumns = columns.filter(
-    (column): column is string =>
-      typeof column === 'string' && column.length > 0,
+    (column): column is string => typeof column === 'string' && column.length > 0
   )
 
   return uniqueStrings(
     existingColumns.filter(
-      (column) => column === 'id' || targetSlugs.has(column),
-    ),
+      column => column === 'id' || targetSlugs.has(column)
+    )
   )
 }
 
 function pickRelationLabelField(targetFields: Array<DataSourceField>): string {
   const slugs = targetFields
-    .map((field) => ({
+    .map(field => ({
       slug: pickString(toRecord(field), 'slug'),
-      type: (pickString(toRecord(field), 'type') ?? '') as IFieldType,
+      type: (pickString(toRecord(field), 'type') ?? '') as IFieldType
     }))
-    .filter((field): field is { slug: string; type: IFieldType } =>
-      Boolean(field.slug),
-    )
+    .filter((field): field is { slug: string; type: IFieldType } => Boolean(field.slug))
 
   for (const candidate of LABEL_FIELD_CANDIDATES) {
-    const matched = slugs.find((field) => field.slug === candidate)
+    const matched = slugs.find(field => field.slug === candidate)
 
     if (matched) return matched.slug
   }
 
-  const textual = slugs.find((field) => TEXTUAL_FIELD_TYPES.has(field.type))
+  const textual = slugs.find(field => TEXTUAL_FIELD_TYPES.has(field.type))
 
   if (textual) return textual.slug
 
@@ -2090,7 +2058,7 @@ function pickRelationLabelField(targetFields: Array<DataSourceField>): string {
 function relationRecordToEnumOption(
   record: Record<string, unknown>,
   field: IField,
-  targetFields: Array<DataSourceField>,
+  targetFields: Array<DataSourceField>
 ): EnumOption | null {
   const id = pickString(record, 'id')
 
@@ -2104,7 +2072,7 @@ function relationRecordToEnumOption(
       'name',
       'title',
       'display_name',
-      'displayName',
+      'displayName'
     ) ?? id
   const nestedByProp = field.nestedByProp ?? 'parent'
   const parentValue = field.nested ? record[nestedByProp] : undefined
@@ -2121,12 +2089,12 @@ function relationRecordToEnumOption(
     description: field.itemMapping?.descriptionField
       ? (pickString(record, field.itemMapping.descriptionField) ?? undefined)
       : undefined,
-    parent: normalizeRelatedId(parentValue) ?? undefined,
+    parent: normalizeRelatedId(parentValue) ?? undefined
   }
 }
 
 function userRecordToEnumOption(
-  record: Record<string, unknown>,
+  record: Record<string, unknown>
 ): EnumOption | null {
   const id = pickString(record, 'id', 'userId', 'user_id')
 
@@ -2142,8 +2110,8 @@ function userRecordToEnumOption(
         'avatar_url',
         'avatarUrl',
         'profile_image_url',
-        'profileImageUrl',
-      ) ?? undefined,
+        'profileImageUrl'
+      ) ?? undefined
   }
 }
 
@@ -2174,7 +2142,7 @@ function normalizeEnumOption(value: unknown): EnumOption | null {
     parent: pickString(record, 'parent') ?? undefined,
     slug: pickString(record, 'slug') ?? undefined,
     description: pickString(record, 'description') ?? undefined,
-    active: pickBoolean(record, 'active') ?? undefined,
+    active: pickBoolean(record, 'active') ?? undefined
   }
 }
 
@@ -2182,7 +2150,7 @@ function buildSubmitPayload(
   fields: Array<
     Pick<DocyrusFormViewField, 'readOnly' | 'disabled' | 'submitKeys'>
   >,
-  values: Record<string, unknown>,
+  values: Record<string, unknown>
 ): Record<string, unknown> {
   const payload: Record<string, unknown> = {}
 
@@ -2204,9 +2172,8 @@ function normalizeColumnsInput(columns: unknown): Array<string> {
   if (Array.isArray(columns)) {
     return uniqueStrings(
       columns.filter(
-        (column): column is string =>
-          typeof column === 'string' && column.length > 0,
-      ),
+        (column): column is string => typeof column === 'string' && column.length > 0
+      )
     )
   }
 
@@ -2214,8 +2181,8 @@ function normalizeColumnsInput(columns: unknown): Array<string> {
     return uniqueStrings(
       columns
         .split(',')
-        .map((column) => column.trim())
-        .filter(Boolean),
+        .map(column => column.trim())
+        .filter(Boolean)
     )
   }
 
@@ -2223,15 +2190,14 @@ function normalizeColumnsInput(columns: unknown): Array<string> {
 }
 
 function uniqueStrings(
-  values: Array<string | null | undefined>,
+  values: Array<string | null | undefined>
 ): Array<string> {
   return Array.from(
     new Set(
       values.filter(
-        (value): value is string =>
-          typeof value === 'string' && value.trim().length > 0,
-      ),
-    ),
+        (value): value is string => typeof value === 'string' && value.trim().length > 0
+      )
+    )
   )
 }
 
@@ -2242,14 +2208,14 @@ function unwrapArray<T>(value: Array<T> | { data: Array<T> } | null): Array<T> {
     typeof value === 'object' &&
     Array.isArray((value as { data?: unknown }).data)
   ) {
-    return (value as { data: Array<T> }).data
+    return value.data
   }
 
   return []
 }
 
 function unwrapRecord(
-  value: object | { data: object } | null | undefined,
+  value: object | { data: object } | null | undefined
 ): Record<string, unknown> {
   if (!value) return {}
   if (
@@ -2322,7 +2288,7 @@ function parseJsonValue(value: string): unknown {
 }
 
 function isDocyrusFormViewLayoutFieldItem(
-  item: DocyrusFormViewLayoutItem,
+  item: DocyrusFormViewLayoutItem
 ): item is DocyrusFormViewLayoutFieldItem {
   return (
     typeof item === 'object' &&
@@ -2335,7 +2301,7 @@ function isDocyrusFormViewLayoutFieldItem(
 function normalizeDocyrusFormViewLayoutItems(
   items: Array<DocyrusFormViewLayoutItem>,
   visibleFieldSlugs: Set<string>,
-  seenFieldSlugs: Set<string> = new Set(),
+  seenFieldSlugs: Set<string> = new Set()
 ): Array<DocyrusFormViewLayoutItem> {
   const normalizedItems: Array<DocyrusFormViewLayoutItem> = []
 
@@ -2362,16 +2328,16 @@ function normalizeDocyrusFormViewLayoutItems(
 
     if (item.variant === 'tabpanel') {
       const normalizedTabs = item.items
-        .filter((tab) => tab.variant === 'tab')
-        .map((tab) => ({
+        .filter(tab => tab.variant === 'tab')
+        .map(tab => ({
           ...tab,
           items: normalizeDocyrusFormViewLayoutItems(
             tab.items,
             visibleFieldSlugs,
-            seenFieldSlugs,
-          ),
+            seenFieldSlugs
+          )
         }))
-        .filter((tab) => tab.items.length > 0)
+        .filter(tab => tab.items.length > 0)
 
       if (normalizedTabs.length === 0) {
         continue
@@ -2379,7 +2345,7 @@ function normalizeDocyrusFormViewLayoutItems(
 
       normalizedItems.push({
         ...item,
-        items: normalizedTabs,
+        items: normalizedTabs
       })
       continue
     }
@@ -2387,7 +2353,7 @@ function normalizeDocyrusFormViewLayoutItems(
     const normalizedChildren = normalizeDocyrusFormViewLayoutItems(
       item.items,
       visibleFieldSlugs,
-      seenFieldSlugs,
+      seenFieldSlugs
     )
 
     if (normalizedChildren.length === 0) {
@@ -2396,7 +2362,7 @@ function normalizeDocyrusFormViewLayoutItems(
 
     normalizedItems.push({
       ...item,
-      items: normalizedChildren,
+      items: normalizedChildren
     })
   }
 
@@ -2404,7 +2370,7 @@ function normalizeDocyrusFormViewLayoutItems(
 }
 
 function collectDocyrusFormViewLayoutFieldSlugs(
-  items: Array<DocyrusFormViewLayoutItem>,
+  items: Array<DocyrusFormViewLayoutItem>
 ): Array<string> {
   return items.flatMap((item) => {
     if (typeof item === 'string') {
@@ -2425,7 +2391,7 @@ function getDocyrusFormViewTabValue(tab: DocyrusFormViewTabSection): string {
 
 function resolveBooleanOrResolver(
   value: boolean | ((values: Record<string, unknown>) => boolean) | undefined,
-  values: Record<string, unknown>,
+  values: Record<string, unknown>
 ): boolean | undefined {
   if (typeof value === 'function') return value(values)
 
@@ -2454,7 +2420,7 @@ function stableStringify(value: unknown): string {
 
 function valuesMatch(
   left: Record<string, unknown>,
-  right: Record<string, unknown>,
+  right: Record<string, unknown>
 ): boolean {
   return stableStringify(left) === stableStringify(right)
 }
@@ -2479,7 +2445,7 @@ function getGridColumnsClassName(columns: 1 | 2 | 3 | 4): string {
 }
 
 function getGridSpanStyle(
-  colSpan: DocyrusFormViewColSpan | undefined,
+  colSpan: DocyrusFormViewColSpan | undefined
 ): CSSProperties | undefined {
   if (!colSpan) return undefined
   if (colSpan === 'full') return { gridColumn: '1 / -1' }

@@ -1,5 +1,6 @@
 'use client'
 
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 import { useMemo, useState } from 'react'
 
 import { Check, ListFilter, type LucideIcon } from 'lucide-react'
@@ -120,18 +121,20 @@ function cleanActivityText(activity: RecordActivity): string {
 
   if (!raw) return ''
 
-  return raw
-    // Embedded "on <weekday> <month> <day> … GMT…" timestamp (date is in the header).
-    .replace(/\s*\bon\s+.*?GMT[^.]*/gi, '')
-    // Trailing "by <actor>" (actor is the header title).
-    .replace(/\s*\bby\s+[^.]+?(?=\.?\s*$)/i, '')
-    // Empty "( )" fragments left by missing record labels.
-    .replace(/\(\s*\)/g, '')
-    // Tidy whitespace and dangling punctuation.
-    .replace(/\s{2,}/g, ' ')
-    .replace(/\s+([.,;:])/g, '$1')
-    .replace(/[.\s]+$/, '')
-    .trim()
+  return (
+    raw
+      // Embedded "on <weekday> <month> <day> … GMT…" timestamp (date is in the header).
+      .replace(/\s*\bon\s+.*?GMT[^.]*/gi, '')
+      // Trailing "by <actor>" (actor is the header title).
+      .replace(/\s*\bby\s+[^.]+?(?=\.?\s*$)/i, '')
+      // Empty "( )" fragments left by missing record labels.
+      .replace(/\(\s*\)/g, '')
+      // Tidy whitespace and dangling punctuation.
+      .replace(/\s{2,}/g, ' ')
+      .replace(/\s+([.,;:])/g, '$1')
+      .replace(/[.\s]+$/, '')
+      .trim()
+  )
 }
 
 // Raw audit operations reduced to readable categories for the filter.
@@ -191,6 +194,7 @@ export function RecordActivityPanel({
   className,
   filterable,
 }: RecordActivityPanelProps) {
+  const { t } = useUiTranslation()
   const [hidden, setHidden] = useState<Set<string>>(() => new Set())
 
   const presentCategories = useMemo(() => {
@@ -272,7 +276,12 @@ export function RecordActivityPanel({
       {showToolbar && (
         <div className="flex items-center justify-between px-1">
           <span className="text-xs text-muted-foreground">
-            {eventCount} {eventCount === 1 ? 'event' : 'events'}
+            {eventCount === 1
+              ? t('ui.recordActivity.oneEvent', '1 event')
+              : t('ui.recordActivity.events', '{{count}} events').replace(
+                  '{{count}}',
+                  String(eventCount),
+                )}
           </span>
           {showFilter && (
             <Popover>
@@ -302,7 +311,9 @@ export function RecordActivityPanel({
                       onClick={() => toggleCategory(category)}
                       className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors hover:bg-muted"
                     >
-                      <MetaIcon className={cn('size-3.5 shrink-0', meta.className)} />
+                      <MetaIcon
+                        className={cn('size-3.5 shrink-0', meta.className)}
+                      />
                       <span className="flex-1">{category}</span>
                       <Check
                         className={cn(

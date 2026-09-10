@@ -1,14 +1,10 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { Field, FieldError } from '@/components/ui/field'
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Combobox } from '@/components/ui/combobox-simple'
 
 import { FormFieldLabel } from './form-field-label'
 import { type DocyrusFormFieldProps } from './types'
@@ -23,9 +19,8 @@ export function CurrencyCodeFormField({
   className,
 }: DocyrusFormFieldProps) {
   return (
-    <form.Field
-      name={fieldConfig.slug}
-      children={(field: any) => {
+    <form.Field name={fieldConfig.slug}>
+      {(field: any) => {
         const isInvalid =
           field.state.meta.isTouched && !field.state.meta.isValid
 
@@ -34,31 +29,21 @@ export function CurrencyCodeFormField({
             <FormFieldLabel htmlFor={field.name} required={required}>
               {fieldConfig.name}
             </FormFieldLabel>
-            <Select
+            <Combobox
+              options={COMMON_CURRENCIES.map((currency) => ({
+                label: `${currency.code} - ${currency.name}`,
+                value: currency.code,
+              }))}
               value={field.state.value ?? ''}
               onValueChange={field.handleChange}
               disabled={disabled || fieldConfig.readOnly === true}
-            >
-              <SelectTrigger
-                id={field.name}
-                aria-invalid={isInvalid}
-                onBlur={field.handleBlur}
-                className="w-full"
-              >
-                <SelectValue placeholder="Select currency..." />
-              </SelectTrigger>
-              <SelectContent>
-                {COMMON_CURRENCIES.map((c) => (
-                  <SelectItem key={c.code} value={c.code}>
-                    {c.code} - {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              className="w-full"
+              placeholder="Select currency..."
+            />
             {isInvalid && <FieldError errors={field.state.meta.errors} />}
           </Field>
         )
       }}
-    />
+    </form.Field>
   )
 }

@@ -6,29 +6,29 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
 export interface RecordEvent {
-  id?: string
-  subject?: string
-  description?: string
-  start_date?: string
-  end_date?: string
-  created_on?: string
-  calendar?: { name?: string } | string | null
+  id?: string;
+  subject?: string;
+  description?: string;
+  start_date?: string;
+  end_date?: string;
+  created_on?: string;
+  calendar?: { name?: string } | string | null;
   record_owner?:
     | { firstname?: string; lastname?: string; email?: string }
     | string
-    | null
+    | null;
 }
 
 export interface RecordActivityTimelineProps {
-  events: Array<RecordEvent>
-  isLoading?: boolean
+  events: Array<RecordEvent>;
+  isLoading?: boolean;
   /** Cap the number of rows (e.g. 2 for the Overview "recent" list) */
-  limit?: number
-  emptyLabel?: string
+  limit?: number;
+  emptyLabel?: string;
   /** Optional "add activity" handler — renders an action in the empty state */
-  onAdd?: () => void
-  addLabel?: string
-  className?: string
+  onAdd?: () => void;
+  addLabel?: string;
+  className?: string;
 }
 
 function ownerName(owner: RecordEvent['record_owner']): string | undefined {
@@ -50,7 +50,7 @@ function formatWhen(value?: string): string {
   return date.toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
-    year: 'numeric',
+    year: 'numeric'
   })
 }
 
@@ -61,7 +61,7 @@ export function RecordActivityTimeline({
   emptyLabel,
   onAdd,
   addLabel,
-  className,
+  className
 }: RecordActivityTimelineProps) {
   const { t } = useTranslation()
   const resolvedEmptyLabel = emptyLabel ?? t('recordDetail.activity.empty')
@@ -73,8 +73,7 @@ export function RecordActivityTimeline({
         {Array.from({ length: limit ?? 4 }).map((_, index) => (
           <div
             key={index}
-            className="h-12 animate-pulse rounded-lg bg-muted/40"
-          />
+            className="h-12 animate-pulse rounded-lg bg-muted/40" />
         ))}
       </div>
     )
@@ -85,9 +84,8 @@ export function RecordActivityTimeline({
       <div
         className={cn(
           'flex min-h-32 flex-col items-center justify-center gap-3 rounded-lg border border-dashed px-6 py-8 text-center',
-          className,
-        )}
-      >
+          className
+        )}>
         <div className="flex size-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
           <CalendarClock className="size-4.5" />
         </div>
@@ -99,8 +97,7 @@ export function RecordActivityTimeline({
             size="sm"
             variant="outline"
             className="gap-1.5"
-            onClick={onAdd}
-          >
+            onClick={onAdd}>
             <Plus className="size-3.5" />
             {resolvedAddLabel}
           </Button>
@@ -120,8 +117,7 @@ export function RecordActivityTimeline({
         return (
           <li
             key={event.id}
-            className="flex items-start gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-muted/50"
-          >
+            className="flex items-start gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-muted/50">
             <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-blue-500">
               <CalendarClock className="size-3.5" />
             </span>

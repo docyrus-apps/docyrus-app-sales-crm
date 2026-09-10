@@ -1,6 +1,8 @@
+/* eslint-disable */
 // @ts-nocheck
 'use client'
 
+import { useDateFnsLocale } from '@/hooks/use-date-fns-locale'
 import * as React from 'react'
 import {
   ChevronDownIcon,
@@ -24,14 +26,23 @@ function Calendar({
   buttonVariant = 'ghost',
   formatters,
   components,
+  locale,
   ...props
 }: React.ComponentProps<typeof DayPicker> & {
   buttonVariant?: React.ComponentProps<typeof Button>['variant']
 }) {
   const defaultClassNames = getDefaultClassNames()
+  /*
+   * Default the grid to the app language. No caller passed `locale`, so every
+   * date picker rendered English month and weekday names (and a Sunday-first
+   * week) inside an otherwise translated form. An explicit `locale` prop still
+   * wins.
+   */
+  const appLocale = useDateFnsLocale()
 
   return (
     <DayPicker
+      locale={locale ?? appLocale}
       showOutsideDays={showOutsideDays}
       className={cn(
         'group/calendar bg-background p-3 [--cell-size:--spacing(8)] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent',

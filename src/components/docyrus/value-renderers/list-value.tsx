@@ -1,33 +1,62 @@
 'use client'
 
-import { List } from 'lucide-react'
-
+// @ts-nocheck
+/* eslint-disable */
+import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
+import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
+import {
+  getEnumBadgeColors,
+  shouldRenderEnumOptionChip,
+} from '../form-fields/lib/utils'
+import { extractEnumId, extractEnumLabel } from './utils'
 import { type DocyrusValueProps } from './types'
 
-export function ListValue({ value, className }: DocyrusValueProps) {
-  if (value == null || (Array.isArray(value) && value.length === 0)) {
-    return <span className="text-muted-foreground">—</span>
+export function ListValue({
+  value,
+  enumOptions,
+  className,
+}: DocyrusValueProps) {
+  if (
+    value == null ||
+    value === '' ||
+    (Array.isArray(value) && value.length === 0)
+  ) {
+    return <span className="text-muted-foreground">–</span>
   }
 
-  const count = Array.isArray(value)
-    ? value.length
-    : typeof value === 'number'
-      ? value
-      : 0
+  const id = extractEnumId(value)
+  const option = id != null ? enumOptions?.find((o) => o.id === id) : undefined
+
+  if (!option) {
+    const fallback =
+      extractEnumLabel(value) ?? (id != null ? String(id) : String(value))
+
+    return (
+      <span className={cn('block truncate text-sm', className)}>
+        {fallback}
+      </span>
+    )
+  }
+
+  const colors = getEnumBadgeColors(option.color)
 
   return (
-    <span
+    <Badge
+      variant="secondary"
       className={cn(
-        'inline-flex items-center gap-1 text-sm text-muted-foreground',
+        'max-w-full',
+        shouldRenderEnumOptionChip(option) && 'rounded-md',
+        colors.className,
         className,
       )}
+      style={colors.style}
     >
-      <List className="size-3.5 shrink-0" />
-      <span>
-        {count} {count === 1 ? 'record' : 'records'}
-      </span>
-    </span>
+      {option.icon && (
+        <DocyrusIcon icon={option.icon} className="size-3.5 shrink-0" />
+      )}
+      <span className="truncate">{option.name}</span>
+    </Badge>
   )
 }

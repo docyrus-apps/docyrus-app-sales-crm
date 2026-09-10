@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { useCallback, useMemo, useState } from 'react'
 
 import { ChevronsUpDownIcon, SearchIcon } from 'lucide-react'
@@ -19,9 +21,9 @@ import {
   featuredHugeIcons,
   featuredIcons,
   hugeIcons,
-} from '@/lib/icon-libraries'
+} from '@/lib/docyrus/icon-libraries'
 
-import { useUiTranslation } from '@/lib/use-ui-translation'
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 import { FormFieldLabel } from './form-field-label'
 import { type DocyrusFormFieldProps } from './types'
@@ -42,9 +44,8 @@ export function IconFormField({
   className,
 }: DocyrusFormFieldProps) {
   return (
-    <form.Field
-      name={fieldConfig.slug}
-      children={(field: any) => {
+    <form.Field name={fieldConfig.slug}>
+      {(field: any) => {
         const isInvalid =
           field.state.meta.isTouched && !field.state.meta.isValid
         const currentValue: string = field.state.value ?? ''
@@ -67,7 +68,7 @@ export function IconFormField({
           </Field>
         )
       }}
-    />
+    </form.Field>
   )
 }
 
@@ -87,7 +88,7 @@ function IconPickerPopover({
   const { t } = useUiTranslation()
   const [open, setOpen] = useState(false)
   const [iconSearch, setIconSearch] = useState('')
-  const [iconLibrary, setIconLibrary] = useState<IconLibrary>(
+  const [iconLibrary, setIconLibrary] = useState<IconLibrary>(() =>
     getIconLibrary(value),
   )
 

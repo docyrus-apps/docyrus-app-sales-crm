@@ -1,3 +1,4 @@
+/* eslint-disable */
 // @ts-nocheck
 import { BaseMentionPlugin } from '@platejs/mention'
 

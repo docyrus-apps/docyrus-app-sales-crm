@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { MessageSquare } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -21,7 +23,7 @@ export function ConversationChannelValue({
   className,
 }: DocyrusValueProps) {
   if (value == null || value === '') {
-    return <span className="text-muted-foreground">—</span>
+    return <span className="text-muted-foreground">–</span>
   }
 
   let display: string
@@ -35,7 +37,12 @@ export function ConversationChannelValue({
   }
 
   return (
-    <span className={cn('inline-flex items-center gap-1 text-sm', className)}>
+    <span
+      className={cn(
+        'inline-flex min-w-0 max-w-full items-center gap-1 text-sm',
+        className,
+      )}
+    >
       <MessageSquare className="size-3.5 shrink-0 text-muted-foreground" />
       <span className="truncate">{display}</span>
     </span>

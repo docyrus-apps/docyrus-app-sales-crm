@@ -1,14 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+
+import { type SlotDefinition } from '@/lib/field-sales'
+
 import { useTranslation } from 'react-i18next'
 import { format } from 'date-fns'
 import { MapPinned, Trash2 } from 'lucide-react'
+
 import {
   Map as DocyrusMap,
   MapMarker,
-  MapPopup,
   MapPolyline,
+  MapPopup,
   MapTileLayer,
-  MapZoomControl,
+  MapZoomControl
 } from '@/components/docyrus/map'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -18,14 +22,14 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
-  AccordionTrigger,
+  AccordionTrigger
 } from '@/components/ui/accordion'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
@@ -34,54 +38,53 @@ import {
   getRelationName,
   getSlotKeyFromIso,
   getStatusMeta,
-  parseMapLocation,
-  type SlotDefinition,
+  parseMapLocation
 } from '@/lib/field-sales'
 
 export interface FieldSalesBoardSourceItem {
-  id: string
-  title: string
-  subtitle?: string
-  detail?: string
+  id: string;
+  title: string;
+  subtitle?: string;
+  detail?: string;
 }
 
 export interface FieldSalesBoardPlanItem {
-  id?: string
-  subject?: string
-  start_date?: string
-  end_date?: string
-  status?: unknown
-  event_type?: unknown
-  organization?: unknown
-  contact?: unknown
-  location?: unknown
+  id?: string;
+  subject?: string;
+  start_date?: string;
+  end_date?: string;
+  status?: unknown;
+  event_type?: unknown;
+  organization?: unknown;
+  contact?: unknown;
+  location?: unknown;
 }
 
 export interface FieldSalesBoardDropPayload {
-  type: 'source' | 'plan'
-  id: string
+  type: 'source' | 'plan';
+  id: string;
 }
 
 interface FieldSalesScheduleBoardProps {
-  title?: string
-  titleToolbar?: React.ReactNode
-  sourceTitle?: string
-  sourceItems?: Array<FieldSalesBoardSourceItem>
-  sourceEmptyText?: string
-  sourceToolbar?: React.ReactNode
-  days: Array<Date>
-  slots: Array<SlotDefinition>
-  plans: Array<FieldSalesBoardPlanItem>
-  readOnly?: boolean
-  className?: string
-  canDragPlan?: (plan: FieldSalesBoardPlanItem) => boolean
-  canDeletePlan?: (plan: FieldSalesBoardPlanItem) => boolean
-  onDeletePlan?: (plan: FieldSalesBoardPlanItem) => void
+  title?: string;
+  titleToolbar?: React.ReactNode;
+  sourceTitle?: string;
+  sourceItems?: Array<FieldSalesBoardSourceItem>;
+  sourceEmptyText?: string;
+  sourceToolbar?: React.ReactNode;
+  days: Array<Date>;
+  slots: Array<SlotDefinition>;
+  plans: Array<FieldSalesBoardPlanItem>;
+  readOnly?: boolean;
+  className?: string;
+  canDragPlan?: (plan: FieldSalesBoardPlanItem) => boolean;
+  canDeletePlan?: (plan: FieldSalesBoardPlanItem) => boolean;
+  onDeletePlan?: (plan: FieldSalesBoardPlanItem) => void;
   onDropToSlot?: (
     payload: FieldSalesBoardDropPayload,
     day: Date,
-    slot: SlotDefinition,
-  ) => void
+    slot: SlotDefinition
+  ) => void;
 }
 
 function getPlanLabel(plan: FieldSalesBoardPlanItem, planFallback: string) {
@@ -100,6 +103,7 @@ function serializePayload(payload: FieldSalesBoardDropPayload) {
 function parsePayload(value: string): FieldSalesBoardDropPayload | null {
   try {
     const parsed = JSON.parse(value) as FieldSalesBoardDropPayload
+
     if (
       parsed &&
       (parsed.type === 'source' || parsed.type === 'plan') &&
@@ -115,15 +119,15 @@ function parsePayload(value: string): FieldSalesBoardDropPayload | null {
 }
 
 type DayMapEntry = {
-  plan: FieldSalesBoardPlanItem
-  order: number
-  label: string
-  timeLabel: string
+  plan: FieldSalesBoardPlanItem;
+  order: number;
+  label: string;
+  timeLabel: string;
   location: {
-    latitude: number
-    longitude: number
-    label?: string
-  } | null
+    latitude: number;
+    longitude: number;
+    label?: string;
+  } | null;
 }
 
 type RouteMode = 'plan' | 'optimized'
@@ -162,6 +166,7 @@ function buildOptimizedRoute(entries: Array<DayMapEntry>) {
 
     remaining.forEach((candidate, index) => {
       const distance = getDistanceBetweenEntries(current!, candidate)
+
       if (distance < nearestDistance) {
         nearestDistance = distance
         nearestIndex = index
@@ -180,12 +185,14 @@ function buildGoogleMapsRouteUrl(entries: Array<DayMapEntry>) {
 
   if (entries.length === 1) {
     const point = entries[0]?.location
+
     if (!point) return ''
+
     return `https://www.google.com/maps/search/?api=1&query=${point.latitude},${point.longitude}`
   }
 
   const encodedPoints = entries
-    .map((entry) => `${entry.location!.latitude},${entry.location!.longitude}`)
+    .map(entry => `${entry.location!.latitude},${entry.location!.longitude}`)
     .slice(0, 10)
 
   const [origin, ...rest] = encodedPoints
@@ -197,7 +204,7 @@ function buildGoogleMapsRouteUrl(entries: Array<DayMapEntry>) {
     api: '1',
     origin,
     destination,
-    travelmode: 'driving',
+    travelmode: 'driving'
   })
 
   if (rest.length > 0) {
@@ -214,15 +221,15 @@ function FieldSalesPlanCard({
   selected,
   deletable,
   onClick,
-  onDelete,
+  onDelete
 }: {
-  plan: FieldSalesBoardPlanItem
-  draggable: boolean
-  selectable?: boolean
-  selected?: boolean
-  deletable?: boolean
-  onClick?: () => void
-  onDelete?: () => void
+  plan: FieldSalesBoardPlanItem;
+  draggable: boolean;
+  selectable?: boolean;
+  selected?: boolean;
+  deletable?: boolean;
+  onClick?: () => void;
+  onDelete?: () => void;
 }) {
   const { t } = useTranslation()
   const status = getStatusMeta(plan.status)
@@ -233,9 +240,8 @@ function FieldSalesPlanCard({
       className={cn(
         'group/plan rounded-xl border bg-card px-3 py-2 shadow-sm transition',
         selected && 'border-primary bg-primary/5',
-        !draggable && !selectable && !deletable && 'opacity-80',
-      )}
-    >
+        !draggable && !selectable && !deletable && 'opacity-80'
+      )}>
       <div className="flex items-start gap-2">
         <button
           type="button"
@@ -247,17 +253,16 @@ function FieldSalesPlanCard({
               'application/json',
               serializePayload({
                 type: 'plan',
-                id: plan.id,
-              }),
+                id: plan.id
+              })
             )
             event.dataTransfer.effectAllowed = 'move'
           }}
           className={cn(
             'min-w-0 flex-1 text-left transition',
             draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-default',
-            selectable && 'hover:text-foreground',
-          )}
-        >
+            selectable && 'hover:text-foreground'
+          )}>
           <div className="text-sm font-semibold text-foreground">
             {getPlanLabel(plan, t('fieldSales.common.plan'))}
           </div>
@@ -280,12 +285,9 @@ function FieldSalesPlanCard({
             variant="ghost"
             size="icon-xs"
             className="mt-0.5 shrink-0 text-muted-foreground transition sm:opacity-0 sm:pointer-events-none sm:group-hover/plan:opacity-100 sm:group-hover/plan:pointer-events-auto sm:group-focus-within/plan:opacity-100 sm:group-focus-within/plan:pointer-events-auto hover:text-destructive focus-visible:opacity-100 focus-visible:pointer-events-auto"
-            onClick={onDelete}
-          >
+            onClick={onDelete}>
             <Trash2 className="h-3.5 w-3.5" />
-            <span className="sr-only">
-              {t('fieldSales.common.deletePlan')}
-            </span>
+            <span className="sr-only">{t('fieldSales.common.deletePlan')}</span>
           </Button>
         ) : null}
       </div>
@@ -308,14 +310,14 @@ export function FieldSalesScheduleBoard({
   canDragPlan,
   canDeletePlan,
   onDeletePlan,
-  onDropToSlot,
+  onDropToSlot
 }: FieldSalesScheduleBoardProps) {
   const { t } = useTranslation()
   const isMobile = useIsMobile()
   const [selectedPayload, setSelectedPayload] =
     useState<FieldSalesBoardDropPayload | null>(null)
   const [selectedMapDayKey, setSelectedMapDayKey] = useState<string | null>(
-    null,
+    null
   )
   const [routeMode, setRouteMode] = useState<RouteMode>('plan')
   const selectedDayMapRef = useRef<any>(null)
@@ -324,9 +326,11 @@ export function FieldSalesScheduleBoard({
 
   for (const plan of plans) {
     const key = getSlotKeyFromIso(plan.start_date)
+
     if (!key) continue
 
     const bucket = planMap.get(key)
+
     if (bucket) {
       bucket.push(plan)
     } else {
@@ -352,9 +356,7 @@ export function FieldSalesScheduleBoard({
     const entries = new Map<string, Array<DayMapEntry>>()
 
     for (const [dayKey, dayPlans] of grouped.entries()) {
-      const sortedPlans = [...dayPlans].sort((first, second) =>
-        (first.start_date || '').localeCompare(second.start_date || ''),
-      )
+      const sortedPlans = [...dayPlans].sort((first, second) => (first.start_date || '').localeCompare(second.start_date || ''))
 
       entries.set(
         dayKey,
@@ -365,8 +367,8 @@ export function FieldSalesScheduleBoard({
           timeLabel: plan.start_date
             ? format(new Date(plan.start_date), 'HH:mm')
             : '',
-          location: getPlanLocation(plan),
-        })),
+          location: getPlanLocation(plan)
+        }))
       )
     }
 
@@ -377,30 +379,29 @@ export function FieldSalesScheduleBoard({
     ? (dayEntriesByKey.get(selectedMapDayKey) ?? [])
     : []
   const selectedDayLocationEntries = selectedDayEntries.filter(
-    (entry) => entry.location,
+    entry => entry.location
   )
   const optimizedDayLocationEntries = useMemo(
     () => buildOptimizedRoute(selectedDayLocationEntries),
-    [selectedDayLocationEntries],
+    [selectedDayLocationEntries]
   )
   const activeDayLocationEntries =
     routeMode === 'optimized'
       ? optimizedDayLocationEntries.map((entry, index) => ({
           ...entry,
-          order: index + 1,
+          order: index + 1
         }))
       : selectedDayLocationEntries
   const entriesWithoutLocation = selectedDayEntries.filter(
-    (entry) => !entry.location,
+    entry => !entry.location
   )
   const selectedDayMarkerPoints = activeDayLocationEntries.map(
-    (entry) =>
-      [entry.location!.latitude, entry.location!.longitude] as [number, number],
+    entry => [entry.location!.latitude, entry.location!.longitude] as [number, number]
   )
-  const selectedDay = days.find((day) => getDateKey(day) === selectedMapDayKey)
+  const selectedDay = days.find(day => getDateKey(day) === selectedMapDayKey)
   const selectedDayMapTitle = selectedDay
     ? t('fieldSales.scheduleBoard.routeForDate', {
-        date: format(selectedDay, 'dd MMMM'),
+        date: format(selectedDay, 'dd MMMM')
       })
     : t('fieldSales.scheduleBoard.dailyRoute')
   const activeRouteColor = routeMode === 'optimized' ? '#0f766e' : '#2563eb'
@@ -414,30 +415,31 @@ export function FieldSalesScheduleBoard({
 
   useEffect(() => {
     const map = selectedDayMapRef.current
+
     if (!map || selectedDayMarkerPoints.length === 0) return
 
     if (selectedDayMarkerPoints.length === 1) {
       map.setView(
         selectedDayMarkerPoints[0],
-        Math.max(map.getZoom?.() ?? 13, 14),
+        Math.max(map.getZoom?.() ?? 13, 14)
       )
+
       return
     }
 
     map.fitBounds(selectedDayMarkerPoints, {
-      padding: [40, 40],
+      padding: [40, 40]
     })
   }, [selectedDayMarkerPoints, selectedMapDayKey])
 
   const sourceItemsById = useMemo(
-    () => new Map((sourceItems ?? []).map((item) => [item.id, item])),
-    [sourceItems],
+    () => new Map((sourceItems ?? []).map(item => [item.id, item])),
+    [sourceItems]
   )
 
   const plansById = useMemo(
-    () =>
-      new Map(plans.filter((plan) => plan.id).map((plan) => [plan.id!, plan])),
-    [plans],
+    () => new Map(plans.filter(plan => plan.id).map(plan => [plan.id!, plan])),
+    [plans]
   )
 
   const selectedPayloadLabel = useMemo(() => {
@@ -452,9 +454,14 @@ export function FieldSalesScheduleBoard({
 
     return getPlanLabel(
       plansById.get(selectedPayload.id) ?? {},
-      t('fieldSales.common.plan'),
+      t('fieldSales.common.plan')
     )
-  }, [plansById, selectedPayload, sourceItemsById, t])
+  }, [
+plansById,
+selectedPayload,
+sourceItemsById,
+t
+])
 
   const handleMobileAssign = (day: Date, slot: SlotDefinition) => {
     if (!selectedPayload || readOnly || !onDropToSlot) return
@@ -466,7 +473,7 @@ export function FieldSalesScheduleBoard({
     const dayKey = getDateKey(day)
     const dayEntries = dayEntriesByKey.get(dayKey) ?? []
     const hasPlans = dayEntries.length > 0
-    const hasLocations = dayEntries.some((entry) => entry.location)
+    const hasLocations = dayEntries.some(entry => entry.location)
 
     return (
       <Button
@@ -491,8 +498,7 @@ export function FieldSalesScheduleBoard({
           if (!hasPlans) return
           setRouteMode('plan')
           setSelectedMapDayKey(dayKey)
-        }}
-      >
+        }}>
         <MapPinned className="h-3.5 w-3.5" />
       </Button>
     )
@@ -511,9 +517,8 @@ export function FieldSalesScheduleBoard({
           <ScrollArea
             className={cn(
               'pr-3',
-              isMobile ? 'h-auto max-h-72' : 'h-[calc(100vh-18rem)]',
-            )}
-          >
+              isMobile ? 'h-auto max-h-72' : 'h-[calc(100vh-18rem)]'
+            )}>
             <div className="space-y-2">
               {sourceItems.length === 0 ? (
                 <div className="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
@@ -537,15 +542,14 @@ export function FieldSalesScheduleBoard({
                       onDragStart={(event) => {
                         event.dataTransfer.setData(
                           'application/json',
-                          serializePayload({ type: 'source', id: item.id }),
+                          serializePayload({ type: 'source', id: item.id })
                         )
                         event.dataTransfer.effectAllowed = 'copyMove'
                       }}
                       className={cn(
                         'flex w-full flex-col rounded-xl border bg-card px-3 py-3 text-left transition hover:border-primary/40 hover:bg-muted/40',
-                        isSelected && 'border-primary bg-primary/5',
-                      )}
-                    >
+                        isSelected && 'border-primary bg-primary/5'
+                      )}>
                       <span className="font-medium text-foreground">
                         {item.title}
                       </span>
@@ -589,7 +593,7 @@ export function FieldSalesScheduleBoard({
             <p className="mt-1 text-muted-foreground">
               {selectedPayload
                 ? t('fieldSales.scheduleBoard.selectDayTimeForRecord', {
-                    label: selectedPayloadLabel,
+                    label: selectedPayloadLabel
                   })
                 : t('fieldSales.scheduleBoard.selectionHint')}
             </p>
@@ -598,8 +602,7 @@ export function FieldSalesScheduleBoard({
                 variant="ghost"
                 size="sm"
                 className="mt-2 h-auto px-0 text-sm"
-                onClick={() => setSelectedPayload(null)}
-              >
+                onClick={() => setSelectedPayload(null)}>
                 {t('fieldSales.scheduleBoard.clearSelection')}
               </Button>
             ) : null}
@@ -610,12 +613,12 @@ export function FieldSalesScheduleBoard({
           type="single"
           collapsible
           defaultValue={days[0] ? getDateKey(days[0]) : undefined}
-          className="rounded-xl border px-4"
-        >
+          className="rounded-xl border px-4">
           {days.map((day) => {
             const dayKey = getDateKey(day)
             const dayPlanCount = slots.reduce((count, slot) => {
               const slotKey = `${dayKey}|${slot.start}`
+
               return count + (planMap.get(slotKey)?.length ?? 0)
             }, 0)
 
@@ -630,7 +633,7 @@ export function FieldSalesScheduleBoard({
                       <div className="text-xs text-muted-foreground">
                         {format(day, 'EEEE')} •{' '}
                         {t('fieldSales.plans.planCount', {
-                          count: dayPlanCount,
+                          count: dayPlanCount
                         })}
                       </div>
                     </div>
@@ -645,8 +648,7 @@ export function FieldSalesScheduleBoard({
                     return (
                       <div
                         key={slotKey}
-                        className="rounded-xl border bg-background px-3 py-3"
-                      >
+                        className="rounded-xl border bg-background px-3 py-3">
                         <div className="flex items-center justify-between gap-3">
                           <div className="text-sm font-medium text-foreground">
                             {slot.label}
@@ -656,8 +658,7 @@ export function FieldSalesScheduleBoard({
                               size="sm"
                               variant={selectedPayload ? 'default' : 'outline'}
                               disabled={!selectedPayload}
-                              onClick={() => handleMobileAssign(day, slot)}
-                            >
+                              onClick={() => handleMobileAssign(day, slot)}>
                               {t('fieldSales.scheduleBoard.addHere')}
                             </Button>
                           ) : null}
@@ -684,7 +685,7 @@ export function FieldSalesScheduleBoard({
                                     plan.id ??
                                     `${slotKey}-${getPlanLabel(
                                       plan,
-                                      t('fieldSales.common.plan'),
+                                      t('fieldSales.common.plan')
                                     )}`
                                   }
                                   plan={plan}
@@ -697,14 +698,13 @@ export function FieldSalesScheduleBoard({
                                       return
                                     setSelectedPayload({
                                       type: 'plan',
-                                      id: plan.id,
+                                      id: plan.id
                                     })
                                   }}
                                   onDelete={() => {
                                     if (!onDeletePlan) return
                                     onDeletePlan(plan)
-                                  }}
-                                />
+                                  }} />
                               )
                             })}
                           </div>
@@ -736,17 +736,15 @@ export function FieldSalesScheduleBoard({
           <div
             className="grid min-w-max"
             style={{
-              gridTemplateColumns: `120px repeat(${days.length}, minmax(220px, 1fr))`,
-            }}
-          >
+              gridTemplateColumns: `120px repeat(${days.length}, minmax(220px, 1fr))`
+            }}>
             <div className="sticky left-0 top-0 z-20 border-b bg-muted/80 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground backdrop-blur">
               {t('fieldSales.scheduleBoard.time')}
             </div>
-            {days.map((day) => (
+            {days.map(day => (
               <div
                 key={day.toISOString()}
-                className="sticky top-0 z-10 border-b border-l bg-muted/80 px-4 py-3 backdrop-blur"
-              >
+                className="sticky top-0 z-10 border-b border-l bg-muted/80 px-4 py-3 backdrop-blur">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <div className="text-sm font-semibold text-foreground">
@@ -761,7 +759,7 @@ export function FieldSalesScheduleBoard({
               </div>
             ))}
 
-            {slots.map((slot) => (
+            {slots.map(slot => (
               <div key={slot.key} className="contents">
                 <div className="sticky left-0 z-10 border-t bg-background px-4 py-4 text-sm font-medium text-muted-foreground">
                   {slot.label}
@@ -784,12 +782,12 @@ export function FieldSalesScheduleBoard({
                         if (readOnly || !onDropToSlot) return
                         event.preventDefault()
                         const payload = parsePayload(
-                          event.dataTransfer.getData('application/json'),
+                          event.dataTransfer.getData('application/json')
                         )
+
                         if (!payload) return
                         onDropToSlot(payload, day, slot)
-                      }}
-                    >
+                      }}>
                       <div className="space-y-2">
                         {slotPlans.map((plan) => {
                           const draggable =
@@ -803,7 +801,7 @@ export function FieldSalesScheduleBoard({
                                 plan.id ??
                                 `${slotKey}-${getPlanLabel(
                                   plan,
-                                  t('fieldSales.common.plan'),
+                                  t('fieldSales.common.plan')
                                 )}`
                               }
                               plan={plan}
@@ -812,8 +810,7 @@ export function FieldSalesScheduleBoard({
                               onDelete={() => {
                                 if (!onDeletePlan) return
                                 onDeletePlan(plan)
-                              }}
-                            />
+                              }} />
                           )
                         })}
                       </div>
@@ -834,9 +831,8 @@ export function FieldSalesScheduleBoard({
         className={cn(
           'grid gap-4',
           sourceItems ? 'xl:grid-cols-[320px_minmax(0,1fr)]' : 'grid-cols-1',
-          className,
-        )}
-      >
+          className
+        )}>
         {renderSourceItems()}
         {isMobile ? renderMobileBoard() : renderDesktopBoard()}
       </div>
@@ -847,8 +843,7 @@ export function FieldSalesScheduleBoard({
           if (!open) {
             setSelectedMapDayKey(null)
           }
-        }}
-      >
+        }}>
         <DialogContent className="max-w-[calc(100%-1rem)] gap-0 overflow-hidden p-0 sm:max-w-5xl">
           <DialogHeader className="gap-3 border-b px-6 py-4 pr-12">
             <div className="space-y-1">
@@ -857,7 +852,7 @@ export function FieldSalesScheduleBoard({
                 {selectedDayLocationEntries.length > 0
                   ? t('fieldSales.scheduleBoard.mapSummary', {
                       total: selectedDayEntries.length,
-                      shown: selectedDayLocationEntries.length,
+                      shown: selectedDayLocationEntries.length
                     })
                   : t('fieldSales.scheduleBoard.noMapLocationsForDay')}
               </DialogDescription>
@@ -867,8 +862,7 @@ export function FieldSalesScheduleBoard({
                 type="button"
                 size="sm"
                 variant={routeMode === 'plan' ? 'default' : 'outline'}
-                onClick={() => setRouteMode('plan')}
-              >
+                onClick={() => setRouteMode('plan')}>
                 {t('fieldSales.scheduleBoard.planOrder')}
               </Button>
               <Button
@@ -876,8 +870,7 @@ export function FieldSalesScheduleBoard({
                 size="sm"
                 variant={routeMode === 'optimized' ? 'default' : 'outline'}
                 disabled={selectedDayLocationEntries.length < 2}
-                onClick={() => setRouteMode('optimized')}
-              >
+                onClick={() => setRouteMode('optimized')}>
                 {t('fieldSales.scheduleBoard.suggestedRoute')}
               </Button>
               <Button
@@ -890,10 +883,9 @@ export function FieldSalesScheduleBoard({
                   window.open(
                     googleMapsRouteUrl,
                     '_blank',
-                    'noopener,noreferrer',
+                    'noopener,noreferrer'
                   )
-                }}
-              >
+                }}>
                 {t('fieldSales.scheduleBoard.openInGoogleMaps')}
               </Button>
             </div>
@@ -907,8 +899,7 @@ export function FieldSalesScheduleBoard({
                     ref={selectedDayMapRef}
                     center={selectedDayMarkerPoints[0] ?? [39, 35]}
                     zoom={13}
-                    className="min-h-full rounded-none"
-                  >
+                    className="min-h-full rounded-none">
                     <MapTileLayer />
                     <MapZoomControl />
                     {selectedDayMarkerPoints.length > 1 ? (
@@ -919,28 +910,20 @@ export function FieldSalesScheduleBoard({
                           weight: 5,
                           opacity: 0.85,
                           dashArray:
-                            routeMode === 'optimized' ? undefined : '10 8',
-                        }}
-                      />
+                            routeMode === 'optimized' ? undefined : '10 8'
+                        }} />
                     ) : null}
-                    {activeDayLocationEntries.map((entry) => (
+                    {activeDayLocationEntries.map(entry => (
                       <MapMarker
-                        key={
-                          entry.plan.id ?? `${selectedMapDayKey}-${entry.order}`
-                        }
-                        position={[
-                          entry.location!.latitude,
-                          entry.location!.longitude,
-                        ]}
+                        key={entry.plan.id ?? `${selectedMapDayKey}-${entry.order}`}
+                        position={[entry.location!.latitude, entry.location!.longitude]}
                         icon={
                           <div
                             className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white shadow-lg ring-2 ring-background"
-                            style={{ backgroundColor: activeRouteColor }}
-                          >
+                            style={{ backgroundColor: activeRouteColor }}>
                             {entry.order}
                           </div>
-                        }
-                      >
+                        }>
                         <MapPopup>
                           <div className="space-y-1">
                             <div className="text-sm font-semibold text-foreground">
@@ -985,23 +968,21 @@ export function FieldSalesScheduleBoard({
                         </div>
                         <Badge variant="secondary" className="text-[11px]">
                           {t('fieldSales.scheduleBoard.locationsCount', {
-                            count: activeDayLocationEntries.length,
+                            count: activeDayLocationEntries.length
                           })}
                         </Badge>
                       </div>
-                      {activeDayLocationEntries.map((entry) => (
+                      {activeDayLocationEntries.map(entry => (
                         <div
                           key={
                             entry.plan.id ??
                             `${selectedMapDayKey}-list-${entry.order}`
                           }
-                          className="rounded-xl border bg-card px-3 py-3"
-                        >
+                          className="rounded-xl border bg-card px-3 py-3">
                           <div className="flex items-start gap-3">
                             <div
                               className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-                              style={{ backgroundColor: activeRouteColor }}
-                            >
+                              style={{ backgroundColor: activeRouteColor }}>
                               {entry.order}
                             </div>
                             <div className="min-w-0 flex-1 space-y-1">
@@ -1010,7 +991,7 @@ export function FieldSalesScheduleBoard({
                               </div>
                               <div className="text-xs text-muted-foreground">
                                 {entry.timeLabel ||
-                                t('fieldSales.scheduleBoard.noTimeSpecified')}
+                                  t('fieldSales.scheduleBoard.noTimeSpecified')}
                               </div>
                               {entry.location?.label ? (
                                 <div className="text-xs text-muted-foreground">
@@ -1028,26 +1009,24 @@ export function FieldSalesScheduleBoard({
                         <div className="text-sm font-semibold text-foreground">
                           {t('fieldSales.scheduleBoard.plansWithoutLocation')}
                         </div>
-                        {entriesWithoutLocation.map((entry) => (
+                        {entriesWithoutLocation.map(entry => (
                           <div
                             key={
                               entry.plan.id ??
                               `${selectedMapDayKey}-missing-${entry.order}`
                             }
-                            className="rounded-xl border border-dashed bg-card px-3 py-3"
-                          >
+                            className="rounded-xl border border-dashed bg-card px-3 py-3">
                             <div className="space-y-1">
                               <div className="text-sm font-semibold text-foreground">
                                 {entry.label}
                               </div>
                               <div className="text-xs text-muted-foreground">
                                 {entry.timeLabel ||
-                                t('fieldSales.scheduleBoard.noTimeSpecified')}
+                                  t('fieldSales.scheduleBoard.noTimeSpecified')}
                               </div>
                               <Badge
                                 variant="outline"
-                                className="mt-1 text-[11px]"
-                              >
+                                className="mt-1 text-[11px]">
                                 {t('fieldSales.scheduleBoard.noLocation')}
                               </Badge>
                             </div>

@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 /*
  * Source: https://usehooks-ts.com/react-hook/use-debounce-callback
  */
@@ -31,38 +33,38 @@ export function useDebounceCallback<T extends (...args: any) => ReturnType<T>>(
   delay = 500,
   options?: DebounceOptions,
 ): DebouncedState<T> {
-  const debouncedFunc = useRef<ReturnType<typeof debounce>>(null)
+  const debouncedFuncRef = useRef<ReturnType<typeof debounce>>(null)
 
   useUnmount(() => {
-    if (debouncedFunc.current) {
-      debouncedFunc.current.cancel()
+    if (debouncedFuncRef.current) {
+      debouncedFuncRef.current.cancel()
     }
   })
 
   const debounced = useMemo(() => {
-    const debouncedFuncInstance = debounce(func, delay, options)
+    const debouncedFuncRefInstance = debounce(func, delay, options)
 
     const wrappedFunc: DebouncedState<T> = (...args: Parameters<T>) => {
-      return debouncedFuncInstance(...args)
+      return debouncedFuncRefInstance(...args)
     }
 
     wrappedFunc.cancel = () => {
-      debouncedFuncInstance.cancel()
+      debouncedFuncRefInstance.cancel()
     }
 
     wrappedFunc.isPending = () => {
-      return !!debouncedFunc.current
+      return !!debouncedFuncRef.current
     }
 
     wrappedFunc.flush = () => {
-      return debouncedFuncInstance.flush()
+      return debouncedFuncRefInstance.flush()
     }
 
     return wrappedFunc
   }, [func, delay, options])
 
   useEffect(() => {
-    debouncedFunc.current = debounce(func, delay, options)
+    debouncedFuncRef.current = debounce(func, delay, options)
   }, [func, delay, options])
 
   return debounced

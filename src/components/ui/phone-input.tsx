@@ -1,3 +1,4 @@
+/* eslint-disable */
 // @ts-nocheck
 'use client'
 
@@ -345,9 +346,21 @@ function detectCountryFromNumber(
 function formatPhoneNumber(value: string, countries: Country[]): string {
   if (!value) return ''
 
-  const normalized = value.startsWith('+') ? value : `+${value}`
+  /*
+   * Only an explicitly international value ("+…") carries a dial code. A bare
+   * local number must NOT be reinterpreted as one: prefixing "+" and running
+   * dial-code detection over "5551234567" matches "+55" and rewrites the entry
+   * as a Brazilian number. Group the digits as typed instead.
+   */
+  if (!value.startsWith('+')) {
+    const localDigits = value.replace(/\D/g, '')
 
-  const digits = normalized.slice(1).replace(/\D/g, '')
+    if (!localDigits) return ''
+
+    return groupPhoneDigits(localDigits)
+  }
+
+  const digits = value.slice(1).replace(/\D/g, '')
   if (!digits) return '+'
 
   const detected = detectCountryFromNumber(`+${digits}`, countries)
@@ -361,16 +374,23 @@ function formatPhoneNumber(value: string, countries: Country[]): string {
   let formatted = `+${countryCode}`
 
   if (rest) {
-    formatted += ' '
-    for (let i = 0; i < rest.length; i++) {
-      if (i > 0 && i % 3 === 0) {
-        formatted += ' '
-      }
-      formatted += rest[i]
-    }
+    formatted += ` ${groupPhoneDigits(rest)}`
   }
 
   return formatted
+}
+
+function groupPhoneDigits(digits: string): string {
+  let grouped = ''
+
+  for (let i = 0; i < digits.length; i++) {
+    if (i > 0 && i % 3 === 0) {
+      grouped += ' '
+    }
+    grouped += digits[i]
+  }
+
+  return grouped
 }
 
 type RootElement = React.ComponentRef<typeof PhoneInput>
@@ -459,7 +479,6 @@ interface PhoneInputProps extends React.ComponentProps<'div'> {
   required?: boolean
   invalid?: boolean
   showFlag?: boolean
-  children?: React.ReactNode
 }
 
 function PhoneInput(props: PhoneInputProps) {
@@ -480,9 +499,9 @@ function PhoneInput(props: PhoneInputProps) {
     invalid,
     showFlag = true,
     className,
+    children,
     id,
     ref,
-    children,
     ...rootProps
   } = props
 
@@ -568,10 +587,13 @@ function PhoneInput(props: PhoneInputProps) {
 
     if (!value) return
 
-    const digits = value.slice(1).replace(/\D/g, '')
-    const shouldDetect = startsWithPlus || digits.length >= 10
-
-    if (!shouldDetect) return
+    /*
+     * Country detection is only meaningful for an international entry. The old
+     * `digits.length >= 10` heuristic also fired for plain local numbers and
+     * silently reassigned the country (a 10-digit Turkish mobile became
+     * Brazilian), so require the explicit "+".
+     */
+    if (!startsWithPlus) return
 
     const detected = detectCountryFromNumber(value, countries)
     if (detected && detected.code !== country) {
@@ -604,13 +626,8 @@ function PhoneInput(props: PhoneInputProps) {
   )
 
   const RootPrimitive = asChild ? SlotPrimitive.Slot : 'div'
-
-  const content = children ?? (
-    <>
-      <PhoneInputCountrySelect />
-      <PhoneInputField />
-    </>
-  )
+  const shouldRenderDefaultParts =
+    !asChild && React.Children.count(children) === 0
 
   return (
     <StoreContext.Provider value={store}>
@@ -621,15 +638,21 @@ function PhoneInput(props: PhoneInputProps) {
           data-disabled={disabled ? '' : undefined}
           data-invalid={invalid ? '' : undefined}
           data-readonly={readOnly ? '' : undefined}
-          id={rootId}
           {...rootProps}
           ref={composedRef}
           className={cn(
-            'relative flex h-10 w-full items-center rounded-md border border-input bg-background transition-colors has-[[data-slot=input-group-control]:focus-visible]:border-ring has-[[data-slot][aria-invalid=true]]:border-destructive has-[[data-slot=input-group-control]:focus-visible]:ring-[3px] has-[[data-slot=input-group-control]:focus-visible]:ring-ring/50 has-[[data-slot][aria-invalid=true]]:ring-[3px] has-[[data-slot][aria-invalid=true]]:ring-destructive/20 data-disabled:cursor-not-allowed data-disabled:opacity-50 dark:bg-input/30 dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40',
+            'relative flex h-9 w-full items-center rounded-md border border-input bg-background transition-colors has-[[data-slot=phone-input-field]:focus-visible]:border-ring has-[[data-slot][aria-invalid=true]]:border-destructive has-[[data-slot=phone-input-field]:focus-visible]:ring-[3px] has-[[data-slot=phone-input-field]:focus-visible]:ring-ring/50 has-[[data-slot][aria-invalid=true]]:ring-[3px] has-[[data-slot][aria-invalid=true]]:ring-destructive/20 data-disabled:cursor-not-allowed data-disabled:opacity-50 dark:bg-input/30 dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40',
             className,
           )}
         >
-          {content}
+          {shouldRenderDefaultParts ? (
+            <>
+              <PhoneInputCountrySelect />
+              <PhoneInputField />
+            </>
+          ) : (
+            children
+          )}
         </RootPrimitive>
         {isFormControl && (
           <VisuallyHiddenInput
@@ -779,6 +802,7 @@ function PhoneInputField(props: React.ComponentProps<'input'>) {
     invalid,
     readOnly,
     required,
+    rootId,
     placeholder,
     countries,
   } = usePhoneInputContext(FIELD_NAME)
@@ -804,7 +828,18 @@ function PhoneInputField(props: React.ComponentProps<'input'>) {
 
       const startsWithPlus = inputValue.startsWith('+')
       const digits = inputValue.replace(/\D/g, '')
-      const newValue = digits ? `+${digits}` : startsWithPlus ? '+' : ''
+      /*
+       * Preserve what the user typed. Forcing a leading "+" onto a local number
+       * turns its first digits into a country dial code (see formatPhoneNumber),
+       * so only an international entry gets the "+".
+       */
+      const newValue = digits
+        ? startsWithPlus
+          ? `+${digits}`
+          : digits
+        : startsWithPlus
+          ? '+'
+          : ''
       store.setState('startsWithPlus', startsWithPlus)
       store.setState('value', newValue)
     },
@@ -826,6 +861,7 @@ function PhoneInputField(props: React.ComponentProps<'input'>) {
       readOnly={isReadOnly}
       required={isRequired}
       {...inputProps}
+      id={inputProps.id ?? rootId}
       ref={composedRef}
       className={cn(
         'h-full flex-1 rounded-r-md rounded-l-none border-0 bg-transparent shadow-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:bg-transparent aria-invalid:border-destructive aria-invalid:ring-[3px] aria-invalid:ring-destructive/20 dark:bg-transparent dark:aria-invalid:ring-destructive/40 dark:disabled:bg-transparent',

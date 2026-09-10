@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, use, type ReactNode } from 'react'
+import { type ReactNode, createContext, use } from 'react'
 
 export type TranslateFn = (key: string, fallback: string) => string
 
@@ -22,7 +22,7 @@ export type TranslateFn = (key: string, fallback: string) => string
  * ```
  */
 export const UiTranslationContext = createContext<{ t: TranslateFn } | null>(
-  null,
+  null
 )
 
 const fallbackT: TranslateFn = (_key, fallback) => fallback
@@ -47,9 +47,9 @@ export function useUiTranslation(): { t: TranslateFn } {
 interface UiTranslationProviderProps {
   t: (
     key: string,
-    fallbackOrParams?: string | Record<string, string | number>,
-  ) => string
-  children: ReactNode
+    fallbackOrParams?: string | Record<string, string | number>
+  ) => string;
+  children: ReactNode;
 }
 
 /**
@@ -60,7 +60,7 @@ interface UiTranslationProviderProps {
  */
 export function UiTranslationProvider({
   t,
-  children,
+  children
 }: UiTranslationProviderProps) {
   const value = { t: (key: string, fallback: string) => t(key, fallback) }
 

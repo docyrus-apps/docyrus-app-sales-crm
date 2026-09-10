@@ -1,46 +1,46 @@
-'use client';
+'use client'
 
 // @ts-nocheck
 /* eslint-disable */
-import { type ComponentType, type ReactNode } from 'react';
+import { type ComponentType, type ReactNode } from 'react'
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Tooltip,
   TooltipContent,
-  TooltipTrigger
-} from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
-import { BrainCircuit } from 'lucide-react';
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
+import { BrainCircuit } from 'lucide-react'
 
-import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation';
+import { useUiTranslation } from '@/hooks/docyrus/use-ui-translation'
 
 export interface DocyrusAgentChatInputMemoryMenuProps {
   /** Fires when "Extract Memories from Session" is selected. */
-  onExtract?: () => void;
+  onExtract?: () => void
   /** Fires when "Manage Memories" is selected. */
-  onManageMemories?: () => void;
+  onManageMemories?: () => void
   /** Disable the "Extract" item (e.g. when no thread / no messages yet). */
-  canExtract?: boolean;
+  canExtract?: boolean
   /** Disable the "Manage Memories" item. */
-  canManage?: boolean;
+  canManage?: boolean
   /** Override the trigger icon. */
-  icon?: ComponentType<{ className?: string }>;
+  icon?: ComponentType<{ className?: string }>
   /** Tooltip / aria-label. */
-  tooltip?: string;
+  tooltip?: string
   /** Override the dropdown content entirely (replaces both built-in items). */
-  children?: ReactNode;
+  children?: ReactNode
   /** Label override for the Extract item. */
-  extractLabel?: ReactNode;
+  extractLabel?: ReactNode
   /** Label override for the Manage item. */
-  manageLabel?: ReactNode;
-  className?: string;
+  manageLabel?: ReactNode
+  className?: string
 }
 
 /**
@@ -60,10 +60,11 @@ export const DocyrusAgentChatInputMemoryMenu = ({
   children,
   extractLabel,
   manageLabel,
-  className
+  className,
 }: DocyrusAgentChatInputMemoryMenuProps) => {
-  const { t } = useUiTranslation();
-  const label = tooltip ?? t('ui.agent.tools.extractMemories', 'Extract memories');
+  const { t } = useUiTranslation()
+  const label =
+    tooltip ?? t('ui.agent.tools.extractMemories', 'Extract memories')
 
   return (
     <DropdownMenu>
@@ -72,10 +73,14 @@ export const DocyrusAgentChatInputMemoryMenu = ({
           <DropdownMenuTrigger asChild>
             <Button
               aria-label={label}
-              className={cn('size-6 text-muted-foreground hover:text-foreground', className)}
+              className={cn(
+                'size-6 text-muted-foreground hover:text-foreground',
+                className,
+              )}
               size="icon"
               type="button"
-              variant="ghost">
+              variant="ghost"
+            >
               <Icon className="size-3.5" />
             </Button>
           </DropdownMenuTrigger>
@@ -87,17 +92,24 @@ export const DocyrusAgentChatInputMemoryMenu = ({
           <>
             <DropdownMenuItem
               disabled={!canExtract || !onExtract}
-              onSelect={() => onExtract?.()}>
-              {extractLabel ?? t('ui.agent.tools.extractFromSession', 'Extract Memories from Session')}
+              onSelect={() => onExtract?.()}
+            >
+              {extractLabel ??
+                t(
+                  'ui.agent.tools.extractFromSession',
+                  'Extract Memories from Session',
+                )}
             </DropdownMenuItem>
             <DropdownMenuItem
               disabled={!canManage || !onManageMemories}
-              onSelect={() => onManageMemories?.()}>
-              {manageLabel ?? t('ui.agent.tools.manageMemories', 'Manage Memories')}
+              onSelect={() => onManageMemories?.()}
+            >
+              {manageLabel ??
+                t('ui.agent.tools.manageMemories', 'Manage Memories')}
             </DropdownMenuItem>
           </>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-};
+  )
+}

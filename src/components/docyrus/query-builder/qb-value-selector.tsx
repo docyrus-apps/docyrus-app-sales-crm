@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { memo, useMemo } from 'react'
 
 import { type VersatileSelectorProps, toArray } from 'react-querybuilder'

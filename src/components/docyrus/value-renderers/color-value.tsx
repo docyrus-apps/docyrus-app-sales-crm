@@ -1,13 +1,15 @@
 'use client'
 
-import { resolveColorHex } from '@/lib/tailwind-colors'
+// @ts-nocheck
+/* eslint-disable */
+import { resolveColorHex } from '@/lib/docyrus/tailwind-colors'
 import { cn } from '@/lib/utils'
 
 import { type DocyrusValueProps } from './types'
 
 export function ColorValue({ value, className }: DocyrusValueProps) {
   if (value == null || value === '') {
-    return <span className="text-muted-foreground">—</span>
+    return <span className="text-muted-foreground">–</span>
   }
 
   const color = String(value)

@@ -1,28 +1,32 @@
 import { useMemo } from 'react'
-import { useEnumEntities } from '@/hooks/use-enums'
+
 import type { EnumEntity } from '@/collections/enums.collection'
 import type { SelectOption } from '@/components/leads/field-mapping-row'
 import type { LeadConvertForm } from '@/components/leads/lead-convert-tabs'
+
+import { useEnumEntities } from '@/hooks/use-enums'
 import { getRelationName, normalizeConversionKey } from '@/lib/lead-conversion'
 
 export type EnumOption = { id: string; name: string }
 
 export function optionByName(
   options: Array<{ id?: string; name?: string }>,
-  name?: string,
+  name?: string
 ): string | undefined {
   if (!name) return undefined
   const normalized = normalizeConversionKey(name)
+
   return options.find(
-    (option) => normalizeConversionKey(option.name) === normalized,
+    option => normalizeConversionKey(option.name) === normalized
   )?.id
 }
 
 export function mapLeadTypeToCustomerType(
   options: Array<{ id?: string; name?: string }>,
-  leadTypeName?: string,
+  leadTypeName?: string
 ): string | undefined {
   const normalized = (leadTypeName ?? '').toLowerCase().trim()
+
   if (normalized.includes('existing'))
     return optionByName(options, 'Existing Business')
   if (normalized.includes('new')) return optionByName(options, 'New Business')
@@ -31,11 +35,11 @@ export function mapLeadTypeToCustomerType(
 }
 
 function toEnumSelectOptions(
-  opts: Array<{ id?: string; name?: string }>,
+  opts: Array<{ id?: string; name?: string }>
 ): Array<SelectOption> {
   return opts
     .filter((o): o is { id: string; name: string } => Boolean(o.id && o.name))
-    .map((o) => ({ value: o.id, label: o.name }))
+    .map(o => ({ value: o.id, label: o.name }))
 }
 
 type EnumFormSlice = Pick<
@@ -48,80 +52,80 @@ type EnumFormSlice = Pick<
 >
 
 export interface LeadConvertEnumMappings {
-  stageOptions: Array<EnumEntity>
-  dealLeadSourceOptions: Array<EnumEntity>
-  customerTypeOptions: Array<EnumEntity>
-  orgIndustryOptions: Array<EnumEntity>
-  orgCompanySizeOptions: Array<EnumEntity>
+  stageOptions: Array<EnumEntity>;
+  dealLeadSourceOptions: Array<EnumEntity>;
+  customerTypeOptions: Array<EnumEntity>;
+  orgIndustryOptions: Array<EnumEntity>;
+  orgCompanySizeOptions: Array<EnumEntity>;
 
-  stageSelectOptions: Array<SelectOption>
-  leadSourceSelectOptions: Array<SelectOption>
-  customerTypeSelectOptions: Array<SelectOption>
-  industrySelectOptions: Array<SelectOption>
-  companySizeSelectOptions: Array<SelectOption>
+  stageSelectOptions: Array<SelectOption>;
+  leadSourceSelectOptions: Array<SelectOption>;
+  customerTypeSelectOptions: Array<SelectOption>;
+  industrySelectOptions: Array<SelectOption>;
+  companySizeSelectOptions: Array<SelectOption>;
 
-  leadCompanyIndustryName: string
-  leadCompanySizeName: string
-  leadSourceName: string
-  leadTypeName: string
+  leadCompanyIndustryName: string;
+  leadCompanySizeName: string;
+  leadSourceName: string;
+  leadTypeName: string;
 
-  newStageId: string | undefined
-  mappedDealLeadSourceId: string | undefined
-  mappedCustomerTypeId: string | undefined
-  mappedCompanyIndustryId: string | undefined
-  mappedCompanySizeId: string | undefined
+  newStageId: string | undefined;
+  mappedDealLeadSourceId: string | undefined;
+  mappedCustomerTypeId: string | undefined;
+  mappedCompanyIndustryId: string | undefined;
+  mappedCompanySizeId: string | undefined;
 
-  effectiveStageId: string
-  effectiveLeadSourceId: string
-  effectiveCustomerTypeId: string
-  effectiveCompanyIndustryId: string
-  effectiveCompanySizeId: string
+  effectiveStageId: string;
+  effectiveLeadSourceId: string;
+  effectiveCustomerTypeId: string;
+  effectiveCompanyIndustryId: string;
+  effectiveCompanySizeId: string;
 }
 
 export function useLeadConvertEnumMappings(
   lead: any,
-  form: EnumFormSlice,
+  form: EnumFormSlice
 ): LeadConvertEnumMappings {
   const { data: stageOptions = [] } = useEnumEntities('stage', {
     appSlug: 'base_crm',
-    dataSourceSlug: 'deal',
+    dataSourceSlug: 'deal'
   })
   const { data: dealLeadSourceOptions = [] } = useEnumEntities('lead_source', {
     appSlug: 'base_crm',
-    dataSourceSlug: 'deal',
+    dataSourceSlug: 'deal'
   })
   const { data: customerTypeOptions = [] } = useEnumEntities('customer_type', {
     appSlug: 'base_crm',
-    dataSourceSlug: 'deal',
+    dataSourceSlug: 'deal'
   })
   const { data: orgIndustryOptions = [] } = useEnumEntities('industry', {
     appSlug: 'base',
-    dataSourceSlug: 'organization',
+    dataSourceSlug: 'organization'
   })
   const { data: orgCompanySizeOptions = [] } = useEnumEntities('company_size', {
     appSlug: 'base',
-    dataSourceSlug: 'organization',
+    dataSourceSlug: 'organization'
   })
 
   const stageSelectOptions = useMemo(
     () => toEnumSelectOptions(stageOptions),
-    [stageOptions],
+    [stageOptions]
   )
   const leadSourceSelectOptions = useMemo(
     () => toEnumSelectOptions(dealLeadSourceOptions),
-    [dealLeadSourceOptions],
+    [dealLeadSourceOptions]
   )
   const customerTypeSelectOptions = useMemo(
     () => toEnumSelectOptions(customerTypeOptions),
-    [customerTypeOptions],
+    [customerTypeOptions]
   )
   const industrySelectOptions = useMemo(
     () => toEnumSelectOptions(orgIndustryOptions),
-    [orgIndustryOptions],
+    [orgIndustryOptions]
   )
   const companySizeSelectOptions = useMemo(
     () => toEnumSelectOptions(orgCompanySizeOptions),
-    [orgCompanySizeOptions],
+    [orgCompanySizeOptions]
   )
 
   const leadCompanyIndustryName = getRelationName(lead?.company_industry) ?? ''
@@ -131,23 +135,23 @@ export function useLeadConvertEnumMappings(
 
   const newStageId = useMemo(
     () => optionByName(stageOptions, 'New'),
-    [stageOptions],
+    [stageOptions]
   )
   const mappedDealLeadSourceId = useMemo(
     () => optionByName(dealLeadSourceOptions, leadSourceName),
-    [dealLeadSourceOptions, leadSourceName],
+    [dealLeadSourceOptions, leadSourceName]
   )
   const mappedCustomerTypeId = useMemo(
     () => mapLeadTypeToCustomerType(customerTypeOptions, leadTypeName),
-    [customerTypeOptions, leadTypeName],
+    [customerTypeOptions, leadTypeName]
   )
   const mappedCompanyIndustryId = useMemo(
     () => optionByName(orgIndustryOptions, leadCompanyIndustryName),
-    [orgIndustryOptions, leadCompanyIndustryName],
+    [orgIndustryOptions, leadCompanyIndustryName]
   )
   const mappedCompanySizeId = useMemo(
     () => optionByName(orgCompanySizeOptions, leadCompanySizeName),
-    [orgCompanySizeOptions, leadCompanySizeName],
+    [orgCompanySizeOptions, leadCompanySizeName]
   )
 
   const effectiveStageId = form.dealStageId || newStageId || ''
@@ -183,6 +187,6 @@ export function useLeadConvertEnumMappings(
     effectiveLeadSourceId,
     effectiveCustomerTypeId,
     effectiveCompanyIndustryId,
-    effectiveCompanySizeId,
+    effectiveCompanySizeId
   }
 }

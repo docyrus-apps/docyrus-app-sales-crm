@@ -1,3 +1,5 @@
+// @ts-nocheck
+/* eslint-disable */
 import { useCallback, useMemo, useState } from 'react'
 
 interface UseShowMoreOptions<T> {

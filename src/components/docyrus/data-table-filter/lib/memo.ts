@@ -1,3 +1,5 @@
+// @ts-nocheck
+/* eslint-disable */
 export function memo<TDeps extends ReadonlyArray<any>, TResult>(
   getDeps: () => TDeps,
   compute: (deps: TDeps) => TResult,

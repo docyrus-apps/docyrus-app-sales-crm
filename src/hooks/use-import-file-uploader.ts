@@ -6,7 +6,7 @@ import type { UploadedFileInfo } from '@/components/docyrus/data-import-wizard'
 import {
   isImportUploadConfigured,
   isTenantStorageToken,
-  uploadImportFile,
+  uploadImportFile
 } from '@/lib/import-file-upload'
 
 import { useMyInfo } from './use-users'
@@ -28,7 +28,7 @@ export function useImportFileUploader():
   const accessToken = tokens?.accessToken ?? null
   const canUpload = useMemo(
     () => isImportUploadConfigured && isTenantStorageToken(accessToken),
-    [accessToken],
+    [accessToken]
   )
   const { data: me } = useMyInfo()
   const tenantNo = me?.tenant?.no ?? null
@@ -40,7 +40,7 @@ export function useImportFileUploader():
       const { fileName, filePath } = await uploadImportFile({
         file,
         tenantNo,
-        accessToken,
+        accessToken
       })
 
       return {
@@ -48,7 +48,7 @@ export function useImportFileUploader():
         originalName: file.name,
         size: file.size,
         mimeType: file.type,
-        filePath,
+        filePath
       }
     }
   }, [accessToken, canUpload, tenantNo])

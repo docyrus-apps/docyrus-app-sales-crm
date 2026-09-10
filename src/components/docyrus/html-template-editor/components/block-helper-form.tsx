@@ -1,36 +1,36 @@
-'use client';
+'use client'
 
 // @ts-nocheck
 /* eslint-disable */
-import { type ReactNode, useMemo } from 'react';
+import { type ReactNode, useMemo } from 'react'
 
 import {
   BracesIcon,
   ChevronRightIcon,
   DatabaseIcon,
-  ListIcon
-} from 'lucide-react';
+  ListIcon,
+} from 'lucide-react'
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { cn } from '@/lib/utils'
 
-import { useHbsContext } from '../lib/hbs-context';
-import { findDataArrayPaths, findDataObjectPaths } from '../lib/data-paths';
-import { type HandlebarsBlockHelper } from '../types';
+import { useHbsContext } from '../lib/hbs-context'
+import { findDataArrayPaths, findDataObjectPaths } from '../lib/data-paths'
+import { type HandlebarsBlockHelper } from '../types'
 
 interface BlockHelperFormProps {
-  helper: HandlebarsBlockHelper;
-  expression: string;
-  onExpressionChange: (next: string) => void;
-  onSubmit: () => void;
+  helper: HandlebarsBlockHelper
+  expression: string
+  onExpressionChange: (next: string) => void
+  onSubmit: () => void
   /** Optional cancel — when omitted the form has no Cancel button. */
-  onCancel?: () => void;
+  onCancel?: () => void
   /** Label for the primary action button (e.g. "Insert Block" / "Save"). */
-  submitLabel: string;
+  submitLabel: string
   /** Optional back action to return to the helper picker (insert flow only). */
-  onBack?: () => void;
+  onBack?: () => void
 }
 
 /**
@@ -40,23 +40,29 @@ interface BlockHelperFormProps {
  * stay free-form text.
  */
 export function BlockHelperForm({
-  helper, expression, onExpressionChange, onSubmit, onCancel, submitLabel, onBack
+  helper,
+  expression,
+  onExpressionChange,
+  onSubmit,
+  onCancel,
+  submitLabel,
+  onBack,
 }: BlockHelperFormProps) {
-  const { data } = useHbsContext();
+  const { data } = useHbsContext()
   const arrayPaths = useMemo(
     () => (helper.name === 'each' ? findDataArrayPaths(data) : []),
-    [data, helper.name]
-  );
+    [data, helper.name],
+  )
   const objectPaths = useMemo(
     () => (helper.name === 'with' ? findDataObjectPaths(data) : []),
-    [data, helper.name]
-  );
+    [data, helper.name],
+  )
 
-  const showArrayPicker = helper.name === 'each' && arrayPaths.length > 0;
-  const showObjectPicker = helper.name === 'with' && objectPaths.length > 0;
-  const showPicker = showArrayPicker || showObjectPicker;
-  const canSubmit = !!expression.trim() || !!helper.defaultExpression;
-  const trimmedExpression = expression.trim();
+  const showArrayPicker = helper.name === 'each' && arrayPaths.length > 0
+  const showObjectPicker = helper.name === 'with' && objectPaths.length > 0
+  const showPicker = showArrayPicker || showObjectPicker
+  const canSubmit = !!expression.trim() || !!helper.defaultExpression
+  const trimmedExpression = expression.trim()
 
   /*
    * A path "matches" the current expression when it's an exact hit OR when
@@ -68,11 +74,11 @@ export function BlockHelperForm({
    * depths in real schemas.
    */
   const matchesExpression = (candidatePath: string): boolean => {
-    if (!trimmedExpression) return false;
-    if (candidatePath === trimmedExpression) return true;
+    if (!trimmedExpression) return false
+    if (candidatePath === trimmedExpression) return true
 
-    return candidatePath.endsWith(`.${trimmedExpression}`);
-  };
+    return candidatePath.endsWith(`.${trimmedExpression}`)
+  }
 
   return (
     <div className="space-y-3 p-3">
@@ -84,7 +90,8 @@ export function BlockHelperForm({
           <button
             type="button"
             onClick={onBack}
-            className="text-xs text-muted-foreground underline-offset-2 hover:underline">
+            className="text-xs text-muted-foreground underline-offset-2 hover:underline"
+          >
             ← back
           </button>
         )}
@@ -98,32 +105,40 @@ export function BlockHelperForm({
         <div className="space-y-1.5">
           <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             <DatabaseIcon className="size-3" />
-            {helper.name === 'each' ? 'Pick an array from data' : 'Pick an object from data'}
+            {helper.name === 'each'
+              ? 'Pick an array from data'
+              : 'Pick an object from data'}
           </div>
           <ScrollArea className="h-40 rounded-md border bg-muted/20">
             <div className="flex flex-col gap-0.5 p-1.5">
-              {showArrayPicker && arrayPaths.map(p => (
-                <PathRow
-                  key={p.path}
-                  path={p.path}
-                  depth={p.depth}
-                  secondary={`${p.itemCount} item${p.itemCount === 1 ? '' : 's'}`}
-                  icon={<ListIcon className="size-3 shrink-0 opacity-60" />}
-                  selected={matchesExpression(p.path)}
-                  onSelect={() => onExpressionChange(p.path)}
-                  tooltip={p.itemKeys.length > 0 ? p.itemKeys.join(', ') : undefined} />
-              ))}
-              {showObjectPicker && objectPaths.map(p => (
-                <PathRow
-                  key={p.path}
-                  path={p.path}
-                  depth={p.depth}
-                  secondary={`${p.keyCount} key${p.keyCount === 1 ? '' : 's'}`}
-                  icon={<BracesIcon className="size-3 shrink-0 opacity-60" />}
-                  selected={matchesExpression(p.path)}
-                  onSelect={() => onExpressionChange(p.path)}
-                  tooltip={p.keys.join(', ')} />
-              ))}
+              {showArrayPicker &&
+                arrayPaths.map((p) => (
+                  <PathRow
+                    key={p.path}
+                    path={p.path}
+                    depth={p.depth}
+                    secondary={`${p.itemCount} item${p.itemCount === 1 ? '' : 's'}`}
+                    icon={<ListIcon className="size-3 shrink-0 opacity-60" />}
+                    selected={matchesExpression(p.path)}
+                    onSelect={() => onExpressionChange(p.path)}
+                    tooltip={
+                      p.itemKeys.length > 0 ? p.itemKeys.join(', ') : undefined
+                    }
+                  />
+                ))}
+              {showObjectPicker &&
+                objectPaths.map((p) => (
+                  <PathRow
+                    key={p.path}
+                    path={p.path}
+                    depth={p.depth}
+                    secondary={`${p.keyCount} key${p.keyCount === 1 ? '' : 's'}`}
+                    icon={<BracesIcon className="size-3 shrink-0 opacity-60" />}
+                    selected={matchesExpression(p.path)}
+                    onSelect={() => onExpressionChange(p.path)}
+                    tooltip={p.keys.join(', ')}
+                  />
+                ))}
             </div>
           </ScrollArea>
         </div>
@@ -135,17 +150,18 @@ export function BlockHelperForm({
         </label>
         <Input
           value={expression}
-          onChange={e => onExpressionChange(e.target.value)}
+          onChange={(e) => onExpressionChange(e.target.value)}
           placeholder={helper.defaultExpression ?? 'expression'}
           className="h-8 font-mono text-xs"
           autoFocus={!showPicker}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
-              e.preventDefault();
-              onSubmit();
+              e.preventDefault()
+              onSubmit()
             }
-            if (e.key === 'Escape') onCancel?.();
-          }} />
+            if (e.key === 'Escape') onCancel?.()
+          }}
+        />
         <p className="text-xs text-muted-foreground">
           Preview:{' '}
           <code className="text-xs">{`{{#${helper.name}${expression.trim() ? ` ${expression.trim()}` : ''}}}`}</code>
@@ -163,34 +179,41 @@ export function BlockHelperForm({
         </Button>
       </div>
     </div>
-  );
+  )
 }
 
 interface PathRowProps {
-  path: string;
-  depth: number;
-  secondary: string;
-  icon: ReactNode;
-  selected: boolean;
-  onSelect: () => void;
-  tooltip?: string;
+  path: string
+  depth: number
+  secondary: string
+  icon: ReactNode
+  selected: boolean
+  onSelect: () => void
+  tooltip?: string
 }
 
 function PathRow({
-  path, depth, secondary, icon, selected, onSelect, tooltip
+  path,
+  depth,
+  secondary,
+  icon,
+  selected,
+  onSelect,
+  tooltip,
 }: PathRowProps) {
   return (
     <button
       type="button"
-      onMouseDown={e => e.preventDefault()}
+      onMouseDown={(e) => e.preventDefault()}
       onClick={onSelect}
       title={tooltip}
       className={cn(
         'flex items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-xs transition-colors',
         'hover:bg-accent hover:text-accent-foreground',
-        selected && 'bg-primary/10 text-primary'
+        selected && 'bg-primary/10 text-primary',
       )}
-      style={{ paddingLeft: 8 + depth * 10 }}>
+      style={{ paddingLeft: 8 + depth * 10 }}
+    >
       <span className="flex min-w-0 items-center gap-1.5">
         <ChevronRightIcon className="size-3 shrink-0 opacity-50" />
         {icon}
@@ -200,5 +223,5 @@ function PathRow({
         {secondary}
       </span>
     </button>
-  );
+  )
 }

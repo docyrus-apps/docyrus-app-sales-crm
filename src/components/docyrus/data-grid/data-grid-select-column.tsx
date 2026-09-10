@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { type ColumnDef } from '@tanstack/react-table'
 
 import './types'

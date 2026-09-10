@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { Link } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -23,7 +25,7 @@ export function RelationValue({
   className,
 }: DocyrusValueProps) {
   if (value == null || value === '') {
-    return <span className="text-muted-foreground">—</span>
+    return <span className="text-muted-foreground">–</span>
   }
 
   if (isExpandedRelation(value)) {

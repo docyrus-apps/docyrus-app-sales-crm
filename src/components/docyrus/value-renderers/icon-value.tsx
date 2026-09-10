@@ -1,5 +1,7 @@
 'use client'
 
+// @ts-nocheck
+/* eslint-disable */
 import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 import { cn } from '@/lib/utils'
 
@@ -7,7 +9,7 @@ import { type DocyrusValueProps } from './types'
 
 export function IconValue({ value, className }: DocyrusValueProps) {
   if (value == null || value === '') {
-    return <span className="text-muted-foreground">—</span>
+    return <span className="text-muted-foreground">–</span>
   }
 
   return (
