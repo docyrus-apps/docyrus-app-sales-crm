@@ -59,6 +59,18 @@ export interface UseDocyrusDataImportWizardOptions extends Pick<
   uniqueFieldSlugs?: ReadonlyArray<string>
   /** Override the three import endpoints (e.g. for tenant-specific routing). */
   endpoints?: ImportEndpoints
+  /**
+   * Replace the upload phase entirely. When provided the hook calls this
+   * instead of POSTing multipart `FormData` to the upload endpoint, and the
+   * returned `fileName` is what the analyse and import phases are given.
+   *
+   * Deployments whose API does not expose `POST …/import/upload` need this:
+   * there the raw file is expected to already sit in tenant storage under
+   * `tenant-{tenantNo}/tmp/import/{fileName}`, and putting it there is app-level
+   * work (it needs the storage credentials and the tenant context), so it stays
+   * out of this hook.
+   */
+  uploadFile?: (file: File) => Promise<UploadedFileInfo>
   /** Number of rows shown in the preview step. Default 10. */
   previewRowCount?: number
   /** Default 20 MB. */
@@ -243,6 +255,7 @@ export function useDocyrusDataImportWizard(
     requiredFieldSlugs = [],
     uniqueFieldSlugs: providedUniqueFieldSlugs,
     endpoints,
+    uploadFile,
     previewRowCount = 10,
     maxFileSizeBytes = DEFAULT_MAX_FILE_SIZE,
     acceptedExtensions = DEFAULT_ACCEPTED_EXTENSIONS,
@@ -305,6 +318,8 @@ export function useDocyrusDataImportWizard(
 
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
+      if (uploadFile) return await uploadFile(file)
+
       const body = new FormData()
 
       body.append('file', file)

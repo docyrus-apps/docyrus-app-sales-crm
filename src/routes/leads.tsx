@@ -44,6 +44,7 @@ import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 import { useDocyrusDataGrid } from '@/hooks/use-docyrus-data-grid'
 import { useSeedDefaultViews } from '@/hooks/use-seed-default-views'
 import { useDocyrusDataImportWizard } from '@/hooks/use-docyrus-data-import-wizard'
+import { useImportFileUploader } from '@/hooks/use-import-file-uploader'
 import { saveGridChanges } from '@/lib/data-grid-record-utils'
 import { createSystemViews } from '@/lib/crm-system-views'
 import { isLeadConvertedRecord } from '@/lib/lead-conversion'
@@ -283,6 +284,7 @@ function LeadsPageInner({
   )
 
   const openWizardRef = useRef<() => void>(() => {})
+  const uploadImportFile = useImportFileUploader()
   const listLeadsRef = useRef<Array<BaseCrmLeadsEntity>>([])
   const reloadListRef = useRef<() => void>(() => {})
 
@@ -322,20 +324,22 @@ function LeadsPageInner({
     [t, updateLead],
   )
 
+  // No uploader means the wizard cannot complete a run, so no entry point.
   const importToolbarButton = useMemo(
-    () => (
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="gap-1.5"
-        onClick={() => openWizardRef.current()}
-      >
-        <Upload className="size-4" />
-        {t('common.import', 'Import')}
-      </Button>
-    ),
-    [t],
+    () =>
+      uploadImportFile ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="gap-1.5"
+          onClick={() => openWizardRef.current()}
+        >
+          <Upload className="size-4" />
+          {t('common.import', 'Import')}
+        </Button>
+      ) : null,
+    [t, uploadImportFile],
   )
 
   const {
@@ -404,6 +408,7 @@ function LeadsPageInner({
     appSlug: APP_SLUG,
     dataSourceSlug: DATA_SOURCE_SLUG,
     fields: listDataSource?.fields,
+    uploadFile: uploadImportFile,
     onImported: reload,
   })
 
