@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react'
+import { useMemo, type ReactNode } from 'react'
 
 import {
   type FieldKind,
@@ -6,6 +6,10 @@ import {
 } from '@/components/leads/field-mapping-row'
 
 import { useTranslation } from 'react-i18next'
+
+import { useDocyrusAuth } from '@docyrus/signin'
+
+import { useMyTenants } from '@/hooks/use-my-tenants'
 import { AlertTriangle, ArrowRight, Plus } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -41,6 +45,13 @@ export type LeadConvertTargetFieldOption = {
   type: string;
 }
 
+/*
+ * The sales CRM only runs for Kiva, and the tenant tag on an organization is a
+ * Kiva-internal bookkeeping field. Gate it on the tenant rather than a role so
+ * it stays hidden if the app is ever opened from another tenant.
+ */
+const KIVA_TENANT_NO = 1000
+
 export type LeadConvertForm = {
   companyName: string;
   companyWebsite: string;
@@ -50,6 +61,8 @@ export type LeadConvertForm = {
   companyCity: string;
   companyIndustry: string;
   companySize: string;
+  /** Docyrus tenant this lead became; written to `organization.tenant`. */
+  companyTenant: string;
   contactName: string;
   contactEmail: string;
   contactPhone: string;
@@ -178,6 +191,21 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
     removeExtraField
   } = props
   const { t } = useTranslation()
+  const { user } = useDocyrusAuth()
+  const isKivaTenant = user?.tenant?.no === KIVA_TENANT_NO
+  /*
+   * The lead carries no tenant of its own, so this is picked by hand during
+   * conversion. Only the tenants the user belongs to are listed — the full list
+   * would need `/v1/super/tenants`, which is superuser-only.
+   */
+  const { data: myTenants } = useMyTenants({ enabled: isKivaTenant })
+  const tenantSelectOptions = useMemo(
+    () => (myTenants ?? []).map(tenant => ({
+        value: tenant.id,
+        label: `${tenant.name} (${tenant.tenant_no})`
+      })),
+    [myTenants]
+  )
 
   const tabsToShow: Array<LeadConvertTarget> = []
 
@@ -280,6 +308,26 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
     )
   }
 
+  const tenantRow: OrderedRow = {
+    key: 'company:tenant',
+    required: false,
+    node: (
+      <FieldMappingRow
+        fieldKey="company:tenant"
+        label={t('leads.convert.field.tenant')}
+        sourceLabel={t('leads.convert.sourceLabel.dialogOnly')}
+        targetLabel={t('leads.convert.targetLabel.organization', {
+          field: 'tenant'
+        })}
+        value={form.companyTenant}
+        kind="select"
+        options={tenantSelectOptions}
+        placeholder={t('leads.convert.placeholder.selectTenant')}
+        onChange={v => updateForm('companyTenant', v)}
+        disabled={formDisabled} />
+    )
+  }
+
   const companyRows: Array<OrderedRow> = [
     {
       key: 'company:name',
@@ -303,6 +351,7 @@ export function LeadConvertTabs(props: LeadConvertTabsProps) {
           required />
       )
     },
+    ...(isKivaTenant ? [tenantRow] : []),
     {
       key: 'company:industry',
       required: Boolean(leadCompanyIndustryName),

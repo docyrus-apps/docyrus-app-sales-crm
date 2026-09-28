@@ -631,14 +631,16 @@
         "leadSource": "Lead kaynağı",
         "customerType": "Müşteri tipi",
         "conversionState": "Dönüşüm durumu",
-        "conversionMode": "Dönüşüm modu"
+        "conversionMode": "Dönüşüm modu",
+        "tenant": "Tenant"
       },
       "placeholder": {
         "selectIndustry": "Sektör seçin...",
         "selectSize": "Boyut seçin...",
         "selectStage": "Aşama seçin...",
         "selectSource": "Kaynak seçin...",
-        "selectType": "Tip seçin..."
+        "selectType": "Tip seçin...",
+        "selectTenant": "Tenant seçin"
       },
       "sourceLabel": {
         "lead": "Lead: {{field}}",
