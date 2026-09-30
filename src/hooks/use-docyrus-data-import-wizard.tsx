@@ -63,6 +63,18 @@ export interface UseDocyrusDataImportWizardOptions extends Pick<
   uniqueFieldSlugs?: ReadonlyArray<string>;
   /** Override the three import endpoints (e.g. for tenant-specific routing). */
   endpoints?: ImportEndpoints;
+  /**
+   * Replace the upload phase entirely. When provided the hook calls this
+   * instead of POSTing multipart `FormData` to the upload endpoint, and the
+   * returned `fileName` is what the analyse and import phases are given.
+   *
+   * Deployments whose API does not expose `POST …/import/upload` need this:
+   * there the raw file is expected to already sit in tenant storage under
+   * `tenant-{tenantNo}/tmp/import/{fileName}`, and putting it there is app-level
+   * work (it needs the storage credentials and the tenant context), so it stays
+   * out of this hook.
+   */
+  uploadFile?: (file: File) => Promise<UploadedFileInfo>;
   /** Number of rows shown in the preview step. Default 10. */
   previewRowCount?: number;
   /** Default 20 MB. */
@@ -210,9 +222,29 @@ function defaultEndpoint(
   return endpoints?.[key] ?? `${base}${fallback}`
 }
 
+/*
+ * Strip the API's `{ success, data }` envelope when it is still there —
+ * `RestApiClient` often has already done it.
+ *
+ * A `data` key alone does not make something an envelope, and this is not
+ * hypothetical: the analyse payload keeps its rows under `data` next to
+ * `columns` and `fileName`, and the import result carries `data`, `success`,
+ * `columns` and `totalSuccessfulRecords` side by side. Unwrapping either one
+ * returns the bare rows array and drops everything else, which is why the
+ * wizard used to report a file with no columns and an import with no records.
+ *
+ * So an envelope is recognised by what it does NOT carry: nothing beyond
+ * `data`, `success` and `message`.
+ */
+const ENVELOPE_KEYS = new Set(['data', 'success', 'message'])
+
 function unwrap<T>(response: unknown): T {
   if (response && typeof response === 'object' && 'data' in response) {
-    return (response as { data: T }).data
+    const keys = Object.keys(response)
+
+    if (keys.every(key => ENVELOPE_KEYS.has(key))) {
+      return (response as { data: T }).data
+    }
   }
 
   return response as T
@@ -243,6 +275,7 @@ export function useDocyrusDataImportWizard(
     requiredFieldSlugs = [],
     uniqueFieldSlugs: providedUniqueFieldSlugs,
     endpoints,
+    uploadFile,
     previewRowCount = 10,
     maxFileSizeBytes = DEFAULT_MAX_FILE_SIZE,
     acceptedExtensions = DEFAULT_ACCEPTED_EXTENSIONS,
@@ -306,6 +339,8 @@ export function useDocyrusDataImportWizard(
 
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
+      if (uploadFile) return await uploadFile(file)
+
       const body = new FormData()
 
       body.append('file', file)
@@ -362,9 +397,28 @@ export function useDocyrusDataImportWizard(
       if (!isControlled) {
         dispatch({ type: next ? 'open' : 'close' })
       }
+
+      /*
+       * Closing ends the run. Without this the next open resumes an abandoned
+       * one — same file, same mapping, same result screen — which reads as the
+       * wizard being stuck rather than as state that was kept on purpose.
+       */
+      if (!next) {
+        dispatch({ type: 'reset' })
+        uploadMutation.reset()
+        analyseMutation.reset()
+        importMutation.reset()
+      }
+
       onOpenChange?.(next)
     },
-    [isControlled, onOpenChange]
+    [
+isControlled,
+onOpenChange,
+uploadMutation,
+analyseMutation,
+importMutation
+]
   )
 
   const openWizard = useCallback(() => setOpen(true), [setOpen])
