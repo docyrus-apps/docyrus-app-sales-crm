@@ -32,6 +32,8 @@ function buildInitialForm(
     companyCity: lead?.city || '',
     companyIndustry: '',
     companySize: '',
+    /* Chosen during conversion; the lead has no tenant field. */
+    companyTenant: '',
     contactName: lead?.name || '',
     contactEmail: lead?.email || '',
     contactPhone: lead?.phone || '',

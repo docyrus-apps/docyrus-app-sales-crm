@@ -631,14 +631,16 @@
         "leadSource": "Lead source",
         "customerType": "Customer type",
         "conversionState": "Conversion state",
-        "conversionMode": "Conversion mode"
+        "conversionMode": "Conversion mode",
+        "tenant": "Tenant"
       },
       "placeholder": {
         "selectIndustry": "Select industry...",
         "selectSize": "Select size...",
         "selectStage": "Select stage...",
         "selectSource": "Select source...",
-        "selectType": "Select type..."
+        "selectType": "Select type...",
+        "selectTenant": "Select tenant"
       },
       "sourceLabel": {
         "lead": "Lead: {{field}}",

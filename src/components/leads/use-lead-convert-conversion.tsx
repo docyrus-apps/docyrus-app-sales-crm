@@ -667,6 +667,7 @@ export function useLeadConvertConversion(
                 company_size: effectiveCompanySizeId || undefined,
                 country: getRelationId(lead.countries),
                 record_owner: getRelationId(lead.record_owner),
+                tenant: form.companyTenant || undefined,
                 source_lead: lead.id,
                 ...orgExtras
               }
