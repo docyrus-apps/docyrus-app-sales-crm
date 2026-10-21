@@ -1714,6 +1714,380 @@ export function SelectCell<TData>({
   )
 }
 
+/**
+ * Reads a companion column off the row. Enum-backed companions come back
+ * either expanded (`{ id, name }`) or as a bare id, depending on the query.
+ */
+function readCompanionId(
+  row: Record<string, unknown> | undefined,
+  slug: string,
+): string {
+  const raw = row?.[slug]
+
+  if (!raw) return ''
+  if (typeof raw === 'string') return raw
+  if (typeof raw === 'object' && 'id' in raw) {
+    return (raw as { id?: string }).id ?? ''
+  }
+
+  return ''
+}
+
+/**
+ * Status cell — the grid twin of StatusFormField.
+ *
+ * A `field-status` keeps three companion columns next to its own value
+ * (`__<slug>_secondary`, `_description`, `_followup_date`), so changing a
+ * status is not a one-value select: the editor is a small card where the user
+ * picks the status, then — only when that status has child options — a
+ * sub-status, plus a note and a follow-up date. Confirm writes all four
+ * columns in a single `onDataUpdate` call so they reach the server together.
+ */
+export function StatusCell<TData>({
+  cell,
+  tableMeta,
+  rowIndex,
+  columnId,
+  rowHeight,
+  isFocused,
+  isEditing,
+  isSelected,
+  isSearchMatch,
+  isActiveSearchMatch,
+  isChanged,
+  readOnly,
+  colorRuleBg,
+}: DataGridCellProps<TData>) {
+  const { t } = useUiTranslation()
+  const containerRef = useRef<HTMLDivElement>(null)
+  const initialValue = (cell.getValue() as string) ?? ''
+  const row = cell.row.original as Record<string, unknown> | undefined
+
+  const secondarySlug = `__${columnId}_secondary`
+  const descriptionSlug = `__${columnId}_description`
+  const followupSlug = `__${columnId}_followup_date`
+
+  const cellOpts = cell.column.columnDef.meta?.cell
+  const options = useMemo(
+    () => (cellOpts?.variant === 'status' ? cellOpts.options : []),
+    [cellOpts],
+  )
+  const optionByValue = useMemo(
+    () => new Map(options.map((option) => [option.value, option])),
+    [options],
+  )
+  const parentOptions = useMemo(
+    () => options.filter((option) => !option.parent),
+    [options],
+  )
+  const secondaryLabel =
+    (cellOpts?.variant === 'status' && cellOpts.secondaryLabel) ||
+    t('ui.formField.statusSubStatus', 'Sub-status')
+
+  const committed = {
+    status: initialValue,
+    secondary: readCompanionId(row, secondarySlug),
+    description: (row?.[descriptionSlug] as string) ?? '',
+    followupDate: (row?.[followupSlug] as string) ?? null,
+  }
+
+  const [draft, setDraft] = useState(committed)
+  const [datePickerOpen, setDatePickerOpen] = useState(false)
+
+  const childOptions = useMemo(
+    () => options.filter((option) => option.parent === draft.status),
+    [options, draft.status],
+  )
+
+  /*
+   * Seed the draft from the row every time the editor opens, so a cancelled
+   * edit never leaks into the next one.
+   */
+  const wasEditingRef = useRef(isEditing)
+
+  if (isEditing && !wasEditingRef.current) {
+    wasEditingRef.current = true
+    setDraft(committed)
+    setDatePickerOpen(false)
+  } else if (!isEditing && wasEditingRef.current) {
+    wasEditingRef.current = false
+  }
+
+  const onSelectStatus = useCallback((statusId: string) => {
+    setDraft((prev) => ({
+      ...prev,
+      status: statusId,
+      // Sub-status options belong to one status — drop it when the status moves.
+      secondary: statusId === prev.status ? prev.secondary : '',
+    }))
+  }, [])
+
+  const onConfirm = useCallback(() => {
+    if (readOnly) return
+
+    tableMeta?.onDataUpdate?.([
+      { rowIndex, columnId, value: draft.status },
+      { rowIndex, columnId: secondarySlug, value: draft.secondary || null },
+      { rowIndex, columnId: descriptionSlug, value: draft.description || null },
+      { rowIndex, columnId: followupSlug, value: draft.followupDate },
+    ])
+    tableMeta?.onCellEditingStop?.()
+  }, [
+    readOnly,
+    tableMeta,
+    rowIndex,
+    columnId,
+    secondarySlug,
+    descriptionSlug,
+    followupSlug,
+    draft,
+  ])
+
+  const onOpenChange = useCallback(
+    (open: boolean) => {
+      if (open && !readOnly) {
+        tableMeta?.onCellEditingStart?.(rowIndex, columnId)
+      } else {
+        tableMeta?.onCellEditingStop?.()
+      }
+    },
+    [tableMeta, rowIndex, columnId, readOnly],
+  )
+
+  const onWrapperKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (isEditing && event.key === 'Escape') {
+        event.preventDefault()
+        tableMeta?.onCellEditingStop?.()
+      } else if (isFocused && event.key === 'Tab') {
+        event.preventDefault()
+        tableMeta?.onCellEditingStop?.({
+          direction: event.shiftKey ? 'left' : 'right',
+        })
+      }
+    },
+    [isEditing, isFocused, tableMeta],
+  )
+
+  const currentOption = optionByValue.get(initialValue)
+  const secondaryOption = optionByValue.get(committed.secondary)
+  const displayLabel =
+    currentOption?.label ?? getOriginalRecordLabel(cell, columnId) ?? initialValue
+  const draftFollowupDate = draft.followupDate
+    ? (parseLocalDate(draft.followupDate) ?? undefined)
+    : undefined
+
+  return (
+    <DataGridCellWrapper<TData>
+      ref={containerRef}
+      cell={cell}
+      tableMeta={tableMeta}
+      rowIndex={rowIndex}
+      columnId={columnId}
+      rowHeight={rowHeight}
+      isEditing={isEditing}
+      isFocused={isFocused}
+      isSelected={isSelected}
+      isSearchMatch={isSearchMatch}
+      isActiveSearchMatch={isActiveSearchMatch}
+      isChanged={isChanged}
+      readOnly={readOnly}
+      colorRuleBg={colorRuleBg}
+      onKeyDown={onWrapperKeyDown}
+    >
+      <Popover open={isEditing} onOpenChange={onOpenChange}>
+        <PopoverAnchor asChild>
+          {/*
+            The wrapper styles `grid-cell-content` as a block, so the badges
+            need their own flex row inside it — a layout class on the slot
+            itself is overridden and the sub-status badge falls out of view.
+          */}
+          <span data-slot="grid-cell-content">
+            <span className="flex min-w-0 items-center gap-1">
+              {displayLabel && (
+                <Badge variant="secondary" className="gap-1.5 px-1.5 py-px">
+                  <CellOptionIndicator option={currentOption} />
+                  {displayLabel}
+                </Badge>
+              )}
+              {/*
+                `shrink`, because Badge ships with `shrink-0`: the sub-status
+                has to be the part that gives way in a narrow column.
+              */}
+              {secondaryOption && (
+                <Badge
+                  variant="outline"
+                  title={secondaryOption.label}
+                  className="min-w-0 shrink gap-1.5 px-1.5 py-px font-normal"
+                >
+                  <CellOptionIndicator option={secondaryOption} />
+                  <span className="truncate">{secondaryOption.label}</span>
+                </Badge>
+              )}
+            </span>
+          </span>
+        </PopoverAnchor>
+        {/*
+          The card is taller than the room under a row, and the room above a
+          row is no better — flipping alone leaves it cut off at the bottom of
+          the screen. Opening it to the side puts the viewport's full height on
+          the cross axis, where the popper shifts it up to keep it whole; the
+          available-height cap is the usual guard for a list long enough to
+          beat even that.
+        */}
+        {isEditing && (
+          <PopoverContent
+            data-grid-cell-editor=""
+            side="right"
+            align="start"
+            sideOffset={4}
+            collisionPadding={12}
+            className="flex max-h-(--radix-popover-content-available-height) w-64 flex-col p-0"
+          >
+            <div className="flex min-h-0 flex-1 flex-col">
+              <div className="min-h-0 flex-1 overflow-y-auto p-1">
+                {parentOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={cn(
+                      'flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm transition-colors',
+                      'hover:bg-accent hover:text-accent-foreground',
+                      draft.status === option.value && 'bg-accent',
+                    )}
+                    onClick={() => onSelectStatus(option.value)}
+                  >
+                    <Check
+                      className={cn(
+                        'size-4 shrink-0',
+                        draft.status === option.value
+                          ? 'opacity-100'
+                          : 'opacity-0',
+                      )}
+                    />
+                    <CellOptionIndicator option={option} />
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+
+              {draft.status && (
+                <div className="flex shrink-0 flex-col gap-3 border-t p-3">
+                  {childOptions.length > 0 && (
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-muted-foreground text-xs">
+                        {secondaryLabel}
+                      </span>
+                      <Select
+                        value={draft.secondary}
+                        onValueChange={(next) =>
+                          setDraft((prev) => ({ ...prev, secondary: next }))
+                        }
+                      >
+                        <SelectTrigger size="sm" className="h-8 w-full text-xs">
+                          <SelectValue
+                            placeholder={t(
+                              'ui.formField.statusSelectReason',
+                              'Select reason...',
+                            )}
+                          />
+                        </SelectTrigger>
+                        <SelectContent data-grid-cell-editor="">
+                          {childOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              <span className="flex items-center gap-2">
+                                <CellOptionIndicator option={option} />
+                                {option.label}
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-muted-foreground text-xs">
+                      {t('ui.formField.statusNotes', 'Notes')}
+                    </span>
+                    <Textarea
+                      value={draft.description}
+                      onChange={(event) =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          description: event.target.value,
+                        }))
+                      }
+                      placeholder={t(
+                        'ui.formField.statusAddNotes',
+                        'Add notes...',
+                      )}
+                      className="min-h-16 resize-none text-xs"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-muted-foreground text-xs">
+                      {t('ui.formField.statusFollowUpDate', 'Follow-up date')}
+                    </span>
+                    <Popover
+                      open={datePickerOpen}
+                      onOpenChange={setDatePickerOpen}
+                    >
+                      <PopoverAnchor asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            'w-full justify-start text-left text-xs font-normal',
+                            !draft.followupDate && 'text-muted-foreground',
+                          )}
+                          onClick={() => setDatePickerOpen((open) => !open)}
+                        >
+                          <Clock className="mr-2 size-3.5" />
+                          {draft.followupDate
+                            ? (tableMeta?.formatDate?.(draft.followupDate) ??
+                              formatDateForDisplay(draft.followupDate))
+                            : t('ui.formField.statusPickDate', 'Pick a date')}
+                        </Button>
+                      </PopoverAnchor>
+                      {datePickerOpen && (
+                        <PopoverContent
+                          data-grid-cell-editor=""
+                          align="start"
+                          className="w-auto p-0"
+                        >
+                          <Calendar
+                            mode="single"
+                            selected={draftFollowupDate}
+                            onSelect={(date) => {
+                              setDraft((prev) => ({
+                                ...prev,
+                                followupDate: date
+                                  ? formatDateToString(date)
+                                  : null,
+                              }))
+                              setDatePickerOpen(false)
+                            }}
+                          />
+                        </PopoverContent>
+                      )}
+                    </Popover>
+                  </div>
+
+                  <Button size="sm" className="w-full" onClick={onConfirm}>
+                    {t('ui.formField.statusConfirm', 'Confirm')}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </PopoverContent>
+        )}
+      </Popover>
+    </DataGridCellWrapper>
+  )
+}
+
 export function EnumCell<TData>({
   cell,
   tableMeta,

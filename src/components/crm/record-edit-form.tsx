@@ -5,6 +5,7 @@ import { useForm } from '@tanstack/react-form'
 import { useTranslation } from 'react-i18next'
 
 import { DynamicFormField } from '@/components/docyrus/form-fields'
+import { getStatusCompanionSlugs } from '@/components/docyrus/form-fields/lib/utils'
 import {
   type FieldChange,
   type RecordDetailField
@@ -87,14 +88,29 @@ export function RecordEditForm({
     [fieldSlugs, fieldBySlug, fieldRenderers]
   )
 
+  /*
+   * A status field edits its sub-status, note and follow-up date in companion
+   * columns inside the status popover. They are not fields of their own, so
+   * they have to be seeded and diffed alongside the slug that owns them or the
+   * popover's values never reach the save payload.
+   */
+  const diffedSlugs = useMemo(
+    () => managedSlugs.flatMap((slug) => {
+      const isStatusField = fieldBySlug.get(slug)?.field.type === 'field-status'
+
+      return isStatusField ? [slug, ...getStatusCompanionSlugs(slug)] : [slug]
+    }),
+    [managedSlugs, fieldBySlug]
+  )
+
   const form = useForm({
     defaultValues: Object.fromEntries(
-      managedSlugs.map(slug => [slug, record[slug] ?? null])
+      diffedSlugs.map(slug => [slug, record[slug] ?? null])
     ),
     onSubmit: async ({ value }) => {
       const changes: Array<FieldChange> = []
 
-      for (const slug of managedSlugs) {
+      for (const slug of diffedSlugs) {
         const next = value[slug]
 
         if (valuesEqual(record[slug], next)) continue

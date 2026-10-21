@@ -211,6 +211,12 @@ export interface IField {
   nested?: boolean | null
   /** The property on EnumOption used for parent reference (defaults to 'parent') */
   nestedByProp?: string | null
+  /**
+   * Label for a `field-status`'s sub-status dropdown. The generic wording is
+   * "Sub-status"; a field whose sub-statuses mean something specific (e.g. how
+   * a lead was reached) names them here instead.
+   */
+  secondaryLabel?: string | null
   /** Mapping for custom item rendering in relation/select fields */
   itemMapping?: {
     iconField?: string | null

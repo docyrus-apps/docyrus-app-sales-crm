@@ -444,6 +444,16 @@ function extractSelectOptions(
        */
       if (typeof option.icon === 'string') opt.iconStr = option.icon
       else if (typeof option.iconStr === 'string') opt.iconStr = option.iconStr
+
+      /*
+       * Status hierarchy: a sub-status points at its parent status, and the
+       * status cell lists those as its second-level dropdown. The API returns
+       * it camelCase; hand-built option lists may use snake_case.
+       */
+      const parent = option.parent ?? option.parent_id
+
+      if (typeof parent === 'string' && parent.length > 0) opt.parent = parent
+
       result.push(opt)
     }
   }

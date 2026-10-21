@@ -46,6 +46,7 @@ import { FileAttachments } from '@/components/shared/file-attachments'
 import { getRelationId, isLeadConvertedRecord } from '@/lib/lead-conversion'
 import { useSetDetailBreadcrumbTitle } from '@/lib/detail-breadcrumb'
 import { mergeCurrentEnumOption } from '@/lib/enum-options'
+import { getCompanionFieldSlug } from '@/components/docyrus/form-fields/lib/utils'
 
 import {
   type FieldChange,
@@ -88,6 +89,20 @@ const ENUM_SLUGS = [
 // Relation/user slugs edited as selects — flat record stores the id value.
 const ID_RELATION_SLUGS = new Set(['countries', 'record_owner', 'contact_person'])
 
+// Companion columns of the lead_status field — written by the status popover.
+const LEAD_STATUS_SECONDARY_SLUG = getCompanionFieldSlug(
+  'lead_status',
+  'secondary'
+)
+const LEAD_STATUS_DESCRIPTION_SLUG = getCompanionFieldSlug(
+  'lead_status',
+  'description'
+)
+const LEAD_STATUS_FOLLOWUP_DATE_SLUG = getCompanionFieldSlug(
+  'lead_status',
+  'followup_date'
+)
+
 function makeField(
   slug: string,
   name: string,
@@ -115,13 +130,19 @@ function toOptions(
     name: string;
     color?: string | null;
     icon?: string | null;
+    parent?: string | null;
   }>
 ): Array<EnumOption> {
   return items.map(item => ({
     id: item.id,
     name: item.name,
     color: item.color ?? undefined,
-    icon: item.icon ?? undefined
+    icon: item.icon ?? undefined,
+    /*
+     * Sub-status options reference their parent status — the status popover
+     * lists them as its "Sub-status" dropdown, so the link has to survive here.
+     */
+    parent: item.parent ?? undefined
   }))
 }
 
@@ -230,13 +251,18 @@ export function LeadDetail() {
     const enumField = (
       slug: (typeof ENUM_SLUGS)[number],
       name: string,
-      type: IField['type'] = 'field-select'
+      type: IField['type'] = 'field-select',
+      // Names the sub-status dropdown of a status field (default: "Sub-status").
+      secondaryLabel?: string
     ): RecordDetailField => {
       const entities = enumEntities[slug]
       const editable = entities.length > 0
 
       return {
-        field: makeField(slug, name, editable ? type : 'field-text'),
+        field: {
+          ...makeField(slug, name, editable ? type : 'field-text'),
+          secondaryLabel
+        },
         enumOptions: mergeCurrentEnumOption(
           toOptions(entities),
           (lead as Record<string, unknown> | undefined)?.[slug]
@@ -252,7 +278,12 @@ export function LeadDetail() {
           t('leads.form.contactNameLabel', { defaultValue: 'Contact Name' })
         )
       },
-      enumField('lead_status', t('leads.status'), 'field-status'),
+      enumField(
+        'lead_status',
+        t('leads.status'),
+        'field-status',
+        t('leads.contactMethod', { defaultValue: 'Contact Method' })
+      ),
       {
         field: makeField(
           'email',
@@ -401,6 +432,20 @@ lead
      */
     record.countries = lead.countries ?? null
     record.city = lead.city ?? ''
+
+    /*
+     * Status companions — sub-status, note and follow-up date, all edited
+     * inside the status popover. The sub-status is an enum like lead_status
+     * itself, so it is flattened to its id for the select.
+     */
+    const leadRow = lead as Record<string, unknown>
+
+    record[LEAD_STATUS_SECONDARY_SLUG] =
+      getRelationId(leadRow[LEAD_STATUS_SECONDARY_SLUG]) ?? ''
+    record[LEAD_STATUS_DESCRIPTION_SLUG] =
+      leadRow[LEAD_STATUS_DESCRIPTION_SLUG] ?? ''
+    record[LEAD_STATUS_FOLLOWUP_DATE_SLUG] =
+      leadRow[LEAD_STATUS_FOLLOWUP_DATE_SLUG] ?? null
 
     return record
   }, [lead, enumEntities])

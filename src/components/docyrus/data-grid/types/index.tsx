@@ -163,6 +163,8 @@ export interface CellSelectOption {
   iconStr?: string
   color?: string
   count?: number
+  /** Parent option id — a status option with a parent is a sub-status. */
+  parent?: string
 }
 
 export interface CellUserOption extends CellSelectOption {
@@ -230,6 +232,12 @@ export type CellOpts =
       options: Array<CellSelectOption>
       /** Render as 'badge' (default) or 'text' (plain label with optional color dot). */
       display?: 'badge' | 'text'
+      /**
+       * Label for the sub-status dropdown. Defaults to the generic
+       * "Sub-status"; a field whose sub-statuses mean something specific
+       * (e.g. how a lead was reached) names them here instead.
+       */
+      secondaryLabel?: string
     }
   | {
       variant: 'enum'

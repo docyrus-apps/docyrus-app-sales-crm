@@ -4,7 +4,7 @@
 /* eslint-disable */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import { CalendarIcon, Check, ChevronRight, ChevronsUpDown } from 'lucide-react'
+import { CalendarIcon, Check, ChevronsUpDown } from 'lucide-react'
 
 import { DocyrusIcon } from '@/components/docyrus/docyrus-icon'
 import { Field, FieldError } from '@/components/ui/field'
@@ -298,24 +298,28 @@ function StatusFormFieldInner({
             {selectedOption ? (
               <div className="flex min-w-0 flex-1 items-center gap-2">
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  {/* Line 1: Status breadcrumb badges */}
-                  <span className="flex items-center gap-1">
+                  {/*
+                    Status breadcrumb badges. The trigger is only as wide as
+                    the attribute panel, so a status plus a sub-status does not
+                    fit on one line there: the pair wraps instead of sliding
+                    under the chevron, and `max-w-full` keeps a single long
+                    label inside the trigger (its text truncates).
+                  */}
+                  <span className="flex min-w-0 flex-wrap items-center gap-1">
                     <Badge
                       variant="secondary"
-                      className="gap-1 px-1.5 py-0 text-xs font-medium"
+                      className="max-w-full gap-1 px-1.5 py-0 text-xs font-medium"
                     >
                       <StatusOptionLabel option={selectedOption} />
                     </Badge>
                     {secondaryOption && (
-                      <>
-                        <ChevronRight className="size-3 shrink-0 text-muted-foreground" />
-                        <Badge
-                          variant="outline"
-                          className="gap-1 px-1.5 py-0 text-xs font-normal"
-                        >
-                          <StatusOptionLabel option={secondaryOption} />
-                        </Badge>
-                      </>
+                      <Badge
+                        variant="outline"
+                        title={secondaryOption.name}
+                        className="max-w-full gap-1 px-1.5 py-0 text-xs font-normal"
+                      >
+                        <StatusOptionLabel option={secondaryOption} />
+                      </Badge>
                     )}
                   </span>
                   {/* Line 2: Description truncated */}
@@ -354,13 +358,24 @@ function StatusFormFieldInner({
             <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
+        {/*
+          Status, sub-status, notes and a date make a card taller than the room
+          under the trigger, and the room above it is no better — flipping
+          alone leaves it cut off at the bottom of the screen. Opening it to
+          the side puts the viewport's full height on the cross axis, where the
+          popper shifts it up to keep it whole; the available-height cap is the
+          usual guard for a list long enough to beat even that.
+        */}
         <PopoverContent
-          className="w-(--radix-popover-trigger-width) p-0"
+          className="flex max-h-(--radix-popover-content-available-height) w-(--radix-popover-trigger-width) min-w-56 flex-col p-0"
+          side="right"
           align="start"
+          sideOffset={4}
+          collisionPadding={12}
         >
-          <div className="flex flex-col">
+          <div className="flex min-h-0 flex-1 flex-col">
             {/* Status list */}
-            <div className="max-h-48 overflow-y-auto p-1">
+            <div className="min-h-0 flex-1 overflow-y-auto p-1">
               {parentOptions.map((option) => (
                 <button
                   key={option.id}
@@ -386,13 +401,14 @@ function StatusFormFieldInner({
             {/* Inline form — always visible when a status is selected */}
             {draft.status && (
               <>
-                <Separator />
-                <div className="flex flex-col gap-3 p-3">
+                <Separator className="shrink-0" />
+                <div className="flex shrink-0 flex-col gap-3 p-3">
                   {/* Sub-status select (conditional on child options) */}
                   {childOptionsForDraft.length > 0 && (
                     <div className="flex flex-col gap-1.5">
                       <Label className="text-xs">
-                        {t('ui.formField.statusSubStatus', 'Sub-status')}
+                        {fieldConfig.secondaryLabel ??
+                          t('ui.formField.statusSubStatus', 'Sub-status')}
                       </Label>
                       <Select
                         value={draft.secondary}
@@ -505,9 +521,12 @@ function StatusOptionLabel({ option }: { option: EnumOption }) {
   const iconColor = getEnumIconColor(option.color)
 
   return (
-    <span className="flex items-center gap-2">
+    <span className="flex min-w-0 items-center gap-2">
       {option.icon ? (
-        <span className={iconColor.className} style={iconColor.style}>
+        <span
+          className={cn('shrink-0', iconColor.className)}
+          style={iconColor.style}
+        >
           <DocyrusIcon icon={option.icon} className="size-4 shrink-0" />
         </span>
       ) : option.color ? (
@@ -519,7 +538,7 @@ function StatusOptionLabel({ option }: { option: EnumOption }) {
           style={getEnumDotStyle(option.color)}
         />
       ) : null}
-      {option.name}
+      <span className="truncate">{option.name}</span>
     </span>
   )
 }

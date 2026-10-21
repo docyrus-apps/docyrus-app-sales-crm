@@ -43,6 +43,7 @@ import {
   type EnumOption,
   type IField,
 } from '@/components/docyrus/form-fields/types'
+import { getStatusCompanionSlugs } from '@/components/docyrus/form-fields/lib/utils'
 
 export interface RecordDetailField {
   /** Field configuration */
@@ -566,6 +567,27 @@ function EditableRecordDetail({
     return map
   }, [fields])
 
+  /*
+   * A status field edits its sub-status, note and follow-up date in companion
+   * columns that are not declared fields of their own. Map each companion slug
+   * back to the status field that owns it, so the diff lets them through —
+   * without this the popover's values are tracked as changes and then dropped
+   * on save.
+   */
+  const companionOwnerMap = useMemo(() => {
+    const map = new Map<string, RecordDetailField>()
+
+    for (const entry of fields) {
+      if (entry.field.type !== 'field-status') continue
+
+      for (const slug of getStatusCompanionSlugs(entry.field.slug)) {
+        map.set(slug, entry)
+      }
+    }
+
+    return map
+  }, [fields])
+
   const originalValuesRef = useRef<Record<string, unknown>>({
     ...record,
   })
@@ -643,7 +665,7 @@ function EditableRecordDetail({
     const changes: Array<FieldChange> = []
 
     for (const slug of changedFields) {
-      const config = fieldMap.get(slug)
+      const config = fieldMap.get(slug) ?? companionOwnerMap.get(slug)
 
       if (!config) continue
 
@@ -656,7 +678,7 @@ function EditableRecordDetail({
     }
 
     return changes
-  }, [changedFields, fieldMap, valuesRef])
+  }, [changedFields, fieldMap, companionOwnerMap, valuesRef])
 
   const validate = useCallback((): boolean => {
     const errors = new Map<string, string>()

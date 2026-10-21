@@ -53,6 +53,7 @@ import {
   RelationCell,
   SelectCell,
   ShortTextCell,
+  StatusCell,
   SwitchCell,
   TagSelectCell,
   TimeCell,
@@ -212,9 +213,11 @@ function DataGridCellImpl<TData>(props: DataGridCellProps<TData>) {
       break
 
     case 'select':
+      Comp = SelectCell
+      break
 
     case 'status':
-      Comp = SelectCell
+      Comp = StatusCell
       break
 
     case 'enum':
