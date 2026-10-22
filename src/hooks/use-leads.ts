@@ -48,6 +48,14 @@ export const LEAD_DETAIL_COLUMNS = [
   'state',
   'lead_source',
   'lead_status',
+  /*
+   * Companion columns of the lead_status field: the sub-status ("how did we
+   * reach them"), the status note and the follow-up date, all edited in the
+   * status popover on the detail page.
+   */
+  '__lead_status_secondary',
+  '__lead_status_description',
+  '__lead_status_followup_date',
   'lead_type',
   'lead_category',
   'contact_person(id,name)',

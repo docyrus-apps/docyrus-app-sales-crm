@@ -636,7 +636,12 @@ export function useEnumOptions(
       label: option.name,
       value: option.id,
       color: option.color,
-      icon: option.icon
+      icon: option.icon,
+      /*
+       * Sub-status options point at their parent status — status editors list
+       * them as a second-level dropdown, so keep the link.
+       */
+      parent: option.parent ?? undefined
     }))
   }, [entities])
 
@@ -654,6 +659,7 @@ export function mapEnumEntitiesToCellOptions(
     label: option.name,
     value: option.id,
     color: option.color ?? undefined,
-    iconStr: option.icon ?? undefined
+    iconStr: option.icon ?? undefined,
+    parent: option.parent ?? undefined
   }))
 }

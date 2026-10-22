@@ -373,6 +373,7 @@
     "failedToLoad": "Potansiyel müşteri detayları yüklenemedi",
     "titleLabel": "Başlık",
     "status": "Durum",
+    "contactMethod": "İletişim Şekli",
     "email": "E-posta",
     "phone": "Telefon",
     "source": "Kaynak",

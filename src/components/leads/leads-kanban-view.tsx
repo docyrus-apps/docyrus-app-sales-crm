@@ -166,13 +166,22 @@ export function LeadsKanbanView({
   statuses,
   onStatusChange
 }: LeadsKanbanViewProps) {
-  const activeStatuses = useMemo(
-    () => statuses.filter(status => !status.isFinalOption),
+  /*
+   * Sub-statuses (options with a parent, e.g. "how did we reach them" under
+   * Contacted) live inside the status card, not on the board — a column per
+   * sub-status would split one pipeline stage into several.
+   */
+  const boardStatuses = useMemo(
+    () => statuses.filter(status => !status.parent),
     [statuses]
   )
+  const activeStatuses = useMemo(
+    () => boardStatuses.filter(status => !status.isFinalOption),
+    [boardStatuses]
+  )
   const finalStatuses = useMemo(
-    () => statuses.filter(status => status.isFinalOption),
-    [statuses]
+    () => boardStatuses.filter(status => status.isFinalOption),
+    [boardStatuses]
   )
   const initialColumns = useMemo(
     () => buildColumns(leads, activeStatuses),

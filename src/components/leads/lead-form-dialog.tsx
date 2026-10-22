@@ -245,12 +245,19 @@ mode
     color: option.color,
     icon: option.icon
   }))
-  const leadStatusComboboxOptions = leadStatusOptions.map((option: any) => ({
-    label: option.label,
-    value: option.value,
-    color: option.color,
-    icon: option.icon
-  }))
+  /*
+   * Sub-statuses (options with a parent) are picked inside the status card on
+   * the detail page, together with the note and follow-up date — this plain
+   * select only offers the pipeline stages themselves.
+   */
+  const leadStatusComboboxOptions = leadStatusOptions
+    .filter((option: any) => !option.parent)
+    .map((option: any) => ({
+      label: option.label,
+      value: option.value,
+      color: option.color,
+      icon: option.icon
+    }))
 
   const isSubmitting = createLead.isPending || updateLead.isPending
   const fieldLabels = {

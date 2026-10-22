@@ -80,7 +80,8 @@ const LEAD_GRID_COLUMN_OVERRIDES: Record<
 > = {
   name: { size: 220 },
   company_name_text: { size: 200 },
-  lead_status: { size: 150 },
+  // Wide enough for the status badge plus its sub-status ("Contacted › Phone").
+  lead_status: { size: 220 },
   lead_source: { size: 160 },
   email: { size: 220 },
   phone: { size: 170 },
@@ -98,6 +99,14 @@ const LEAD_GRID_LIST_COLUMNS = [
   'name',
   'company_name_text',
   'lead_status(id,name)',
+  /*
+   * Companion columns of lead_status — the sub-status ("how did we reach
+   * them"), the status note and the follow-up date. The status cell edits all
+   * three together, so the grid has to load them with the status itself.
+   */
+  '__lead_status_secondary',
+  '__lead_status_description',
+  '__lead_status_followup_date',
   'lead_source(id,name)',
   'email',
   'phone',
@@ -421,7 +430,11 @@ t
             ...defaultColumn.meta,
             cell: {
               ...(defaultColumn.meta?.cell ?? {}),
-              options: leadStatusOptions
+              options: leadStatusOptions,
+              // Lead sub-statuses record how the lead was reached.
+              secondaryLabel: t('leads.contactMethod', {
+                defaultValue: 'Contact Method'
+              })
             }
           }
         }

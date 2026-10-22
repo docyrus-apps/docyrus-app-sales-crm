@@ -373,6 +373,7 @@
     "failedToLoad": "Failed to load lead details",
     "titleLabel": "Title",
     "status": "Status",
+    "contactMethod": "Contact Method",
     "email": "Email",
     "phone": "Phone",
     "source": "Source",

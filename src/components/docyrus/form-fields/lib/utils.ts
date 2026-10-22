@@ -146,6 +146,24 @@ export function getCompanionValue(
   return record[getCompanionFieldSlug(fieldSlug, suffix)]
 }
 
+/**
+ * Sub-columns a `field-status` field keeps next to its own value. The API
+ * exposes them as writable composite fields, and StatusFormField edits all
+ * three inside the status popover (sub-status, notes, follow-up date), so a
+ * surface that diffs a record has to send them with the status value itself.
+ */
+export const STATUS_COMPANION_SUFFIXES = [
+  'secondary',
+  'description',
+  'followup_date',
+] as const
+
+export function getStatusCompanionSlugs(fieldSlug: string): string[] {
+  return STATUS_COMPANION_SUFFIXES.map((suffix) =>
+    getCompanionFieldSlug(fieldSlug, suffix),
+  )
+}
+
 /** Convert a Date to a timezone-safe date-only string (YYYY-MM-DD). */
 export function toLocalDateString(date: Date): string {
   const yyyy = date.getFullYear()
